@@ -25,7 +25,7 @@ type MsgServiceRouter struct {
 var _ gogogrpc.Server = &MsgServiceRouter{}
 
 // NewMsgServiceRouter creates a new MsgServiceRouter.
-func NewMsgServiceRouter(logger log.Logger) *MsgServiceRouter {
+func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
 		routes: map[string]MsgServiceHandler{},
 	}
@@ -56,7 +56,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 	err := msgservice.ValidateServiceAnnotations(sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of logging.
-		msr.logger.Info(fmt.Sprintf("The SDK is requiring protobuf annotation on Msgs; %+v", err))
+		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)
 	}
 
 	// Adds a top-level query handler based on the gRPC service name.
@@ -81,7 +81,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			err := msgservice.ValidateMsgAnnotations(proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.
-				msr.logger.Info(fmt.Sprintf("The SDK is requiring protobuf annotation on sdMsgs; %+v", err))
+				fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)
 			}
 
 			requestTypeName = sdk.MsgTypeURL(msg)

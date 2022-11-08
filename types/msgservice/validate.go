@@ -8,6 +8,25 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msg "cosmossdk.io/api/cosmos/msg/v1"
+
+	// Import the descriptors
+	_ "cosmossdk.io/api/cosmos/auth/v1beta1"
+	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
+	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
+	_ "cosmossdk.io/api/cosmos/consensus/v1"
+	_ "cosmossdk.io/api/cosmos/crisis/v1beta1"
+	_ "cosmossdk.io/api/cosmos/distribution/v1beta1"
+	_ "cosmossdk.io/api/cosmos/evidence/v1beta1"
+	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
+	_ "cosmossdk.io/api/cosmos/gov/v1"
+	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
+	_ "cosmossdk.io/api/cosmos/group/v1"
+	_ "cosmossdk.io/api/cosmos/mint/v1beta1"
+	_ "cosmossdk.io/api/cosmos/nft/v1beta1"
+	_ "cosmossdk.io/api/cosmos/slashing/v1beta1"
+	_ "cosmossdk.io/api/cosmos/staking/v1beta1"
+	_ "cosmossdk.io/api/cosmos/upgrade/v1beta1"
+	_ "cosmossdk.io/api/cosmos/vesting/v1beta1"
 )
 
 // ValidateServiceAnnotations validates that all Msg services have the

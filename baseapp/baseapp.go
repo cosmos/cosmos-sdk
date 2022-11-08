@@ -152,7 +152,7 @@ func NewBaseApp(
 		cms:              store.NewCommitMultiStore(db),
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
-		msgServiceRouter: NewMsgServiceRouter(logger),
+		msgServiceRouter: NewMsgServiceRouter(),
 		txDecoder:        txDecoder,
 		fauxMerkleMode:   false,
 	}

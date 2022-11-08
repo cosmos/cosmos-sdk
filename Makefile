@@ -408,12 +408,14 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.0
+protoVer=0.11.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
 containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
 containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.9.0
+containerProtoLint=$(PROJECT_NAME)-proto-lint-$(protoVer)
+containerProtoBreaking=$(PROJECT_NAME)-proto-breaking-$(protoVer)
+containerProtoUpdate=$(PROJECT_NAME)-proto-update-$(protoVer)
 
 proto-all: proto-format proto-lint proto-gen
 
@@ -432,12 +434,13 @@ proto-format:
 	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
 		find ./ -name "*.proto" -exec clang-format -i {} \; ; fi
 
-
 proto-lint:
-	@$(DOCKER_BUF) lint --error-format=json
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoLint}$$"; then docker start -a $(containerProtoLint); else docker run --name $(containerProtoLint) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		buf lint --error-format=json; fi
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoBreaking}$$"; then docker start -a $(containerProtoBreaking); else docker run --name $(containerProtoBreaking) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		buf breaking --against $(HTTPS_GIT); fi #branch=main
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-alpha.2/proto/tendermint
 
@@ -473,6 +476,9 @@ proto-update-deps:
 
 	@mkdir -p $(TM_P2P)
 	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
+
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoUpdate}$$"; then docker start -a $(containerProtoUpdate); else docker run --name $(containerProtoUpdate) -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) \
+		buf mod update; fi
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 

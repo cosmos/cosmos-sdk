@@ -81,15 +81,12 @@ type AppInputs struct {
 	AppConfig      *appv1alpha1.Config
 	Config         *runtimev1alpha1.Module
 	AppBuilder     *AppBuilder
-	Modules        map[string]AppModuleWrapper
+	Modules        map[string]appmodule.AppModule
 	BaseAppOptions []BaseAppOption
 }
 
 func SetupAppBuilder(inputs AppInputs) {
-	mm := &module.Manager{Modules: map[string]module.AppModule{}}
-	for name, wrapper := range inputs.Modules {
-		mm.Modules[name] = wrapper.AppModule
-	}
+	mm := module.NewManagerFromMap(inputs.Modules)
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config

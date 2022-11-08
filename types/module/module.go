@@ -60,6 +60,9 @@ type AppModuleBasic interface {
 	GetQueryCmd() *cobra.Command
 }
 
+// HasName allows the module to provide its own name for legacy purposes.
+// Newer apps should specify the name for their modules using a map
+// (see NewManagerFromMap).
 type HasName interface {
 	Name() string
 }
@@ -167,10 +170,7 @@ type HasGenesis interface {
 type AppModule interface {
 	appmodule.AppModule
 
-	// HasName allows the module to provide its own name for legacy purposes.
-	// Newer apps should specify the name for their modules using a map
-	// (see NewManagerFromMap).
-	HasName
+	AppModuleBasic
 }
 
 type HasRegisterInvariants interface {

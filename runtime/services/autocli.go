@@ -4,8 +4,7 @@ import (
 	"context"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
-	"github.com/cosmos/cosmos-sdk/types/module"
+	"cosmossdk.io/core/appmodule"
 )
 
 // AutoCLIQueryService implements the cosmos.autocli.v1.Query service.
@@ -15,7 +14,7 @@ type AutoCLIQueryService struct {
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func NewAutoCLIQueryService(appModules map[string]module.AppModule) *AutoCLIQueryService {
+func NewAutoCLIQueryService(appModules map[string]appmodule.AppModule) *AutoCLIQueryService {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {

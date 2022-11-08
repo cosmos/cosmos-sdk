@@ -6,7 +6,9 @@ import (
 	"sort"
 	"time"
 
+	"cosmossdk.io/core/appmodule"
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -51,7 +53,7 @@ func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 // with the same moduleName.
 // Then it attempts to cast every provided AppModule into an AppModuleSimulation.
 // If the cast succeeds, its included, otherwise it is excluded.
-func NewSimulationManagerFromAppModules(modules map[string]AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
+func NewSimulationManagerFromAppModules(modules map[string]appmodule.AppModule, overrideModules map[string]AppModuleSimulation) *SimulationManager {
 	simModules := []AppModuleSimulation{}
 	appModuleNamesSorted := make([]string, 0, len(modules))
 	for moduleName := range modules {

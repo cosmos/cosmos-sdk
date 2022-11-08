@@ -18,7 +18,7 @@ Contains the required files to set up rosetta cli and make it work against its w
 ## Rosetta-ci
 
 Contains the files for a deterministic network, with fixed keys and some actions on there, to test parsing of msgs and historical balances.  This image is used to run a simapp node and to run the rosetta server and the rosetta-cli.
-Whenever rosetta-cli releases a new version, rosetta-ci/Dockerfile should be updated to reflect the new version.
+Whenever [rosetta-cli](https://github.com/coinbase/rosetta-cli) releases a new version, rosetta-ci/Dockerfile should be updated to reflect the new version.
 
 ## Notes
 

@@ -81,12 +81,14 @@ func TestRunMigrations(t *testing.T) {
 	//
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
-	for _, module := range app.ModuleManager.Modules {
-		if module.Name() == banktypes.ModuleName {
+	for name, mod := range app.ModuleManager.Modules {
+		if name == banktypes.ModuleName {
 			continue
 		}
 
-		module.RegisterServices(configurator)
+		if mod, ok := mod.(module.LegacyRegisterServices); ok {
+			mod.RegisterServices(configurator)
+		}
 	}
 
 	// Initialize the chain
@@ -209,8 +211,6 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockModule := mock.NewMockAppModule(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
-	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule
 
@@ -252,7 +252,9 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	ctx := app.NewContext(false, tmproto.Header{})
 	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	for v, i := range app.ModuleManager.Modules {
-		require.Equal(t, vm[v], i.ConsensusVersion())
+		if i, ok := i.(module.HasConsensusVersion); ok {
+			require.Equal(t, vm[v], i.ConsensusVersion())
+		}
 	}
 
 	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())

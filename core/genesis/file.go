@@ -123,7 +123,6 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	return buf.Bytes(), nil
 }
 
-var _ GenesisTarget = &FileGenesisTarget{}
 
 type FileGenesisTarget struct {
 	targetDir  string

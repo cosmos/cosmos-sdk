@@ -17,7 +17,7 @@ service Msg {
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
 
-  // UpdateDenomMetadata defines a method for updating the fee denom metadata. Only usable in x/gov proposal.
+  // UpdateDenomMetadata defines a method for updating the denom metadata. Only usable in x/gov proposal.
   rpc UpdateDenomMetadata(MsgUpdateDenomMetadata) returns (MsgUpdateDenomMetadataResponse);
 }
 

@@ -15,6 +15,7 @@ type msgServer struct {
 	Keeper
 }
 
+// UpdateDenomMetadata updates the denom metadata if the message is signed by gov module account
 func (k msgServer) UpdateDenomMetadata(goCtx context.Context, msg *types.MsgUpdateDenomMetadata) (*types.MsgUpdateDenomMetadataResponse, error) {
 	if k.GetAuthority() != msg.FromAddress {
 		return nil, errors.Wrapf(gov.ErrInvalidSigner, "expected %s got %s", k.GetAuthority(), msg.FromAddress)

@@ -44,21 +44,21 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 	fName := fmt.Sprintf("%s.json", field)
 	fPath := filepath.Join(f.sourceDir, f.moduleName)
 
-	fp, err := os.Open(filepath.Join(fPath, fName))
+	fp, err := os.Open(filepath.Clean(filepath.Join(fPath, fName)))
 	if err == nil {
 		return fp, nil
 	}
 
 	// if cannot find it, try reading from <sourceDir>/<module>.json
 	fName = fmt.Sprintf("%s.json", f.moduleName)
-	fp, err = os.Open(filepath.Join(f.sourceDir, fName))
+	fp, err = os.Open(filepath.Clean(filepath.Join(f.sourceDir, fName)))
 	if err == nil {
 		return fp, nil
 	}
 
 	// else try reading <field> field from <sourceDir>/genesis.json
 	fPath = filepath.Join(f.sourceDir, "genesis.json")
-	fp, err = os.Open(fPath)
+	fp, err = os.Open(filepath.Clean(fPath))
 	if err == nil {
 		return fp, nil
 	}
@@ -82,12 +82,12 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	fName := fmt.Sprintf("%s.json", f.moduleName)
 	fPath := filepath.Join(f.sourceDir, fName)
 
-	fp, err := os.Open(fPath)
+	fp, err := os.Open(filepath.Clean(fPath))
 	if err != nil {
 		// try reading from <sourceDir>/genesis.json if it's not able to read from
 		// <sourceDir>/<moduleName>.json
 		fPath = filepath.Join(f.sourceDir, "genesis.json")
-		fp, err = os.Open(fPath)
+		fp, err = os.Open(filepath.Clean(fPath))
 		if err != nil {
 			return nil, fmt.Errorf("failed to open file from %s: %w", fPath, err)
 		}
@@ -169,7 +169,7 @@ func (f *FileGenesisTarget) OpenWriter(field string) (io.WriteCloser, error) {
 		}
 
 		fileName := fmt.Sprintf("%s.json", field)
-		fp, err := os.OpenFile(filepath.Join(f.targetDir, f.moduleName, fileName), fileOpenflag, flieOpenMode)
+		fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, f.moduleName, fileName)), fileOpenflag, flieOpenMode)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open writer, %s: %v", fileName, err)
 		}
@@ -183,7 +183,7 @@ func (f *FileGenesisTarget) OpenWriter(field string) (io.WriteCloser, error) {
 	// if there is empty field, try to open/create a file to <targetDir>/<module>.json
 	if len(f.moduleName) > 0 {
 		fName := fmt.Sprintf("%s.json", f.moduleName)
-		fp, err := os.OpenFile(filepath.Join(f.targetDir, fName), fileOpenflag, flieOpenMode)
+		fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, fName)), fileOpenflag, flieOpenMode)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open writer, %s: %v", fName, err)
 		}
@@ -191,7 +191,7 @@ func (f *FileGenesisTarget) OpenWriter(field string) (io.WriteCloser, error) {
 	}
 
 	// else if there is empty module and field name try to open/create a file to <targetDir>/genesis.json
-	fp, err := os.OpenFile(filepath.Join(f.targetDir, "genesis.json"), fileOpenflag, flieOpenMode)
+	fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, "genesis.json")), fileOpenflag, flieOpenMode)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (f *FileGenesisTarget) WriteRawJSON(rawBz json.RawMessage) (rerr error) {
 
 	fName := fmt.Sprintf("%s.json", f.moduleName)
 	fPath := filepath.Join(f.targetDir, fName)
-	fp, err := os.OpenFile(fPath, fileOpenflag, flieOpenMode)
+	fp, err := os.OpenFile(filepath.Clean(fPath), fileOpenflag, flieOpenMode)
 	if err != nil {
 		return fmt.Errorf("failed to create file, %s: %w", fPath, err)
 	}

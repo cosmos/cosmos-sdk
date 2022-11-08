@@ -87,11 +87,15 @@ One alternative at this point is to simply tell people not to use go semantic
 versioning at all and to keep their packages on `v0.x` forever. This solution,
 however, would likely be highly unpopular.
 
-### API Module Approach
+### Solutions
+
+### A) API Module Approach
 
 The first proposed solution was to generate a separate API go module (see
 https://github.com/cosmos/cosmos-sdk/discussions/10582). This solution alone,
 however, introduces other complexities:
+
+### B) Changes to Generated Code
 
 #### Proto File Versioning
 

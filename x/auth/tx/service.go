@@ -261,8 +261,15 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	resp := txb.(*txtypes.Tx)
-
+	p, ok := txb.(intoAny)
+	if !ok {
+		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
+	}
+	any := p.AsAny()
+	resp, ok := any.GetCachedValue().(*txtypes.Tx)
+	if !ok {
+		return nil, status.Errorf(codes.Internal, "expected %T, got %T", txtypes.Tx{}, any.GetCachedValue())
+	}
 	return &txtypes.TxDecodeResponse{
 		Tx: resp,
 	}, nil

@@ -41,16 +41,20 @@ service Service {
     option (google.api.http).get = "/cosmos/tx/v1beta1/txs/block/{height}";
   }
   // TxDecode decodes the transaction.
+  //
+  // Since: cosmos-sdk 0.47
   rpc TxDecode(TxDecodeRequest) returns (TxDecodeResponse) {
     option (google.api.http) = {
-      post: "/cosmos/tx/v1beta1/txs/decode"
+      post: "/cosmos/tx/v1beta1/decode"
       body: "*"
     };
   }
   // TxEncode encodes the transaction.
+  //
+  // Since: cosmos-sdk 0.47
   rpc TxEncode(TxEncodeRequest) returns (TxEncodeResponse) {
     option (google.api.http) = {
-      post: "/cosmos/tx/v1beta1/txs/encode"
+      post: "/cosmos/tx/v1beta1/encode"
       body: "*"
     };
   }

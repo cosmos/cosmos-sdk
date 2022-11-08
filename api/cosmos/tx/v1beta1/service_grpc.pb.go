@@ -35,8 +35,12 @@ type ServiceClient interface {
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
 	// TxDecode decodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
 	TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error)
 	// TxEncode encodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
 	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
 }
 
@@ -128,8 +132,12 @@ type ServiceServer interface {
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
 	// TxDecode decodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
 	TxDecode(context.Context, *TxDecodeRequest) (*TxDecodeResponse, error)
 	// TxEncode encodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
 	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }

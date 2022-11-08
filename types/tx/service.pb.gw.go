@@ -693,9 +693,9 @@ var (
 
 	pattern_Service_GetBlockWithTxs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "tx", "v1beta1", "txs", "block", "height"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Service_TxDecode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "tx", "v1beta1", "txs", "decode"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Service_TxDecode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "tx", "v1beta1", "decode"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Service_TxEncode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "tx", "v1beta1", "txs", "encode"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Service_TxEncode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmos", "tx", "v1beta1", "encode"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

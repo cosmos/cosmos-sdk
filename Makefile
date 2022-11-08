@@ -410,39 +410,28 @@ devdoc-update:
 
 protoVer=0.11.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
-containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
-containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
-containerProtoLint=$(PROJECT_NAME)-proto-lint-$(protoVer)
-containerProtoBreaking=$(PROJECT_NAME)-proto-breaking-$(protoVer)
-containerProtoUpdate=$(PROJECT_NAME)-proto-update-$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace -u $(UID):$(UID) --workdir /workspace $(protoImageName)
 
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen.sh; fi
+	@$(protoImage) sh ./scripts/protocgen.sh
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protoc-swagger-gen.sh; fi
+	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
 proto-format:
-	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		find ./ -name "*.proto" -exec clang-format -i {} \; ; fi
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
 proto-lint:
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoLint}$$"; then docker start -a $(containerProtoLint); else docker run --name $(containerProtoLint) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		buf lint --error-format=json; fi
+	@$(protoImage) buf lint --error-format=json
 
 proto-check-breaking:
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoBreaking}$$"; then docker start -a $(containerProtoBreaking); else docker run --name $(containerProtoBreaking) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		buf breaking --against $(HTTPS_GIT); fi #branch=main
+	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-alpha.2/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-rc1/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci
@@ -477,8 +466,7 @@ proto-update-deps:
 	@mkdir -p $(TM_P2P)
 	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
 
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoUpdate}$$"; then docker start -a $(containerProtoUpdate); else docker run --name $(containerProtoUpdate) -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) \
-		buf mod update; fi
+	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace -u $(UID):$(UID) --workdir /workspace $(protoImageName) buf mod update
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 

@@ -32,7 +32,7 @@ services:
       - 8080
 
   test_rosetta:
-    image: tendermintdev/rosetta-cli:v0.6.7
+    image: rosetta-ci:latest
     volumes:
       - ./configuration:/rosetta/config:z
     command: ["./config/run_tests.sh"]

@@ -74,8 +74,7 @@ func checkListsEqual(t *testing.T, l1, l2 protoreflect.List) {
 	}
 
 	for i := 0; i < l2.Len(); i++ {
-		require.Equal(t, l1.Len(), l2.Len())
-		coin, ok := l1.Get(i).Message().Interface().(*basev1beta1.Coin)
+		coin, ok := l2.Get(i).Message().Interface().(*basev1beta1.Coin)
 		require.True(t, ok)
 
 		require.Equal(t, coinsMap[coin.Denom], coin)

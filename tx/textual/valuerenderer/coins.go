@@ -10,7 +10,6 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
-	"cosmossdk.io/math"
 )
 
 const emptyCoins = "empty coins"
@@ -142,54 +141,23 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 	amt1 := coinArr[0]
 	coinDenom := coinArr[1]
 
-	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
-		dec, err := parseDec(amt1)
-		return &basev1beta1.Coin{
-			Amount: dec,
+	var base = coinDenom
+	if metadata != nil {
+		base = metadata.Base
+	}
+
+	vr, err := corecoins.ConvertAmt(
+		&basev1beta1.Coin{
+			Amount: amt1,
 			Denom:  coinDenom,
-		}, err
-	}
-	baseDenom := metadata.Base
+		}, metadata, base,
+	)
 
-	// Find exponents of both denoms.
-	foundCoinExp, foundBaseExp := false, false
-	var coinExp, baseExp uint32
-	for _, unit := range metadata.DenomUnits {
-		if coinDenom == unit.Denom {
-			coinExp = unit.Exponent
-			foundCoinExp = true
-		}
-		if baseDenom == unit.Denom {
-			baseExp = unit.Exponent
-			foundBaseExp = true
-		}
-	}
+	// vr value contains 1000 separators, need to be removed.
+	vr = strings.Replace(vr, "'", "", -1)
 
-	// If we didn't find either exponent, then we return early.
-	if !foundCoinExp || !foundBaseExp {
-		amt, err := parseDec(amt1)
-		return &basev1beta1.Coin{
-			Amount: amt,
-			Denom:  baseDenom,
-		}, err
-	}
-
-	// remove 1000 separators, (ex: 1'000'000 -> 1000000)
-	amt1 = strings.Replace(amt1, "'", "", -1)
-	amt, err := math.LegacyNewDecFromStr(amt1)
-	if err != nil {
-		return &basev1beta1.Coin{}, err
-	}
-
-	if coinExp > baseExp {
-		amt = amt.Mul(math.LegacyNewDec(10).Power(uint64(coinExp - baseExp)))
-	} else {
-		amt = amt.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
-	}
-
-	amtStr, err := parseDec(amt.String())
 	return &basev1beta1.Coin{
-		Amount: amtStr,
-		Denom:  baseDenom,
+		Denom:  base,
+		Amount: vr,
 	}, err
 }

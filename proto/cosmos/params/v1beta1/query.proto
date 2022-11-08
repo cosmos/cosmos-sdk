@@ -4,6 +4,7 @@ package cosmos.params.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/params/v1beta1/params.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/params/types/proposal";
 
@@ -35,7 +36,7 @@ message QueryParamsRequest {
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // param defines the queried parameter.
-  ParamChange param = 1 [(gogoproto.nullable) = false];
+  ParamChange param = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // QuerySubspacesRequest defines a request type for querying for all registered

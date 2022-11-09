@@ -253,6 +253,9 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 }
 
 func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
 	if req.TxBytes == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}
@@ -271,6 +274,9 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 }
 
 func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}

@@ -10,18 +10,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
-
-	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // Supported ABCI Query prefixes
@@ -39,6 +39,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
+	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
+
 	// If req.InitialHeight is > 1, then we set the initial version in the
 	// stores.
 	if req.InitialHeight > 1 {
@@ -50,7 +52,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
-	// initialize the deliver state and check state with a correct header
+	// initialize states with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
 	app.setPrepareProposalState(initHeader)
@@ -185,19 +187,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
-	// we
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
-			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
-	}
-	if app.prepareProposalState != nil {
-		app.prepareProposalState.ctx = app.prepareProposalState.ctx.
-			WithBlockGasMeter(gasMeter).
-			WithHeaderHash(req.Hash)
-	}
-	if app.processProposalState != nil {
-		app.processProposalState.ctx = app.processProposalState.ctx.
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash)
 	}
@@ -250,22 +241,52 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // work in a block before proposing it.
 //
 // Transactions can be modified, removed, or added by the application. Since the
-// application maintains it's own local mempool, it will ignore the transactions
+// application maintains its own local mempool, it will ignore the transactions
 // provided to it in RequestPrepareProposal. Instead, it will determine which
 // transactions to return based on the mempool's semantics and the MaxTxBytes
 // provided by the client's request.
 //
-// Note, there is no need to execute the transactions for validity as they have
-// already passed CheckTx.
-//
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	txs, err := app.prepareProposal(req)
-	if err != nil {
-		panic(err)
+	var (
+		txsBytes  [][]byte
+		byteCount int64
+	)
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+	iterator := app.mempool.Select(ctx, req.Txs)
+
+	for iterator != nil {
+		memTx := iterator.Tx()
+
+		bz, err := app.txEncoder(memTx)
+		if err != nil {
+			panic(err)
+		}
+
+		txSize := int64(len(bz))
+
+		// NOTE: runTx was already run in CheckTx which calls mempool.Insert so ideally everything in the pool
+		// should be valid. But some mempool implementations may insert invalid txs, so we check again.
+		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+		if err != nil {
+			err := app.mempool.Remove(memTx)
+			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+				panic(err)
+			}
+			iterator = iterator.Next()
+			continue
+		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+			txsBytes = append(txsBytes, bz)
+		} else {
+			break
+		}
+
+		iterator = iterator.Next()
 	}
-	return abci.ResponsePrepareProposal{Txs: txs}
+
+	return abci.ResponsePrepareProposal{Txs: txsBytes}
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -281,11 +302,19 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	err := app.processProposal(req)
-	if err != nil {
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+	if app.processProposal == nil {
+		panic("app.ProcessProposal is not set")
 	}
-	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+
+	ctx := app.processProposalState.ctx.
+		WithVoteInfos(app.voteInfos).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithHeaderHash(req.Hash).
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+
+	return app.processProposal(ctx, req)
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -388,7 +417,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	app.setPrepareProposalState(header)
 	app.setProcessProposalState(header)
 
-	// empty/reset the deliver
+	// empty/reset the deliver state
 	app.deliverState = nil
 
 	var halt bool

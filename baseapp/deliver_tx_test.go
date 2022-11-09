@@ -27,8 +27,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/gogoproto/jsonpb"
+
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -74,6 +75,7 @@ func defaultLogger() log.Logger {
 func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 
 	logger := defaultLogger()
@@ -2015,6 +2017,7 @@ func setFailOnAnte(cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.
 	vals.Set("failOnAnte", strconv.FormatBool(failOnAnte))
 	memo = vals.Encode()
 	builder.SetMemo(memo)
+	setTxSignature(builder, 1)
 
 	return builder.GetTx()
 }
@@ -2214,5 +2217,11 @@ func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 func setTxSignature(builder client.TxBuilder, nonce uint64) {
 	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
 	pubKey := privKey.PubKey()
-	builder.SetSignatures(signingtypes.SignatureV2{PubKey: pubKey, Sequence: nonce})
+	err := builder.SetSignatures(
+		signingtypes.SignatureV2{
+			PubKey: pubKey, Sequence: nonce, Data: &signingtypes.SingleSignatureData{},
+		})
+	if err != nil {
+		panic(err)
+	}
 }

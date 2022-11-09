@@ -2,6 +2,7 @@
 syntax = "proto3";
 package cosmos.authz.v1beta1;
 
+import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/timestamp.proto";
 import "gogoproto/gogo.proto";
@@ -13,6 +14,7 @@ option (gogoproto.goproto_getters_all) = false;
 // GenericAuthorization gives the grantee unrestricted permissions to execute
 // the provided method on behalf of the granter's account.
 message GenericAuthorization {
+  option (amino.name)                        = "cosmos-sdk/GenericAuthorization";
   option (cosmos_proto.implements_interface) = "Authorization";
 
   // Msg, identified by it's type URL, to grant unrestricted permissions to execute

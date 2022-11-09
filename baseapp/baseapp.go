@@ -59,17 +59,18 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
-	txEncoder         sdk.TxEncoder
+	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool        mempool.Mempool  // application side mempool
-	anteHandler    sdk.AnteHandler  // ante handler for fee and auth
-	postHandler    sdk.AnteHandler  // post handler, optional, e.g. for tips
-	initChainer    sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker   sdk.BeginBlocker // logic to run before any txs
-	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
-	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
-	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	mempool         mempool.Mempool            // application side mempool
+	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
+	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
+	initChainer     sdk.InitChainer            // initialize state with validators and state blob
+	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
+	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
+	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
+	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
+	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
+	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -80,8 +81,8 @@ type BaseApp struct { //nolint: maligned
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
 	checkState           *state // for CheckTx
 	deliverState         *state // for DeliverTx
-	processProposalState *state // for CheckTx
-	prepareProposalState *state // for DeliverTx
+	processProposalState *state // for ProcessProposal
+	prepareProposalState *state // for PrepareProposal
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache
@@ -167,9 +168,12 @@ func NewBaseApp(
 		option(app)
 	}
 
-	// if execution of options has left certain required fields nil, set them to sane default values
 	if app.mempool == nil {
 		app.SetMempool(mempool.NewNonceMempool())
+	}
+
+	if app.processProposal == nil {
+		app.SetProcessProposal(app.DefaultProcessProposal())
 	}
 
 	if app.interBlockCache != nil {
@@ -339,8 +343,14 @@ func (app *BaseApp) Init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
+	emptyHeader := tmproto.Header{}
+
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(tmproto.Header{})
+	app.setCheckState(emptyHeader)
+
+	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
+	app.setPrepareProposalState(emptyHeader)
+	app.setProcessProposalState(emptyHeader)
 	app.Seal()
 
 	rms, ok := app.cms.(*rootmulti.Store)
@@ -412,10 +422,9 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 	}
 }
 
-// setPrepareProposalState sets the BaseApp's deliverState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
+// setPrepareProposalState sets the BaseApp's prepareProposalState with a
+// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
+// same multi-store branch, and provided header. It is set on InitChain and Commit.
 func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.prepareProposalState = &state{
@@ -424,10 +433,9 @@ func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
 	}
 }
 
-// setProcessProposalState sets the BaseApp's deliverState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
+// setProcessProposalState sets the BaseApp's processProposalState with a
+// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
+// same multi-store branch, and provided header. It is set on InitChain and Commit.
 func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	app.processProposalState = &state{
@@ -556,7 +564,11 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
-	ctx := app.getState(mode).ctx.
+	modeState := app.getState(mode)
+	if modeState == nil {
+		panic(fmt.Sprintf("state is nil for mode %v", mode))
+	}
+	ctx := modeState.ctx.
 		WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos)
 
@@ -695,7 +707,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}
 
 	if mode == runTxModeCheck {
-		fmt.Println("inserting tx:", tx.GetMsgs())
 		err = app.mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
@@ -759,8 +770,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
-		// skip actual execution for (Re)CheckTx mode
-		if mode == runTxModeCheck || mode == runTxModeReCheck || mode == runTxPrepareProposal || mode == runTxProcessProposal {
+
+		if mode != runTxModeDeliver && mode != runTxModeSimulate {
 			break
 		}
 
@@ -837,57 +848,26 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}
 }
 
-func (app *BaseApp) prepareProposal(req abci.RequestPrepareProposal) ([][]byte, error) {
-	var (
-		txsBytes  [][]byte
-		byteCount int64
-	)
-
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
-	iterator := app.mempool.Select(ctx, req.Txs)
-
-	for iterator != nil {
-		memTx := iterator.Tx()
-
-		bz, encErr := app.txEncoder(memTx)
-		txSize := int64(len(bz))
-		if encErr != nil {
-			return nil, encErr
-		}
-
-		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
-		if err != nil {
-			removeErr := app.mempool.Remove(memTx)
-			if removeErr != nil && err != mempool.ErrTxNotFound {
-				return nil, removeErr
+// DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
+// Every transaction in the proposal must pass 2 conditions:
+//
+// 1. The transaction bytes must decode to a valid transaction.
+// 2. The transaction must be valid (i.e. pass runTx, AnteHandler only)
+//
+// If any transaction fails to pass either condition, the proposal is rejected.
+func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		for _, txBytes := range req.Txs {
+			_, err := app.txDecoder(txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
-			continue
-		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
-			txsBytes = append(txsBytes, bz)
-		} else {
-			break
-		}
 
-		iterator = iterator.Next()
-	}
-
-	return txsBytes, nil
-}
-
-func (app *BaseApp) processProposal(req abci.RequestProcessProposal) error {
-	for _, txBytes := range req.Txs {
-		tx, err := app.txDecoder(txBytes)
-		if err != nil {
-			return err
-		}
-
-		_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
-		if err != nil {
-			err = app.mempool.Remove(tx)
-			if err != nil && err != mempool.ErrTxNotFound {
-				return err
+			_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 		}
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
-	return nil
 }

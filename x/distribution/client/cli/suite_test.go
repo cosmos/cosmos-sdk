@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -90,12 +89,12 @@ func (s *CLITestSuite) TestGetCmdQueryParams() {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`{"community_tax":"0","base_proposer_reward":"0","bonus_proposer_reward":"0","withdraw_addr_enabled":false}`,
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`base_proposer_reward: "0"
 bonus_proposer_reward: "0"
 community_tax: "0"
@@ -127,17 +126,17 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorDistributionInfo() {
 	}{
 		{
 			"invalid val address",
-			[]string{"invalid address", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"invalid address", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 		},
 		{
 			"json output",
-			[]string{val.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 		},
 		{
 			"text output",
-			[]string{val.String(), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{val.String(), fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			false,
 		},
 	}
@@ -181,7 +180,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 			[]string{
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
 				sdk.ValAddress(val[0].Address).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			`{"rewards":[]}`,
@@ -189,7 +188,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorOutstandingRewards() {
 		{
 			"text output",
 			[]string{
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
 				sdk.ValAddress(val[0].Address).String(),
 			},
@@ -238,7 +237,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorCommission() {
 			[]string{
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
 				sdk.ValAddress(val[0].Address).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			`{"commission":[]}`,
@@ -246,7 +245,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorCommission() {
 		{
 			"text output",
 			[]string{
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
 				sdk.ValAddress(val[0].Address).String(),
 			},
@@ -313,7 +312,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorSlashes() {
 			[]string{
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
 				sdk.ValAddress(val[0].Address).String(), "1", "3",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			"{\"slashes\":[],\"pagination\":null}",
@@ -321,7 +320,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorSlashes() {
 		{
 			"text output",
 			[]string{
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=3", flags.FlagHeight),
 				sdk.ValAddress(val[0].Address).String(), "1", "3",
 			},
@@ -381,7 +380,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegatorRewards() {
 			[]string{
 				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			`{"rewards":[],"total":[]}`,
@@ -391,7 +390,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegatorRewards() {
 			[]string{
 				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(), valAddr.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			`{"rewards":[]}`,
@@ -399,7 +398,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegatorRewards() {
 		{
 			"text output",
 			[]string{
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(),
 			},
@@ -410,7 +409,7 @@ total: []`,
 		{
 			"text output (specific validator)",
 			[]string{
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=5", flags.FlagHeight),
 				addr.String(), valAddr.String(),
 			},
@@ -444,12 +443,12 @@ func (s *CLITestSuite) TestGetCmdQueryCommunityPool() {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=3", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`{"pool":[]}`,
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag), fmt.Sprintf("--%s=3", flags.FlagHeight)},
+			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput), fmt.Sprintf("--%s=3", flags.FlagHeight)},
 			`pool: []`,
 		},
 	}

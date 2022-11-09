@@ -13,11 +13,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-
 type FileGenesisSource struct {
-	sourceDir  string
-	moduleName string
-    moduleRootJson json.RawJSON // the RawJSON from the genesis.json app_state.<module> that got passed into InitCHain
+	sourceDir      string
+	moduleName     string
+	moduleRootJson json.RawMessage // the RawJSON from the genesis.json app_state.<module> that got passed into InitCHain
 }
 
 const (
@@ -50,6 +49,8 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 	}
 
 	// if cannot find it, try reading from <sourceDir>/<module>.json
+	rawBz, err := f.ReadRawJSON()
+
 	fName = fmt.Sprintf("%s.json", f.moduleName)
 	fp, err = os.Open(filepath.Clean(filepath.Join(f.sourceDir, fName)))
 	if err == nil {
@@ -68,19 +69,19 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 
 // ReadMessage is a unsupported op
 func (f *FileGenesisSource) ReadMessage(msg proto.Message) error {
-   bz, err := f.ReadRawJSON()
-   if err != nil {
-     return err
-   }
-   return proto.Unmarshal(bz, msg)
+	bz, err := f.ReadRawJSON()
+	if err != nil {
+		return err
+	}
+	return proto.Unmarshal(bz, msg)
 }
 
 // ReadRawJSON returns a json.RawMessage read from the source file given by the
-// source directory and the module name. If the module name is empty, it will reads
-// raw JSON data from <sourceDir>/genesis.json
+// source directory and the module name. If it cannot open <sourceDir>/<module>.json,
+// it will try to read raw JSON data from <sourceDir>/genesis.json
 func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	if len(f.moduleName) == 0 {
-		f.moduleName = "genesis"
+		return nil, fmt.Errorf("failed to write RawJSON: empty module name")
 	}
 
 	fName := fmt.Sprintf("%s.json", f.moduleName)
@@ -127,7 +128,6 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 
 	return buf.Bytes(), nil
 }
-
 
 type FileGenesisTarget struct {
 	targetDir  string

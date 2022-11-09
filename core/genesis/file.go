@@ -32,9 +32,9 @@ func NewFileGenesisSource(sourceDir, moduleName string) GenesisSource {
 	return &FileGenesisSource{sourceDir: filepath.Clean(sourceDir), moduleName: moduleName}
 }
 
-// OpenReader opens the source file reading from the given parameters,
+// OpenReader opens the source field reading from the given parameters,
 // and returns a ReadCloser.
-// It will try to open the file in order following by:
+// It will try to open the field in order following by:
 // <sourceDir>/<module>/<field>.json
 // <sourceDir>/<module>.json
 // <sourceDir>/genesis.json

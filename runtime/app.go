@@ -8,8 +8,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	"cosmossdk.io/core/appmodule"
-
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -50,7 +48,6 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
-	appModules        map[string]appmodule.AppModule
 }
 
 // RegisterModules registers the provided modules with the module manager and

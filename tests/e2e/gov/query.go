@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
@@ -23,7 +22,7 @@ func (s *IntegrationTestSuite) TestCmdParams() {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","min_initial_deposit_ratio":"0.000000000000000000"}}`,
 		},
 		{
@@ -81,7 +80,7 @@ func (s *IntegrationTestSuite) TestCmdParam() {
 			"voting params",
 			[]string{
 				"voting",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			`{"voting_period":"172800000000000"}`,
 		},
@@ -89,7 +88,7 @@ func (s *IntegrationTestSuite) TestCmdParam() {
 			"tally params",
 			[]string{
 				"tallying",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			`{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"}`,
 		},
@@ -97,7 +96,7 @@ func (s *IntegrationTestSuite) TestCmdParam() {
 			"deposit params",
 			[]string{
 				"deposit",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			`{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800000000000"}`,
 		},
@@ -129,7 +128,7 @@ func (s *IntegrationTestSuite) TestCmdProposer() {
 		{
 			"without proposal id",
 			[]string{
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			``,
@@ -138,7 +137,7 @@ func (s *IntegrationTestSuite) TestCmdProposer() {
 			"json output",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			fmt.Sprintf("{\"proposal_id\":\"%s\",\"proposer\":\"%s\"}", "1", val.Address.String()),
@@ -175,7 +174,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 		{
 			"without proposal id",
 			[]string{
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			v1.TallyResult{},
@@ -184,7 +183,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 			"json output",
 			[]string{
 				"2",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			v1.NewTallyResult(sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
@@ -193,7 +192,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 			"json output",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			v1.NewTallyResult(s.cfg.BondedTokens, sdk.NewInt(0), sdk.NewInt(0), sdk.NewInt(0)),
@@ -233,7 +232,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 			"get non existing proposal",
 			[]string{
 				"10",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -241,7 +240,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 			"get proposal with json response",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -278,7 +277,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 		{
 			"get proposals as json response",
 			[]string{
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -286,7 +285,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 			"get proposals with invalid status",
 			[]string{
 				"--status=unknown",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -332,7 +331,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
 			"get deposits(valid req)",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -388,7 +387,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
 			[]string{
 				"1",
 				val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -439,7 +438,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVotes() {
 			"vote for invalid proposal",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -498,7 +497,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 			[]string{
 				"1",
 				val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			v1.NewNonSplitVoteOption(v1.OptionYes),
@@ -508,7 +507,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVote() {
 			[]string{
 				"3",
 				val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			v1.WeightedVoteOptions{

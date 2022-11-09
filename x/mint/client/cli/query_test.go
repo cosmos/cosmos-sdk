@@ -19,7 +19,6 @@ import (
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintcli "github.com/cosmos/cosmos-sdk/x/mint/client/cli"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func TestGetCmdQueryParams(t *testing.T) {
@@ -44,13 +43,13 @@ func TestGetCmdQueryParams(t *testing.T) {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`[--height=1 --output=json]`,
 			`{"mint_denom":"","inflation_rate_change":"0","inflation_max":"0","inflation_min":"0","goal_bonded":"0","blocks_per_year":"0"}`,
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`[--height=1 --output=text]`,
 			`blocks_per_year: "0"
 goal_bonded: "0"
@@ -109,13 +108,13 @@ func TestGetCmdQueryInflation(t *testing.T) {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`[--height=1 --output=json]`,
 			`<nil>`,
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`[--height=1 --output=text]`,
 			`<nil>`,
 		},
@@ -169,13 +168,13 @@ func TestGetCmdQueryAnnualProvisions(t *testing.T) {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`[--height=1 --output=json]`,
 			`<nil>`,
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`[--height=1 --output=text]`,
 			`<nil>`,
 		},

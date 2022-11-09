@@ -1,6 +1,6 @@
 # Cosmos SDK v0.45.11 Release Notes
 
-This release introduces a number of bug fixes, features and improvements.
+This release introduces a number of bug fixes and improvements.
 
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.45.x/CHANGELOG.md) for an exhaustive list of changes.
 

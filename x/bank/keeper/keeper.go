@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"fmt"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"

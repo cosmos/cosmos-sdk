@@ -69,3 +69,38 @@ func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSe
 
 	return &types.MsgSendResponse{}, nil
 }
+
+func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*types.MsgMultiSendResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// NOTE: totalIn == totalOut should already have been checked
+	for _, in := range msg.Inputs {
+		if err := k.IsSendEnabledCoins(ctx, in.Coins...); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, out := range msg.Outputs {
+		accAddr, err := sdk.AccAddressFromBech32(out.Address)
+		if err != nil {
+			panic(err)
+		}
+		if k.BlockedAddr(accAddr) {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive transactions", out.Address)
+		}
+	}
+
+	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+	)
+
+	return &types.MsgMultiSendResponse{}, nil
+}

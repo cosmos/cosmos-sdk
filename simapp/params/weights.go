@@ -3,6 +3,7 @@ package params
 // Default simulation operation weights for messages and gov proposals
 const (
 	DefaultWeightMsgSend                        int = 100
+	DefaultWeightMsgMultiSend                   int = 10
 	DefaultWeightMsgSetWithdrawAddress          int = 50
 	DefaultWeightMsgWithdrawDelegationReward    int = 50
 	DefaultWeightMsgWithdrawValidatorCommission int = 50

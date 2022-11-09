@@ -2,13 +2,9 @@ package keeper_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -18,11 +14,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 const (
@@ -350,6 +349,87 @@ func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
 	suite.Require().NotNil(app.AccountKeeper.GetAccount(ctx, addr2))
 }
 
+func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
+	app, ctx := suite.app, suite.ctx
+
+	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
+
+	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	suite.Require().Equal(balances, acc1Balances)
+
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+
+	suite.Require().Nil(app.AccountKeeper.GetAccount(ctx, addr2))
+	suite.Require().Empty(app.BankKeeper.GetAllBalances(ctx, addr2))
+
+	inputs := []types.Input{
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+	}
+	outputs := []types.Output{
+		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+	}
+
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+
+	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
+	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
+	suite.Require().Equal(expected, acc2Balances)
+	suite.Require().NotNil(app.AccountKeeper.GetAccount(ctx, addr2))
+}
+
+func (suite *IntegrationTestSuite) TestInputOutputCoins() {
+	app, ctx := suite.app, suite.ctx
+	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
+
+	addr1 := sdk.AccAddress([]byte("addr1_______________"))
+	acc1 := app.AccountKeeper.NewAccountWithAddress(ctx, addr1)
+	app.AccountKeeper.SetAccount(ctx, acc1)
+
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+	app.AccountKeeper.SetAccount(ctx, acc2)
+
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	acc3 := app.AccountKeeper.NewAccountWithAddress(ctx, addr3)
+	app.AccountKeeper.SetAccount(ctx, acc3)
+
+	inputs := []types.Input{
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
+	}
+	outputs := []types.Output{
+		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
+	}
+
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, []types.Output{}))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr1, balances))
+
+	insufficientInputs := []types.Input{
+		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+	}
+	insufficientOutputs := []types.Output{
+		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
+	}
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+
+	acc1Balances := app.BankKeeper.GetAllBalances(ctx, addr1)
+	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
+	suite.Require().Equal(expected, acc1Balances)
+
+	acc2Balances := app.BankKeeper.GetAllBalances(ctx, addr2)
+	suite.Require().Equal(expected, acc2Balances)
+
+	acc3Balances := app.BankKeeper.GetAllBalances(ctx, addr3)
+	suite.Require().Equal(expected, acc3Balances)
+}
+
 func (suite *IntegrationTestSuite) TestSendCoins() {
 	app, ctx := suite.app, suite.ctx
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
@@ -559,6 +639,109 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	suite.Require().Equal(10, len(events))
 	suite.Require().Equal(abci.Event(event1), events[8])
 	suite.Require().Equal(abci.Event(event2), events[9])
+}
+
+func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
+	app, ctx := suite.app, suite.ctx
+
+	app.BankKeeper.SetParams(ctx, types.DefaultParams())
+
+	addr := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+	addr3 := sdk.AccAddress([]byte("addr3_______________"))
+	addr4 := sdk.AccAddress([]byte("addr4_______________"))
+	acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+	acc2 := app.AccountKeeper.NewAccountWithAddress(ctx, addr2)
+
+	app.AccountKeeper.SetAccount(ctx, acc)
+	app.AccountKeeper.SetAccount(ctx, acc2)
+
+	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
+	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
+	inputs := []types.Input{
+		{Address: addr.String(), Coins: newCoins.Add(newCoins2...)},
+	}
+	outputs := []types.Output{
+		{Address: addr3.String(), Coins: newCoins},
+		{Address: addr4.String(), Coins: newCoins2},
+	}
+
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+
+	events := ctx.EventManager().ABCIEvents()
+	suite.Require().Equal(0, len(events))
+
+	// Set addr's coins but not addr2's coins
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
+	suite.Require().Error(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+
+	events = ctx.EventManager().ABCIEvents()
+	suite.Require().Equal(6, len(events)) // 7 events because account funding causes extra minting + coin_spent + coin_recv events
+
+	event1 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []abci.EventAttribute{},
+	}
+	event1.Attributes = append(
+		event1.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+	)
+
+	// Set addr's coins and addr2's coins
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
+	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
+
+	suite.Require().NoError(simapp.FundAccount(app.BankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
+	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
+
+	suite.Require().NoError(app.BankKeeper.InputOutputCoins(ctx, inputs, outputs))
+
+	events = ctx.EventManager().ABCIEvents()
+	suite.Require().Equal(24, len(events)) // 25 due to account funding + coin_spent + coin_recv events
+
+	event2 := sdk.Event{
+		Type:       sdk.EventTypeMessage,
+		Attributes: []abci.EventAttribute{},
+	}
+	event2.Attributes = append(
+		event2.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+	)
+	event3 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []abci.EventAttribute{},
+	}
+	event3.Attributes = append(
+		event3.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+	)
+	event3.Attributes = append(
+		event3.Attributes,
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+	event4 := sdk.Event{
+		Type:       types.EventTypeTransfer,
+		Attributes: []abci.EventAttribute{},
+	}
+	event4.Attributes = append(
+		event4.Attributes,
+		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+	)
+	event4.Attributes = append(
+		event4.Attributes,
+		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+	)
+
+	for _, eventA := range []sdk.Event{event1, event2, event3, event4} {
+		var matched bool
+		for _, eventB := range events {
+			if reflect.DeepEqual(abci.Event(eventA), eventB) {
+				matched = true
+				break
+			}
+		}
+
+		suite.Require().True(matched)
+	}
 }
 
 func (suite *IntegrationTestSuite) TestSpendableCoins() {

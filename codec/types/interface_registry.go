@@ -43,7 +43,7 @@ type InterfaceRegistry interface {
 	// the interface iface.
 	//
 	// Ex:
-	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{})
+	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface interface{}, impls ...proto.Message)
 
 	// ListAllInterfaces list the type URLs of all registered interfaces.

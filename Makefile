@@ -68,8 +68,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 ifeq ($(ENABLE_ROCKSDB),true)
   BUILD_TAGS += rocksdb_build
   test_tags += rocksdb_build
-else
-  $(warning RocksDB support is disabled; to build and test with RocksDB support, set ENABLE_ROCKSDB=true)
 endif
 
 # DB backend selection

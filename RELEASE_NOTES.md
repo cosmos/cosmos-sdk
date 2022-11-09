@@ -11,3 +11,4 @@ Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.
 ```go
 # Chains must add the following to their go.mod for the application:
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```

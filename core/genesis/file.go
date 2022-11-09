@@ -37,7 +37,7 @@ func NewFileGenesisSource(sourceDir, moduleName string) GenesisSource {
 // It will try to open the field in order following by:
 // <sourceDir>/<module>/<field>.json
 // <field> key inside <sourceDir>/<module>.json
-// <sourceDir>/genesis.json
+// app_state.<module>.<field> key in <sourceDir>/genesis.json
 func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 	// try reading genesis data from <sourceDir>/<module>/<field>.json
 	fName := fmt.Sprintf("%s.json", field)

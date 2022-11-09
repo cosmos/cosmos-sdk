@@ -137,8 +137,11 @@ message QueryAllBalancesRequest {
 // method.
 message QueryAllBalancesResponse {
   // balances is the balances of all the coins.
-  repeated cosmos.base.v1beta1.Coin balances = 1
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin balances = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -165,8 +168,11 @@ message QuerySpendableBalancesRequest {
 // Since: cosmos-sdk 0.46
 message QuerySpendableBalancesResponse {
   // balances is the spendable balances of all the coins.
-  repeated cosmos.base.v1beta1.Coin balances = 1
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin balances = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -188,8 +194,11 @@ message QueryTotalSupplyRequest {
 // method
 message QueryTotalSupplyResponse {
   // supply is the supply of the coins
-  repeated cosmos.base.v1beta1.Coin supply = 1
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  repeated cosmos.base.v1beta1.Coin supply = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 
   // pagination defines the pagination in the response.
   //

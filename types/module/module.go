@@ -170,8 +170,6 @@ type LegacyGenesis interface {
 // its functionality has been moved to extension interfaces based off of
 // cosmossdk.io/core/appmodule.AppModule.
 type AppModule interface {
-	appmodule.AppModule
-
 	AppModuleBasic
 }
 
@@ -249,7 +247,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]appmodule.AppModule
+	Modules            map[string]interface{}
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
@@ -260,7 +258,7 @@ type Manager struct {
 // Deprecated: NewManager creates a new Manager object. NewManagerFromMap should
 // be preferred.
 func NewManager(modules ...AppModule) *Manager {
-	moduleMap := make(map[string]appmodule.AppModule)
+	moduleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(modules))
 	for _, module := range modules {
 		moduleMap[module.Name()] = module
@@ -279,13 +277,15 @@ func NewManager(modules ...AppModule) *Manager {
 // NewManagerFromMap creates a new Manager object from a map of module names to module implementations. It
 // should be used instead of NewManager for new apps.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
-	modulesStr := make([]string, 0, len(moduleMap))
-	for name := range moduleMap {
+	simpleModuleMap := make(map[string]interface{})
+	modulesStr := make([]string, 0, len(simpleModuleMap))
+	for name, module := range moduleMap {
+		simpleModuleMap[name] = module
 		modulesStr = append(modulesStr, name)
 	}
 
 	return &Manager{
-		Modules:            moduleMap,
+		Modules:            simpleModuleMap,
 		OrderInitGenesis:   modulesStr,
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,

@@ -132,6 +132,10 @@ Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common fla
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/flags/flags.go#L92-L101
 ```
 
+## AutoCLI
+
+
+
 ## gRPC
 
 [gRPC](https://grpc.io/) is a Remote Procedure Call (RPC) framework. RPC is the preferred way for external clients like wallets and exchanges to interact with a blockchain.

@@ -89,7 +89,7 @@ type AppModule struct {
 func NewAppModule(accountKeeper types.AccountKeeper,
 	stakingKeeper types.StakingKeeper, deliverTx deliverTxfn,
 	txEncodingConfig client.TxEncodingConfig,
-) module.AppModule {
+) module.GenesisOnlyAppModule {
 	return module.NewGenesisOnlyAppModule(AppModule{
 		AppModuleBasic:   AppModuleBasic{},
 		accountKeeper:    accountKeeper,

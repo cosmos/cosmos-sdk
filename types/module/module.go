@@ -212,7 +212,7 @@ type GenesisOnlyAppModule struct {
 }
 
 // NewGenesisOnlyAppModule creates a new GenesisOnlyAppModule object
-func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
+func NewGenesisOnlyAppModule(amg AppModuleGenesis) GenesisOnlyAppModule {
 	return GenesisOnlyAppModule{
 		AppModuleGenesis: amg,
 	}

@@ -17,7 +17,7 @@ type AutoCLIQueryService struct {
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func NewAutoCLIQueryService(appModules map[string]appmodule.AppModule) *AutoCLIQueryService {
+func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryService {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
@@ -25,29 +25,31 @@ func NewAutoCLIQueryService(appModules map[string]appmodule.AppModule) *AutoCLIQ
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
 		} else {
-			// try to auto-discover options based on the last msg and query
-			// services registered for the module
-			cfg := &autocliConfigurator{}
-			mod.RegisterServices(cfg)
-			modOptions := &autocliv1.ModuleOptions{}
-			haveServices := false
+			if mod, ok := mod.(module.LegacyRegisterServices); ok {
+				// try to auto-discover options based on the last msg and query
+				// services registered for the module
+				cfg := &autocliConfigurator{}
+				mod.RegisterServices(cfg)
+				modOptions := &autocliv1.ModuleOptions{}
+				haveServices := false
 
-			if cfg.msgServer.serviceName != "" {
-				haveServices = true
-				modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
-					Service: cfg.msgServer.serviceName,
+				if cfg.msgServer.serviceName != "" {
+					haveServices = true
+					modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
+						Service: cfg.msgServer.serviceName,
+					}
 				}
-			}
 
-			if cfg.queryServer.serviceName != "" {
-				haveServices = true
-				modOptions.Query = &autocliv1.ServiceCommandDescriptor{
-					Service: cfg.queryServer.serviceName,
+				if cfg.queryServer.serviceName != "" {
+					haveServices = true
+					modOptions.Query = &autocliv1.ServiceCommandDescriptor{
+						Service: cfg.queryServer.serviceName,
+					}
 				}
-			}
 
-			if haveServices {
-				moduleOptions[modName] = modOptions
+				if haveServices {
+					moduleOptions[modName] = modOptions
+				}
 			}
 		}
 	}

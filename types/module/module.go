@@ -52,7 +52,7 @@ type AppModuleBasic interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
-	LegacyGenesisBasics
+	HasGenesisBasics
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
@@ -68,7 +68,7 @@ type HasName interface {
 }
 
 // LegacyGenesisBasics is the legacy interface for stateless genesis methods.
-type LegacyGenesisBasics interface {
+type HasGenesisBasics interface {
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error
 }
@@ -156,19 +156,18 @@ func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
 // AppModuleGenesis is the standard form for an application module genesis functions
 type AppModuleGenesis interface {
 	AppModuleBasic
-	LegacyGenesis
+	HasGenesis
 }
 
-// LegacyGenesis is the legacy interface for stateful genesis methods.
-type LegacyGenesis interface {
-	LegacyGenesisBasics
+// HasGenesis is the extension interface for stateful genesis methods.
+type HasGenesis interface {
+	HasGenesisBasics
 	InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate
 	ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage
 }
 
-// Deprecated: AppModule is the legacy form for an application module. Most of
-// its functionality has been moved to extension interfaces based off of
-// cosmossdk.io/core/appmodule.AppModule.
+// AppModule is the form for an application module. Most of
+// its functionality has been moved to extension interfaces.
 type AppModule interface {
 	AppModuleBasic
 }
@@ -179,8 +178,8 @@ type HasRegisterInvariants interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 }
 
-// LegacyRegisterServices is the legacy method for modules to register services.
-type LegacyRegisterServices interface {
+// HasRegisterSerices is the interface for modules to register services.
+type HasRegisterSerices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
 }
@@ -247,7 +246,7 @@ func (GenesisOnlyAppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []ab
 // Manager defines a module manager that provides the high level utility for managing and executing
 // operations for a group of modules
 type Manager struct {
-	Modules            map[string]interface{}
+	Modules            map[string]interface{} // interface{} is used now to support the legacy AppModule as well as new core appmodule.AppModule.
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
@@ -255,8 +254,7 @@ type Manager struct {
 	OrderMigrations    []string
 }
 
-// Deprecated: NewManager creates a new Manager object. NewManagerFromMap should
-// be preferred.
+// NewManager creates a new Manager object.
 func NewManager(modules ...AppModule) *Manager {
 	moduleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(modules))
@@ -274,8 +272,8 @@ func NewManager(modules ...AppModule) *Manager {
 	}
 }
 
-// NewManagerFromMap creates a new Manager object from a map of module names to module implementations. It
-// should be used instead of NewManager for new apps.
+// NewManagerFromMap creates a new Manager object from a map of module names to module implementations.
+// This method should be used for apps and modules which have migrated to the cosmossdk.io/core.appmodule.AppModule API.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]interface{})
 	modulesStr := make([]string, 0, len(simpleModuleMap))
@@ -338,7 +336,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (m *Manager) RegisterServices(cfg Configurator) {
 	modules := maps.Values(m.Modules)
 	for _, module := range modules {
-		if module, ok := module.(LegacyRegisterServices); ok {
+		if module, ok := module.(HasRegisterSerices); ok {
 			module.RegisterServices(cfg)
 		}
 	}
@@ -355,7 +353,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			continue
 		}
 
-		if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
+		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
 			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
@@ -391,7 +389,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	genesisData := make(map[string]json.RawMessage)
 	if len(modulesToExport) == 0 {
 		for _, moduleName := range m.OrderExportGenesis {
-			if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
+			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
 				genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
 			}
 		}
@@ -405,7 +403,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	}
 
 	for _, moduleName := range modulesToExport {
-		if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
+		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
 			genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
 		}
 	}
@@ -536,7 +534,7 @@ func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM Version
 			}
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("adding a new module: %s", moduleName))
-			if module, ok := m.Modules[moduleName].(LegacyGenesis); ok {
+			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
 				moduleValUpdates := module.InitGenesis(ctx, c.cdc, module.DefaultGenesis(c.cdc))
 				// The module manager assumes only one module will update the
 				// validator set, and it can't be a new module.

@@ -25,7 +25,7 @@ func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryServ
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
 		} else {
-			if mod, ok := mod.(module.LegacyRegisterServices); ok {
+			if mod, ok := mod.(module.HasRegisterSerices); ok {
 				// try to auto-discover options based on the last msg and query
 				// services registered for the module
 				cfg := &autocliConfigurator{}

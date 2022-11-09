@@ -18,24 +18,13 @@ is typically found in `RegisterAPIRoutes`.
 
 ### AppModule Interface
 
-The `AppModule` interface is being refactored into `cosmossdk.io/core` and is now fully composed of extension interfaces
-based off of the `cosmossdk.io/core/appmodule.AppModule` tag interface. All `AppModule` implementations must now implement
-this tag interface which consists of the following code:
+Support for the `AppModule` `Querier`, `Route` and `LegacyQuerier` methods has been entirely removed from the `AppModule`
+interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously
+known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
 
-```go
-// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
-func (AppModule) IsOnePerModuleType() {}
-
-// IsAppModule implements the appmodule.AppModule interface.
-func (AppModule) IsAppModule() {}
-```
-
-Support for the `AppModule` `Querier`, `Route` and `LegacyQuerier` methods has been entirely removed.
-This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as
-the LCD, and the `sdk.Msg#Route` method won't be used anymore.
-
-Most other existing `AppModule` methods are supported as is, although new stable extension interfaces are being added to
-`cosmossdk.io/core`.
+Most other existing `AppModule` methods have been moved to extension interfaces in preparation for the migration
+to the `cosmossdk.io/core/appmodule` API in the next release. Most `AppModule` implementations should not be broken
+by this change.
 
 ### SimApp
 

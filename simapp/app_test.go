@@ -86,7 +86,7 @@ func TestRunMigrations(t *testing.T) {
 			continue
 		}
 
-		if mod, ok := mod.(module.LegacyRegisterServices); ok {
+		if mod, ok := mod.(module.HasRegisterSerices); ok {
 			mod.RegisterServices(configurator)
 		}
 	}

@@ -36,9 +36,8 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree    Tree
-	logger  types.Logger
-	metrics metrics.StoreMetrics
+	tree   Tree
+	logger log.Logger
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
@@ -89,9 +88,8 @@ func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKe
 	}
 
 	return &Store{
-		tree:    tree,
-		logger:  logger,
-		metrics: metrics,
+		tree:   tree,
+		logger: logger,
 	}, nil
 }
 

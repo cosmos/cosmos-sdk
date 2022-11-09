@@ -252,24 +252,6 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 
-func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
-	if req.TxBytes == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
-	}
-
-	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
-	if err != nil {
-		return nil, err
-	}
-	txWrapper, ok := txb.(*wrapper)
-	if ok {
-		return &txtypes.TxDecodeResponse{
-			Tx: txWrapper.tx,
-		}, nil
-	}
-	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
-}
-
 func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
@@ -291,6 +273,24 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 	return &txtypes.TxEncodeResponse{
 		TxBytes: encodedBytes,
 	}, nil
+}
+
+func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req.TxBytes == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	if err != nil {
+		return nil, err
+	}
+	txWrapper, ok := txb.(*wrapper)
+	if ok {
+		return &txtypes.TxDecodeResponse{
+			Tx: txWrapper.tx,
+		}, nil
+	}
+	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

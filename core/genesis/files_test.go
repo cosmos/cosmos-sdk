@@ -109,7 +109,7 @@ func TestFileGenesisSourceOpenReaderWithInvalidFile(t *testing.T) {
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
 	_, err = gs.OpenReader(field)
-	require.ErrorContains(t, err, "fail to open reader")
+	require.ErrorContains(t, err, "no such file or directory")
 }
 
 func TestFileGenesisSourceReadRawJSON(t *testing.T) {
@@ -175,10 +175,8 @@ func TestFileGenesisSourceReadRawJSONWithEmptyModuleName(t *testing.T) {
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
 
-	rj, err := gs.ReadRawJSON()
-	require.NoError(t, err)
-
-	require.Equal(t, str, (string)(rj))
+	_, err = gs.ReadRawJSON()
+	require.ErrorContains(t, err, "failed to write RawJSON: empty module name")
 }
 
 func TestFileGenesisSourceReadMessageNoOp(t *testing.T) {
@@ -279,6 +277,17 @@ func TestFileGenesisTargetWriteMessageNoOp(t *testing.T) {
 	gs := NewFileGenesisTarget("", "")
 	err := gs.WriteMessage(pm)
 	require.Error(t, err, "unsupported op")
+}
+
+func TestFileGenesisTargetWriteRawJSONEmptyModuleName(t *testing.T) {
+	tmpdir := t.TempDir()
+	moduleName := ""
+
+	gt := NewFileGenesisTarget(tmpdir, moduleName)
+
+	str := `{"genesis": "write test"}`
+	err := gt.WriteRawJSON([]byte(str))
+	require.ErrorContains(t, err, "failed to write RawJSON: empty module name")
 }
 
 func TestFileGenesisTargetWriteRawJSON(t *testing.T) {

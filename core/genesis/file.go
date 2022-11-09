@@ -25,6 +25,14 @@ const (
 	dirCreateMode = fs.FileMode(0o700)
 )
 
+type readCloserWrapper struct {
+	io.Reader
+}
+
+func (r readCloserWrapper) Close() error {
+	return nil
+}
+
 // NewFileGenesisSource returns a new GenesisSource for the provided
 // source directory and the provided module name where it is assumed
 // that the encoded json data of file.
@@ -50,21 +58,14 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 
 	// if cannot find it, try reading from <sourceDir>/<module>.json
 	rawBz, err := f.ReadRawJSON()
-
-	fName = fmt.Sprintf("%s.json", f.moduleName)
-	fp, err = os.Open(filepath.Clean(filepath.Join(f.sourceDir, fName)))
-	if err == nil {
-		return fp, nil
+	if err != nil {
+		return nil, err
 	}
 
-	// else try reading <field> field from <sourceDir>/genesis.json
-	fPath = filepath.Join(f.sourceDir, "genesis.json")
-	fp, err = os.Open(filepath.Clean(fPath))
-	if err == nil {
-		return fp, nil
-	}
+	// read <field> from the raw JSON data
 
-	return nil, fmt.Errorf("fail to open reader from %s: %v", fPath, err)
+	// wrap raw field dara to reader
+	return readCloserWrapper{bytes.NewReader(rawBz)}, nil
 }
 
 // ReadMessage is a unsupported op
@@ -210,7 +211,7 @@ func (f *FileGenesisTarget) WriteRawJSON(rawBz json.RawMessage) (rerr error) {
 	}
 
 	if len(f.moduleName) == 0 {
-		f.moduleName = "genesis"
+		return fmt.Errorf("failed to write RawJSON: empty module name")
 	}
 
 	fName := fmt.Sprintf("%s.json", f.moduleName)

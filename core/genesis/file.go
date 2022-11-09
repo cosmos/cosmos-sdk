@@ -17,6 +17,7 @@ import (
 type FileGenesisSource struct {
 	sourceDir  string
 	moduleName string
+    moduleRootJson json.RawJSON // the RawJSON from the genesis.json app_state.<module> that got passed into InitCHain
 }
 
 const (

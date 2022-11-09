@@ -67,8 +67,12 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 }
 
 // ReadMessage is a unsupported op
-func (f *FileGenesisSource) ReadMessage(proto.Message) error {
-	return errors.New("unsupported op")
+func (f *FileGenesisSource) ReadMessage(msg proto.Message) error {
+   bz, err := f.ReadRawJSON()
+   if err != nil {
+     return err
+   }
+   return proto.Unmarshal(bz, msg)
 }
 
 // ReadRawJSON returns a json.RawMessage read from the source file given by the

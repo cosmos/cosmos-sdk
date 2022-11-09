@@ -3,8 +3,7 @@ package cli_test
 import (
 	"fmt"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -35,7 +34,7 @@ func (s *CLITestSuite) TestQueryClass() {
 			cmd := cli.GetCmdQueryClass()
 			var args []string
 			args = append(args, tc.args.ClassID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 
 			if tc.expectErr {
@@ -65,7 +64,7 @@ func (s *CLITestSuite) TestQueryClasses() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryClasses()
 			var args []string
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
@@ -107,7 +106,7 @@ func (s *CLITestSuite) TestQueryNFT() {
 			var args []string
 			args = append(args, tc.args.ClassID)
 			args = append(args, tc.args.ID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
@@ -160,7 +159,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 			var args []string
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, tc.args.ClassID))
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, tc.args.Owner))
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
@@ -203,7 +202,7 @@ func (s *CLITestSuite) TestQueryOwner() {
 			var args []string
 			args = append(args, tc.args.ClassID)
 			args = append(args, tc.args.ID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
@@ -248,7 +247,7 @@ func (s *CLITestSuite) TestQueryBalance() {
 			var args []string
 			args = append(args, tc.args.Owner)
 			args = append(args, tc.args.ClassID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
@@ -287,7 +286,7 @@ func (s *CLITestSuite) TestQuerySupply() {
 			cmd := cli.GetCmdQuerySupply()
 			var args []string
 			args = append(args, tc.args.ClassID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {

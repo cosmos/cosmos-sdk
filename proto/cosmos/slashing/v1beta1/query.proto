@@ -60,6 +60,7 @@ message QuerySigningInfosRequest {
 // method
 message QuerySigningInfosResponse {
   // info is the signing info of all validators
-  repeated cosmos.slashing.v1beta1.ValidatorSigningInfo info       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  cosmos.base.query.v1beta1.PageResponse                pagination = 2;
+  repeated cosmos.slashing.v1beta1.ValidatorSigningInfo info = 1
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

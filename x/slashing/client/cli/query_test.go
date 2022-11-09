@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -89,7 +88,7 @@ func (s *CLITestSuite) TestGetCmdQuerySigningInfo() {
 			"valid address (json output)",
 			[]string{
 				pubKeyStr,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -98,7 +97,7 @@ func (s *CLITestSuite) TestGetCmdQuerySigningInfo() {
 			"valid address (text output)",
 			[]string{
 				pubKeyStr,
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -129,11 +128,11 @@ func (s *CLITestSuite) TestGetCmdQueryParams() {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 		},
 	}
 

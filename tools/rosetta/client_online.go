@@ -537,17 +537,11 @@ func (c *Client) blockTxs(ctx context.Context, height *int64) (crgtypes.BlockTra
 
 func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int64, err error) {
 	if height != nil && *height == -1 {
-		genesisChunk, err := c.tmRPC.GenesisChunked(ctx, 0)
+		status, err := c.tmRPC.Status(ctx)
 		if err != nil {
 			return nil, err
 		}
-
-		heightNum, err := extractInitialHeightFromGenesisChunk(genesisChunk.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		realHeight = &heightNum
+		realHeight = &status.SyncInfo.EarliestBlockHeight
 	} else {
 		realHeight = height
 	}

@@ -26,6 +26,11 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		return nil, errors.ToRosetta(err)
 	}
 
+	var oldestBlockHeight int64 = -1
+	oldestBlockIdentifier, err := on.client.BlockByHeight(ctx, &oldestBlockHeight)
+	if err != nil {
+		return nil, errors.ToRosetta(err)
+	}
 	peers, err := on.client.Peers(ctx)
 	if err != nil {
 		return nil, errors.ToRosetta(err)
@@ -35,7 +40,7 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		CurrentBlockIdentifier: block.Block,
 		CurrentBlockTimestamp:  block.MillisecondTimestamp,
 		GenesisBlockIdentifier: on.genesisBlockIdentifier,
-		OldestBlockIdentifier:  nil,
+		OldestBlockIdentifier:  oldestBlockIdentifier.Block,
 		SyncStatus:             syncStatus,
 		Peers:                  peers,
 	}, nil

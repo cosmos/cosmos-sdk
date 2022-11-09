@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
@@ -16,7 +15,6 @@ import (
 // genesisBlockFetchTimeout defines a timeout to fetch the genesis block
 const (
 	genesisBlockFetchTimeout = 15 * time.Second
-	genesisHashEnv           = "GENESIS_HASH"
 )
 
 // NewOnlineNetwork builds a single network adapter.
@@ -25,26 +23,18 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, 
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
-	var genesisHeight int64 = -1 // to use initial_height in genesis.json
-	block, err := client.BlockByHeight(ctx, &genesisHeight)
+	var genesisHeight int64 = -1 // to get earliest block height
+	genesisBlock, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
+		logger.Error(fmt.Sprintf("Could not get genesis block height. %v", err))
 		return OnlineNetwork{}, err
 	}
-
-	// Get genesis hash from ENV. It should be set by an external script since is not possible to get
-	// using tendermint API
-	genesisHash := os.Getenv(genesisHashEnv)
-	if genesisHash == "" {
-		logger.Error(fmt.Sprintf("Genesis hash env '%s' is not properly set!", genesisHashEnv))
-	}
-
-	block.Block.Hash = genesisHash
 
 	return OnlineNetwork{
 		client:                 client,
 		network:                network,
-		networkOptions:         networkOptionsFromClient(client, block.Block),
-		genesisBlockIdentifier: block.Block,
+		networkOptions:         networkOptionsFromClient(client, genesisBlock.Block),
+		genesisBlockIdentifier: genesisBlock.Block,
 	}, nil
 }
 

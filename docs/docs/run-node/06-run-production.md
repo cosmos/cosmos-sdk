@@ -97,7 +97,7 @@ sudo ufw allow 9090/tcp
 sudo ufw allow 1317/tcp
 ```
 
-6. Lastly enabling ufw
+6. Lastly, enable ufw
 
 ```bash
 sudo ufw enable
@@ -112,3 +112,66 @@ If the node that is being started is a validator there are multiple ways a valid
 File based signing is the simplest and default approach. This approach works by storing the consensus key, generated on initialization, to sign blocks. This approach is only as safe as your server setup as if the server is compromised so is your key.  This key is located in the `config/priv_val_key.json` directory generated on initialization.
 
 A second file exists that user must be aware of, the file is located in the data directory `data/priv_val_state.json`. This file protects your node from double signing. It keeps track of the consensus keys last sign height, round and latest signature. If the node crashes and needs to be recovered this file must be kept in order to ensure that the consensus key will not be used for signing a block that was previously signed. 
+
+#### Remote Signer
+
+A remote signer is a secondary server that is separate from the running node that signs blocks with the consensus key. This means that the consensus key does not live on the node itself. This increases security because your full node which is connected to the remote signer can be swapped without missing blocks. 
+
+The two most used remote signers are [tmkms](https://github.com/iqlusioninc/tmkms) from [Iqlusion](https://www.iqlusion.io) and [horcrux](https://github.com/strangelove-ventures/horcrux) from [Strangelove](https://strange.love).
+
+##### TMKMS 
+
+###### Dependencies
+
+Update server dependencies and install extras needed. 
+
+```sh
+sudo apt update -y && sudo apt install  build-essential curl jq snapd -y
+```
+
+Install Rust 
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Install Libusb
+
+```sh
+apt install libusb-1.0-0-dev
+```
+
+###### Setup
+
+There are two ways to install tmkms, from source or `cargo install`. In the examples we will cover downloading or building from source and using softsign. Softsign stands for software signing, but you could use a [yubihsm](https://www.yubico.com/products/hardware-security-module/) as your signing key if you wish. 
+
+Building from source:
+
+```bash
+cd $HOME
+git clone https://github.com/iqlusioninc/tmkms.git
+cd $HOME/tmkms
+cargo install tmkms --features=softsign
+tmkms init config
+tmkms softsign keygen ./config/secrets/secret_connection_key
+```
+
+Cargo install: 
+
+```bash
+cargo install tmkms --features=softsign
+tmkms init config
+tmkms softsign keygen ./config/secrets/secret_connection_key
+```
+
+:::note
+To use tmkms with a yubikey install the binary with `--features=yubihsm`.
+:::
+
+Next, we need to get the migrate the validator key from the full node to the new tmkms instance. 
+
+```bash
+scp user@123.456.32.123:~/.simd/config/priv_validator_key.json ~/tmkms/config/secrets
+```
+
+Then 

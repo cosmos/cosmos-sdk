@@ -7,9 +7,9 @@ import (
 
 // bank message types
 const (
-	TypeMsgSend      			= "send"
-	TypeMsgMultiSend 			= "multisend"
-	TypeMsgUpdateDenomMetadata 	= "updatedenommetada"
+	TypeMsgSend                = "send"
+	TypeMsgMultiSend           = "multisend"
+	TypeMsgUpdateDenomMetadata = "updatedenommetada"
 )
 
 var _ sdk.Msg = &MsgSend{}
@@ -186,16 +186,15 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 	return nil
 }
 
-
 var _ sdk.Msg = &MsgUpdateDenomMetadata{}
 
 // NewMsgUpdateDenomMetadata - construct a message to update denom metadata
 func NewMsgUpdateDenomMetadata(fromAddr, title string, description string, metadata *Metadata) *MsgUpdateDenomMetadata {
 	return &MsgUpdateDenomMetadata{
 		FromAddress: fromAddr,
-		Title: title,
+		Title:       title,
 		Description: description,
-		Metadata: metadata,
+		Metadata:    metadata,
 	}
 }
 

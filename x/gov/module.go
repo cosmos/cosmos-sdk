@@ -122,6 +122,12 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 	v1beta1.RegisterInterfaces(registry)
 }
 
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // AppModule implements an application module for the gov module.
 type AppModule struct {
 	AppModuleBasic

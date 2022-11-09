@@ -11,13 +11,14 @@ import (
 )
 
 // ConvertAmt converts given coin to `toDenom` base coin using metadata, and returns dec as string.
-func ConvertAmt(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata, toDenom string) (string, error) {
+func ConvertAmt(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata, toDenom string) (string, string, error) {
 	amt1 := coin.Amount
 	coinDenom := coin.Denom
 
 	// Return early if no display denom or display denom is the current coin denom.
-	if metadata == nil || metadata.Display == "" || coinDenom == toDenom {
-		return math.FormatDec(coin.Amount)
+	if metadata == nil || toDenom == "" || coinDenom == toDenom {
+		dec, err := math.FormatDec(amt1)
+		return dec, coinDenom, err
 	}
 
 	// Find exponents of both denoms.
@@ -36,12 +37,13 @@ func ConvertAmt(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata, toDenom 
 
 	// If we didn't find either exponent, then we return early.
 	if !foundCoinExp || !foundToDenomExp {
-		return math.FormatDec(amt1)
+		dec, err := math.FormatDec(amt1)
+		return dec, coinDenom, err
 	}
 
 	amount, err := math.LegacyNewDecFromStr(coin.Amount)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if coinExp > ToDenomExp {
@@ -50,7 +52,8 @@ func ConvertAmt(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata, toDenom 
 		amount = amount.Quo(math.LegacyNewDec(10).Power(uint64(ToDenomExp - coinExp)))
 	}
 
-	return math.FormatDec(amount.String())
+	amt, err := math.FormatDec(amount.String())
+	return amt, toDenom, err
 }
 
 // formatCoin formats a sdk.Coin into a value-rendered string, using the
@@ -62,10 +65,10 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 		display = metadata.Display
 	}
 
-	vr, err := ConvertAmt(coin, metadata, display)
+	vr, denom, err := ConvertAmt(coin, metadata, display)
 
 	// vr, err := math.FormatDec(dispAmount.String())
-	return vr + " " + display, err
+	return vr + " " + denom, err
 }
 
 // formatCoins formats Coins into a value-rendered string, which uses

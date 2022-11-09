@@ -138,7 +138,7 @@ func parseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta
 
 func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
 	coinArr := strings.Split(coinStr, " ")
-	amt1 := coinArr[0]
+	amt1 := strings.Replace(coinArr[0], "'", "", -1)
 	coinDenom := coinArr[1]
 
 	var base = coinDenom
@@ -146,7 +146,7 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 		base = metadata.Base
 	}
 
-	vr, err := corecoins.ConvertAmt(
+	vr, denom, err := corecoins.ConvertAmt(
 		&basev1beta1.Coin{
 			Amount: amt1,
 			Denom:  coinDenom,
@@ -157,7 +157,7 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 	vr = strings.Replace(vr, "'", "", -1)
 
 	return &basev1beta1.Coin{
-		Denom:  base,
+		Denom:  denom,
 		Amount: vr,
 	}, err
 }

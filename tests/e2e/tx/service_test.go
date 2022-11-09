@@ -256,12 +256,13 @@ func (s IntegrationTestSuite) TestTxDecode_GRPC() {
 		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxDecode(context.Background(), tc.req)
-			fmt.Println("res: ", res)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
 			} else {
 				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetTx())
 			}
 		})
 	}
@@ -292,13 +293,9 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 
 			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode", val.APIAddress), "application/json", req)
 			s.Require().NoError(err)
-			fmt.Println("res: ", res)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
-				s.Require().NoError(err)
-				var result tx.TxDecodeResponse
-				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 			}
 		})

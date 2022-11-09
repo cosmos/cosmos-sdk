@@ -234,6 +234,72 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 	}
 }
 
+func (s IntegrationTestSuite) TestTxEncode_GRPC() {
+	txBuilder := s.mkTxBuilder()
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
+		{"valid request with tx bytes", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxEncode(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetTxBytes())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestTxEncode_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	// Convert the txBuilder to a tx.Tx.
+	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
+		{"valid request with tx bytes", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
 func (s IntegrationTestSuite) TestTxDecode_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()

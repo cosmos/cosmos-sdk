@@ -109,4 +109,6 @@ If the node that is being started is a validator there are multiple ways a valid
 
 #### File
 
-File based signing is the simplest and default approach. This approach works by storing the consensus key, generated on initialization, to sign blocks. This approach is only as safe as your server setup as if the server is compromised so is your key.  This key is located in the `config/priv_val_key.json` directory generated on initialization
+File based signing is the simplest and default approach. This approach works by storing the consensus key, generated on initialization, to sign blocks. This approach is only as safe as your server setup as if the server is compromised so is your key.  This key is located in the `config/priv_val_key.json` directory generated on initialization.
+
+A second file exists that user must be aware of, the file is located in the data directory `data/priv_val_state.json`. This file protects your node from double signing. It keeps track of the consensus keys last sign height, round and latest signature. If the node crashes and needs to be recovered this file must be kept in order to ensure that the consensus key will not be used for signing a block that was previously signed. 

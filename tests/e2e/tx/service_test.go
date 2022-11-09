@@ -946,8 +946,8 @@ type protoTxProvider interface {
 }
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
+// Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field and for testing the TxEncode endpoint.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {

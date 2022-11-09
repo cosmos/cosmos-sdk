@@ -10,6 +10,8 @@ import (
 	"cosmossdk.io/math"
 )
 
+const EmptyCoins = "empty coins"
+
 // ConvertAmt converts given coin to `toDenom` base coin using metadata, and returns dec as string.
 func ConvertAmt(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata, toDenom string) (string, string, error) {
 	amt1 := coin.Amount
@@ -79,6 +81,10 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (string, error) {
 	if len(coins) != len(metadata) {
 		return "", fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
+	}
+
+	if len(coins) == 0 {
+		return EmptyCoins, nil
 	}
 
 	formatted := make([]string, len(coins))

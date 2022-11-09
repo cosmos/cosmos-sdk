@@ -12,8 +12,6 @@ import (
 	corecoins "cosmossdk.io/core/coins"
 )
 
-const emptyCoins = "empty coins"
-
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
 func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
 	return coinsValueRenderer{q}
@@ -39,10 +37,6 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	// If it's a repeated Coin:
 	case protoreflect.List:
 		{
-			if protoCoins.Len() == 0 {
-				return []Screen{{Text: emptyCoins}}, nil
-			}
-
 			coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 			var err error
 			for i := 0; i < protoCoins.Len(); i++ {
@@ -88,7 +82,7 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	if screens[0].Text == emptyCoins {
+	if screens[0].Text == corecoins.EmptyCoins {
 		return protoreflect.ValueOfList(NewGenericList([]*basev1beta1.Coin{})), nil
 	}
 

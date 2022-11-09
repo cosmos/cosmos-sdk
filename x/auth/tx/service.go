@@ -248,10 +248,12 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	}, nil
 }
 
+// BroadcastTx implements the ServiceServer.BroadcastTx RPC method.
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
 }
 
+// TxEncode implements the ServiceServer.TxEncode RPC method.
 func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
@@ -275,6 +277,7 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 	}, nil
 }
 
+// TxDecode implements the ServiceServer.TxDecode RPC method.
 func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
 	if req.TxBytes == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")

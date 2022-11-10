@@ -315,9 +315,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
-	println("CONCURRENCY IS: ", config.GRPC.Concurrency)
 	if config.GRPC.Concurrency {
-		println("SETTING CONCURRENCY ON")
 		clientCtx = clientCtx.WithConcurrency(true)
 	}
 

@@ -434,7 +434,7 @@ func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
 }
 
-func HasOnlyDigits(s string) bool {
+func hasOnlyDigits(s string) bool {
 	if s == "" {
 		return false
 	}
@@ -462,7 +462,7 @@ func FormatInt(v string) (string, error) {
 	}
 
 	// Ensure that the string contains only digits at this point.
-	if !HasOnlyDigits(v) {
+	if !hasOnlyDigits(v) {
 		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
 	}
 

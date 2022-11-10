@@ -10,7 +10,10 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
+	"cosmossdk.io/math"
 )
+
+const emptyCoins = "empty coins"
 
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
 func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
@@ -37,6 +40,10 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	// If it's a repeated Coin:
 	case protoreflect.List:
 		{
+			if protoCoins.Len() == 0 {
+				return []Screen{{Text: emptyCoins}}, nil
+			}
+
 			coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 			var err error
 			for i := 0; i < protoCoins.Len(); i++ {
@@ -82,7 +89,7 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	if screens[0].Text == corecoins.EmptyCoins {
+	if screens[0].Text == emptyCoins {
 		return protoreflect.ValueOfList(NewGenericList([]*basev1beta1.Coin{})), nil
 	}
 
@@ -132,26 +139,57 @@ func parseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta
 
 func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
 	coinArr := strings.Split(coinStr, " ")
-	amt1 := strings.Replace(coinArr[0], "'", "", -1)
+	amt1 := coinArr[0]
 	coinDenom := coinArr[1]
 
-	var base = coinDenom
-	if metadata != nil {
-		base = metadata.Base
+	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
+		dec, err := parseDec(amt1)
+		return &basev1beta1.Coin{
+			Amount: dec,
+			Denom:  coinDenom,
+		}, err
+	}
+	baseDenom := metadata.Base
+
+	// Find exponents of both denoms.
+	foundCoinExp, foundBaseExp := false, false
+	var coinExp, baseExp uint32
+	for _, unit := range metadata.DenomUnits {
+		if coinDenom == unit.Denom {
+			coinExp = unit.Exponent
+			foundCoinExp = true
+		}
+		if baseDenom == unit.Denom {
+			baseExp = unit.Exponent
+			foundBaseExp = true
+		}
 	}
 
-	vr, denom, err := corecoins.ConvertAmt(
-		&basev1beta1.Coin{
-			Amount: amt1,
-			Denom:  coinDenom,
-		}, metadata, base,
-	)
+	// If we didn't find either exponent, then we return early.
+	if !foundCoinExp || !foundBaseExp {
+		amt, err := parseDec(amt1)
+		return &basev1beta1.Coin{
+			Amount: amt,
+			Denom:  baseDenom,
+		}, err
+	}
 
-	// vr value contains 1000 separators, need to be removed.
-	vr = strings.Replace(vr, "'", "", -1)
+	// remove 1000 separators, (ex: 1'000'000 -> 1000000)
+	amt1 = strings.Replace(amt1, "'", "", -1)
+	amt, err := math.LegacyNewDecFromStr(amt1)
+	if err != nil {
+		return &basev1beta1.Coin{}, err
+	}
 
+	if coinExp > baseExp {
+		amt = amt.Mul(math.LegacyNewDec(10).Power(uint64(coinExp - baseExp)))
+	} else {
+		amt = amt.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
+	}
+
+	amtStr, err := parseDec(amt.String())
 	return &basev1beta1.Coin{
-		Denom:  denom,
-		Amount: vr,
+		Amount: amtStr,
+		Denom:  baseDenom,
 	}, err
 }

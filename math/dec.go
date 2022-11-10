@@ -920,7 +920,7 @@ func FormatDec(v string) (string, error) {
 
 	// Ensure that the decimal part has only digits.
 	// https://github.com/cosmos/cosmos-sdk/issues/12811
-	if !HasOnlyDigits(decPart) {
+	if !hasOnlyDigits(decPart) {
 		return "", fmt.Errorf("non-digits detected after decimal point in: %q", decPart)
 	}
 

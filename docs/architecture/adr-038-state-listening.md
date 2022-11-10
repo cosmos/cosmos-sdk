@@ -4,9 +4,6 @@
 
 * 11/23/2020: Initial draft
 * 10/06/2022: Introduce plugin system based on hashicorp/go-plugin
-* 10/30/2022: Updated ADR based on review feedback, move listening to `CommitMultiStore` and add a `MemoryListener` [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516)
-* 11/01/2022: Add gRPC client, server and plugin implementation examples
-* 11/02/2022: Update language on `RegisterStreamingPlugin` function
 
 ## Status
 

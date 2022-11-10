@@ -30,13 +30,11 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 
 	var accId uint64
 	switch {
-	//nolint:gosec
 	case req.AccountId > 0 && req.Id > 0 && req.AccountId != uint64(req.Id):
 		return nil, status.Errorf(codes.InvalidArgument, "different values passed for id (%d) & account-id (%d)", req.Id, req.AccountId)
 	case req.AccountId > 0:
 		accId = req.AccountId
 	case req.Id > 0:
-		//nolint:gosec
 		accId = uint64(req.Id)
 	}
 

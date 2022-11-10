@@ -59,6 +59,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [13789](https://github.com/cosmos/cosmos-sdk/pull/13789) Add tx `encode` and `decode` endpoints to tx service.
+  > Note: This endpoint will only encode proto messages, Amino encoding is not supported.
 * [#13619](https://github.com/cosmos/cosmos-sdk/pull/13619) Add new function called LogDeferred to report errors in defers. Use the function in x/bank files.
 * (tools) [#13603](https://github.com/cosmos/cosmos-sdk/pull/13603) Rename cosmovisor package name to `cosmossdk.io/tools/cosmovisor`. The new tool directory contains Cosmos SDK tools.
 * (deps) [#13397](https://github.com/cosmos/cosmos-sdk/pull/13397) Bump Go version minimum requirement to `1.19`.

@@ -259,17 +259,9 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
 
-	txb, err := s.clientCtx.Codec.Marshal(req.Tx)
-	if err != nil {
-		return nil, err
-	}
+	txBuilder := &wrapper{tx: req.Tx}
 
-	decodedBytes, err := s.clientCtx.TxConfig.TxDecoder()(txb)
-	if err != nil {
-		return nil, err
-	}
-
-	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(decodedBytes)
+	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
 	if err != nil {
 		return nil, err
 	}

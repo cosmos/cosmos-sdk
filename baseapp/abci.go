@@ -335,7 +335,7 @@ func (app *BaseApp) PrepareProposalOption1(req abci.RequestPrepareProposal) abci
 }
 
 // Option2:
-// * Introduce `Validate` func on the app-side mempool that returns error if the aggregated txs are valid.
+// * Introduce `Validate` func on the app-side mempool that returns error if the aggregated txs are not valid.
 func (app *BaseApp) PrepareProposalOption2(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 	var (
 		txs       []sdk.Tx // TODO: probably better perf wise to init w `make` if we can return the expected size in `Select`

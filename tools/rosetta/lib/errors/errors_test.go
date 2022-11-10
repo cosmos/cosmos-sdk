@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	tmtypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
 func TestRegisterError(t *testing.T) {
@@ -55,6 +56,10 @@ func TestToRosetta(t *testing.T) {
 	assert.NotNil(t, ToRosetta(error))
 	// wrong type
 	assert.NotNil(t, ToRosetta(&MyError{}))
+
+	tmErr := &tmtypes.RPCError{}
+	// RpcError case
+	assert.NotNil(t, ToRosetta(tmErr))
 }
 
 type MyError struct{}

@@ -5,7 +5,6 @@ package errors
 
 import (
 	"fmt"
-	"reflect"
 
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -69,17 +68,16 @@ func WrapError(err *Error, msg string) *Error {
 // ToRosetta attempts to converting an error into a rosetta
 // error, if the error cannot be converted it will be parsed as unknown
 func ToRosetta(err error) *types.Error {
-	if rv := reflect.ValueOf(err); !rv.IsValid() || rv.IsNil() {
+	// if it's null or not known
+	rosErr, ok := err.(*Error)
+	if rosErr == nil || !ok {
+		tmErr, ok := err.(*tmtypes.RPCError)
+		if tmErr != nil && ok {
+			return fromTendermintToRosettaError(tmErr).rosErr
+		}
 		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
 	}
-	switch err := err.(type) {
-	case *Error:
-		return err.rosErr
-	case *tmtypes.RPCError:
-		return fromTendermintToRosettaError(err).rosErr
-	default:
-		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
-	}
+	return rosErr.rosErr
 }
 
 // fromTendermintToRosettaError converts a tendermint jsonrpc error to rosetta error

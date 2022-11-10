@@ -56,11 +56,16 @@ func parseDec(v string) (string, error) {
 		return intPart, nil
 	}
 
-	if !hasOnlyDigits(parts[1]) {
+	decPart := strings.TrimRight(parts[1], "0")
+	if len(decPart) == 0 {
+		return intPart, nil
+	}
+
+	if !hasOnlyDigits(decPart) {
 		return "", fmt.Errorf("non-digits detected after decimal point in: %q", parts[1])
 	}
 
-	return intPart + "." + parts[1], nil
+	return intPart + "." + decPart, nil
 }
 
 func hasOnlyDigits(s string) bool {

@@ -187,13 +187,14 @@ func NewSimApp(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 	var (
-		app          = &SimApp{}
-		appBuilder   *runtime.AppBuilder
+		app        = &SimApp{}
+		appBuilder *runtime.AppBuilder
+		// Below we construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
+		// handlers.  These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+		// them.
 		nonceMempool = mempool.NewNonceMempool()
-		// construct an application specific mempool here
-		mempoolOpt = baseapp.SetMempool(nonceMempool)
-		// set an override for ABCI 1.0 Prepare and Process Proposal
-		prepareOpt = func(app *baseapp.BaseApp) {
+		mempoolOpt   = baseapp.SetMempool(nonceMempool)
+		prepareOpt   = func(app *baseapp.BaseApp) {
 			app.SetPrepareProposal(app.DefaultPrepareProposal())
 		}
 		processOpt = func(app *baseapp.BaseApp) {

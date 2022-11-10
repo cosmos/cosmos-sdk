@@ -13,7 +13,11 @@ type Mempool interface {
 
 	// Select returns an Iterator over the app-side mempool.  If txs are specified, then they shall be incorporated
 	// into the Iterator.  The Iterator must be closed by the caller.
-	Select(sdk.Context, [][]byte) Iterator
+	Select(sdk.Context, [][]byte, int64) Iterator
+
+	// Validate returns nil if the slice of txs specified are valid txs to reply in `ResponsePrepareProposal`.
+	// Otherwise, returns error.
+	Validate(sdk.Context, [][]byte, int64, []sdk.Tx) error
 
 	// CountTx returns the number of transactions currently in the mempool.
 	CountTx() int

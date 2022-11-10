@@ -23,11 +23,10 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, 
 	ctx, cancel := context.WithTimeout(context.Background(), genesisBlockFetchTimeout)
 	defer cancel()
 
-	var genesisHeight int64 = -1 // to get earliest block height
+	var genesisHeight int64 = 1 // to get genesis block height
 	genesisBlock, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Could not get genesis block height. %v", err))
-		return OnlineNetwork{}, err
 	}
 
 	return OnlineNetwork{
@@ -45,7 +44,7 @@ type OnlineNetwork struct {
 	network        *types.NetworkIdentifier      // identifies the network, it's static
 	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static
 
-	genesisBlockIdentifier *types.BlockIdentifier // identifies genesis block, it's static
+	genesisBlockIdentifier *types.BlockIdentifier // identifies genesis block
 }
 
 // networkOptionsFromClient builds network options given the client

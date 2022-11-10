@@ -3,11 +3,8 @@ package rosetta
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -546,21 +543,4 @@ func (c *Client) getHeight(ctx context.Context, height *int64) (realHeight *int6
 		realHeight = height
 	}
 	return
-}
-
-var initialHeightRE = regexp.MustCompile(`"initial_height":"(\d+)"`)
-
-func extractInitialHeightFromGenesisChunk(genesisChunk string) (int64, error) {
-	firstChunk, err := base64.StdEncoding.DecodeString(genesisChunk)
-	if err != nil {
-		return 0, err
-	}
-
-	matches := initialHeightRE.FindStringSubmatch(string(firstChunk))
-	if len(matches) != 2 {
-		return 0, errors.New("failed to fetch initial_height")
-	}
-
-	heightStr := matches[1]
-	return strconv.ParseInt(heightStr, 10, 64)
 }

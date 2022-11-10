@@ -26,11 +26,22 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		return nil, errors.ToRosetta(err)
 	}
 
+	// if genesis block could not be reached before
+	if on.genesisBlockIdentifier == nil {
+		var genesisBlockHeight int64 = 1
+		genesisBlockIdentifier, err := on.client.BlockByHeight(ctx, &genesisBlockHeight)
+		if err == nil {
+			// once genesis is queryable, updates it to avoid future calls
+			on.genesisBlockIdentifier = genesisBlockIdentifier.Block // once genesis is queryable, updates OnlineNetwork genesisBlockIdentifier
+		}
+	}
+
 	var oldestBlockHeight int64 = -1
 	oldestBlockIdentifier, err := on.client.BlockByHeight(ctx, &oldestBlockHeight)
 	if err != nil {
 		return nil, errors.ToRosetta(err)
 	}
+
 	peers, err := on.client.Peers(ctx)
 	if err != nil {
 		return nil, errors.ToRosetta(err)

@@ -63,7 +63,10 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply i
 		return err
 	}
 
+	println("ISALLOWED: ", isTendermintQuery, isSimulationRequest, grpcConcurrentEnabled)
+
 	if ctx.GRPCClient != nil && isGRPCAllowed {
+		println("GOING FOR GRPC YO")
 		md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(requestedHeight, 10))
 		context := metadata.NewOutgoingContext(grpcCtx, md)
 		// Case 2-1. Invoke grpc.

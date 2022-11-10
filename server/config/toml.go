@@ -179,6 +179,17 @@ enable = {{ .GRPC.Enable }}
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
 
+# The default value is math.MaxInt32.
+max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
+
+# The default value is math.MaxInt32.
+max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
+
+# Concurrency defines if node queries should be done in parallel.
+# This is experimental and has led to node failures, so enable with caution.
+# The default value is false.
+concurrency = {{ .GRPC.Concurrency }}
+
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
 ###############################################################################

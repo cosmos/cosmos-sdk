@@ -261,15 +261,25 @@ func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
 
 // SetMempool sets the mempool for the BaseApp and is required for the app to start up.
 func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
+	if app.sealed {
+		panic("SetMempool() on sealed BaseApp")
+	}
 	app.mempool = mempool
 }
 
 // SetProcessProposal sets the process proposal function for the BaseApp.
 func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
+	if app.sealed {
+		panic("SetProcessProposal() on sealed BaseApp")
+	}
 	app.processProposal = handler
 }
 
 // SetPrepareProposal sets the prepare proposal function for the BaseApp.
 func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
+	if app.sealed {
+		panic("SetPrepareProposal() on sealed BaseApp")
+	}
+
 	app.prepareProposal = handler
 }

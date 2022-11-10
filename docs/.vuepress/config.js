@@ -27,7 +27,7 @@ module.exports = {
     algolia: {
       id: "QLS2QSP47E",
       key: "067b84458bfa80c295e1d4f12c461911",
-      index: "cosmos_network"
+      index: "cosmos_network_vue"
     },
     versions: [
       {

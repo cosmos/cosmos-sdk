@@ -255,7 +255,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 	)
 
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
-	iterator := app.mempool.Select(ctx, req.Txs)
+	iterator := app.mempool.Select(ctx, req.Txs, req.MaxTxBytes)
 
 	for iterator != nil {
 		memTx := iterator.Tx()
@@ -271,10 +271,14 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 		// should be valid. But some mempool implementations may insert invalid txs, so we check again.
 		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 		if err != nil {
+			// This doesn't quite separate out the concerns between `PrepareProposal` and app-side mempool.
+			// App-side mempool should be completely controlled by the application itself, but removing
+			// tx here seems to indicate that the ABCI methods like `PrepareProposal` can affect the app-side mempool.
 			err := app.mempool.Remove(memTx)
 			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 				panic(err)
 			}
+			// This feels like "silently ignore tx returned by the app-mempool", which feels like swallowing an error.
 			iterator = iterator.Next()
 			continue
 		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
@@ -284,6 +288,93 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 		}
 
 		iterator = iterator.Next()
+	}
+
+	return abci.ResponsePrepareProposal{Txs: txsBytes}
+}
+
+// Option1:
+// * Assume that app-side mempool will return valid set of txs. If it doesn't return a valid set then, it's considered a bug, so panic.
+// * `PrepareProposal` should perform lightweight validations only.
+func (app *BaseApp) PrepareProposalOption1(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	var (
+		txsBytes  [][]byte
+		byteCount int64
+	)
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+
+	// `Select` doesn't necessarily have to return an iterator. It can be a slice.
+	iterator := app.mempool.Select(ctx, req.Txs, req.MaxTxBytes)
+
+	for iterator != nil {
+		memTx := iterator.Tx()
+
+		bz, err := app.txEncoder(memTx)
+		if err != nil {
+			panic(err)
+		}
+
+		txSize := int64(len(bz))
+
+		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+		if err != nil {
+			// Don't remove tx from app.mempool for the reason mentioned above.
+			panic(err)
+		}
+
+		byteCount += txSize
+
+		if byteCount > req.MaxTxBytes {
+			panic(fmt.Errorf("app-side mempool returned more bytes than max tx bytes (%d)", req.MaxTxBytes))
+		}
+		iterator = iterator.Next()
+	}
+
+	return abci.ResponsePrepareProposal{Txs: txsBytes}
+}
+
+// Option2:
+// * Introduce `Validate` func on the app-side mempool that returns error if the aggregated txs are valid.
+func (app *BaseApp) PrepareProposalOption2(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	var (
+		txs       []sdk.Tx // TODO: probably better perf wise to init w `make` if we can return the expected size in `Select`
+		txsBytes  [][]byte
+		byteCount int64
+	)
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+
+	// `Select` doesn't necessarily have to return an iterator. It can be a slice.
+	iterator := app.mempool.Select(ctx, req.Txs, req.MaxTxBytes)
+
+	for iterator != nil {
+		memTx := iterator.Tx()
+
+		bz, err := app.txEncoder(memTx)
+		if err != nil {
+			panic(err)
+		}
+
+		txSize := int64(len(bz))
+
+		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+		if err != nil { // skip tx.
+			iterator = iterator.Next()
+			continue
+		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+			txsBytes = append(txsBytes, bz)
+			txs = append(txs, memTx)
+		} else { // aggregated max bytes, skip the rest.
+			break
+		}
+
+		iterator = iterator.Next()
+	}
+
+	// After aggregating txs, ask app-side mempool if the txs are valid or not.
+	if err := app.mempool.Validate(ctx, req.Txs, req.MaxTxBytes, txs); err != nil {
+		panic(err)
 	}
 
 	return abci.ResponsePrepareProposal{Txs: txsBytes}

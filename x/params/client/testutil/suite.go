@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
 			"json output",
 			[]string{
 				"foo", "bar",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			`{"subspace":"foo","key":"bar","value":"\"1234\""}`,
 		},
@@ -123,7 +123,7 @@ func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
 			"text output",
 			[]string{
 				"foo", "bar",
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 			},
 			`key: bar
 subspace: foo

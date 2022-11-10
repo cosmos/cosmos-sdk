@@ -10,35 +10,28 @@ import (
 
 // Default constants
 const (
-	chainID         = ""
-	keyringBackend  = "os"
-	output          = "text"
-	node            = "tcp://localhost:26657"
-	broadcastMode   = "sync"
-	grpcConcurrency = false
+	chainID        = ""
+	keyringBackend = "os"
+	output         = "text"
+	node           = "tcp://localhost:26657"
+	broadcastMode  = "sync"
 )
 
 type ClientConfig struct {
-	ChainID         string `mapstructure:"chain-id" json:"chain-id"`
-	KeyringBackend  string `mapstructure:"keyring-backend" json:"keyring-backend"`
-	Output          string `mapstructure:"output" json:"output"`
-	Node            string `mapstructure:"node" json:"node"`
-	BroadcastMode   string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	GRPCConcurrency bool   `mapstructure:"grpc-concurrency" json:"grpc-concurrency"`
+	ChainID        string `mapstructure:"chain-id" json:"chain-id"`
+	KeyringBackend string `mapstructure:"keyring-backend" json:"keyring-backend"`
+	Output         string `mapstructure:"output" json:"output"`
+	Node           string `mapstructure:"node" json:"node"`
+	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
 }
 
 // defaultClientConfig returns the reference to ClientConfig with default values.
 func defaultClientConfig() *ClientConfig {
-	return &ClientConfig{chainID, keyringBackend, output, node,
-		broadcastMode, grpcConcurrency}
+	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
 }
 
 func (c *ClientConfig) SetChainID(chainID string) {
 	c.ChainID = chainID
-}
-
-func (c *ClientConfig) SetGRPCConcurrency(grpcConcurrency bool) {
-	c.GRPCConcurrency = grpcConcurrency
 }
 
 func (c *ClientConfig) SetKeyringBackend(keyringBackend string) {

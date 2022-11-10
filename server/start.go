@@ -252,7 +252,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	config, err := config.GetConfig(ctx.Viper)
+	config, err := serverconfig.GetConfig(ctx.Viper)
 	if err != nil {
 		return err
 	}
@@ -313,6 +313,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if a, ok := app.(types.ApplicationQueryService); ok {
 			a.RegisterNodeService(clientCtx)
 		}
+	}
+
+	if config.GRPC.Concurrency {
+		clientCtx = clientCtx.WithConcurrency(true)
 	}
 
 	var apiSrv *api.Server

@@ -177,6 +177,10 @@ func NewBaseApp(
 		app.SetProcessProposal(app.DefaultProcessProposal())
 	}
 
+	if app.prepareProposal == nil {
+		app.SetPrepareProposal(app.DefaultPrepareProposal())
+	}
+
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}

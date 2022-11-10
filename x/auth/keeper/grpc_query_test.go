@@ -183,6 +183,14 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 		{
+			"invalid: account-id, id are not same",
+			func() {
+				req = &types.QueryAccountAddressByIDRequest{AccountId: 1, Id: -1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
+		},
+		{
 			"account address not found",
 			func() {
 				req = &types.QueryAccountAddressByIDRequest{Id: math.MaxInt64}

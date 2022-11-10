@@ -25,7 +25,7 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	if req.Id < 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid account number")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid account number %d", req.Id)
 	}
 
 	var accId uint64

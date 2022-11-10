@@ -1,6 +1,14 @@
 FROM golang:1.19-alpine as build
 
-RUN apk add --no-cache tar git
+RUN apk add git tar gcc libc-dev --no-cache
+
+ARG ROSETTA_VERSION="v0.10.0"
+
+# build rosetta CLI
+WORKDIR /rosetta
+RUN git clone https://github.com/coinbase/rosetta-cli .
+RUN git checkout tags/$ROSETTA_VERSION
+RUN go build -o rosetta-cli ./main.go
 
 # prepare node data
 WORKDIR /node
@@ -17,6 +25,7 @@ RUN apk add gcc git libc-dev python3 --no-cache
 
 ENV PATH=$PATH:/bin
 
+COPY --from=build /rosetta/rosetta-cli /bin/rosetta-cli
 COPY --from=build /simd/simapp/simd/simd /bin/simd
 
 WORKDIR /rosetta

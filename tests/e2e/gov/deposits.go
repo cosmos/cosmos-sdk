@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -139,7 +139,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	proposalID := s.proposalIDs[2]
 
 	// query proposal
-	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{proposalID, fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	cmd := cli.GetCmdQueryProposal()
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
@@ -158,7 +158,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 }
 
 func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {
-	args := []string{proposalID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{proposalID, fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	var depositsRes *v1.QueryDepositsResponse
 	cmd := cli.GetCmdQueryDeposits()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -175,7 +175,7 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 }
 
 func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.Deposit {
-	args := []string{proposalID, val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+	args := []string{proposalID, val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	var depositRes *v1.Deposit
 	cmd := cli.GetCmdQueryDeposit()
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)

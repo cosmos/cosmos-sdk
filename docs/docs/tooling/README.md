@@ -8,3 +8,4 @@ This section provides documentation on various tooling used in development of a 
 
 * [Protocol Buffers](./00-protobuf.md)
 * [Cosmovisor](./01-cosmovisor.md)
+* [Depinject](./02-depinject.md)

@@ -2,6 +2,7 @@ package keys
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -140,7 +141,7 @@ func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer, output string) {
 		out, err = yaml.Marshal(&stringer)
 
 	case OutputFormatJSON:
-		out, err = KeysCdc.MarshalJSON(stringer)
+		out, err = json.Marshal(&stringer)
 	}
 
 	if err != nil {

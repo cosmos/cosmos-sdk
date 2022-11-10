@@ -14,7 +14,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,6 +27,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -187,8 +187,18 @@ func NewSimApp(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 	var (
-		app        = &SimApp{}
-		appBuilder *runtime.AppBuilder
+		app          = &SimApp{}
+		appBuilder   *runtime.AppBuilder
+		nonceMempool = mempool.NewNonceMempool()
+		// construct an application specific mempool here
+		mempoolOpt = baseapp.SetMempool(nonceMempool)
+		// set an override for ABCI 1.0 Prepare and Process Proposal
+		prepareOpt = func(app *baseapp.BaseApp) {
+			app.SetPrepareProposal(app.DefaultPrepareProposal())
+		}
+		processOpt = func(app *baseapp.BaseApp) {
+			app.SetProcessProposal(app.DefaultProcessProposal())
+		}
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -202,7 +212,6 @@ func NewSimApp(
 				//
 				// AUTH
 				//
-
 				// For providing a custom function required in auth to generate custom account types
 				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
 				//
@@ -251,6 +260,7 @@ func NewSimApp(
 		panic(err)
 	}
 
+	baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// configure state listening capabilities using AppOptions

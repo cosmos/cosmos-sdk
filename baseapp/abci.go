@@ -359,7 +359,7 @@ func (app *BaseApp) PrepareProposalOption2(req abci.RequestPrepareProposal) abci
 		txSize := int64(len(bz))
 
 		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-		if err != nil { // skip tx.
+		if err != nil { // tolearte skipping tx, but we ask the app mempool later for confirmation.
 			iterator = iterator.Next()
 			continue
 		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {

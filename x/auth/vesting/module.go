@@ -80,14 +80,21 @@ type AppModule struct {
 	accountKeeper keeper.AccountKeeper
 	bankKeeper    types.BankKeeper
 	distrKeeper   types.DistrKeeper
+	stakingKeeper types.StakingKeeper
 }
 
-func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper) AppModule {
+func NewAppModule(
+	ak keeper.AccountKeeper,
+	bk types.BankKeeper,
+	dk types.DistrKeeper,
+	sk types.StakingKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		distrKeeper:    dk,
+		stakingKeeper:  sk,
 	}
 }
 
@@ -96,7 +103,7 @@ func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the module's message router and handler.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.bankKeeper, am.distrKeeper))
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.accountKeeper, am.bankKeeper, am.distrKeeper, am.stakingKeeper))
 }
 
 // QuerierRoute returns an empty string as the module contains no query
@@ -105,7 +112,15 @@ func (AppModule) QuerierRoute() string { return "" }
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), NewMsgServerImpl(am.accountKeeper, am.bankKeeper, am.distrKeeper))
+	types.RegisterMsgServer(
+		cfg.MsgServer(),
+		NewMsgServerImpl(
+			am.accountKeeper,
+			am.bankKeeper,
+			am.distrKeeper,
+			am.stakingKeeper,
+		),
+	)
 }
 
 // LegacyQuerierHandler performs a no-op.

@@ -19,12 +19,18 @@ type msgServer struct {
 	keeper.AccountKeeper
 	types.BankKeeper
 	types.DistrKeeper
+	types.StakingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the vesting MsgServer interface,
 // wrapping the corresponding AccountKeeper and BankKeeper.
-func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper) types.MsgServer {
-	return &msgServer{AccountKeeper: k, BankKeeper: bk, DistrKeeper: dk}
+func NewMsgServerImpl(
+	k keeper.AccountKeeper,
+	bk types.BankKeeper,
+	dk types.DistrKeeper,
+	sk types.StakingKeeper,
+) types.MsgServer {
+	return &msgServer{AccountKeeper: k, BankKeeper: bk, DistrKeeper: dk, StakingKeeper: sk}
 }
 
 var _ types.MsgServer = msgServer{}
@@ -166,6 +172,7 @@ func (s msgServer) DonateAllVestingTokens(goCtx context.Context, msg *types.MsgD
 
 	ak := s.AccountKeeper
 	dk := s.DistrKeeper
+	sk := s.StakingKeeper
 
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
@@ -177,13 +184,16 @@ func (s msgServer) DonateAllVestingTokens(goCtx context.Context, msg *types.MsgD
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s not exists", msg.FromAddress)
 	}
 
+	// check whether an account has any type of staking entry
+	if len(sk.GetDelegatorDelegations(ctx, acc.GetAddress(), 1)) != 0 ||
+		len(sk.GetUnbondingDelegations(ctx, acc.GetAddress(), 1)) != 0 ||
+		len(sk.GetRedelegations(ctx, acc.GetAddress(), 1)) != 0 {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s has staking entry", msg.FromAddress)
+	}
+
 	vestingAcc, ok := acc.(exported.VestingAccount)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s is not vesting account", msg.FromAddress)
-	}
-
-	if !vestingAcc.GetDelegatedVesting().IsZero() {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "account %s has delegated vesting tokens", msg.FromAddress)
 	}
 
 	vestingCoins := vestingAcc.GetVestingCoins(ctx.BlockTime())

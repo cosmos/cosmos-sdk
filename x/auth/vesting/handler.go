@@ -8,8 +8,13 @@ import (
 )
 
 // NewHandler returns a handler for x/auth message types.
-func NewHandler(ak keeper.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper) sdk.Handler {
-	msgServer := NewMsgServerImpl(ak, bk, dk)
+func NewHandler(
+	ak keeper.AccountKeeper,
+	bk types.BankKeeper,
+	dk types.DistrKeeper,
+	sk types.StakingKeeper,
+) sdk.Handler {
+	msgServer := NewMsgServerImpl(ak, bk, dk, sk)
 
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())

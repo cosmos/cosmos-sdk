@@ -192,6 +192,8 @@ message GetBlockWithTxsResponse {
 
 // TxDecodeRequest is the request type for the Service.TxDecode
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxDecodeRequest {
   // tx_bytes is the raw transaction.
   bytes tx_bytes = 1;
@@ -199,6 +201,8 @@ message TxDecodeRequest {
 
 // TxDecodeResponse is the response type for the
 // Service.TxDecode method.
+//
+// Since: cosmos-sdk 0.47
 message TxDecodeResponse {
   // tx is the decoded transaction.
   cosmos.tx.v1beta1.Tx tx = 1;
@@ -206,6 +210,8 @@ message TxDecodeResponse {
 
 // TxEncodeResponse is the request type for the Service.TxEncode
 // RPC method.
+//
+// Since: cosmos-sdk 0.47
 message TxEncodeRequest {
   // tx is the transaction to encode.
   cosmos.tx.v1beta1.Tx tx = 1;
@@ -213,6 +219,8 @@ message TxEncodeRequest {
 
 // TxEncodeResponse is the response type for the
 // Service.TxEncode method.
+//
+// Since: cosmos-sdk 0.47
 message TxEncodeResponse {
   // tx_bytes is the encoded transaction bytes.
   bytes tx_bytes = 1;

@@ -837,6 +837,8 @@ func (s IntegrationTestSuite) TestTxDecode_GRPC() {
 	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
 	testCases := []struct {
 		name      string
 		req       *tx.TxDecodeRequest
@@ -845,6 +847,7 @@ func (s IntegrationTestSuite) TestTxDecode_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.TxDecodeRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeRequest{TxBytes: invalidTxBytes}, true, "tx parse error"},
 		{"valid request with tx bytes", &tx.TxDecodeRequest{TxBytes: encodedTx}, false, ""},
 	}
 
@@ -871,6 +874,8 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
+	invalidTxBytes := append(txBytes, byte(0o00))
+
 	testCases := []struct {
 		name      string
 		req       *tx.TxDecodeRequest
@@ -878,6 +883,7 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 		expErrMsg string
 	}{
 		{"empty request", &tx.TxDecodeRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeRequest{TxBytes: invalidTxBytes}, true, "tx parse error"},
 		{"valid request with tx_bytes", &tx.TxDecodeRequest{TxBytes: txBytes}, false, ""},
 	}
 

@@ -2,8 +2,6 @@ package types
 
 import (
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // InitChainer initializes application state at genesis
@@ -28,4 +26,4 @@ type PeerFilter func(info string) abci.ResponseQuery
 type ProcessProposalHandler func(Context, abci.RequestProcessProposal) abci.ResponseProcessProposal
 
 // PrepareProposalHandler defines a function type alias for preparing a proposal
-type PrepareProposalHandler func(Context, mempool.Mempool, abci.RequestPrepareProposal) abci.ResponsePrepareProposal
+type PrepareProposalHandler func(Context, abci.RequestPrepareProposal) abci.ResponsePrepareProposal

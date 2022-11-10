@@ -860,13 +860,13 @@ func createEvents(msg sdk.Msg) sdk.Events {
 // that the same validation logic is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
 func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, pool mempool.Mempool, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		var (
 			txsBytes  [][]byte
 			byteCount int64
 		)
 
-		iterator := pool.Select(ctx, req.Txs)
+		iterator := app.mempool.Select(ctx, req.Txs)
 		for iterator != nil {
 			memTx := iterator.Tx()
 
@@ -881,7 +881,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 			// should be valid. But some mempool implementations may insert invalid txs, so we check again.
 			_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 			if err != nil {
-				err := pool.Remove(memTx)
+				err := app.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)
 				}

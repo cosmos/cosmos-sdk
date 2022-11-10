@@ -252,7 +252,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
-	return app.prepareProposal(ctx, app.mempool, req)
+	return app.prepareProposal(ctx, req)
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a

@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -11,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -19,7 +21,6 @@ import (
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
-	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -43,10 +44,10 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simtestutil.DefaultWeightMsgSetWithdrawAddress, types.ModuleName, types.TypeMsgSetWithdrawAddress},
-		{simtestutil.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
-		{simtestutil.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
-		{simtestutil.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
+		{simulation.DefaultWeightMsgSetWithdrawAddress, types.ModuleName, types.TypeMsgSetWithdrawAddress},
+		{simulation.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
+		{simulation.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
+		{simulation.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
 	}
 
 	for i, w := range weightesOps {
@@ -102,12 +103,12 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	validator0 := suite.getTestingValidator0(accounts)
 
 	// setup delegation
-	delTokens := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, 2)
+	delTokens := sdk.TokensFromConsensusPower(2, sdk.DefaultPowerReduction)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
-	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
 
@@ -158,8 +159,8 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 	// set outstanding rewards
 	valCommission := sdk.NewDecCoins(
-		sdk.NewDecCoinFromDec(tokenName, sdk.NewDec(5).Quo(sdk.NewDec(2))),
-		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(1))),
+		sdk.NewDecCoinFromDec(tokenName, math.LegacyNewDec(5).Quo(math.LegacyNewDec(2))),
+		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(1))),
 	)
 
 	suite.distrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
@@ -234,18 +235,30 @@ type SimTestSuite struct {
 }
 
 func (suite *SimTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&suite.cdc,
-		&suite.txConfig,
-		&suite.stakingKeeper,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.distrKeeper,
+	var (
+		appBuilder *runtime.AppBuilder
+		err        error
 	)
+	suite.app, err = simtestutil.Setup(configurator.NewAppConfig(
+		configurator.AuthModule(),
+		configurator.ParamsModule(),
+		configurator.BankModule(),
+		configurator.StakingModule(),
+		configurator.TxModule(),
+		configurator.ConsensusModule(),
+		configurator.DistributionModule(),
+	), &suite.accountKeeper,
+		&suite.bankKeeper,
+		&suite.cdc,
+		&appBuilder,
+		&suite.stakingKeeper,
+		&suite.distrKeeper,
+		&suite.txConfig,
+	)
+
 	suite.NoError(err)
 
-	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	genesisVals := suite.stakingKeeper.GetAllValidators(suite.ctx)
 	suite.Require().Len(genesisVals, 1)
@@ -269,7 +282,7 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 }
 
 func (suite *SimTestSuite) getTestingValidator0(accounts []simtypes.Account) stakingtypes.Validator {
-	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
+	commission0 := stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyOneDec(), math.LegacyOneDec())
 	return suite.getTestingValidator(accounts, commission0, 0)
 }
 
@@ -283,7 +296,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 	require.NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(err)
-	validator.DelegatorShares = sdk.NewDec(100)
+	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = sdk.NewInt(1000000)
 
 	suite.stakingKeeper.SetValidator(suite.ctx, validator)
@@ -292,7 +305,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 }
 
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
-	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}
+	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
 	suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
 	// setup current revards

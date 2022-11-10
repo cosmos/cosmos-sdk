@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,15 +30,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// ConsensusVersion defines the current x/params module consensus version.
+// ConsensusVersion defines the current x/crisis module consensus version.
 const ConsensusVersion = 2
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.EndBlockAppModule = AppModule{}
+	_ module.AppModuleBasic    = AppModuleBasic{}
 )
 
 // Module init related flags
@@ -133,17 +133,6 @@ func (AppModule) Name() string {
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the crisis module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns no querier route.
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns no sdk.Querier.
-func (AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
@@ -179,9 +168,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
 // EndBlock returns the end blocker for the crisis module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
@@ -189,43 +175,55 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// New App Wiring Setup
+// App Wiring Setup
 
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-type crisisInputs struct {
+type CrisisInputs struct {
 	depinject.In
 
-	Config     *modulev1.Module
-	Key        *store.KVStoreKey
-	Cdc        codec.Codec
-	AppOpts    servertypes.AppOptions `optional:"true"`
-	Subspace   paramstypes.Subspace
+	Config  *modulev1.Module
+	Key     *store.KVStoreKey
+	Cdc     codec.Codec
+	AppOpts servertypes.AppOptions `optional:"true"`
+
 	BankKeeper types.SupplyKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
 }
 
-type crisisOutputs struct {
+type CrisisOutputs struct {
 	depinject.Out
 
 	Module       runtime.AppModuleWrapper
 	CrisisKeeper *keeper.Keeper
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-func provideModule(in crisisInputs) crisisOutputs {
-	invalidCheckPeriod := cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
+func ProvideModule(in CrisisInputs) CrisisOutputs {
+	var invalidCheckPeriod uint
+	if in.AppOpts != nil {
+		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
+	}
 
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
@@ -234,12 +232,15 @@ func provideModule(in crisisInputs) crisisOutputs {
 		invalidCheckPeriod,
 		in.BankKeeper,
 		feeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 
-	skipGenesisInvariants := cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
+	var skipGenesisInvariants bool
+	if in.AppOpts != nil {
+		skipGenesisInvariants = cast.ToBool(in.AppOpts.Get(FlagSkipGenesisInvariants))
+	}
 
-	m := NewAppModule(k, skipGenesisInvariants, in.Subspace)
+	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return crisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
+	return CrisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
 }

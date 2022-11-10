@@ -10,16 +10,12 @@ import (
 
 func TestImmutableTreePanics(t *testing.T) {
 	t.Parallel()
-	immTree := iavl.NewImmutableTree(dbm.NewMemDB(), 100)
+	immTree := iavl.NewImmutableTree(dbm.NewMemDB(), 100, false)
 	it := &immutableTree{immTree}
 	require.Panics(t, func() { it.Set([]byte{}, []byte{}) })
 	require.Panics(t, func() { it.Remove([]byte{}) })
 	require.Panics(t, func() { it.SaveVersion() })           // nolint:errcheck
 	require.Panics(t, func() { it.DeleteVersion(int64(1)) }) // nolint:errcheck
-	v, _ := it.GetVersioned([]byte{0x01}, 1)
-	require.Equal(t, int64(-1), v)
-	v, _ = it.GetVersioned([]byte{0x01}, 0)
-	require.Equal(t, int64(0), v)
 
 	val, proof, err := it.GetVersionedWithProof(nil, 1)
 	require.Error(t, err)

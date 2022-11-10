@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"sigs.k8s.io/yaml"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -137,19 +137,7 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	return ProposalStatus(num), nil
 }
 
-// Marshal needed for protobuf compatibility
-func (status ProposalStatus) Marshal() ([]byte, error) {
-	return []byte{byte(status)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility
-func (status *ProposalStatus) Unmarshal(data []byte) error {
-	*status = ProposalStatus(data[0])
-	return nil
-}
-
 // Format implements the fmt.Formatter interface.
-
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

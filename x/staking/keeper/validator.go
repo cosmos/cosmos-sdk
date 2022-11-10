@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -182,8 +182,9 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
-	// call hooks
-	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	if err := k.Hooks().AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator()); err != nil {
+		k.Logger(ctx).Error("error in after validator removed hook", "error", err)
+	}
 }
 
 // get groups of validators
@@ -415,8 +416,6 @@ func (k Keeper) ValidatorQueueIterator(ctx sdk.Context, endTime time.Time, endHe
 // UnbondAllMatureValidators unbonds all the mature unbonding validators that
 // have finished their unbonding period.
 func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
-	store := ctx.KVStore(k.storeKey)
-
 	blockTime := ctx.BlockTime()
 	blockHeight := ctx.BlockHeight()
 
@@ -456,13 +455,33 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					panic("unexpected validator in unbonding queue; status was not unbonding")
 				}
 
-				val = k.UnbondingToUnbonded(ctx, val)
-				if val.GetDelegatorShares().IsZero() {
-					k.RemoveValidator(ctx, val.GetOperator())
+				if val.UnbondingOnHoldRefCount == 0 {
+					for _, id := range val.UnbondingIds {
+						k.DeleteUnbondingIndex(ctx, id)
+					}
+
+					val = k.UnbondingToUnbonded(ctx, val)
+
+					if val.GetDelegatorShares().IsZero() {
+						k.RemoveValidator(ctx, val.GetOperator())
+					} else {
+						// remove unbonding ids
+						val.UnbondingIds = []uint64{}
+					}
+
+					// remove validator from queue
+					k.DeleteValidatorQueue(ctx, val)
 				}
 			}
-
-			store.Delete(key)
 		}
 	}
+}
+
+func (k Keeper) IsValidatorJailed(ctx sdk.Context, addr sdk.ConsAddress) bool {
+	v, ok := k.GetValidatorByConsAddr(ctx, addr)
+	if !ok {
+		return false
+	}
+
+	return v.Jailed
 }

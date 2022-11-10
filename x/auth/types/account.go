@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/tendermint/tendermint/crypto"
 	"sigs.k8s.io/yaml"
 
@@ -26,6 +26,7 @@ var (
 )
 
 // NewBaseAccount creates a new BaseAccount object
+//
 //nolint:interfacer
 func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
@@ -157,6 +158,17 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	}
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
+}
+
+// NewModuleAddressOrAddress gets an input string and returns an AccAddress.
+// If the input is a valid address, it returns the address.
+// If the input is a module name, it returns the module address.
+func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
+	if addr, err := sdk.AccAddressFromBech32(input); err == nil {
+		return addr
+	}
+
+	return NewModuleAddress(input)
 }
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name

@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 
 	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,13 +18,13 @@ const (
 	defaultMinGasPrices = ""
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
-	DefaultAPIAddress = "tcp://0.0.0.0:1317"
+	DefaultAPIAddress = "tcp://localhost:1317"
 
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
-	DefaultGRPCAddress = "0.0.0.0:9090"
+	DefaultGRPCAddress = "localhost:9090"
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "0.0.0.0:9091"
+	DefaultGRPCWebAddress = "localhost:9091"
 
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.
@@ -81,8 +81,12 @@ type BaseConfig struct {
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
+
 	// IavlCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
+
+	// IAVLDisableFastNode enables or disables the fast sync node.
+	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
 
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the Tendermint config's DBBackend value should be used.
@@ -236,15 +240,16 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
-			MinGasPrices:      defaultMinGasPrices,
-			InterBlockCache:   true,
-			Pruning:           pruningtypes.PruningOptionDefault,
-			PruningKeepRecent: "0",
-			PruningInterval:   "0",
-			MinRetainBlocks:   0,
-			IndexEvents:       make([]string, 0),
-			IAVLCacheSize:     781250, // 50 MB
-			AppDBBackend:      "",
+			MinGasPrices:        defaultMinGasPrices,
+			InterBlockCache:     true,
+			Pruning:             pruningtypes.PruningOptionDefault,
+			PruningKeepRecent:   "0",
+			PruningInterval:     "0",
+			MinRetainBlocks:     0,
+			IndexEvents:         make([]string, 0),
+			IAVLCacheSize:       781250, // 50 MB
+			IAVLDisableFastNode: false,
+			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{
 			Enabled:      false,
@@ -287,76 +292,12 @@ func DefaultConfig() *Config {
 }
 
 // GetConfig returns a fully parsed Config object.
-func GetConfig(v *viper.Viper) Config {
-	globalLabelsRaw := v.Get("telemetry.global-labels").([]interface{})
-	globalLabels := make([][]string, 0, len(globalLabelsRaw))
-	for _, glr := range globalLabelsRaw {
-		labelsRaw := glr.([]interface{})
-		if len(labelsRaw) == 2 {
-			globalLabels = append(globalLabels, []string{labelsRaw[0].(string), labelsRaw[1].(string)})
-		}
+func GetConfig(v *viper.Viper) (Config, error) {
+	conf := DefaultConfig()
+	if err := v.Unmarshal(conf); err != nil {
+		return Config{}, fmt.Errorf("error extracting app config: %w", err)
 	}
-
-	return Config{
-		BaseConfig: BaseConfig{
-			MinGasPrices:      v.GetString("minimum-gas-prices"),
-			InterBlockCache:   v.GetBool("inter-block-cache"),
-			Pruning:           v.GetString("pruning"),
-			PruningKeepRecent: v.GetString("pruning-keep-recent"),
-			PruningInterval:   v.GetString("pruning-interval"),
-			HaltHeight:        v.GetUint64("halt-height"),
-			HaltTime:          v.GetUint64("halt-time"),
-			IndexEvents:       v.GetStringSlice("index-events"),
-			MinRetainBlocks:   v.GetUint64("min-retain-blocks"),
-			IAVLCacheSize:     v.GetUint64("iavl-cache-size"),
-			AppDBBackend:      v.GetString("app-db-backend"),
-		},
-		Telemetry: telemetry.Config{
-			ServiceName:             v.GetString("telemetry.service-name"),
-			Enabled:                 v.GetBool("telemetry.enabled"),
-			EnableHostname:          v.GetBool("telemetry.enable-hostname"),
-			EnableHostnameLabel:     v.GetBool("telemetry.enable-hostname-label"),
-			EnableServiceLabel:      v.GetBool("telemetry.enable-service-label"),
-			PrometheusRetentionTime: v.GetInt64("telemetry.prometheus-retention-time"),
-			GlobalLabels:            globalLabels,
-		},
-		API: APIConfig{
-			Enable:             v.GetBool("api.enable"),
-			Swagger:            v.GetBool("api.swagger"),
-			Address:            v.GetString("api.address"),
-			MaxOpenConnections: v.GetUint("api.max-open-connections"),
-			RPCReadTimeout:     v.GetUint("api.rpc-read-timeout"),
-			RPCWriteTimeout:    v.GetUint("api.rpc-write-timeout"),
-			RPCMaxBodyBytes:    v.GetUint("api.rpc-max-body-bytes"),
-			EnableUnsafeCORS:   v.GetBool("api.enabled-unsafe-cors"),
-		},
-		Rosetta: RosettaConfig{
-			Enable:              v.GetBool("rosetta.enable"),
-			Address:             v.GetString("rosetta.address"),
-			Blockchain:          v.GetString("rosetta.blockchain"),
-			Network:             v.GetString("rosetta.network"),
-			Retries:             v.GetInt("rosetta.retries"),
-			Offline:             v.GetBool("rosetta.offline"),
-			EnableFeeSuggestion: v.GetBool("rosetta.enable-fee-suggestion"),
-			GasToSuggest:        v.GetInt("rosetta.gas-to-suggest"),
-			DenomToSuggest:      v.GetString("rosetta.denom-to-suggest"),
-		},
-		GRPC: GRPCConfig{
-			Enable:         v.GetBool("grpc.enable"),
-			Address:        v.GetString("grpc.address"),
-			MaxRecvMsgSize: v.GetInt("grpc.max-recv-msg-size"),
-			MaxSendMsgSize: v.GetInt("grpc.max-send-msg-size"),
-		},
-		GRPCWeb: GRPCWebConfig{
-			Enable:           v.GetBool("grpc-web.enable"),
-			Address:          v.GetString("grpc-web.address"),
-			EnableUnsafeCORS: v.GetBool("grpc-web.enable-unsafe-cors"),
-		},
-		StateSync: StateSyncConfig{
-			SnapshotInterval:   v.GetUint64("state-sync.snapshot-interval"),
-			SnapshotKeepRecent: v.GetUint32("state-sync.snapshot-keep-recent"),
-		},
-	}
+	return *conf, nil
 }
 
 // ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.

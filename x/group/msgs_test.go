@@ -1,13 +1,17 @@
 package group_test
 
 import (
+	fmt "fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
 var (
@@ -962,6 +966,32 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 }
 
+func TestMsgSubmitProposalGetSignBytes(t *testing.T) {
+	testcases := []struct {
+		name      string
+		proposal  []sdk.Msg
+		expSignBz string
+	}{
+		{
+			"MsgSend",
+			[]sdk.Msg{banktypes.NewMsgSend(member1, member1, sdk.NewCoins())},
+			fmt.Sprintf(`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposers":[""]}}`, member1, member1),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg, err := group.NewMsgSubmitProposal(sdk.AccAddress{}.String(), []string{sdk.AccAddress{}.String()}, tc.proposal, "", group.Exec_EXEC_UNSPECIFIED)
+			require.NoError(t, err)
+			var bz []byte
+			require.NotPanics(t, func() {
+				bz = msg.GetSignBytes()
+			})
+			require.Equal(t, tc.expSignBz, string(bz))
+		})
+	}
+}
+
 func TestMsgVote(t *testing.T) {
 	testCases := []struct {
 		name   string
@@ -1164,4 +1194,15 @@ func TestMsgLeaveGroup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAmino(t *testing.T) {
+	cdc := testutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+
+	out, err := cdc.Amino.MarshalJSON(group.MsgSubmitProposal{Proposers: []string{member1.String()}})
+	require.NoError(t, err)
+	require.Equal(t,
+		`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"proposers":["cosmos1d4jk6cn9wgcsj540xq"]}}`,
+		string(out),
+	)
 }

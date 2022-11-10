@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/core/appmodule"
+
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,6 +23,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
+
 	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -30,7 +32,7 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -126,21 +128,6 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// Deprecated: Route returns the evidence module's message routing key.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the evidence module's query routing key.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the evidence module's Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -176,12 +163,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
 }
 
-// EndBlock executes all ABCI EndBlock logic respective to the evidence module. It
-// returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the evidence module.
@@ -192,11 +173,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the evidence content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized evidence param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 
@@ -211,20 +187,20 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type evidenceInputs struct {
+type EvidenceInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -234,16 +210,16 @@ type evidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-type evidenceOutputs struct {
+type EvidenceOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         runtime.AppModuleWrapper
 }
 
-func provideModule(in evidenceInputs) evidenceOutputs {
+func ProvideModule(in EvidenceInputs) EvidenceOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
 	m := NewAppModule(*k)
 
-	return evidenceOutputs{EvidenceKeeper: *k, Module: runtime.WrapAppModule(m)}
+	return EvidenceOutputs{EvidenceKeeper: *k, Module: runtime.WrapAppModule(m)}
 }

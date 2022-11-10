@@ -13,9 +13,6 @@ const (
 
 	// FeeCollectorName the root string for the fee collector account address
 	FeeCollectorName = "fee_collector"
-
-	// QuerierRoute is the querier route for auth
-	QuerierRoute = ModuleName
 )
 
 var (

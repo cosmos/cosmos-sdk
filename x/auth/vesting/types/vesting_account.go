@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -69,7 +70,7 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
 		// Y := D - X
-		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
+		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), math.ZeroInt()), coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {
@@ -237,7 +238,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// calculate the vesting scalar
 	x := blockTime.Unix() - cva.StartTime
 	y := cva.EndTime - cva.StartTime
-	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
+	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
 		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()

@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,12 +23,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/distribution/exported"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -36,7 +35,7 @@ import (
 const ConsensusVersion = 3
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -104,13 +103,13 @@ type AppModule struct {
 	stakingKeeper types.StakingKeeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
-	legacySubspace paramstypes.Subspace
+	legacySubspace exported.Subspace
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
 	cdc codec.Codec, keeper keeper.Keeper, accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss paramstypes.Subspace,
+	bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, ss exported.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
@@ -132,25 +131,10 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Deprecated: Route returns the message routing key for the distribution module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the distribution module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the distribution module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
@@ -186,12 +170,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
 }
 
-// EndBlock returns the end blocker for the distribution module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the distribution module.
@@ -202,16 +180,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the distribution content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(am.keeper)
-}
-
-// RandomizedParams creates randomized distribution param changes for the simulator.
-
-// TODO: Returns an empty slice which will make parameter changes a no-op during
-// simulations. Once all modules are migrated, remove RandomizedParams from
-// the simulation interface.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
+	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for distribution module's types
@@ -227,20 +196,20 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type distrInputs struct {
+type DistrInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -252,22 +221,27 @@ type distrInputs struct {
 	StakingKeeper types.StakingKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace paramstypes.Subspace
+	LegacySubspace exported.Subspace
 }
 
-type distrOutputs struct {
+type DistrOutputs struct {
 	depinject.Out
 
 	DistrKeeper keeper.Keeper
 	Module      runtime.AppModuleWrapper
 	Hooks       staking.StakingHooksWrapper
-	GovHandler  govv1beta1.HandlerRoute
 }
 
-func provideModule(in distrInputs) distrOutputs {
+func ProvideModule(in DistrInputs) DistrOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
@@ -277,15 +251,14 @@ func provideModule(in distrInputs) distrOutputs {
 		in.BankKeeper,
 		in.StakingKeeper,
 		feeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
 
-	return distrOutputs{
+	return DistrOutputs{
 		DistrKeeper: k,
 		Module:      runtime.WrapAppModule(m),
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-		GovHandler:  govv1beta1.HandlerRoute{Handler: NewCommunityPoolSpendProposalHandler(k), RouteKey: types.RouterKey},
 	}
 }

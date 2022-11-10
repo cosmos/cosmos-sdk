@@ -24,7 +24,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 
 		// called when proposal become inactive
-		keeper.AfterProposalFailedMinDeposit(ctx, proposal.Id)
+		keeper.Hooks().AfterProposalFailedMinDeposit(ctx, proposal.Id)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -37,7 +37,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"min_deposit", sdk.NewCoins(keeper.GetDepositParams(ctx).MinDeposit...).String(),
+			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
@@ -58,8 +58,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		if passes {
 			var (
-				idx int
-				msg sdk.Msg
+				idx    int
+				events sdk.Events
+				msg    sdk.Msg
 			)
 
 			// attempt to execute all messages within the passed proposal
@@ -71,10 +72,12 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)
-					_, err = handler(cacheCtx, msg)
+					res, err := handler(cacheCtx, msg)
 					if err != nil {
 						break
 					}
+
+					events = append(events, res.GetEvents()...)
 				}
 			}
 
@@ -85,14 +88,11 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
 
-				// The cached context is created with a new EventManager. However, since
-				// the proposal handler execution was successful, we want to track/keep
-				// any events emitted, so we re-emit to "merge" the events into the
-				// original Context's EventManager.
-				ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
-
 				// write state to the underlying multi-store
 				writeCache()
+
+				// propagate the msg events to the current context
+				ctx.EventManager().EmitEvents(events)
 			} else {
 				proposal.Status = v1.StatusFailed
 				tagValue = types.AttributeValueProposalFailed
@@ -110,7 +110,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		// when proposal become active
-		keeper.AfterProposalVotingPeriodEnded(ctx, proposal.Id)
+		keeper.Hooks().AfterProposalVotingPeriodEnded(ctx, proposal.Id)
 
 		logger.Info(
 			"proposal tallied",

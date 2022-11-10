@@ -22,8 +22,9 @@
 // The backends:
 //
 //	os	The instance returned by this constructor uses the operating system's default
-//		credentials store to handle key storage operations securely. It should be noted
-//		that the keyring may be kept unlocked for the whole duration of the user session.
+//		credentials store to handle keys storage operations securely. It should be noted
+//		that the keyring may be kept unlocked for the whole duration of the user
+//		session.
 //	file	This backend more closely resembles the previous keyring storage used prior to
 //		v0.38.1. It stores the keyring encrypted within the app's configuration directory.
 //		This keyring will request a password each time it is accessed, which may occur

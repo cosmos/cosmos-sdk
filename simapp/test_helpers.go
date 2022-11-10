@@ -1,11 +1,8 @@
 package simapp
 
 import (
-	"context"
 	"encoding/json"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,17 +14,18 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -36,23 +34,21 @@ import (
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
 type SetupOptions struct {
-	Logger    log.Logger
-	DB        *dbm.MemDB
-	EncConfig params.EncodingConfig
-	AppOpts   types.AppOptions
+	Logger  log.Logger
+	DB      *dbm.MemDB
+	AppOpts servertypes.AppOptions
 }
 
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := MakeTestEncodingConfig()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 
-	app := NewSimApp(log.NewNopLogger(), db, nil, true, encCdc, appOptions)
+	app := NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
 	if withGenesis {
-		return app, NewDefaultGenesisState(encCdc.Codec)
+		return app, NewDefaultGenesisState(app.AppCodec())
 	}
 	return app, GenesisState{}
 }
@@ -62,7 +58,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -76,7 +72,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 
-	app := NewSimApp(options.Logger, options.DB, nil, true, options.EncConfig, options.AppOpts)
+	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
@@ -104,7 +100,7 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -159,29 +155,13 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
-// SetupWithGenesisAccounts initializes a new SimApp with the provided genesis
-// accounts and possible balances.
-func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
-	t.Helper()
-
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
-	require.NoError(t, err)
-
-	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	return SetupWithGenesisValSet(t, valSet, genAccs, balances...)
-}
-
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
 func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	t.Helper()
 
 	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey(context.TODO())
+	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -203,21 +183,6 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	require.NoError(t, err)
 
 	return genesisState
-}
-
-// AddTestAddrsFromPubKeys adds the addresses into the SimApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *SimApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt math.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), accAmt))
-
-	for _, pk := range pubKeys {
-		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
-	}
-}
-
-// AddTestAddrs constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
-func AddTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt math.Int) []sdk.AccAddress {
-	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateRandomAccounts)
 }
 
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
@@ -250,98 +215,7 @@ func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coi
 	}
 }
 
-// CheckBalance checks the balance of an account.
-func CheckBalance(t *testing.T, app *SimApp, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
-}
-
-// SignCheckDeliver checks a generated signed transaction and simulates a
-// block commitment with the given transaction. A test assertion is made using
-// the parameter 'expPass' against the result. A corresponding result is
-// returned.
-func SignCheckDeliver(
-	t *testing.T, txCfg client.TxConfig, app *bam.BaseApp, header tmproto.Header, msgs []sdk.Msg,
-	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
-) (sdk.GasInfo, *sdk.Result, error) {
-	tx, err := simtestutil.GenSignedMockTx(
-		rand.New(rand.NewSource(time.Now().UnixNano())),
-		txCfg,
-		msgs,
-		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-		simtestutil.DefaultGenTxGas,
-		chainID,
-		accNums,
-		accSeqs,
-		priv...,
-	)
-	require.NoError(t, err)
-	txBytes, err := txCfg.TxEncoder()(tx)
-	require.Nil(t, err)
-
-	// Must simulate now as CheckTx doesn't run Msgs anymore
-	_, res, err := app.Simulate(txBytes)
-
-	if expSimPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
-	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
-	}
-
-	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
-
-	if expPass {
-		require.NoError(t, err)
-		require.NotNil(t, res)
-	} else {
-		require.Error(t, err)
-		require.Nil(t, res)
-	}
-
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
-
-	return gInfo, res, err
-}
-
-// GenSequenceOfTxs generates a set of signed transactions of messages, such
-// that they differ only by having the sequence numbers incremented between
-// every transaction.
-func GenSequenceOfTxs(txGen client.TxConfig, msgs []sdk.Msg, accNums []uint64, initSeqNums []uint64, numToGenerate int, priv ...cryptotypes.PrivKey) ([]sdk.Tx, error) {
-	txs := make([]sdk.Tx, numToGenerate)
-	var err error
-	for i := 0; i < numToGenerate; i++ {
-		txs[i], err = simtestutil.GenSignedMockTx(
-			rand.New(rand.NewSource(time.Now().UnixNano())),
-			txGen,
-			msgs,
-			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
-			simtestutil.DefaultGenTxGas,
-			"",
-			accNums,
-			initSeqNums,
-			priv...,
-		)
-		if err != nil {
-			break
-		}
-		incrementAllSequenceNumbers(initSeqNums)
-	}
-
-	return txs, err
-}
-
-func incrementAllSequenceNumbers(initSeqNums []uint64) {
-	for i := 0; i < len(initSeqNums); i++ {
-		initSeqNums[i]++
-	}
-}
-
-// ModuleAccountAddrs provides a list of blocked module accounts from configuration in app.yaml
+// ModuleAccountAddrs provides a list of blocked module accounts from configuration in AppConfig
 //
 // Ported from SimApp
 func ModuleAccountAddrs() map[string]bool {
@@ -351,4 +225,29 @@ func ModuleAccountAddrs() map[string]bool {
 		panic("unable to load DI container")
 	}
 	return bk.GetBlockedAddresses()
+}
+
+// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
+func NewTestNetworkFixture() network.TestFixture {
+	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.EmptyAppOptions{})
+
+	appCtr := func(val testutil.Validator) servertypes.Application {
+		return NewSimApp(
+			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
+			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
+		)
+	}
+
+	return network.TestFixture{
+		AppConstructor: appCtr,
+		GenesisState:   ModuleBasics.DefaultGenesis(app.AppCodec()),
+		EncodingConfig: testutil.TestEncodingConfig{
+			InterfaceRegistry: app.InterfaceRegistry(),
+			Codec:             app.AppCodec(),
+			TxConfig:          app.TxConfig(),
+			Amino:             app.LegacyAmino(),
+		},
+	}
 }

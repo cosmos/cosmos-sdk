@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
-	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
+	"cosmossdk.io/core/appmodule"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,7 +34,7 @@ import (
 const ConsensusVersion = 2
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -137,19 +137,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the mint module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the mint module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
-
-// QuerierRoute returns the mint module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the mint module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -188,12 +175,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	BeginBlocker(ctx, am.keeper, am.inflationCalculator)
 }
 
-// EndBlock returns the end blocker for the mint module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
@@ -206,15 +187,6 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 	return nil
 }
 
-// RandomizedParams creates randomized mint param changes for the simulator.
-//
-// TODO: Returns an empty slice which will make parameter changes a no-op during
-// simulations. Once all modules are migrated, remove RandomizedParams from
-// the simulation interface.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
-}
-
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
@@ -225,26 +197,28 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 	return nil
 }
 
-// ============================================================================
-// New App Wiring Setup
-// ============================================================================
+//
+// App Wiring Setup
+//
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type mintInputs struct {
+type MintInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	ModuleKey              depinject.OwnModuleKey
+	Config                 *modulev1.Module
+	Key                    *store.KVStoreKey
+	Cdc                    codec.Codec
+	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -254,17 +228,23 @@ type mintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
-type mintOutputs struct {
+type MintOutputs struct {
 	depinject.Out
 
 	MintKeeper keeper.Keeper
 	Module     runtime.AppModuleWrapper
 }
 
-func provideModule(in mintInputs) mintOutputs {
+func ProvideModule(in MintInputs) MintOutputs {
 	feeCollectorName := in.Config.FeeCollectorName
 	if feeCollectorName == "" {
 		feeCollectorName = authtypes.FeeCollectorName
+	}
+
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
@@ -274,11 +254,11 @@ func provideModule(in mintInputs) mintOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authority.String(),
 	)
 
-	// TODO: allow to set inflation calculation function
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
+	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
 
-	return mintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
+	return MintOutputs{MintKeeper: k, Module: runtime.WrapAppModule(m)}
 }

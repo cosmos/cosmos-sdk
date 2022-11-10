@@ -1,10 +1,10 @@
 /*
 Package module contains application module patterns and associated "manager" functionality.
 The module pattern has been broken down by:
- - independent module functionality (AppModuleBasic)
- - inter-dependent module genesis functionality (AppModuleGenesis)
- - inter-dependent module simulation functionality (AppModuleSimulation)
- - inter-dependent module full functionality (AppModule)
+  - independent module functionality (AppModuleBasic)
+  - inter-dependent module genesis functionality (AppModuleGenesis)
+  - inter-dependent module simulation functionality (AppModuleSimulation)
+  - inter-dependent module full functionality (AppModule)
 
 inter-dependent module functionality is module functionality which somehow
 depends on other modules, typically through the module keeper.  Many of the
@@ -36,6 +36,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -118,7 +119,8 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
-	for _, b := range bm {
+	values := maps.Values(bm)
+	for _, b := range values {
 		if cmd := b.GetTxCmd(); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
 		}
@@ -130,7 +132,8 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	for _, b := range bm {
+	values := maps.Values(bm)
+	for _, b := range values {
 		if cmd := b.GetQueryCmd(); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
@@ -152,15 +155,6 @@ type AppModule interface {
 	// registers
 	RegisterInvariants(sdk.InvariantRegistry)
 
-	// Deprecated: use RegisterServices
-	Route() sdk.Route
-
-	// Deprecated: use RegisterServices
-	QuerierRoute() string
-
-	// Deprecated: use RegisterServices
-	LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier
-
 	// RegisterServices allows a module to register services
 	RegisterServices(Configurator)
 
@@ -169,9 +163,17 @@ type AppModule interface {
 	// introduced by the module. To avoid wrong/empty versions, the initial version
 	// should be set to 1.
 	ConsensusVersion() uint64
+}
 
-	// ABCI
+// BeginBlockAppModule is an extension interface that contains information about the AppModule and BeginBlock.
+type BeginBlockAppModule interface {
+	AppModule
 	BeginBlock(sdk.Context, abci.RequestBeginBlock)
+}
+
+// EndBlockAppModule is an extension interface that contains information about the AppModule and EndBlock.
+type EndBlockAppModule interface {
+	AppModule
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
@@ -190,14 +192,8 @@ func NewGenesisOnlyAppModule(amg AppModuleGenesis) AppModule {
 // RegisterInvariants is a placeholder function register no invariants
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route empty module message route
-func (GenesisOnlyAppModule) Route() sdk.Route { return sdk.Route{} }
-
 // QuerierRoute returns an empty module querier route
 func (GenesisOnlyAppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns an empty module querier
-func (gam GenesisOnlyAppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
 // RegisterServices registers all services.
 func (gam GenesisOnlyAppModule) RegisterServices(Configurator) {}
@@ -275,26 +271,16 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 
 // RegisterInvariants registers all module invariants
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
-	for _, module := range m.Modules {
+	modules := maps.Values(m.Modules)
+	for _, module := range modules {
 		module.RegisterInvariants(ir)
-	}
-}
-
-// RegisterRoutes registers all module routes and module querier routes
-func (m *Manager) RegisterRoutes(router sdk.Router, queryRouter sdk.QueryRouter, legacyQuerierCdc *codec.LegacyAmino) {
-	for _, module := range m.Modules {
-		if r := module.Route(); !r.Empty() {
-			router.AddRoute(r)
-		}
-		if r := module.QuerierRoute(); r != "" {
-			queryRouter.AddRoute(r, module.LegacyQuerierHandler(legacyQuerierCdc))
-		}
 	}
 }
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) {
-	for _, module := range m.Modules {
+	modules := maps.Values(m.Modules)
+	for _, module := range modules {
 		module.RegisterServices(cfg)
 	}
 }
@@ -335,12 +321,41 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 // ExportGenesis performs export genesis functionality for modules
 func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string]json.RawMessage {
+	return m.ExportGenesisForModules(ctx, cdc, []string{})
+}
+
+// ExportGenesisForModules performs export genesis functionality for modules
+func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	for _, moduleName := range m.OrderExportGenesis {
+	if len(modulesToExport) == 0 {
+		for _, moduleName := range m.OrderExportGenesis {
+			genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+		}
+
+		return genesisData
+	}
+
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		panic(err)
+	}
+
+	for _, moduleName := range modulesToExport {
 		genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
 	}
 
 	return genesisData
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *Manager) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.Modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // assertNoForgottenModules checks that we didn't forget any modules in the
@@ -350,13 +365,15 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	for _, m := range moduleNames {
 		ms[m] = true
 	}
+	allKeys := maps.Keys(m.Modules)
 	var missing []string
-	for m := range m.Modules {
+	for _, m := range allKeys {
 		if !ms[m] {
 			missing = append(missing, m)
 		}
 	}
 	if len(missing) != 0 {
+		sort.Strings(missing)
 		panic(fmt.Sprintf(
 			"%s: all modules must be defined when setting %s, missing: %v", setOrderFnName, setOrderFnName, missing))
 	}
@@ -377,19 +394,21 @@ type VersionMap map[string]uint64
 // returning RunMigrations should be enough:
 //
 // Example:
-//   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-//       return app.mm.RunMigrations(ctx, cfg, fromVM)
-//   })
+//
+//	cfg := module.NewConfigurator(...)
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	    return app.mm.RunMigrations(ctx, cfg, fromVM)
+//	})
 //
 // Internally, RunMigrations will perform the following steps:
 // - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
 // - make a diff of `fromVM` and `udpatedVM`, and for each module:
-//    - if the module's `fromVM` version is less than its `updatedVM` version,
-//      then run in-place store migrations for that module between those versions.
-//    - if the module does not exist in the `fromVM` (which means that it's a new module,
-//      because it was not in the previous x/upgrade's store), then run
-//      `InitGenesis` on that module.
+//   - if the module's `fromVM` version is less than its `updatedVM` version,
+//     then run in-place store migrations for that module between those versions.
+//   - if the module does not exist in the `fromVM` (which means that it's a new module,
+//     because it was not in the previous x/upgrade's store), then run
+//     `InitGenesis` on that module.
+//
 // - return the `updatedVM` to be persisted in the x/upgrade's store.
 //
 // Migrations are run in an order defined by `Manager.OrderMigrations` or (if not set) defined by
@@ -402,18 +421,19 @@ type VersionMap map[string]uint64
 // running anything for foo.
 //
 // Example:
-//   cfg := module.NewConfigurator(...)
-//   app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-//       // Assume "foo" is a new module.
-//       // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
-//       // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
-//       // run InitGenesis on foo.
-//       // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
-//       // consensus version:
-//       fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
 //
-//       return app.mm.RunMigrations(ctx, cfg, fromVM)
-//   })
+//	cfg := module.NewConfigurator(...)
+//	app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+//	    // Assume "foo" is a new module.
+//	    // `fromVM` is fetched from existing x/upgrade store. Since foo didn't exist
+//	    // before this upgrade, `v, exists := fromVM["foo"]; exists == false`, and RunMigration will by default
+//	    // run InitGenesis on foo.
+//	    // To skip running foo's InitGenesis, you need set `fromVM`'s foo to its latest
+//	    // consensus version:
+//	    fromVM["foo"] = foo.AppModule{}.ConsensusVersion()
+//
+//	    return app.mm.RunMigrations(ctx, cfg, fromVM)
+//	})
 //
 // Please also refer to docs/core/upgrade.md for more information.
 func (m Manager) RunMigrations(ctx sdk.Context, cfg Configurator, fromVM VersionMap) (VersionMap, error) {
@@ -468,7 +488,10 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		m.Modules[moduleName].BeginBlock(ctx, req)
+		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
+		if ok {
+			module.BeginBlock(ctx, req)
+		}
 	}
 
 	return abci.ResponseBeginBlock{
@@ -484,7 +507,11 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		moduleValUpdates := m.Modules[moduleName].EndBlock(ctx, req)
+		module, ok := m.Modules[moduleName].(EndBlockAppModule)
+		if !ok {
+			continue
+		}
+		moduleValUpdates := module.EndBlock(ctx, req)
 
 		// use these validator updates if provided, the module manager assumes
 		// only one module will update the validator set
@@ -517,13 +544,7 @@ func (m *Manager) GetVersionMap() VersionMap {
 
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
-	ms := make([]string, len(m.Modules))
-	i := 0
-	for m := range m.Modules {
-		ms[i] = m
-		i++
-	}
-	return ms
+	return maps.Keys(m.Modules)
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

@@ -4,21 +4,23 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	"github.com/cosmos/cosmos-sdk/x/authz/testutil"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 var (
@@ -34,34 +36,46 @@ type TestSuite struct {
 	ctx               sdk.Context
 	addrs             []sdk.AccAddress
 	authzKeeper       authzkeeper.Keeper
-	bankKeeper        bankkeeper.Keeper
+	accountKeeper     *authztestutil.MockAccountKeeper
+	bankKeeper        *authztestutil.MockBankKeeper
 	interfaceRegistry codectypes.InterfaceRegistry
+	baseApp           *baseapp.BaseApp
+	encCfg            moduletestutil.TestEncodingConfig
 	queryClient       authz.QueryClient
 }
 
 func (s *TestSuite) SetupTest() {
-	var stakingKeeper *stakingkeeper.Keeper
+	key := sdk.NewKVStoreKey(authzkeeper.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&s.bankKeeper,
-		&stakingKeeper,
-		&s.authzKeeper,
-		&s.interfaceRegistry,
+	s.baseApp = baseapp.NewBaseApp(
+		"authz",
+		log.NewNopLogger(),
+		testCtx.DB,
+		s.encCfg.TxConfig.TxDecoder(),
 	)
-	s.Require().NoError(err)
+	s.baseApp.SetCMS(testCtx.CMS)
+	s.baseApp.SetInterfaceRegistry(s.encCfg.InterfaceRegistry)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	now := tmtime.Now()
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.interfaceRegistry)
+	s.addrs = simtestutil.CreateIncrementalAccounts(7)
+
+	// gomock initializations
+	ctrl := gomock.NewController(s.T())
+	s.accountKeeper = authztestutil.NewMockAccountKeeper(ctrl)
+	s.bankKeeper = authztestutil.NewMockBankKeeper(ctrl)
+	banktypes.RegisterInterfaces(s.encCfg.InterfaceRegistry)
+	banktypes.RegisterMsgServer(s.baseApp.MsgServiceRouter(), s.bankKeeper)
+
+	s.authzKeeper = authzkeeper.NewKeeper(key, s.encCfg.Codec, s.baseApp.MsgServiceRouter(), s.accountKeeper)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.encCfg.InterfaceRegistry)
 	authz.RegisterQueryServer(queryHelper, s.authzKeeper)
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
-	s.ctx = ctx
 	s.queryClient = queryClient
-	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
 }
 
 func (s *TestSuite) TestKeeper() {
@@ -125,9 +139,10 @@ func (s *TestSuite) TestKeeperIter() {
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
 	e := ctx.BlockTime().AddDate(1, 0, 0)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), &e)
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, banktypes.NewSendAuthorization(coins100), &e)
+	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
+	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
 
 	s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granteeAddr, grantee)
@@ -144,9 +159,7 @@ func (s *TestSuite) TestDispatchAction() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	a := banktypes.NewSendAuthorization(coins100)
-
-	require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
+	a := banktypes.NewSendAuthorization(coins100, nil)
 
 	testCases := []struct {
 		name      string
@@ -290,7 +303,6 @@ func (s *TestSuite) TestDispatchedEvents() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	require.NoError(banktestutil.FundAccount(s.bankKeeper, s.ctx, granterAddr, coins1000))
 	expiration := s.ctx.BlockTime().Add(1 * time.Second) // must be in the future
 
 	msgs := authz.NewMsgExec(granteeAddr, []sdk.Msg{
@@ -316,14 +328,15 @@ func (s *TestSuite) TestDispatchedEvents() {
 	result, err := s.authzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	require.NoError(err)
 	require.NotNil(result)
+
 	events := s.ctx.EventManager().Events()
+
 	// get last 5 events (events that occur *after* the grant)
-	events = events[len(events)-5:]
+	events = events[len(events)-2:]
+
 	requiredEvents := map[string]bool{
-		"coin_spent":    false,
-		"coin_received": false,
-		"transfer":      false,
-		"message":       false,
+		"cosmos.authz.v1beta1.EventGrant":  true,
+		"cosmos.authz.v1beta1.EventRevoke": true,
 	}
 	for _, e := range events {
 		requiredEvents[e.Type] = true
@@ -377,6 +390,85 @@ func (s *TestSuite) TestDequeueAllGrantsQueue() {
 	authzs, err = s.authzKeeper.GetAuthorizations(newCtx, granter, grantee)
 	require.NoError(err)
 	require.Len(authzs, 1)
+}
+
+func (s *TestSuite) TestGetAuthorization() {
+	addr1 := s.addrs[3]
+	addr2 := s.addrs[4]
+	addr3 := s.addrs[5]
+	addr4 := s.addrs[6]
+
+	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
+	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
+	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
+
+	start := s.ctx.BlockHeader().Time
+	expired := start.Add(time.Duration(1) * time.Second)
+	notExpired := start.Add(time.Duration(5) * time.Hour)
+
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr2, genAuthMulti, nil), "creating grant 1->2")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr3, genAuthSend, &expired), "creating grant 1->3")
+	s.Require().NoError(s.authzKeeper.SaveGrant(s.ctx, addr1, addr4, sendAuth, &notExpired), "creating grant 1->4")
+	// Without access to private keeper methods, I don't know how to save a grant with an invalid authorization.
+	newCtx := s.ctx.WithBlockTime(start.Add(time.Duration(1) * time.Minute))
+
+	tests := []struct {
+		name    string
+		grantee sdk.AccAddress
+		granter sdk.AccAddress
+		msgType string
+		expAuth authz.Authorization
+		expExp  *time.Time
+	}{
+		{
+			name:    "grant has nil exp and is returned",
+			grantee: addr1,
+			granter: addr2,
+			msgType: genAuthMulti.MsgTypeURL(),
+			expAuth: genAuthMulti,
+			expExp:  nil,
+		},
+		{
+			name:    "grant is expired not returned",
+			grantee: addr1,
+			granter: addr3,
+			msgType: genAuthSend.MsgTypeURL(),
+			expAuth: nil,
+			expExp:  nil,
+		},
+		{
+			name:    "grant is not expired and is returned",
+			grantee: addr1,
+			granter: addr4,
+			msgType: sendAuth.MsgTypeURL(),
+			expAuth: sendAuth,
+			expExp:  &notExpired,
+		},
+		{
+			name:    "grant is not expired but wrong msg type returns nil",
+			grantee: addr1,
+			granter: addr4,
+			msgType: genAuthMulti.MsgTypeURL(),
+			expAuth: nil,
+			expExp:  nil,
+		},
+		{
+			name:    "no grant exists between the two",
+			grantee: addr2,
+			granter: addr3,
+			msgType: genAuthSend.MsgTypeURL(),
+			expAuth: nil,
+			expExp:  nil,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			actAuth, actExp := s.authzKeeper.GetAuthorization(newCtx, tc.grantee, tc.granter, tc.msgType)
+			s.Assert().Equal(tc.expAuth, actAuth, "authorization")
+			s.Assert().Equal(tc.expExp, actExp, "expiration")
+		})
+	}
 }
 
 func TestTestSuite(t *testing.T) {

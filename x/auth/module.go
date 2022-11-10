@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
-	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/depinject"
+
+	"cosmossdk.io/core/appmodule"
+
+	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -100,6 +102,14 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
@@ -118,33 +128,19 @@ func (AppModule) Name() string {
 // RegisterInvariants performs a no-op.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the auth module.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the auth module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the auth module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.accountKeeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.accountKeeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.accountKeeper)
+
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
 
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
@@ -171,15 +167,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
-// BeginBlock returns the begin blocker for the auth module.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
-// EndBlock returns the end blocker for the auth module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the auth module
@@ -190,11 +177,6 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
-}
-
-// RandomizedParams creates randomized auth param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
@@ -208,45 +190,66 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(
+			ProvideModuleBasic,
+			ProvideModule,
+		),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type authInputs struct {
+type AuthInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
 	Key    *store.KVStoreKey
 	Cdc    codec.Codec
 
+	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
+	AccountI                func() types.AccountI         `optional:"true"`
+
 	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
+	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type authOutputs struct {
+type AuthOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        runtime.AppModuleWrapper
+	NewAppModule  appmodule.AppModule
 }
 
-func provideModule(in authInputs) authOutputs {
+func ProvideModule(in AuthInputs) AuthOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
-	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
+	// default to governance authority if not provided
+	authority := types.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 
-	return authOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	if in.RandomGenesisAccountsFn == nil {
+		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
+	}
+
+	if in.AccountI == nil {
+		in.AccountI = types.ProtoBaseAccount
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
+	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
+
+	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m), NewAppModule: m}
 }

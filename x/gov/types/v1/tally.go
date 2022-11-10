@@ -9,8 +9,8 @@ import (
 type ValidatorGovInfo struct {
 	Address             sdk.ValAddress      // address of the validator operator
 	BondedTokens        math.Int            // Power of a Validator
-	DelegatorShares     sdk.Dec             // Total outstanding delegator shares
-	DelegatorDeductions sdk.Dec             // Delegator deductions from validator's delegators voting independently
+	DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
+	DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
 	Vote                WeightedVoteOptions // Vote of the validator
 }
 
@@ -49,7 +49,7 @@ func NewTallyResultFromMap(results map[VoteOption]sdk.Dec) TallyResult {
 
 // EmptyTallyResult returns an empty TallyResult.
 func EmptyTallyResult() TallyResult {
-	return NewTallyResult(sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt(), sdk.ZeroInt())
+	return NewTallyResult(math.ZeroInt(), math.ZeroInt(), math.ZeroInt(), math.ZeroInt())
 }
 
 // Equals returns if two tally results are equal.

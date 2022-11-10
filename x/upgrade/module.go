@@ -3,6 +3,7 @@ package upgrade
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
@@ -41,8 +42,8 @@ const (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.BeginBlockAppModule = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
 )
 
 // AppModuleBasic implements the sdk.AppModuleBasic interface
@@ -96,19 +97,6 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 // RegisterInvariants does nothing, there are no invariants to enforce
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the upgrade module.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the route we respond to for abci queries
-func (AppModule) QuerierRoute() string { return types.QuerierKey }
-
-// LegacyQuerierHandler registers a query handler to respond to the module-specific queries
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -117,7 +105,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.keeper)
 	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
 }
 
@@ -151,26 +139,21 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(am.keeper, ctx, req)
 }
 
-// EndBlock does nothing
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
+		appmodule.Provide(ProvideModuleBasic, ProvideModule),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type upgradeInputs struct {
+type UpgradeInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -180,7 +163,7 @@ type upgradeInputs struct {
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-type upgradeOutputs struct {
+type UpgradeOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper keeper.Keeper
@@ -188,7 +171,7 @@ type upgradeOutputs struct {
 	GovHandler    govv1beta1.HandlerRoute
 }
 
-func provideModule(in upgradeInputs) upgradeOutputs {
+func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)
@@ -202,10 +185,16 @@ func provideModule(in upgradeInputs) upgradeOutputs {
 		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return upgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
+	return UpgradeOutputs{UpgradeKeeper: k, Module: runtime.WrapAppModule(m), GovHandler: gh}
 }

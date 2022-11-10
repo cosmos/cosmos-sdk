@@ -7,11 +7,12 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -64,6 +65,11 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
+// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
+func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
@@ -73,6 +79,16 @@ func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
 // SetSnapshot sets the snapshot store.
 func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
+}
+
+// SetMempool sets the mempool on BaseApp.
+func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetMempool(mempool) }
+}
+
+// SetProcessProposal sets the ProcessProposal handler.
+func SetProcessProposal(proposalHandler sdk.ProcessProposalHandler) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetProcessProposal(proposalHandler) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -200,14 +216,6 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
-// SetRouter allows us to customize the router.
-func (app *BaseApp) SetRouter(router sdk.Router) {
-	if app.sealed {
-		panic("SetRouter() on sealed BaseApp")
-	}
-	app.router = router
-}
-
 // SetSnapshot sets the snapshot store and options.
 func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {
@@ -242,4 +250,25 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
+}
+
+// SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
+	app.txEncoder = txEncoder
+}
+
+// SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
+func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
+	app.qms = ms
+}
+
+// SetMempool sets the mempool for the BaseApp and is required for the app to start up.
+func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
+	app.mempool = mempool
+}
+
+func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
+	app.processProposal = handler
 }

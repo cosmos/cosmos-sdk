@@ -7,11 +7,12 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -173,5 +174,9 @@ func (f failingInterfaceRegistry) ListAllInterfaces() []string {
 }
 
 func (f failingInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
+	panic("cannot be called")
+}
+
+func (f failingInterfaceRegistry) EnsureRegistered(iface interface{}) error {
 	panic("cannot be called")
 }

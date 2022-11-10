@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -135,7 +136,7 @@ func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
 
 	// Marshalling/unmarshalling the tx wrapped in a struct should work.
 	txRequest := &cli.BroadcastReq{
-		Mode: "block",
+		Mode: flags.BroadcastSync,
 		Tx:   tx,
 	}
 	_, err = legacyCdc.MarshalJSON(txRequest)

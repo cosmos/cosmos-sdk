@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,7 +35,7 @@ import (
 const ConsensusVersion = 3
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -128,23 +128,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the slashing module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the slashing module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the slashing module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns the slashing module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
-		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
-	}
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -184,62 +167,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 	BeginBlocker(ctx, req, am.keeper)
 }
 
-// EndBlock returns the end blocker for the slashing module. It returns no validator
-// updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
-// _____________________________________________________________________________________
-
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		),
-	)
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type slashingInputs struct {
-	depinject.In
-
-	Key           *store.KVStoreKey
-	Cdc           codec.Codec
-	LegacyAmino   *codec.LegacyAmino
-	AccountKeeper types.AccountKeeper `key:"cosmos.auth.v1.AccountKeeper"`
-	BankKeeper    types.BankKeeper    `key:"cosmos.bank.v1.Keeper"`
-	StakingKeeper types.StakingKeeper `key:"cosmos.staking.v1.Keeper"`
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace exported.Subspace
-}
-
-type slashingOutputs struct {
-	depinject.Out
-
-	Keeper keeper.Keeper
-	Module runtime.AppModuleWrapper
-	Hooks  staking.StakingHooksWrapper
-}
-
-func provideModule(in slashingInputs) slashingOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
-	return slashingOutputs{
-		Keeper: k,
-		Module: runtime.WrapAppModule(m),
-		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
-	}
-}
-
-// _____________________________________________________________________________________
-
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the slashing module.
@@ -250,11 +177,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
-}
-
-// RandomizedParams creates randomized slashing param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for slashing module's types
@@ -268,4 +190,62 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper, am.stakingKeeper,
 	)
+}
+
+//
+// App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(
+			ProvideModuleBasic,
+			ProvideModule,
+		),
+	)
+}
+
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
+	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+}
+
+type SlashingInputs struct {
+	depinject.In
+
+	Config      *modulev1.Module
+	Key         *store.KVStoreKey
+	Cdc         codec.Codec
+	LegacyAmino *codec.LegacyAmino
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
+}
+
+type SlashingOutputs struct {
+	depinject.Out
+
+	Keeper keeper.Keeper
+	Module runtime.AppModuleWrapper
+	Hooks  staking.StakingHooksWrapper
+}
+
+func ProvideModule(in SlashingInputs) SlashingOutputs {
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
+
+	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.Key, in.StakingKeeper, authority.String())
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
+	return SlashingOutputs{
+		Keeper: k,
+		Module: runtime.WrapAppModule(m),
+		Hooks:  staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+	}
 }

@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,7 +15,7 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.Deci
 		return nil, fmt.Errorf("decision policy is required")
 	}
 
-	contents, err := ioutil.ReadFile(decisionPolicyFile)
+	contents, err := os.ReadFile(decisionPolicyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +35,7 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 		return members.Members, nil
 	}
 
-	contents, err := ioutil.ReadFile(membersFile)
+	contents, err := os.ReadFile(membersFile)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +61,9 @@ func execFromString(execStr string) group.Exec {
 type Proposal struct {
 	GroupPolicyAddress string `json:"group_policy_address"`
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages"`
+	Messages  []json.RawMessage `json:"messages,omitempty"`
 	Metadata  string            `json:"metadata"`
-	Proposers []string          `json:"proposers"`
+	Proposers []string          `json:"proposers,omitempty"`
 }
 
 func getCLIProposal(path string) (Proposal, error) {

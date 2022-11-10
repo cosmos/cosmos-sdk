@@ -3,21 +3,21 @@ package network
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
-	abciclient "github.com/tendermint/tendermint/abci/client"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmtime "github.com/tendermint/tendermint/libs/time"
 	"github.com/tendermint/tendermint/node"
+	"github.com/tendermint/tendermint/p2p"
+	pvm "github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/proxy"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -33,36 +33,35 @@ func startInProcess(cfg Config, val *Validator) error {
 		return err
 	}
 
-	app := cfg.AppConstructor(*val)
-
-	genDoc, err := types.GenesisDocFromFile(tmCfg.GenesisFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(tmCfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	val.tmNode, err = node.New(
+	app := cfg.AppConstructor(*val)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(tmCfg)
+
+	tmNode, err := node.NewNode( //resleak:notresource
 		tmCfg,
+		pvm.LoadOrGenFilePV(tmCfg.PrivValidatorKeyFile(), tmCfg.PrivValidatorStateFile()),
+		nodeKey,
+		proxy.NewLocalClientCreator(app),
+		genDocProvider,
+		node.DefaultDBProvider,
+		node.DefaultMetricsProvider(tmCfg.Instrumentation),
 		logger.With("module", val.Moniker),
-		abciclient.NewLocalCreator(app),
-		genDoc,
 	)
 	if err != nil {
 		return err
 	}
 
-	if err := val.tmNode.Start(); err != nil {
+	if err := tmNode.Start(); err != nil {
 		return err
 	}
+	val.tmNode = tmNode
 
 	if val.RPCAddress != "" {
-		node, ok := val.tmNode.(local.NodeService)
-		if !ok {
-			return fmt.Errorf("failed to cast %T to NodeService", val.tmNode)
-		}
-		val.RPCClient, err = local.New(node)
-		if err != nil {
-			return errors.Wrap(err, "failed to create a local node")
-		}
+		val.RPCClient = local.New(tmNode)
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
@@ -70,11 +69,9 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.ClientCtx = val.ClientCtx.
 			WithClient(val.RPCClient)
 
-		// Add the tx service in the gRPC router.
 		app.RegisterTxService(val.ClientCtx)
-
-		// Add the tendermint queries service in the gRPC router.
 		app.RegisterTendermintService(val.ClientCtx)
+		app.RegisterNodeService(val.ClientCtx)
 	}
 
 	if val.APIAddress != "" {
@@ -137,7 +134,7 @@ func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 		}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
+			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
 		if err != nil {
 			return err
 		}
@@ -195,13 +192,11 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 func writeFile(name string, dir string, contents []byte) error {
 	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(dir, 0o755)
-	if err != nil {
-		return err
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
-	if err != nil {
+	if err := os.WriteFile(file, contents, 0o644); err != nil { //nolint: gosec
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -91,10 +92,13 @@ func validateInflationRateChange(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("inflation rate change cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("inflation rate change cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("inflation rate change too large: %s", v)
 	}
 
@@ -107,10 +111,13 @@ func validateInflationMax(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("max inflation cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("max inflation cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("max inflation too large: %s", v)
 	}
 
@@ -123,10 +130,13 @@ func validateInflationMin(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("min inflation cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min inflation cannot be negative: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("min inflation too large: %s", v)
 	}
 
@@ -139,10 +149,13 @@ func validateGoalBonded(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("goal bonded cannot be nil: %s", v)
+	}
 	if v.IsNegative() || v.IsZero() {
 		return fmt.Errorf("goal bonded must be positive: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("goal bonded too large: %s", v)
 	}
 

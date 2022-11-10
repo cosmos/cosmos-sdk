@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"context"
+	"os"
 	"sync"
 	"testing"
 
@@ -34,9 +35,9 @@ func TestGRPCQueryRouter(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "hello", res.Message)
 
-	require.Panics(t, func() {
-		_, _ = client.Echo(context.Background(), nil)
-	})
+	res, err = client.Echo(context.Background(), nil)
+	require.Nil(t, err)
+	require.Empty(t, res.Message)
 
 	res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 	require.Nil(t, err)
@@ -58,7 +59,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
 	require.NoError(t, err)
 	db := dbm.NewMemDB()
-	app := appBuilder.Build(log.MustNewDefaultLogger("plain", "info", false), db, nil)
+	app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil)
 
 	// First time registering service shouldn't panic.
 	require.NotPanics(t, func() {
@@ -152,9 +153,9 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 			require.NotNil(t, res)
 			require.Equal(t, "hello", res.Message)
 
-			require.Panics(t, func() {
-				_, _ = client.Echo(context.Background(), nil)
-			})
+			res, err = client.Echo(context.Background(), nil)
+			require.Nil(t, err)
+			require.Empty(t, res.Message)
 
 			res2, err := client.SayHello(context.Background(), &testdata.SayHelloRequest{Name: "Foo"})
 			require.Nil(t, err)

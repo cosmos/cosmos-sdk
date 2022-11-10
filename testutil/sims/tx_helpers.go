@@ -2,7 +2,14 @@ package sims
 
 import (
 	"math/rand"
+	"testing"
+	"time"
 
+	"github.com/stretchr/testify/require"
+	types2 "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,4 +77,56 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 	}
 
 	return tx.GetTx(), nil
+}
+
+// SignCheckDeliver checks a generated signed transaction and simulates a
+// block commitment with the given transaction. A test assertion is made using
+// the parameter 'expPass' against the result. A corresponding result is
+// returned.
+func SignCheckDeliver(
+	t *testing.T, txCfg client.TxConfig, app *baseapp.BaseApp, header types.Header, msgs []sdk.Msg,
+	chainID string, accNums, accSeqs []uint64, expSimPass, expPass bool, priv ...cryptotypes.PrivKey,
+) (sdk.GasInfo, *sdk.Result, error) {
+	tx, err := GenSignedMockTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
+		txCfg,
+		msgs,
+		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
+		DefaultGenTxGas,
+		chainID,
+		accNums,
+		accSeqs,
+		priv...,
+	)
+	require.NoError(t, err)
+	txBytes, err := txCfg.TxEncoder()(tx)
+	require.Nil(t, err)
+
+	// Must simulate now as CheckTx doesn't run Msgs anymore
+	_, res, err := app.Simulate(txBytes)
+
+	if expSimPass {
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	} else {
+		require.Error(t, err)
+		require.Nil(t, res)
+	}
+
+	// Simulate a sending a transaction and committing a block
+	app.BeginBlock(types2.RequestBeginBlock{Header: header})
+	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+
+	if expPass {
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	} else {
+		require.Error(t, err)
+		require.Nil(t, res)
+	}
+
+	app.EndBlock(types2.RequestEndBlock{})
+	app.Commit()
+
+	return gInfo, res, err
 }

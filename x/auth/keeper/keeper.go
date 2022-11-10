@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -79,10 +80,10 @@ func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() types.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
-
 	permAddrs := make(map[string]types.PermissionsForAddress)
-	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
+	permNames := maps.Keys(maccPerms)
+	for _, name := range permNames {
+		permAddrs[name] = types.NewPermissionsForAddress(name, maccPerms[name])
 	}
 
 	bech32Codec := newBech32Codec(bech32Prefix)
@@ -97,7 +98,7 @@ func NewAccountKeeper(
 	}
 }
 
-// GetAuthority returns the x/mint module's authority.
+// GetAuthority returns the x/auth module's authority.
 func (ak AccountKeeper) GetAuthority() string {
 	return ak.authority
 }
@@ -239,7 +240,7 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 }
 
 // MarshalAccount protobuf serializes an Account interface
-func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { // nolint:interfacer
+func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { //nolint:interfacer
 	return ak.cdc.MarshalInterface(accountI)
 }
 

@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
@@ -57,7 +56,6 @@ type BaseKeeper struct {
 	ak                     types.AccountKeeper
 	cdc                    codec.BinaryCodec
 	storeKey               storetypes.StoreKey
-	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
 }
 
@@ -98,20 +96,18 @@ func NewBaseKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	ak types.AccountKeeper,
-	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
+	authority string,
 ) BaseKeeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Errorf("invalid bank authority address: %w", err))
 	}
 
 	return BaseKeeper{
-		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
+		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, blockedAddrs, authority),
 		ak:                     ak,
 		cdc:                    cdc,
 		storeKey:               storeKey,
-		paramSpace:             paramSpace,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
 	}
 }
@@ -119,7 +115,8 @@ func NewBaseKeeper(
 // WithMintCoinsRestriction restricts the bank Keeper used within a specific module to
 // have restricted permissions on minting via function passed in parameter.
 // Previous restriction functions can be nested as such:
-//  bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
+//
+//	bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
 func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
 	oldRestrictionFn := k.mintCoinsRestrictionFn
 	k.mintCoinsRestrictionFn = func(ctx sdk.Context, coins sdk.Coins) error {
@@ -291,7 +288,7 @@ func (k BaseKeeper) IterateAllDenomMetaData(ctx sdk.Context, cb func(types.Metad
 	denomMetaDataStore := prefix.NewStore(store, types.DenomMetadataPrefix)
 
 	iterator := denomMetaDataStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer sdk.LogDeferred(ctx.Logger(), func() error { return iterator.Close() })
 
 	for ; iterator.Valid(); iterator.Next() {
 		var metadata types.Metadata
@@ -530,7 +527,7 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 
 	iterator := supplyStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer sdk.LogDeferred(ctx.Logger(), func() error { return iterator.Close() })
 
 	for ; iterator.Valid(); iterator.Next() {
 		var amount math.Int

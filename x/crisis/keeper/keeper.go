@@ -28,16 +28,11 @@ type Keeper struct {
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
-func (k *Keeper) GetAuthority() string {
-	return k.authority
-}
-
 // NewKeeper creates a new Keeper object
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, invCheckPeriod uint,
 	supplyKeeper types.SupplyKeeper, feeCollectorName string, authority string,
 ) *Keeper {
-
 	return &Keeper{
 		storeKey:         storeKey,
 		cdc:              cdc,
@@ -47,6 +42,11 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 	}
+}
+
+// GetAuthority returns the x/crisis module's authority.
+func (k *Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.

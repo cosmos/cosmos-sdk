@@ -3,12 +3,13 @@ package module
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
+	"fmt"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/core/appmodule"
 
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
@@ -29,7 +30,7 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.EndBlockAppModule   = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -56,7 +57,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.keeper)
 	err := cfg.RegisterMigration(feegrant.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/feegrant from version 1 to 2: %v", err))
 	}
 }
 
@@ -68,11 +69,6 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers the feegrant module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	feegrant.RegisterInterfaces(registry)
-}
-
-// LegacyQuerierHandler returns the feegrant module sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return nil
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the feegrant
@@ -140,21 +136,6 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the feegrant module invariants.
 func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 
-// Deprecated: Route returns the message routing key for the feegrant module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// NewHandler returns an sdk.Handler for the feegrant module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
-}
-
-// QuerierRoute returns the feegrant module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return ""
-}
-
 // InitGenesis performs genesis initialization for the feegrant module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) []abci.ValidatorUpdate {
@@ -182,9 +163,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 2 }
 
-// BeginBlock returns the begin blocker for the feegrant module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
 // EndBlock returns the end blocker for the feegrant module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
@@ -195,16 +173,16 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
+			ProvideModuleBasic,
+			ProvideModule,
 		))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type feegrantInputs struct {
+type FeegrantInputs struct {
 	depinject.In
 
 	Key           *store.KVStoreKey
@@ -214,7 +192,7 @@ type feegrantInputs struct {
 	Registry      cdctypes.InterfaceRegistry
 }
 
-func provideModule(in feegrantInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+func ProvideModule(in FeegrantInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
 	return k, runtime.WrapAppModule(m)
@@ -230,11 +208,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the feegrant content functions used to
 // simulate governance proposals.
 func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized feegrant param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
 	return nil
 }
 

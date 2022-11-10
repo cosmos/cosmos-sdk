@@ -7,6 +7,7 @@ import "cosmos/orm/v1/orm.proto";
 // This is a simulated bank schema used for testing.
 
 message Balance {
+  // clang-format off
   option (cosmos.orm.v1.table) = {
     id: 1;
     primary_key: {
@@ -18,13 +19,15 @@ message Balance {
           1 fields: "denom"
     }
   };
+// clang-format on
 
-  string address = 1;
-  string denom = 2;
-  uint64 amount = 3;
+string address = 1;
+string denom   = 2;
+uint64 amount  = 3;
 }
 
 message Supply {
+  // clang-format off
   option (cosmos.orm.v1.table) = {
     id: 2;
     primary_key: {
@@ -32,7 +35,8 @@ message Supply {
           "denom"
     }
   };
+// clang-format on
 
-  string denom = 1;
-  uint64 amount = 2;
+string denom  = 1;
+uint64 amount = 2;
 }

@@ -22,7 +22,7 @@ var _ paramtypes.ParamSet = &Params{}
 
 // ParamKeyTable for auth module
 //
-// NOTE: Deprecated.
+// Deprecated.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }

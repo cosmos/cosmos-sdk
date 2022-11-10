@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"sort"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -18,6 +17,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,18 +27,21 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
-	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+const ConsensusVersion = 4
+
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.EndBlockAppModule   = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -58,7 +61,7 @@ func NewAppModuleBasic(legacyProposalHandlers []govclient.ProposalHandler) AppMo
 
 // Name returns the gov module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return govtypes.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the gov module's types for the given codec.
@@ -77,7 +80,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
 	var data v1.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", govtypes.ModuleName, err)
 	}
 
 	return v1.ValidateGenesis(&data)
@@ -119,50 +122,67 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 	v1beta1.RegisterInterfaces(registry)
 }
 
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // AppModule implements an application module for the gov module.
 type AppModule struct {
 	AppModuleBasic
 
 	keeper        *keeper.Keeper
-	accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+	accountKeeper govtypes.AccountKeeper
+	bankKeeper    govtypes.BankKeeper
+
+	// legacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace govtypes.ParamSubspace
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(
+	cdc codec.Codec, keeper *keeper.Keeper,
+	ak govtypes.AccountKeeper, bk govtypes.BankKeeper, ss govtypes.ParamSubspace,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		legacySubspace: ss,
 	}
 }
 
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule, provideKeyTable),
-		appmodule.Invoke(invokeAddRoutes, invokeSetHooks))
+		appmodule.Provide(ProvideModuleBasic, ProvideModule, ProvideKeyTable),
+		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
+func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
 	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
-type govInputs struct {
+type GovInputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
 	Cdc              codec.Codec
 	Key              *store.KVStoreKey
-	Subspace         types.ParamSubspace
+	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter *baseapp.MsgServiceRouter
-	AccountKeeper    types.AccountKeeper
-	BankKeeper       types.BankKeeper
-	StakingKeeper    types.StakingKeeper
+
+	AccountKeeper govtypes.AccountKeeper
+	BankKeeper    govtypes.BankKeeper
+	StakingKeeper govtypes.StakingKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace govtypes.ParamSubspace
 }
 
-type govOutputs struct {
+type GovOutputs struct {
 	depinject.Out
 
 	Module       runtime.AppModuleWrapper
@@ -170,24 +190,39 @@ type govOutputs struct {
 	HandlerRoute v1beta1.HandlerRoute
 }
 
-func provideModule(in govInputs) govOutputs {
-	kConfig := types.DefaultConfig()
+func ProvideModule(in GovInputs) GovOutputs {
+	kConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
-	k := keeper.NewKeeper(in.Cdc, in.Key, in.Subspace, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.MsgServiceRouter, kConfig)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
-	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: types.RouterKey}
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 
-	return govOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.Key,
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.StakingKeeper,
+		in.MsgServiceRouter,
+		kConfig,
+		authority.String(),
+	)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
+	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
+
+	return GovOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
 }
 
-func provideKeyTable() paramtypes.KeyTable {
+func ProvideKeyTable() paramtypes.KeyTable {
 	return v1.ParamKeyTable()
 }
 
-func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
+func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 	if keeper == nil || routes == nil {
 		return
 	}
@@ -205,7 +240,7 @@ func invokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {
 	keeper.SetLegacyRouter(router)
 }
 
-func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWrapper) error {
+func InvokeSetHooks(keeper *keeper.Keeper, govHooks map[string]govtypes.GovHooksWrapper) error {
 	if keeper == nil || govHooks == nil {
 		return nil
 	}
@@ -216,7 +251,7 @@ func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWra
 	order := modNames
 	sort.Strings(order)
 
-	var multiHooks types.MultiGovHooks
+	var multiHooks govtypes.MultiGovHooks
 	for _, modName := range order {
 		hook, ok := govHooks[modName]
 		if !ok {
@@ -231,7 +266,7 @@ func invokeSetHooks(keeper *keeper.Keeper, govHooks map[string]types.GovHooksWra
 
 // Name returns the gov module's name.
 func (AppModule) Name() string {
-	return types.ModuleName
+	return govtypes.ModuleName
 }
 
 // RegisterInvariants registers module invariants
@@ -239,39 +274,28 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper, am.bankKeeper)
 }
 
-// Deprecated: Route returns the message routing key for the gov module.
-func (am AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the gov module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.QuerierRoute
-}
-
-// LegacyQuerierHandler returns no sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
-	return keeper.NewQuerier(am.keeper, legacyQuerierCdc)
-}
-
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	msgServer := keeper.NewMsgServerImpl(am.keeper)
-	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(types.ModuleName).String(), msgServer))
+	v1beta1.RegisterMsgServer(cfg.MsgServer(), keeper.NewLegacyMsgServerImpl(am.accountKeeper.GetModuleAddress(govtypes.ModuleName).String(), msgServer))
 	v1.RegisterMsgServer(cfg.MsgServer(), msgServer)
 
 	legacyQueryServer := keeper.NewLegacyQueryServer(am.keeper)
 	v1beta1.RegisterQueryServer(cfg.QueryServer(), legacyQueryServer)
 	v1.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
 	}
-	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
+	err = cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 2 to 3: %v", err))
+	}
+	err = cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4)
+	if err != nil {
+		panic(fmt.Sprintf("failed to migrate x/gov from version 3 to 4: %v", err))
 	}
 }
 
@@ -292,10 +316,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 3 }
-
-// BeginBlock performs a no-op.
-func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock returns the end blocker for the gov module. It returns no validator
 // updates.
@@ -317,14 +338,9 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 	return simulation.ProposalContents()
 }
 
-// RandomizedParams creates randomized gov param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return simulation.ParamChanges(r)
-}
-
 // RegisterStoreDecoder registers a decoder for gov module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+	sdr[govtypes.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.

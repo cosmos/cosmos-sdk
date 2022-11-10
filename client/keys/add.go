@@ -3,6 +3,7 @@ package keys
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -93,12 +94,13 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 
 /*
 input
-	- bip39 mnemonic
-	- bip39 passphrase
-	- bip44 path
-	- local encryption password
+  - bip39 mnemonic
+  - bip39 passphrase
+  - bip44 path
+  - local encryption password
+
 output
-	- armor encrypted private key (saved to file)
+  - armor encrypted private key (saved to file)
 */
 func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
@@ -312,7 +314,7 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 			out.Mnemonic = mnemonic
 		}
 
-		jsonString, err := KeysCdc.MarshalJSON(out)
+		jsonString, err := json.Marshal(out)
 		if err != nil {
 			return err
 		}

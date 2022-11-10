@@ -36,7 +36,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 ### `coin`
 
 - Applies to `cosmos.base.v1beta1.Coin`.
-- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc1/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
+- Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
   - We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 - One space between the denom and amount (e.g. `10 atom`).
@@ -81,7 +81,7 @@ where:
 
 Given the proto definition:
 
-```proto
+```protobuf
 message AllowedMsgAllowance {
   repeated string allowed_messages = 1;
 }
@@ -123,7 +123,7 @@ End of Allowed messages
 
 Given the following Protobuf messages:
 
-```proto
+```protobuf
 enum VoteOption {
   VOTE_OPTION_UNSPECIFIED = 0;
   VOTE_OPTION_YES = 1;
@@ -203,18 +203,56 @@ Object: /cosmos.gov.v1.Vote
 
 ### `google.protobuf.Timestamp`
 
-Rendered as either ISO8601 (`2021-01-01T12:00:00Z`).
+Rendered using [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339) (a
+simplification of ISO 8601), which is the current recommendation for portable
+time values. The rendering always uses "Z" (UTC) as the timezone. It uses only
+the necessary fractional digits of a second, omitting the fractional part
+entirely if the timestamp has no fractional seconds. (The resulting timestamps
+are not automatically sortable by standard lexicographic order, but we favor
+the legibility of the shorter string.)
 
-### `google.protobuf.Duration` (TODO)
+#### Examples
 
-- rendered in terms of weeks, days, hours, minutes and seconds as these time units can be measured independently of any calendar and duration values are in seconds (so months and years can't be used precisely)
-- total seconds values included at the end so users have both pieces of information
-- Ex:
-  - `1483530 seconds` -> `2 weeks, 3 days, 4 hours, 5 minutes, 30 seconds (1483530 seconds total)`
+The timestamp with 1136214245 seconds and 700000000 nanoseconds is rendered
+as `2006-01-02T15:04:05.7Z`.
+The timestamp with 1136214245 seconds and zero nanoseconds is rendered
+as `2006-01-02T15:04:05Z`.
+
+### `google.protobuf.Duration`
+
+The duration proto expresses a raw number of seconds and nanoseconds.
+This will be rendered as longer time units of days, hours, and minutes,
+plus any remaining seconds, in that order.
+Leading and trailing zero-quantity units will be omitted, but all
+units in between nonzero units will be shown, e.g. ` 3 days, 0 hours, 0 minutes, 5 seconds`.
+
+Even longer time units such as months or years are imprecise.
+Weeks are precise, but not commonly used - `91 days` is more immediately
+legible than `13 weeks`.  Although `days` can be problematic,
+e.g. noon to noon on subsequent days can be 23 or 25 hours depending on
+daylight savings transitions, there is significant advantage in using
+strict 24-hour days over using only hours (e.g. `91 days` vs `2184 hours`).
+
+When nanoseconds are nonzero, they will be shown as fractional seconds,
+with only the minimum number of digits, e.g `0.5 seconds`.
+
+A duration of exactly zero is shown as `0 seconds`.
+
+Units will be given as singular (no trailing `s`) when the quantity is exactly one,
+and will be shown in plural otherwise.
+
+Negative durations will be indicated with a leading minus sign (`-`).
+
+Examples:
+
+- `1 day`
+- `30 days`
+- `-1 day, 12 hours`
+- `3 hours, 0 minutes, 53.025 seconds`
 
 ### bytes
 
-- Bytes are rendered in base64.
+- Bytes are rendered in hexadecimal, all capital letters, without the `0x` prefix.
 
 ### address bytes
 
@@ -230,7 +268,7 @@ Strings are rendered as-is.
 
 #### Example
 
-```proto
+```protobuf
 message TestData {
   string signer = 1;
   string metadata = 2;
@@ -260,7 +298,7 @@ _This paragraph is in the Annex for informational purposes only, and will be rem
 - all protobuf messages to be used with `SIGN_MODE_TEXTUAL` CAN have a short title associated with them that can be used in format strings whenever the type URL is explicitly referenced via the `cosmos.msg.v1.textual.msg_title` Protobuf message option.
 - if this option is not specified for a Msg, then the Protobuf fully qualified name will be used.
 
-```proto
+```protobuf
 message MsgSend {
   option (cosmos.msg.v1.textual.msg_title) = "bank send coins";
 }

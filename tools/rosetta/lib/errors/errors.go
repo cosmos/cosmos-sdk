@@ -5,6 +5,7 @@ package errors
 
 import (
 	"fmt"
+	"reflect"
 
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -68,6 +69,9 @@ func WrapError(err *Error, msg string) *Error {
 // ToRosetta attempts to converting an error into a rosetta
 // error, if the error cannot be converted it will be parsed as unknown
 func ToRosetta(err error) *types.Error {
+	if rv := reflect.ValueOf(err); !rv.IsValid() || rv.IsNil() {
+		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
+	}
 	switch err := err.(type) {
 	case *Error:
 		return err.rosErr

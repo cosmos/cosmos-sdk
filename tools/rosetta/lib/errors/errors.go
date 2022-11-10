@@ -10,6 +10,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
+	tmtypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
 // ListErrors lists all the registered errors
@@ -67,12 +68,25 @@ func WrapError(err *Error, msg string) *Error {
 // ToRosetta attempts to converting an error into a rosetta
 // error, if the error cannot be converted it will be parsed as unknown
 func ToRosetta(err error) *types.Error {
-	// if it's null or not known
-	rosErr, ok := err.(*Error)
-	if rosErr == nil || !ok {
+	switch err := err.(type) {
+	case *Error:
+		return err.rosErr
+	case *tmtypes.RPCError:
+		return fromTendermintToRosettaError(err).rosErr
+	default:
 		return ToRosetta(WrapError(ErrUnknown, ErrUnknown.Error()))
 	}
-	return rosErr.rosErr
+}
+
+// fromTendermintToRosettaError converts a tendermint jsonrpc error to rosetta error
+func fromTendermintToRosettaError(err *tmtypes.RPCError) *Error {
+	return &Error{rosErr: &types.Error{
+		Code:    int32(err.Code),
+		Message: err.Message,
+		Details: map[string]interface{}{
+			"info": err.Data,
+		},
+	}}
 }
 
 // FromGRPCToRosettaError converts a gRPC error to rosetta error

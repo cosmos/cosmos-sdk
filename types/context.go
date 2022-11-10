@@ -23,24 +23,6 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-<<<<<<< HEAD
-	baseCtx       context.Context
-	ms            MultiStore
-	header        tmproto.Header
-	headerHash    tmbytes.HexBytes
-	chainID       string
-	txBytes       []byte
-	logger        log.Logger
-	voteInfo      []abci.VoteInfo
-	gasMeter      GasMeter
-	blockGasMeter GasMeter
-	checkTx       bool
-	recheckTx     bool // if recheckTx == true, then checkTx must also be true
-	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
-	eventManager  *EventManager
-	priority      int64 // The tx priority, only relevant in CheckTx
-=======
 	baseCtx              context.Context
 	ms                   MultiStore
 	header               tmproto.Header
@@ -54,12 +36,11 @@ type Context struct {
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice          DecCoins
-	consParams           *tmproto.ConsensusParams
+	consParams           *abci.ConsensusParams
 	eventManager         *EventManager
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
->>>>>>> f001b467a (feat(types): set custom GasConfig on Context for GasKVStore (#13826))
 }
 
 // Proposed rename, not done to avoid API breakage

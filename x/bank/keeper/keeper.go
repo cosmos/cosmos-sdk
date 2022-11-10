@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -47,6 +48,8 @@ type Keeper interface {
 	DelegateCoins(ctx sdk.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx sdk.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
+	GetAuthority() string
+
 	types.QueryServer
 }
 
@@ -59,6 +62,7 @@ type BaseKeeper struct {
 	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
+	authority  			   string
 }
 
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
@@ -113,6 +117,7 @@ func NewBaseKeeper(
 		storeKey:               storeKey,
 		paramSpace:             paramSpace,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
+		authority: 				authtypes.NewModuleAddress(govtypes.ModuleName).String(), // hardcoded till all transitive dependencies can be updated to pass in the constructor instead
 	}
 }
 
@@ -549,4 +554,8 @@ func (k BaseViewKeeper) IterateTotalSupply(ctx sdk.Context, cb func(sdk.Coin) bo
 			break
 		}
 	}
+}
+
+func (k BaseKeeper) GetAuthority() string {
+	return k.authority
 }

@@ -41,6 +41,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
 	suite.NoError(err)
 
+	// Create a new denom 'atom' so the proposal to update fee denom can be tested
+	atomCoins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100000)))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, atomCoins)
+	suite.NoError(err)
+
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
 	v1.RegisterQueryServer(queryHelper, app.GovKeeper)
 	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
@@ -56,7 +61,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)
-	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	suite.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(50000000))
 }
 
 func TestIncrementProposalNumber(t *testing.T) {

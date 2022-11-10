@@ -16,6 +16,9 @@ service Msg {
 
   // MultiSend defines a method for sending coins from some accounts to other accounts.
   rpc MultiSend(MsgMultiSend) returns (MsgMultiSendResponse);
+
+  // UpdateDenomMetadata defines a method for updating the denom metadata. Only usable in x/gov proposal.
+  rpc UpdateDenomMetadata(MsgUpdateDenomMetadata) returns (MsgUpdateDenomMetadataResponse);
 }
 
 // MsgSend represents a message to send coins from one account to another.
@@ -47,3 +50,17 @@ message MsgMultiSend {
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
 
+message MsgUpdateDenomMetadata {
+  option (cosmos.msg.v1.signer) = "from_address";
+
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string   from_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   title        = 2;
+  string   description  = 3;
+  Metadata metadata     = 4;
+}
+
+// MsgUpdateDenomMetadataResponse defines the Msg/UpdateDenomMetadata response type.
+message MsgUpdateDenomMetadataResponse {}

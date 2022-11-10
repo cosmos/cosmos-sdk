@@ -24,6 +24,22 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 		Amount:      coins,
 	}
 
+	updateFeeDenomMsg := &banktypes.MsgUpdateDenomMetadata{
+		FromAddress: govAcct.String(),
+		Title:       "title",
+		Description: "description",
+		Metadata: &banktypes.Metadata{
+			Base:        "atom",
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Display:     "atom",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*banktypes.DenomUnit{
+				{"atom", uint32(0), []string{"atom"}},
+			},
+		},
+	}
+
 	cases := map[string]struct {
 		preRun    func() (*v1.MsgSubmitProposal, error)
 		expErr    bool
@@ -99,6 +115,28 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			},
 			expErr: false,
 		},
+		"all good - update fee denom proposal": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{updateFeeDenomMsg},
+					initialDeposit,
+					proposer.String(),
+					"",
+				)
+			},
+			expErr: false,
+		},
+		"all good with min deposit -  update fee denom proposal": {
+			preRun: func() (*v1.MsgSubmitProposal, error) {
+				return v1.NewMsgSubmitProposal(
+					[]sdk.Msg{updateFeeDenomMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+				)
+			},
+			expErr: false,
+		},
 	}
 
 	for name, tc := range cases {
@@ -121,9 +159,9 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	govAcct := suite.app.GovKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
 	addrs := suite.addrs
 	proposer := addrs[0]
-
 	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
 	minDeposit := suite.app.GovKeeper.GetDepositParams(suite.ctx).MinDeposit
+
 	bankMsg := &banktypes.MsgSend{
 		FromAddress: govAcct.String(),
 		ToAddress:   proposer.String(),
@@ -142,6 +180,22 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalId := res.ProposalId
+
+	updateFeeDenomMsg := &banktypes.MsgUpdateDenomMetadata{
+		FromAddress: govAcct.String(),
+		Title:       "title",
+		Description: "description",
+		Metadata: &banktypes.Metadata{
+			Base:        "atom",
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Display:     "atom",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*banktypes.DenomUnit{
+				{"atom", uint32(0), []string{"atom"}},
+			},
+		},
+	}
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -212,6 +266,27 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 			metadata: "",
 			expErr:   false,
 		},
+		"all good - fee-denom-change-proposal": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{updateFeeDenomMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+				)
+
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:   v1.VoteOption_VOTE_OPTION_YES,
+			voter:    proposer,
+			metadata: "",
+			expErr:   false,
+		},
 	}
 
 	for name, tc := range cases {
@@ -254,6 +329,22 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
 	proposalId := res.ProposalId
+
+	updateFeeDenomMsg := &banktypes.MsgUpdateDenomMetadata{
+		FromAddress: govAcct.String(),
+		Title:       "title",
+		Description: "description",
+		Metadata: &banktypes.Metadata{
+			Base:        "atom",
+			Name:        "Cosmos Hub Atom",
+			Symbol:      "ATOM",
+			Display:     "atom",
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*banktypes.DenomUnit{
+				{"atom", uint32(0), []string{"atom"}},
+			},
+		},
+	}
 
 	cases := map[string]struct {
 		preRun    func() uint64
@@ -309,6 +400,26 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 			preRun: func() uint64 {
 				msg, err := v1.NewMsgSubmitProposal(
 					[]sdk.Msg{bankMsg},
+					minDeposit,
+					proposer.String(),
+					"",
+				)
+				suite.Require().NoError(err)
+
+				res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res.ProposalId)
+				return res.ProposalId
+			},
+			option:   v1.VoteOption_VOTE_OPTION_YES,
+			voter:    proposer,
+			metadata: "",
+			expErr:   false,
+		},
+		"all good - fee denom proposal": {
+			preRun: func() uint64 {
+				msg, err := v1.NewMsgSubmitProposal(
+					[]sdk.Msg{updateFeeDenomMsg},
 					minDeposit,
 					proposer.String(),
 					"",

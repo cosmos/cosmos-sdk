@@ -45,14 +45,14 @@ service Query {
       returns (QueryValidatorUnbondingDelegationsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/validators/"
-                                   "{validator_addr}/unbonding_delegations";
+                                                 "{validator_addr}/unbonding_delegations";
   }
 
   // Delegation queries delegate info for given validator delegator pair.
   rpc Delegation(QueryDelegationRequest) returns (QueryDelegationResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/"
-                                   "{delegator_addr}";
+                                                 "{delegator_addr}";
   }
 
   // UnbondingDelegation queries unbonding info for given validator delegator
@@ -60,7 +60,7 @@ service Query {
   rpc UnbondingDelegation(QueryUnbondingDelegationRequest) returns (QueryUnbondingDelegationResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/"
-                                   "{delegator_addr}/unbonding_delegation";
+                                                 "{delegator_addr}/unbonding_delegation";
   }
 
   // DelegatorDelegations queries all delegations of a given delegator address.
@@ -81,7 +81,7 @@ service Query {
       returns (QueryDelegatorUnbondingDelegationsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/delegators/"
-                                   "{delegator_addr}/unbonding_delegations";
+                                                 "{delegator_addr}/unbonding_delegations";
   }
 
   // Redelegations queries redelegations of given address.
@@ -108,7 +108,7 @@ service Query {
   rpc DelegatorValidator(QueryDelegatorValidatorRequest) returns (QueryDelegatorValidatorResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/"
-                                   "{validator_addr}";
+                                                 "{validator_addr}";
   }
 
   // HistoricalInfo queries the historical info for given height.
@@ -304,7 +304,8 @@ message QueryRedelegationsRequest {
 // QueryRedelegationsResponse is response type for the Query/Redelegations RPC
 // method.
 message QueryRedelegationsResponse {
-  repeated RedelegationResponse redelegation_responses = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated RedelegationResponse redelegation_responses = 1
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

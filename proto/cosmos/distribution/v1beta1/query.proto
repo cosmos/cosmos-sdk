@@ -92,8 +92,11 @@ message QueryValidatorDistributionInfoResponse {
   // operator_address defines the validator operator address.
   string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // self_bond_rewards defines the self delegations rewards.
-  repeated cosmos.base.v1beta1.DecCoin self_bond_rewards = 2
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  repeated cosmos.base.v1beta1.DecCoin self_bond_rewards = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
   // commission defines the commission the validator received.
   repeated cosmos.base.v1beta1.DecCoin commission = 3
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false];
@@ -168,8 +171,11 @@ message QueryDelegationRewardsRequest {
 // Query/DelegationRewards RPC method.
 message QueryDelegationRewardsResponse {
   // rewards defines the rewards accrued by a delegation.
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
 }
 
 // QueryDelegationTotalRewardsRequest is the request type for the
@@ -187,8 +193,11 @@ message QueryDelegationTotalRewardsResponse {
   // rewards defines all the rewards accrued by a delegator.
   repeated DelegationDelegatorReward rewards = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // total defines the sum of all the rewards.
-  repeated cosmos.base.v1beta1.DecCoin total = 2
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
+  repeated cosmos.base.v1beta1.DecCoin total = 2 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
 }
 
 // QueryDelegatorValidatorsRequest is the request type for the
@@ -239,6 +248,9 @@ message QueryCommunityPoolRequest {}
 // RPC method.
 message QueryCommunityPoolResponse {
   // pool defines community pool's coins.
-  repeated cosmos.base.v1beta1.DecCoin pool = 1
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated cosmos.base.v1beta1.DecCoin pool = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
 }

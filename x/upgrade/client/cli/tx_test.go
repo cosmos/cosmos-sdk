@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -43,12 +42,12 @@ func TestModuleVersionsCLI(t *testing.T) {
 	}{
 		{
 			msg:          "test full query with json output",
-			args:         []string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			args:         []string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			expCmdOuptut: `--height=1 --output=json`,
 		},
 		{
 			msg:          "test full query with text output",
-			args:         []string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			args:         []string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			expCmdOuptut: `--height=1 --output=text`,
 		},
 		{

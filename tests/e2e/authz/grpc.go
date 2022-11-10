@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -108,7 +109,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := CreateGrant(val, []string{
+				_, err := authzclitestutil.CreateGrant(val.ClientCtx, []string{
 					grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),

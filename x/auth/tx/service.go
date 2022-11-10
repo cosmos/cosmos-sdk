@@ -263,10 +263,12 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 	if err != nil {
 		return nil, err
 	}
+
 	decodedBytes, err := s.clientCtx.TxConfig.TxDecoder()(txb)
 	if err != nil {
 		return nil, err
 	}
+
 	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(decodedBytes)
 	if err != nil {
 		return nil, err
@@ -287,12 +289,14 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 	if err != nil {
 		return nil, err
 	}
+
 	txWrapper, ok := txb.(*wrapper)
 	if ok {
 		return &txtypes.TxDecodeResponse{
 			Tx: txWrapper.tx,
 		}, nil
 	}
+
 	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
 }
 

@@ -91,6 +91,11 @@ func SetProcessProposal(proposalHandler sdk.ProcessProposalHandler) func(*BaseAp
 	return func(app *BaseApp) { app.SetProcessProposal(proposalHandler) }
 }
 
+// SetPrepareProposal sets the PrepareProposal handler.
+func SetPrepareProposal(proposalHandler sdk.PrepareProposalHandler) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetPrepareProposal(proposalHandler) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -269,6 +274,12 @@ func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 	app.mempool = mempool
 }
 
+// SetProcessProposal sets the process proposal function for the BaseApp.
 func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
 	app.processProposal = handler
+}
+
+// SetPrepareProposal sets the prepare proposal function for the BaseApp.
+func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
+	app.prepareProposal = handler
 }

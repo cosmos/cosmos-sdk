@@ -8,6 +8,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/tx/textual/internal/utils"
 	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -34,7 +35,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 					ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), tc.Metadata[coin.Denom])
 				}
 
-				listValue := valuerenderer.NewGenericList(tc.Proto)
+				listValue := utils.NewGenericList(tc.Proto)
 				screens, err := vr.Format(ctx, protoreflect.ValueOf(listValue))
 
 				if tc.Error {

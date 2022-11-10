@@ -11,9 +11,10 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
 	"cosmossdk.io/math"
+	"cosmossdk.io/tx/textual/internal/utils"
 )
 
-const emptyCoins = "empty coins"
+const emptyCoins = "zero"
 
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
 func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
@@ -90,7 +91,7 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	}
 
 	if screens[0].Text == emptyCoins {
-		return protoreflect.ValueOfList(NewGenericList([]*basev1beta1.Coin{})), nil
+		return protoreflect.ValueOfList(utils.NewGenericList([]*basev1beta1.Coin{})), nil
 	}
 
 	coins := strings.Split(screens[0].Text, ", ")
@@ -114,7 +115,7 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	}
 
 	if len(parsed) > 1 {
-		return protoreflect.ValueOf(NewGenericList(parsed)), err
+		return protoreflect.ValueOf(utils.NewGenericList(parsed)), err
 	} else {
 		return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
 	}

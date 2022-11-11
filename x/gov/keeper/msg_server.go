@@ -14,6 +14,7 @@ import (
 	v1 "cosmossdk.io/x/gov/types/v1"
 	"cosmossdk.io/x/gov/types/v1beta1"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -97,8 +98,8 @@ func (k msgServer) SubmitProposal(ctx context.Context, msg *v1.MsgSubmitProposal
 	}
 
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/9683
-	if err := k.GasService.GasMeter(ctx).Consume(
-		3*k.GasService.GasConfig(ctx).WriteCostPerByte*uint64(len(bytes)),
+	ctx.GasMeter().ConsumeGas(
+		3*ctx.KVGasConfig().WriteCostPerByte*uint64(len(bytes)),
 		"submit proposal",
 	); err != nil {
 		return nil, err

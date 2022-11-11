@@ -38,42 +38,47 @@ but please do not over-use it. We try to keep all data structured
 and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
-	baseCtx       context.Context
-	ms            MultiStore
-	header        tmproto.Header
-	headerHash    tmbytes.HexBytes
-	chainID       string
-	txBytes       []byte
-	logger        log.Logger
-	voteInfo      []abci.VoteInfo
-	gasMeter      GasMeter
-	blockGasMeter GasMeter
-	checkTx       bool
-	recheckTx     bool // if recheckTx == true, then checkTx must also be true
-	minGasPrice   DecCoins
-	consParams    *abci.ConsensusParams
-	eventManager  *EventManager
-	priority      int64 // The tx priority, only relevant in CheckTx
+	baseCtx              context.Context
+	ms                   MultiStore
+	header               tmproto.Header
+	headerHash           tmbytes.HexBytes
+	chainID              string
+	txBytes              []byte
+	logger               log.Logger
+	voteInfo             []abci.VoteInfo
+	gasMeter             GasMeter
+	blockGasMeter        GasMeter
+	checkTx              bool
+	recheckTx            bool // if recheckTx == true, then checkTx must also be true
+	minGasPrice          DecCoins
+	consParams           *abci.ConsensusParams
+	eventManager         *EventManager
+	priority             int64 // The tx priority, only relevant in CheckTx
+	kvGasConfig          storetypes.GasConfig
+	transientKVGasConfig storetypes.GasConfig
 }
 
 // Proposed rename, not done to avoid API breakage
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context    { return c.ctx }
-func (c Context) MultiStore() MultiStore      { return c.ms }
-func (c Context) BlockHeight() int64          { return c.header.Height }
-func (c Context) BlockTime() time.Time        { return c.header.Time }
-func (c Context) ChainID() string             { return c.chainID }
-func (c Context) TxBytes() []byte             { return c.txBytes }
-func (c Context) Logger() log.Logger          { return c.logger }
-func (c Context) VoteInfos() []abci.VoteInfo  { return c.voteInfo }
-func (c Context) GasMeter() GasMeter          { return c.gasMeter }
-func (c Context) BlockGasMeter() GasMeter     { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool             { return c.checkTx }
-func (c Context) IsReCheckTx() bool           { return c.recheckTx }
-func (c Context) MinGasPrices() DecCoins      { return c.minGasPrice }
-func (c Context) EventManager() *EventManager { return c.eventManager }
+func (c Context) Context() context.Context                   { return c.baseCtx }
+func (c Context) MultiStore() MultiStore                     { return c.ms }
+func (c Context) BlockHeight() int64                         { return c.header.Height }
+func (c Context) BlockTime() time.Time                       { return c.header.Time }
+func (c Context) ChainID() string                            { return c.chainID }
+func (c Context) TxBytes() []byte                            { return c.txBytes }
+func (c Context) Logger() log.Logger                         { return c.logger }
+func (c Context) VoteInfos() []abci.VoteInfo                 { return c.voteInfo }
+func (c Context) GasMeter() GasMeter                         { return c.gasMeter }
+func (c Context) BlockGasMeter() GasMeter                    { return c.blockGasMeter }
+func (c Context) IsCheckTx() bool                            { return c.checkTx }
+func (c Context) IsReCheckTx() bool                          { return c.recheckTx }
+func (c Context) MinGasPrices() DecCoins                     { return c.minGasPrice }
+func (c Context) EventManager() *EventManager                { return c.eventManager }
+func (c Context) Priority() int64                            { return c.priority }
+func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasConfig }
+func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }
 
 // clone the header before returning
 func (c Context) BlockHeader() tmproto.Header {
@@ -111,19 +116,15 @@ func NewContext(ms storetypes.MultiStore, isCheckTx bool, logger log.Logger) Con
 	return Context{
 		baseCtx:              context.Background(),
 		ms:                   ms,
-		header:               h,
-		chainID:              h.ChainID,
+		header:               header,
+		chainID:              header.ChainID,
 		checkTx:              isCheckTx,
-		sigverifyTx:          true,
 		logger:               logger,
 		gasMeter:             storetypes.NewInfiniteGasMeter(),
 		minGasPrice:          DecCoins{},
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
-		headerInfo: header.Info{
-			Time: h.Time,
-		},
 	}
 }
 
@@ -337,13 +338,13 @@ func (c Context) Value(key interface{}) interface{} {
 // ----------------------------------------------------------------------------
 
 // KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key storetypes.StoreKey) storetypes.KVStore {
-	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.kvGasConfig)
+func (c Context) KVStore(key storetypes.StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
-	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
+func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
+	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), c.transientKVGasConfig)
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new

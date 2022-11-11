@@ -27,7 +27,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -189,17 +188,18 @@ func NewSimApp(
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
-		// Below we construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
+		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
 		// handlers.  These defaults are already set in the SDK's BaseApp, this shows an example of how to override
 		// them.
-		nonceMempool = mempool.NewNonceMempool()
-		mempoolOpt   = baseapp.SetMempool(nonceMempool)
-		prepareOpt   = func(app *baseapp.BaseApp) {
-			app.SetPrepareProposal(app.DefaultPrepareProposal())
-		}
-		processOpt = func(app *baseapp.BaseApp) {
-			app.SetProcessProposal(app.DefaultProcessProposal())
-		}
+		//
+		//nonceMempool = mempool.NewNonceMempool()
+		//mempoolOpt   = baseapp.SetMempool(nonceMempool)
+		//prepareOpt   = func(app *baseapp.BaseApp) {
+		//	app.SetPrepareProposal(app.DefaultPrepareProposal())
+		//}
+		//processOpt = func(app *baseapp.BaseApp) {
+		//	app.SetProcessProposal(app.DefaultProcessProposal())
+		//}
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(

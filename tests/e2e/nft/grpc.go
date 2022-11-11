@@ -29,7 +29,7 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 				Owner:   s.owner.String(),
 			},
 			expectErr:   true,
-			errMsg:      "invalid class id",
+			errMsg:      "Empty class id",
 			expectValue: 0,
 		},
 		{
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				ID:      ExpNFT.Id,
 			},
 			expectErr:    true,
-			errMsg:       "invalid class id",
+			errMsg:       "Empty class id",
 			expectResult: "",
 		},
 		{
@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 				ClassID: "invalid_class_id",
 			},
 			expectErr:    true,
-			errMsg:       "invalid class id",
+			errMsg:       "Empty class id",
 			expectResult: 0,
 		},
 		{
@@ -371,7 +371,7 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 				ID:      "invalid_nft_id",
 			},
 			expectErr: true,
-			errorMsg:  "invalid nft id",
+			errorMsg:  "Empty nft id",
 		},
 		{
 			name: "nft id does not exist",

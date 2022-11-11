@@ -231,7 +231,7 @@ func (s *IntegrationTestSuite) TestQueryOwner() {
 				ID:      testID,
 			},
 			expectErr:    true,
-			errorMsg:     "invalid class id",
+			errorMsg:     "Empty class id",
 			expectResult: "",
 		},
 		{

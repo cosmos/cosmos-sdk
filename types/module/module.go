@@ -173,7 +173,7 @@ type AppModule interface {
 }
 
 // HasRegisterInvariants is the interface for registering invariants.
-type HasRegisterInvariants interface {
+type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)
 }

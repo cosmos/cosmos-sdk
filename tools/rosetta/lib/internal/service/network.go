@@ -26,20 +26,17 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 		return nil, errors.ToRosetta(err)
 	}
 
-	// if genesis block could not be reached before
-	if on.genesisBlockIdentifier == nil {
-		var genesisBlockHeight int64 = 1
-		genesisBlockIdentifier, err := on.client.BlockByHeight(ctx, &genesisBlockHeight)
-		if err == nil {
-			// once genesis is queryable, updates it to avoid future calls
-			on.genesisBlockIdentifier = genesisBlockIdentifier.Block // once genesis is queryable, updates OnlineNetwork genesisBlockIdentifier
-		}
-	}
-
-	var oldestBlockHeight int64 = -1
-	oldestBlockIdentifier, err := on.client.BlockByHeight(ctx, &oldestBlockHeight)
+	oldestBlockIdentifier, err := on.client.OldestBlock(ctx)
 	if err != nil {
 		return nil, errors.ToRosetta(err)
+	}
+
+	genesisBlock, err := on.client.GenesisBlock(ctx)
+	if err != nil {
+		genesisBlock, err = on.client.InitialHeightBlock(ctx)
+		if err != nil {
+			genesisBlock = oldestBlockIdentifier
+		}
 	}
 
 	peers, err := on.client.Peers(ctx)
@@ -50,7 +47,7 @@ func (on OnlineNetwork) NetworkStatus(ctx context.Context, _ *types.NetworkReque
 	return &types.NetworkStatusResponse{
 		CurrentBlockIdentifier: block.Block,
 		CurrentBlockTimestamp:  block.MillisecondTimestamp,
-		GenesisBlockIdentifier: on.genesisBlockIdentifier,
+		GenesisBlockIdentifier: genesisBlock.Block,
 		OldestBlockIdentifier:  oldestBlockIdentifier.Block,
 		SyncStatus:             syncStatus,
 		Peers:                  peers,

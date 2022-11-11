@@ -30,10 +30,9 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, 
 	}
 
 	return OnlineNetwork{
-		client:                 client,
-		network:                network,
-		networkOptions:         networkOptionsFromClient(client, genesisBlock.Block),
-		genesisBlockIdentifier: genesisBlock.Block,
+		client:         client,
+		network:        network,
+		networkOptions: networkOptionsFromClient(client, genesisBlock.Block),
 	}, nil
 }
 
@@ -43,8 +42,6 @@ type OnlineNetwork struct {
 
 	network        *types.NetworkIdentifier      // identifies the network, it's static
 	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static
-
-	genesisBlockIdentifier *types.BlockIdentifier // identifies genesis block
 }
 
 // networkOptionsFromClient builds network options given the client

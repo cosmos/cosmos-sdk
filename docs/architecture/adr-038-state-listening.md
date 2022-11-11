@@ -188,25 +188,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 
 ```go
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
-    cachedStores := make(map[types.StoreKey]types.CacheWrapper)
-	for key, store := range rs.stores {
-        var cacheStore types.KVStore
-        switch store.GetStoreType() {
-        case types.StoreTypeIAVL:
-            // If the store is wrapped with an inter-block cache, we must first unwrap
-            // it to get the underlying IAVL store.
-            store = rs.GetCommitKVStore(key)
-
-            // Attempt to lazy-load an already saved IAVL store version. If the
-            // version does not exist or is pruned, an error should be returned.
-            var err error
-            cacheStore, err = store.(*iavl.Store).GetImmutable(version)
-            if err != nil {
-                return nil, err
-            }
-        default:
-            cacheStore = store
-        }
+ // ...
 
         // Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
         // set same listeners on cache store will observe duplicated writes.

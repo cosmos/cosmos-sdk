@@ -16,11 +16,11 @@ var _ sdk.Msg = &MsgSend{}
 // ValidateBasic implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {
 	if len(m.ClassId) == 0 {
-		return errors.Wrapf(ErrInvalidID, "Empty class id (%s)", m.ClassId)
+		return errors.Wrap(ErrInvalidID, "Empty class id")
 	}
 
 	if len(m.Id) == 0 {
-		return errors.Wrapf(ErrInvalidID, "Empty nft id (%s)", m.Id)
+		return errors.Wrap(ErrInvalidID, "Empty nft id")
 	}
 
 	_, err := sdk.AccAddressFromBech32(m.Sender)

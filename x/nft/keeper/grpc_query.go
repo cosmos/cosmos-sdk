@@ -20,7 +20,7 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
 	}
 
 	owner, err := sdk.AccAddressFromBech32(r.Owner)
@@ -40,11 +40,11 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
 	}
 
 	if len(r.Id) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty nft id (%s)", r.Id)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty nft id")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -59,7 +59,7 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	supply := k.GetTotalSupply(ctx, r.ClassId)
@@ -135,10 +135,10 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
 	}
 	if len(r.Id) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty nft id (%s)", r.Id)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty nft id")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -156,7 +156,7 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
+		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

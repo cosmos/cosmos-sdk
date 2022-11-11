@@ -9,13 +9,13 @@ import (
 func ValidateGenesis(data GenesisState) error {
 	for _, class := range data.Classes {
 		if len(class.Id) == 0 {
-			return errors.Wrapf(ErrInvalidID, "Empty class id (%s)", class.Id)
+			return errors.Wrap(ErrInvalidID, "Empty class id")
 		}
 	}
 	for _, entry := range data.Entries {
 		for _, nft := range entry.Nfts {
 			if len(nft.Id) == 0 {
-				return errors.Wrapf(ErrInvalidID, "Empty nft id (%s)", nft.Id)
+				return errors.Wrap(ErrInvalidID, "Empty nft id")
 			}
 			if _, err := sdk.AccAddressFromBech32(entry.Owner); err != nil {
 				return err

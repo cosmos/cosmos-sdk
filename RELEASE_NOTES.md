@@ -7,7 +7,7 @@ If your chain's state has coin metadata, an issue has been discovered in the coi
 
 * If you are planning to migrate to v0.46, please use `v0.46.5`. All releases prior to `v0.46.5`, **must not be used**. All previous version of `v0.46` are retracted.
 * If your chain is already on v0.46 using `<=v0.46.4` and has coin metadata, a **coordinated upgrade** to `v0.46.5` is required.
-* If you chain is already on v0.46 using `<=v0.46.4` but has no coin metadata, this release is **not breaking**.
+* If your chain is already on v0.46 using `<=v0.46.4` but has no coin metadata, this release is **not breaking**.
 
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md) for an exhaustive list of changes.
 

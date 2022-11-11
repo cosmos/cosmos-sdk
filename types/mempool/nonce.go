@@ -9,11 +9,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
+var (
+	_ Mempool  = (*nonceMempool)(nil)
+	_ Iterator = (*nonceMempoolIterator)(nil)
+)
+
 // nonceMempool is a mempool that keeps transactions sorted by nonce. Transactions with the lowest nonce globally
 // are prioritized. Transactions with the same nonce are prioritized by sender address. Fee/gas based
 // prioritization is not supported.
 type nonceMempool struct {
 	txQueue *huandu.SkipList
+}
+
+type nonceMempoolIterator struct {
+	currentTx *huandu.Element
+}
+
+func (i nonceMempoolIterator) Next() Iterator {
+	if i.currentTx == nil {
+		return nil
+	} else if n := i.currentTx.Next(); n != nil {
+		return nonceMempoolIterator{currentTx: n}
+	} else {
+		return nil
+	}
+}
+
+func (i nonceMempoolIterator) Tx() sdk.Tx {
+	return i.currentTx.Value.(sdk.Tx)
 }
 
 type txKey struct {
@@ -34,6 +57,7 @@ func txKeyLessNonce(a, b any) int {
 	return huandu.String.Compare(keyB.sender, keyA.sender)
 }
 
+// NewNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
 func NewNonceMempool() Mempool {
 	sp := &nonceMempool{
 		txQueue: huandu.New(huandu.LessThanFunc(txKeyLessNonce)),
@@ -44,7 +68,7 @@ func NewNonceMempool() Mempool {
 
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
-func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
+func (sp nonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -61,26 +85,15 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx Tx) error {
 	return nil
 }
 
-// Select returns txs from the mempool with the lowest nonce globally first. A sender's txs will always be returned
-// in nonce order.
-func (sp nonceMempool) Select(_ [][]byte, maxBytes int64) ([]Tx, error) {
-	var (
-		txBytes     int64
-		selectedTxs []Tx
-	)
-
+// Select returns an iterator ordering transactions the mempool with the lowest nonce globally first. A sender's txs
+// will always be returned in nonce order.
+func (sp nonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	currentTx := sp.txQueue.Front()
-	for currentTx != nil {
-		mempoolTx := currentTx.Value.(Tx)
-
-		if txBytes += mempoolTx.Size(); txBytes <= maxBytes {
-			selectedTxs = append(selectedTxs, mempoolTx)
-		} else {
-			return selectedTxs, nil
-		}
-		currentTx = currentTx.Next()
+	if currentTx == nil {
+		return nil
 	}
-	return selectedTxs, nil
+
+	return &nonceMempoolIterator{currentTx: currentTx}
 }
 
 // CountTx returns the number of txs in the mempool.
@@ -90,7 +103,7 @@ func (sp nonceMempool) CountTx() int {
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
 // was not found in the pool.
-func (sp nonceMempool) Remove(tx Tx) error {
+func (sp nonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

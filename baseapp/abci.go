@@ -38,6 +38,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
+	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
+
 	// If req.InitialHeight is > 1, then we set the initial version in the
 	// stores.
 	if req.InitialHeight > 1 {
@@ -49,9 +51,11 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
-	// initialize the deliver state and check state with a correct header
+	// initialize states with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
+	app.setPrepareProposalState(initHeader)
+	app.setProcessProposalState(initHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
@@ -182,8 +186,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
-	// we also set block gas meter to checkState in case the application needs to
-	// verify gas consumption during (Re)CheckTx
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
@@ -238,19 +240,19 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // work in a block before proposing it.
 //
 // Transactions can be modified, removed, or added by the application. Since the
-// application maintains it's own local mempool, it will ignore the transactions
+// application maintains its own local mempool, it will ignore the transactions
 // provided to it in RequestPrepareProposal. Instead, it will determine which
 // transactions to return based on the mempool's semantics and the MaxTxBytes
 // provided by the client's request.
 //
-// Note, there is no need to execute the transactions for validity as they have
-// already passed CheckTx.
-//
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	// TODO: Implement.
-	return abci.ResponsePrepareProposal{Txs: req.Txs}
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+	if app.prepareProposal == nil {
+		panic("PrepareProposal method not set")
+	}
+	return app.prepareProposal(ctx, req)
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -266,8 +268,19 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	// TODO: Implement.
-	return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	if app.processProposal == nil {
+		panic("app.ProcessProposal is not set")
+	}
+
+	ctx := app.processProposalState.ctx.
+		WithVoteInfos(app.voteInfos).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithHeaderHash(req.Hash).
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+
+	return app.processProposal(ctx, req)
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -367,6 +380,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
+	app.setPrepareProposalState(header)
+	app.setProcessProposalState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil

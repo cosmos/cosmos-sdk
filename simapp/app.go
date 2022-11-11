@@ -14,7 +14,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -189,6 +188,21 @@ func NewSimApp(
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
+		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
+		// handlers.  These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+		// them.
+		//
+		//nonceMempool = mempool.NewNonceMempool()
+		//mempoolOpt   = baseapp.SetMempool(nonceMempool)
+		//prepareOpt   = func(app *baseapp.BaseApp) {
+		//	app.SetPrepareProposal(app.DefaultPrepareProposal())
+		//}
+		//processOpt = func(app *baseapp.BaseApp) {
+		//	app.SetProcessProposal(app.DefaultProcessProposal())
+		//}
+		//
+		// Further down we'd set the options in the AppBuilder like below.
+		//baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -202,7 +216,6 @@ func NewSimApp(
 				//
 				// AUTH
 				//
-
 				// For providing a custom function required in auth to generate custom account types
 				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
 				//

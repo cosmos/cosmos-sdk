@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -138,13 +139,20 @@ func (acc BaseAccount) Validate() error {
 }
 
 func (acc BaseAccount) String() string {
-	out, _ := acc.MarshalYAML()
+	out, err := acc.MarshalYAML()
+	if err != nil {
+		panic(err)
+	}
+
 	return out.(string)
 }
 
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &acc)
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+
+	bz, err := codec.MarshalYAML(codec.NewProtoCodec(registry), &acc)
 	if err != nil {
 		return nil, err
 	}

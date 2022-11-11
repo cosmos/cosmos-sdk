@@ -21,7 +21,7 @@ In addition to these request/response queries, it would be beneficial to have a 
 
 ## Decision
 
-We will modify the `CommitMultiStore` interface and its concrete (`rootmulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores.
+We will modify the store layer to allow listening to state changes in underlying KVStores.
 We will introduce a plugin system for configuring and running streaming services that write these state changes and their surrounding ABCI message context to different destinations.
 
 ### Listening
@@ -246,12 +246,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
                 os.Exit(1)
             }
         } else {
-            rek, rez := req, res
-            go func() {
-                if err := app.abciListener.ListenBeginBlock(ctx, rek, rez); err != nil {
+            go func(req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
+                if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
                    app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
                 }
-            }()
+            }(req, res)
         }
     }
 
@@ -274,14 +273,13 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
                 os.Exit(1)
             }
         } else {
-            rek, rez := req, res
-            go func() {
+            go func(req abci.RequestEndBlock, res abci.ResponseEndBlock) {
                 if reqErr == nil && resErr == nil {
-                    if err := app.abciListener.ListenEndBlock(blockHeight, rek, rez); err != nil {
+                    if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
                         app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
                     }
                 }
-            }()
+            }(req, res)
         }
     }
 
@@ -304,14 +302,13 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
                     os.Exit(1)
                 }
             } else {
-                rek, rez := req, abciRes
-                go func() {
+                go func(req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
                     if reqErr == nil && resErr == nil {
-                        if err := app.abciListener.ListenDeliverTx(blockHeight, rek, rez); err != nil {
+                        if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
                             app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
                         }
                     }
-                }()
+                }(req, abciRes)
             }
         }
     }()
@@ -343,12 +340,11 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
                 os.Exit(1)
             }
         } else {
-            rez := res
-            go func() {
-                if err := app.abciListener.ListenCommit(ctx, rez, changeSet); err != nil {
+            go func(res abci.ResponseCommit, changeSet []store.StoreKVPair) {
+                if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
                     app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
                 }
-            }()
+            }(res, changeSet)
         }
     }
 

@@ -178,8 +178,8 @@ type HasRegisterInvariants interface {
 	RegisterInvariants(sdk.InvariantRegistry)
 }
 
-// HasRegisterSerices is the interface for modules to register services.
-type HasRegisterSerices interface {
+// HasRegisterServices is the interface for modules to register services.
+type HasRegisterServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
 }

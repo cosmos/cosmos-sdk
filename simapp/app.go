@@ -200,6 +200,9 @@ func NewSimApp(
 		//processOpt = func(app *baseapp.BaseApp) {
 		//	app.SetProcessProposal(app.DefaultProcessProposal())
 		//}
+		//
+		// Further down we'd set the options in the AppBuilder like below.
+		//baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -261,7 +264,6 @@ func NewSimApp(
 		panic(err)
 	}
 
-	baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// configure state listening capabilities using AppOptions

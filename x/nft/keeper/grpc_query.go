@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,8 +19,8 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
 	}
 
 	owner, err := sdk.AccAddressFromBech32(r.Owner)
@@ -38,12 +39,12 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
 	}
 
-	if err := nft.ValidateNFTID(r.Id); err != nil {
-		return nil, err
+	if len(r.Id) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty nft id (%s)", r.Id)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -57,8 +58,8 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	supply := k.GetTotalSupply(ctx, r.ClassId)
@@ -73,11 +74,6 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 
 	var err error
 	var owner sdk.AccAddress
-	if len(r.ClassId) > 0 {
-		if err := nft.ValidateClassID(r.ClassId); err != nil {
-			return nil, err
-		}
-	}
 
 	if len(r.Owner) > 0 {
 		owner, err = sdk.AccAddressFromBech32(r.Owner)
@@ -138,11 +134,11 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
 	}
-	if err := nft.ValidateNFTID(r.Id); err != nil {
-		return nil, err
+	if len(r.Id) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty nft id (%s)", r.Id)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -159,8 +155,8 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
 	}
 
-	if err := nft.ValidateClassID(r.ClassId); err != nil {
-		return nil, err
+	if len(r.ClassId) == 0 {
+		return nil, errors.Wrapf(nft.ErrInvalidID, "Empty class id (%s)", r.ClassId)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

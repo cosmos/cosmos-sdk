@@ -106,11 +106,14 @@ All methods, structs and their fields must be public for `depinject`.
   https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L210-L215
   ```
 
-5. Create a function named `ProvideModule` (as called in 1.) and use the inputs for instantitating the module outputs.
+5. Create a function named `ProvideModule` (as called in 1.) and use the inputs for instantiating the module outputs.
 
   ```go reference
   https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L217-L227
   ```
+
+The `ProvideModule` function should return an instance of `cosmossdk.io/core/appmodule.AppModule` which implements
+one or more app module extension interfaces for initializing the module.
 
 Following is the complete app wiring configuration for `group`:
 

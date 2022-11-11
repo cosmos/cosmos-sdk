@@ -24,32 +24,30 @@ func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryServ
 			AutoCLIOptions() *autocliv1.ModuleOptions
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
-		} else {
-			if mod, ok := mod.(module.HasRegisterSerices); ok {
-				// try to auto-discover options based on the last msg and query
-				// services registered for the module
-				cfg := &autocliConfigurator{}
-				mod.RegisterServices(cfg)
-				modOptions := &autocliv1.ModuleOptions{}
-				haveServices := false
+		} else if mod, ok := mod.(module.HasServices); ok {
+			// try to auto-discover options based on the last msg and query
+			// services registered for the module
+			cfg := &autocliConfigurator{}
+			mod.RegisterServices(cfg)
+			modOptions := &autocliv1.ModuleOptions{}
+			haveServices := false
 
-				if cfg.msgServer.serviceName != "" {
-					haveServices = true
-					modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
-						Service: cfg.msgServer.serviceName,
-					}
+			if cfg.msgServer.serviceName != "" {
+				haveServices = true
+				modOptions.Tx = &autocliv1.ServiceCommandDescriptor{
+					Service: cfg.msgServer.serviceName,
 				}
+			}
 
-				if cfg.queryServer.serviceName != "" {
-					haveServices = true
-					modOptions.Query = &autocliv1.ServiceCommandDescriptor{
-						Service: cfg.queryServer.serviceName,
-					}
+			if cfg.queryServer.serviceName != "" {
+				haveServices = true
+				modOptions.Query = &autocliv1.ServiceCommandDescriptor{
+					Service: cfg.queryServer.serviceName,
 				}
+			}
 
-				if haveServices {
-					moduleOptions[modName] = modOptions
-				}
+			if haveServices {
+				moduleOptions[modName] = modOptions
 			}
 		}
 	}

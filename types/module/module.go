@@ -172,14 +172,14 @@ type AppModule interface {
 	AppModuleBasic
 }
 
-// HasRegisterInvariants is the interface for registering invariants.
+// HasInvariants is the interface for registering invariants.
 type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
 	RegisterInvariants(sdk.InvariantRegistry)
 }
 
-// HasRegisterServices is the interface for modules to register services.
-type HasRegisterServices interface {
+// HasServices is the interface for modules to register services.
+type HasServices interface {
 	// RegisterServices allows a module to register services.
 	RegisterServices(Configurator)
 }
@@ -326,7 +326,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 	modules := maps.Values(m.Modules)
 	for _, module := range modules {
-		if module, ok := module.(HasRegisterInvariants); ok {
+		if module, ok := module.(HasInvariants); ok {
 			module.RegisterInvariants(ir)
 		}
 	}
@@ -336,7 +336,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 func (m *Manager) RegisterServices(cfg Configurator) {
 	modules := maps.Values(m.Modules)
 	for _, module := range modules {
-		if module, ok := module.(HasRegisterSerices); ok {
+		if module, ok := module.(HasServices); ok {
 			module.RegisterServices(cfg)
 		}
 	}

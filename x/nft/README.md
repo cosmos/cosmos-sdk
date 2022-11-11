@@ -13,8 +13,8 @@ sidebar_position: 1
 * [Concept](#concepts)
     * [Class](#class)
     * [NFT](#nft)
-*[State](#state)
-*[Messages](#messages)
+* [State](#state)
+* [Messages](#messages)
     * [MsgSend](#msgsend)
 *[Events](#events)
 

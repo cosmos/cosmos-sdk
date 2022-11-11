@@ -67,7 +67,7 @@ type HasName interface {
 	Name() string
 }
 
-// LegacyGenesisBasics is the legacy interface for stateless genesis methods.
+// HasGenesisBasics is the legacy interface for stateless genesis methods.
 type HasGenesisBasics interface {
 	DefaultGenesis(codec.JSONCodec) json.RawMessage
 	ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error

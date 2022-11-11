@@ -34,3 +34,8 @@ message TestNoGoImportModule {
   option (cosmos.app.v1alpha1.module) = {
   };
 }
+
+message TestGenesisFile {
+    string key = 1;
+    string Value = 2;
+}

@@ -8,7 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"cosmossdk.io/core/internal/testpb"
 	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -41,12 +43,15 @@ func TestFileGenesisSourceOpenReaderWithField(t *testing.T) {
 	require.Equal(t, str, buf.String())
 }
 
-func TestFileGenesisSourceOpenReaderWithModule(t *testing.T) {
+func TestFileGenesisSourceOpenReaderWithCachedmoduleJson(t *testing.T) {
 	tmpdir := t.TempDir()
 	moduleName := "test"
 	field := "test"
 
-	fm := filepath.Join(tmpdir, fmt.Sprintf("%s.json", moduleName))
+	err := os.MkdirAll(filepath.Join(tmpdir, moduleName), dirCreateMode)
+	require.NoError(t, err)
+
+	fm := filepath.Join(tmpdir, moduleName, fmt.Sprintf("%s.json", field))
 	f, err := os.Create(fm)
 	require.NoError(t, err)
 	defer f.Close()
@@ -67,18 +72,18 @@ func TestFileGenesisSourceOpenReaderWithModule(t *testing.T) {
 	require.Equal(t, str, buf.String())
 }
 
-func TestFileGenesisSourceOpenReaderWithGenesis(t *testing.T) {
+func TestFileGenesisSourceOpenReaderWithModule(t *testing.T) {
 	tmpdir := t.TempDir()
-	moduleName := "test"
-	field := "test"
+	moduleName := "module"
+	field := "field"
 
-	fm := filepath.Join(tmpdir, "genesis.json")
+	fm := filepath.Join(tmpdir, fmt.Sprintf("%s.json", moduleName))
 	f, err := os.Create(fm)
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := "genesis read test!"
-	_, err = f.WriteString(str)
+	moduleState := json.RawMessage(`{"field":"value"}`)
+	_, err = f.Write(moduleState)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
@@ -90,7 +95,48 @@ func TestFileGenesisSourceOpenReaderWithGenesis(t *testing.T) {
 	_, err = buf.ReadFrom(reader)
 	require.NoError(t, err)
 
-	require.Equal(t, str, buf.String())
+	expected := json.RawMessage(`"value"`)
+	require.Equal(t, expected, json.RawMessage(buf.String()))
+
+	// verify the fileGenesisSource cached the moduleRawJSON
+	fgs := gs.(*FileGenesisSource)
+	require.Equal(t, moduleState, fgs.moduleRootJson)
+}
+
+func TestFileGenesisSourceOpenReaderWithGenesis(t *testing.T) {
+	tmpdir := t.TempDir()
+	moduleName := "module"
+	field := "field"
+
+	fm := filepath.Join(tmpdir, "genesis.json")
+	f, err := os.Create(fm)
+	require.NoError(t, err)
+	defer f.Close()
+
+	appState := make(map[string]json.RawMessage)
+	appState[moduleName] = json.RawMessage(`{"field":"value"}`)
+
+	gc := tmtypes.GenesisDoc{}
+	gc.AppState, err = json.Marshal(appState)
+	require.NoError(t, err)
+
+	gcRawJson, err := json.Marshal(gc)
+	require.NoError(t, err)
+
+	_, err = f.Write(gcRawJson)
+	require.NoError(t, err)
+
+	gs := NewFileGenesisSource(tmpdir, moduleName)
+	reader, err := gs.OpenReader(field)
+	require.NoError(t, err)
+	defer reader.Close()
+
+	buf := &bytes.Buffer{}
+	_, err = buf.ReadFrom(reader)
+	require.NoError(t, err)
+
+	expected := json.RawMessage(`"value"`)
+	require.Equal(t, expected, json.RawMessage(buf.String()))
 }
 
 func TestFileGenesisSourceOpenReaderWithInvalidFile(t *testing.T) {
@@ -176,15 +222,37 @@ func TestFileGenesisSourceReadRawJSONWithEmptyModuleName(t *testing.T) {
 	gs := NewFileGenesisSource(tmpdir, moduleName)
 
 	_, err = gs.ReadRawJSON()
-	require.ErrorContains(t, err, "failed to write RawJSON: empty module name")
+	require.ErrorContains(t, err, "failed to read RawJSON: empty module name")
 }
 
-func TestFileGenesisSourceReadMessageNoOp(t *testing.T) {
-	gs := NewFileGenesisSource("", "")
+func TestFileGenesisSourceReadMessage(t *testing.T) {
+	tmpdir := t.TempDir()
+	moduleName := "module"
 
-	var pm proto.Message
-	err := gs.ReadMessage(pm)
-	require.Error(t, err, "unsupportted op")
+	fp := filepath.Join(filepath.Clean(tmpdir), "genesis.json")
+
+	f, err := os.Create(fp)
+	require.NoError(t, err)
+	defer f.Close()
+
+	m := &testpb.TestGenesisFile{}
+	m.Key = "key"
+	m.Value = "value"
+
+	bz, err := proto.Marshal(m)
+	require.NoError(t, err)
+
+	_, err = f.Write(bz)
+	require.NoError(t, err)
+
+	gs := NewFileGenesisSource(tmpdir, moduleName)
+
+	mr := &testpb.TestGenesisFile{}
+
+	err = gs.ReadMessage(mr)
+	require.NoError(t, err)
+
+	require.Equal(t, m.String(), mr.String())
 }
 
 func TestFileGenesisTargetWithField(t *testing.T) {

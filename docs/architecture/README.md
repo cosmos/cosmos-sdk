@@ -57,6 +57,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 055: ORM](./adr-055-orm.md)
 * [ADR 058: Auto-Generated CLI](./adr-058-auto-generated-cli.md)
 * [ADR 060: ABCI 1.0 (Phase I)](adr-060-abci-1.0.md)
+* [ADR 061: Liquid Staking](./adr-061-liquid-staking.md)
 
 ### Proposed
 

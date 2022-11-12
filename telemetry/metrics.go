@@ -60,7 +60,7 @@ func New(cnf Config) (Metrics, error) {
 	m := &metrics{memSink: memSink, cnf: c}
 	fanout := gometrics.FanoutSink{memSink}
 	var promSink *metricsprom.PrometheusSink
-
+	var err error
 	if c.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
 		prometheusOpts := metricsprom.PrometheusOpts{

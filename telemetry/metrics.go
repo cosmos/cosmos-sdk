@@ -33,9 +33,7 @@ type GatherResponse struct {
 	ContentType string
 }
 
-// New creates a new instance of metrics
 func New(cnf Config) (Metrics, error) {
-	var err error
 
 	c := &cnf
 

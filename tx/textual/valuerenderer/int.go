@@ -29,12 +29,12 @@ func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 
 func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
-		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
 	parsedInt, err := parseInt(screens[0].Text)
 	if err != nil {
-		return protoreflect.Value{}, err
+		return nilValue, err
 	}
 
 	return protoreflect.ValueOfString(parsedInt), nil

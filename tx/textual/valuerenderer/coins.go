@@ -83,7 +83,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 
 func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
-		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
 	if screens[0].Text == corecoins.EmptyCoins {
@@ -101,17 +101,17 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	for i, coin := range coins {
 		coinArr := strings.Split(coin, " ")
 		if len(coinArr) != 2 {
-			return protoreflect.Value{}, fmt.Errorf("invalid coin %s", coins)
+			return nilValue, fmt.Errorf("invalid coin %s", coins)
 		}
 		metadatas[i], err = vr.coinMetadataQuerier(ctx, coinArr[1])
 		if err != nil {
-			return protoreflect.Value{}, err
+			return nilValue, err
 		}
 	}
 
 	parsed, err := parseCoins(coins, metadatas)
 	if err != nil {
-		return protoreflect.Value{}, err
+		return nilValue, err
 	}
 
 	if vr.fd != nil && vr.fd.IsList() {

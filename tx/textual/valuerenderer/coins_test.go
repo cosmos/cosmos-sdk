@@ -8,6 +8,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/math"
 	"cosmossdk.io/tx/textual/internal/listpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
@@ -78,8 +79,18 @@ func checkListsEqual(t *testing.T, l1, l2 protoreflect.List) {
 		coin, ok := l2.Get(i).Message().Interface().(*basev1beta1.Coin)
 		require.True(t, ok)
 
-		require.Equal(t, coinsMap[coin.Denom], coin)
+		coin1 := coinsMap[coin.Denom]
+		checkCoinsEqual(t, coin, coin1)
 	}
+}
+
+func checkCoinsEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
+	require.Equal(t, coin1.Denom, coin.Denom)
+	v, err := math.LegacyNewDecFromStr(coin.Amount)
+	require.NoError(t, err)
+	v1, err := math.LegacyNewDecFromStr(coin1.Amount)
+	require.NoError(t, err)
+	require.Equal(t, v, v1)
 }
 
 // coinsJsonTest is the type of test cases in the testdata file.

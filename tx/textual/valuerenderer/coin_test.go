@@ -8,10 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/testing/protocmp"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
@@ -97,8 +95,10 @@ func TestCoinJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				diff := cmp.Diff(tc.Proto.ProtoReflect().Interface(), value.Message().Interface(), protocmp.Transform())
-				require.Empty(t, diff)
+				coin, ok := value.Message().Interface().(*basev1beta1.Coin)
+				require.True(t, ok)
+
+				checkCoinsEqual(t, coin, tc.Proto)
 			}
 		})
 	}

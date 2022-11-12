@@ -34,17 +34,10 @@ type GatherResponse struct {
 }
 
 // New creates a new instance of metrics
-func New(opts ...Option) (Metrics, error) {
+func New(cnf Config) (Metrics, error) {
 	var err error
 
-	c := new(Config)
-	c.loadDefaults()
-	for _, fn := range opts {
-		err = fn(c)
-		if err != nil {
-			return nil, err
-		}
-	}
+	c := &cnf
 
 	if !c.Enabled {
 		return nil, nil
@@ -99,8 +92,8 @@ func New(opts ...Option) (Metrics, error) {
 }
 
 // Init create a new instance and set it as the default Metric
-func Init(opts ...Option) error {
-	m, err := New(opts...)
+func Init(cnf Config) error {
+	m, err := New(cnf)
 	if err != nil {
 		return err
 	}

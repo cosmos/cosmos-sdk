@@ -2,7 +2,6 @@
 package telemetry
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -16,13 +15,6 @@ func TestNew(t *testing.T) {
 		M := initMetric(t)
 		require.NotNil(t, M)
 	})
-	t.Run("option error", func(t *testing.T) {
-		M, err := New(func(c *Config) error {
-			return fmt.Errorf("AnyError")
-		})
-		require.Error(t, err)
-		require.Nil(t, M)
-	})
 
 }
 
@@ -32,9 +24,7 @@ func TestInit(t *testing.T) {
 		require.NotNil(t, M)
 	})
 	t.Run("option error", func(t *testing.T) {
-		Init(func(c *Config) error {
-			return fmt.Errorf("AnyError")
-		})
+		Init(Config{})
 	})
 }
 

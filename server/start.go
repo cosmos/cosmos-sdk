@@ -531,7 +531,8 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 }
 
 func startTelemetry(cfg serverconfig.Config) (telemetry.Metrics, error) {
-	var ops []telemetry.Option
-	ops = append(ops, telemetry.OptionWithConfig(cfg.Telemetry))
-	return telemetry.New(ops...)
+	if !cfg.Telemetry.Enabled {
+		return nil, nil
+	}
+	return telemetry.New(cfg.Telemetry)
 }

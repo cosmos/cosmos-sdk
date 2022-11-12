@@ -252,7 +252,11 @@ type moduleAccountPretty struct {
 }
 
 func (ma ModuleAccount) String() string {
-	out, _ := ma.MarshalYAML()
+	out, err := ma.MarshalYAML()
+	if err != nil {
+		panic(err)
+	}
+
 	return out.(string)
 }
 

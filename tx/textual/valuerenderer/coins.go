@@ -11,14 +11,12 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
 	"cosmossdk.io/math"
-	"cosmossdk.io/tx/textual/internal/utils"
+	"cosmossdk.io/tx/textual/internal/listpb"
 )
 
-const emptyCoins = "zero"
-
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
-func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
-	return coinsValueRenderer{q}
+func NewCoinsValueRenderer(q CoinMetadataQueryFn, fd protoreflect.FieldDescriptor) ValueRenderer {
+	return coinsValueRenderer{q, fd}
 }
 
 type coinsValueRenderer struct {
@@ -27,6 +25,7 @@ type coinsValueRenderer struct {
 	// each denom's associated metadata, either using the bank keeper (for
 	// server-side code) or a gRPC query client (for client-side code).
 	coinMetadataQuerier CoinMetadataQueryFn
+	fd                  protoreflect.FieldDescriptor
 }
 
 var _ ValueRenderer = coinsValueRenderer{}
@@ -41,9 +40,6 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	// If it's a repeated Coin:
 	case protoreflect.List:
 		{
-			if protoCoins.Len() == 0 {
-				return []Screen{{Text: emptyCoins}}, nil
-			}
 
 			coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 			var err error
@@ -90,8 +86,12 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	if screens[0].Text == emptyCoins {
-		return protoreflect.ValueOfList(utils.NewGenericList([]*basev1beta1.Coin{})), nil
+	if screens[0].Text == corecoins.EmptyCoins {
+		if vr.fd != nil && vr.fd.IsList() {
+			return protoreflect.ValueOfList(listpb.NewGenericList([]*basev1beta1.Coin{})), nil
+		}
+
+		return protoreflect.ValueOfMessage((&basev1beta1.Coin{}).ProtoReflect()), nil
 	}
 
 	coins := strings.Split(screens[0].Text, ", ")
@@ -114,8 +114,8 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return protoreflect.Value{}, err
 	}
 
-	if len(parsed) > 1 {
-		return protoreflect.ValueOf(utils.NewGenericList(parsed)), err
+	if vr.fd != nil && vr.fd.IsList() {
+		return protoreflect.ValueOf(listpb.NewGenericList(parsed)), err
 	} else {
 		return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
 	}

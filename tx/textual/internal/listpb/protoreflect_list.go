@@ -1,4 +1,4 @@
-package utils
+package listpb
 
 import (
 	"google.golang.org/protobuf/proto"

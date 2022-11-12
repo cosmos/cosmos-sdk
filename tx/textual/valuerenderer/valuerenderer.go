@@ -84,8 +84,13 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 
 		vr, found := r.messages[fullName]
 		if found {
-			return vr, nil
+			if fd.IsList() {
+				return NewCoinsValueRenderer(r.coinMetadataQuerier, fd), nil
+			} else {
+				return vr, nil
+			}
 		}
+
 		if fd.IsMap() {
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
 		}
@@ -108,7 +113,7 @@ func (r *Textual) init() {
 	}
 	if r.messages == nil {
 		r.messages = map[protoreflect.FullName]ValueRenderer{}
-		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
+		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier, nil)
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
 	}

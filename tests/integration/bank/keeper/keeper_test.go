@@ -523,6 +523,26 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	suite.Require().Error(suite.bankKeeper.ValidateBalance(ctx, addr2))
 }
 
+func (suite *IntegrationTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
+	ctx := suite.ctx
+	balances := sdk.NewCoins(newFooCoin(50))
+	addr := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	acc0 := authtypes.NewBaseAccountWithAddress(addr)
+	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	suite.accountKeeper.SetAccount(ctx, vacc)
+
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr2, balances))
+	suite.Require().Error(suite.bankKeeper.SendCoins(ctx, addr, addr2, sendCoins))
+}
+
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	ctx := suite.ctx
 	enabled := true

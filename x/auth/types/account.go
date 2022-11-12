@@ -138,15 +138,6 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
-func (acc BaseAccount) String() string {
-	out, err := acc.MarshalYAML()
-	if err != nil {
-		panic(err)
-	}
-
-	return out.(string)
-}
-
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 	registry := codectypes.NewInterfaceRegistry()

@@ -81,6 +81,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
 * [ADR 060: ABCI 1.0](adr-060-abci-1.0.md)
+* [ADR 062: Revise x/gov No With Veto Option](./adr-062-revise-gov-nwv.md)
 
 ### Draft
 

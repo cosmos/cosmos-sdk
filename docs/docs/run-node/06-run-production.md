@@ -139,7 +139,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Install Libusb
 
 ```sh
-apt install libusb-1.0-0-dev
+sudo apt install libusb-1.0-0-dev
 ```
 
 ###### Setup

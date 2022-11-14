@@ -136,7 +136,7 @@ Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Install Libusb
+Install Libusb:
 
 ```sh
 sudo apt install libusb-1.0-0-dev

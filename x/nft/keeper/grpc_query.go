@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,7 +19,7 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
+		return nil, nft.ErrEmptyClassID
 	}
 
 	owner, err := sdk.AccAddressFromBech32(r.Owner)
@@ -40,11 +39,11 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
+		return nil, nft.ErrEmptyClassID
 	}
 
 	if len(r.Id) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty nft id")
+		return nil, nft.ErrEmptyNFTID
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -59,7 +58,7 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
+		return nil, nft.ErrEmptyClassID
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	supply := k.GetTotalSupply(ctx, r.ClassId)
@@ -135,10 +134,10 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
+		return nil, nft.ErrEmptyClassID
 	}
 	if len(r.Id) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty nft id")
+		return nil, nft.ErrEmptyNFTID
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -156,7 +155,7 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 	}
 
 	if len(r.ClassId) == 0 {
-		return nil, errors.Wrap(nft.ErrInvalidID, "Empty class id")
+		return nil, nft.ErrEmptyClassID
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

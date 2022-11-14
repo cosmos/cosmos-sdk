@@ -29,7 +29,7 @@ func (s *TestSuite) TestBalance() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryBalanceRequest{}
 			},
-			"Empty class id",
+			nft.ErrEmptyClassID.Error(),
 			0,
 			func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64) {},
 		},
@@ -95,7 +95,7 @@ func (s *TestSuite) TestOwner() {
 					Id: testID,
 				}
 			},
-			"Empty class id",
+			nft.ErrEmptyClassID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {},
 		},
 		{
@@ -105,7 +105,7 @@ func (s *TestSuite) TestOwner() {
 					ClassId: testClassID,
 				}
 			},
-			"Empty nft id",
+			nft.ErrEmptyNFTID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {},
 		},
 		{
@@ -180,7 +180,7 @@ func (s *TestSuite) TestSupply() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QuerySupplyRequest{}
 			},
-			"Empty class id",
+			nft.ErrEmptyClassID.Error(),
 			0,
 			func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64) {},
 		},
@@ -393,7 +393,7 @@ func (s *TestSuite) TestNFT() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryNFTRequest{}
 			},
-			"Empty class id",
+			nft.ErrEmptyClassID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
@@ -403,7 +403,7 @@ func (s *TestSuite) TestNFT() {
 					ClassId: testClassID,
 				}
 			},
-			"Empty nft id",
+			nft.ErrEmptyNFTID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
@@ -480,7 +480,7 @@ func (s *TestSuite) TestClass() {
 			func(index int, require *require.Assertions) {
 				req = &nft.QueryClassRequest{}
 			},
-			"Empty class id",
+			nft.ErrEmptyClassID.Error(),
 			func(index int, require *require.Assertions, res *nft.QueryClassResponse) {},
 		},
 		{

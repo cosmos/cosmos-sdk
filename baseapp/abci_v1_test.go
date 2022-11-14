@@ -37,6 +37,7 @@ type ABCIv1TestSuite struct {
 	mempool  mempool.Mempool
 	txConfig client.TxConfig
 	cdc      codec.ProtoCodecMarshaler
+	options  []func(app *baseapp.BaseApp)
 }
 
 func TestABCIv1TestSuite(t *testing.T) {
@@ -59,7 +60,8 @@ func (s *ABCIv1TestSuite) SetupTest() {
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc, &registry)
 	require.NoError(t, err)
 
-	app := setupBaseApp(t, anteOpt, baseapp.SetMempool(pool))
+	s.options = append(s.options, baseapp.SetMempool(pool), anteOpt)
+	app := setupBaseApp(t, s.options...)
 	baseapptestutil.RegisterInterfaces(registry)
 	app.SetMsgServiceRouter(baseapp.NewMsgServiceRouter())
 	app.SetInterfaceRegistry(registry)
@@ -120,10 +122,6 @@ func (s *ABCIv1TestSuite) TestABCIv1_HappyPath() {
 	reqProcessProposal := abci.RequestProcessProposal{
 		Txs: reqProposalTxBytes[:],
 	}
-
-	s.baseApp.SetProcessProposal(nil)
-	require.Panics(t, func() { s.baseApp.ProcessProposal(reqProcessProposal) })
-	s.baseApp.SetProcessProposal(s.baseApp.DefaultProcessProposal())
 
 	resProcessProposal := s.baseApp.ProcessProposal(reqProcessProposal)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)

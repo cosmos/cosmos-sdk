@@ -127,7 +127,7 @@ The two most used remote signers are [tmkms](https://github.com/iqlusioninc/tmkm
 Update server dependencies and install extras needed. 
 
 ```sh
-sudo apt update -y && sudo apt install  build-essential curl jq snapd -y
+sudo apt update -y && sudo apt install build-essential curl jq -y
 ```
 
 Install Rust 

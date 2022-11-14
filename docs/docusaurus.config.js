@@ -37,15 +37,15 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
-          lastVersion: "0.47",
+          lastVersion: "v0.47",
           versions: {
             current: {
               path: "main",
               banner: "unreleased",
             },
-            0.47: {
+            "v0.47": {
               path: "v0.47",
-              label: "0.47",
+              label: "v0.47",
             },
           },
         },

@@ -39,4 +39,5 @@ func TestNestedAnys(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NotPanics(t, func() { _ = proposal.String() })
+	require.NotEmpty(t, proposal.String())
 }

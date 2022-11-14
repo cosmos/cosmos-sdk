@@ -208,9 +208,11 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	// adding during a migration.
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockModule := mock.NewMockAppModule(mockCtrl)
+	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
+	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule
 

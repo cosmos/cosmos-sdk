@@ -56,6 +56,8 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
 * [ADR 055: ORM](./adr-055-orm.md)
 * [ADR 058: Auto-Generated CLI](./adr-058-auto-generated-cli.md)
+* [ADR 060: ABCI 1.0 (Phase I)](adr-060-abci-1.0.md)
+* [ADR 061: Liquid Staking](./adr-061-liquid-staking.md)
 
 ### Proposed
 
@@ -80,7 +82,6 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 046: Module Params](./adr-046-module-params.md)
 * [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
-* [ADR 060: ABCI 1.0](adr-060-abci-1.0.md)
 
 ### Draft
 

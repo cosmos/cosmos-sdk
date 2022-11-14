@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // Supported ABCI Query prefixes
@@ -249,44 +248,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	var (
-		txsBytes  [][]byte
-		byteCount int64
-	)
-
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
-	iterator := app.mempool.Select(ctx, req.Txs)
-
-	for iterator != nil {
-		memTx := iterator.Tx()
-
-		bz, err := app.txEncoder(memTx)
-		if err != nil {
-			panic(err)
-		}
-
-		txSize := int64(len(bz))
-
-		// NOTE: runTx was already run in CheckTx which calls mempool.Insert so ideally everything in the pool
-		// should be valid. But some mempool implementations may insert invalid txs, so we check again.
-		_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-		if err != nil {
-			err := app.mempool.Remove(memTx)
-			if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-				panic(err)
-			}
-			iterator = iterator.Next()
-			continue
-		} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
-			txsBytes = append(txsBytes, bz)
-		} else {
-			break
-		}
-
-		iterator = iterator.Next()
+	if app.prepareProposal == nil {
+		panic("PrepareProposal method not set")
 	}
-
-	return abci.ResponsePrepareProposal{Txs: txsBytes}
+	return app.prepareProposal(ctx, req)
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a

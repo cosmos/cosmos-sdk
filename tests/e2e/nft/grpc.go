@@ -75,19 +75,6 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 		expectResult string
 	}{
 		{
-			name: "class id is empty",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: "",
-				ID:      ExpNFT.Id,
-			},
-			expectErr:    true,
-			errMsg:       nft.ErrEmptyClassID.Error(),
-			expectResult: "",
-		},
-		{
 			name: "class id does not exist",
 			args: struct {
 				ClassID string
@@ -97,19 +84,6 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 				ID:      ExpNFT.Id,
 			},
 			expectErr:    false,
-			expectResult: "",
-		},
-		{
-			name: "nft id is empty",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: ExpNFT.ClassId,
-				ID:      "",
-			},
-			expectErr:    true,
-			errMsg:       nft.ErrEmptyNFTID.Error(),
 			expectResult: "",
 		},
 		{
@@ -325,42 +299,6 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 		expectErr bool
 		errorMsg  string
 	}{
-		{
-			name: "class id is empty",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: "",
-				ID:      ExpNFT.Id,
-			},
-			expectErr: true,
-			errorMsg:  nft.ErrEmptyClassID.Error(),
-		},
-		{
-			name: "class id does not exist",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: "class",
-				ID:      ExpNFT.Id,
-			},
-			expectErr: true,
-			errorMsg:  "not found nft",
-		},
-		{
-			name: "nft id is empty",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: ExpNFT.ClassId,
-				ID:      "",
-			},
-			expectErr: true,
-			errorMsg:  nft.ErrEmptyNFTID.Error(),
-		},
 		{
 			name: "nft id does not exist",
 			args: struct {

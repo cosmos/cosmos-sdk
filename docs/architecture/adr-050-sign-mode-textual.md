@@ -402,7 +402,7 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *This transaction has 1 other signer:
 *Signer (1/2):
 *Public Key: iQ...==
-*Sign mode: Direct Aux
+*Sign mode: SIGN_MODE_DIRECT_AUX
 *Sequence: 42
 *End of other signers
 *Hash of raw bytes: <hex_string>
@@ -549,7 +549,7 @@ Fee: 0.002 atom
 *This transaction has 1 other signer:
 *Signer (2/2):
 *Public Key: iR...==
-*Sign mode: Direct
+*Sign mode: SIGN_MODE_DIRECT
 *Sequence: 42
 *End of other signers
 *Hash of raw bytes: <hex_string>

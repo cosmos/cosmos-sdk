@@ -174,4 +174,81 @@ Next, we need to get the migrate the validator key from the full node to the new
 scp user@123.456.32.123:~/.simd/config/priv_validator_key.json ~/tmkms/config/secrets
 ```
 
-Then 
+Then, we must import the validator key into tmkms. 
+
+```bash
+tmkms softsign import $HOME/tmkms/config/secrets/priv_validator_key.json $HOME/tmkms/config/secrets/priv_validator_key
+```
+
+At this point, it is necessary to delete the `priv_validator_key.json` from the validator node and the tmkms node. Since the key has been imported into tmkms (above) it is no longer necessary on the nodes. The key can be safely stored offline. 
+
+Finally, before starting the processes, the `tmkms.toml` must be modified. 
+
+```bash
+vim $HOME/tmkms/config/tmkms.toml
+```
+
+This example shows a configuration that could be used for soft signing. The example has an IP of `123.456.12.345` with a port of `26659` a chain_id of `test-chain-waSDSe`. These are items that most be modified for the usecase of tmkms and the network. 
+
+```toml
+# Tendermint KMS configuration file
+
+## Chain Configuration
+
+[[chain]]
+id = "osmosis-1"
+key_format = { type = "bech32", account_key_prefix = "cosmospub", consensus_key_prefix = "cosmosvalconspub" }
+state_file = "/root/tmkms/config/state/priv_validator_state.json"
+
+## Signing Provider Configuration
+
+### Software-based Signer Configuration
+
+[[providers.softsign]]
+chain_ids = ["test-chain-waSDSe"]
+key_type = "consensus"
+path = "/root/tmkms/config/secrets/priv_validator_key"
+
+## Validator Configuration
+
+[[validator]]
+chain_id = "test-chain-waSDSe"
+addr = "tcp://123.456.12.345:26659"
+secret_key = "/root/tmkms/config/secrets/secret_connection_key"
+protocol_version = "v0.34"
+reconnect = true
+```
+
+First on the node, which is connecting to the tmkms instance, we must set the address of the tmkms instance. 
+
+```bash
+vim $HOME/.simd/config/config.toml
+
+priv_validator_laddr = "tcp://0.0.0.0:26659"
+```
+
+:::tip
+The above address it set to `0.0.0.0` but it is recommended to set the tmkms server to secure the startup
+:::
+
+:::tip
+It is recommended to comment or delete the lines that specify the path of the validator key and validator:
+
+```toml
+# Path to the JSON file containing the private key to use as a validator in the consensus protocol
+# priv_validator_key_file = "config/priv_validator_key.json"
+
+# Path to the JSON file containing the last sign state of a validator
+# priv_validator_state_file = "data/priv_validator_state.json"
+```
+:::
+
+Finally, start the two processes. 
+
+```bash
+tmkms start -c $HOME/tmkms/config/tmkms.toml
+```
+
+```bash
+simd start
+```

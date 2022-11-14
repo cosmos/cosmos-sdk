@@ -14,9 +14,10 @@ var (
 	_ Iterator = (*nonceMempoolIterator)(nil)
 )
 
-// nonceMempool is a mempool that keeps transactions sorted by nonce. Transactions with the lowest nonce globally
-// are prioritized. Transactions with the same nonce are prioritized by sender address. Fee/gas based
-// prioritization is not supported.
+// nonceMempool is a mempool that keeps transactions sorted by nonce. Transactions
+// with the lowest nonce globally are prioritized. Transactions with the same
+// nonce are prioritized by sender address. Fee/gas based prioritization is not
+// supported.
 type nonceMempool struct {
 	txQueue *huandu.SkipList
 }

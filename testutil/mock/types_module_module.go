@@ -601,74 +601,74 @@ func (mr *MockAppModuleMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModule)(nil).ValidateGenesis), arg0, arg1, arg2)
 }
 
-// MockHasRegisterInvariants is a mock of HasRegisterInvariants interface.
-type MockHasRegisterInvariants struct {
+// MockHasInvariants is a mock of HasInvariants interface.
+type MockHasInvariants struct {
 	ctrl     *gomock.Controller
-	recorder *MockHasRegisterInvariantsMockRecorder
+	recorder *MockHasInvariantsMockRecorder
 }
 
-// MockHasRegisterInvariantsMockRecorder is the mock recorder for MockHasRegisterInvariants.
-type MockHasRegisterInvariantsMockRecorder struct {
-	mock *MockHasRegisterInvariants
+// MockHasInvariantsMockRecorder is the mock recorder for MockHasInvariants.
+type MockHasInvariantsMockRecorder struct {
+	mock *MockHasInvariants
 }
 
-// NewMockHasRegisterInvariants creates a new mock instance.
-func NewMockHasRegisterInvariants(ctrl *gomock.Controller) *MockHasRegisterInvariants {
-	mock := &MockHasRegisterInvariants{ctrl: ctrl}
-	mock.recorder = &MockHasRegisterInvariantsMockRecorder{mock}
+// NewMockHasInvariants creates a new mock instance.
+func NewMockHasInvariants(ctrl *gomock.Controller) *MockHasInvariants {
+	mock := &MockHasInvariants{ctrl: ctrl}
+	mock.recorder = &MockHasInvariantsMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHasRegisterInvariants) EXPECT() *MockHasRegisterInvariantsMockRecorder {
+func (m *MockHasInvariants) EXPECT() *MockHasInvariantsMockRecorder {
 	return m.recorder
 }
 
 // RegisterInvariants mocks base method.
-func (m *MockHasRegisterInvariants) RegisterInvariants(arg0 types0.InvariantRegistry) {
+func (m *MockHasInvariants) RegisterInvariants(arg0 types0.InvariantRegistry) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterInvariants", arg0)
 }
 
 // RegisterInvariants indicates an expected call of RegisterInvariants.
-func (mr *MockHasRegisterInvariantsMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
+func (mr *MockHasInvariantsMockRecorder) RegisterInvariants(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockHasRegisterInvariants)(nil).RegisterInvariants), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInvariants", reflect.TypeOf((*MockHasInvariants)(nil).RegisterInvariants), arg0)
 }
 
-// MockHasRegisterSerices is a mock of HasRegisterSerices interface.
-type MockHasRegisterSerices struct {
+// MockHasServices is a mock of HasServices interface.
+type MockHasServices struct {
 	ctrl     *gomock.Controller
-	recorder *MockHasRegisterSericesMockRecorder
+	recorder *MockHasServicesMockRecorder
 }
 
-// MockHasRegisterSericesMockRecorder is the mock recorder for MockHasRegisterSerices.
-type MockHasRegisterSericesMockRecorder struct {
-	mock *MockHasRegisterSerices
+// MockHasServicesMockRecorder is the mock recorder for MockHasServices.
+type MockHasServicesMockRecorder struct {
+	mock *MockHasServices
 }
 
-// NewMockHasRegisterSerices creates a new mock instance.
-func NewMockHasRegisterSerices(ctrl *gomock.Controller) *MockHasRegisterSerices {
-	mock := &MockHasRegisterSerices{ctrl: ctrl}
-	mock.recorder = &MockHasRegisterSericesMockRecorder{mock}
+// NewMockHasServices creates a new mock instance.
+func NewMockHasServices(ctrl *gomock.Controller) *MockHasServices {
+	mock := &MockHasServices{ctrl: ctrl}
+	mock.recorder = &MockHasServicesMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockHasRegisterSerices) EXPECT() *MockHasRegisterSericesMockRecorder {
+func (m *MockHasServices) EXPECT() *MockHasServicesMockRecorder {
 	return m.recorder
 }
 
 // RegisterServices mocks base method.
-func (m *MockHasRegisterSerices) RegisterServices(arg0 module.Configurator) {
+func (m *MockHasServices) RegisterServices(arg0 module.Configurator) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RegisterServices", arg0)
 }
 
 // RegisterServices indicates an expected call of RegisterServices.
-func (mr *MockHasRegisterSericesMockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
+func (mr *MockHasServicesMockRecorder) RegisterServices(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasRegisterSerices)(nil).RegisterServices), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServices", reflect.TypeOf((*MockHasServices)(nil).RegisterServices), arg0)
 }
 
 // MockHasConsensusVersion is a mock of HasConsensusVersion interface.

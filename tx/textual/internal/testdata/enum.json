@@ -1,0 +1,7 @@
+[
+	{ "proto": { "ee": 1 }, "text": "Two" },
+	{ "proto": { "ee": 2 }, "text": "Three" },
+	{ "proto": { "ie": 1 }, "text": "Baz.Five" },
+	{ "proto": { "option": 1 }, "text": "Yes" },
+	{ "proto": { "option": 4 }, "text": "No with veto" }
+]

@@ -15,7 +15,7 @@ There are many different ways to secure a server and your node, the described st
 :::
 
 :::note
-This walkthrough assumes the underlying operating system is ubuntu. 
+This walkthrough assumes the underlying operating system is Ubuntu. 
 :::
 ## Sever Setup
 

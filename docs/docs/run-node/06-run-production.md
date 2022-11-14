@@ -5,7 +5,7 @@ sidebar_position: 1
 # Running in Production
 
 :::note Synopsis
-This section describes how to securely run a node in a public setting and/or on a mainnet on one of the many cosmos-sdk public blockchains. 
+This section describes how to securely run a node in a public setting and/or on a mainnet on one of the many Cosmos SDK public blockchains. 
 :::
 
 When operating a node, full node or validator, in production it is important to set your server up securely. 

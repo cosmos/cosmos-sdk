@@ -17,6 +17,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -120,6 +121,12 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 	v1.RegisterInterfaces(registry)
 	v1beta1.RegisterInterfaces(registry)
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 // AppModule implements an application module for the gov module.
 type AppModule struct {
@@ -280,15 +287,15 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
 	}
 	err = cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 2 to 3: %v", err))
 	}
 	err = cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 3 to 4: %v", err))
 	}
 }
 

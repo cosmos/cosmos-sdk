@@ -8,8 +8,6 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
-	"cosmossdk.io/core/appmodule"
-
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -36,8 +34,6 @@ import (
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app.go for an example of this setup.
-//
-//nolint:unused
 type App struct {
 	*baseapp.BaseApp
 
@@ -49,12 +45,9 @@ type App struct {
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
 	basicManager      module.BasicManager
-	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
-	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
-	appModules        map[string]appmodule.AppModule
 }
 
 // RegisterModules registers the provided modules with the module manager and

@@ -30,6 +30,13 @@ type Client interface {
 	// when the rosetta instance might come up before the node itself
 	// the servicer must return nil if the node is ready
 	Ready() error
+	// GenesisBlock gets the genesis block of the chain
+	GenesisBlock(ctx context.Context) (BlockResponse, error)
+	// InitialHeightBlock gets block with height InitialHeight
+	// from GenesisDoc by downloading the blob
+	InitialHeightBlock(ctx context.Context) (BlockResponse, error)
+	// OldestBlock gets block with height EarliestBlockHeight from syncStatus
+	OldestBlock(ctx context.Context) (BlockResponse, error)
 
 	// Data API
 

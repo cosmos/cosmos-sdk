@@ -36,6 +36,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Correctly populates rosetta's `/network/status` endpoint response. Roseta data api is divided into its own go files (account, block, mempool, network).
+
+### Bug Fixes
+
+* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Wrap tendermint RPC errors to rosetta errors. 
+
 ## v0.1.0 2022-11-04
 
 **From `v0.1.0` the minimum version of Tendermint is `v0.37+`, due event type changes.**

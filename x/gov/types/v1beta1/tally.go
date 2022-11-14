@@ -2,7 +2,6 @@ package v1beta1
 
 import (
 	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -60,10 +59,4 @@ func (tr TallyResult) Equals(comp TallyResult) bool {
 		tr.Abstain.Equal(comp.Abstain) &&
 		tr.No.Equal(comp.No) &&
 		tr.NoWithVeto.Equal(comp.NoWithVeto)
-}
-
-// String implements stringer interface
-func (tr TallyResult) String() string {
-	out, _ := yaml.Marshal(tr)
-	return string(out)
 }

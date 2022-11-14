@@ -62,11 +62,6 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 	return WeightedVoteOptions{{option, math.LegacyNewDec(1)}}
 }
 
-func (v WeightedVoteOption) String() string {
-	out, _ := yaml.Marshal(v)
-	return string(out)
-}
-
 // WeightedVoteOptions describes array of WeightedVoteOptions
 type WeightedVoteOptions []WeightedVoteOption
 

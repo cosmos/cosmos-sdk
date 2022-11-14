@@ -179,4 +179,6 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 )
 
+replace github.com/cosmos/gogoproto => ../gogoproto
+
 retract v0.43.0

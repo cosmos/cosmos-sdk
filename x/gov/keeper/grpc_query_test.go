@@ -74,13 +74,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				// Instead of using MashalJSON, we could compare .String() output too.
-				// https://github.com/cosmos/cosmos-sdk/issues/10965
-				expJSON, err := suite.cdc.MarshalJSON(&expProposal)
-				suite.Require().NoError(err)
-				actualJSON, err := suite.cdc.MarshalJSON(proposalRes.Proposal)
-				suite.Require().NoError(err)
-				suite.Require().Equal(expJSON, actualJSON)
+				suite.Require().NotEmpty(proposalRes.Proposal.String())
+				suite.Require().Equal(proposalRes.Proposal.String(), expProposal.String())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(proposalRes)
@@ -150,13 +145,8 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				// Instead of using MashalJSON, we could compare .String() output too.
-				// https://github.com/cosmos/cosmos-sdk/issues/10965
-				expJSON, err := suite.cdc.MarshalJSON(&expProposal)
-				suite.Require().NoError(err)
-				actualJSON, err := suite.cdc.MarshalJSON(&proposalRes.Proposal)
-				suite.Require().NoError(err)
-				suite.Require().Equal(expJSON, actualJSON)
+				suite.Require().NotEmpty(proposalRes.Proposal.String())
+				suite.Require().Equal(proposalRes.Proposal.String(), expProposal.String())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(proposalRes)
@@ -299,14 +289,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 
 				suite.Require().Len(proposals.GetProposals(), len(expRes.GetProposals()))
 				for i := 0; i < len(proposals.GetProposals()); i++ {
-					// Instead of using MashalJSON, we could compare .String() output too.
-					// https://github.com/cosmos/cosmos-sdk/issues/10965
-					expJSON, err := suite.cdc.MarshalJSON(expRes.GetProposals()[i])
 					suite.Require().NoError(err)
-					actualJSON, err := suite.cdc.MarshalJSON(proposals.GetProposals()[i])
-					suite.Require().NoError(err)
-
-					suite.Require().Equal(expJSON, actualJSON)
+					suite.Require().NotEmpty(proposals.GetProposals()[i])
+					suite.Require().Equal(expRes.GetProposals()[i], proposals.GetProposals()[i])
 				}
 
 			} else {

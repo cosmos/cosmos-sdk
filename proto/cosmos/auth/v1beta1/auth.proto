@@ -38,9 +38,8 @@ message ModuleAccount {
 
 // Params defines the parameters for the auth module.
 message Params {
-  option (amino.name)                 = "cosmos-sdk/x/auth/Params";
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (amino.name)      = "cosmos-sdk/x/auth/Params";
+  option (gogoproto.equal) = true;
 
   uint64 max_memo_characters       = 1;
   uint64 tx_sig_limit              = 2;

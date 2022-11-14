@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/cosmos/gogoproto/proto"
-	"sigs.k8s.io/yaml"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,12 +38,6 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 	}
 
 	return p, nil
-}
-
-// String implements stringer interface
-func (p Proposal) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 // GetContent returns the proposal Content
@@ -179,12 +172,6 @@ func (tp *TextProposal) ProposalType() string { return ProposalTypeText }
 
 // ValidateBasic validates the content's title and description of the proposal
 func (tp *TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
-
-// String implements Stringer interface
-func (tp TextProposal) String() string {
-	out, _ := yaml.Marshal(tp)
-	return string(out)
-}
 
 func ValidProposalStatus(status ProposalStatus) bool {
 	if status == StatusDepositPeriod ||

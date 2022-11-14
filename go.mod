@@ -163,4 +163,12 @@ replace (
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
 )
 
-retract v0.46.2
+retract (
+	// subject to the dragonberry vulnerability
+	// and/or the bank coin metadata migration issue
+	[v0.46.0, v0.46.4]
+	// subject to the dragonberry vulnerability
+	[v0.45.0, v0.45.8]
+	// do not use
+	v0.43.0
+)

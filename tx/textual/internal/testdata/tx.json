@@ -47,8 +47,7 @@
 			}
 		},
 		"screens": [
-			{ "text": "Chain ID: my-chain" },
-			{ "text": "Account number: 0" },
+			{ "text": "Chain id: my-chain" },
 			{ "text": "Sequence: 2" },
 			{ "text": "Fees: 5'000 uatom" },
 			{ "text": "Gas limit: 100'000", "expert": true },
@@ -136,17 +135,19 @@
 				}
 			},
 			"signer_data": {
+				"accountNumber": 1,
 				"chainId": "my-chain",
 				"pubKey": {
 					"@type": "/cosmos.crypto.secp256k1.PubKey",
 					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-				}
+				},
+				"sequence": 2
 			}
 		},
 		"screens": [
-			{ "text": "Chain ID: my-chain" },
-			{ "text": "Account number: 0" },
-			{ "text": "Sequence: 0" },
+			{ "text": "Chain id: my-chain" },
+			{ "text": "Account number: 1" },
+			{ "text": "Sequence: 2" },
 			{ "text": "Fees: 5'000 uatom" },
 			{
 				"text": "Fee payer: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
@@ -156,7 +157,11 @@
 				"text": "Fee granter: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
 				"expert": true
 			},
-			{ "text": "Gas limit: 100'000", "expert": true }
+			{ "text": "Gas limit: 100'000", "expert": true },
+			{
+				"text": "Hash of raw bytes: f7442f0b4797874e399a552f58a2678bc7f5194ceb48be510cc59f03e41e3757",
+				"expert": true
+			}
 		]
 	}
 ]

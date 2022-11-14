@@ -146,14 +146,14 @@ Account number: <uint64>
 Sequence: <uint64>
 *Public Key: <hex_string>
 <TxBody>                                                    // See #8.
+Memo: <string>                                              // Skipped if no memo set
 Fee: <coins>                                                // See value renderers for coins encoding.
 *Fee payer: <string>                                        // Skipped if no fee_payer set
 *Fee granter: <string>                                      // Skipped if no fee_granter set
-Memo: <string>                                              // Skipped if no memo set
-*Gas Limit: <uint64>
-*Timeout Height:  <uint64>                                  // Skipped if no timeout_height set
 Tipper: <string>                                            // If there's a tip
 Tip: <string>
+*Gas Limit: <uint64>
+*Timeout Height:  <uint64>                                  // Skipped if no timeout_height set
 *This transaction has <int> body extension:                 // Skipped if no body extension options
 *<repeated Any>
 *This transaction has <int> body non-critical extensions:   // Skipped if no body non-critical extension options

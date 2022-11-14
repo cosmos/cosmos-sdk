@@ -54,7 +54,8 @@ func TestTxJsonTestcases(t *testing.T) {
 			tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier)
 			rend := valuerenderer.NewTxValueRenderer(&tr)
 
-			screens, err := rend.Format(context.Background(), protoreflect.ValueOf(textualData.ProtoReflect()))
+			val := protoreflect.ValueOf(textualData.ProtoReflect())
+			screens, err := rend.Format(context.Background(), val)
 			if tc.Error {
 				require.Error(t, err)
 				return
@@ -62,16 +63,10 @@ func TestTxJsonTestcases(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)
 
-			// val, err := rend.Parse(context.Background(), screens)
-			// if tc.Error {
-			// 	require.Error(t, err)
-			// 	return
-			// }
+			// Round trip.
+			// parsedVal, err := rend.Parse(context.Background(), screens)
 			// require.NoError(t, err)
-			// msg := val.Message().Interface()
-			// require.IsType(t, &tspb.Timestamp{}, msg)
-			// timestamp := msg.(*tspb.Timestamp)
-			// require.True(t, proto.Equal(timestamp, tc.Proto))
+			// require.Equal(t, val.Interface(), parsedVal.Interface())
 		})
 	}
 }

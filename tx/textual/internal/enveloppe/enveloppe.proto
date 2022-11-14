@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option go_package = "cosmossdk.io/tx/textual/internal/testpb";
+
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+message Part1 {
+    string chain_id = 1;
+    uint64 account_number = 2;
+    uint64 sequence = 3;
+}
+
+message Part2 {}
+
+message Part3 {
+    string memo = 1;
+    repeated cosmos.base.v1beta1.Coin fees = 2;
+}
+
+message Part4 {
+    string fee_payer = 2;
+    string fee_granter = 3;
+}
+
+message Part5 {
+    repeated cosmos.base.v1beta1.Coin tip = 4;
+    string tipper = 5;
+}
+
+message Part6 {
+    uint64 gas_limit = 1;
+    uint64 timeout_height = 2;
+    string hash_of_raw_bytes = 100;
+}

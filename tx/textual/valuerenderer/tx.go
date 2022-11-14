@@ -12,6 +12,7 @@ import (
 
 	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/tx/textual/internal/enveloppe"
 )
 
 type txValueRenderer struct {
@@ -48,141 +49,81 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	if err != nil {
 		return nil, err
 	}
-	signerData := textualData.SignerData
 
-	screens := make([]Screen, 3)
-	screens[0].Text = fmt.Sprintf("Chain ID: %s", signerData.ChainId)
-	screens[1].Text = fmt.Sprintf("Account number: %d", signerData.AccountNumber)
-	screens[2].Text = fmt.Sprintf("Sequence: %d", signerData.Sequence)
-
-	// TODO Public key: needs Any
-	// TODO Body messages: needs repeated
-
-	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "amount", "Fees", false)
-	if err != nil {
-		return nil, err
+	p1 := &enveloppe.Part1{
+		ChainId:       textualData.SignerData.ChainId,
+		AccountNumber: textualData.SignerData.AccountNumber,
+		Sequence:      textualData.SignerData.Sequence,
 	}
-	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "payer", "Fee payer", true)
-	if err != nil {
-		return nil, err
+	p2 := &enveloppe.Part2{}
+	p3 := &enveloppe.Part3{
+		Memo: txBody.Memo,
+		Fees: txAuthInfo.Fee.Amount,
 	}
-	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "granter", "Fee granter", true)
-	if err != nil {
-		return nil, err
+	p4 := &enveloppe.Part4{
+		FeePayer:   txAuthInfo.Fee.Payer,
+		FeeGranter: txAuthInfo.Fee.Granter,
 	}
-	screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "memo", "Memo", false)
-	if err != nil {
-		return nil, err
+	p5 := &enveloppe.Part5{}
+	if txAuthInfo.Tip != nil {
+		p5.Tip = txAuthInfo.Tip.Amount
+		p5.Tipper = txAuthInfo.Tip.Tipper
 	}
-	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Fee.ProtoReflect(), "gas_limit", "Gas limit", true)
-	if err != nil {
-		return nil, err
-	}
-	screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "timeout_height", "Timeout height", true)
-	if err != nil {
-		return nil, err
-	}
-	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Tip.ProtoReflect(), "tipper", "Tipper", true)
-	if err != nil {
-		return nil, err
-	}
-	screens, err = vr.appendScreen(screens, ctx, txAuthInfo.Tip.ProtoReflect(), "amount", "Tip", true)
-	if err != nil {
-		return nil, err
-	}
-	// screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "extension_options", "Body extensions", true)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// screens, err = vr.appendScreen(screens, ctx, txBody.ProtoReflect(), "non_critical_extension_options options", "Non-critical body extensions", true)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	if len(txAuthInfo.SignerInfos) > 1 {
-		// Get all signer infos except the signer's one.
-		otherSigners := make([]*txv1beta1.SignerInfo, 0, len(txAuthInfo.SignerInfos)-1)
-		for _, si := range txAuthInfo.SignerInfos {
-			if !proto.Equal(si.PublicKey, signerData.PubKey) {
-				otherSigners = append(otherSigners, si)
-			}
-		}
-
-		// Create the sametxAuthInfo.SignerInfos message, but without the signer
-		fd := txAuthInfo.ProtoReflect().Descriptor().Fields().ByName("signer_infos")
-		newField := txAuthInfo.ProtoReflect().NewField(fd)
-		r, err := vr.tr.GetValueRenderer(fd)
-		if err != nil {
-			return nil, err
-		}
-		newScreens, err := r.Format(ctx, newField)
-		if err != nil {
-			return nil, err
-		}
-
-		// Manually replace the first screen, to add the "other" word
-		newScreens[0].Text = fmt.Sprintf("This transaction has %d other signers:", len(otherSigners))
-
-		screens = append(screens, newScreens...)
+	p6 := &enveloppe.Part6{
+		GasLimit:       txAuthInfo.Fee.GasLimit,
+		TimeoutHeight:  txBody.TimeoutHeight,
+		HashOfRawBytes: getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
 	}
 
-	screens = append(screens, Screen{
-		Text:   fmt.Sprintf("Hash of raw bytes: %s", getHash(textualData.BodyBytes, textualData.AuthInfoBytes)),
-		Expert: true,
-	})
+	screens1, err := vr.formatPart(ctx, p1, false)
+	if err != nil {
+		return nil, err
+	}
+	screens2, err := vr.formatPart(ctx, p2, true)
+	if err != nil {
+		return nil, err
+	}
+	screens3, err := vr.formatPart(ctx, p3, false)
+	if err != nil {
+		return nil, err
+	}
+	screens4, err := vr.formatPart(ctx, p4, true)
+	if err != nil {
+		return nil, err
+	}
+	screens5, err := vr.formatPart(ctx, p5, false)
+	if err != nil {
+		return nil, err
+	}
+	screens6, err := vr.formatPart(ctx, p6, true)
+	if err != nil {
+		return nil, err
+	}
+
+	screens := append(screens1, append(screens2, append(screens3, append(screens4, append(screens5, screens6...)...)...)...)...)
 
 	return screens, nil
 }
 
-func (vr txValueRenderer) appendScreen(
-	screens []Screen, ctx context.Context,
-	msg protoreflect.Message, fieldName,
-	label string, expert bool,
-) ([]Screen, error) {
-	// Skip if the message is empty
-	if !msg.IsValid() {
-		return screens, nil
-	}
-	fd := msg.Descriptor().Fields().ByName(protoreflect.Name(fieldName))
-	value := msg.Get(fd)
-	// Skip if the value is empty
-	if !value.IsValid() || isValueEmpty(msg, fd, value) {
-		return screens, nil
-	}
-
-	// Get the value-rendered text of the inner Message
-	r, err := vr.tr.GetValueRenderer(fd)
-	if err != nil {
-		return nil, err
-	}
-	new, err := r.Format(ctx, value)
+func (vr txValueRenderer) formatPart(ctx context.Context, m proto.Message, expert bool) ([]Screen, error) {
+	messageVR := NewMessageValueRenderer(vr.tr, m.ProtoReflect().Descriptor())
+	screens, err := messageVR.Format(ctx, protoreflect.ValueOf(m.ProtoReflect()))
 	if err != nil {
 		return nil, err
 	}
 
-	// Add label and expert fields as needed
-	new[0].Text = fmt.Sprintf("%s: %s", label, new[0].Text)
-	if expert {
-		for i := range new {
-			new[i].Expert = true
+	// Remove 1st screen which is the message name
+	screens = screens[1:]
+
+	// Remove indentations on all subscreens
+	for i := range screens {
+		screens[i].Indent--
+		if expert {
+			screens[i].Expert = true
 		}
 	}
 
-	screens = append(screens, new...)
-
 	return screens, nil
-}
-
-// isValueEmpty checks if the protoreflect.Value is equal to its empty
-// (default) value.
-// Protobuf only exposes the `Equal` method on messages, so here we create
-// two messages: one empty, and the other empty except for the field with the
-// given Value. We then do proto.Equal on these two messages.
-func isValueEmpty(msg protoreflect.Message, fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
-	msgWithValue := msg.New()
-	msgWithValue.Set(fd, v)
-	emptyMsg := msg.New()
-
-	return proto.Equal(emptyMsg.Interface(), msgWithValue.Interface())
 }
 
 // getHash gets the hash of raw bytes to be signed over.
@@ -203,8 +144,8 @@ func getHash(bodyBz, authInfoBz []byte) string {
 }
 
 // Parse implements the ValueRenderer interface.
-func (vr txValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	tx := &txv1beta1.Tx{}
+func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
+	tx := &textualv1.TextualData{}
 
 	return protoreflect.ValueOfMessage(tx.ProtoReflect()), nil
 }

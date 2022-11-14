@@ -50,6 +50,13 @@ func TestBaseAddressPubKey(t *testing.T) {
 	err = acc2.SetAddress(addr2)
 	require.Nil(t, err)
 	require.EqualValues(t, addr2, acc2.GetAddress())
+
+	// no error when calling MarshalYAML with an account with pubkey
+	_, err = acc.MarshalYAML()
+	require.Nil(t, err)
+
+	// no panic on calling string with an account with pubkey
+	require.NotPanics(t, func() { _ = acc.String() })
 }
 
 func TestBaseSequence(t *testing.T) {

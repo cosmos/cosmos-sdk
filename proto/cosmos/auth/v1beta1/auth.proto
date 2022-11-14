@@ -12,10 +12,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types";
 // for basic account functionality. Any custom account type should extend this
 // type for additional functionality (e.g. vesting).
 message BaseAccount {
-  option (amino.name)                 = "cosmos-sdk/BaseAccount";
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.equal)            = false;
+  option (amino.name)                = "cosmos-sdk/BaseAccount";
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
 
   option (cosmos_proto.implements_interface) = "AccountI";
 

@@ -55,7 +55,7 @@ message Bar {
 enum ExternalEnum {
   One = 0;
   Two = 1;
-  EXTERNAL_ENUM_THREE = 2;
+  EXTERNAL_ENUM_THREE = 127;
 }
 
 // Baz is a sampel message type used for testing enum rendering.

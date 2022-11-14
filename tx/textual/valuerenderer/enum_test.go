@@ -3,16 +3,17 @@ package valuerenderer_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/tx/textual/internal/testpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 type enumTest struct {
@@ -35,32 +36,34 @@ func TestEnumJsonTestcases(t *testing.T) {
 			err := protojson.Unmarshal(tc.Proto, m)
 			require.NoError(t, err)
 
-			fd := getFd(m)
+			fd := getFd(tc.Proto, m)
 			valrend, err := textual.GetValueRenderer(fd)
 			require.NoError(t, err)
 
-			screens, err := valrend.Format(context.Background(), m.ProtoReflect().Get(fd))
+			val := m.ProtoReflect().Get(fd)
+			screens, err := valrend.Format(context.Background(), val)
 			require.NoError(t, err)
 			require.Equal(t, 1, len(screens))
 			require.Equal(t, tc.Text, screens[0].Text)
 
 			// Round trip
-			// val, err := valrend.Parse(context.Background(), screens)
-			// require.NoError(t, err)
-			// require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
+			parsedVal, err := valrend.Parse(context.Background(), screens)
+			require.NoError(t, err)
+			diff := cmp.Diff(val.Interface(), parsedVal.Interface(), protocmp.Transform())
+			require.Empty(t, diff)
 		})
 	}
 }
 
-// getFd returns the field descriptor on Baz whose value is set
-func getFd(m *testpb.Baz) protoreflect.FieldDescriptor {
-	for i := 1; i <= 3; i++ {
-		fd := m.ProtoReflect().Descriptor().Fields().ByNumber(protowire.Number(i))
-		value := m.ProtoReflect().Get(fd).Enum()
-		if value > 0 {
-			return fd
-		}
+// getFd returns the field descriptor on Baz whose value is set. Since golang
+// treats empty and default values as the same, we actually parse the protojson
+// encoded string to retrieve which field is set.
+func getFd(proto json.RawMessage, m *testpb.Baz) protoreflect.FieldDescriptor {
+	if strings.Contains(string(proto), `"ee"`) {
+		return m.ProtoReflect().Descriptor().Fields().ByNumber(1)
+	} else if strings.Contains(string(proto), `"ie"`) {
+		return m.ProtoReflect().Descriptor().Fields().ByNumber(2)
+	} else {
+		return m.ProtoReflect().Descriptor().Fields().ByNumber(3)
 	}
-
-	panic(fmt.Errorf("no enums set on %+v", m))
 }

@@ -1,63 +1,55 @@
 package valuerenderer
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type enumValueRenderer struct {
-	fd protoreflect.FieldDescriptor
+	ed protoreflect.EnumDescriptor
 }
 
 func NewEnumValueRenderer(fd protoreflect.FieldDescriptor) ValueRenderer {
-	return enumValueRenderer{fd: fd}
+	ed := fd.Enum()
+	if ed == nil {
+		panic(fmt.Errorf("expected enum field, got %s", fd.Kind()))
+	}
+
+	return enumValueRenderer{ed: ed}
 }
 
 var _ ValueRenderer = (*enumValueRenderer)(nil)
 
 func (er enumValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	ed := er.fd.Enum()
-	if ed == nil {
-		return nil, fmt.Errorf("expected enum field, got %T", er.fd)
+
+	// Get the full name of the enum variant.
+	evd := er.ed.Values().ByNumber(v.Enum())
+	if evd == nil {
+		return nil, fmt.Errorf("cannot get enum %s variant of number %d", er.ed.FullName(), v.Enum())
 	}
 
-	evd := ed.Values().ByNumber(v.Enum())
-	fullName := string(evd.FullName())
-
-	// Transform the Enum name to SNAKE_CASE, and optionally trim if from the
-	// enum value name.
-	snakeCaseEd := toSnakeCase(string(ed.Name()))
-	if strings.HasPrefix(fullName, snakeCaseEd) {
-		fullName = strings.TrimPrefix(fullName, snakeCaseEd+"_")
-		fullName = strings.ToLower(fullName)
-	}
-
-	return []Screen{{Text: formatFieldName(fullName)}}, nil
+	return []Screen{{Text: string(evd.FullName())}}, nil
 
 }
 
 func (er enumValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	panic("unimplemented")
-}
+	if len(screens) != 1 {
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
+	}
 
-// toSnakeCase converts from PascalCase to capitalized SNAKE_CASE.
-func toSnakeCase(s string) string {
-	var buf bytes.Buffer
-	for _, c := range s {
-		if 'A' <= c && c <= 'Z' {
-			// just convert [A-Z] to _[A-Z]
-			if buf.Len() > 0 {
-				buf.WriteRune('_')
-			}
-			buf.WriteRune(c)
-		} else {
-			buf.WriteRune(c - 'a' + 'A')
+	formatted := screens[0].Text
+
+	// Loop through all enum variants until we find the one matching the
+	// formatted screen's one.
+	values := er.ed.Values()
+	for i := 0; i < values.Len(); i++ {
+		evd := values.Get(i)
+		if string(evd.FullName()) == formatted {
+			return protoreflect.ValueOfEnum(evd.Number()), nil
 		}
 	}
 
-	return buf.String()
+	return nilValue, fmt.Errorf("cannot parse %s as enum on field %s", formatted, er.ed.FullName())
 }

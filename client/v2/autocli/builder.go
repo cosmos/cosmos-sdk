@@ -15,5 +15,5 @@ type Builder struct {
 
 	// GetClientConn specifies how CLI commands will resolve a grpc.ClientConnInterface
 	// from a given context.
-	GetClientConn func(context.Context) grpc.ClientConnInterface
+	GetClientConn func(context.Context) (grpc.ClientConnInterface, error)
 }

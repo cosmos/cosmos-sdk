@@ -164,7 +164,11 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
-		clientConn := getClientConn(ctx)
+		clientConn, err := getClientConn(ctx)
+		if err != nil {
+			return err
+		}
+
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err

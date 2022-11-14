@@ -14,7 +14,7 @@ import (
 type AutoCLIQueryService struct {
 	autocliv1.UnimplementedQueryServer
 
-	moduleOptions map[string]*autocliv1.ModuleOptions
+	ModuleOptions map[string]*autocliv1.ModuleOptions
 }
 
 func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryService {
@@ -52,13 +52,13 @@ func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryServ
 		}
 	}
 	return &AutoCLIQueryService{
-		moduleOptions: moduleOptions,
+		ModuleOptions: moduleOptions,
 	}
 }
 
 func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {
 	return &autocliv1.AppOptionsResponse{
-		ModuleOptions: a.moduleOptions,
+		ModuleOptions: a.ModuleOptions,
 	}, nil
 }
 

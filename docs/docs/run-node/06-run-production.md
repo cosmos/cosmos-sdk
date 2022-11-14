@@ -44,7 +44,7 @@ Nodes should not have all ports open to the public, this is a simple way to get 
 
 When setting up a firewall there are a few ports that can be open when operating a Cosmos SDK node. There is the Tendermint json-RPC, prometheus, p2p, remote signer and Cosmos SDK GRPC and REST. If the node is being operated as a node that does not offer endpoints to be used for submission or querying then a max of three endpoints are needed.
 
-Most, if not all servers come equipped with [ufw](https://wiki.ubuntuusers.de/ufw/). Ufw will be used in this tutorial. 
+Most, if not all servers come equipped with [ufw](https://help.ubuntu.com/community/UFW). Ufw will be used in this tutorial. 
 
 1. Reset UFW to disallow all incoming connections and allow outgoing
 

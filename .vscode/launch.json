@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Run E2E tests from the current dir in VSCode
+      // For running all E2E tests use `make test-e2e`
+      "name": "E2E: (current dir)",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${fileDirname}",
+      "args": ["-test.timeout", "30m", "-test.v"],
+      "buildFlags": "-tags e2e"
+    }
+  ]
+}

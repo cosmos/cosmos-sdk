@@ -62,7 +62,8 @@ make build-docs
 
 When a new major version of the SDK is released, the following steps should be taken:
 
-* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/deploy-docs.yml`), for avoiding deploying the docs from the release branches
+* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/deploy-docs.yml`), for avoiding deploying the docs from the release branches.
+* On the `release/vX.Y.Z` branch, update `docusaurus.config.js` and set the `lastVersion` to `current`, remove all other versions from the config.
 * Each time a new version is released (on docusaurus), drop support from the oldest versions.
     * If the old version is still running vuepress (v0.45, v0.46), remove its line from `vuepress_versions`
     * If any, remove the outdated redirections from `docusaurus.config.js` and add the base version redirection (`/vX.XX`) to `/main`.
@@ -74,6 +75,8 @@ When a new major version of the SDK is released, the following steps should be t
         },
       ```
 
-* Add the new version sidebar to the list of versionned sidebar and add the version to `versions`
+* Add the new version sidebar to the list of versionned sidebar and add the version to `versions.json`.
+* Update the latest version (`presets[1].docs.lastVersion`) in `docusaurus.config.js`.
+* Add the new version with in `presets[1].docs.versions` in `docusaurus.config.js`.
 
 Learn more about [versioning](https://docusaurus.io/docs/versioning) in Docusaurus.

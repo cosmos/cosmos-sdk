@@ -11,7 +11,7 @@ This section describes how to securely run a node in a public setting and/or on 
 When operating a node, full node or validator, in production it is important to set your server up securely. 
 
 :::note
-There are many different ways to secure a server and your node, the described steps here is one way.
+There are many different ways to secure a server and your node, the described steps here is one way. To see another way of setting up a server see the [run in production tutorial](https://tutorials.cosmos.network/hands-on-exercise/5-run-in-prod/1-overview.html)
 :::
 
 :::note
@@ -124,19 +124,19 @@ The two most used remote signers are [tmkms](https://github.com/iqlusioninc/tmkm
 
 ###### Dependencies
 
-Update server dependencies and install extras needed. 
+1. Update server dependencies and install extras needed. 
 
 ```sh
 sudo apt update -y && sudo apt install build-essential curl jq -y
 ```
 
-Install Rust 
+2. Install Rust: 
 
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-Install Libusb:
+3. Install Libusb:
 
 ```sh
 sudo apt install libusb-1.0-0-dev
@@ -146,7 +146,9 @@ sudo apt install libusb-1.0-0-dev
 
 There are two ways to install tmkms, from source or `cargo install`. In the examples we will cover downloading or building from source and using softsign. Softsign stands for software signing, but you could use a [yubihsm](https://www.yubico.com/products/hardware-security-module/) as your signing key if you wish. 
 
-Building from source:
+1. Build:
+
+From source:
 
 ```bash
 cd $HOME
@@ -156,6 +158,7 @@ cargo install tmkms --features=softsign
 tmkms init config
 tmkms softsign keygen ./config/secrets/secret_connection_key
 ```
+or 
 
 Cargo install: 
 
@@ -169,13 +172,13 @@ tmkms softsign keygen ./config/secrets/secret_connection_key
 To use tmkms with a yubikey install the binary with `--features=yubihsm`.
 :::
 
-Next, we need to get the migrate the validator key from the full node to the new tmkms instance. 
+2. Migrate the validator key from the full node to the new tmkms instance. 
 
 ```bash
 scp user@123.456.32.123:~/.simd/config/priv_validator_key.json ~/tmkms/config/secrets
 ```
 
-Then, we must import the validator key into tmkms. 
+3. Import the validator key into tmkms. 
 
 ```bash
 tmkms softsign import $HOME/tmkms/config/secrets/priv_validator_key.json $HOME/tmkms/config/secrets/priv_validator_key
@@ -183,7 +186,7 @@ tmkms softsign import $HOME/tmkms/config/secrets/priv_validator_key.json $HOME/t
 
 At this point, it is necessary to delete the `priv_validator_key.json` from the validator node and the tmkms node. Since the key has been imported into tmkms (above) it is no longer necessary on the nodes. The key can be safely stored offline. 
 
-Finally, before starting the processes, the `tmkms.toml` must be modified. 
+4. Modifiy the `tmkms.toml`. 
 
 ```bash
 vim $HOME/tmkms/config/tmkms.toml
@@ -220,7 +223,7 @@ protocol_version = "v0.34"
 reconnect = true
 ```
 
-First on the node, which is connecting to the tmkms instance, we must set the address of the tmkms instance. 
+5. Set the address of the tmkms instance. 
 
 ```bash
 vim $HOME/.simd/config/config.toml
@@ -244,7 +247,7 @@ It is recommended to comment or delete the lines that specify the path of the va
 ```
 :::
 
-Finally, start the two processes. 
+6. Start the two processes. 
 
 ```bash
 tmkms start -c $HOME/tmkms/config/tmkms.toml

@@ -3,7 +3,6 @@ package runtime
 import (
 	"fmt"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -14,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -35,7 +33,7 @@ func init() {
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideDeliverTx,
-			ProvideAutoCLIModuleOptions,
+			//ProvideAutoCLIModuleOptions,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -146,7 +144,7 @@ func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.R
 	}
 }
 
-// ProvideAutoCLIModuleOptions provides the autocli module options discovered by the app.
-func ProvideAutoCLIModuleOptions(app *AppBuilder) map[string]*autocliv1.ModuleOptions {
-	return services.NewAutoCLIQueryService(app.app.ModuleManager.Modules).ModuleOptions
-}
+//// ProvideAutoCLIModuleOptions provides the autocli module options discovered by the app.
+//func ProvideAutoCLIModuleOptions(app *AppBuilder) map[string]*autocliv1.ModuleOptions {
+//	return services.NewAutoCLIQueryService(app.app.ModuleManager.Modules).ModuleOptions
+//}

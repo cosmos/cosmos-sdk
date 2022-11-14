@@ -13,7 +13,6 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
@@ -186,7 +185,7 @@ godocs:
 	godoc -http=:6060
 
 build-docs:
-	@cd docs && sh ./build-all.sh
+	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
 
 .PHONY: build-docs
 

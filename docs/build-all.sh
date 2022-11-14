@@ -3,7 +3,7 @@
 # This builds the docs.cosmos.network docs using docusaurus.
 # Old documentation, which have not been migrated to docusaurus are generated with vuepress.
 COMMIT=$(git rev-parse HEAD)
-mkdir -p ~/output ~/versioned_docs  ~/versioned_sidebars
+mkdir -p ~/versioned_docs  ~/versioned_sidebars
 for version in $(jq -r .[] versions.json); do
     echo "building docusaurus $version docs"
     git clean -fdx && git reset --hard && git checkout release/v$version.x
@@ -17,13 +17,11 @@ echo "building docusaurus main docs"
 mv ~/versioned_docs ~/versioned_sidebars .
 npm ci && npm run build
 mv build ~/output
-## TODO to delete after deprecation of 0.45 and 0.46
-echo "building vuepress docs"
 while read -r branch path_prefix; do
-    echo "building vuepress $${branch} docs"
-    (git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build)
-    mkdir -p ~/output/$${path_prefix}
-    cp -r .vuepress/dist/* ~/output/$${path_prefix}/
+    echo "building vuepress $branch docs"
+    (git clean -fdx && git reset --hard && git checkout $branch && npm install && VUEPRESS_BASE="/$path_prefix/" npm run build)
+    mkdir -p ~/output/$path_prefix
+    cp -r .vuepress/dist/* ~/output/$path_prefix/
 done < vuepress_versions
 echo "setup domain"
 echo $DOCS_DOMAIN > ~/output/CNAME

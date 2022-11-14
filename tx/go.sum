@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+cosmossdk.io/api v0.2.4 h1:o2t77GXWWEN5egCzD2ZyyFgbsoAif/XdF3T+/sAYiHQ=
+cosmossdk.io/api v0.2.4/go.mod h1:7xfxe8ghXHoKj3W2oG/HcuxGVwUHN3q8piiIEiJ3CEU=
+>>>>>>> f1fc44efd4dc06d5ef161ae48c4a8a08af89d5b9
 github.com/cosmos/cosmos-proto v1.0.0-alpha8 h1:d3pCRuMYYvGA5bM0ZbbjKn+AoQD4A7dyNG2wzwWalUw=
 github.com/cosmos/cosmos-proto v1.0.0-alpha8/go.mod h1:6/p+Bc4O8JKeZqe0VqUGTX31eoYqemTT4C1hLCWsO7I=
 github.com/cosmos/gogoproto v1.4.2 h1:UeGRcmFW41l0G0MiefWhkPEVEwvu78SZsHBvI78dAYw=

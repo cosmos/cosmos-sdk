@@ -40,7 +40,6 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
-	_ sdk.MempoolTx              = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -61,10 +60,6 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
-}
-
-func (w *wrapper) Size() int {
-	panic("not yet implemented")
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {
@@ -194,10 +189,12 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			if err != nil {
 				return nil, err
 			}
+			// sequence number is functionally a transaction nonce and referred to as such in the SDK
+			nonce := si.GetSequence()
 			res[i] = signing.SignatureV2{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
-				Sequence: si.GetSequence(),
+				Sequence: nonce,
 			}
 
 		}

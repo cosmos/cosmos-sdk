@@ -37,7 +37,8 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree Tree
+	tree   Tree
+	logger log.Logger
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
@@ -87,7 +88,8 @@ func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKe
 	}
 
 	return &Store{
-		tree: tree,
+		tree:   tree,
+		logger: logger,
 	}, nil
 }
 
@@ -198,7 +200,10 @@ func (st *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []typ
 func (st *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
-	st.tree.Set(key, value)
+	_, err := st.tree.Set(key, value)
+	if err != nil && st.logger != nil {
+		st.logger.Error("iavl set error", "error", err.Error())
+	}
 }
 
 // Implements types.KVStore.
@@ -409,29 +414,4 @@ func getProofFromTree(tree *iavl.MutableTree, key []byte, exists bool) *tmcrypto
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
 	return &tmcrypto.ProofOps{Ops: []tmcrypto.ProofOp{op.ProofOp()}}
-}
-
-//----------------------------------------
-
-// iavlIterator implements types.Iterator.
-type iavlIterator struct {
-	dbm.Iterator
-}
-
-var _ types.Iterator = (*iavlIterator)(nil)
-
-// newIAVLIterator will create a new iavlIterator.
-// CONTRACT: Caller must release the iavlIterator, as each one creates a new
-// goroutine.
-//
-//nolint:deadcode,unused
-func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
-	iterator, err := tree.Iterator(start, end, ascending)
-	if err != nil {
-		panic(err)
-	}
-	iter := &iavlIterator{
-		Iterator: iterator,
-	}
-	return iter
 }

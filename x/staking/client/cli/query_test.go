@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -22,12 +21,12 @@ func (s *CLITestSuite) TestGetCmdQueryValidator() {
 	}{
 		{
 			"with invalid address ",
-			[]string{"somethinginvalidaddress", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"somethinginvalidaddress", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 		},
 		{
 			"happy case",
-			[]string{sdk.ValAddress(s.addrs[0]).String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{sdk.ValAddress(s.addrs[0]).String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 		},
 	}
@@ -57,14 +56,14 @@ func (s *CLITestSuite) TestGetCmdQueryValidators() {
 		{
 			"one validator case",
 			[]string{
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagLimit),
 			},
 			1,
 		},
 		{
 			"multi validator case",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			0,
 		},
 	}
@@ -97,7 +96,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegation() {
 			[]string{
 				"wrongDelAddr",
 				s.addrs[1].String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil,
 		},
@@ -106,7 +105,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegation() {
 			[]string{
 				s.addrs[0].String(),
 				"wrongValAddr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil,
 		},
@@ -115,7 +114,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegation() {
 			[]string{
 				s.addrs[0].String(),
 				sdk.ValAddress(s.addrs[1]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			&types.DelegationResponse{},
@@ -159,7 +158,7 @@ func (s *CLITestSuite) TestGetCmdQueryDelegations() {
 			"valid request (height specific)",
 			[]string{
 				s.addrs[0].String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -205,7 +204,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorDelegations() {
 			"valid request(height specific)",
 			[]string{
 				s.addrs[0].String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -240,7 +239,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegations() {
 			"wrong delegator address",
 			[]string{
 				"wrongDelAddr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -248,7 +247,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegations() {
 			"valid request",
 			[]string{
 				s.addrs[0].String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -285,7 +284,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegation() {
 			[]string{
 				"wrongDelAddr",
 				s.addrs[0].String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -294,7 +293,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegation() {
 			[]string{
 				s.addrs[0].String(),
 				"wrongValAddr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -303,7 +302,7 @@ func (s *CLITestSuite) TestGetCmdQueryUnbondingDelegation() {
 			[]string{
 				s.addrs[0].String(),
 				sdk.ValAddress(s.addrs[1]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -339,7 +338,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 			"wrong validator address",
 			[]string{
 				"wrongValAddr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -347,7 +346,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 			"valid request",
 			[]string{
 				sdk.ValAddress(s.addrs[0]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -382,7 +381,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegations() {
 			"wrong delegator address",
 			[]string{
 				"wrongdeladdr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -390,7 +389,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegations() {
 			"valid request",
 			[]string{
 				s.addrs[0].String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -427,7 +426,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegation() {
 				"wrongdeladdr",
 				sdk.ValAddress(s.addrs[0]).String(),
 				sdk.ValAddress(s.addrs[1]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -437,7 +436,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegation() {
 				s.addrs[0].String(),
 				"wrongSrcValAddress",
 				sdk.ValAddress(s.addrs[1]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -447,7 +446,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegation() {
 				s.addrs[0].String(),
 				sdk.ValAddress(s.addrs[0]).String(),
 				"wrongDestValAddress",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -457,7 +456,7 @@ func (s *CLITestSuite) TestGetCmdQueryRedelegation() {
 				s.addrs[0].String(),
 				sdk.ValAddress(s.addrs[0]).String(),
 				sdk.ValAddress(s.addrs[1]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -493,7 +492,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorRedelegations() {
 			"wrong validator address",
 			[]string{
 				"wrongValAddr",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 		},
@@ -501,7 +500,7 @@ func (s *CLITestSuite) TestGetCmdQueryValidatorRedelegations() {
 			"valid request",
 			[]string{
 				sdk.ValAddress(s.addrs[0]).String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 		},
@@ -535,7 +534,7 @@ func (s *CLITestSuite) TestGetCmdQueryPool() {
 		{
 			"with text",
 			[]string{
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			`bonded_tokens: "0"
@@ -544,7 +543,7 @@ not_bonded_tokens: "0"`,
 		{
 			"with json",
 			[]string{
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			`{"not_bonded_tokens":"0","bonded_tokens":"0"}`,

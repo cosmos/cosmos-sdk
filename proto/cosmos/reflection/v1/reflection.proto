@@ -4,7 +4,6 @@ package cosmos.reflection.v1;
 
 import "google/protobuf/descriptor.proto";
 import "cosmos/query/v1/query.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 
 // Package cosmos.reflection.v1 provides support for inspecting protobuf
 // file descriptors.
@@ -18,18 +17,11 @@ service ReflectionService {
   }
 }
 
-
 // FileDescriptorsRequest is the Query/FileDescriptors request type.
-message FileDescriptorsRequest {
-  // pagination defines the optional pagination request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
+message FileDescriptorsRequest {}
 
 // FileDescriptorsResponse is the Query/FileDescriptors response type.
 message FileDescriptorsResponse {
   // files is the file descriptors.
-  repeated google.protobuf.FileDescriptorProto file = 1;
-
-  // pagination defines the pagination response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated google.protobuf.FileDescriptorProto files = 1;
 }

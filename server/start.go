@@ -3,6 +3,7 @@ package server
 // DONTCOVER
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -21,14 +22,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"cosmossdk.io/tools/rosetta"
+	crgserver "cosmossdk.io/tools/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
-	"github.com/cosmos/cosmos-sdk/server/rosetta"
-	crgserver "github.com/cosmos/cosmos-sdk/server/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -50,13 +51,13 @@ const (
 	FlagTrace              = "trace"
 	FlagInvCheckPeriod     = "inv-check-period"
 
-	FlagPruning           = "pruning"
-	FlagPruningKeepRecent = "pruning-keep-recent"
-	FlagPruningInterval   = "pruning-interval"
-	FlagIndexEvents       = "index-events"
-	FlagMinRetainBlocks   = "min-retain-blocks"
-	FlagIAVLCacheSize     = "iavl-cache-size"
-	FlagIAVLFastNode      = "iavl-disable-fastnode"
+	FlagPruning             = "pruning"
+	FlagPruningKeepRecent   = "pruning-keep-recent"
+	FlagPruningInterval     = "pruning-interval"
+	FlagIndexEvents         = "index-events"
+	FlagMinRetainBlocks     = "min-retain-blocks"
+	FlagIAVLCacheSize       = "iavl-cache-size"
+	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
@@ -187,6 +188,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
+	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
 	return cmd
@@ -287,7 +290,13 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		if fn != nil {
 			fn()
 		}
-		traceWriter.Close()
+
+		// if flagTraceStore is not used then traceWriter is nil
+		if traceWriter != nil {
+			if err = traceWriter.Close(); err != nil {
+				ctx.Logger.Error("failed to close trace writer", "err", err)
+			}
+		}
 	}
 
 	config, err := serverconfig.GetConfig(ctx.Viper)
@@ -455,10 +464,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	if config.Rosetta.Enable {
 		offlineMode := config.Rosetta.Offline
 
-		// If GRPC is not enabled rosetta cannot work in online mode, so it works in
-		// offline mode.
-		if !config.GRPC.Enable {
-			offlineMode = true
+		// If GRPC is not enabled rosetta cannot work in online mode, so we throw an error.
+		if !config.GRPC.Enable && !offlineMode {
+			return errors.New("'grpc' must be enable in online mode for Rosetta to work")
 		}
 
 		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)

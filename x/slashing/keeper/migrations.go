@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
-	v043 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v043"
+	v2 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v3"
 )
 
@@ -20,7 +20,7 @@ func NewMigrator(keeper Keeper, ss exported.Subspace) Migrator {
 
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v043.MigrateStore(ctx, m.keeper.storeKey)
+	return v2.MigrateStore(ctx, m.keeper.storeKey)
 }
 
 // Migrate2to3 migrates the x/slashing module state from the consensus

@@ -185,7 +185,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	initialSupply := res.GetSupply()
 
 	rapid.Check(suite.T(), func(t *rapid.T) {
-
 		numCoins := rapid.IntRange(1, 3).Draw(t, "num-count")
 		coins := make(sdk.Coins, 0, numCoins)
 
@@ -233,7 +232,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 
 		req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
 		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 0, true)
-
 	})
 
 	coin := sdk.NewCoin("bar", sdk.NewInt(100))

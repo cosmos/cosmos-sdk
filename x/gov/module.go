@@ -17,6 +17,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -121,6 +122,12 @@ func (a AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 	v1beta1.RegisterInterfaces(registry)
 }
 
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // AppModule implements an application module for the gov module.
 type AppModule struct {
 	AppModuleBasic
@@ -166,7 +173,6 @@ type GovInputs struct {
 	Key              *store.KVStoreKey
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter *baseapp.MsgServiceRouter
-	Authority        map[string]sdk.AccAddress `optional:"true"`
 
 	AccountKeeper govtypes.AccountKeeper
 	BankKeeper    govtypes.BankKeeper
@@ -190,9 +196,10 @@ func ProvideModule(in GovInputs) GovOutputs {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
@@ -280,15 +287,15 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
 	}
 	err = cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 2 to 3: %v", err))
 	}
 	err = cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 3 to 4: %v", err))
 	}
 }
 

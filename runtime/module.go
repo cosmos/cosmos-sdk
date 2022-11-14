@@ -6,6 +6,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
@@ -27,7 +28,7 @@ func (b BaseAppOption) IsManyPerContainerType() {}
 func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
-			ProvideCodecs,
+			Provide,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -37,7 +38,7 @@ func init() {
 	)
 }
 
-func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
+func Provide(moduleBasics map[string]AppModuleBasicWrapper) (
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
@@ -74,16 +75,17 @@ func ProvideCodecs(moduleBasics map[string]AppModuleBasicWrapper) (
 	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
 }
 
-type appInputs struct {
+type AppInputs struct {
 	depinject.In
 
+	AppConfig      *appv1alpha1.Config
 	Config         *runtimev1alpha1.Module
 	AppBuilder     *AppBuilder
 	Modules        map[string]AppModuleWrapper
 	BaseAppOptions []BaseAppOption
 }
 
-func SetupAppBuilder(inputs appInputs) {
+func SetupAppBuilder(inputs AppInputs) {
 	mm := &module.Manager{Modules: map[string]module.AppModule{}}
 	for name, wrapper := range inputs.Modules {
 		mm.Modules[name] = wrapper.AppModule
@@ -92,6 +94,7 @@ func SetupAppBuilder(inputs appInputs) {
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
+	app.appConfig = inputs.AppConfig
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

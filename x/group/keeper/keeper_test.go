@@ -253,6 +253,26 @@ func (s *TestSuite) TestCreateGroup() {
 			},
 			expErr: true,
 		},
+		"invalid member weight - Inf": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr3.String(),
+					Weight:  "inf",
+				}},
+			},
+			expErr: true,
+		},
+		"invalid member weight - NaN": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr3.String(),
+					Weight:  "NaN",
+				}},
+			},
+			expErr: true,
+		},
 	}
 
 	var seq uint32 = 1
@@ -898,6 +918,19 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr: false,
+		},
+		"minExecutionPeriod = votingPeriod + MaxExecutionPeriod": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:              addr1.String(),
+				Members:            members,
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+				time.Second+group.DefaultConfig().MaxExecutionPeriod,
+			),
+			expErr: true,
 		},
 	}
 
@@ -1860,6 +1893,67 @@ func (s *TestSuite) TestWithdrawProposal() {
 			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
 		})
 	}
+}
+
+func (s *TestSuite) TestTallyProposalsAtVPEnd() {
+	// panics before https://github.com/cosmos/cosmos-sdk/pull/13869 fixes
+	// we need to skip the test because extra validation was added making the invalid threshold policy
+	// impossible to create. However, we still want to make sure that the panic will not be triggered for the already existing invalid policies.
+	s.T().Skip()
+
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := time.Duration(4 * time.Minute)
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		votingPeriod,
+		minExecutionPeriod,
+	)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	s.Require().NoError(err)
+	s.Require().NotNil(groupPolicy)
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+
+	// move forward in time
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+
+	result, err := s.groupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
+		ProposalId: proposalRes.ProposalId,
+	})
+	s.Require().Equal("1", result.Tally.YesCount)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
 }
 
 func (s *TestSuite) TestVote() {

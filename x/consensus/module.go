@@ -85,6 +85,14 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -123,12 +131,8 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type ConsensusParamInputs struct {
@@ -143,7 +147,7 @@ type ConsensusParamOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
-	Module        runtime.AppModuleWrapper
+	Module        appmodule.AppModule
 	BaseAppOption runtime.BaseAppOption
 }
 
@@ -162,7 +166,7 @@ func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
 
 	return ConsensusParamOutputs{
 		Keeper:        k,
-		Module:        runtime.WrapAppModule(m),
+		Module:        m,
 		BaseAppOption: baseappOpt,
 	}
 }

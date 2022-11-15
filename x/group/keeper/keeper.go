@@ -400,8 +400,12 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 		} else {
+<<<<<<< HEAD
 			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo) //nolint:gosec // implicit memory aliasing in for loop
 			if err != nil {
+=======
+			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
+>>>>>>> 3423442ab (fix(group): add group members weight checks (#13869))
 				return sdkerrors.Wrap(err, "doTallyAndUpdate")
 			}
 

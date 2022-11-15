@@ -67,7 +67,12 @@ TotalSupply is responsible for tracking the number of all nfts under a certain c
 
 ## Messages
 
-In this section we describe the processing of messages for the nft module.
+In this section we describe the processing of messages for the NFT module.
+
+:::warning
+The validation of `ClassID` and `NftID` is left to the app developer.  
+The SDK does not provide any validation for these fields.
+:::
 
 ### MsgSend
 
@@ -75,9 +80,9 @@ You can use the `MsgSend` message to transfer the ownership of nft. This is a fu
 
 The message handling should fail if:
 
-* provided `ClassID` is not exist.
-* provided `Id` is not exist.
-* provided `Sender` is not the owner of nft.
+* provided `ClassID` does not exist.
+* provided `Id` does not exist.
+* provided `Sender` does not the owner of nft.
 
 ## Events
 

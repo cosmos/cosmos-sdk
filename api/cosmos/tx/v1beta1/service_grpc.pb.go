@@ -42,6 +42,14 @@ type ServiceClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
+	// TxEncodeAmino encodes an amino transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncodeAmino(ctx context.Context, in *TxEncodeAminoRequest, opts ...grpc.CallOption) (*TxEncodeAminoResponse, error)
+	// TxDecodeAmino decodes an amino transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecodeAmino(ctx context.Context, in *TxDecodeAminoRequest, opts ...grpc.CallOption) (*TxDecodeAminoResponse, error)
 }
 
 type serviceClient struct {
@@ -115,6 +123,24 @@ func (c *serviceClient) TxEncode(ctx context.Context, in *TxEncodeRequest, opts 
 	return out, nil
 }
 
+func (c *serviceClient) TxEncodeAmino(ctx context.Context, in *TxEncodeAminoRequest, opts ...grpc.CallOption) (*TxEncodeAminoResponse, error) {
+	out := new(TxEncodeAminoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxEncodeAmino", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) TxDecodeAmino(ctx context.Context, in *TxDecodeAminoRequest, opts ...grpc.CallOption) (*TxDecodeAminoResponse, error) {
+	out := new(TxDecodeAminoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxDecodeAmino", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 // All implementations must embed UnimplementedServiceServer
 // for forward compatibility
@@ -139,6 +165,14 @@ type ServiceServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
+	// TxEncodeAmino encodes an amino transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncodeAmino(context.Context, *TxEncodeAminoRequest) (*TxEncodeAminoResponse, error)
+	// TxDecodeAmino decodes an amino transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecodeAmino(context.Context, *TxDecodeAminoRequest) (*TxDecodeAminoResponse, error)
 	mustEmbedUnimplementedServiceServer()
 }
 
@@ -166,6 +200,12 @@ func (UnimplementedServiceServer) TxDecode(context.Context, *TxDecodeRequest) (*
 }
 func (UnimplementedServiceServer) TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TxEncode not implemented")
+}
+func (UnimplementedServiceServer) TxEncodeAmino(context.Context, *TxEncodeAminoRequest) (*TxEncodeAminoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxEncodeAmino not implemented")
+}
+func (UnimplementedServiceServer) TxDecodeAmino(context.Context, *TxDecodeAminoRequest) (*TxDecodeAminoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxDecodeAmino not implemented")
 }
 func (UnimplementedServiceServer) mustEmbedUnimplementedServiceServer() {}
 
@@ -306,6 +346,42 @@ func _Service_TxEncode_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_TxEncodeAmino_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxEncodeAminoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxEncodeAmino(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxEncodeAmino",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxEncodeAmino(ctx, req.(*TxEncodeAminoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_TxDecodeAmino_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxDecodeAminoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxDecodeAmino(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxDecodeAmino",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxDecodeAmino(ctx, req.(*TxDecodeAminoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Service_ServiceDesc is the grpc.ServiceDesc for Service service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -340,6 +416,14 @@ var Service_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TxEncode",
 			Handler:    _Service_TxEncode_Handler,
+		},
+		{
+			MethodName: "TxEncodeAmino",
+			Handler:    _Service_TxEncodeAmino_Handler,
+		},
+		{
+			MethodName: "TxDecodeAmino",
+			Handler:    _Service_TxDecodeAmino_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1882,62 +1882,6 @@ func (s *TestSuite) TestWithdrawProposal() {
 	}
 }
 
-func (s *TestSuite) TestTallyProposalsAtVPEnd() {
-	addrs := s.addrs
-	addr1 := addrs[0]
-	addr2 := addrs[1]
-	votingPeriod := time.Duration(4 * time.Minute)
-	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
-
-	groupMsg := &group.MsgCreateGroupWithPolicy{
-		Admin: addr1.String(),
-		Members: []group.MemberRequest{
-			{Address: addr1.String(), Weight: "1"},
-			{Address: addr2.String(), Weight: "1"},
-		},
-	}
-	policy := group.NewThresholdDecisionPolicy(
-		"1",
-		votingPeriod,
-		minExecutionPeriod,
-	)
-	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
-
-	s.setNextAccount()
-	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
-	s.Require().NoError(err)
-	accountAddr := groupRes.GetGroupPolicyAddress()
-	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
-	s.Require().NoError(err)
-	s.Require().NotNil(groupPolicy)
-
-	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{addr1.String()},
-		Messages:           nil,
-	})
-	s.Require().NoError(err)
-
-	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
-		ProposalId: proposalRes.ProposalId,
-		Voter:      addr1.String(),
-		Option:     group.VOTE_OPTION_YES,
-	})
-	s.Require().NoError(err)
-
-	// move forward in time
-	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
-
-	result, err := s.groupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
-		ProposalId: proposalRes.ProposalId,
-	})
-	s.Require().Equal("1", result.Tally.YesCount)
-	s.Require().NoError(err)
-
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
-}
-
 func (s *TestSuite) TestVote() {
 	addrs := s.addrs
 	addr1 := addrs[0]

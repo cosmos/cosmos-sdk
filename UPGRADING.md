@@ -18,7 +18,13 @@ is typically found in `RegisterAPIRoutes`.
 
 ### AppModule Interface
 
-Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
+Support for the `AppModule` `Querier`, `Route` and `LegacyQuerier` methods has been entirely removed from the `AppModule`
+interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously
+known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
+
+Most other existing `AppModule` methods have been moved to extension interfaces in preparation for the migration
+to the `cosmossdk.io/core/appmodule` API in the next release. Most `AppModule` implementations should not be broken
+by this change.
 
 ### SimApp
 

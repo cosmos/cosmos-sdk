@@ -14,10 +14,10 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 
 	"cosmossdk.io/depinject"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -128,6 +128,14 @@ func NewAppModule(cdc codec.Codec, ak feegrant.AccountKeeper, bk feegrant.BankKe
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the feegrant module's name.
 func (AppModule) Name() string {
 	return feegrant.ModuleName
@@ -172,14 +180,8 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
-		))
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+		appmodule.Provide(ProvideModule),
+	)
 }
 
 type FeegrantInputs struct {
@@ -192,10 +194,10 @@ type FeegrantInputs struct {
 	Registry      cdctypes.InterfaceRegistry
 }
 
-func ProvideModule(in FeegrantInputs) (keeper.Keeper, runtime.AppModuleWrapper) {
+func ProvideModule(in FeegrantInputs) (keeper.Keeper, appmodule.AppModule) {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, in.AccountKeeper, in.BankKeeper, k, in.Registry)
-	return k, runtime.WrapAppModule(m)
+	return k, m
 }
 
 // AppModuleSimulation functions

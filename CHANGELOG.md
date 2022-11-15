@@ -40,7 +40,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## Unreleased
 
 * Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
-* nothing
+
+### Improvements
+
+* Bring in Cosmos-SDK [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) changes [#362](https://github.com/provenance-io/cosmos-sdk/pull/362).
+* (server) [#362](https://github.com/provenance-io/cosmos-sdk/pull/362) Change the default for the re-added start command --iavl-disable-fastnode flag back to true to match the config default.
 
 ---
 
@@ -167,6 +171,25 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 
 # Cosmos-SDK releases
 
+## [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) - 2022-11-01
+
+### Features
+
+* (x/auth) [#13612](https://github.com/cosmos/cosmos-sdk/pull/13612) Add `Query/ModuleAccountByName` endpoint for accessing the module account info by module name.
+
+### Improvements
+
+* (deps) Bump IAVL version to [v0.19.4](https://github.com/cosmos/iavl/releases/tag/v0.19.4).
+
+## Bug Fixes
+
+* (x/auth/tx) [#12474](https://github.com/cosmos/cosmos-sdk/pull/12474) Remove condition in GetTxsEvent that disallowed multiple equal signs, which would break event queries with base64 strings (i.e. query by signature).
+* (store) [#13530](https://github.com/cosmos/cosmos-sdk/pull/13530) Fix app-hash mismatch if upgrade migration commit is interrupted.
+
+## API Breaking Changes
+
+* (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
+
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 
 ATTENTION:
@@ -185,6 +208,7 @@ replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8
 
 * [#13435](https://github.com/cosmos/cosmos-sdk/pull/13435) Extend error context when a simulation fails.
 * (grpc) [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485) Implement a new gRPC query, `/cosmos/base/node/v1beta1/config`, which provides operator configuration.
+* [#13577](https://github.com/cosmos/cosmos-sdk/pull/13577) Added `ApplicationQueryService` interface (the related method is added directly to the `Application` interface and `ApplicationQueryService` is removed in the future version). Applications implementing `ApplicationQueryService` enabling registration of module external gRPC services. When implemented the SDK will automatically register chain information query service introduced in [#13485](https://github.com/cosmos/cosmos-sdk/pull/13485).
 * (cli) [#13147](https://github.com/cosmos/cosmos-sdk/pull/13147) Add the `--append` flag to the `sign-batch` CLI cmd to combine the messages and sign those txs which are created with `--generate-only`.
 * (cli) [#13454](https://github.com/cosmos/cosmos-sdk/pull/13454) `sign-batch` CLI can now read multiple transaction files.
 

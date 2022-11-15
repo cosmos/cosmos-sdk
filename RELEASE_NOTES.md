@@ -119,11 +119,47 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 
 ---
 
+## [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) - 2022-11-01
+
+This release introduces a number of bug fixes, features and improvements.
+Notably, a new query for accessing module accounts info by module name (thanks @gsk967).
+
+Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md) for an exhaustive list of changes.
+
+Full Commit History: https://github.com/cosmos/cosmos-sdk/compare/v0.46.3...v0.46.4
+
+**NOTE**: The changes mentioned in `v0.46.3` are **still** required:
+
+> Chains must add the following to their go.mod for the application:
+>
+> ```go
+> replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+> ```
+
+### Features
+
+* (x/auth) [#13612](https://github.com/cosmos/cosmos-sdk/pull/13612) Add `Query/ModuleAccountByName` endpoint for accessing the module account info by module name.
+
+### Improvements
+
+* (deps) Bump IAVL version to [v0.19.4](https://github.com/cosmos/iavl/releases/tag/v0.19.4).
+
+## Bug Fixes
+
+* (x/auth/tx) [#12474](https://github.com/cosmos/cosmos-sdk/pull/12474) Remove condition in GetTxsEvent that disallowed multiple equal signs, which would break event queries with base64 strings (i.e. query by signature).
+* (store) [#13530](https://github.com/cosmos/cosmos-sdk/pull/13530) Fix app-hash mismatch if upgrade migration commit is interrupted.
+
+## API Breaking Changes
+
+* (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
+
+---
+
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 
 ATTENTION:
 
-This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702). 
+This is a security release for the [Dragonberry security advisory](https://forum.cosmos.network/t/ibc-security-advisory-dragonberry/7702).
 
 All users should upgrade immediately.
 

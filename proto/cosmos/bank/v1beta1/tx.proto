@@ -50,6 +50,7 @@ message MsgMultiSend {
 // MsgMultiSendResponse defines the Msg/MultiSend response type.
 message MsgMultiSendResponse {}
 
+// MsgUpdateDenomMetadata represents a message to update denom metadata
 message MsgUpdateDenomMetadata {
   option (cosmos.msg.v1.signer) = "from_address";
 

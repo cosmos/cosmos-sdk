@@ -29,13 +29,13 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 		Title:       "title",
 		Description: "description",
 		Metadata: &banktypes.Metadata{
-			Base:        "atom",
-			Name:        "Cosmos Hub Atom",
-			Symbol:      "ATOM",
-			Display:     "atom",
-			Description: "The native staking token of the Cosmos Hub.",
+			Base:        "diamondback",
+			Name:        "diamondback",
+			Symbol:      "DB",
+			Display:     "diamondback",
+			Description: "The native token.",
 			DenomUnits: []*banktypes.DenomUnit{
-				{"atom", uint32(0), []string{"atom"}},
+				{"diamondback", uint32(0), []string{"diamondback"}},
 			},
 		},
 	}
@@ -186,13 +186,13 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		Title:       "title",
 		Description: "description",
 		Metadata: &banktypes.Metadata{
-			Base:        "atom",
-			Name:        "Cosmos Hub Atom",
-			Symbol:      "ATOM",
-			Display:     "atom",
-			Description: "The native staking token of the Cosmos Hub.",
+			Base:        "diamondback",
+			Name:        "diamondback",
+			Symbol:      "DB",
+			Display:     "diamondback",
+			Description: "Native token",
 			DenomUnits: []*banktypes.DenomUnit{
-				{"atom", uint32(0), []string{"atom"}},
+				{"diamondback", uint32(0), []string{"diamondback"}},
 			},
 		},
 	}
@@ -335,13 +335,13 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 		Title:       "title",
 		Description: "description",
 		Metadata: &banktypes.Metadata{
-			Base:        "atom",
-			Name:        "Cosmos Hub Atom",
-			Symbol:      "ATOM",
-			Display:     "atom",
-			Description: "The native staking token of the Cosmos Hub.",
+			Base:        "diamondback",
+			Name:        "diamondback",
+			Symbol:      "DB",
+			Display:     "diamondback",
+			Description: "The native token",
 			DenomUnits: []*banktypes.DenomUnit{
-				{"atom", uint32(0), []string{"atom"}},
+				{"diamondback", uint32(0), []string{"diamondback"}},
 			},
 		},
 	}

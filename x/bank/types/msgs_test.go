@@ -283,22 +283,22 @@ func TestUpdateDenomMetadataGetSignBytes(t *testing.T) {
 		Title: "title",
 		Description: "description",
 		Metadata: &Metadata {
-			Name:        "Cosmos Hub Atom",
-			Symbol:      "ATOM",
-			Description: "The native staking token of the Cosmos Hub.",
+			Name:        "diamondback",
+			Symbol:      "DB",
+			Description: "The native staking token",
 			DenomUnits: []*DenomUnit{
-				{"uatom", uint32(0), []string{"microatom"}},
+				{"udiamondback", uint32(0), []string{"microdiamondback"}},
 			},
 		},
 	}
 	res := msg.GetSignBytes()
 
-	expected := `{"type":"cosmos-sdk/MsgUpdateDenomMetadata","value":{"description":"description","metadata":{"denom_units":[{"aliases":["microatom"],"denom":"uatom"}],"description":"The native staking token of the Cosmos Hub.","name":"Cosmos Hub Atom","symbol":"ATOM"},"title":"title"}}`
+	expected := `{"type":"cosmos-sdk/MsgUpdateDenomMetadata","value":{"description":"description","metadata":{"denom_units":[{"aliases":["microdiamondback"],"denom":"udiamondback"}],"description":"The native staking token","name":"diamondback","symbol":"DB"},"title":"title"}}`
 	require.Equal(t, expected, string(res))
 }
 
 func TestUpdateDenomMetadataGetSigners(t *testing.T) {
-	from := sdk.AccAddress("input111111111111111")
+	from := sdk.AccAddress("cosmos1d9h8qat57ljhcm")
 	title := "Proposal Title"
 	description := "Proposal description"
 	metadata := Metadata{}

@@ -200,7 +200,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 
 		_, hasNeg := sdk.Coins{spendable}.SafeSub(coin)
 		if hasNeg {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, balance)
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
 		}
 
 		newBalance := balance.Sub(coin)
@@ -425,11 +425,12 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEn
 // getSendEnabled returns whether send is enabled and whether that flag was set for a denom.
 //
 // Example usage:
-//    store := ctx.KVStore(k.storeKey)
-//    sendEnabled, found := getSendEnabled(store, "atom")
-//    if !found {
-//        sendEnabled = DefaultSendEnabled
-//    }
+//
+//	store := ctx.KVStore(k.storeKey)
+//	sendEnabled, found := getSendEnabled(store, "atom")
+//	if !found {
+//	    sendEnabled = DefaultSendEnabled
+//	}
 func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, bool) {
 	key := types.CreateSendEnabledKey(denom)
 	if !store.Has(key) {

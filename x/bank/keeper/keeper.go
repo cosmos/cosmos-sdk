@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -18,6 +17,8 @@ import (
 )
 
 var _ Keeper = (*BaseKeeper)(nil)
+
+const govModuleName = "gov"
 
 // Keeper defines a module interface that facilitates the transfer of coins
 // between accounts.
@@ -62,7 +63,7 @@ type BaseKeeper struct {
 	storeKey               storetypes.StoreKey
 	paramSpace             paramtypes.Subspace
 	mintCoinsRestrictionFn MintingRestrictionFn
-	authority  			   string
+	authority              string
 }
 
 type MintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
@@ -117,7 +118,7 @@ func NewBaseKeeper(
 		storeKey:               storeKey,
 		paramSpace:             paramSpace,
 		mintCoinsRestrictionFn: func(ctx sdk.Context, coins sdk.Coins) error { return nil },
-		authority: 				authtypes.NewModuleAddress(govtypes.ModuleName).String(), // hardcoded till all transitive dependencies can be updated to pass in the constructor instead
+		authority:              authtypes.NewModuleAddress(govModuleName).String(), // hardcoded till all transitive dependencies can be updated to pass in the constructor instead
 	}
 }
 

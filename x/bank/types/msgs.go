@@ -210,11 +210,7 @@ func (msg MsgUpdateDenomMetadata) Type() string {
 
 // ValidateBasic Implements Msg.
 func (msg MsgUpdateDenomMetadata) ValidateBasic() error {
-	err := msg.Metadata.Validate()
-	if err != nil {
-		return err
-	}
-	return nil
+	return msg.Metadata.Validate()
 }
 
 // GetSignBytes Implements Msg.

@@ -41,9 +41,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
 	suite.NoError(err)
 
-	// Create a new denom 'atom' so the proposal to update fee denom can be tested
-	atomCoins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(100000)))
-	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, atomCoins)
+	// Create a new denom 'diamondback' so the proposal to update fee denom can be tested
+	diamondbackCoins := sdk.NewCoins(sdk.NewCoin("diamondback", sdk.NewInt(100000)))
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, diamondbackCoins)
 	suite.NoError(err)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())

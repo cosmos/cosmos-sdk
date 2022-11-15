@@ -29,16 +29,40 @@ than it seems at first glance.
 Consider we have a Cosmos SDK module `foo` at a go module v1.x semantic version,
 and in that go module there is some generated protobuf code in the protobuf
 package `foo.v1` in that module’s  `types` package that forms part of the public
-API, for instance as part of `Keeper` methods, ex:
+API, ex:
 ```go
-// foo/keeper.go
+// foo/types/tx.pb.go
 
-import "foo/types"
+type MsgDoSomething struct {
+	Sender string
+	Amount uint64
+}
 
-type Keeper interface {
-  DoSomething(context.Context, *[]types.Coin)
+type MsgServer interface {
+	DoSomething(context.Context, msg *MsgDoSomething) (*MsgDoSomethingResponse, error)
+}
+
+```
+
+Now consider that we want to make an upgrade and release `foo/v2` and also 
+add a new optional field to `MsgDoSomething`. We might now end up with the
+following generated code in `foo/v2/types` if we follow the SDK's current
+approach to generated code:
+
+```go
+// foo/v2/types/tx.pb.go
+type MsgDoSomething struct {
+    Sender string
+    Amount uint64
+    // if Condition is non-nil, then the condition must be checked before performing the action
+    Condition *anypb.Any
+}
+
+type MsgServer interface {
+    DoSomething(context.Context, msg *MsgDoSomething) (*MsgDoSomethingResponse, error)
 }
 ```
+
 
 Now consider that the developer wants to make a breaking change in `foo` that
 *does not affect* the `Keeper` interface above at all. So now a new go module
@@ -46,6 +70,7 @@ Now consider that the developer wants to make a breaking change in `foo` that
 
 The most obvious choice is to move all the code to `foo/v2` including the keeper
 so we now have:
+
 
 ```go
 // foo/v2/keeper.go
@@ -126,6 +151,15 @@ but more Cosmos-specific) to replace `ValidateBasic`.
 
 #### Pinning State Machine API Compatibility
 
+To solve 2), state machine modules must be able to specify what the version of
+the protobuf files was that they were built against. The simplest way to
+do this may be to embed the protobuf `FileDescriptor`s into the module itself
+so that these `FileDescriptor`s are used at runtime rather than the ones that
+are built into the `foo/api` which may be different. This would involve the
+following steps:
+1. a build step executed during `make proto-gen` that runs `buf build` to pack the `FileDescriptor`s into an image file
+2. a go embed directive to embed the image file
+
 One consequence of bundling protobuf types separate from state machine logic is how it affects API forwards
 compatibility. By default, protobuf as we're using it is forwards compatible - meaning that newer clients can talk to
 older state machines. This can cause problems, however, if fields are added to older messages and clients try to use
@@ -164,17 +198,26 @@ This second approach is probably less fragile than the "Since" annotations becau
 versions with annotations. While these annotations are a good solution for clients like CosmJs which want to support
 multiple chains, we need things to be a little stricter inside state machines.
 
-
-To solve 2), state machine modules must be able to specify what the version of
-the protobuf files was that they were built against. The simplest way to
-do this may be to embed the protobuf `FileDescriptor`s into the module itself
-so that these `FileDescriptor`s are used at runtime rather than the ones that
-are built into the `foo/api` which may be different. This would involve the
-following steps:
-1. a build step executed during `make proto-gen` that runs `buf build` to pack the `FileDescriptor`s into an image file
-2. a go embed directive to embed the image file
-
 ### B) Changes to Generated Code
+
+An alternate approach to solving the versioning problem with generated code is to change the generated code itself.
+Currently, we face two issues with how protobuf generated code works:
+1. there can be only one generated type per protobuf type in the global registry (this can be overridden with special build flags)
+2. if there are two generated types for one protobuf type, then they are not compatible
+
+To solve the global registry problem, we can adapt the code generator to not registry protobuf types with the global
+registry if the generated code is placed in an `internal/` package. This will require modules to register their types
+with the app-level level protobuf registry manually. This is similar to what modules already do with registering types
+with the amino codec and `InterfaceRegistry`.
+
+Dealing with incompatible types is more difficult. Imagine we have an ADR 033 module client which is using the type
+`github.com/cosmos/cosmos-sdk/x/bank/types.MsgSend`, but the bank module itself is using
+`github.com/cosmos/cosmos-sdk/x/bank/v2/internal/types.MsgSend` in its `MsgServer` implementation. It won't be possible
+to directly convert one `MsgSend` to the other the way protobuf types are currently generated.
+
+If we changed protobuf generated types to only expose interfaces and then implemented the storage of the types using
+some set of zero-copy memory buffers, then we could simply pass the memory buffers from one implementation of the
+types to another.
 
 #### Proto File Versioning
 

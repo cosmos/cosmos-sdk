@@ -1561,7 +1561,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	bigThresholdPolicy := group.NewThresholdDecisionPolicy(
 		"100",
 		time.Second,
-		0,
+		minExecutionPeriod,
 	)
 	s.setNextAccount()
 	err = policyReq.SetDecisionPolicy(bigThresholdPolicy)

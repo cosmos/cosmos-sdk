@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
-	github.com/cosmos/gogoproto v1.4.2
+	github.com/cosmos/gogoproto v1.4.3
 	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1

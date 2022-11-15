@@ -98,7 +98,7 @@ func (s *TestSuite) SetupTest() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
-		0,
+		5*time.Second, // Must wait 5 seconds before executing proposal
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   s.addrs[0].String(),
@@ -2379,6 +2379,7 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
+			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2392,6 +2393,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
+			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2403,6 +2405,7 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
+			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
@@ -2419,34 +2422,59 @@ func (s *TestSuite) TestExecProposal() {
 			},
 			expErr: true,
 		},
-		"Decision policy also applied on timeout": {
+		"Decision policy also applied on exactly voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
-			srcBlockTime:      s.blockTime.Add(time.Second),
+			srcBlockTime:      s.blockTime.Add(time.Second), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
-		"Decision policy also applied after timeout": {
+		"Decision policy also applied after voting period end": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
-			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond),
+			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond), // Voting period is 1s
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"exec proposal before MinExecutionPeriod should fail": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(4 * time.Second), // min execution date is 5s later after s.blockTime
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE, // Because MinExecutionPeriod has not passed
+		},
+		"exec proposal at exactly MinExecutionPeriod should pass": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 		"prevent double execution when successful": {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
 
+				// Wait after min execution period end before Exec
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(6 * time.Second)) // MinExecutionPeriod is 5s
+				ctx = sdk.WrapSDKContext(sdkCtx)
+
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			expErr:            true, // since proposal is pruned after a successful MsgExec
+			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
+			expErr:            true,                             // since proposal is pruned after a successful MsgExec
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2461,6 +2489,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
+			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
 		},
@@ -2468,6 +2497,11 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+
+				// Wait after min execution period end before Exec
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(6 * time.Second)) // MinExecutionPeriod is 5s
+				ctx = sdk.WrapSDKContext(sdkCtx)
 
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
@@ -2478,6 +2512,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				return myProposalID
 			},
+			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
@@ -3152,4 +3187,60 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 	}
 
 	return policyAddr, groupID
+}
+
+func (s *TestSuite) TestTallyProposalsAtVPEnd() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := time.Duration(4 * time.Minute)
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"1",
+		votingPeriod,
+		minExecutionPeriod,
+	)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	s.Require().NoError(err)
+	s.Require().NotNil(groupPolicy)
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+
+	// move forward in time
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+
+	result, err := s.groupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
+		ProposalId: proposalRes.ProposalId,
+	})
+	s.Require().Equal("1", result.Tally.YesCount)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
 }

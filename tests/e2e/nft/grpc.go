@@ -322,6 +322,18 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 			},
 			expectErr: false,
 		},
+		{
+			name: "class id does not exist",
+			args: struct {
+				ClassID string
+				ID      string
+			}{
+				ClassID: "class",
+				ID:      ExpNFT.Id,
+			},
+			expectErr: true,
+			errorMsg:  "not found nft",
+		},
 	}
 	nftURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s/%s"
 	for _, tc := range testCases {

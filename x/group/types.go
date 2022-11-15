@@ -136,8 +136,8 @@ func (p *ThresholdDecisionPolicy) Validate(g GroupInfo, config Config) error {
 		return sdkerrors.Wrap(err, "group total weight")
 	}
 
-	if p.Windows.MinExecutionPeriod >= p.Windows.VotingPeriod+config.MaxExecutionPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be strictly smaller than voting_period + max_execution_period")
+	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }
@@ -171,8 +171,8 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 }
 
 func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
-	if p.Windows.MinExecutionPeriod >= p.Windows.VotingPeriod+config.MaxExecutionPeriod {
-		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be strictly smaller than voting_period + max_execution_period")
+	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
+		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
 	}
 	return nil
 }

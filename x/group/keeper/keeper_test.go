@@ -919,19 +919,6 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 			),
 			expErr: false,
 		},
-		"minExecutionPeriod = votingPeriod + MaxExecutionPeriod": {
-			req: &group.MsgCreateGroupWithPolicy{
-				Admin:              addr1.String(),
-				Members:            members,
-				GroupPolicyAsAdmin: false,
-			},
-			policy: group.NewThresholdDecisionPolicy(
-				"1",
-				time.Second,
-				time.Second+group.DefaultConfig().MaxExecutionPeriod,
-			),
-			expErr: true,
-		},
 	}
 
 	for msg, spec := range specs {
@@ -1896,11 +1883,6 @@ func (s *TestSuite) TestWithdrawProposal() {
 }
 
 func (s *TestSuite) TestTallyProposalsAtVPEnd() {
-	// panics before https://github.com/cosmos/cosmos-sdk/pull/13869 fixes
-	// we need to skip the test because extra validation was added making the invalid threshold policy
-	// impossible to create.
-	s.T().Skip()
-
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]

@@ -399,16 +399,6 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			return sdkerrors.Wrap(err, "group")
 		}
 
-		// skip the invalid decision policies that could have been created before
-		// https://github.com/cosmos/cosmos-sdk/pull/13869
-		decisionPolicy, err := policyInfo.GetDecisionPolicy()
-		if err != nil {
-			return sdkerrors.Wrap(err, "decision policy")
-		}
-		if err := decisionPolicy.Validate(electorate, k.config); err != nil {
-			continue
-		}
-
 		proposalID := proposal.Id
 		if proposal.Status == group.PROPOSAL_STATUS_ABORTED || proposal.Status == group.PROPOSAL_STATUS_WITHDRAWN {
 			if err := k.pruneProposal(ctx, proposalID); err != nil {

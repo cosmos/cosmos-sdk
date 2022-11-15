@@ -14,11 +14,11 @@ import (
 
 type MockStakingHooks struct {
 	types.StakingHooksTemplate
-	afterUnbondingInitiated func(uint64)
+	afterUnbondingInitiated func(uint64) error
 }
 
-func (h MockStakingHooks) AfterUnbondingInitiated(_ sdk.Context, id uint64) {
-	h.afterUnbondingInitiated(id)
+func (h MockStakingHooks) AfterUnbondingInitiated(_ sdk.Context, id uint64) error {
+	return h.afterUnbondingInitiated(id)
 }
 
 func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
@@ -35,13 +35,14 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 	)
 
 	myHooks := MockStakingHooks{
-		afterUnbondingInitiated: func(id uint64) {
+		afterUnbondingInitiated: func(id uint64) error {
 			*hookCalled = true
 			// save id
 			*ubdeID = id
 			// call back to stop unbonding
 			err := app.StakingKeeper.PutUnbondingOnHold(ctx, id)
 			require.NoError(t, err)
+			return nil
 		},
 	}
 

@@ -92,13 +92,13 @@ func (d Delegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) UnbondingDelegationEntry {
+func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, unbondingID uint64) UnbondingDelegationEntry {
 	return UnbondingDelegationEntry{
 		CreationHeight:          creationHeight,
 		CompletionTime:          completionTime,
 		InitialBalance:          balance,
 		Balance:                 balance,
-		UnbondingId:             id,
+		UnbondingId:             unbondingID,
 		UnbondingOnHoldRefCount: 0,
 	}
 }

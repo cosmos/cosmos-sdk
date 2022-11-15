@@ -1,0 +1,1 @@
+GET http://localhost:1317/cosmos/bank/v1beta1/balances/cosmos1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u0tvx7u

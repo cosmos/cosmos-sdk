@@ -3,14 +3,13 @@ package govv1
 
 import (
 	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var _ protoreflect.List = (*_GenesisState_2_list)(nil)
@@ -1177,21 +1176,21 @@ type GenesisState struct {
 	// proposals defines all the proposals present at genesis.
 	Proposals []*Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals,omitempty"`
 	// Deprecated: Prefer to use `params` instead.
-	// deposit_params defines all the parameters of related to deposit.
+	// deposit_params defines all the paramaters of related to deposit.
 	//
 	// Deprecated: Do not use.
 	DepositParams *DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params,omitempty"`
 	// Deprecated: Prefer to use `params` instead.
-	// voting_params defines all the parameters of related to voting.
+	// voting_params defines all the paramaters of related to voting.
 	//
 	// Deprecated: Do not use.
 	VotingParams *VotingParams `protobuf:"bytes,6,opt,name=voting_params,json=votingParams,proto3" json:"voting_params,omitempty"`
 	// Deprecated: Prefer to use `params` instead.
-	// tally_params defines all the parameters of related to tally.
+	// tally_params defines all the paramaters of related to tally.
 	//
 	// Deprecated: Do not use.
 	TallyParams *TallyParams `protobuf:"bytes,7,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"`
-	// params defines all the parameters of x/gov module.
+	// params defines all the paramaters of x/gov module.
 	//
 	// Since: cosmos-sdk 0.47
 	Params *Params `protobuf:"bytes,8,opt,name=params,proto3" json:"params,omitempty"`

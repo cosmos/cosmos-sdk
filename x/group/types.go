@@ -66,10 +66,6 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
 func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.Windows.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
-	}
-
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "threshold")
@@ -179,10 +175,6 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
 func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.Windows.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
-	}
-
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "percentage")

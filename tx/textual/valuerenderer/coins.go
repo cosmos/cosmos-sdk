@@ -14,6 +14,8 @@ import (
 	"cosmossdk.io/tx/textual/internal/listpb"
 )
 
+const emptyCoins = "zero"
+
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
 func NewCoinsValueRenderer(q CoinMetadataQueryFn, fd protoreflect.FieldDescriptor) ValueRenderer {
 	return coinsValueRenderer{q, fd}
@@ -86,7 +88,7 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	if screens[0].Text == corecoins.EmptyCoins {
+	if screens[0].Text == emptyCoins {
 		if vr.fd != nil && vr.fd.IsList() {
 			return protoreflect.ValueOfList(listpb.NewGenericList([]*basev1beta1.Coin{})), nil
 		}
@@ -138,6 +140,10 @@ func parseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta
 	return parsedCoins, nil
 }
 
+// parseCoin parses a single value-rendered coin into the Coin struct.
+// It shares a lot of code with `cosmos-sdk.io/core/coins.Format`,
+// so this code might be refactored once we have
+// a core Parse function for coins.
 func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
 	coinArr := strings.Split(coinStr, " ")
 	amt1 := coinArr[0]

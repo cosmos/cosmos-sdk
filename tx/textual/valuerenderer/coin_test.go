@@ -98,7 +98,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 				coin, ok := value.Message().Interface().(*basev1beta1.Coin)
 				require.True(t, ok)
 
-				checkCoinsEqual(t, coin, tc.Proto)
+				checkCoinEqual(t, coin, tc.Proto)
 			}
 		})
 	}

@@ -75,5 +75,5 @@ func checkNumberTest(t *testing.T, r valuerenderer.ValueRenderer, pv protoreflec
 	v1, err := math.LegacyNewDecFromStr(value.String())
 	require.NoError(t, err)
 
-	require.Equal(t, v, v1)
+	require.True(t, v.Equal(v1))
 }

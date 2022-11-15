@@ -59,13 +59,13 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				}
 
 				require.NoError(t, err)
-				checkListsEqual(t, listValue, value.List())
+				checkCoinsEqual(t, listValue, value.List())
 			}
 		})
 	}
 }
 
-func checkListsEqual(t *testing.T, l1, l2 protoreflect.List) {
+func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 	require.Equal(t, l1.Len(), l2.Len())
 	var coinsMap = make(map[string]*basev1beta1.Coin, l1.Len())
 
@@ -80,17 +80,17 @@ func checkListsEqual(t *testing.T, l1, l2 protoreflect.List) {
 		require.True(t, ok)
 
 		coin1 := coinsMap[coin.Denom]
-		checkCoinsEqual(t, coin, coin1)
+		checkCoinEqual(t, coin, coin1)
 	}
 }
 
-func checkCoinsEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
+func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
 	require.Equal(t, coin1.Denom, coin.Denom)
 	v, err := math.LegacyNewDecFromStr(coin.Amount)
 	require.NoError(t, err)
 	v1, err := math.LegacyNewDecFromStr(coin1.Amount)
 	require.NoError(t, err)
-	require.Equal(t, v, v1)
+	require.True(t, v.Equal(v1))
 }
 
 // coinsJsonTest is the type of test cases in the testdata file.

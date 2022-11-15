@@ -177,7 +177,6 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorByConsAddrKey(valConsAddr))
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
-	// call hooks
 	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
 }
 
@@ -440,7 +439,9 @@ func (k Keeper) UnbondAllMatureValidators(ctx sdk.Context) {
 					for _, id := range val.UnbondingIds {
 						k.DeleteUnbondingIndex(ctx, id)
 					}
+
 					val = k.UnbondingToUnbonded(ctx, val)
+
 					if val.GetDelegatorShares().IsZero() {
 						k.RemoveValidator(ctx, val.GetOperator())
 					} else {

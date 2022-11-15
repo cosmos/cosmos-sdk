@@ -79,8 +79,9 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 }
 
 // This is called when an UnbondingDelegationEntry is first created
-func (k Keeper) AfterUnbondingInitiated(ctx sdk.Context, id uint64) {
+func (k Keeper) AfterUnbondingInitiated(ctx sdk.Context, id uint64) error {
 	if k.hooks != nil {
-		k.hooks.AfterUnbondingInitiated(ctx, id)
+		return k.hooks.AfterUnbondingInitiated(ctx, id)
 	}
+	return nil
 }

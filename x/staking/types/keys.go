@@ -45,14 +45,31 @@ var (
 
 	UnbondingIdKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
 	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs
+	UnbondingTypeKey  = []byte{0x39} // prefix for an index containing the type of unbonding operations
 
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
-	ValidatorUpdatesKey = []byte{0x51} // prefix for the end block validator updates key
+	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
 )
+
+type UnbondingType int
+
+const (
+	UnbondingType_Undefined UnbondingType = iota
+	UnbondingType_UnbondingDelegation
+	UnbondingType_Redelegation
+	UnbondingType_ValidatorUnbonding
+)
+
+// Returns a key for an index containing the type of unbonding operations
+func GetUnbondingTypeKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(UnbondingTypeKey, bz...)
+}
 
 // Returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
 func GetUnbondingIndexKey(id uint64) []byte {

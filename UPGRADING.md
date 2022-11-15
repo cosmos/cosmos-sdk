@@ -2,8 +2,6 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
-## [Unreleased]
-
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation

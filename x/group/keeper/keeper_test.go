@@ -1898,7 +1898,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	// panics before https://github.com/cosmos/cosmos-sdk/pull/13869 fixes
 	// we need to skip the test because extra validation was added making the invalid threshold policy
-	// impossible to create. However, we still want to make sure that the panic will not be triggered for the already existing invalid policies.
+	// impossible to create.
 	s.T().Skip()
 
 	addrs := s.addrs

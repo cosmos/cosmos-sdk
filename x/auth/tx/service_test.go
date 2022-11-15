@@ -165,6 +165,11 @@ func TestEventRegex(t *testing.T) {
 			match: true,
 		},
 		{
+			name:  "valid: with underscores",
+			event: "claim_reward.message_action='something'",
+			match: true,
+		},
+		{
 			name:  "valid: no quotes",
 			event: "tx.message=something",
 			match: true,

@@ -6,7 +6,7 @@ package testdata
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -17,8 +17,18 @@ type Animal interface {
 	Greet() string
 }
 
-func (c Cat) Greet() string {
+type Cartoon interface {
+	proto.Message
+
+	Identify() string
+}
+
+func (c *Cat) Greet() string {
 	return fmt.Sprintf("Meow, my name is %s", c.Moniker)
+}
+
+func (c *Bird) Identify() string {
+	return "This is Tweety."
 }
 
 func (d Dog) Greet() string {

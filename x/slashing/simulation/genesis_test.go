@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -15,13 +16,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
 // Abonormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	var interfaceRegistry codectypes.InterfaceRegistry
+	depinject.Inject(testutil.AppConfig, &interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)
@@ -53,12 +56,12 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, time.Duration(34800000000000), slashingGenesis.Params.DowntimeJailDuration)
 	require.Len(t, slashingGenesis.MissedBlocks, 0)
 	require.Len(t, slashingGenesis.SigningInfos, 0)
-
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.
 func TestRandomizedGenState1(t *testing.T) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	var interfaceRegistry codectypes.InterfaceRegistry
+	depinject.Inject(testutil.AppConfig, &interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	s := rand.NewSource(1)

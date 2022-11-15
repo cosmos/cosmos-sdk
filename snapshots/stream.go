@@ -5,8 +5,8 @@ import (
 	"compress/zlib"
 	"io"
 
-	protoio "github.com/gogo/protobuf/io"
-	"github.com/gogo/protobuf/proto"
+	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -54,10 +54,6 @@ func (sw *StreamWriter) WriteMsg(msg proto.Message) error {
 // Close implements io.Closer interface
 func (sw *StreamWriter) Close() error {
 	if err := sw.protoWriter.Close(); err != nil {
-		sw.chunkWriter.CloseWithError(err)
-		return err
-	}
-	if err := sw.zWriter.Close(); err != nil {
 		sw.chunkWriter.CloseWithError(err)
 		return err
 	}

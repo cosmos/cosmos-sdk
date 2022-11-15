@@ -6,8 +6,8 @@ package types
 import (
 	fmt "fmt"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	types1 "github.com/tendermint/tendermint/abci/types"
 	io "io"
 	math "math"
@@ -59,7 +59,7 @@ type TxResponse struct {
 	Timestamp string `protobuf:"bytes,12,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// Events defines all the events emitted by processing a transaction. Note,
 	// these events include those emitted by processing all the messages and those
-	// emitted from the ante handler. Whereas Logs contains the events, with
+	// emitted from the ante. Whereas Logs contains the events, with
 	// additional metadata, emitted only by processing the messages.
 	//
 	// Since: cosmos-sdk 0.42.11, 0.44.5, 0.45

@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/math"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -51,6 +53,7 @@ func NewTxCmd() *cobra.Command {
 	return stakingTxCmd
 }
 
+// NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
 func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-validator",
@@ -90,6 +93,7 @@ func NewCreateValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewEditValidatorCmd returns a CLI command handler for creating a MsgEditValidator transaction.
 func NewEditValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit-validator",
@@ -119,7 +123,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
+			var newMinSelfDelegation *math.Int
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
@@ -145,6 +149,7 @@ func NewEditValidatorCmd() *cobra.Command {
 	return cmd
 }
 
+// NewDelegateCmd returns a CLI command handler for creating a MsgDelegate transaction.
 func NewDelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -188,6 +193,7 @@ $ %s tx staking delegate %s1l2rsakp388kuv9k8qzq6lrm9taddae7fpx59wm 1000stake --f
 	return cmd
 }
 
+// NewRedelegateCmd returns a CLI command handler for creating a MsgBeginRedelegate transaction.
 func NewRedelegateCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -236,6 +242,7 @@ $ %s tx staking redelegate %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj %s1l2rsakp3
 	return cmd
 }
 
+// NewUnbondCmd returns a CLI command handler for creating a MsgUndelegate transaction.
 func NewUnbondCmd() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -279,6 +286,7 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 	return cmd
 }
 
+// NewCancelUnbondingDelegation returns a CLI command handler for creating a MsgCancelUnbondingDelegation transaction.
 func NewCancelUnbondingDelegation() *cobra.Command {
 	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
 
@@ -391,10 +399,11 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	genOnly, _ := fs.GetBool(flags.FlagGenerateOnly)
 	if genOnly {
 		ip, _ := fs.GetString(FlagIP)
+		p2pPort, _ := fs.GetUint(FlagP2PPort)
 		nodeID, _ := fs.GetString(FlagNodeID)
 
-		if nodeID != "" && ip != "" {
-			txf = txf.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
+		if nodeID != "" && ip != "" && p2pPort > 0 {
+			txf = txf.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
 		}
 	}
 
@@ -405,7 +414,8 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 // this is anticipated to be used with the gen-tx
 func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
-	fsCreateValidator.String(FlagIP, ipDefault, "The node's public IP")
+	fsCreateValidator.String(FlagIP, ipDefault, "The node's public P2P IP")
+	fsCreateValidator.Uint(FlagP2PPort, 26656, "The node's public P2P port")
 	fsCreateValidator.String(FlagNodeID, "", "The node's NodeID")
 	fsCreateValidator.String(FlagMoniker, "", "The validator's (optional) moniker")
 	fsCreateValidator.String(FlagWebsite, "", "The validator's (optional) website")
@@ -445,6 +455,7 @@ type TxCreateValidatorConfig struct {
 	PubKey cryptotypes.PubKey
 
 	IP              string
+	P2PPort         uint
 	Website         string
 	SecurityContact string
 	Details         string
@@ -458,35 +469,35 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 	if err != nil {
 		return c, err
 	}
+
 	if ip == "" {
-		_, _ = fmt.Fprintf(os.Stderr, "couldn't retrieve an external IP; "+
-			"the tx's memo field will be unset")
+		_, _ = fmt.Fprintf(os.Stderr, "failed to retrieve an external IP; the tx's memo field will be unset")
 	}
-	c.IP = ip
+
+	p2pPort, err := flagSet.GetUint(FlagP2PPort)
+	if err != nil {
+		return c, err
+	}
 
 	website, err := flagSet.GetString(FlagWebsite)
 	if err != nil {
 		return c, err
 	}
-	c.Website = website
 
 	securityContact, err := flagSet.GetString(FlagSecurityContact)
 	if err != nil {
 		return c, err
 	}
-	c.SecurityContact = securityContact
 
 	details, err := flagSet.GetString(FlagDetails)
 	if err != nil {
 		return c, err
 	}
-	c.SecurityContact = details
 
 	identity, err := flagSet.GetString(FlagIdentity)
 	if err != nil {
 		return c, err
 	}
-	c.Identity = identity
 
 	c.Amount, err = flagSet.GetString(FlagAmount)
 	if err != nil {
@@ -513,6 +524,11 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 		return c, err
 	}
 
+	c.IP = ip
+	c.P2PPort = p2pPort
+	c.Website = website
+	c.SecurityContact = securityContact
+	c.Identity = identity
 	c.NodeID = nodeID
 	c.PubKey = valPubKey
 	c.Website = website
@@ -549,7 +565,6 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool) (tx.Factory, sdk.Msg, error) {
 	amounstStr := config.Amount
 	amount, err := sdk.ParseCoinNormalized(amounstStr)
-
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -568,7 +583,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	maxRateStr := config.CommissionMaxRate
 	maxChangeRateStr := config.CommissionMaxChangeRate
 	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
-
 	if err != nil {
 		return txBldr, nil, err
 	}
@@ -582,17 +596,24 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), config.PubKey, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr),
+		config.PubKey,
+		amount,
+		description,
+		commissionRates,
+		minSelfDelegation,
 	)
 	if err != nil {
 		return txBldr, msg, err
 	}
+
 	if generateOnly {
 		ip := config.IP
+		p2pPort := config.P2PPort
 		nodeID := config.NodeID
 
-		if nodeID != "" && ip != "" {
-			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:26656", nodeID, ip))
+		if nodeID != "" && ip != "" && p2pPort > 0 {
+			txBldr = txBldr.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
 		}
 	}
 

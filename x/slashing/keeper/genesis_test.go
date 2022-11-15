@@ -1,59 +1,57 @@
 package keeper_test
 
 import (
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/golang/mock/gomock"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-func TestExportAndInitGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) TestExportAndInitGenesis() {
+	ctx, keeper := s.ctx, s.slashingKeeper
+	require := s.Require()
 
-	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
+	keeper.SetParams(ctx, testutil.TestParams())
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
+	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
+	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
 
-	info1 := types.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[0]), int64(4), int64(3),
+	info1 := types.NewValidatorSigningInfo(consAddr1, int64(4), int64(3),
 		time.Now().UTC().Add(100000000000), false, int64(10))
-	info2 := types.NewValidatorSigningInfo(sdk.ConsAddress(addrDels[1]), int64(5), int64(4),
+	info2 := types.NewValidatorSigningInfo(consAddr2, int64(5), int64(4),
 		time.Now().UTC().Add(10000000000), false, int64(10))
 
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), info1)
-	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]), info2)
-	genesisState := app.SlashingKeeper.ExportGenesis(ctx)
+	keeper.SetValidatorSigningInfo(ctx, consAddr1, info1)
+	keeper.SetValidatorSigningInfo(ctx, consAddr2, info2)
+	genesisState := keeper.ExportGenesis(ctx)
 
-	require.Equal(t, genesisState.Params, testslashing.TestParams())
-	require.Len(t, genesisState.SigningInfos, 2)
-	require.Equal(t, genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
+	require.Equal(genesisState.Params, testutil.TestParams())
+	require.Len(genesisState.SigningInfos, 2)
+	require.Equal(genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 
 	// Tombstone validators after genesis shouldn't effect genesis state
-	app.SlashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[0]))
-	app.SlashingKeeper.Tombstone(ctx, sdk.ConsAddress(addrDels[1]))
+	keeper.Tombstone(ctx, consAddr1)
+	keeper.Tombstone(ctx, consAddr2)
 
-	ok := app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[0]))
-	require.True(t, ok)
+	ok := keeper.IsTombstoned(ctx, consAddr1)
+	require.True(ok)
 
-	newInfo1, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
-	require.NotEqual(t, info1, newInfo1)
+	newInfo1, _ := keeper.GetValidatorSigningInfo(ctx, consAddr1)
+	require.NotEqual(info1, newInfo1)
+
 	// Initialise genesis with genesis state before tombstone
-
-	app.SlashingKeeper.InitGenesis(ctx, app.StakingKeeper, genesisState)
+	s.stakingKeeper.EXPECT().IterateValidators(ctx, gomock.Any()).Return()
+	keeper.InitGenesis(ctx, s.stakingKeeper, genesisState)
 
 	// Validator isTombstoned should return false as GenesisState is initialised
-	ok = app.SlashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(addrDels[0]))
-	require.False(t, ok)
+	ok = keeper.IsTombstoned(ctx, consAddr1)
+	require.False(ok)
 
-	newInfo1, ok = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
-	newInfo2, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]))
-	require.True(t, ok)
-	require.Equal(t, info1, newInfo1)
-	require.Equal(t, info2, newInfo2)
+	newInfo1, _ = keeper.GetValidatorSigningInfo(ctx, consAddr1)
+	newInfo2, _ := keeper.GetValidatorSigningInfo(ctx, consAddr2)
+	require.Equal(info1, newInfo1)
+	require.Equal(info2, newInfo2)
 }

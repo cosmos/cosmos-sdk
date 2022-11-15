@@ -38,11 +38,11 @@ func (suite *SKSuite) TestMarshal() {
 	require := suite.Require()
 	const size = 32
 
-	var buffer = make([]byte, size)
+	buffer := make([]byte, size)
 	_, err := suite.sk.MarshalTo(buffer)
 	require.NoError(err)
 
-	var sk = new(PrivKey)
+	sk := new(PrivKey)
 	err = sk.Unmarshal(buffer, secp256r1, size)
 	require.NoError(err)
 	require.True(sk.Equal(&suite.sk.PrivateKey))

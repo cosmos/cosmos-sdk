@@ -16,6 +16,9 @@ type KeyTable struct {
 	m map[string]attribute
 }
 
+// IsOnePerModuleType implements depinject.OnePerModuleType
+func (KeyTable) IsOnePerModuleType() {}
+
 func NewKeyTable(pairs ...ParamSetPair) KeyTable {
 	keyTable := KeyTable{
 		m: make(map[string]attribute),

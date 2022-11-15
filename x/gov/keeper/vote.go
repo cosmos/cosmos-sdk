@@ -11,13 +11,12 @@ import (
 
 // AddVote adds a vote on a specific proposal
 func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress, options v1.WeightedVoteOptions, metadata string) error {
-	proposal, ok := keeper.GetProposal(ctx, proposalID)
-	if !ok {
-		return sdkerrors.Wrapf(types.ErrUnknownProposal, "%d", proposalID)
-	}
-	if proposal.Status != v1.StatusVotingPeriod {
+	// Check if proposal is in voting period.
+	store := ctx.KVStore(keeper.storeKey)
+	if !store.Has(types.VotingPeriodProposalKey(proposalID)) {
 		return sdkerrors.Wrapf(types.ErrInactiveProposal, "%d", proposalID)
 	}
+
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return err
@@ -33,7 +32,7 @@ func (keeper Keeper) AddVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 	keeper.SetVote(ctx, vote)
 
 	// called after a vote on a proposal is cast
-	keeper.AfterProposalVote(ctx, proposalID, voterAddr)
+	keeper.Hooks().AfterProposalVote(ctx, proposalID, voterAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -81,10 +80,8 @@ func (keeper Keeper) GetVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.A
 func (keeper Keeper) SetVote(ctx sdk.Context, vote v1.Vote) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&vote)
-	addr, err := sdk.AccAddressFromBech32(vote.Voter)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(vote.Voter)
+
 	store.Set(types.VoteKey(vote.ProposalId, addr), bz)
 }
 

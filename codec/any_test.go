@@ -10,8 +10,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func NewTestInterfaceRegistry() types.InterfaceRegistry {
@@ -26,41 +26,53 @@ func NewTestInterfaceRegistry() types.InterfaceRegistry {
 }
 
 func TestMarshalAny(t *testing.T) {
+	catRegistry := types.NewInterfaceRegistry()
+	catRegistry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Cat{})
+
 	registry := types.NewInterfaceRegistry()
 
 	cdc := codec.NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := cdc.MarshalInterface(kitty)
+	emptyBz, err := cdc.MarshalInterface(kitty)
+	require.ErrorContains(t, err, "does not have a registered interface")
+
+	catBz, err := codec.NewProtoCodec(catRegistry).MarshalInterface(kitty)
 	require.NoError(t, err)
+	require.NotEmpty(t, catBz)
 
 	var animal testdata.Animal
 
-	// empty registry should fail
-	err = cdc.UnmarshalInterface(bz, &animal)
-	require.Error(t, err)
+	// deserializing cat bytes should error in an empty registry
+	err = cdc.UnmarshalInterface(catBz, &animal)
+	require.ErrorContains(t, err, "no registered implementations of type testdata.Animal")
+
+	// deserializing an empty byte array will return nil, but no error
+	err = cdc.UnmarshalInterface(emptyBz, &animal)
+	require.Nil(t, animal)
+	require.NoError(t, err)
 
 	// wrong type registration should fail
 	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = cdc.UnmarshalInterface(bz, &animal)
+	err = cdc.UnmarshalInterface(catBz, &animal)
 	require.Error(t, err)
 
 	// should pass
 	registry = NewTestInterfaceRegistry()
 	cdc = codec.NewProtoCodec(registry)
-	err = cdc.UnmarshalInterface(bz, &animal)
+	err = cdc.UnmarshalInterface(catBz, &animal)
 	require.NoError(t, err)
 	require.Equal(t, kitty, animal)
 
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
-	err = cdc.UnmarshalInterface(bz, nil)
+	err = cdc.UnmarshalInterface(catBz, nil)
 	require.Error(t, err)
 }
 
 func TestMarshalProtoPubKey(t *testing.T) {
 	require := require.New(t)
-	ccfg := simapp.MakeTestEncodingConfig()
+	ccfg := testutil.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 
@@ -79,7 +91,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	var pkI cryptotypes.PubKey
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny2, &pkI)
 	require.NoError(err)
-	var pk2 = pkAny2.GetCachedValue().(cryptotypes.PubKey)
+	pk2 := pkAny2.GetCachedValue().(cryptotypes.PubKey)
 	require.True(pk2.Equals(pk))
 
 	// **** test binary serialization ****
@@ -92,7 +104,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 	require.NoError(err)
 	err = ccfg.InterfaceRegistry.UnpackAny(&pkAny3, &pkI)
 	require.NoError(err)
-	var pk3 = pkAny3.GetCachedValue().(cryptotypes.PubKey)
+	pk3 := pkAny3.GetCachedValue().(cryptotypes.PubKey)
 	require.True(pk3.Equals(pk))
 }
 
@@ -100,7 +112,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 // helper functions
 func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	require := require.New(t)
-	ccfg := simapp.MakeTestEncodingConfig()
+	ccfg := testutil.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()
 

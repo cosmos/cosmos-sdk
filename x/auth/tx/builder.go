@@ -1,7 +1,7 @@
 package tx
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -34,12 +34,12 @@ type wrapper struct {
 }
 
 var (
-	_ authsigning.Tx                   = &wrapper{}
-	_ client.TxBuilder                 = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
-	_ middleware.HasExtensionOptionsTx = &wrapper{}
-	_ ExtensionOptionsTxBuilder        = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
+	_ authsigning.Tx             = &wrapper{}
+	_ client.TxBuilder           = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
+	_ ante.HasExtensionOptionsTx = &wrapper{}
+	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -140,11 +140,7 @@ func (w *wrapper) GetFee() sdk.Coins {
 func (w *wrapper) FeePayer() sdk.AccAddress {
 	feePayer := w.tx.AuthInfo.Fee.Payer
 	if feePayer != "" {
-		payerAddr, err := sdk.AccAddressFromBech32(feePayer)
-		if err != nil {
-			panic(err)
-		}
-		return payerAddr
+		return sdk.MustAccAddressFromBech32(feePayer)
 	}
 	// use first signer as default if no payer specified
 	return w.GetSigners()[0]
@@ -153,11 +149,7 @@ func (w *wrapper) FeePayer() sdk.AccAddress {
 func (w *wrapper) FeeGranter() sdk.AccAddress {
 	feePayer := w.tx.AuthInfo.Fee.Granter
 	if feePayer != "" {
-		granterAddr, err := sdk.AccAddressFromBech32(feePayer)
-		if err != nil {
-			panic(err)
-		}
-		return granterAddr
+		return sdk.MustAccAddressFromBech32(feePayer)
 	}
 	return nil
 }
@@ -197,10 +189,12 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			if err != nil {
 				return nil, err
 			}
+			// sequence number is functionally a transaction nonce and referred to as such in the SDK
+			nonce := si.GetSequence()
 			res[i] = signing.SignatureV2{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
-				Sequence: si.GetSequence(),
+				Sequence: nonce,
 			}
 
 		}

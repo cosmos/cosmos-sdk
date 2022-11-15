@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -331,7 +331,8 @@ func (k Keeper) SetValidatorSlashEvent(ctx sdk.Context, val sdk.ValAddress, heig
 
 // iterate over slash events between heights, inclusive
 func (k Keeper) IterateValidatorSlashEventsBetween(ctx sdk.Context, val sdk.ValAddress, startingHeight uint64, endingHeight uint64,
-	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool)) {
+	handler func(height uint64, event types.ValidatorSlashEvent) (stop bool),
+) {
 	store := ctx.KVStore(k.storeKey)
 	iter := store.Iterator(
 		types.GetValidatorSlashEventKeyPrefix(val, startingHeight),

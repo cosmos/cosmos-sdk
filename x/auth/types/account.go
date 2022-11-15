@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/tendermint/tendermint/crypto"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,6 +27,7 @@ var (
 )
 
 // NewBaseAccount creates a new BaseAccount object
+//
 //nolint:interfacer
 func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNumber, sequence uint64) *BaseAccount {
 	acc := &BaseAccount{
@@ -136,14 +138,12 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
-func (acc BaseAccount) String() string {
-	out, _ := acc.MarshalYAML()
-	return out.(string)
-}
-
 // MarshalYAML returns the YAML representation of an account.
 func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), &acc)
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+
+	bz, err := codec.MarshalYAML(codec.NewProtoCodec(registry), &acc)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +157,17 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	}
 	var pubKey cryptotypes.PubKey
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
+}
+
+// NewModuleAddressOrAddress gets an input string and returns an AccAddress.
+// If the input is a valid address, it returns the address.
+// If the input is a module name, it returns the module address.
+func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
+	if addr, err := sdk.AccAddressFromBech32(input); err == nil {
+		return addr
+	}
+
+	return NewModuleAddress(input)
 }
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name
@@ -203,7 +214,7 @@ func (ma ModuleAccount) HasPermission(permission string) bool {
 	return false
 }
 
-// GetName returns the the name of the holder's module
+// GetName returns the name of the holder's module
 func (ma ModuleAccount) GetName() string {
 	return ma.Name
 }
@@ -241,7 +252,11 @@ type moduleAccountPretty struct {
 }
 
 func (ma ModuleAccount) String() string {
-	out, _ := ma.MarshalYAML()
+	out, err := ma.MarshalYAML()
+	if err != nil {
+		panic(err)
+	}
+
 	return out.(string)
 }
 

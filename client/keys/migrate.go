@@ -38,6 +38,6 @@ func runMigrateCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd.Println("Keys migration has been successfully executed")
+	cmd.Println("Keys migration has been successfully executed.")
 	return nil
 }

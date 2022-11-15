@@ -149,7 +149,7 @@ func assertValid(obj codec.ProtoMarshaler) error {
 func (a table) Delete(store sdk.KVStore, rowID RowID) error {
 	pStore := prefix.NewStore(store, a.prefix[:])
 
-	var oldValue = reflect.New(a.model).Interface().(codec.ProtoMarshaler)
+	oldValue := reflect.New(a.model).Interface().(codec.ProtoMarshaler)
 	if err := a.GetOne(store, rowID, oldValue); err != nil {
 		return sdkerrors.Wrap(err, "load old value")
 	}
@@ -170,9 +170,7 @@ func (a table) Has(store sdk.KVStore, key RowID) bool {
 		return false
 	}
 	pStore := prefix.NewStore(store, a.prefix[:])
-	it := pStore.Iterator(PrefixRange(key))
-	defer it.Close()
-	return it.Valid()
+	return pStore.Has(key)
 }
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
@@ -194,12 +192,13 @@ func (a table) GetOne(store sdk.KVStore, rowID RowID, dest codec.ProtoMarshaler)
 // WARNING: The use of a PrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
 // this as an endpoint to the public without further limits.
 // Example:
-//			it, err := idx.PrefixScan(ctx, start, end)
-//			if err !=nil {
-//				return err
-//			}
-//			const defaultLimit = 20
-//			it = LimitIterator(it, defaultLimit)
+//
+//	it, err := idx.PrefixScan(ctx, start, end)
+//	if err !=nil {
+//		return err
+//	}
+//	const defaultLimit = 20
+//	it = LimitIterator(it, defaultLimit)
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (a table) PrefixScan(store sdk.KVStore, start, end RowID) (Iterator, error) {
@@ -252,11 +251,9 @@ func (a table) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
 // data should be a slice of structs that implement PrimaryKeyed.
 func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
 	// Clear all data
-	pStore := prefix.NewStore(store, a.prefix[:])
-	it := pStore.Iterator(nil, nil)
-	defer it.Close()
-	for ; it.Valid(); it.Next() {
-		if err := a.Delete(store, it.Key()); err != nil {
+	keys := a.keys(store)
+	for _, key := range keys {
+		if err := a.Delete(store, key); err != nil {
 			return err
 		}
 	}
@@ -282,6 +279,18 @@ func (a table) Import(store sdk.KVStore, data interface{}, _ uint64) error {
 	return nil
 }
 
+func (a table) keys(store sdk.KVStore) [][]byte {
+	pStore := prefix.NewStore(store, a.prefix[:])
+	it := pStore.Iterator(nil, nil)
+	defer it.Close()
+
+	var keys [][]byte
+	for ; it.Valid(); it.Next() {
+		keys = append(keys, it.Key())
+	}
+	return keys
+}
+
 // typeSafeIterator is initialized with a type safe RowGetter only.
 type typeSafeIterator struct {
 	store     sdk.KVStore
@@ -299,6 +308,5 @@ func (i typeSafeIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
 }
 
 func (i typeSafeIterator) Close() error {
-	i.it.Close()
-	return nil
+	return i.it.Close()
 }

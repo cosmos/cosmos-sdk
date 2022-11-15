@@ -33,6 +33,8 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+const minExecutionPeriod = 5 * time.Second
+
 type TestSuite struct {
 	suite.Suite
 
@@ -98,7 +100,7 @@ func (s *TestSuite) SetupTest() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
-		5*time.Second, // Must wait 5 seconds before executing proposal
+		minExecutionPeriod, // Must wait 5 seconds before executing proposal
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   s.addrs[0].String(),
@@ -2379,7 +2381,7 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2393,7 +2395,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2405,7 +2407,7 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
 			},
-			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
@@ -2466,15 +2468,15 @@ func (s *TestSuite) TestExecProposal() {
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(6 * time.Second)) // MinExecutionPeriod is 5s
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
 				ctx = sdk.WrapSDKContext(sdkCtx)
 
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
-			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
-			expErr:            true,                             // since proposal is pruned after a successful MsgExec
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expErr:            true,                                // since proposal is pruned after a successful MsgExec
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			expBalance:        true,
@@ -2489,7 +2491,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
 		},
@@ -2500,7 +2502,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
-				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(6 * time.Second)) // MinExecutionPeriod is 5s
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
 				ctx = sdk.WrapSDKContext(sdkCtx)
 
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
@@ -2512,7 +2514,7 @@ func (s *TestSuite) TestExecProposal() {
 
 				return myProposalID
 			},
-			srcBlockTime:      s.blockTime.Add(6 * time.Second), // After min execution period end
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
 			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
 			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
@@ -2704,6 +2706,11 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
 
+				// Wait for min execution period end
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+				ctx = sdk.WrapSDKContext(sdkCtx)
+
 				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
@@ -2725,6 +2732,8 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
 			}
 
+			// Wait for min execution period end
+			sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
 			ctx = sdk.WrapSDKContext(sdkCtx)
 			_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {

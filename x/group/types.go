@@ -31,10 +31,13 @@ type DecisionPolicy interface {
 	// GetVotingPeriod returns the duration after proposal submission where
 	// votes are accepted.
 	GetVotingPeriod() time.Duration
+	// GetMinExecutionPeriod returns the minimum duration after submission
+	// where we can execution a proposal.
+	GetMinExecutionPeriod() time.Duration
 	// Allow defines policy-specific logic to allow a proposal to pass or not,
 	// based on its tally result, the group's total power and the time since
 	// the proposal was submitted.
-	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
+	Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error)
 
 	ValidateBasic() error
 	Validate(g GroupInfo, config Config) error
@@ -52,6 +55,10 @@ func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+func (p ThresholdDecisionPolicy) GetMinExecutionPeriod() time.Duration {
+	return p.Windows.MinExecutionPeriod
+}
+
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
 		return sdkerrors.Wrap(err, "threshold")
@@ -65,7 +72,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error) {
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "threshold")
@@ -150,6 +157,10 @@ func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+func (p PercentageDecisionPolicy) GetMinExecutionPeriod() time.Duration {
+	return p.Windows.MinExecutionPeriod
+}
+
 func (p PercentageDecisionPolicy) ValidateBasic() error {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
@@ -174,7 +185,7 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string) (DecisionPolicyResult, error) {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "percentage")

@@ -2,7 +2,7 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
-## [Unreleased]
+## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation
 
@@ -36,6 +36,7 @@ SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/bui
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
 The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
 If you are using a legacy `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
+
 ```go
 autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
@@ -156,6 +157,11 @@ After:
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
 bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
+
+#### `x/nft`
+
+The SDK does not validate anymore the `classID` and `nftID` of an NFT, for extra flexibility in your NFT implementation.
+This means chain developers need to validate the `classID` and `nftID` of an NFT.
 
 ### Ledger
 

@@ -116,6 +116,6 @@ require (
 replace (
 	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
 	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
-	// Temporary until we tag a new SDK version (v0.47)
+	// Temporary until we tag a new version
 	github.com/cosmos/cosmos-sdk => ../..
 )

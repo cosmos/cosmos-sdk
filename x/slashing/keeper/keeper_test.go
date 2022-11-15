@@ -245,6 +245,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(0), signInfo.MissedBlocksCounter)
 	require.Equal(t, int64(0), signInfo.IndexOffset)
+
 	// array should be cleared
 	for offset := int64(0); offset < app.SlashingKeeper.SignedBlocksWindow(ctx); offset++ {
 		missed := app.SlashingKeeper.GetValidatorMissedBlockBitArray(ctx, consAddr, offset)

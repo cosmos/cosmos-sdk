@@ -105,5 +105,6 @@ func (h Hooks) BeforeValidatorModified(_ sdk.Context, _ sdk.ValAddress)         
 func (h Hooks) AfterValidatorBonded(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress)         {}
 func (h Hooks) AfterValidatorBeginUnbonding(_ sdk.Context, _ sdk.ConsAddress, _ sdk.ValAddress) {}
 func (h Hooks) BeforeDelegationRemoved(_ sdk.Context, _ sdk.AccAddress, _ sdk.ValAddress)       {}
-func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) {
+func (h Hooks) AfterUnbondingInitiated(_ sdk.Context, _ uint64) error {
+	return nil
 }

@@ -41,10 +41,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
 
+---
+
+## [v0.46.4-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.4-pio-1) - 2022-11-15
+
 ### Improvements
 
 * Bring in Cosmos-SDK [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) changes [#362](https://github.com/provenance-io/cosmos-sdk/pull/362).
 * (server) [#362](https://github.com/provenance-io/cosmos-sdk/pull/362) Change the default for the re-added start command --iavl-disable-fastnode flag back to true to match the config default.
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.3-pio-4...v0.46.4-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.4...v0.46.4-pio-1
 
 ---
 

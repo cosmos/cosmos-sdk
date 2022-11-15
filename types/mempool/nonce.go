@@ -1,7 +1,10 @@
 package mempool
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"math/rand"
+	"time"
 
 	huandu "github.com/huandu/skiplist"
 
@@ -20,6 +23,7 @@ var (
 // supported.
 type nonceMempool struct {
 	txQueue *huandu.SkipList
+	salt    []byte
 }
 
 type nonceMempoolIterator struct {
@@ -42,7 +46,7 @@ func (i nonceMempoolIterator) Tx() sdk.Tx {
 
 type txKey struct {
 	nonce  uint64
-	sender string
+	sender []byte
 }
 
 // txKeyLessNonce compares two txKeys by nonce then by sender address.
@@ -50,18 +54,25 @@ func txKeyLessNonce(a, b any) int {
 	keyA := a.(txKey)
 	keyB := b.(txKey)
 
-	res := huandu.Uint64.Compare(keyB.nonce, keyA.nonce)
+	res := huandu.Bytes.Compare(keyB.sender, keyA.sender)
 	if res != 0 {
 		return res
 	}
 
-	return huandu.String.Compare(keyB.sender, keyA.sender)
+	return huandu.Uint64.Compare(keyB.nonce, keyA.nonce)
 }
 
 // NewNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
 func NewNonceMempool() Mempool {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	salt := make([]byte, 32)
+	for i := range salt {
+		salt[i] = byte(r.Intn(256))
+	}
+
 	sp := &nonceMempool{
 		txQueue: huandu.New(huandu.LessThanFunc(txKeyLessNonce)),
+		salt:    salt,
 	}
 
 	return sp
@@ -79,9 +90,10 @@ func (sp nonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sig.PubKey.Address().String()
+
+	senderHash := sha256.Sum256(append(sig.PubKey.Address().Bytes(), sp.salt...))
 	nonce := sig.Sequence
-	tk := txKey{nonce: nonce, sender: sender}
+	tk := txKey{nonce: nonce, sender: senderHash[:]}
 	sp.txQueue.Set(tk, tx)
 	return nil
 }
@@ -114,9 +126,9 @@ func (sp nonceMempool) Remove(tx sdk.Tx) error {
 	}
 
 	sig := sigs[0]
-	sender := sig.PubKey.Address().String()
+	senderHash := sha256.Sum256(append(sig.PubKey.Address().Bytes(), sp.salt...))
 	nonce := sig.Sequence
-	tk := txKey{nonce: nonce, sender: sender}
+	tk := txKey{nonce: nonce, sender: senderHash[:]}
 	res := sp.txQueue.Remove(tk)
 	if res == nil {
 		return ErrTxNotFound

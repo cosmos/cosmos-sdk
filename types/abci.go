@@ -1,6 +1,8 @@
 package types
 
-import abci "github.com/tendermint/tendermint/abci/types"
+import (
+	abci "github.com/tendermint/tendermint/abci/types"
+)
 
 // InitChainer initializes application state at genesis
 type InitChainer func(ctx Context, req abci.RequestInitChain) abci.ResponseInitChain
@@ -21,4 +23,7 @@ type EndBlocker func(ctx Context, req abci.RequestEndBlock) abci.ResponseEndBloc
 type PeerFilter func(info string) abci.ResponseQuery
 
 // ProcessProposalHandler defines a function type alias for processing a proposer
-type ProcessProposalHandler func(ctx Context, proposal abci.RequestProcessProposal) abci.ResponseProcessProposal
+type ProcessProposalHandler func(Context, abci.RequestProcessProposal) abci.ResponseProcessProposal
+
+// PrepareProposalHandler defines a function type alias for preparing a proposal
+type PrepareProposalHandler func(Context, abci.RequestPrepareProposal) abci.ResponsePrepareProposal

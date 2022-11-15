@@ -44,7 +44,7 @@ var (
 	_ txtypes.ServiceServer = txServer{}
 
 	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
-	EventRegex = regexp.MustCompile(`^[a-zA-Z]+\.[a-zA-Z]+=\S+$`)
+	EventRegex = regexp.MustCompile(`^[a-zA-Z_]+\.[a-zA-Z_]+=\S+$`)
 )
 
 const (
@@ -248,8 +248,48 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	}, nil
 }
 
+// BroadcastTx implements the ServiceServer.BroadcastTx RPC method.
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
+}
+
+// TxEncode implements the ServiceServer.TxEncode RPC method.
+func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+	if req.Tx == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+
+	txBuilder := &wrapper{tx: req.Tx}
+
+	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeResponse{
+		TxBytes: encodedBytes,
+	}, nil
+}
+
+// TxDecode implements the ServiceServer.TxDecode RPC method.
+func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req.TxBytes == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txWrapper, ok := txb.(*wrapper)
+	if ok {
+		return &txtypes.TxDecodeResponse{
+			Tx: txWrapper.tx,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

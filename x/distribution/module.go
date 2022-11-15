@@ -16,7 +16,6 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -121,6 +120,14 @@ func NewAppModule(
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the distribution module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -201,12 +208,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type DistrInputs struct {
@@ -228,7 +231,7 @@ type DistrOutputs struct {
 	depinject.Out
 
 	DistrKeeper keeper.Keeper
-	Module      runtime.AppModuleWrapper
+	Module      appmodule.AppModule
 	Hooks       staking.StakingHooksWrapper
 }
 
@@ -258,7 +261,7 @@ func ProvideModule(in DistrInputs) DistrOutputs {
 
 	return DistrOutputs{
 		DistrKeeper: k,
-		Module:      runtime.WrapAppModule(m),
+		Module:      m,
 		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
 	}
 }

@@ -58,6 +58,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [13789](https://github.com/cosmos/cosmos-sdk/pull/13789) Add tx `encode` and `decode` endpoints to tx service.
+  > Note: This endpoint will only encode proto messages, Amino encoding is not supported.
 * [#13826](https://github.com/cosmos/cosmos-sdk/pull/13826) Support custom `GasConfig` configuration for applications.
 * [#13619](https://github.com/cosmos/cosmos-sdk/pull/13619) Add new function called LogDeferred to report errors in defers. Use the function in x/bank files.
 * (tools) [#13603](https://github.com/cosmos/cosmos-sdk/pull/13603) Rename cosmovisor package name to `cosmossdk.io/tools/cosmovisor`. The new tool directory contains Cosmos SDK tools.
@@ -89,6 +91,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13781](https://github.com/cosmos/cosmos-sdk/pull/13781) Remove `client/keys.KeysCdc`.
 * [#13803](https://github.com/cosmos/cosmos-sdk/pull/13803) Add an error log if iavl set operation failed.
 * [#13802](https://github.com/cosmos/cosmos-sdk/pull/13802) Add --output-document flag to the export CLI command to allow writing genesis state to a file.
+* [#13794](https://github.com/cosmos/cosmos-sdk/pull/13794) `types/module.Manager` now supports the
+`cosmossdk.io/core/appmodule.AppModule` API via the new `NewManagerFromMap` constructor.
 
 ### State Machine Breaking
 
@@ -159,7 +163,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#13160](https://github.com/cosmos/cosmos-sdk/pull/13160) Remove custom marshaling of proposl and voteoption.
 * (types) [#13430](https://github.com/cosmos/cosmos-sdk/pull/13430) Remove unused code `ResponseCheckTx` and `ResponseDeliverTx`
 * (store) [#13529](https://github.com/cosmos/cosmos-sdk/pull/13529) Add method `LatestVersion` to `MultiStore` interface, add method `SetQueryMultiStore` to baesapp to support alternative `MultiStore` implementation for query service.
-* (pruning) [#13609]](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning pacakge to be under store pacakge
+* (pruning) [#13609]](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning package to be under store package
+* [#13794](https://github.com/cosmos/cosmos-sdk/pull/13794) Most methods on `types/module.AppModule` have been moved to 
+extension interfaces. `module.Manager.Modules` is now of type `map[string]interface{}` to support in parallel the new 
+`cosmossdk.io/core/appmodule.AppModule` API.
 
 ### CLI Breaking Changes
 
@@ -168,6 +175,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (x/auth) [#13838](https://github.com/cosmos/cosmos-sdk/pull/13838) Fix calling `String()` and `MarshalYAML` panics when pubkey is set on a `BaseAccount`. 
 * (rosetta) [#13583](https://github.com/cosmos/cosmos-sdk/pull/13583) Misc fixes for cosmos-rosetta.
 * (x/evidence) [#13740](https://github.com/cosmos/cosmos-sdk/pull/13740)  Fix evidence query API to decode the hash properly.
 * (bank) [#13691](https://github.com/cosmos/cosmos-sdk/issues/13691) Fix unhandled error for vesting account transfers, when total vesting amount exceeds total balance.
@@ -185,7 +193,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#13045](https://github.com/cosmos/cosmos-sdk/pull/13045) Fix gov migrations for v3(0.46).
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
 * (x/gov) [#13728](https://github.com/cosmos/cosmos-sdk/pull/13728) Fix propagation of message events to the current context in `EndBlocker`.
-* (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints. 
+* (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
+* [#13861](https://github.com/cosmos/cosmos-sdk/pull/13861) Allow `_` characters in tx event queries, i.e. `GetTxsEvent`.
 
 ### Deprecated
 

@@ -1533,38 +1533,49 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 func (s *TestSuite) TestSubmitProposal() {
 	addrs := s.addrs
 	addr1 := addrs[0]
-	addr2 := addrs[1]
+	addr2 := addrs[1] // Has weight 2
 	addr4 := addrs[3]
-	addr5 := addrs[4]
+	addr5 := addrs[4] // Has weight 1
 
 	myGroupID := s.groupID
-	accountAddr := s.groupPolicyAddr
 
-	msgSend := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
-		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
-	}
-
+	// Create a new group policy to test TRY_EXEC
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   addr1.String(),
 		GroupId: myGroupID,
 	}
 	policy := group.NewThresholdDecisionPolicy(
+		"2",
+		time.Second,
+		0, // no MinExecutionPeriod to test TRY_EXEC
+	)
+	err := policyReq.SetDecisionPolicy(policy)
+	s.Require().NoError(err)
+	s.setNextAccount()
+	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	s.Require().NoError(err)
+	groupPolicyAddr := sdk.MustAccAddressFromBech32(res.Address)
+
+	// Create a new group policy with super high threshold
+	bigThresholdPolicy := group.NewThresholdDecisionPolicy(
 		"100",
 		time.Second,
 		0,
 	)
-	err := policyReq.SetDecisionPolicy(policy)
-	s.Require().NoError(err)
-
 	s.setNextAccount()
+	err = policyReq.SetDecisionPolicy(bigThresholdPolicy)
+	s.Require().NoError(err)
 	bigThresholdRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	bigThresholdAddr := bigThresholdRes.Address
 
+	msgSend := &banktypes.MsgSend{
+		FromAddress: groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
 	defaultProposal := group.Proposal{
-		GroupPolicyAddress: accountAddr.String(),
+		GroupPolicyAddress: groupPolicyAddr.String(),
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
 		FinalTallyResult: group.TallyResult{
 			YesCount:        "0",
@@ -1584,7 +1595,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	}{
 		"all good with minimal fields set": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr2.String()},
 			},
 			expProposal: defaultProposal,
@@ -1592,11 +1603,11 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"all good with good msg payload": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr2.String()},
 			},
 			msgs: []sdk.Msg{&banktypes.MsgSend{
-				FromAddress: accountAddr.String(),
+				FromAddress: groupPolicyAddr.String(),
 				ToAddress:   addr2.String(),
 				Amount:      sdk.Coins{sdk.NewInt64Coin("token", 100)},
 			}},
@@ -1605,7 +1616,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"metadata too long": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr2.String()},
 				Metadata:           strings.Repeat("a", 256),
 			},
@@ -1643,7 +1654,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"only group members can create a proposal": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr4.String()},
 			},
 			expErr:  true,
@@ -1651,7 +1662,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"all proposers must be in group": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr2.String(), addr4.String()},
 			},
 			expErr:  true,
@@ -1659,7 +1670,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"admin that is not a group member can not create proposal": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr1.String()},
 			},
 			expErr:  true,
@@ -1667,7 +1678,7 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"reject msgs that are not authz by group policy": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr2.String()},
 			},
 			msgs:    []sdk.Msg{&testdata.TestMsg{Signers: []string{addr1.String()}}},
@@ -1681,13 +1692,13 @@ func (s *TestSuite) TestSubmitProposal() {
 				}
 			},
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr2.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Status:             group.PROPOSAL_STATUS_ACCEPTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "2",
@@ -1698,10 +1709,10 @@ func (s *TestSuite) TestSubmitProposal() {
 				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
-				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, accountAddr).Return(sdk.NewCoins(sdk.NewInt64Coin("test", 9900)))
+				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, groupPolicyAddr).Return(sdk.NewCoins(sdk.NewInt64Coin("test", 9900)))
 				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, addr2).Return(sdk.NewCoins(sdk.NewInt64Coin("test", 100)))
 
-				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, accountAddr)
+				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, groupPolicyAddr)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.bankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
@@ -1709,13 +1720,13 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Proposers:          []string{addr5.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: groupPolicyAddr.String(),
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final

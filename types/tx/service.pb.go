@@ -714,6 +714,194 @@ func (m *GetBlockWithTxsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
+// TxDecodeRequest is the request type for the Service.TxDecode
+// RPC method.
+type TxDecodeRequest struct {
+	// tx_bytes is the raw transaction.
+	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+}
+
+func (m *TxDecodeRequest) Reset()         { *m = TxDecodeRequest{} }
+func (m *TxDecodeRequest) String() string { return proto.CompactTextString(m) }
+func (*TxDecodeRequest) ProtoMessage()    {}
+func (*TxDecodeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{10}
+}
+func (m *TxDecodeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxDecodeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxDecodeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxDecodeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxDecodeRequest.Merge(m, src)
+}
+func (m *TxDecodeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxDecodeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxDecodeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxDecodeRequest proto.InternalMessageInfo
+
+func (m *TxDecodeRequest) GetTxBytes() []byte {
+	if m != nil {
+		return m.TxBytes
+	}
+	return nil
+}
+
+// TxDecodeResponse is the response type for the
+// Service.TxDecode method.
+type TxDecodeResponse struct {
+	// tx is the decoded transaction.
+	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+}
+
+func (m *TxDecodeResponse) Reset()         { *m = TxDecodeResponse{} }
+func (m *TxDecodeResponse) String() string { return proto.CompactTextString(m) }
+func (*TxDecodeResponse) ProtoMessage()    {}
+func (*TxDecodeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{11}
+}
+func (m *TxDecodeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxDecodeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxDecodeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxDecodeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxDecodeResponse.Merge(m, src)
+}
+func (m *TxDecodeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxDecodeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxDecodeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxDecodeResponse proto.InternalMessageInfo
+
+func (m *TxDecodeResponse) GetTx() *Tx {
+	if m != nil {
+		return m.Tx
+	}
+	return nil
+}
+
+// TxEncodeResponse is the request type for the Service.TxEncode
+// RPC method.
+type TxEncodeRequest struct {
+	// tx is the transaction to encode.
+	Tx *Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
+}
+
+func (m *TxEncodeRequest) Reset()         { *m = TxEncodeRequest{} }
+func (m *TxEncodeRequest) String() string { return proto.CompactTextString(m) }
+func (*TxEncodeRequest) ProtoMessage()    {}
+func (*TxEncodeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{12}
+}
+func (m *TxEncodeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxEncodeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxEncodeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxEncodeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxEncodeRequest.Merge(m, src)
+}
+func (m *TxEncodeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxEncodeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxEncodeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxEncodeRequest proto.InternalMessageInfo
+
+func (m *TxEncodeRequest) GetTx() *Tx {
+	if m != nil {
+		return m.Tx
+	}
+	return nil
+}
+
+// TxEncodeResponse is the response type for the
+// Service.TxEncode method.
+type TxEncodeResponse struct {
+	// tx_bytes is the encoded transaction bytes.
+	TxBytes []byte `protobuf:"bytes,1,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+}
+
+func (m *TxEncodeResponse) Reset()         { *m = TxEncodeResponse{} }
+func (m *TxEncodeResponse) String() string { return proto.CompactTextString(m) }
+func (*TxEncodeResponse) ProtoMessage()    {}
+func (*TxEncodeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e0b00a618705eca7, []int{13}
+}
+func (m *TxEncodeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TxEncodeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TxEncodeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TxEncodeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TxEncodeResponse.Merge(m, src)
+}
+func (m *TxEncodeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *TxEncodeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TxEncodeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TxEncodeResponse proto.InternalMessageInfo
+
+func (m *TxEncodeResponse) GetTxBytes() []byte {
+	if m != nil {
+		return m.TxBytes
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("cosmos.tx.v1beta1.OrderBy", OrderBy_name, OrderBy_value)
 	proto.RegisterEnum("cosmos.tx.v1beta1.BroadcastMode", BroadcastMode_name, BroadcastMode_value)
@@ -727,6 +915,10 @@ func init() {
 	proto.RegisterType((*GetTxResponse)(nil), "cosmos.tx.v1beta1.GetTxResponse")
 	proto.RegisterType((*GetBlockWithTxsRequest)(nil), "cosmos.tx.v1beta1.GetBlockWithTxsRequest")
 	proto.RegisterType((*GetBlockWithTxsResponse)(nil), "cosmos.tx.v1beta1.GetBlockWithTxsResponse")
+	proto.RegisterType((*TxDecodeRequest)(nil), "cosmos.tx.v1beta1.TxDecodeRequest")
+	proto.RegisterType((*TxDecodeResponse)(nil), "cosmos.tx.v1beta1.TxDecodeResponse")
+	proto.RegisterType((*TxEncodeRequest)(nil), "cosmos.tx.v1beta1.TxEncodeRequest")
+	proto.RegisterType((*TxEncodeResponse)(nil), "cosmos.tx.v1beta1.TxEncodeResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/tx/v1beta1/service.proto", fileDescriptor_e0b00a618705eca7) }
@@ -823,6 +1015,14 @@ type ServiceClient interface {
 	//
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxsRequest, opts ...grpc.CallOption) (*GetBlockWithTxsResponse, error)
+	// TxDecode decodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error)
+	// TxEncode encodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
 }
 
 type serviceClient struct {
@@ -878,6 +1078,24 @@ func (c *serviceClient) GetBlockWithTxs(ctx context.Context, in *GetBlockWithTxs
 	return out, nil
 }
 
+func (c *serviceClient) TxDecode(ctx context.Context, in *TxDecodeRequest, opts ...grpc.CallOption) (*TxDecodeResponse, error) {
+	out := new(TxDecodeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxDecode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serviceClient) TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error) {
+	out := new(TxEncodeResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.tx.v1beta1.Service/TxEncode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServiceServer is the server API for Service service.
 type ServiceServer interface {
 	// Simulate simulates executing a transaction for estimating gas usage.
@@ -892,6 +1110,14 @@ type ServiceServer interface {
 	//
 	// Since: cosmos-sdk 0.45.2
 	GetBlockWithTxs(context.Context, *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error)
+	// TxDecode decodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxDecode(context.Context, *TxDecodeRequest) (*TxDecodeResponse, error)
+	// TxEncode encodes the transaction.
+	//
+	// Since: cosmos-sdk 0.47
+	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
 }
 
 // UnimplementedServiceServer can be embedded to have forward compatible implementations.
@@ -912,6 +1138,12 @@ func (*UnimplementedServiceServer) GetTxsEvent(ctx context.Context, req *GetTxsE
 }
 func (*UnimplementedServiceServer) GetBlockWithTxs(ctx context.Context, req *GetBlockWithTxsRequest) (*GetBlockWithTxsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBlockWithTxs not implemented")
+}
+func (*UnimplementedServiceServer) TxDecode(ctx context.Context, req *TxDecodeRequest) (*TxDecodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxDecode not implemented")
+}
+func (*UnimplementedServiceServer) TxEncode(ctx context.Context, req *TxEncodeRequest) (*TxEncodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxEncode not implemented")
 }
 
 func RegisterServiceServer(s grpc1.Server, srv ServiceServer) {
@@ -1008,6 +1240,42 @@ func _Service_GetBlockWithTxs_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Service_TxDecode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxDecodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxDecode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxDecode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxDecode(ctx, req.(*TxDecodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Service_TxEncode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TxEncodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServiceServer).TxEncode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.tx.v1beta1.Service/TxEncode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServiceServer).TxEncode(ctx, req.(*TxEncodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.tx.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),
@@ -1031,6 +1299,14 @@ var _Service_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBlockWithTxs",
 			Handler:    _Service_GetBlockWithTxs_Handler,
+		},
+		{
+			MethodName: "TxDecode",
+			Handler:    _Service_TxDecode_Handler,
+		},
+		{
+			MethodName: "TxEncode",
+			Handler:    _Service_TxEncode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1513,6 +1789,136 @@ func (m *GetBlockWithTxsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *TxDecodeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxDecodeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxDecodeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TxBytes) > 0 {
+		i -= len(m.TxBytes)
+		copy(dAtA[i:], m.TxBytes)
+		i = encodeVarintService(dAtA, i, uint64(len(m.TxBytes)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxDecodeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxDecodeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxDecodeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tx != nil {
+		{
+			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxEncodeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxEncodeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxEncodeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tx != nil {
+		{
+			size, err := m.Tx.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TxEncodeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TxEncodeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TxEncodeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TxBytes) > 0 {
+		i -= len(m.TxBytes)
+		copy(dAtA[i:], m.TxBytes)
+		i = encodeVarintService(dAtA, i, uint64(len(m.TxBytes)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	offset -= sovService(v)
 	base := offset
@@ -1711,6 +2117,58 @@ func (m *GetBlockWithTxsResponse) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxDecodeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.TxBytes)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxDecodeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tx != nil {
+		l = m.Tx.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxEncodeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tx != nil {
+		l = m.Tx.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *TxEncodeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.TxBytes)
+	if l > 0 {
 		n += 1 + l + sovService(uint64(l))
 	}
 	return n
@@ -2979,6 +3437,346 @@ func (m *GetBlockWithTxsResponse) Unmarshal(dAtA []byte) error {
 			}
 			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxDecodeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxDecodeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxDecodeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxBytes = append(m.TxBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.TxBytes == nil {
+				m.TxBytes = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxDecodeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxDecodeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxDecodeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tx == nil {
+				m.Tx = &Tx{}
+			}
+			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxEncodeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxEncodeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxEncodeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tx", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tx == nil {
+				m.Tx = &Tx{}
+			}
+			if err := m.Tx.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TxEncodeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TxEncodeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TxEncodeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TxBytes", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TxBytes = append(m.TxBytes[:0], dAtA[iNdEx:postIndex]...)
+			if m.TxBytes == nil {
+				m.TxBytes = []byte{}
 			}
 			iNdEx = postIndex
 		default:

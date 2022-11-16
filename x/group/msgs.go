@@ -89,6 +89,136 @@ func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker gogoprotoany.AnyUnpa
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
+// Route Implements Msg.
+func (m MsgCreateGroupWithPolicy) Route() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// Type Implements Msg.
+func (m MsgCreateGroupWithPolicy) Type() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// GetSignBytes Implements Msg.
+func (m MsgCreateGroupWithPolicy) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgCreateGroupWithPolicy.
+func (m MsgCreateGroupWithPolicy) GetSigners() []sdk.AccAddress {
+	admin := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{admin}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+	policy, err := m.GetDecisionPolicy()
+	if err != nil {
+		return sdkerrors.Wrap(err, "decision policy")
+	}
+	if err := policy.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "decision policy")
+	}
+
+	return strictValidateMembers(m.Members)
+}
+
+var _ sdk.Msg = &MsgCreateGroupPolicy{}
+
+// Route Implements Msg.
+func (m MsgCreateGroupPolicy) Route() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// Type Implements Msg.
+func (m MsgCreateGroupPolicy) Type() string { return sdk.MsgTypeURL(&m) }
+
+// GetSignBytes Implements Msg.
+func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgCreateGroupPolicy.
+func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
+	admin := sdk.MustAccAddressFromBech32(m.Admin)
+	return []sdk.AccAddress{admin}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgCreateGroupPolicy) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+	if m.GroupId == 0 {
+		return sdkerrors.Wrap(errors.ErrEmpty, "group id")
+	}
+
+	policy, err := m.GetDecisionPolicy()
+	if err != nil {
+		return sdkerrors.Wrap(err, "decision policy")
+	}
+
+	if err := policy.ValidateBasic(); err != nil {
+		return sdkerrors.Wrap(err, "decision policy")
+	}
+	return nil
+}
+
+var _ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
+
+// Route Implements Msg.
+func (m MsgUpdateGroupPolicyAdmin) Route() string {
+	return sdk.MsgTypeURL(&m)
+}
+
+// Type Implements Msg.
+func (m MsgUpdateGroupPolicyAdmin) Type() string { return sdk.MsgTypeURL(&m) }
+
+// GetSignBytes Implements Msg.
+func (m MsgUpdateGroupPolicyAdmin) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&m))
+}
+
+// GetSigners returns the expected signers for a MsgUpdateGroupPolicyAdmin.
+func (m MsgUpdateGroupPolicyAdmin) GetSigners() []sdk.AccAddress {
+	admin := sdk.MustAccAddressFromBech32(m.Admin)
+
+	return []sdk.AccAddress{admin}
+}
+
+// ValidateBasic does a sanity check on the provided data
+func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
+	admin, err := sdk.AccAddressFromBech32(m.Admin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "admin")
+	}
+
+	newAdmin, err := sdk.AccAddressFromBech32(m.NewAdmin)
+	if err != nil {
+		return sdkerrors.Wrap(err, "new admin")
+	}
+
+	_, err = sdk.AccAddressFromBech32(m.GroupPolicyAddress)
+	if err != nil {
+		return sdkerrors.Wrap(err, "group policy")
+	}
+
+	if admin.Equals(newAdmin) {
+		return sdkerrors.Wrap(errors.ErrInvalid, "new and old admin are same")
+	}
+	return nil
+}
+
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupPolicyDecisionPolicy{}
+	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
+)
+
 // NewMsgUpdateGroupPolicyDecisionPolicy creates a new MsgUpdateGroupPolicyDecisionPolicy.
 func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address string, decisionPolicy DecisionPolicy) (*MsgUpdateGroupPolicyDecisionPolicy, error) {
 	m := &MsgUpdateGroupPolicyDecisionPolicy{

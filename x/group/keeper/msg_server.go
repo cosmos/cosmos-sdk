@@ -796,14 +796,15 @@ func (k Keeper) doTallyAndUpdate(ctx context.Context, p *group.Proposal, groupIn
 		return err
 	}
 
-	result, err := policy.Allow(tallyResult, groupInfo.TotalWeight)
+	sinceSubmission := ctx.BlockTime().Sub(p.SubmitTime) // duration passed since proposal submission.
+	result, err := policy.Allow(tallyResult, electorate.TotalWeight, sinceSubmission)
 	if err != nil {
-		return errorsmod.Wrap(err, "policy allow")
+		return sdkerrors.Wrap(err, "policy allow")
 	}
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
 	// period ended, then we consider the proposal as final.
-	if isFinal := result.Final || k.HeaderService.HeaderInfo(ctx).Time.After(p.VotingPeriodEnd); isFinal {
+	if isFinal := result.Final || ctx.BlockTime().After(p.VotingPeriodEnd); isFinal {
 		if err := k.pruneVotes(ctx, p.Id); err != nil {
 			return err
 		}

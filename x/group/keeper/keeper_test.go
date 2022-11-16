@@ -202,6 +202,26 @@ func (s *TestSuite) TestCreateGroup() {
 			},
 			expErr: true,
 		},
+		"invalid member weight - Inf": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr3.String(),
+					Weight:  "inf",
+				}},
+			},
+			expErr: true,
+		},
+		"invalid member weight - NaN": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr3.String(),
+					Weight:  "NaN",
+				}},
+			},
+			expErr: true,
+		},
 	}
 
 	var seq uint32 = 1

@@ -395,6 +395,8 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	if err != nil {
 		return nil
 	}
+
+	//nolint:gosec // implicit memory aliasing in for loop
 	for _, proposal := range proposals {
 		policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
 		if err != nil {
@@ -415,8 +417,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 		} else {
-			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo) //nolint:gosec // implicit memory aliasing in for loop
-			if err != nil {
+			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 				return sdkerrors.Wrap(err, "doTallyAndUpdate")
 			}
 

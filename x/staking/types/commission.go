@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,18 +32,6 @@ func NewCommissionWithTime(rate, maxRate, maxChangeRate sdk.Dec, updatedAt time.
 		CommissionRates: NewCommissionRates(rate, maxRate, maxChangeRate),
 		UpdateTime:      updatedAt,
 	}
-}
-
-// String implements the Stringer interface for a Commission object.
-func (c Commission) String() string {
-	out, _ := yaml.Marshal(c)
-	return string(out)
-}
-
-// String implements the Stringer interface for a CommissionRates object.
-func (cr CommissionRates) String() string {
-	out, _ := yaml.Marshal(cr)
-	return string(out)
 }
 
 // Validate performs basic sanity validation checks of initial commission

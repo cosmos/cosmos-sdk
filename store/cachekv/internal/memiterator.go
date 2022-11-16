@@ -2,12 +2,13 @@ package internal
 
 import (
 	"bytes"
+	"errors"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tidwall/btree"
 )
 
-var _ types.Iterator = &memIterator{}
+var _ types.Iterator = (*memIterator)(nil)
 
 // memIterator iterates over iterKVCache items.
 // if key is nil, means it was deleted.
@@ -45,7 +46,8 @@ func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}
 			valid = iter.Last()
 		}
 	}
-	return &memIterator{
+
+	mi := &memIterator{
 		iter:      iter,
 		start:     start,
 		end:       end,
@@ -54,6 +56,12 @@ func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}
 		deleted:   deleted,
 		valid:     valid,
 	}
+
+	if mi.valid {
+		mi.valid = mi.keyInRange(mi.Key())
+	}
+
+	return mi
 }
 
 func (mi *memIterator) Domain() (start []byte, end []byte) {
@@ -66,14 +74,31 @@ func (mi *memIterator) Close() error {
 }
 
 func (mi *memIterator) Error() error {
+	if !mi.Valid() {
+		return errors.New("invalid memIterator")
+	}
 	return nil
 }
 
 func (mi *memIterator) Valid() bool {
-	if !mi.valid {
-		return false
+	return mi.valid
+}
+
+func (mi *memIterator) Next() {
+	mi.assertValid()
+
+	if mi.ascending {
+		mi.valid = mi.iter.Next()
+	} else {
+		mi.valid = mi.iter.Prev()
 	}
-	key := mi.iter.Item().key
+
+	if mi.valid {
+		mi.valid = mi.keyInRange(mi.Key())
+	}
+}
+
+func (mi *memIterator) keyInRange(key []byte) bool {
 	if mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
 	}
@@ -81,14 +106,6 @@ func (mi *memIterator) Valid() bool {
 		return false
 	}
 	return true
-}
-
-func (mi *memIterator) Next() {
-	if mi.ascending {
-		mi.valid = mi.iter.Next()
-	} else {
-		mi.valid = mi.iter.Prev()
-	}
 }
 
 func (mi *memIterator) Key() []byte {
@@ -103,10 +120,18 @@ func (mi *memIterator) Value() []byte {
 	// If the current key is the same as the last key (and last key is not nil / the start)
 	// then we are calling value on the same thing as last time.
 	// Therefore we don't check the mi.deleted to see if this key is included in there.
-	reCallingOnOldLastKey := (mi.lastKey != nil) && bytes.Equal(key, mi.lastKey)
-	if _, ok := mi.deleted[string(key)]; ok && !reCallingOnOldLastKey {
-		return nil
+	if _, ok := mi.deleted[string(key)]; ok {
+		if mi.lastKey == nil || !bytes.Equal(key, mi.lastKey) {
+			// not re-calling on old last key
+			return nil
+		}
 	}
 	mi.lastKey = key
 	return item.value
+}
+
+func (mi *memIterator) assertValid() {
+	if err := mi.Error(); err != nil {
+		panic(err)
+	}
 }

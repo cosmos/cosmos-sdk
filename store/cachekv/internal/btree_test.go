@@ -182,13 +182,14 @@ func TestDBIterator(t *testing.T) {
 }
 
 func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string) {
-	var list []int64
+	i := 0
 	for itr.Valid() {
 		key := itr.Key()
-		list = append(list, bytes2Int64(key))
+		require.Equal(t, expected[i], bytes2Int64(key), "iterator: %d mismatches", i)
 		itr.Next()
+		i++
 	}
-	require.Equal(t, expected, list, msg)
+	require.Equal(t, i, len(expected), "expected to have fully iterated over all the elements in iter")
 }
 
 func int642Bytes(i int64) []byte {

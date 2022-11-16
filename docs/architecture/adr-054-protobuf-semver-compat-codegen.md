@@ -10,12 +10,7 @@ PROPOSED
 
 ## Abstract
 
-In order to work well with semantically versioned go modules, some changes to 
-the cosmos-proto code generator need to be made and best practices need to
-be followed. In particular:
-* clients should use generated protobuf code in a standalone "API" module
-* state machines should use cosmos-proto generated code in `internal/` packages
-* protobuf interface types (to be implemented in cosmos-proto) should be used in all public facing API's
+TODO
 
 ## Context
 
@@ -26,91 +21,100 @@ than it seems at first glance.
 
 ### Problem
 
-Consider we have a Cosmos SDK module `foo` at a go module v1.x semantic version,
-and in that go module there is some generated protobuf code in the protobuf
-package `foo.v1` in that module’s  `types` package that forms part of the public
-API, ex:
-```go
-// foo/types/tx.pb.go
+Consider we have a module `foo` which defines the following `MsgDoSomething` and that we've released it under
+the go module `example.com/foo`:
 
-type MsgDoSomething struct {
-	Sender string
-	Amount uint64
+```protobuf
+package foo.v1;
+
+message MsgDoSomething {
+  string sender = 1;
+  uint64 amount = 2;
 }
 
-type MsgServer interface {
-	DoSomething(context.Context, msg *MsgDoSomething) (*MsgDoSomethingResponse, error)
-}
-
-```
-
-Now consider that we want to make an upgrade and release `foo/v2` and also 
-add a new optional field to `MsgDoSomething`. We might now end up with the
-following generated code in `foo/v2/types` if we follow the SDK's current
-approach to generated code:
-
-```go
-// foo/v2/types/tx.pb.go
-type MsgDoSomething struct {
-    Sender string
-    Amount uint64
-    // if Condition is non-nil, then the condition must be checked before performing the action
-    Condition *anypb.Any
-}
-
-type MsgServer interface {
-    DoSomething(context.Context, msg *MsgDoSomething) (*MsgDoSomethingResponse, error)
+service Msg {
+  DoSomething(MsgDoSomething) returns (MsgDoSomethingResponse);
 }
 ```
 
+Now consider that we make a revision to this module and add a new `condition` field to `MsgDoSomething` and also
+add a new validation rule on `amount` requiring it to be non-zero, and that we follow go semantic versioning and
+want to release the next state machine version of `foo` as `example.com/foo/v2`.
 
-Now consider that the developer wants to make a breaking change in `foo` that
-*does not affect* the `Keeper` interface above at all. So now a new go module
-`foo/v2` must be created to follow go semantic versioning.
+```protobuf
+// Revision 1
+package foo.v1;
 
-The most obvious choice is to move all the code to `foo/v2` including the keeper
-so we now have:
-
-
-```go
-// foo/v2/keeper.go
-
-import v2types "foo/v2/types"
-
-type Keeper interface {
-  DoSomething(context.Context, *[]v2types.Coin)
+message MsgDoSomething {
+  string sender = 1;
+  
+  // amount must be a non-zero integer.
+  uint64 amount = 2;
+  
+  // condition is an optional condition on doing the thing.
+  //
+  // Since: Revision 1
+  Condition condition = 3;
 }
 ```
 
-Note that in this scenario `foo/v2/types` *still* refers to the protobuf package
-`foo.v1`!
+Approaching this naively, we would generate the protobuf types for the initial
+version of `foo` in `example.com/foo/types` and we would generate the protobuf
+types for the second version in `example.com/foo/v2/types`.
 
-Now consider, another go module `bar` with a state machine also at v1.x that
-depends on `foo.Keeper`. Let’s say that `bar` doesn’t have any changes but an
-app wants to use `foo/v2` together with `bar`.
+Now let's say we have a module `bar` which talks to `foo` using this keeper
+interface which `foo` provides:
+```go
+type FooKeeper interface {
+	DoSomething(MsgDoSomething) error
+}
+```
 
-Now `bar` can’t be instantiated together with `foo/v2` because it requires the 
-`foo` v1.x keeper which depends on the generated code in `foo` v1. Even if the
-`foo/v2` `Keeper` interface is basically identical to v1 interface, we must
-refactor `bar` to work with the new `foo/v2` `Keeper`. And now consumers of
-`bar` will also be forced to upgrade to `foo/v2` to get any `bar` updates.
-That’s not really a good outcome because it could cause all sorts of downstream
-compatibility problems
+### Scenario A: Backward Compatibility: Newer Foo, Older Bar
 
-To avoid this, we could consider an alternative where `foo/v2` imports `foo` v1
-and exposes the `foo` v1 keeper interface to be compatible. Then `foo/v2` will
-need to import the `foo` v1 go module then we have these problems:
-* there will be a protobuf namespace conflict because we have the protobuf
-package `foo.v1` generated into both `foo/types` and `foo/v2/types` in the
-same binary. The startup panic can be disabled with a build flag, but that is a
-rather hacky solution.
-* `foo/v2` will need to implement a wrapper which converts the `foo/types`
-structs to `foo/v2/types` structs which is just unnecessary because they both 
-represent the *same* protobuf types in `foo.v1`.
+Imagine we have a chain which uses both `foo` and `bar` and wants to upgrade to
+`foo/v2`, but the `bar` module has not upgraded to `foo/v2`.
 
-One alternative at this point is to simply tell people not to use go semantic
-versioning at all and to keep their packages on `v0.x` forever. This solution,
-however, would likely be highly unpopular.
+In this case, the chain will not be able to upgrade to `foo/v2` until `bar` 
+has upgraded its references to `example.com/foo/types.MsgDoSomething` to 
+`example.com/foo/v2/types.MsgDoSomething`.
+
+Even if `bar`'s usage of `MsgDoSomething` has not changed at all, the upgrade
+will be impossible without this change because `example.com/foo/types.MsgDoSomething`
+and `example.com/foo/v2/types.MsgDoSomething` are fundamentally different
+incompatible types in the go type system.
+
+### Scenario B: Forward Compatibility: Older Foo, Newer Bar
+
+Now let's consider the reverse scenario, where `bar` upgrades to `foo/v2`
+by changing the `MsgDoSomething` reference to `example.com/foo/v2/types.MsgDoSomething`
+and releases that as `bar/v2` with some other changes that a chain wants.
+The chain, however, has decided that it thinks the changes in `foo/v2` are too
+risky and that it'd prefer to stay on the initial version of `foo`.
+
+In this scenario, it is impossible to upgrade to `bar/v2` without upgrading
+to `foo/v2` even if `bar/v2` would have worked 100% fine with `foo` other
+than changing the import path to `MsgDoSomething` (meaning that `bar/v2`
+doesn't actually use any new features of `foo/v2`).
+
+Now because of the way go semantic import versioning works, we are locked
+into either using `foo` and `bar` OR `foo/v2` and `bar/v2`. We cannot have
+`foo` + `bar/v2` OR `foo/v2` + `bar`. The go type system doesn't allow this
+even if both versions of these modules are otherwise compatible with each other.
+
+### Naive Mitigation
+
+A naive approach at fixing this would be to not regenerate the protobuf types
+in `example.com/foo/v2/types` but instead just update `example.com/foo/types`
+to reflect the changes needed for `v2` (adding `condition` and requiring
+`amount` to be non-zero). Then we could release a patch of `example.com/foo/types`
+with this update and use that for `foo/v2`. But this change is state machine
+breaking for `v1`. It requires changing the `ValidateBasic` method to reject
+the case where `amount` is zero, and it adds the `condition` field which
+should be rejected based on ADR 020 unknown field filtering. So adding these
+changes as a patch on `v1` is actually an incorrect semantic versioning patch
+to that release line. Chains that want to stay on `v1` of `foo` should not
+be importing these changes because they are incorrect for `v1.`
 
 ### Solutions
 

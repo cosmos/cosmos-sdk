@@ -1489,6 +1489,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	res, err := s.app.GroupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	noMinExecPeriodPolicyAddr := sdk.MustAccAddressFromBech32(res.Address)
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, noMinExecPeriodPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
 
 	// Create a new group policy with super high threshold
 	bigThresholdPolicy := group.NewThresholdDecisionPolicy(
@@ -1636,7 +1637,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, noMinExecPeriodPolicyAddr)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
@@ -1703,6 +1704,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				}
 			}
 
+			s.sdkCtx.WithBlockTime(s.blockTime)
 			spec.postRun(s.sdkCtx)
 		})
 	}

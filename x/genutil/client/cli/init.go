@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
@@ -81,14 +80,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
-
-			// default mamaki configs TODO: move to the app to be more explicit
-			// in what we are setting as defaults
-			config.Consensus.TimeoutCommit = time.Second * 25
-			config.Consensus.SkipTimeoutCommit = false
-			config.Mempool.KeepInvalidTxsInCache = true
-			config.Mempool.TTLNumBlocks = 15
-
 			config.SetRoot(clientCtx.HomeDir)
 
 			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)

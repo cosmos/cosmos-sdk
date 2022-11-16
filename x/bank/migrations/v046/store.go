@@ -96,7 +96,7 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 // Migrate_V046_4_To_V046_5 is a helper function to migrate chains from <=v0.46.4
 // to v0.46.5 ONLY.
 //
-// IMPORTANT: Please de not use this function if you are upgrading to v0.46
+// IMPORTANT: Please do not use this function if you are upgrading to v0.46
 // from <=v0.45.
 //
 // This function migrates the store in-place by fixing the bank denom bug

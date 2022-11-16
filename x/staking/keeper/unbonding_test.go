@@ -29,7 +29,6 @@ func setup(t *testing.T, hookCalled *bool, ubdeID *uint64) (
 	stakingKeeper := keeper.NewKeeper(
 		app.AppCodec(),
 		app.GetKey(types.StoreKey),
-		app.GetKey(types.StoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),

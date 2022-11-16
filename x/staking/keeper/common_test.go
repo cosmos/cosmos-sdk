@@ -28,7 +28,6 @@ func createTestInput() (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app.StakingKeeper = keeper.NewKeeper(
 		app.AppCodec(),
 		app.GetKey(types.StoreKey),
-		app.GetTKey(types.TStoreKey),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),

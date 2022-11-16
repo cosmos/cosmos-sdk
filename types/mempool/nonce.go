@@ -1,10 +1,9 @@
 package mempool
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
-	"math/rand"
-	"time"
 
 	huandu "github.com/huandu/skiplist"
 
@@ -64,10 +63,10 @@ func txKeyLessNonce(a, b any) int {
 
 // NewNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
 func NewNonceMempool() Mempool {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	salt := make([]byte, 32)
-	for i := range salt {
-		salt[i] = byte(r.Intn(256))
+	_, err := rand.Read(salt)
+	if err != nil {
+		panic(err)
 	}
 
 	sp := &nonceMempool{

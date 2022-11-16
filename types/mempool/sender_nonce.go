@@ -2,13 +2,18 @@ package mempool
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	huandu "github.com/huandu/skiplist"
 )
 
-var _ Mempool = (*senderNonceMempool)(nil) // _ Iterator = (*nonceMempoolIterator)(nil)
+var (
+	_ Mempool  = (*senderNonceMempool)(nil)
+	_ Iterator = (*nonceMempoolIterator)(nil)
+)
 
 type senderTxs struct {
 	txQueue *huandu.SkipList
@@ -50,6 +55,7 @@ func (s senderTxs) remove(key txKey) error {
 type senderNonceMempool struct {
 	senders map[string]senderTxs
 	txCount int
+	rnd     *rand.Rand
 }
 
 func NewSenderNonceMempool() Mempool {
@@ -58,7 +64,13 @@ func NewSenderNonceMempool() Mempool {
 		senders: senderMap,
 		txCount: 0,
 	}
+	snp.setSeed(time.Now().UnixNano())
 	return snp
+}
+
+func (snm senderNonceMempool) SetSeed(seed int64) {
+	s1 := rand.NewSource(seed)
+	snm.rnd = rand.New(s1)
 }
 
 func (snm senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
@@ -86,8 +98,13 @@ func (snm senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 }
 
 func (snm senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator {
+	var senders []string
+	for key := range snm.senders {
+		senders = append(senders, key)
+	}
 	iter := &senderNonceMepoolIterator{
 		mempool: &snm,
+		senders: senders,
 	}
 	iter.Next()
 	return iter
@@ -130,19 +147,34 @@ func (snm senderNonceMempool) Remove(tx sdk.Tx) error {
 type senderNonceMepoolIterator struct {
 	mempool   *senderNonceMempool
 	currentTx *huandu.Element
+	senders   []string
+	seed      int
 }
 
 func (i senderNonceMepoolIterator) Next() Iterator {
-	for sender := range i.mempool.senders {
+	for len(i.senders) > 0 {
+		senderIndex := i.mempool.rnd.Intn(len(i.senders))
+		sender := i.senders[senderIndex]
 		senderTxs, found := i.mempool.senders[sender]
 		if !found {
-			continue
+			newSenders := removeAtIndex(i.senders, senderIndex)
+			return senderNonceMepoolIterator{
+				senders:   newSenders,
+				currentTx: nil,
+				mempool:   i.mempool,
+			}
 		}
 		tx := senderTxs.getMove()
 		if tx == nil {
-			continue
+			newSenders := removeAtIndex(i.senders, senderIndex)
+			return senderNonceMepoolIterator{
+				senders:   newSenders,
+				currentTx: nil,
+				mempool:   i.mempool,
+			}
 		}
 		return senderNonceMepoolIterator{
+			senders:   i.senders,
 			currentTx: tx,
 			mempool:   i.mempool,
 		}
@@ -153,4 +185,8 @@ func (i senderNonceMepoolIterator) Next() Iterator {
 
 func (i senderNonceMepoolIterator) Tx() sdk.Tx {
 	return i.currentTx.Value.(sdk.Tx)
+}
+
+func removeAtIndex[T any](slice []T, index int) []T {
+	return append(slice[:index], slice[index+1:]...)
 }

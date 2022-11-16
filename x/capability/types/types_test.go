@@ -20,7 +20,7 @@ func TestCapabilityKey(t *testing.T) {
 func TestOwner(t *testing.T) {
 	o := types.NewOwner("bank", "send")
 	require.Equal(t, "bank/send", o.Key())
-	require.Equal(t, "module: bank\nname: send\n", o.String())
+	require.Equal(t, "module:\"bank\" name:\"send\" ", o.String())
 }
 
 func TestCapabilityOwners_Set(t *testing.T) {

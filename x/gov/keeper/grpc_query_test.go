@@ -291,7 +291,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 				for i := 0; i < len(proposals.GetProposals()); i++ {
 					suite.Require().NoError(err)
 					suite.Require().NotEmpty(proposals.GetProposals()[i])
-					suite.Require().Equal(expRes.GetProposals()[i], proposals.GetProposals()[i])
+					suite.Require().Equal(expRes.GetProposals()[i].String(), proposals.GetProposals()[i].String())
 				}
 
 			} else {
@@ -1251,6 +1251,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 }
 
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryDeposits() {
+	suite.reset()
 	ctx, queryClient, addrs := suite.ctx, suite.legacyQueryClient, suite.addrs
 
 	var (

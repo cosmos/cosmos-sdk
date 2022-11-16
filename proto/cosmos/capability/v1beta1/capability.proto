@@ -17,7 +17,6 @@ message Capability {
 // Owner defines a single capability owner. An owner is defined by the name of
 // capability and the module name.
 message Owner {
-  option (gogoproto.goproto_stringer) = false;
   option (gogoproto.goproto_getters)  = false;
 
   string module = 1;

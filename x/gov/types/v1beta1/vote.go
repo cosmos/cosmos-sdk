@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -17,15 +16,9 @@ func NewVote(proposalID uint64, voter sdk.AccAddress, options WeightedVoteOption
 	return Vote{ProposalId: proposalID, Voter: voter.String(), Options: options}
 }
 
-// String returns the string representation of the vote
-func (v Vote) String() string {
-	out, _ := yaml.Marshal(v)
-	return string(out)
-}
-
 // Empty returns whether a vote is empty.
 func (v Vote) Empty() bool {
-	return v.String() == Vote{}.String()
+	return v.String() == (&Vote{}).String()
 }
 
 // Votes is an array of vote

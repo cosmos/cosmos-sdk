@@ -150,21 +150,6 @@ func (bva BaseVestingAccount) Validate() error {
 	return bva.BaseAccount.Validate()
 }
 
-type vestingAccountYAML struct {
-	Address          sdk.AccAddress `json:"address"`
-	PubKey           string         `json:"public_key"`
-	AccountNumber    uint64         `json:"account_number"`
-	Sequence         uint64         `json:"sequence"`
-	OriginalVesting  sdk.Coins      `json:"original_vesting"`
-	DelegatedFree    sdk.Coins      `json:"delegated_free"`
-	DelegatedVesting sdk.Coins      `json:"delegated_vesting"`
-	EndTime          int64          `json:"end_time"`
-
-	// custom fields based on concrete vesting type which can be omitted
-	StartTime      int64   `json:"start_time,omitempty"`
-	VestingPeriods Periods `json:"vesting_periods,omitempty"`
-}
-
 // Continuous Vesting Account
 
 var (

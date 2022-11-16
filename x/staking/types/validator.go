@@ -202,12 +202,6 @@ func NewDescription(moniker, identity, website, securityContact, details string)
 	}
 }
 
-// String implements the Stringer interface for a Description object.
-func (d Description) String() string {
-	out, _ := yaml.Marshal(d)
-	return string(out)
-}
-
 // UpdateDescription updates the fields of a given description. An error is
 // returned if the resulting description contains an invalid length.
 func (d Description) UpdateDescription(d2 Description) (Description, error) {

@@ -107,8 +107,9 @@ func TestPluginTestSuite(t *testing.T) {
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 		pluginVersion := "abci_v1"
-		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
-		pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/file.py", s.workDir)
+		pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
+		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/file", s.workDir)
+		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/file.py", s.workDir)
 		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/kafka.py", s.workDir)
 		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 			t.Fail()

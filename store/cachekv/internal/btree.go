@@ -10,7 +10,7 @@ import (
 var errKeyEmpty = errors.New("key cannot be empty")
 
 // BTree implements the sorted cache for cachekv store,
-// we don't use MemDB here because we don't need thread safty here,
+// we don't use MemDB here because we don't need thread safety here,
 // and since cachekv is used extensively in sdk core path, the faster the better.
 //
 // We choose tidwall/btree over google/btree here because it provides API for step iterator.

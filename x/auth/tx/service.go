@@ -271,6 +271,22 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 	}, nil
 }
 
+// TxEncodeAmino implements the ServiceServer.TxEncodeAmino RPC method.
+func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
+	if req.AminoJson == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
+	}
+
+	encodedBytes, err := s.clientCtx.LegacyAmino.Marshal(req.AminoJson)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeAminoResponse{
+		AminoBinary: encodedBytes,
+	}, nil
+}
+
 // TxDecode implements the ServiceServer.TxDecode RPC method.
 func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
 	if req.TxBytes == nil {
@@ -290,6 +306,23 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 	}
 
 	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
+}
+
+// TxDecodeAmino implements the ServiceServer.TxDecodeAmino RPC method.
+func (s txServer) TxDecodeAmino(ctx context.Context, req *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
+	if req.AminoBinary == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	var res string
+	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxDecodeAminoResponse{
+		AminoJson: res,
+	}, nil
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

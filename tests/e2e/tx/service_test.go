@@ -771,6 +771,36 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	}
 }
 
+func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
+	// aminoBuilder := s.aminoBuilder()
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		// {"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: aminoBuilder.GetTx()}},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetAminoBinary())
+			}
+		})
+	}
+}
+
 func (s IntegrationTestSuite) TestTxEncode_GRPC() {
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -784,7 +814,7 @@ func (s IntegrationTestSuite) TestTxEncode_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
-		{"valid request with tx bytes", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -816,7 +846,7 @@ func (s *IntegrationTestSuite) TestTxEncode_GRPCGateway() {
 		expErrMsg string
 	}{
 		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
-		{"valid request with tx bytes", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -912,6 +942,39 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
+func (s IntegrationTestSuite) aminoBuilder() client.TxBuilder {
+	val := s.network.Validators[0]
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// prepare txBuilder with msg
+	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
+	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
+	gasLimit := testdata.NewTestGasLimit()
+	s.Require().NoError(
+		txBuilder.SetMsgs(&banktypes.MsgSend{
+			FromAddress: val.Address.String(),
+			ToAddress:   val.Address.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
+		}),
+	)
+	txBuilder.SetFeeAmount(feeAmount)
+	txBuilder.SetGasLimit(gasLimit)
+	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
+
+	// setup txFactory
+	txFactory := clienttx.Factory{}.
+		WithChainID(val.ClientCtx.ChainID).
+		WithKeybase(val.ClientCtx.Keyring).
+		WithTxConfig(val.ClientCtx.TxConfig).
+		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
+
+	// Sign Tx.
+	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
+	s.Require().NoError(err)
+
+	return txBuilder
+}
+
 func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
@@ -930,6 +993,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
+	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.

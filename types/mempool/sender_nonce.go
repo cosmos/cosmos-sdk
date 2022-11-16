@@ -138,8 +138,11 @@ func (snm senderNonceMempool) Remove(tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
-
-	snm.senders[sender] = senderTxs
+	if senderTxs.txQueue.Len() == 0 {
+		delete(snm.senders, sender)
+	} else {
+		snm.senders[sender] = senderTxs
+	}
 	snm.txCount = snm.txCount - 1
 	return nil
 }

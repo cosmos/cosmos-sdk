@@ -92,3 +92,39 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 
 	return nil
 }
+
+// Migrate_V046_4_To_V046_5 is a helper function to migrate chains from <=v0.46.4
+// to v0.46.5 ONLY.
+//
+// IMPORTANT: Please do not use this function if you are upgrading to v0.46
+// from <=v0.45.
+//
+// This function migrates the store in-place by fixing the bank denom bug
+// discovered in https://github.com/cosmos/cosmos-sdk/pull/13821. It has been
+// fixed in v0.46.5, but if your chain had already migrated to v0.46, then you
+// can apply this patch (in a coordinated upgrade, e.g. in the upgrade handler)
+// to fix the bank denom state.
+//
+// The store is expected to be the bank store, and not any prefixed substore.
+func Migrate_V046_4_To_V046_5(store sdk.KVStore) error {
+	denomStore := prefix.NewStore(store, DenomMetadataPrefix)
+
+	iter := denomStore.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		oldKey := iter.Key()
+
+		// In the previous bugged version, we took one character too long,
+		// see this line diff:
+		// https://github.com/cosmos/cosmos-sdk/commit/62443b8c28a23efe43df2158aa2833c02c42af16#diff-d4d8a522eca0bd1fd052a756b80d0a50bff7bd8e487105221475eb78e232b46aR83
+		//
+		// Therefore we trim the last byte.
+		newKey := oldKey[:len(oldKey)-1]
+
+		denomStore.Set(newKey, iter.Value())
+		denomStore.Delete(oldKey)
+	}
+
+	return nil
+}

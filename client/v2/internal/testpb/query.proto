@@ -10,10 +10,10 @@ import "cosmos/base/v1beta1/coin.proto";
 
 service Query {
   // Echo returns the request in the response
-  rpc Echo(QueryEchoRequest) returns (QueryEchoResponse);
+  rpc Echo(EchoRequest) returns (EchoResponse);
 }
 
-message QueryEchoRequest {
+message EchoRequest {
   // u32 is an uint32
   uint32                                u32        = 1;
   uint64                                u64        = 2;
@@ -58,6 +58,6 @@ message AMessage {
   int32  baz = 2;
 }
 
-message QueryEchoResponse {
+message EchoResponse {
   QueryEchoRequest request = 1;
 }

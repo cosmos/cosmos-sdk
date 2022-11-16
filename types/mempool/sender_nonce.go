@@ -32,8 +32,7 @@ func (s senderTxs) getMove() *huandu.Element {
 		return nil
 	}
 	currentHead := s.head
-	next := s.head.Next()
-	s.head = next
+	s.head = s.head.Next()
 	return currentHead
 }
 

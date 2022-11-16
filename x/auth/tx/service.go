@@ -314,14 +314,14 @@ func (s txServer) TxDecodeAmino(ctx context.Context, req *txtypes.TxDecodeAminoR
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}
 
-	var res string
-	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, res)
+	var res txtypes.TxDecodeAminoResponse
+	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &res)
 	if err != nil {
 		return nil, err
 	}
 
 	return &txtypes.TxDecodeAminoResponse{
-		AminoJson: res,
+		AminoJson: res.AminoJson,
 	}, nil
 }
 

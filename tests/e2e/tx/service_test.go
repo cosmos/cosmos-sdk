@@ -795,8 +795,6 @@ func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
 		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
-			fmt.Println("res:", res)
-			fmt.Printf("res bytes: %v\n", res.AminoBinary)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)

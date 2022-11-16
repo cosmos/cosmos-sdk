@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (x/auth) [#13612](https://github.com/cosmos/cosmos-sdk/pull/13612) Add `Query/ModuleAccountByName` endpoint for accessing the module account info by module name.
+* (feat) [#13891](https://github.com/cosmos/cosmos-sdk/pull/13891) Provide a helper function `MigrateV0464ToV0465` for migrating a chain **already on <=v0.46.4** to the latest v0.46.5 correct state.
 
 ### Improvements
 

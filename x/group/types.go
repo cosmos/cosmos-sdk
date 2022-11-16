@@ -32,7 +32,8 @@ type DecisionPolicy interface {
 	// votes are accepted.
 	GetVotingPeriod() time.Duration
 	// GetMinExecutionPeriod returns the minimum duration after submission
-	// where we can execution a proposal.
+	// where we can execution a proposal. It can be set to 0 or to a value
+	// lesser than VotingPeriod to allow TRY_EXEC.
 	GetMinExecutionPeriod() time.Duration
 	// Allow defines policy-specific logic to allow a proposal to pass or not,
 	// based on its tally result, the group's total power and the time since

@@ -13,7 +13,8 @@ import "amino/amino.proto";
 // ValidatorSigningInfo defines a validator's signing info for monitoring their
 // liveness activity.
 message ValidatorSigningInfo {
-  option (gogoproto.equal) = true;
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
 
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // Height at which validator was first a candidate OR was unjailed

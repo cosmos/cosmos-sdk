@@ -33,13 +33,13 @@ func TestPlanString(t *testing.T) {
 				Info:   "https://foo.bar/baz",
 				Height: 7890,
 			},
-			expect: "name:\"by height\" time:<seconds:-62135596800 > height:7890 info:\"https://foo.bar/baz\" ",
+			expect: "Upgrade Plan\n  Name: by height\n  height: 7890\n  Info: https://foo.bar/baz.",
 		},
 		"neither": {
 			p: types.Plan{
 				Name: "almost-empty",
 			},
-			expect: "name:\"almost-empty\" time:<seconds:-62135596800 > ",
+			expect: "Upgrade Plan\n  Name: almost-empty\n  height: 0\n  Info: .",
 		},
 	}
 

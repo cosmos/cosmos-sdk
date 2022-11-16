@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -32,6 +34,13 @@ func (sup *SoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(sup)
 }
 
+func (sup SoftwareUpgradeProposal) String() string {
+	return fmt.Sprintf(`Software Upgrade Proposal:
+  Title:       %s
+  Description: %s
+`, sup.Title, sup.Description)
+}
+
 func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 	return &CancelSoftwareUpgradeProposal{title, description}
 }
@@ -48,4 +57,11 @@ func (csup *CancelSoftwareUpgradeProposal) ProposalType() string {
 
 func (csup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(csup)
+}
+
+func (csup CancelSoftwareUpgradeProposal) String() string {
+	return fmt.Sprintf(`Cancel Software Upgrade Proposal:
+  Title:       %s
+  Description: %s
+`, csup.Title, csup.Description)
 }

@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/math"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -60,6 +61,21 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		MinSelfDelegation:       math.OneInt(),
 		UnbondingOnHoldRefCount: 0,
 	}, nil
+}
+
+// String implements the Stringer interface for a Validator object.
+func (v Validator) String() string {
+	bz, err := codec.ProtoMarshalJSON(&v, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	out, err := yaml.JSONToYAML(bz)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(out)
 }
 
 // Validators is a collection of Validator
@@ -184,6 +200,12 @@ func NewDescription(moniker, identity, website, securityContact, details string)
 		SecurityContact: securityContact,
 		Details:         details,
 	}
+}
+
+// String implements the Stringer interface for a Description object.
+func (d Description) String() string {
+	out, _ := yaml.Marshal(d)
+	return string(out)
 }
 
 // UpdateDescription updates the fields of a given description. An error is

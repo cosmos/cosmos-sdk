@@ -132,7 +132,8 @@ message QueryValidatorCommissionResponse {
 // QueryValidatorSlashesRequest is the request type for the
 // Query/ValidatorSlashes RPC method
 message QueryValidatorSlashesRequest {
-  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
 
   // validator_address defines the validator address to query for.
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -31,4 +34,15 @@ func NewValidatorSlashEvent(validatorPeriod uint64, fraction sdk.Dec) ValidatorS
 		ValidatorPeriod: validatorPeriod,
 		Fraction:        fraction,
 	}
+}
+
+func (vs ValidatorSlashEvents) String() string {
+	out := "Validator Slash Events:\n"
+	for i, sl := range vs.ValidatorSlashEvents {
+		out += fmt.Sprintf(`  Slash %d:
+    Period:   %d
+    Fraction: %s
+`, i, sl.ValidatorPeriod, sl.Fraction)
+	}
+	return strings.TrimSpace(out)
 }

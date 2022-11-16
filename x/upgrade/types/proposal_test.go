@@ -33,14 +33,14 @@ func TestContentAccessors(t *testing.T) {
 			title: "Title",
 			desc:  "desc",
 			typ:   "SoftwareUpgrade",
-			str:   "title:\"Title\" description:\"desc\" plan:<name:\"due_height\" time:<seconds:-62135596800 > height:99999999999 info:\"https://foo.bar\" > ",
+			str:   "Software Upgrade Proposal:\n  Title:       Title\n  Description: desc\n",
 		},
 		"cancel": {
 			p:     types.NewCancelSoftwareUpgradeProposal("Cancel", "bad idea"),
 			title: "Cancel",
 			desc:  "bad idea",
 			typ:   "CancelSoftwareUpgrade",
-			str:   "title:\"Cancel\" description:\"bad idea\" ",
+			str:   "Cancel Software Upgrade Proposal:\n  Title:       Cancel\n  Description: bad idea\n",
 		},
 	}
 

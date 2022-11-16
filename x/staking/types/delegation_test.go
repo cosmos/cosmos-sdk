@@ -62,13 +62,14 @@ func TestRedelegationEqual(t *testing.T) {
 		time.Unix(0, 0), sdk.NewInt(0),
 		math.LegacyNewDec(0), 2)
 
-	// I don't think this is correct, the string representation was identical before but not anymore
-	require.Equal(t, r1.String(), r2.String())
+	ok := r1.String() == r2.String()
+	require.True(t, ok)
 
 	r2.Entries[0].SharesDst = math.LegacyNewDec(10)
 	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
 
-	require.NotEqual(t, r1.String(), r2.String())
+	ok = r1.String() == r2.String()
+	require.False(t, ok)
 }
 
 func TestRedelegationString(t *testing.T) {

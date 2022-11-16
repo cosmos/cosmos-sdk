@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,6 +17,11 @@ func DefaultParams() Params {
 		BonusProposerReward: sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled: true,
 	}
+}
+
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
 }
 
 // ValidateBasic performs basic validation on distribution parameters.

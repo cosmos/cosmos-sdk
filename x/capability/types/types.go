@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	"sigs.k8s.io/yaml"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -13,6 +15,13 @@ func NewCapability(index uint64) *Capability {
 	return &Capability{Index: index}
 }
 
+// String returns the string representation of a Capability. The string contains
+// the Capability's memory reference as the string is to be used in a composite
+// key and to authenticate capabilities.
+func (ck *Capability) String() string {
+	return fmt.Sprintf("Capability{%p, %d}", ck, ck.Index)
+}
+
 func NewOwner(module, name string) Owner {
 	return Owner{Module: module, Name: name}
 }
@@ -20,6 +29,11 @@ func NewOwner(module, name string) Owner {
 // Key returns a composite key for an Owner.
 func (o Owner) Key() string {
 	return fmt.Sprintf("%s/%s", o.Module, o.Name)
+}
+
+func (o Owner) String() string {
+	bz, _ := yaml.Marshal(o)
+	return string(bz)
 }
 
 func NewCapabilityOwners() *CapabilityOwners {

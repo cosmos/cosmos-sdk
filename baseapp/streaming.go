@@ -1,13 +1,11 @@
 package baseapp
 
 import (
+	"context"
 	"fmt"
-	"sort"
-	"strings"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
@@ -15,18 +13,17 @@ import (
 // ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
+	ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
 	// ListenEndBlock updates the steaming service with the latest EndBlock messages
-	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+	ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+	ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
 	// ListenCommit updates the steaming service with the latest Commit messages and state changes
-	ListenCommit(ctx types.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error
+	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error
 }
 
 const (
 	StreamingTomlKey              = "streaming"
-	StreamingEnableTomlKey        = "enable"
 	StreamingPluginTomlKey        = "plugin"
 	StreamingKeysTomlKey          = "keys"
 	StreamingStopNodeOnErrTomlKey = "stop-node-on-err"
@@ -58,7 +55,7 @@ func registerABCIListenerPlugin(
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
 	keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
 	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-	bApp.cms.AddListeners(exposeStoreKeysSorted(exposeKeysStr, keys))
+	bApp.cms.AddListeners(exposeStoreKeys(exposeKeysStr, keys))
 	bApp.abciListener = abciListener
 	bApp.stopNodeOnStreamingErr = stopNodeOnErr
 }
@@ -72,7 +69,7 @@ func exposeAll(list []string) bool {
 	return false
 }
 
-func exposeStoreKeysSorted(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
+func exposeStoreKeys(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
 	var exposeStoreKeys []store.StoreKey
 	if exposeAll(keysStr) {
 		exposeStoreKeys = make([]store.StoreKey, 0, len(keys))
@@ -87,10 +84,6 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*store.KVStoreKey) 
 			}
 		}
 	}
-	// sort storeKeys for deterministic output
-	sort.SliceStable(exposeStoreKeys, func(i, j int) bool {
-		return strings.Compare(exposeStoreKeys[i].Name(), exposeStoreKeys[j].Name()) < 0
-	})
 
 	return exposeStoreKeys
 }

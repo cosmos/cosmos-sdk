@@ -299,9 +299,8 @@ func TestAppStateDeterminism(t *testing.T) {
 	vpr := viper.New()
 	if FlagEnableStreamingValue {
 		m := make(map[string]interface{})
-		m["streaming.enable"] = true
 		m["streaming.keys"] = []string{"*"}
-		m["streaming.plugin"] = "grpc_abci_v1"
+		m["streaming.plugin"] = "abci_v1"
 		m["streaming.stop-node-on-err"] = true
 		for key, value := range m {
 			vpr.SetDefault(key, value)

@@ -3,13 +3,7 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -17,6 +11,11 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -233,11 +232,10 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
-	// enable streaming?
-	enableKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingEnableTomlKey)
-	if enable := cast.ToBool(appOpts.Get(enableKey)); enable {
-		pluginKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingPluginTomlKey)
-		pluginName := cast.ToString(appOpts.Get(pluginKey))
+	// register streaming service
+	pluginKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingPluginTomlKey)
+	pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
+	if len(pluginName) > 0 {
 		logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
 		plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
 		if err != nil {

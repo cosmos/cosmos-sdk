@@ -372,11 +372,14 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	return false
 }
 
-func (rs *Store) PopStateCache() []types.StoreKVPair {
-	var cache []types.StoreKVPair
+func (rs *Store) PopStateCache() []*types.StoreKVPair {
+	var cache []*types.StoreKVPair
 	for _, ls := range rs.listeners {
 		cache = append(cache, ls.PopStateCache()...)
 	}
+	sort.SliceStable(cache, func(i, j int) bool {
+		return cache[i].StoreKey < cache[j].StoreKey
+	})
 	return cache
 }
 

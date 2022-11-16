@@ -50,4 +50,4 @@ stop-node-on-err = true
 
 List of support streaming plugins
 
-- [ABCI State Streaming Plugin](./plugins/abci/README.md)
+- [ABCI State Streaming Plugin](plugins/abci/v1/README.md)

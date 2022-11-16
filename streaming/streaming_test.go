@@ -35,7 +35,7 @@ type PluginTestSuite struct {
 	deliverTxRes  abci.ResponseDeliverTx
 	commitRes     abci.ResponseCommit
 
-	changeSet []store.StoreKVPair
+	changeSet []*store.StoreKVPair
 }
 
 func (s *PluginTestSuite) SetupTest() {
@@ -84,7 +84,7 @@ func (s *PluginTestSuite) SetupTest() {
 	s.commitRes = abci.ResponseCommit{}
 
 	// test store kv pair types
-	s.changeSet = []types.StoreKVPair{
+	s.changeSet = []*types.StoreKVPair{
 		{
 			StoreKey: "mockStore",
 			Delete:   false,
@@ -106,10 +106,10 @@ func TestPluginTestSuite(t *testing.T) {
 
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
-		pluginVersion := "grpc_abci_v1"
-		pluginPath := fmt.Sprintf("%s/plugins/abci/%s/examples/plugin-go/stdout", s.workDir, pluginVersion)
-		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/%s/examples/plugin-python/file.py", s.workDir, pluginVersion)
-		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/%s/examples/plugin-python/kafka.py", s.workDir, pluginVersion)
+		pluginVersion := "abci_v1"
+		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
+		pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/file.py", s.workDir)
+		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/kafka.py", s.workDir)
 		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 			t.Fail()
 		}

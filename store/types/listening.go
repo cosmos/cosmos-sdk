@@ -2,7 +2,7 @@ package types
 
 // MemoryListener listens to the state writes and accumulate the records in memory.
 type MemoryListener struct {
-	stateCache []StoreKVPair
+	stateCache []*StoreKVPair
 }
 
 // NewMemoryListener creates a listener that accumulate the state writes in memory.
@@ -12,7 +12,7 @@ func NewMemoryListener() *MemoryListener {
 
 // OnWrite implements MemoryListener interface
 func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) {
-	fl.stateCache = append(fl.stateCache, StoreKVPair{
+	fl.stateCache = append(fl.stateCache, &StoreKVPair{
 		StoreKey: storeKey.Name(),
 		Delete:   delete,
 		Key:      key,
@@ -21,7 +21,7 @@ func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, d
 }
 
 // PopStateCache returns the current state caches and set to nil
-func (fl *MemoryListener) PopStateCache() []StoreKVPair {
+func (fl *MemoryListener) PopStateCache() []*StoreKVPair {
 	res := fl.stateCache
 	fl.stateCache = nil
 	return res

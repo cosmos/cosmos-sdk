@@ -33,6 +33,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+const minExecutionPeriod = 5 * time.Second
+
 type TestSuite struct {
 	suite.Suite
 
@@ -74,7 +76,7 @@ func (s *TestSuite) SetupTest() {
 	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
-		0,
+		minExecutionPeriod, // Must wait 5 seconds before executing proposal
 	)
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   s.addrs[0].String(),
@@ -1475,34 +1477,47 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 func (s *TestSuite) TestSubmitProposal() {
 	addrs := s.addrs
 	addr1 := addrs[0]
-	addr2 := addrs[1]
+	addr2 := addrs[1] // Has weight 2
 	addr4 := addrs[3]
-	addr5 := addrs[4]
+	addr5 := addrs[4] // Has weight 1
 
 	myGroupID := s.groupID
 	accountAddr := s.groupPolicyAddr
 
-	msgSend := &banktypes.MsgSend{
-		FromAddress: s.groupPolicyAddr.String(),
-		ToAddress:   addr2.String(),
-		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
-	}
-
+	// Create a new group policy to test TRY_EXEC
 	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   addr1.String(),
 		GroupId: myGroupID,
 	}
-	policy := group.NewThresholdDecisionPolicy(
+	noMinExecPeriodPolicy := group.NewThresholdDecisionPolicy(
+		"2",
+		time.Second,
+		0, // no MinExecutionPeriod to test TRY_EXEC
+	)
+	err := policyReq.SetDecisionPolicy(noMinExecPeriodPolicy)
+	s.Require().NoError(err)
+	res, err := s.app.GroupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	s.Require().NoError(err)
+	noMinExecPeriodPolicyAddr := sdk.MustAccAddressFromBech32(res.Address)
+	s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, s.sdkCtx, noMinExecPeriodPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)}))
+
+	// Create a new group policy with super high threshold
+	bigThresholdPolicy := group.NewThresholdDecisionPolicy(
 		"100",
 		time.Second,
-		0,
+		minExecutionPeriod,
 	)
-	err := policyReq.SetDecisionPolicy(policy)
+	err = policyReq.SetDecisionPolicy(bigThresholdPolicy)
 	s.Require().NoError(err)
-	bigThresholdRes, err := s.keeper.CreateGroupPolicy(s.ctx, policyReq)
+	bigThresholdRes, err := s.app.GroupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	bigThresholdAddr := bigThresholdRes.Address
 
+	msgSend := &banktypes.MsgSend{
+		FromAddress: noMinExecPeriodPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
 	defaultProposal := group.Proposal{
 		GroupPolicyAddress: accountAddr.String(),
 		Status:             group.PROPOSAL_STATUS_SUBMITTED,
@@ -1615,13 +1630,13 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
 				Proposers:          []string{addr2.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
 				Status:             group.PROPOSAL_STATUS_ACCEPTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "2",
@@ -1632,7 +1647,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
-				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
+				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, noMinExecPeriodPolicyAddr)
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
@@ -1640,13 +1655,13 @@ func (s *TestSuite) TestSubmitProposal() {
 		},
 		"with try exec, not enough yes votes for proposal to pass": {
 			req: &group.MsgSubmitProposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
 				Proposers:          []string{addr5.String()},
 				Exec:               group.Exec_EXEC_TRY,
 			},
 			msgs: []sdk.Msg{msgSend},
 			expProposal: group.Proposal{
-				GroupPolicyAddress: accountAddr.String(),
+				GroupPolicyAddress: noMinExecPeriodPolicyAddr.String(),
 				Status:             group.PROPOSAL_STATUS_SUBMITTED,
 				FinalTallyResult: group.TallyResult{
 					YesCount:        "0", // Since tally doesn't pass Allow(), we consider the proposal not final
@@ -1699,6 +1714,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				}
 			}
 
+			s.sdkCtx.WithBlockTime(s.blockTime)
 			spec.postRun(s.sdkCtx)
 		})
 	}
@@ -2238,24 +2254,146 @@ func (s *TestSuite) SetupTest() {
 	members := []group.MemberRequest{
 		{Address: s.addrsStr[4], Weight: "1"}, {Address: s.addrsStr[1], Weight: "2"},
 	}
+	proposers := []string{addr2.String()}
 
-	s.setNextAccount()
+	specs := map[string]struct {
+		srcBlockTime      time.Time
+		setupProposal     func(ctx context.Context) uint64
+		expErr            bool
+		expProposalStatus group.ProposalStatus
+		expExecutorResult group.ProposalExecutorResult
+		expBalance        bool
+		expFromBalances   sdk.Coin
+		expToBalances     sdk.Coin
+	}{
+		"proposal executed when accepted": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9900),
+			expToBalances:     sdk.NewInt64Coin("test", 100),
+		},
+		"proposal with multiple messages executed when accepted": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9800),
+			expToBalances:     sdk.NewInt64Coin("test", 200),
+		},
+		"proposal not executed when rejected": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
+			},
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"open proposal must not fail": {
+			setupProposal: func(ctx context.Context) uint64 {
+				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+			},
+			expProposalStatus: group.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"existing proposal required": {
+			setupProposal: func(ctx context.Context) uint64 {
+				return 9999
+			},
+			expErr: true,
+		},
+		"Decision policy also applied on exactly voting period end": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
+			},
+			srcBlockTime:      s.blockTime.Add(time.Second), // Voting period is 1s
+			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"Decision policy also applied after voting period end": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
+			},
+			srcBlockTime:      s.blockTime.Add(time.Second).Add(time.Millisecond), // Voting period is 1s
+			expProposalStatus: group.PROPOSAL_STATUS_REJECTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"exec proposal before MinExecutionPeriod should fail": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(4 * time.Second), // min execution date is 5s later after s.blockTime
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE, // Because MinExecutionPeriod has not passed
+		},
+		"exec proposal at exactly MinExecutionPeriod should pass": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+		"prevent double execution when successful": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
 
-	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
-		Admin:   s.addrsStr[0],
-		Members: members,
-	})
-	s.Require().NoError(err)
-	s.groupID = groupRes.GroupId
+				// Wait after min execution period end before Exec
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
+				ctx = sdk.WrapSDKContext(sdkCtx)
 
-	policy := group.NewThresholdDecisionPolicy(
-		"2",
-		time.Second,
-		minExecutionPeriod, // Must wait 5 seconds before executing proposal
-	)
-	policyReq := &group.MsgCreateGroupPolicy{
-		Admin:   s.addrsStr[0],
-		GroupId: s.groupID,
+				_, err := s.app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expErr:            true,                                // since proposal is pruned after a successful MsgExec
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expBalance:        true,
+			expFromBalances:   sdk.NewInt64Coin("test", 9900),
+			expToBalances:     sdk.NewInt64Coin("test", 100),
+		},
+		"rollback all msg updates on failure": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend2}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
+		},
+		"executable when failed before": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend2}
+				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+
+				// Wait after min execution period end before Exec
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
+				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				return myProposalID
+			},
+			srcBlockTime:      s.blockTime.Add(minExecutionPeriod), // After min execution period end
+			expProposalStatus: group.PROPOSAL_STATUS_ACCEPTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
 	}
 	err = policyReq.SetDecisionPolicy(policy)
 	s.Require().NoError(err)
@@ -2281,16 +2419,135 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 }
 
-func (s *TestSuite) setNextAccount() {
-	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
-	derivationKey := make([]byte, 8)
-	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
+func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+
+	msgSend1 := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+	}
+	msgSend2 := &banktypes.MsgSend{
+		FromAddress: s.groupPolicyAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.Coins{sdk.NewInt64Coin("test", 10001)},
+	}
+	proposers := []string{addr2.String()}
+	specs := map[string]struct {
+		srcBlockTime      time.Time
+		setupProposal     func(ctx context.Context) uint64
+		expErr            bool
+		expErrMsg         string
+		expExecutorResult group.ProposalExecutorResult
+	}{
+		"proposal pruned after executor result success": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expErrMsg:         "load proposal: not found",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+		"proposal with multiple messages pruned when executed with result success": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expErrMsg:         "load proposal: not found",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+		"proposal not pruned when not executed and rejected": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_NO)
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"open proposal is not pruned which must not fail ": {
+			setupProposal: func(ctx context.Context) uint64 {
+				return submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal not pruned with group modified before tally": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+
+				// then modify group
+				_, err := s.keeper.UpdateGroupMetadata(ctx, &group.MsgUpdateGroupMetadata{
+					Admin:   addr1.String(),
+					GroupId: s.groupID,
+				})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal not pruned with group policy modified before tally": {
+			setupProposal: func(ctx context.Context) uint64 {
+				myProposalID := submitProposal(ctx, s, []sdk.Msg{msgSend1}, proposers)
+				_, err := s.keeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
+					Admin:              addr1.String(),
+					GroupPolicyAddress: s.groupPolicyAddr.String(),
+				})
+				s.Require().NoError(err)
+				return myProposalID
+			},
+			expErr:            true, // since proposal status will be `aborted` when group policy is modified
+			expErrMsg:         "not possible to exec with proposal status",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+		},
+		"proposal exists when rollback all msg updates on failure": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend1, msgSend2}
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+			},
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_FAILURE,
+		},
+		"pruned when proposal is executable when failed before": {
+			setupProposal: func(ctx context.Context) uint64 {
+				msgs := []sdk.Msg{msgSend2}
+				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
+
+				// Wait for min execution period end
+				sdkCtx := sdk.UnwrapSDKContext(ctx)
+				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+				ctx = sdk.WrapSDKContext(sdkCtx)
+
+				_, err := s.app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				s.Require().NoError(err)
+
+				sdkCtx = sdk.UnwrapSDKContext(ctx)
+				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
+
+				return myProposalID
+			},
+			expErrMsg:         "load proposal: not found",
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+		},
+	}
+	for msg, spec := range specs {
+		spec := spec
+		s.Run(msg, func() {
+			sdkCtx, _ := s.sdkCtx.CacheContext()
+			ctx := sdk.WrapSDKContext(sdkCtx)
+			proposalID := spec.setupProposal(ctx)
 
 	ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix}, derivationKey)
 	s.Require().NoError(err)
 
-	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(ac)
-	s.Require().NoError(err)
+			// Wait for min execution period end
+			sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
+			ctx = sdk.WrapSDKContext(sdkCtx)
+			_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			if spec.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), spec.expErrMsg)
+				return
+			}
+			s.Require().NoError(err)
 
 	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
@@ -2731,14 +2988,17 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 }
 
 func (s *TestSuite) TestTallyProposalsAtVPEnd() {
-	votingPeriod := 4 * time.Minute
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := time.Duration(4 * time.Minute)
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
-		Admin: s.addrsStr[0],
+		Admin: addr1.String(),
 		Members: []group.MemberRequest{
-			{Address: s.addrsStr[0], Weight: "1"},
-			{Address: s.addrsStr[1], Weight: "1"},
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
 		},
 	}
 	policy := group.NewThresholdDecisionPolicy(
@@ -2748,120 +3008,36 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	)
 	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
 
-	s.setNextAccount()
-	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
-	s.Require().NoError(err)
-	accountAddr := groupRes.GetGroupPolicyAddress()
-	groupPolicy, err := s.accountKeeper.AddressCodec().StringToBytes(accountAddr)
-	s.Require().NoError(err)
-	s.Require().NotNil(groupPolicy)
-
-	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
-		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{s.addrsStr[0]},
-		Messages:           nil,
-	})
-	s.Require().NoError(err)
-
-	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
-		ProposalId: proposalRes.ProposalId,
-		Voter:      s.addrsStr[0],
-		Option:     group.VOTE_OPTION_YES,
-	})
-	s.Require().NoError(err)
-
-	// move forward in time
-	ctx := s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1)})
-
-	result, err := s.groupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
-		ProposalId: proposalRes.ProposalId,
-	})
-	s.Require().Equal("1", result.Tally.YesCount)
-	s.Require().NoError(err)
-
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() {
-		err := s.groupKeeper.EndBlocker(ctx)
-		if err != nil {
-			panic(err)
-		}
-	})
-}
-
-// TestTallyProposalsAtVPEnd_GroupMemberLeaving test that the node doesn't
-// panic if a member leaves after the voting period end.
-func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
-	votingPeriod := 4 * time.Minute
-	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
-
-	groupMsg := &group.MsgCreateGroupWithPolicy{
-		Admin: s.addrsStr[0],
-		Members: []group.MemberRequest{
-			{Address: s.addrsStr[0], Weight: "0.3"},
-			{Address: s.addrsStr[1], Weight: "7"},
-			{Address: s.addrsStr[2], Weight: "0.6"},
-		},
-	}
-	policy := group.NewThresholdDecisionPolicy(
-		"3",
-		votingPeriod,
-		minExecutionPeriod,
-	)
-	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
-
-	s.setNextAccount()
-	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	groupRes, err := s.app.GroupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
 	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+	proposalRes, err := s.app.GroupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
-		Proposers:          []string{s.addrsStr[0]},
+		Proposers:          []string{addr1.String()},
 		Messages:           nil,
 	})
 	s.Require().NoError(err)
 
-	// group members vote
-	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+	_, err = s.app.GroupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
-		Voter:      s.addrsStr[0],
-		Option:     group.VOTE_OPTION_NO,
-	})
-	s.Require().NoError(err)
-	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
-		ProposalId: proposalRes.ProposalId,
-		Voter:      s.addrsStr[1],
-		Option:     group.VOTE_OPTION_NO,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
 	})
 	s.Require().NoError(err)
 
 	// move forward in time
-	ctx := s.sdkCtx.WithHeaderInfo(header.Info{Time: s.sdkCtx.HeaderInfo().Time.Add(votingPeriod + 1)})
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
 
-	// Tally the result. This saves the tally result to state.
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() {
-		err := s.groupKeeper.EndBlocker(ctx)
-		if err != nil {
-			panic(err)
-		}
+	result, err := s.app.GroupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
+		ProposalId: proposalRes.ProposalId,
 	})
-
-	// member 2 (high weight) leaves group.
-	_, err = s.groupKeeper.LeaveGroup(ctx, &group.MsgLeaveGroup{
-		Address: s.addrsStr[1],
-		GroupId: groupRes.GroupId,
-	})
+	s.Require().Equal("1", result.Tally.YesCount)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() {
-		err := s.groupKeeper.EndBlocker(ctx)
-		if err != nil {
-			panic(err)
-		}
-	})
+	s.Require().NoError(s.app.GroupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.NotPanics(func() { module.EndBlocker(ctx, s.app.GroupKeeper) })
 }

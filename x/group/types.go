@@ -62,12 +62,10 @@ func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
-// GetMinExecutionPeriod returns the minimum execution period of ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) GetMinExecutionPeriod() time.Duration {
 	return p.Windows.MinExecutionPeriod
 }
 
-// ValidateBasic does basic validation on ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
 		return errorsmod.Wrap(err, "threshold")
@@ -167,12 +165,10 @@ func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
-// GetMinExecutionPeriod returns the minimum execution period of PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) GetMinExecutionPeriod() time.Duration {
 	return p.Windows.MinExecutionPeriod
 }
 
-// ValidateBasic does basic validation on PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) ValidateBasic() error {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {

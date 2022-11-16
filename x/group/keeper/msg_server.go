@@ -796,8 +796,7 @@ func (k Keeper) doTallyAndUpdate(ctx context.Context, p *group.Proposal, groupIn
 		return err
 	}
 
-	sinceSubmission := ctx.BlockTime().Sub(p.SubmitTime) // duration passed since proposal submission.
-	result, err := policy.Allow(tallyResult, electorate.TotalWeight, sinceSubmission)
+	result, err := policy.Allow(tallyResult, electorate.TotalWeight)
 	if err != nil {
 		return sdkerrors.Wrap(err, "policy allow")
 	}
@@ -865,7 +864,8 @@ func (k Keeper) Exec(ctx context.Context, msg *group.MsgExec) (*group.MsgExecRes
 			return nil, err
 		}
 
-		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr); err != nil {
+		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
+		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
 			k.Logger.Info("proposal execution failed", "cause", err, "proposalID", proposal.Id)

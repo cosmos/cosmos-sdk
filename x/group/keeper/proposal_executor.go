@@ -16,13 +16,11 @@ import (
 
 // doExecuteMsgs routes the messages to the registered handlers. Messages are limited to those that require no authZ or
 // by the account of group policy only. Otherwise this gives access to other peoples accounts as the sdk middlewares are bypassed
-func (k Keeper) doExecuteMsgs(ctx context.Context, proposal group.Proposal, groupPolicyAcc sdk.AccAddress, decisionPolicy group.DecisionPolicy) error {
-	currentTime := k.HeaderService.HeaderInfo(ctx).Time
-
+func (s Keeper) doExecuteMsgs(ctx sdk.Context, router *baseapp.MsgServiceRouter, proposal group.Proposal, groupPolicyAcc sdk.AccAddress, decisionPolicy group.DecisionPolicy) ([]sdk.Result, error) {
 	// Ensure it's not too early to execute the messages.
 	minExecutionDate := proposal.SubmitTime.Add(decisionPolicy.GetMinExecutionPeriod())
-	if currentTime.Before(minExecutionDate) {
-		return errors.ErrInvalid.Wrapf("must wait until %s to execute proposal %d", minExecutionDate, proposal.Id)
+	if ctx.BlockTime().Before(minExecutionDate) {
+		return nil, grouperrors.ErrInvalid.Wrapf("must wait until %s to execute proposal %d", minExecutionDate, proposal.Id)
 	}
 
 	// Ensure it's not too late to execute the messages.

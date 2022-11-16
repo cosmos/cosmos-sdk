@@ -274,19 +274,6 @@ long as the authors of `foo` and `bar` avoid incompatible breaking changes betwe
 
 ## Decision
 
-We have decided based on the complexities of approach B) to adopt approach A) for the time-being. While the refactoring
-from interface methods to handlers is somewhat tedious, it is relatively simpler than changing how we use generated
-code everywhere. Also, embedded file descriptors is a rather simple way to deal with correct unknown field
-filtering - it needs a small amount of boilerplate and a build step all of which could be part of a project template
-and is basically set it and forget it. Regarding excluding state machine breaking changes from generated code (i.e.
-API modules), this is something primarily for the SDK team to attend to and define best practices around. We may even
-decide to recommend projects use [Buf Remote Generation](https://docs.buf.build/bsr/remote-generation/go) with a
-Buf template which we provide to make this step mostly fool-proof for module developers.
-
-Maintaining both internal types + an API module might be confusing in an ongoing way to module developers, not to
-mention the upfront costs of 1) getting the code generator right and 2) designing a new zero-copy encoding on top of
-protobuf. It may be worth reconsidering B) in the future when we start supporting modules in other languages, but
-for now A) is a simpler correct-enough approach.
 
 ## Consequences
 

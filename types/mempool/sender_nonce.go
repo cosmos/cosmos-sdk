@@ -64,7 +64,7 @@ func NewSenderNonceMempool() Mempool {
 		senders: senderMap,
 		txCount: 0,
 	}
-	snp.setSeed(time.Now().UnixNano())
+	snp.SetSeed(time.Now().UnixNano())
 	return snp
 }
 

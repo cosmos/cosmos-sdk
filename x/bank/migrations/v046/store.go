@@ -93,7 +93,7 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 	return nil
 }
 
-// MigrateV0464ToV0465 is a helper function to migrate chains from <=v0.46.4
+// Migrate_V0464_To_V0465 is a helper function to migrate chains from <=v0.46.4
 // to v0.46.5 ONLY.
 //
 // IMPORTANT: Please de not use this function if you are upgrading to v0.46
@@ -106,7 +106,7 @@ func migrateDenomMetadata(store sdk.KVStore) error {
 // to fix the bank denom state.
 //
 // The store is expected to be the bank store, and not any prefixed substore.
-func MigrateV0464ToV0465(store sdk.KVStore) error {
+func Migrate_V0464_To_V0465(store sdk.KVStore) error {
 	denomStore := prefix.NewStore(store, DenomMetadataPrefix)
 
 	iter := denomStore.Iterator(nil, nil)

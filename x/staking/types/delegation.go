@@ -92,12 +92,13 @@ func (d Delegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int) UnbondingDelegationEntry {
+func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) UnbondingDelegationEntry {
 	return UnbondingDelegationEntry{
 		CreationHeight: creationHeight,
 		CompletionTime: completionTime,
 		InitialBalance: balance,
 		Balance:        balance,
+		Id:             id,
 	}
 }
 
@@ -112,25 +113,46 @@ func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 	return !e.CompletionTime.After(currentTime)
 }
 
+// return the unbonding delegation entry
+func MustMarshalUBDE(cdc codec.BinaryCodec, ubd UnbondingDelegationEntry) []byte {
+	return cdc.MustMarshal(&ubd)
+}
+
+// unmarshal a unbonding delegation entry from a store value
+func MustUnmarshalUBDE(cdc codec.BinaryCodec, value []byte) UnbondingDelegationEntry {
+	ubd, err := UnmarshalUBDE(cdc, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return ubd
+}
+
+// unmarshal a unbonding delegation entry from a store value
+func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegationEntry, err error) {
+	err = cdc.Unmarshal(value, &ubd)
+	return ubd, err
+}
+
 // NewUnbondingDelegation - create a new unbonding delegation object
 //
 //nolint:interfacer
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance sdk.Int,
+	creationHeight int64, minTime time.Time, balance sdk.Int, id uint64,
 ) UnbondingDelegation {
 	return UnbondingDelegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Entries: []UnbondingDelegationEntry{
-			NewUnbondingDelegationEntry(creationHeight, minTime, balance),
+			NewUnbondingDelegationEntry(creationHeight, minTime, balance, id),
 		},
 	}
 }
 
 // AddEntry - append entry to the unbonding delegation
-func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int) {
-	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance)
+func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance sdk.Int, id uint64) {
+	entry := NewUnbondingDelegationEntry(creationHeight, minTime, balance, id)
 	ubd.Entries = append(ubd.Entries, entry)
 }
 

@@ -33,7 +33,7 @@ func TestDelegationString(t *testing.T) {
 
 func TestUnbondingDelegationEqual(t *testing.T) {
 	ubd1 := types.NewUnbondingDelegation(sdk.AccAddress(valAddr1), valAddr2, 0,
-		time.Unix(0, 0), sdk.NewInt(0))
+		time.Unix(0, 0), sdk.NewInt(0), 1)
 	ubd2 := ubd1
 
 	ok := ubd1.String() == ubd2.String()
@@ -48,7 +48,7 @@ func TestUnbondingDelegationEqual(t *testing.T) {
 
 func TestUnbondingDelegationString(t *testing.T) {
 	ubd := types.NewUnbondingDelegation(sdk.AccAddress(valAddr1), valAddr2, 0,
-		time.Unix(0, 0), sdk.NewInt(0))
+		time.Unix(0, 0), sdk.NewInt(0), 1)
 
 	require.NotEmpty(t, ubd.String())
 }

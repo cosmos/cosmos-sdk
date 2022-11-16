@@ -6858,6 +6858,8 @@ UnbondingDelegationEntry defines an unbonding object with relevant metadata.
 | `completion_time` | [google.protobuf.Timestamp](#google.protobuf.Timestamp) |  | completion_time is the unix time for unbonding completion. |
 | `initial_balance` | [string](#string) |  | initial_balance defines the tokens initially scheduled to receive at completion. |
 | `balance` | [string](#string) |  | balance defines the tokens to receive at completion. |
+| `id` | [uint64](#uint64) |  | Incrementing id that uniquely identifies this entry |
+| `on_hold` | [bool](#bool) |  | True if this entry's unbonding has been stopped by an external module |
 
 
 

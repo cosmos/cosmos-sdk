@@ -17,18 +17,18 @@ This module is used in the Cosmos Hub.
 
 ## Contents
 
-- [Concepts](#concepts)
-  - [Gas & Fees](#gas--fees)
-- [State](#state)
-  - [Accounts](#accounts)
-- [AnteHandlers](#antehandlers)
-- [Keepers](#keepers)
-  - [Account Keeper](#account-keeper)
-- [Parameters](#parameters)
-- [Client](#client)
-  - [CLI](#cli)
-  - [gRPC](#grpc)
-  - [REST](#rest)
+* [Concepts](#concepts)
+    * [Gas & Fees](#gas--fees)
+* [State](#state)
+    * [Accounts](#accounts)
+* [AnteHandlers](#antehandlers)
+* [Keepers](#keepers)
+    * [Account Keeper](#account-keeper)
+* [Parameters](#parameters)
+* [Client](#client)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 
 ## Concepts
 
@@ -36,8 +36,8 @@ This module is used in the Cosmos Hub.
 
 The differences are:
 
-- `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
-- `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
+* `auth` - authentication of accounts and transactions for Cosmos SDK applications and is responsible for specifying the base transaction and account types.
+* `authz` - authorization for accounts to perform actions on behalf of other accounts and enables a granter to grant authorizations to a grantee that allows the grantee to execute messages on behalf of the granter.
 
 ### Gas & Fees
 
@@ -68,7 +68,7 @@ minimum gas prices set, such a mechanism could be implemented by node operators.
 
 Because the market value for tokens will fluctuate, validators are expected to
 dynamically adjust their minimum gas prices to a level that would encourage the
-use of the network.
+use of the network.		
 
 ## State
 
@@ -83,7 +83,7 @@ Accounts are exposed externally as an interface, and stored internally as
 either a base account or vesting account. Module clients wishing to add more
 account types may do so.
 
-- `0x01 | Address -> ProtocolBuffer(account)`
+* `0x01 | Address -> ProtocolBuffer(account)`
 
 #### Account Interface
 
@@ -151,31 +151,31 @@ Note that the `AnteHandler` is called on both `CheckTx` and `DeliverTx`, as Tend
 
 The auth module provides `AnteDecorator`s that are recursively chained together into a single `AnteHandler` in the following order:
 
-- `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
+* `SetUpContextDecorator`: Sets the `GasMeter` in the `Context` and wraps the next `AnteHandler` with a defer clause to recover from any downstream `OutOfGas` panics in the `AnteHandler` chain to return an error with information on gas provided and gas used.
 
-- `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
+* `RejectExtensionOptionsDecorator`: Rejects all extension options which can optionally be included in protobuf transactions.
 
-- `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
+* `MempoolFeeDecorator`: Checks if the `tx` fee is above local mempool `minFee` parameter during `CheckTx`.
 
-- `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
+* `ValidateBasicDecorator`: Calls `tx.ValidateBasic` and returns any non-nil error.
 
-- `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
+* `TxTimeoutHeightDecorator`: Check for a `tx` height timeout.
 
-- `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
+* `ValidateMemoDecorator`: Validates `tx` memo with application parameters and returns any non-nil error.
 
-- `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
+* `ConsumeGasTxSizeDecorator`: Consumes gas proportional to the `tx` size based on application parameters.
 
-- `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
+* `DeductFeeDecorator`: Deducts the `FeeAmount` from first signer of the `tx`. If the `x/feegrant` module is enabled and a fee granter is set, it deducts fees from the fee granter account.
 
-- `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
+* `SetPubKeyDecorator`: Sets the pubkey from a `tx`'s signers that does not already have its corresponding pubkey saved in the state machine and in the current context.
 
-- `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
+* `ValidateSigCountDecorator`: Validates the number of signatures in `tx` based on app-parameters.
 
-- `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+* `SigGasConsumeDecorator`: Consumes parameter-defined amount of gas for each signature. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
-- `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
+* `SigVerificationDecorator`: Verifies all signatures are valid. This requires pubkeys to be set in context for all signers as part of `SetPubKeyDecorator`.
 
-- `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
+* `IncrementSequenceDecorator`: Increments the account sequence for each signer to prevent replay attacks.
 
 ## Keepers
 
@@ -225,13 +225,13 @@ type AccountKeeperI interface {
 
 The auth module contains the following parameters:
 
-| Key                    | Type   | Example |
-| ---------------------- | ------ | ------- |
-| MaxMemoCharacters      | uint64 | 256     |
-| TxSigLimit             | uint64 | 7       |
-| TxSizeCostPerByte      | uint64 | 10      |
-| SigVerifyCostED25519   | uint64 | 590     |
-| SigVerifyCostSecp256k1 | uint64 | 1000    |
+| Key                    | Type            | Example |
+| ---------------------- | --------------- | ------- |
+| MaxMemoCharacters      |      uint64     | 256     |
+| TxSigLimit             |      uint64     | 7       |
+| TxSizeCostPerByte      |      uint64     | 10      |
+| SigVerifyCostED25519   |      uint64     | 590     |
+| SigVerifyCostSecp256k1 |      uint64     | 1000    |
 
 ## Client
 
@@ -429,7 +429,7 @@ simd tx sign txs.json --from $ALICE > tx.signed.json
 
 or
 
-```bash
+```bash 
 simd tx sign tx1.json tx2.json tx3.json --from $ALICE > tx.signed.json
 ```
 
@@ -497,6 +497,7 @@ More information about the `encode` command can be found running `simd tx encode
 #### `decode`
 
 The `decode` commands decodes a transaction encoded with the `encode` command.
+
 
 ```bash
 simd tx decode Co8BCowBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmwKLWNvc21vczFsNnZzcWhoN3Jud3N5cjJreXozampnM3FkdWF6OGd3Z3lsODI3NRItY29zbW9zMTU4c2FsZHlnOHBteHU3Znd2dDBkNng3amVzd3A0Z3d5a2xrNnkzGgwKBXN0YWtlEgMxMDASBhIEEMCaDA==

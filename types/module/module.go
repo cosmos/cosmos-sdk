@@ -205,6 +205,12 @@ type EndBlockAppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
+// CommitAppModule is an extension interface that contains information about the AppModule and Commit.
+type CommitAppModule interface {
+	AppModule
+	Commit(sdk.Context)
+}
+
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
 	AppModuleGenesis
@@ -251,6 +257,7 @@ type Manager struct {
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
+	OrderCommiters     []string
 	OrderMigrations    []string
 }
 
@@ -268,6 +275,7 @@ func NewManager(modules ...AppModule) *Manager {
 		OrderInitGenesis:   modulesStr,
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,
+		OrderCommiters:     modulesStr,
 		OrderEndBlockers:   modulesStr,
 	}
 }
@@ -307,6 +315,11 @@ func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames)
 	m.OrderBeginBlockers = moduleNames
+}
+
+// SetOrderCommiters sets the order of set commiter calls
+func (m *Manager) SetOrderCommiters(moduleNames ...string) {
+	m.OrderCommiters = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
@@ -596,6 +609,17 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	return abci.ResponseEndBlock{
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
+	}
+}
+
+// Commit performs commit functionality for all modules.
+func (m *Manager) Commit(ctx sdk.Context) {
+	for _, moduleName := range m.OrderCommiters {
+		module, ok := m.Modules[moduleName].(CommitAppModule)
+		if !ok {
+			continue
+		}
+		module.Commit(ctx)
 	}
 }
 

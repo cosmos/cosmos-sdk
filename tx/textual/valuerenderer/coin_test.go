@@ -71,6 +71,14 @@ func TestCoinJsonTestcases(t *testing.T) {
 				ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.Proto.Denom), tc.Metadata)
 				screens, err := vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 
+				var baseDenom string
+				if tc.Metadata != nil {
+					baseDenom = tc.Metadata.Display
+				} else {
+					baseDenom = strings.Split(screens[0].Text, " ")[1]
+				}
+				ctx = context.WithValue(context.Background(), mockCoinMetadataKey(baseDenom), tc.Metadata)
+
 				if tc.Error {
 					require.Error(t, err)
 					return
@@ -80,14 +88,6 @@ func TestCoinJsonTestcases(t *testing.T) {
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
 
-				var baseDenom string
-				if tc.Metadata != nil {
-					baseDenom = tc.Metadata.Display
-				} else {
-					baseDenom = strings.Split(screens[0].Text, " ")[1]
-				}
-
-				ctx = context.WithValue(context.Background(), mockCoinMetadataKey(baseDenom), tc.Metadata)
 				value, err := vr.Parse(ctx, screens)
 				if tc.Error {
 					require.Error(t, err)

@@ -32,26 +32,20 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				// Create a context.Context containing all coins metadata, to simulate
 				// that they are in state.
 				ctx := context.Background()
-				for _, coin := range tc.Proto {
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(coin.Denom), tc.Metadata[coin.Denom])
+
+				for _, v := range tc.Metadata {
+					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Base), v)
+					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Display), v)
 				}
 
 				listValue := listpb.NewGenericList(tc.Proto)
 				screens, err := vr.Format(ctx, protoreflect.ValueOf(listValue))
 
-				if tc.Error {
-					require.Error(t, err)
-					return
-				}
-
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
 
-				for _, v := range tc.Metadata {
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Display), v)
-				}
-
+				// Round trip.
 				value, err := vr.Parse(ctx, screens)
 				if tc.Error {
 					require.Error(t, err)
@@ -65,6 +59,11 @@ func TestCoinsJsonTestcases(t *testing.T) {
 	}
 }
 
+// checkCoinsEqual checks that the 2 lists of Coins contain the same
+// **set** of coins. It does not check that the order of coins are
+// equal, because in Textual, we sort the coins alphabetically after
+// rendering, so we lose initial Coins ordering. Instead, we just check
+// set equality using a map.
 func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 	require.Equal(t, l1.Len(), l2.Len())
 	var coinsMap = make(map[string]*basev1beta1.Coin, l1.Len())

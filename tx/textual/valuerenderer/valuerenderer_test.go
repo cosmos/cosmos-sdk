@@ -17,9 +17,9 @@ func TestDispatcher(t *testing.T) {
 		expErr           bool
 		expValueRenderer valuerenderer.ValueRenderer
 	}{
-		{"UINT32", false, valuerenderer.NewIntValueRenderer()},
-		{"UINT64", false, valuerenderer.NewIntValueRenderer()},
-		{"SDKINT", false, valuerenderer.NewIntValueRenderer()},
+		{"UINT32", false, valuerenderer.NewIntValueRenderer(fieldDescriptorFromName("UINT32"))},
+		{"UINT64", false, valuerenderer.NewIntValueRenderer(fieldDescriptorFromName("UINT64"))},
+		{"SDKINT", false, valuerenderer.NewIntValueRenderer(fieldDescriptorFromName("SDKINT"))},
 		{"SDKDEC", false, valuerenderer.NewDecValueRenderer()},
 		{"BYTES", false, valuerenderer.NewBytesValueRenderer()},
 		{"TIMESTAMP", false, valuerenderer.NewTimestampValueRenderer()},

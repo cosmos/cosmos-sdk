@@ -3,6 +3,7 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -11,11 +12,13 @@ import (
 
 // NewIntValueRenderer returns a ValueRenderer for uint32, uint64, int32 and
 // int64, and sdk.Int scalars.
-func NewIntValueRenderer() ValueRenderer {
-	return intValueRenderer{}
+func NewIntValueRenderer(fd protoreflect.FieldDescriptor) ValueRenderer {
+	return intValueRenderer{fd}
 }
 
-type intValueRenderer struct{}
+type intValueRenderer struct {
+	fd protoreflect.FieldDescriptor
+}
 
 var _ ValueRenderer = intValueRenderer{}
 
@@ -37,7 +40,29 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return nilValue, err
 	}
 
+	if vr.fd != nil {
+		switch vr.fd.Kind() {
+		case protoreflect.Uint32Kind:
+			value, err := strconv.ParseUint(parsedInt, 10, 32)
+			if err != nil {
+				return nilValue, err
+			}
+			return protoreflect.ValueOfUint32(uint32(value)), nil
+
+		case protoreflect.Uint64Kind:
+			value, err := strconv.ParseUint(parsedInt, 10, 64)
+			if err != nil {
+				return nilValue, err
+			}
+			return protoreflect.ValueOfUint64(value), nil
+
+		default:
+			return protoreflect.ValueOfString(parsedInt), nil
+		}
+	}
+
 	return protoreflect.ValueOfString(parsedInt), nil
+
 }
 
 // parseInt parses a value-rendered string into an integer

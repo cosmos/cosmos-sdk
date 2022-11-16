@@ -61,6 +61,10 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 				return nil, fmt.Errorf("got empty value renderer for scalar %s", scalar)
 			}
 
+			if scalar == "cosmos.Int" {
+				return NewIntValueRenderer(fd), nil
+			}
+
 			return vr, nil
 		}
 	case fd.Kind() == protoreflect.BytesKind:
@@ -72,7 +76,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 		fd.Kind() == protoreflect.Int32Kind ||
 		fd.Kind() == protoreflect.Int64Kind:
 		{
-			return NewIntValueRenderer(), nil
+			return NewIntValueRenderer(fd), nil
 		}
 
 	case fd.Kind() == protoreflect.StringKind:
@@ -84,7 +88,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 
 		vr, found := r.messages[fullName]
 		if found {
-			if fd.IsList() {
+			if fullName == (&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName() && fd.IsList() {
 				return NewCoinsValueRenderer(r.coinMetadataQuerier, fd), nil
 			} else {
 				return vr, nil
@@ -108,7 +112,7 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 func (r *Textual) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRenderer{}
-		r.scalars["cosmos.Int"] = NewIntValueRenderer()
+		r.scalars["cosmos.Int"] = NewIntValueRenderer(nil)
 		r.scalars["cosmos.Dec"] = NewDecValueRenderer()
 	}
 	if r.messages == nil {

@@ -240,6 +240,11 @@ func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
+// LoadVersionForOverwritingWithMode call LoadVersionForOverwriting with offlineRollback
+func (st *Store) LoadVersionForOverwritingWithMode(targetVersion int64, offlineRollback bool) (int64, error) {
+	return st.tree.LoadVersionForOverwritingWithMode(targetVersion, offlineRollback)
+}
+
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)

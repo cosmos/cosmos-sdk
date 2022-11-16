@@ -37,8 +37,11 @@ application.
 				return fmt.Errorf("failed to rollback tendermint state: %w", err)
 			}
 			// rollback the multistore
-
-			if err := app.CommitMultiStore().RollbackToVersion(height); err != nil {
+			offlineRollback, err := cmd.Flags().GetBool(flags.FlagOfflineRollback)
+			if err != nil {
+				return err
+			}
+			if err := app.CommitMultiStore().RollbackToVersionWithMode(height, offlineRollback); err != nil {
 				return fmt.Errorf("failed to rollback to version: %w", err)
 			}
 
@@ -46,7 +49,8 @@ application.
 			return nil
 		},
 	}
-
+	cmd.Flags().Bool(flags.FlagOfflineRollback, false, "Offline rollback")
+	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	return cmd
 }

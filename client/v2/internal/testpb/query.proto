@@ -13,7 +13,7 @@ service Query {
   rpc Echo(QueryEchoRequest) returns (QueryEchoResponse);
 }
 
-message EchoRequest {
+message QueryEchoRequest {
   // u32 is an uint32
   uint32                                u32        = 1;
   uint64                                u64        = 2;
@@ -58,6 +58,6 @@ message AMessage {
   int32  baz = 2;
 }
 
-message EchoResponse {
-  EchoRequest request = 1;
+message QueryEchoResponse {
+  QueryEchoRequest request = 1;
 }

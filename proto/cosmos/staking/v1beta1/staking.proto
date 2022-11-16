@@ -225,7 +225,13 @@ message UnbondingDelegationEntry {
     (gogoproto.moretags)   = "yaml:\"initial_balance\""
   ];
   // balance defines the tokens to receive at completion.
-  string balance = 4 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string balance = 4  [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+
+  // Incrementing id that uniquely identifies this entry
+  uint64 id = 5;
+
+  // True if this entry's unbonding has been stopped by an external module
+  bool on_hold = 6; 
 }
 
 // RedelegationEntry defines a redelegation object with relevant metadata.

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -76,4 +78,21 @@ func (k Keeper) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, 
 	if k.hooks != nil {
 		k.hooks.BeforeValidatorSlashed(ctx, valAddr, fraction)
 	}
+}
+
+// This is called when an UnbondingDelegationEntry is first created
+func (k Keeper) UnbondingDelegationEntryCreated(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
+	creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) {
+	if k.hooks != nil {
+		k.hooks.UnbondingDelegationEntryCreated(ctx, delegatorAddr, validatorAddr, creationHeight, completionTime, balance, id)
+	}
+}
+
+// This is called before completing unbonding of a UnbondingDelegationEntry. returning true
+// will stop the unbonding.
+func (k Keeper) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) bool {
+	if k.hooks != nil {
+		return k.hooks.BeforeUnbondingDelegationEntryComplete(ctx, id)
+	}
+	return false
 }

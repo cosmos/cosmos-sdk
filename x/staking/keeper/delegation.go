@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -10,7 +11,29 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// GetDelegation returns a specific delegation.
+// Increments and returns a unique ID for an UnbondingDelegationEntry
+func (k Keeper) IncrementUnbondingDelegationEntryId(ctx sdk.Context) (unbondingDelegationEntryId uint64) {
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.UnbondingDelegationEntryIdKey)
+
+	if bz == nil {
+		unbondingDelegationEntryId = 0
+	} else {
+		unbondingDelegationEntryId = binary.BigEndian.Uint64(bz)
+	}
+
+	unbondingDelegationEntryId = unbondingDelegationEntryId + 1
+
+	// Convert back into bytes for storage
+	bz = make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, unbondingDelegationEntryId)
+
+	store.Set(types.UnbondingDelegationEntryIdKey, bz)
+
+	return unbondingDelegationEntryId
+}
+
+// return a specific delegation
 func (k Keeper) GetDelegation(ctx sdk.Context,
 	delAddr sdk.AccAddress, valAddr sdk.ValAddress,
 ) (delegation types.Delegation, found bool) {
@@ -149,8 +172,59 @@ func (k Keeper) GetUnbondingDelegation(
 	return ubd, true
 }
 
-// GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
-// particular validator.
+// return a unbonding delegation that has an unbonding delegation entry with a certain ID
+func (k Keeper) GetUnbondingDelegationByEntry(
+	ctx sdk.Context, id uint64,
+) (ubd types.UnbondingDelegation, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	indexKey := types.GetUnbondingDelegationEntryIndexKey(id)
+	ubdeKey := store.Get(indexKey)
+
+	if ubdeKey == nil {
+		return ubd, false
+	}
+
+	value := store.Get(ubdeKey)
+
+	if value == nil {
+		return ubd, false
+	}
+
+	ubd = types.MustUnmarshalUBD(k.cdc, value)
+
+	return ubd, true
+}
+
+// Set an index to look up an UnbondingDelegation by the ID of an UnbondingDelegationEntry that it contains
+func (k Keeper) SetUBDByEntryIndex(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	delAddr, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	indexKey := types.GetUnbondingDelegationEntryIndexKey(id)
+	ubdKey := types.GetUBDKey(delAddr, valAddr)
+
+	store.Set(indexKey, ubdKey)
+}
+
+// Remove a UBDByEntryIndex
+func (k Keeper) DeleteUBDByEntryIndex(ctx sdk.Context, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+
+	indexKey := types.GetUnbondingDelegationEntryIndexKey(id)
+
+	store.Delete(indexKey)
+}
+
+// return all unbonding delegations from a particular validator
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx sdk.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -309,13 +383,20 @@ func (k Keeper) SetUnbondingDelegationEntry(
 	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) types.UnbondingDelegation {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
+	id := k.IncrementUnbondingDelegationEntryId(ctx)
 	if found {
-		ubd.AddEntry(creationHeight, minTime, balance)
+		ubd.AddEntry(creationHeight, minTime, balance, id)
 	} else {
-		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+		ubd = types.NewUnbondingDelegation(delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
 	}
 
 	k.SetUnbondingDelegation(ctx, ubd)
+
+	// Add to the UBDByEntry index to look up the UBD by the UBDE ID
+	k.SetUBDByEntryIndex(ctx, ubd, id)
+
+	// Call hook
+	k.UnbondingDelegationEntryCreated(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance, id)
 
 	return ubd
 }
@@ -850,23 +931,32 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 		return nil, err
 	}
 
-	// loop through all the entries and complete unbonding mature entries
+	// loop through all the entries and try to complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
-		entry := ubd.Entries[i]
+		entry := &ubd.Entries[i]
 		if entry.IsMature(ctxTime) {
-			ubd.RemoveEntry(int64(i))
-			i--
+			// This hook allows external modules to stop an unbonding delegation entry from fully unbonding
+			// when the completionTime has passed. This allows them to prolong the unbonding period.
+			onHold := k.BeforeUnbondingDelegationEntryComplete(ctx, entry.Id)
+			if onHold {
+				// Mark that the entry is stopped
+				entry.OnHold = true
+			} else {
+				// Proceed with unbonding
+				ubd.RemoveEntry(int64(i))
+				i--
 
-			// track undelegation only when remaining or truncated shares are non-zero
-			if !entry.Balance.IsZero() {
-				amt := sdk.NewCoin(bondDenom, entry.Balance)
-				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
-					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
-				); err != nil {
-					return nil, err
+				// track undelegation only when remaining or truncated shares are non-zero
+				if !entry.Balance.IsZero() {
+					amt := sdk.NewCoin(bondDenom, entry.Balance)
+					if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+						ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+					); err != nil {
+						return nil, err
+					}
+
+					balances = balances.Add(amt)
 				}
-
-				balances = balances.Add(amt)
 			}
 		}
 	}
@@ -881,8 +971,58 @@ func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAd
 	return balances, nil
 }
 
-// BeginRedelegation begins unbonding / redelegation and creates a redelegation
-// record.
+// This can be called to complete the unbonding of an unbonding delegation entry that was previously
+// stopped by the BeforeUnbondingDelegationEntryComplete hook in CompleteUnbonding
+func (k Keeper) CompleteStoppedUnbonding(ctx sdk.Context, id uint64) (found bool, err error) {
+	ubd, found := k.GetUnbondingDelegationByEntry(ctx, id)
+	if !found {
+		return false, nil
+	}
+
+	for i, entry := range ubd.Entries {
+		// we find the entry with the right ID and make sure that it
+		// is on hold.
+		if entry.Id == id && entry.OnHold {
+			// Complete unbonding
+			delegatorAddress, err := sdk.AccAddressFromBech32(ubd.DelegatorAddress)
+			if err != nil {
+				return true, err
+			}
+
+			bondDenom := k.GetParams(ctx).BondDenom
+
+			// Remove entry
+			ubd.RemoveEntry(int64(i))
+			// Remove from the UBDByEntry index
+			k.DeleteUBDByEntryIndex(ctx, entry.Id)
+
+			// track undelegation only when remaining or truncated shares are non-zero
+			if !entry.Balance.IsZero() {
+				amt := sdk.NewCoin(bondDenom, entry.Balance)
+				if err := k.bankKeeper.UndelegateCoinsFromModuleToAccount(
+					ctx, types.NotBondedPoolName, delegatorAddress, sdk.NewCoins(amt),
+				); err != nil {
+					return false, err
+				}
+			}
+
+			// set the unbonding delegation or remove it if there are no more entries
+			if len(ubd.Entries) == 0 {
+				k.RemoveUnbondingDelegation(ctx, ubd)
+			} else {
+				k.SetUnbondingDelegation(ctx, ubd)
+			}
+
+			// Successfully completed unbonding
+			return true, nil
+		}
+	}
+
+	// If an entry was not found
+	return false, nil
+}
+
+// begin unbonding / redelegation; create a redelegation record
 func (k Keeper) BeginRedelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (completionTime time.Time, err error) {

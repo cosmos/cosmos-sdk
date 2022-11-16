@@ -1,4 +1,4 @@
-package cachekv
+package internal
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ type memIterator struct {
 	valid     bool
 }
 
-func newMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator {
+func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator {
 	iter := items.tree.Iter()
 	var valid bool
 	if ascending {

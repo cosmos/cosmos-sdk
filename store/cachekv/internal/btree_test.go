@@ -1,4 +1,4 @@
-package cachekv
+package internal
 
 import (
 	"encoding/binary"

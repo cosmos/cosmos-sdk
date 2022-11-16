@@ -1,4 +1,4 @@
-package cachekv
+package internal
 
 import (
 	"bytes"
@@ -46,14 +46,14 @@ func (bt *BTree) Iterator(start, end []byte) (*memIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
-	return newMemIterator(start, end, bt, make(map[string]struct{}), true), nil
+	return NewMemIterator(start, end, bt, make(map[string]struct{}), true), nil
 }
 
 func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
-	return newMemIterator(start, end, bt, make(map[string]struct{}), false), nil
+	return NewMemIterator(start, end, bt, make(map[string]struct{}), false), nil
 }
 
 // item is a btree.Item with byte slices as keys and values

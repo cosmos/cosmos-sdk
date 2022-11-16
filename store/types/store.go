@@ -197,6 +197,9 @@ type CommitMultiStore interface {
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
+
+	// RollbackToVersionWithMode rollback the db to specific version(height) with offlineRollback.
+	RollbackToVersionWithMode(target int64, offlineRollback bool) error
 }
 
 //---------subsp-------------------------------

@@ -152,6 +152,10 @@ func (ms multiStore) RollbackToVersion(version int64) error {
 	panic("not implemented")
 }
 
+func (ms multiStore) RollbackToVersionWithMode(target int64, offlineRollback bool) error {
+	panic("not implemented")
+}
+
 func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }

@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"fmt"
-	"os"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -113,16 +112,62 @@ func (k Keeper) AllocateTokens(
 		reward := feesCollected.MulDecTruncate(voteMultiplier).MulDecTruncate(powerFraction)
 		fmt.Fprintln(os.Stderr, "Allocated", reward)
 		logger.Info("Allocated reward", "reward", reward)
+		logger.Info("Validator for reward", "validator", validator.GetOperator())
 		k.AllocateTokensToValidator(ctx, validator, reward)
 		remaining = remaining.Sub(reward)
+
 	}
+
+	logger.Info("=> Remaining to distribute", "value", remaining.String())
+
+	quarterReward := remaining.QuoDecTruncate(sdk.NewDec(4))
+	logger.Info("=> quarterRemaining to distribute", "value", quarterReward.String())
+
+	dev1Tokens := quarterReward
+	dev2Tokens := quarterReward
+
+	remaining = remaining.Sub(quarterReward).Sub(quarterReward)
+
+	logger.Info("New remaining tokens", "value", remaining.String())
+
+	dev1AccAddress, err := sdk.AccAddressFromBech32("jmes1v0d76gdxn7zmh9tg8ne3kxx9m75xu7mq4elg4f")
+	if err != nil {
+		panic(err)
+	}
+	dev2AccAddress, err2 := sdk.AccAddressFromBech32("jmes1acm2q0uqtwx2ne5eevm57yumghamr0wt8hsscm")
+	if err2 != nil {
+		panic(err2)
+	}
+	logger.Info("Sending "+dev1Tokens.String()+" to ", "address", dev1AccAddress.String())
+	logger.Info("Sending "+dev2Tokens.String()+" to ", "address", dev2AccAddress.String())
+
+	// Allocate to dev address
+	k.AllocateTokensToAddress(ctx, dev1AccAddress, dev1Tokens)
+	k.AllocateTokensToAddress(ctx, dev2AccAddress, dev2Tokens)
+	logger.Info("Allocated")
 
 	// allocate community funding
 	// TODO: Transfer to smart-contract instead. Modifiable address via proposal voting.
 	// Keep any remaining to community pool.
 	feePool.CommunityPool = feePool.CommunityPool.Add(remaining...)
 	k.SetFeePool(ctx, feePool)
-	logger.Info("Allocated community funding", "value", remaining.String())
+	logger.Info("=> Allocated community funding", "value", remaining.String())
+}
+
+func (k Keeper) AllocateTokensToAddress(ctx sdk.Context, addr sdk.AccAddress, tokens sdk.DecCoins) {
+	logger := k.Logger(ctx)
+
+	logger.Info("===== Allocate tokens to address", "tokens", tokens)
+	logger.Info("===== Allocate tokens to address", "addr", addr)
+	tokensCoins, _ := tokens.TruncateDecimal()
+	logger.Info("===== Allocate tokensCoins to address", "tokensCoins", tokensCoins)
+
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, tokensCoins); err != nil {
+		panic(err)
+	}
+	logger.Info("done")
+	finalBalance := k.bankKeeper.GetBalance(ctx, addr, tokensCoins.GetDenomByIndex(0))
+	logger.Info("FInalBalance", "final", finalBalance)
 }
 
 // AllocateTokensToValidator allocate tokens to a particular validator, splitting according to commission

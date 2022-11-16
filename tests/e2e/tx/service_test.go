@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -912,8 +911,9 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
-	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
-	txJSONBytes, err := stdTxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
 	s.Require().NoError(err)
 
 	testCases := []struct {
@@ -946,8 +946,9 @@ func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
 func (s *IntegrationTestSuite) TestTxEncodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
-	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
-	txJSONBytes, err := stdTxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
 	s.Require().NoError(err)
 
 	testCases := []struct {

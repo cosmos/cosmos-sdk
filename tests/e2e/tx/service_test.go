@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -772,7 +773,12 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
 }
 
 func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
-	// aminoBuilder := s.aminoBuilder()
+	txBuilder := s.mkTxBuilder()
+	val := s.network.Validators[0]
+
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	txJSONBytes, err := stdTxConfig.TxJSONEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
 
 	testCases := []struct {
 		name      string
@@ -782,13 +788,15 @@ func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
-		// {"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: aminoBuilder.GetTx()}},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
 			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
+			fmt.Println("res:", res)
+			fmt.Printf("res bytes: %v\n", res.AminoBinary)
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)
@@ -940,39 +948,6 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func (s IntegrationTestSuite) aminoBuilder() client.TxBuilder {
-	val := s.network.Validators[0]
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	// prepare txBuilder with msg
-	txBuilder := val.ClientCtx.TxConfig.NewTxBuilder()
-	feeAmount := sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)}
-	gasLimit := testdata.NewTestGasLimit()
-	s.Require().NoError(
-		txBuilder.SetMsgs(&banktypes.MsgSend{
-			FromAddress: val.Address.String(),
-			ToAddress:   val.Address.String(),
-			Amount:      sdk.Coins{sdk.NewInt64Coin(s.cfg.BondDenom, 10)},
-		}),
-	)
-	txBuilder.SetFeeAmount(feeAmount)
-	txBuilder.SetGasLimit(gasLimit)
-	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
-
-	// setup txFactory
-	txFactory := clienttx.Factory{}.
-		WithChainID(val.ClientCtx.ChainID).
-		WithKeybase(val.ClientCtx.Keyring).
-		WithTxConfig(val.ClientCtx.TxConfig).
-		WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
-
-	// Sign Tx.
-	err := authclient.SignTx(txFactory, val.ClientCtx, val.Moniker, txBuilder, false, true)
-	s.Require().NoError(err)
-
-	return txBuilder
 }
 
 func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {

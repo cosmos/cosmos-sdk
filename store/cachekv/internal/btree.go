@@ -28,9 +28,8 @@ type BTree struct {
 func NewBTree() *BTree {
 	return &BTree{tree: *btree.NewBTreeGOptions(byKeys, btree.Options{
 		Degree: bTreeDegree,
-		// we do need to enable locks here, although cachekv is protected with lock,
-		// because multiple iterators could access the btree concurrently.
-		NoLocks: false,
+		// we don't need to enable locks here, because cachekv should not be called concurrently.
+		NoLocks: true,
 	})}
 }
 

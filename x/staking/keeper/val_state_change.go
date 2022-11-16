@@ -172,8 +172,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 
 		// update the validator set if power has changed
 		if !found || !bytes.Equal(oldPowerBytes, newPowerBytes) {
-			update := validator.ABCIValidatorUpdate(powerReduction)
-			updates = append(updates, update)
+			updates = append(updates, validator.ABCIValidatorUpdate(powerReduction))
 			// set the validator update and power
 			k.SetLastValidatorPower(ctx, valAddr, newPower)
 		}
@@ -190,8 +189,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx sdk.Context) (updates []ab
 	}
 
 	for _, valAddrBytes := range noLongerBonded {
-		valAddr := sdk.ValAddress(valAddrBytes)
-		validator := k.mustGetValidator(ctx, valAddr)
+		validator := k.mustGetValidator(ctx, sdk.ValAddress(valAddrBytes))
 		validator, err = k.bondedToUnbonding(ctx, validator)
 		if err != nil {
 			return nil, err
@@ -261,7 +259,7 @@ func (k Keeper) UnbondingToUnbonded(ctx sdk.Context, validator types.Validator) 
 		panic(fmt.Sprintf("bad state transition unbondingToBonded, validator: %v\n", validator))
 	}
 
-	return k.CompleteUnbondingValidator(ctx, validator)
+	return k.completeUnbondingValidator(ctx, validator)
 }
 
 // send a validator to jail
@@ -354,7 +352,7 @@ func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validat
 }
 
 // perform all the store operations for when a validator status becomes unbonded
-func (k Keeper) CompleteUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
+func (k Keeper) completeUnbondingValidator(ctx sdk.Context, validator types.Validator) types.Validator {
 	validator = validator.UpdateStatus(types.Unbonded)
 	k.SetValidator(ctx, validator)
 

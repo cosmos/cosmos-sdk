@@ -1486,11 +1486,7 @@ func (s *TestSuite) TestSubmitProposal() {
 	)
 	err := policyReq.SetDecisionPolicy(noMinExecPeriodPolicy)
 	s.Require().NoError(err)
-<<<<<<< HEAD
-	bigThresholdRes, err := s.keeper.CreateGroupPolicy(s.ctx, policyReq)
-=======
-	s.setNextAccount()
-	res, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
+	res, err := s.app.GroupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	noMinExecPeriodPolicyAddr := sdk.MustAccAddressFromBech32(res.Address)
 
@@ -1500,11 +1496,9 @@ func (s *TestSuite) TestSubmitProposal() {
 		time.Second,
 		minExecutionPeriod,
 	)
-	s.setNextAccount()
 	err = policyReq.SetDecisionPolicy(bigThresholdPolicy)
 	s.Require().NoError(err)
-	bigThresholdRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
->>>>>>> 7661f6273 (fix(group)!: Fix group min execution period (#13876))
+	bigThresholdRes, err := s.app.GroupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	bigThresholdAddr := bigThresholdRes.Address
 
@@ -1642,14 +1636,7 @@ func (s *TestSuite) TestSubmitProposal() {
 				ExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 			},
 			postRun: func(sdkCtx sdk.Context) {
-<<<<<<< HEAD
 				fromBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, accountAddr)
-=======
-				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, noMinExecPeriodPolicyAddr).Return(sdk.NewCoins(sdk.NewInt64Coin("test", 9900)))
-				s.bankKeeper.EXPECT().GetAllBalances(sdkCtx, addr2).Return(sdk.NewCoins(sdk.NewInt64Coin("test", 100)))
-
-				fromBalances := s.bankKeeper.GetAllBalances(sdkCtx, noMinExecPeriodPolicyAddr)
->>>>>>> 7661f6273 (fix(group)!: Fix group min execution period (#13876))
 				s.Require().Contains(fromBalances, sdk.NewInt64Coin("test", 9900))
 				toBalances := s.app.BankKeeper.GetAllBalances(sdkCtx, addr2)
 				s.Require().Contains(toBalances, sdk.NewInt64Coin("test", 100))
@@ -2382,7 +2369,6 @@ func (s *TestSuite) TestExecProposal() {
 		"exec proposal at exactly MinExecutionPeriod should pass": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend1).Return(nil, nil)
 				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
 			srcBlockTime:      s.blockTime.Add(5 * time.Second), // min execution date is 5s later after s.blockTime
@@ -2393,16 +2379,12 @@ func (s *TestSuite) TestExecProposal() {
 			setupProposal: func(ctx context.Context) uint64 {
 				myProposalID := submitProposalAndVote(ctx, s, []sdk.Msg{msgSend1}, proposers, group.VOTE_OPTION_YES)
 
-<<<<<<< HEAD
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
-=======
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
 				ctx = sdk.WrapSDKContext(sdkCtx)
 
-				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
->>>>>>> 7661f6273 (fix(group)!: Fix group min execution period (#13876))
+				_, err := s.app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
@@ -2428,21 +2410,9 @@ func (s *TestSuite) TestExecProposal() {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-<<<<<<< HEAD
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
-=======
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
-				ctx = sdk.WrapSDKContext(sdkCtx)
-
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
-				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
-
->>>>>>> 7661f6273 (fix(group)!: Fix group min execution period (#13876))
-				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
@@ -2589,22 +2559,15 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				msgs := []sdk.Msg{msgSend2}
 				myProposalID := submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 
-<<<<<<< HEAD
-				_, err := s.keeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
-=======
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
-
 				// Wait for min execution period end
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
 				ctx = sdk.WrapSDKContext(sdkCtx)
 
-				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
-				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
-
->>>>>>> 7661f6273 (fix(group)!: Fix group min execution period (#13876))
+				_, err := s.app.GroupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
-				sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+				sdkCtx = sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(s.app.BankKeeper, sdkCtx, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
 
 				return myProposalID
@@ -3100,22 +3063,21 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	)
 	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
 
-	s.setNextAccount()
-	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	groupRes, err := s.app.GroupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
 	s.Require().NoError(err)
 	accountAddr := groupRes.GetGroupPolicyAddress()
 	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
 	s.Require().NoError(err)
 	s.Require().NotNil(groupPolicy)
 
-	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+	proposalRes, err := s.app.GroupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
 		GroupPolicyAddress: accountAddr,
 		Proposers:          []string{addr1.String()},
 		Messages:           nil,
 	})
 	s.Require().NoError(err)
 
-	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+	_, err = s.app.GroupKeeper.Vote(s.ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr1.String(),
 		Option:     group.VOTE_OPTION_YES,
@@ -3125,12 +3087,12 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	// move forward in time
 	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
 
-	result, err := s.groupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
+	result, err := s.app.GroupKeeper.TallyResult(ctx, &group.QueryTallyResultRequest{
 		ProposalId: proposalRes.ProposalId,
 	})
 	s.Require().Equal("1", result.Tally.YesCount)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
-	s.NotPanics(func() { module.EndBlocker(ctx, s.groupKeeper) })
+	s.Require().NoError(s.app.GroupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.NotPanics(func() { module.EndBlocker(ctx, s.app.GroupKeeper) })
 }

@@ -944,6 +944,11 @@ func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
 
 // RollbackToVersion delete the versions after `target` and update the latest version.
 func (rs *Store) RollbackToVersion(target int64) error {
+	return rs.RollbackToVersionWithMode(target, false)
+}
+
+// RollbackToVersionWithMode call RollbackToVersion with offlineRollback.
+func (rs *Store) RollbackToVersionWithMode(target int64, offlineRollback bool) error {
 	if target <= 0 {
 		return fmt.Errorf("invalid rollback height target: %d", target)
 	}
@@ -953,7 +958,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
-			_, err := store.(*iavl.Store).LoadVersionForOverwriting(target)
+			_, err := store.(*iavl.Store).LoadVersionForOverwritingWithMode(target, offlineRollback)
 			if err != nil {
 				return err
 			}
@@ -961,7 +966,9 @@ func (rs *Store) RollbackToVersion(target int64) error {
 	}
 
 	rs.flushMetadata(rs.db, target, rs.buildCommitInfo(target))
-
+	if offlineRollback {
+		return nil
+	}
 	return rs.LoadLatestVersion()
 }
 

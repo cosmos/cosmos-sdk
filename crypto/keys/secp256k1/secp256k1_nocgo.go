@@ -39,7 +39,6 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
 	if err != nil {
 		return false
 	}
-
 	return signature.Verify(crypto.Sha256(msg), pub)
 }
 
@@ -51,7 +50,6 @@ func signatureFromBytes(sigStr []byte) (*ecdsa.Signature, error) {
 	r.SetByteSlice(sigStr[:32])
 	var s secp256k1.ModNScalar
 	s.SetByteSlice(sigStr[32:64])
-
 	if s.IsOverHalfOrder() {
 		return nil, errors.New("signature is not in lower-S form")
 	}

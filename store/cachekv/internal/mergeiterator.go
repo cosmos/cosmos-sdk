@@ -135,11 +135,12 @@ func (iter *cacheMergeIterator) Value() []byte {
 
 // Close implements Iterator
 func (iter *cacheMergeIterator) Close() error {
+	err1 := iter.cache.Close()
 	if err := iter.parent.Close(); err != nil {
 		return err
 	}
 
-	return iter.cache.Close()
+	return err1
 }
 
 // Error returns an error if the cacheMergeIterator is invalid defined by the

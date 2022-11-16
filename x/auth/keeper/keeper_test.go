@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -237,14 +236,13 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 				break
 			}
 		}
-		if assert.NotNilf(suite.T(), keeperAcct, "genesis account %s not in keeper accounts", genAcctAddr) {
-			suite.Require().Equal(genAcct.GetPubKey(), keeperAcct.GetPubKey())
+		suite.Require().NotNilf(keeperAcct, "genesis account %s not in keeper accounts", genAcctAddr)
+		suite.Require().Equal(genAcct.GetPubKey(), keeperAcct.GetPubKey())
+		suite.Require().Equal(genAcct.GetSequence(), keeperAcct.GetSequence())
+		if i == 1 {
+			suite.Require().Equalf(1, int(keeperAcct.GetAccountNumber()), genAcctAddr.String())
+		} else {
 			suite.Require().Equal(genAcct.GetSequence(), keeperAcct.GetSequence())
-			if i == 1 {
-				suite.Require().Equalf(1, int(keeperAcct.GetAccountNumber()), genAcctAddr.String())
-			} else {
-				suite.Require().Equal(genAcct.GetSequence(), keeperAcct.GetSequence())
-			}
 		}
 	}
 

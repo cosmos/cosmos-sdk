@@ -1,4 +1,4 @@
-# ADR 054: Protobuf Semver Compatible Codegen
+# ADR 054: Semver Compatible SDK Modules
 
 ## Changelog
 
@@ -10,16 +10,34 @@ PROPOSED
 
 ## Abstract
 
-TODO
+In order to move the Cosmos SDK to a system of decoupled semantically versioned
+modules which can be composed in different combinations (ex. staking v3 with
+bank v1 and distribution v2), we need to reassess how we organize the API surface
+of modules to avoid problems with go semantic import versioning and
+circular dependencies. This ADR explores various approaches we can take to
+addressing these issues.
 
 ## Context
 
 There has been [a fair amount of desire](https://github.com/cosmos/cosmos-sdk/discussions/10162)
-in the community for semantic versioning in the SDK. How this interacts
-with protobuf generated code is [more complex](https://github.com/cosmos/cosmos-sdk/discussions/10162#discussioncomment-1363034)
-than it seems at first glance.
+in the community for semantic versioning in the SDK and there has been significant
+movement to splitting out modules into [standalone go modules](https://github.com/cosmos/cosmos-sdk/issues/11899).
+Both of these will ideally allow the ecosystem to move faster because we won't
+be waiting for all major dependencies to update in sync. For instance, we could
+have 3 versions of the core SDK compatible with the latest 2 releases of
+CosmWasm, and 4 different versions of staking that are compatible with all
+these releases of the SDK and CosmWasm. This sort of setup would allow 
+early adopters to aggressively integrate new versions, while also allowing 
+more conservative users to be more selective about which latest and greatest
+versions they're ready for.
 
-### Problem 1: Version Compatibility
+In order to achieve this, we need to solve the following problems:
+1. because of the way [go semantic import versioning](https://research.swtch.com/vgo-import) (SIV)
+works, moving to SIV naively will actually make it harder to achieve these goals
+2. circular dependencies between modules need to be broken to actually release
+many modules in the SDK independently
+
+### Problem 1: Semantic Import Versioning Compatibility
 
 Consider we have a module `foo` which defines the following `MsgDoSomething` and that we've released it under
 the go module `example.com/foo`:
@@ -140,9 +158,9 @@ to depend on each other in that both of them could depend on `foo/api` and
 `bar/api` without `foo` directly depending on `bar` and vice versa.
 
 This is similar to the naive mitigation described above except that it separates
-the types into separate go modules which in and of itself could break circular
-dependencies. Otherwise, it would have the same problems as that solution which
-we could rectify by:
+the types into separate go modules which in and of itself could be used to
+break circular module dependencies. It has the same problems as the naive solution,
+otherwise, which we could rectify by:
 1. removing all state machine breaking code from the API module (ex. `ValidateBasic` and any other interface methods)
 2. embedding the correct file descriptors to be used for unknown field filtering in the binary.
 
@@ -151,7 +169,20 @@ we could rectify by:
 To solve 1), we need to remove all interface implementations from generated
 types and start using a handler approach which essentially means that given
 a type `X`, we have some sort of router which allows us to resolve some interface
-implementation for that type (say `sdk.Msg` or `authz.Authorization`).
+implementation for that type (say `sdk.Msg` or `authz.Authorization`). Ex:
+
+```go
+func (k Keeper) DoSomething(msg MsgDoSomething) error {
+	var validateBasicHandler ValidateBasicHandler
+	err := k.resolver.Resolve(&validateBasic, msg)
+	if err != nil {
+		return err
+    }   
+	
+	err = validateBasicHandler.ValidateBasic()
+	...
+}
+```
 
 In the case of some methods on `sdk.Msg`, we can replace them with declarative
 annotations. For instance, `GetSigners` can already be replaced by the protobuf
@@ -159,7 +190,7 @@ annotation `cosmos.msg.v1.signer`. In the future, we may consider some sort
 of protobuf validation framework (like https://github.com/bufbuild/protoc-gen-validate
 but more Cosmos-specific) to replace `ValidateBasic`.
 
-#### Pinning State Machine API Compatibility
+#### Pinned FileDescriptor's
 
 To solve 2), state machine modules must be able to specify what the version of
 the protobuf files was that they were built against. For instance if the API
@@ -170,10 +201,11 @@ set.
 
 The simplest way to do this may be to embed the protobuf `FileDescriptor`s into
 the module itself so that these `FileDescriptor`s are used at runtime rather 
-than the ones that are built into the `foo/api` which may be different. This
-would involve the following steps:
-1. a build step executed during `make proto-gen` that runs `buf build` to pack the `FileDescriptor`s into an image file
-2. a go embed directive to embed the image file
+than the ones that are built into the `foo/api` which may be different. Using
+[buf build](https://docs.buf.build/build/usage#output-format), [go embed](https://pkg.go.dev/embed),
+and a build script we can probably come up with a solution for embedding
+`FileDescriptor`s into modules that is basically set it and forget it the
+way that protobuf codegen is now.
 
 #### Potential limitations to generated code
 
@@ -256,21 +288,29 @@ the `google.golang.org/protobuf/reflect/protoreflect` API in order to work with 
 It is possible that this second approach could be adopted later on as an optimization for multi-language message
 on top of the first API module approach.
 
-### Approach C) Use 0.x based versioning and replace directives
+### Approach C) Don't address these issues
 
-Some people have commented that go's semantic import versioning (i.e. changing the import path to `foo/v2`, `foo/v3`,
-etc.) is too restrictive and that it should be optional. The golang maintainers disagree and only officially support
-semantic import versioning, although we could take the contrary perspective and get more flexibility by using 0.x-based
-versioning basically forever.
+We can also decide not to do anything explicit to:
+* enable better module version compatibility, and
+* break circular dependencies.
+
+In this case, when developers are confronted with the issues described above
+they can require dependencies to update in sync (what we do now) or
+attempt some ad hoc potentially hacky solution.
+
+One approach is to ditch go semantic import versioning (SIV) altogether. Some people have commented that go's SIV
+(i.e. changing the import path to `foo/v2`, `foo/v3`, etc.) is too restrictive and that it should be optional. The
+golang maintainers disagree and only officially support semantic import versioning, although we could take the
+contrary perspective and get more flexibility by using 0.x-based versioning basically forever.
 
 Module version compatibility could then be achieved using go.mod replace directives to pin dependencies to specific
 compatible 0.x versions. For instance if we knew `foo` 0.2 and 0.3 were both compatible with `bar` 0.3 and 0.4, we
 could use replace directives in our go.mod to stick to the versions of `foo` and `bar` we want. This would work as
 long as the authors of `foo` and `bar` avoid incompatible breaking changes between these modules.
 
-### Approach D) Use semantic versioning and don't address these issues
-
-
+Or, if developers choose to use semantic import versioning, they can attempt the naive solution described above
+and would also need to use special tags and replace directives to make sure that modules are pinned to the correct
+versions.
 
 ## Decision
 

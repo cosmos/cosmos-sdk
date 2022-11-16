@@ -104,7 +104,7 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// We need to reset the counter & array so that the validator won't be immediately slashed for downtime upon rebonding.
 			signInfo.MissedBlocksCounter = 0
 			signInfo.IndexOffset = 0
-			k.ClearValidatorMissedBlockBitArray(ctx, consAddr)
+			k.clearValidatorMissedBlockBitArray(ctx, consAddr)
 
 			logger.Info(
 				"slashing and jailing validator due to liveness fault",

@@ -32,7 +32,8 @@ func (s senderTxs) getMove() *huandu.Element {
 		return nil
 	}
 	currentHead := s.head
-	s.head = s.head.Next()
+	next := s.head.Next()
+	s.head = next
 	return currentHead
 }
 
@@ -81,12 +82,16 @@ func (snm senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 
 	senderTxs.insert(tk, tx)
 	snm.senders[sender] = senderTxs
-	snm.txCount += 1
+	snm.txCount = snm.txCount + 1
 	return nil
 }
 
 func (snm senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator {
-
+	iter := &senderNonceMepoolIterator{
+		mempool: &snm,
+	}
+	iter.Next()
+	return iter
 }
 
 // CountTx returns the total count of txs in the mempool.
@@ -119,7 +124,7 @@ func (snm senderNonceMempool) Remove(tx sdk.Tx) error {
 	}
 
 	snm.senders[sender] = senderTxs
-	snm.txCount -= 1
+	snm.txCount = snm.txCount - 1
 	return nil
 }
 

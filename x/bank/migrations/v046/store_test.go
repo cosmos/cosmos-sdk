@@ -107,7 +107,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 // migrateDenomMetadataV0464 is the denom metadata migration function present
 // in v0.46.4. It is buggy, as discovered in https://github.com/cosmos/cosmos-sdk/pull/13821.
-// It is copied verbatim here to test the helper function Migrate_V0464_To_V0465
+// It is copied verbatim here to test the helper function Migrate_V046_4_To_V046_5
 // which aims to fix the bug on chains already on v0.46.
 //
 // Copied from:
@@ -133,7 +133,7 @@ func migrateDenomMetadataV0464(store sdk.KVStore) error {
 	return nil
 }
 
-func TestMigrate_V0464_To_V0465(t *testing.T) {
+func TestMigrate_V046_4_To_V046_5(t *testing.T) {
 	// Step 1. Create a v0.43 state.
 	encCfg := simapp.MakeTestEncodingConfig()
 	bankKey := sdk.NewKVStoreKey("bank")
@@ -162,7 +162,7 @@ func TestMigrate_V0464_To_V0465(t *testing.T) {
 	}
 
 	// Step 3. Use the helper function to migrate to a correct v0.46.5 state.
-	require.NoError(t, v046.Migrate_V0464_To_V0465(store))
+	require.NoError(t, v046.Migrate_V046_4_To_V046_5(store))
 
 	assertCorrectDenomKeys(t, denomMetadataStore, encCfg.Codec)
 }

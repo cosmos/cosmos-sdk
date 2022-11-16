@@ -3,8 +3,6 @@ package cachekv
 import (
 	"strconv"
 	"testing"
-
-	db "github.com/tendermint/tm-db"
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {
@@ -39,6 +37,6 @@ func generateStore() *Store {
 	return &Store{
 		cache:         cache,
 		unsortedCache: unsorted,
-		sortedCache:   db.NewMemDB(),
+		sortedCache:   NewBTree(),
 	}
 }

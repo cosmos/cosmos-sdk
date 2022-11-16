@@ -1,0 +1,72 @@
+package cachekv
+
+import (
+	"bytes"
+	"errors"
+
+	"github.com/tidwall/btree"
+)
+
+var errKeyEmpty = errors.New("key cannot be empty")
+
+type BTree struct {
+	tree btree.BTreeG[item]
+}
+
+// NewBTree creates a wrapper around `btree.BTreeG`.
+func NewBTree() *BTree {
+	return &BTree{tree: *btree.NewBTreeGOptions(byKeys, btree.Options{
+		Degree:  32,
+		NoLocks: true,
+	})}
+}
+
+func (bt *BTree) Set(key, value []byte) {
+	bt.tree.Set(newPair(key, value))
+}
+
+func (bt *BTree) Get(key []byte) []byte {
+	i, found := bt.tree.Get(newKey(key))
+	if !found {
+		return nil
+	}
+	return i.value
+}
+
+func (bt *BTree) Delete(key []byte) {
+	bt.tree.Delete(newKey(key))
+}
+
+func (bt *BTree) Iterator(start, end []byte) (*memIterator, error) {
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, errKeyEmpty
+	}
+	return newMemIterator(start, end, bt, make(map[string]struct{}), true), nil
+}
+
+func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) {
+	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
+		return nil, errKeyEmpty
+	}
+	return newMemIterator(start, end, bt, make(map[string]struct{}), false), nil
+}
+
+// item is a btree.Item with byte slices as keys and values
+type item struct {
+	key   []byte
+	value []byte
+}
+
+// byKeys compares the items by key
+func byKeys(a, b item) bool {
+	return bytes.Compare(a.key, b.key) == -1
+}
+
+// newPair creates a new pair item.
+func newPair(key, value []byte) item {
+	return item{key: key, value: value}
+}
+
+func newKey(key []byte) item {
+	return item{key: key}
+}

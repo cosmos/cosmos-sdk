@@ -31,7 +31,7 @@ type Store struct {
 	cache         map[string]*cValue
 	deleted       map[string]struct{}
 	unsortedCache map[string]struct{}
-	sortedCache   *dbm.MemDB // always ascending sorted
+	sortedCache   *BTree // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -43,7 +43,7 @@ func NewStore(parent types.KVStore) *Store {
 		cache:         make(map[string]*cValue),
 		deleted:       make(map[string]struct{}),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   dbm.NewMemDB(),
+		sortedCache:   NewBTree(),
 		parent:        parent,
 	}
 }
@@ -103,7 +103,7 @@ func (store *Store) Write() {
 	defer store.mtx.Unlock()
 
 	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
-		store.sortedCache = dbm.NewMemDB()
+		store.sortedCache = NewBTree()
 		return
 	}
 
@@ -150,7 +150,7 @@ func (store *Store) Write() {
 	for key := range store.unsortedCache {
 		delete(store.unsortedCache, key)
 	}
-	store.sortedCache = dbm.NewMemDB()
+	store.sortedCache = NewBTree()
 }
 
 // CacheWrap implements CacheWrapper.
@@ -378,16 +378,11 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 		if item.Value == nil {
 			// deleted element, tracked by store.deleted
 			// setting arbitrary value
-			if err := store.sortedCache.Set(item.Key, []byte{}); err != nil {
-				panic(err)
-			}
-
+			store.sortedCache.Set(item.Key, []byte{})
 			continue
 		}
 
-		if err := store.sortedCache.Set(item.Key, item.Value); err != nil {
-			panic(err)
-		}
+		store.sortedCache.Set(item.Key, item.Value)
 	}
 }
 

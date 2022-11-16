@@ -10,7 +10,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 service Query {
   // Echo returns the request in the response
-  rpc Echo(EchoRequest) returns (EchoResponse);
+  rpc Echo(QueryEchoRequest) returns (QueryEchoResponse);
 }
 
 message EchoRequest {

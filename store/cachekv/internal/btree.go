@@ -7,13 +7,19 @@ import (
 	"github.com/tidwall/btree"
 )
 
+const (
+	// The approximate number of items and children per B-tree node. Tuned with benchmarks.
+	// copied from memdb.
+	bTreeDegree = 32
+)
+
 var errKeyEmpty = errors.New("key cannot be empty")
 
 // BTree implements the sorted cache for cachekv store,
-// we don't use MemDB here because we don't need thread safety here,
-// and since cachekv is used extensively in sdk core path, the faster the better.
+// we don't use MemDB here because cachekv is used extensively in sdk core path,
+// we need it to be as fast as possible.
 //
-// We choose tidwall/btree over google/btree here because it provides API for step iterator.
+// We choose tidwall/btree over google/btree here because it provides API to implement step iterator directly.
 type BTree struct {
 	tree btree.BTreeG[item]
 }
@@ -21,8 +27,10 @@ type BTree struct {
 // NewBTree creates a wrapper around `btree.BTreeG`.
 func NewBTree() *BTree {
 	return &BTree{tree: *btree.NewBTreeGOptions(byKeys, btree.Options{
-		Degree:  32,
-		NoLocks: true,
+		Degree: bTreeDegree,
+		// we do need to enable locks here, although cachekv is protected with lock,
+		// because multiple iterators could access the btree concurrently.
+		NoLocks: false,
 	})}
 }
 

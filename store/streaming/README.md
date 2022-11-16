@@ -17,17 +17,17 @@ loaded from the `app.toml` file:
 # ...
 
 [store]
-    # streaming is enabled if one or more streamers are defined
-    streamers = [
-        # name of the streaming service, used by constructor
-        "file"
-    ]
+# streaming is enabled if one or more streamers are defined
+streamers = [
+    # name of the streaming service, used by constructor
+    "file"
+]
 
 [streamers]
-    [streamers.file]
-        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-        write_dir = "path to the write directory"
-        prefix = "optional prefix to prepend to the generated file names"
+[streamers.file]
+    keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
+    write_dir = "path to the write directory"
+    prefix = "optional prefix to prepend to the generated file names"
 ```
 
 The `store.streamers` field contains a list of the names of the `StreamingService`

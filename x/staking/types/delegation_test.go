@@ -56,10 +56,10 @@ func TestUnbondingDelegationString(t *testing.T) {
 func TestRedelegationEqual(t *testing.T) {
 	r1 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), sdk.NewInt(0),
-		sdk.NewDec(0))
+		sdk.NewDec(0), false, 1)
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), sdk.NewInt(0),
-		sdk.NewDec(0))
+		sdk.NewDec(0), false, 2)
 
 	ok := r1.String() == r2.String()
 	require.True(t, ok)
@@ -74,7 +74,7 @@ func TestRedelegationEqual(t *testing.T) {
 func TestRedelegationString(t *testing.T) {
 	r := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), sdk.NewInt(0),
-		sdk.NewDec(10))
+		sdk.NewDec(10), false, 1)
 
 	require.NotEmpty(t, r.String())
 }
@@ -111,8 +111,8 @@ func TestDelegationResponses(t *testing.T) {
 func TestRedelegationResponses(t *testing.T) {
 	cdc := codec.NewLegacyAmino()
 	entries := []types.RedelegationEntryResponse{
-		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
-		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5)),
+		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5), false, 0),
+		types.NewRedelegationEntryResponse(0, time.Unix(0, 0), sdk.NewDec(5), sdk.NewInt(5), sdk.NewInt(5), false, 0),
 	}
 	rdr1 := types.NewRedelegationResponse(sdk.AccAddress(valAddr1), valAddr2, valAddr3, entries)
 	rdr2 := types.NewRedelegationResponse(sdk.AccAddress(valAddr2), valAddr1, valAddr3, entries)

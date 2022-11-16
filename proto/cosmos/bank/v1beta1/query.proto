@@ -94,30 +94,6 @@ message QueryAllBalancesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QuerySpendableBalancesRequest defines the gRPC request structure for querying
-// an account's spendable balances.
-message QuerySpendableBalancesRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // address is the address to query spendable balances for.
-  string address = 1;
-
-  // pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
-}
-
-// QuerySpendableBalancesResponse defines the gRPC response structure for querying
-// an account's spendable balances.
-message QuerySpendableBalancesResponse {
-  // balances is the spendable balances of all the coins.
-  repeated cosmos.base.v1beta1.Coin balances = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-
-  // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
 // QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC
 // method.
 message QueryTotalSupplyRequest {

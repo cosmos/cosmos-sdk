@@ -219,14 +219,14 @@ func TestHandleAbsentValidator(t *testing.T) {
 	// validator should have been slashed
 	require.True(t, amt.Sub(slashAmt).Equal(validator.GetTokens()))
 
-	// 502nd block *also* missed (since the LastCommit would have still included the just-unbonded validator)
 	height++
 	ctx = ctx.WithBlockHeight(height)
 	app.SlashingKeeper.HandleValidatorSignature(ctx, val.Address(), power, false)
 	info, found = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	require.Equal(t, int64(1), info.MissedBlocksCounter)
+	// validator missed block should not be incremented since it is jailed (#11425)
+	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	// end block
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -260,8 +260,8 @@ func TestHandleAbsentValidator(t *testing.T) {
 	info, found = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
 	require.True(t, found)
 	require.Equal(t, int64(0), info.StartHeight)
-	// we've missed 2 blocks more than the maximum, so the counter was reset to 0 at 1 block more and is now 1
-	require.Equal(t, int64(1), info.MissedBlocksCounter)
+	// validator missed block should not have been changed
+	require.Equal(t, int64(0), info.MissedBlocksCounter)
 
 	// validator should not be immediately jailed again
 	height++

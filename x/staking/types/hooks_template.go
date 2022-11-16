@@ -1,8 +1,6 @@
 package types
 
 import (
-	"time"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,8 +28,5 @@ func (h StakingHooksTemplate) AfterDelegationModified(ctx sdk.Context, delAddr s
 }
 func (h StakingHooksTemplate) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {
 }
-func (h StakingHooksTemplate) UnbondingDelegationEntryCreated(ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, creationHeight int64, completionTime time.Time, balance sdk.Int, id uint64) {
-}
-func (h StakingHooksTemplate) BeforeUnbondingDelegationEntryComplete(ctx sdk.Context, id uint64) bool {
-	return false
+func (h StakingHooksTemplate) AfterUnbondingInitiated(ctx sdk.Context, id uint64) {
 }

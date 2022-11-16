@@ -19,7 +19,7 @@ in the community for semantic versioning in the SDK. How this interacts
 with protobuf generated code is [more complex](https://github.com/cosmos/cosmos-sdk/discussions/10162#discussioncomment-1363034)
 than it seems at first glance.
 
-### Problem
+### Problem 1: Version Compatibility
 
 Consider we have a module `foo` which defines the following `MsgDoSomething` and that we've released it under
 the go module `example.com/foo`:
@@ -70,7 +70,7 @@ type FooKeeper interface {
 }
 ```
 
-### Scenario A: Backward Compatibility: Newer Foo, Older Bar
+#### Scenario A: Backward Compatibility: Newer Foo, Older Bar
 
 Imagine we have a chain which uses both `foo` and `bar` and wants to upgrade to
 `foo/v2`, but the `bar` module has not upgraded to `foo/v2`.
@@ -84,7 +84,7 @@ will be impossible without this change because `example.com/foo/types.MsgDoSomet
 and `example.com/foo/v2/types.MsgDoSomething` are fundamentally different
 incompatible types in the go type system.
 
-### Scenario B: Forward Compatibility: Older Foo, Newer Bar
+#### Scenario B: Forward Compatibility: Older Foo, Newer Bar
 
 Now let's consider the reverse scenario, where `bar` upgrades to `foo/v2`
 by changing the `MsgDoSomething` reference to `example.com/foo/v2/types.MsgDoSomething`
@@ -102,7 +102,7 @@ into either using `foo` and `bar` OR `foo/v2` and `bar/v2`. We cannot have
 `foo` + `bar/v2` OR `foo/v2` + `bar`. The go type system doesn't allow this
 even if both versions of these modules are otherwise compatible with each other.
 
-### Naive Mitigation
+#### Naive Mitigation
 
 A naive approach at fixing this would be to not regenerate the protobuf types
 in `example.com/foo/v2/types` but instead just update `example.com/foo/types`
@@ -116,9 +116,18 @@ changes as a patch on `v1` is actually an incorrect semantic versioning patch
 to that release line. Chains that want to stay on `v1` of `foo` should not
 be importing these changes because they are incorrect for `v1.`
 
+### Problem 2: Circular dependencies
+
+None of the above approaches allow `foo` and `bar` to be separate modules
+if for some reason `foo` and `bar` depend on each other in different ways.
+We have several cases of circular module dependencies in the SDK
+(ex. staking, distribution and slashing) that are legitimate from a state machine
+perspective but that would make it impossible to independently semantically
+version these modules without some other mitigation.
+
 ### Solutions
 
-### A) API Module Approach
+### Approach A) Separate API and State Machine Modules
 
 One solution (first proposed in https://github.com/cosmos/cosmos-sdk/discussions/10582) is to isolate all protobuf generated code into a separate module
 from the state machine module. This would mean that we could have state machine
@@ -126,12 +135,16 @@ go modules `foo` and `foo/v2` which could use a types or API go module say
 `foo/api`. This `foo/api` go module would be perpetually on `v1.x` and only
 accept non-breaking changes. This would then allow other modules to be
 compatible with either `foo` or `foo/v2` as long as the inter-module API only
-depends on the types in `foo/api`.
+depends on the types in `foo/api`. It would also allow modules `foo` and `bar`
+to depend on each other in that both of them could depend on `foo/api` and
+`bar/api` without `foo` directly depending on `bar` and vice versa.
 
-In order to differentiate this from the naive mitigation described above
-we would need to do two things differently:
-1. remove all state machine breaking code from the API module (ex. `ValidateBasic` and any other interface methods)
-2. embed the correct file descriptors to be used for unknown field filtering in the binary.
+This is similar to the naive mitigation described above except that it separates
+the types into separate go modules which in and of itself could break circular
+dependencies. Otherwise, it would have the same problems as that solution which
+we could rectify by:
+1. removing all state machine breaking code from the API module (ex. `ValidateBasic` and any other interface methods)
+2. embedding the correct file descriptors to be used for unknown field filtering in the binary.
 
 #### Migrate all interface methods on API types to handlers 
 
@@ -175,7 +188,7 @@ out from the API module into the state machine module. Both of these mitigations
 are potentially viable but the API module approach does require an extra level
 of care to avoid these sorts of issues.
 
-### B) Changes to Generated Code
+### Approach B) Changes to Generated Code
 
 An alternate approach to solving the versioning problem with generated code is to change the generated code itself.
 Currently, we face two issues with how protobuf generated code works:
@@ -242,6 +255,22 @@ the `google.golang.org/protobuf/reflect/protoreflect` API in order to work with 
 
 It is possible that this second approach could be adopted later on as an optimization for multi-language message
 on top of the first API module approach.
+
+### Approach C) Use 0.x based versioning and replace directives
+
+Some people have commented that go's semantic import versioning (i.e. changing the import path to `foo/v2`, `foo/v3`,
+etc.) is too restrictive and that it should be optional. The golang maintainers disagree and only officially support
+semantic import versioning, although we could take the contrary perspective and get more flexibility by using 0.x-based
+versioning basically forever.
+
+Module version compatibility could then be achieved using go.mod replace directives to pin dependencies to specific
+compatible 0.x versions. For instance if we knew `foo` 0.2 and 0.3 were both compatible with `bar` 0.3 and 0.4, we
+could use replace directives in our go.mod to stick to the versions of `foo` and `bar` we want. This would work as
+long as the authors of `foo` and `bar` avoid incompatible breaking changes between these modules.
+
+### Approach D) Use semantic versioning and don't address these issues
+
+
 
 ## Decision
 

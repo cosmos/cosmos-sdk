@@ -63,7 +63,7 @@ func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) {
 	return NewMemIterator(start, end, bt, make(map[string]struct{}), false), nil
 }
 
-// item is a btree.Item with byte slices as keys and values
+// item is a btree item with byte slices as keys and values
 type item struct {
 	key   []byte
 	value []byte

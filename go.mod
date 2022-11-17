@@ -179,4 +179,12 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 )
 
-retract v0.43.0
+retract (
+	// subject to the dragonberry vulnerability
+	// and/or the bank coin metadata migration issue
+	[v0.46.0, v0.46.4]
+	// subject to the dragonberry vulnerability
+	[v0.45.0, v0.45.8]
+	// do not use
+	v0.43.0
+)

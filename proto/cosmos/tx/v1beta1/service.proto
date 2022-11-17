@@ -58,7 +58,7 @@ service Service {
       body: "*"
     };
   }
-  // TxEncodeAmino encodes an amino transaction.
+  // TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
   //
   // Since: cosmos-sdk 0.47
   rpc TxEncodeAmino(TxEncodeAminoRequest) returns (TxEncodeAminoResponse) {
@@ -67,7 +67,7 @@ service Service {
       body: "*"
     };
   }
-  // TxDecodeAmino decodes an amino transaction.
+  // TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
   //
   // Since: cosmos-sdk 0.47
   rpc TxDecodeAmino(TxDecodeAminoRequest) returns (TxDecodeAminoResponse) {

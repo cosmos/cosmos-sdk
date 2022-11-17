@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"encoding/binary"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -193,11 +193,9 @@ func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string
 }
 
 func int642Bytes(i int64) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, uint64(i))
-	return buf
+	return sdk.Uint64ToBigEndian(uint64(i))
 }
 
 func bytes2Int64(buf []byte) int64 {
-	return int64(binary.BigEndian.Uint64(buf))
+	return int64(sdk.BigEndianToUint64(buf))
 }

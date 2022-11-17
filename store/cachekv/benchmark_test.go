@@ -34,6 +34,8 @@ func DoBenchmarkDeepContextStack(b *testing.B, depth int) {
 	}
 
 	store := stack.CurrentContext().KVStore(key)
+
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		it := store.Iterator(begin, end)
 		it.Valid()
@@ -68,6 +70,8 @@ type cachedContext struct {
 
 // ContextStack manages the initial context and a stack of cached contexts,
 // to support the `StateDB.Snapshot` and `StateDB.RevertToSnapshot` methods.
+//
+// Copied from an old version of ethermint
 type ContextStack struct {
 	// Context of the initial state before transaction execution.
 	// It's the context used by `StateDB.CommitedState`.
@@ -102,8 +106,6 @@ func (cs *ContextStack) IsEmpty() bool {
 func (cs *ContextStack) Commit() {
 	// commit in order from top to bottom
 	for i := len(cs.cachedContexts) - 1; i >= 0; i-- {
-		// keep all the cosmos events
-		cs.initialCtx.EventManager().EmitEvents(cs.cachedContexts[i].ctx.EventManager().Events())
 		if cs.cachedContexts[i].commit == nil {
 			panic(fmt.Sprintf("commit function at index %d should not be nil", i))
 		} else {
@@ -120,11 +122,8 @@ func (cs *ContextStack) CommitToRevision(target int) error {
 		return fmt.Errorf("snapshot index %d out of bound [%d..%d)", target, 0, len(cs.cachedContexts))
 	}
 
-	targetCtx := cs.cachedContexts[target].ctx
 	// commit in order from top to bottom
 	for i := len(cs.cachedContexts) - 1; i > target; i-- {
-		// keep all the cosmos events
-		targetCtx.EventManager().EmitEvents(cs.cachedContexts[i].ctx.EventManager().Events())
 		if cs.cachedContexts[i].commit == nil {
 			return fmt.Errorf("commit function at index %d should not be nil", i)
 		}

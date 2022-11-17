@@ -34,11 +34,11 @@ func NewBTree() *BTree {
 }
 
 func (bt *BTree) Set(key, value []byte) {
-	bt.tree.Set(newPair(key, value))
+	bt.tree.Set(newItem(key, value))
 }
 
 func (bt *BTree) Get(key []byte) []byte {
-	i, found := bt.tree.Get(newKey(key))
+	i, found := bt.tree.Get(newItem(key, nil))
 	if !found {
 		return nil
 	}
@@ -46,7 +46,7 @@ func (bt *BTree) Get(key []byte) []byte {
 }
 
 func (bt *BTree) Delete(key []byte) {
-	bt.tree.Delete(newKey(key))
+	bt.tree.Delete(newItem(key, nil))
 }
 
 func (bt *BTree) Iterator(start, end []byte) (*memIterator, error) {
@@ -74,11 +74,7 @@ func byKeys(a, b item) bool {
 	return bytes.Compare(a.key, b.key) == -1
 }
 
-// newPair creates a new pair item.
-func newPair(key, value []byte) item {
+// newItem creates a new pair item.
+func newItem(key, value []byte) item {
 	return item{key: key, value: value}
-}
-
-func newKey(key []byte) item {
-	return item{key: key}
 }

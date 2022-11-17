@@ -29,13 +29,13 @@ func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}
 	var valid bool
 	if ascending {
 		if start != nil {
-			valid = iter.Seek(newKey(start))
+			valid = iter.Seek(newItem(start, nil))
 		} else {
 			valid = iter.First()
 		}
 	} else {
 		if end != nil {
-			valid = iter.Seek(newKey(end))
+			valid = iter.Seek(newItem(end, nil))
 			if !valid {
 				valid = iter.Last()
 			} else {

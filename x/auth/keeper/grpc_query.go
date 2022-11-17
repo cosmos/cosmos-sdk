@@ -24,18 +24,12 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Id < 0 {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid account number %d", req.Id)
-	}
-
 	var accId uint64
 	switch {
-	case req.AccountId > 0 && req.Id > 0 && req.AccountId != uint64(req.Id):
-		return nil, status.Errorf(codes.InvalidArgument, "different values passed for id (%d) & account-id (%d)", req.Id, req.AccountId)
+	case req.Id > 0: //ignoring `0` case since it is default value.
+		return nil, status.Errorf(codes.InvalidArgument, "requesting with id isn't supported, try to request using account-id")
 	case req.AccountId > 0:
 		accId = req.AccountId
-	case req.Id > 0:
-		accId = uint64(req.Id)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

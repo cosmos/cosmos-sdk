@@ -6,9 +6,10 @@ If your chain's state has coin metadata, an issue has been discovered in the ban
 
 * If you are planning to migrate to v0.46, please use `v0.46.5`. All releases prior to `v0.46.5`, **must NOT be used**. All previous version of `v0.46` are retracted.
 * If your chain is already on v0.46 using `<= v0.46.4` and has coin metadata, a **coordinated upgrade** to `v0.46.5` is required.
+    * Use the helper function `Migrate_V0464_To_V0465` for migrating a chain **already on v0.46 with versions <=v0.46.4** to the latest v0.46.5 correct state.
 * If your chain is already on v0.46 using `<= v0.46.4` but has no coin metadata, this release is **non-breaking**.
 
-Moreover, an issue have been found in the group module. This issue is fixed in `v0.46.5`.
+Moreover, a serious issue have been found in the group module. This issue is fixed in `v0.46.5`.
 
 * If you use the group module, upgrade to `v0.46.5` **immediately**. A **coordinated upgrade** to `v0.46.5` is required.
 

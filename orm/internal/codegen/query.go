@@ -84,7 +84,7 @@ func (g queryProtoGen) gen() error {
 func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.TableDescriptor) error {
 	name := msg.Desc.Name()
 	g.svc.F("// Get queries the %s table by its primary key.", name)
-	g.svc.F("rpc Get%s (Get%sRequest) returns (Get%sResponse) {}", name, name, name) // TODO grpc gateway
+	g.svc.F("rpc Get%s(Get%sRequest) returns (Get%sResponse) {}", name, name, name) // TODO grpc gateway
 
 	g.startRequestType("Get%sRequest", name)
 	g.msgs.Indent()
@@ -118,7 +118,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 		fieldsCamel := fieldsToCamelCase(idx.Fields)
 		methodName := fmt.Sprintf("Get%sBy%s", name, fieldsCamel)
 		g.svc.F("// %s queries the %s table by its %s index", methodName, name, fieldsCamel)
-		g.svc.F("rpc %s (%sRequest) returns (%sResponse) {}", methodName, methodName, methodName) // TODO grpc gateway
+		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", methodName, methodName, methodName) // TODO grpc gateway
 
 		g.startRequestType("%sRequest", methodName)
 		g.msgs.Indent()
@@ -144,7 +144,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 
 	g.imports["cosmos/base/query/v1beta1/pagination.proto"] = true
 	g.svc.F("// List%s queries the %s table using prefix and range queries against defined indexes.", name, name)
-	g.svc.F("rpc List%s (List%sRequest) returns (List%sResponse) {}", name, name, name) // TODO grpc gateway
+	g.svc.F("rpc List%s(List%sRequest) returns (List%sResponse) {}", name, name, name) // TODO grpc gateway
 	g.startRequestType("List%sRequest", name)
 	g.msgs.Indent()
 	g.msgs.F("// IndexKey specifies the value of an index key to use in prefix and range queries.")

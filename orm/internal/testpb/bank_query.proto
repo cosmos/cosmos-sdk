@@ -8,13 +8,13 @@ import "testpb/bank.proto";
 // BankQueryService queries the state of the tables specified by testpb/bank.proto.
 service BankQueryService {
   // Get queries the Balance table by its primary key.
-  rpc GetBalance (GetBalanceRequest) returns (GetBalanceResponse) {}
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
   // ListBalance queries the Balance table using prefix and range queries against defined indexes.
-  rpc ListBalance (ListBalanceRequest) returns (ListBalanceResponse) {}
+  rpc ListBalance(ListBalanceRequest) returns (ListBalanceResponse) {}
   // Get queries the Supply table by its primary key.
-  rpc GetSupply (GetSupplyRequest) returns (GetSupplyResponse) {}
+  rpc GetSupply(GetSupplyRequest) returns (GetSupplyResponse) {}
   // ListSupply queries the Supply table using prefix and range queries against defined indexes.
-  rpc ListSupply (ListSupplyRequest) returns (ListSupplyResponse) {}
+  rpc ListSupply(ListSupplyRequest) returns (ListSupplyResponse) {}
 }
 
 // GetBalanceRequest is the BankQuery/GetBalanceRequest request type.

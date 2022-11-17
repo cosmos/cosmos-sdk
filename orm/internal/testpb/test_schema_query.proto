@@ -9,33 +9,33 @@ import "testpb/test_schema.proto";
 // TestSchemaQueryService queries the state of the tables specified by testpb/test_schema.proto.
 service TestSchemaQueryService {
   // Get queries the ExampleTable table by its primary key.
-  rpc GetExampleTable (GetExampleTableRequest) returns (GetExampleTableResponse) {}
+  rpc GetExampleTable(GetExampleTableRequest) returns (GetExampleTableResponse) {}
   // GetExampleTableByU64Str queries the ExampleTable table by its U64Str index
-  rpc GetExampleTableByU64Str (GetExampleTableByU64StrRequest) returns (GetExampleTableByU64StrResponse) {}
+  rpc GetExampleTableByU64Str(GetExampleTableByU64StrRequest) returns (GetExampleTableByU64StrResponse) {}
   // ListExampleTable queries the ExampleTable table using prefix and range queries against defined indexes.
-  rpc ListExampleTable (ListExampleTableRequest) returns (ListExampleTableResponse) {}
+  rpc ListExampleTable(ListExampleTableRequest) returns (ListExampleTableResponse) {}
   // Get queries the ExampleAutoIncrementTable table by its primary key.
-  rpc GetExampleAutoIncrementTable (GetExampleAutoIncrementTableRequest) returns (GetExampleAutoIncrementTableResponse) {}
+  rpc GetExampleAutoIncrementTable(GetExampleAutoIncrementTableRequest) returns (GetExampleAutoIncrementTableResponse) {}
   // GetExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
-  rpc GetExampleAutoIncrementTableByX (GetExampleAutoIncrementTableByXRequest) returns (GetExampleAutoIncrementTableByXResponse) {}
+  rpc GetExampleAutoIncrementTableByX(GetExampleAutoIncrementTableByXRequest) returns (GetExampleAutoIncrementTableByXResponse) {}
   // ListExampleAutoIncrementTable queries the ExampleAutoIncrementTable table using prefix and range queries against defined indexes.
-  rpc ListExampleAutoIncrementTable (ListExampleAutoIncrementTableRequest) returns (ListExampleAutoIncrementTableResponse) {}
+  rpc ListExampleAutoIncrementTable(ListExampleAutoIncrementTableRequest) returns (ListExampleAutoIncrementTableResponse) {}
   // GetExampleSingleton queries the ExampleSingleton singleton.
   rpc GetExampleSingleton (GetExampleSingletonRequest) returns (GetExampleSingletonResponse) {}
   // Get queries the ExampleTimestamp table by its primary key.
-  rpc GetExampleTimestamp (GetExampleTimestampRequest) returns (GetExampleTimestampResponse) {}
+  rpc GetExampleTimestamp(GetExampleTimestampRequest) returns (GetExampleTimestampResponse) {}
   // ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.
-  rpc ListExampleTimestamp (ListExampleTimestampRequest) returns (ListExampleTimestampResponse) {}
+  rpc ListExampleTimestamp(ListExampleTimestampRequest) returns (ListExampleTimestampResponse) {}
   // Get queries the SimpleExample table by its primary key.
-  rpc GetSimpleExample (GetSimpleExampleRequest) returns (GetSimpleExampleResponse) {}
+  rpc GetSimpleExample(GetSimpleExampleRequest) returns (GetSimpleExampleResponse) {}
   // GetSimpleExampleByUnique queries the SimpleExample table by its Unique index
-  rpc GetSimpleExampleByUnique (GetSimpleExampleByUniqueRequest) returns (GetSimpleExampleByUniqueResponse) {}
+  rpc GetSimpleExampleByUnique(GetSimpleExampleByUniqueRequest) returns (GetSimpleExampleByUniqueResponse) {}
   // ListSimpleExample queries the SimpleExample table using prefix and range queries against defined indexes.
-  rpc ListSimpleExample (ListSimpleExampleRequest) returns (ListSimpleExampleResponse) {}
+  rpc ListSimpleExample(ListSimpleExampleRequest) returns (ListSimpleExampleResponse) {}
   // Get queries the ExampleAutoIncFieldName table by its primary key.
-  rpc GetExampleAutoIncFieldName (GetExampleAutoIncFieldNameRequest) returns (GetExampleAutoIncFieldNameResponse) {}
+  rpc GetExampleAutoIncFieldName(GetExampleAutoIncFieldNameRequest) returns (GetExampleAutoIncFieldNameResponse) {}
   // ListExampleAutoIncFieldName queries the ExampleAutoIncFieldName table using prefix and range queries against defined indexes.
-  rpc ListExampleAutoIncFieldName (ListExampleAutoIncFieldNameRequest) returns (ListExampleAutoIncFieldNameResponse) {}
+  rpc ListExampleAutoIncFieldName(ListExampleAutoIncFieldNameRequest) returns (ListExampleAutoIncFieldNameResponse) {}
 }
 
 // GetExampleTableRequest is the TestSchemaQuery/GetExampleTableRequest request type.

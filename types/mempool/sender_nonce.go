@@ -160,21 +160,13 @@ func (i senderNonceMepoolIterator) Next() Iterator {
 		sender := i.senders[senderIndex]
 		senderTxs, found := i.mempool.senders[sender]
 		if !found {
-			newSenders := removeAtIndex(i.senders, senderIndex)
-			return senderNonceMepoolIterator{
-				senders:   newSenders,
-				currentTx: nil,
-				mempool:   i.mempool,
-			}
+			i.senders = removeAtIndex(i.senders, senderIndex)
+			continue
 		}
 		tx := senderTxs.getMove()
 		if tx == nil {
-			newSenders := removeAtIndex(i.senders, senderIndex)
-			return senderNonceMepoolIterator{
-				senders:   newSenders,
-				currentTx: nil,
-				mempool:   i.mempool,
-			}
+			i.senders = removeAtIndex(i.senders, senderIndex)
+			continue
 		}
 		return senderNonceMepoolIterator{
 			senders:   i.senders,

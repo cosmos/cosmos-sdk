@@ -1,13 +1,14 @@
-# Cosmos SDK v0.45.3 Release Notes
+# Cosmos SDK v0.45.11 Release Notes
 
-This release introduces a Tendermint dependency update to v0.34.19 which
-itself includes two bug fixes related to consensus. See the full changelog from
-v0.34.17-v0.34.19 [here](https://github.com/tendermint/tendermint/blob/v0.34.19/CHANGELOG.md#v0.34.19).
+This release introduces a number of bug fixes and improvements.
 
-In addition, it includes a change to `ScheduleUpgrade` to allow upgrades without
-requiring a governance proposal process.
+Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.45.x/CHANGELOG.md) for an exhaustive list of changes.
 
-See the [Cosmos SDK v0.45.3 Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.45.3/CHANGELOG.md)
-for the exhaustive list of all changes.
+**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.10...v0.45.11
 
-**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.2...v0.45.3
+**NOTE**: The changes mentioned in `v0.45.9` are **still** required:
+
+```go
+# Chains must add the following to their go.mod for the application:
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```

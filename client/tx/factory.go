@@ -284,7 +284,7 @@ func (f Factory) BuildSimTx(msgs ...sdk.Msg) ([]byte, error) {
 
 	var pk cryptotypes.PubKey = &secp256k1.PubKey{} // use default public key type
 
-	if f.keybase != nil {
+	if f.simulateAndExecute && f.keybase != nil {
 		infos, _ := f.keybase.List()
 		if len(infos) == 0 {
 			return nil, errors.New("cannot build signature for simulation, key infos slice is empty")

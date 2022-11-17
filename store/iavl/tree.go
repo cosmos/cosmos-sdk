@@ -3,6 +3,7 @@ package iavl
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/iavl"
 )
 
@@ -17,20 +18,22 @@ type (
 	// implemented by an iavl.MutableTree. For an immutable IAVL tree, a wrapper
 	// must be made.
 	Tree interface {
-		Has(key []byte) bool
-		Get(key []byte) (index int64, value []byte)
-		Set(key, value []byte) bool
-		Remove(key []byte) ([]byte, bool)
+		Has(key []byte) (bool, error)
+		Get(key []byte) ([]byte, error)
+		Set(key, value []byte) (bool, error)
+		Remove(key []byte) ([]byte, bool, error)
 		SaveVersion() ([]byte, int64, error)
 		DeleteVersion(version int64) error
 		DeleteVersions(versions ...int64) error
 		Version() int64
-		Hash() []byte
+		Hash() ([]byte, error)
 		VersionExists(version int64) bool
-		GetVersioned(key []byte, version int64) (int64, []byte)
+		GetVersioned(key []byte, version int64) ([]byte, error)
 		GetVersionedWithProof(key []byte, version int64) ([]byte, *iavl.RangeProof, error)
 		GetImmutable(version int64) (*iavl.ImmutableTree, error)
 		SetInitialVersion(version uint64)
+		Iterator(start, end []byte, ascending bool) (types.Iterator, error)
+		LoadVersionForOverwriting(targetVersion int64) (int64, error)
 	}
 
 	// immutableTree is a simple wrapper around a reference to an iavl.ImmutableTree
@@ -41,11 +44,11 @@ type (
 	}
 )
 
-func (it *immutableTree) Set(_, _ []byte) bool {
+func (it *immutableTree) Set(_, _ []byte) (bool, error) {
 	panic("cannot call 'Set' on an immutable IAVL tree")
 }
 
-func (it *immutableTree) Remove(_ []byte) ([]byte, bool) {
+func (it *immutableTree) Remove(_ []byte) ([]byte, bool, error) {
 	panic("cannot call 'Remove' on an immutable IAVL tree")
 }
 
@@ -69,9 +72,9 @@ func (it *immutableTree) VersionExists(version int64) bool {
 	return it.Version() == version
 }
 
-func (it *immutableTree) GetVersioned(key []byte, version int64) (int64, []byte) {
+func (it *immutableTree) GetVersioned(key []byte, version int64) ([]byte, error) {
 	if it.Version() != version {
-		return -1, nil
+		return nil, fmt.Errorf("version mismatch on immutable IAVL tree; got: %d, expected: %d", version, it.Version())
 	}
 
 	return it.Get(key)
@@ -91,4 +94,8 @@ func (it *immutableTree) GetImmutable(version int64) (*iavl.ImmutableTree, error
 	}
 
 	return it.ImmutableTree, nil
+}
+
+func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	panic("cannot call 'LoadVersionForOverwriting' on an immutable IAVL tree")
 }

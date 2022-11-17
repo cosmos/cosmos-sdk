@@ -9,12 +9,12 @@ import (
 )
 
 // Validate performs a basic validation of the coin metadata fields. It checks:
-//  - Name and Symbol are not blank
-//  - Base and Display denominations are valid coin denominations
-//  - Base and Display denominations are present in the DenomUnit slice
-//  - Base denomination has exponent 0
-//  - Denomination units are sorted in ascending order
-//  - Denomination units not duplicated
+//   - Name and Symbol are not blank
+//   - Base and Display denominations are valid coin denominations
+//   - Base and Display denominations are present in the DenomUnit slice
+//   - Base denomination has exponent 0
+//   - Denomination units are sorted in ascending order
+//   - Denomination units not duplicated
 func (m Metadata) Validate() error {
 	if strings.TrimSpace(m.Name) == "" {
 		return errors.New("name field cannot be blank")

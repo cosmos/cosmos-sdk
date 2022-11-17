@@ -36,8 +36,10 @@ import (
 // interface assertion
 var _ crgtypes.Client = (*Client)(nil)
 
-const tmWebsocketPath = "/websocket"
-const defaultNodeTimeout = 15 * time.Second
+const (
+	tmWebsocketPath    = "/websocket"
+	defaultNodeTimeout = 15 * time.Second
+)
 
 // Client implements a single network client to interact with cosmos based chains
 type Client struct {
@@ -248,7 +250,8 @@ func (c *Client) TxOperationsAndSignersAccountIdentifiers(signed bool, txBytes [
 }
 
 // GetTx returns a transaction given its hash. For Rosetta we  make a synthetic transaction for BeginBlock
-//  and EndBlock to adhere to balance tracking rules.
+//
+//	and EndBlock to adhere to balance tracking rules.
 func (c *Client) GetTx(ctx context.Context, hash string) (*rosettatypes.Transaction, error) {
 	hashBytes, err := hex.DecodeString(hash)
 	if err != nil {

@@ -435,11 +435,11 @@ type QueryClient interface {
 	Grants(ctx context.Context, in *QueryGrantsRequest, opts ...grpc.CallOption) (*QueryGrantsResponse, error)
 	// GranterGrants returns list of `GrantAuthorization`, granted by granter.
 	//
-	// Since: cosmos-sdk 0.46
+	// Since: cosmos-sdk 0.45.2
 	GranterGrants(ctx context.Context, in *QueryGranterGrantsRequest, opts ...grpc.CallOption) (*QueryGranterGrantsResponse, error)
 	// GranteeGrants returns a list of `GrantAuthorization` by grantee.
 	//
-	// Since: cosmos-sdk 0.46
+	// Since: cosmos-sdk 0.45.2
 	GranteeGrants(ctx context.Context, in *QueryGranteeGrantsRequest, opts ...grpc.CallOption) (*QueryGranteeGrantsResponse, error)
 }
 
@@ -484,11 +484,11 @@ type QueryServer interface {
 	Grants(context.Context, *QueryGrantsRequest) (*QueryGrantsResponse, error)
 	// GranterGrants returns list of `GrantAuthorization`, granted by granter.
 	//
-	// Since: cosmos-sdk 0.46
+	// Since: cosmos-sdk 0.45.2
 	GranterGrants(context.Context, *QueryGranterGrantsRequest) (*QueryGranterGrantsResponse, error)
 	// GranteeGrants returns a list of `GrantAuthorization` by grantee.
 	//
-	// Since: cosmos-sdk 0.46
+	// Since: cosmos-sdk 0.45.2
 	GranteeGrants(context.Context, *QueryGranteeGrantsRequest) (*QueryGranteeGrantsResponse, error)
 }
 

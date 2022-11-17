@@ -1,8 +1,9 @@
-FROM golang:1.17-alpine AS build
+FROM golang:1.18-alpine AS build
 RUN apk add build-base git linux-headers
 WORKDIR /work
 COPY go.mod go.sum /work/
-COPY db/go.mod db/go.sum /work/db/
+COPY ./ics23/go/go.mod /work/ics23/go/go.mod
+
 RUN go mod download
 COPY ./ /work
 RUN LEDGER_ENABLED=false make clean build

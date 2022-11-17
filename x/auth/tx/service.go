@@ -3,12 +3,13 @@ package tx
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/golang/protobuf/proto" // nolint: staticcheck
+	"github.com/golang/protobuf/proto" //nolint: staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -118,7 +119,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Unknown, "%v With gas wanted: '%d' and gas used: '%d' ", err, gasInfo.GasWanted, gasInfo.GasUsed)
 	}
 
 	return &txtypes.SimulateResponse{
@@ -235,7 +236,6 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			Total: blockTxsLn,
 		},
 	}, nil
-
 }
 
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {

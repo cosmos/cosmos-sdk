@@ -56,6 +56,7 @@ func (csup *CancelSoftwareUpgradeProposal) ProposalRoute() string  { return Rout
 func (csup *CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
+
 func (csup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(csup)
 }

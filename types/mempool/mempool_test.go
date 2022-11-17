@@ -150,8 +150,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 		err := s.mempool.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
-	// TODO add validity check to see if it exist not insert. Maybe a map ?
-	//require.Equal(t, len(accounts), s.mempool.CountTx())
+	require.Equal(t, len(accounts), s.mempool.CountTx())
 
 	// distinct sender-nonce should not overwrite a tx
 	s.resetMempool()
@@ -184,14 +183,13 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	require.ErrorIs(t, s.mempool.Remove(txs[1]), mempool.ErrTxNotFound)
 
 	// inserting a tx with a different priority should overwrite the old tx
-	// TODO there is no longer priorities
 	newPriorityTx := testTx{
 		address:  txs[0].address,
 		priority: txs[0].priority + 1,
 		nonce:    txs[0].nonce,
 	}
 	require.NoError(t, s.mempool.Insert(ctx, newPriorityTx))
-	//require.Equal(t, 1, s.mempool.CountTx())
+	require.Equal(t, 1, s.mempool.CountTx())
 }
 
 type MempoolTestSuite struct {

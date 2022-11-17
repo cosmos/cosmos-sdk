@@ -54,7 +54,6 @@ func (s *senderTxs) remove(key txKey) error {
 
 type senderNonceMempool struct {
 	senders map[string]*senderTxs
-	txCount int
 	rnd     *rand.Rand
 }
 
@@ -62,7 +61,6 @@ func NewSenderNonceMempool() Mempool {
 	senderMap := make(map[string]*senderTxs)
 	snp := &senderNonceMempool{
 		senders: senderMap,
-		txCount: 0,
 	}
 	snp.setSeed(time.Now().UnixNano())
 	return snp
@@ -72,7 +70,6 @@ func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 	senderMap := make(map[string]*senderTxs)
 	snp := &senderNonceMempool{
 		senders: senderMap,
-		txCount: 0,
 	}
 	snp.setSeed(seed)
 	return snp
@@ -103,7 +100,6 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	tk := txKey{nonce: nonce, sender: sender}
 	senderTxs.insert(tk, tx)
 	snm.senders[sender] = senderTxs
-	snm.txCount = snm.txCount + 1
 	return nil
 }
 
@@ -126,7 +122,11 @@ func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator 
 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
-	return snm.txCount
+	count := 0
+	for _, sender := range snm.senders {
+		count = count + sender.txQueue.Len()
+	}
+	return count
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
@@ -157,7 +157,6 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	} else {
 		snm.senders[sender] = senderTxs
 	}
-	snm.txCount = snm.txCount - 1
 	return nil
 }
 
@@ -171,7 +170,6 @@ type senderNonceMepoolIterator struct {
 func (i *senderNonceMepoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.mempool.rnd.Intn(len(i.senders))
-		fmt.Println(senderIndex)
 		sender := i.senders[senderIndex]
 		senderTxs, found := i.mempool.senders[sender]
 		if !found {

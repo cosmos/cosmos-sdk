@@ -33,6 +33,9 @@ const (
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
+
+	// FileStreamer defines the store streaming type for file streaming.
+	FileStreamer = "file"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -311,6 +314,14 @@ func DefaultConfig() *Config {
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,
+		},
+		Store: StoreConfig{
+			Streamers: []string{},
+		},
+		Streamers: StreamersConfig{
+			File: FileStreamerConfig{
+				Keys: []string{"*"},
+			},
 		},
 	}
 }

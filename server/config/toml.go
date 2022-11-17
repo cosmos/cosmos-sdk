@@ -246,8 +246,8 @@ streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
 [streamers]
 [streamers.file]
 keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
-write_dir = {{ .Streamers.File.WriteDir }}
-prefix = {{ .Streamers.File.Prefix }}
+write_dir = "{{ .Streamers.File.WriteDir }}"
+prefix = "{{ .Streamers.File.Prefix }}"
 `
 
 var configTemplate *template.Template

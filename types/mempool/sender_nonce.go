@@ -64,11 +64,21 @@ func NewSenderNonceMempool() Mempool {
 		senders: senderMap,
 		txCount: 0,
 	}
-	snp.SetSeed(time.Now().UnixNano())
+	snp.setSeed(time.Now().UnixNano())
 	return snp
 }
 
-func (snm *senderNonceMempool) SetSeed(seed int64) {
+func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
+	senderMap := make(map[string]*senderTxs)
+	snp := &senderNonceMempool{
+		senders: senderMap,
+		txCount: 0,
+	}
+	snp.setSeed(seed)
+	return snp
+}
+
+func (snm *senderNonceMempool) setSeed(seed int64) {
 	s1 := rand.NewSource(seed)
 	snm.rnd = rand.New(s1)
 }
@@ -161,6 +171,7 @@ type senderNonceMepoolIterator struct {
 func (i *senderNonceMepoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.mempool.rnd.Intn(len(i.senders))
+		fmt.Println(senderIndex)
 		sender := i.senders[senderIndex]
 		senderTxs, found := i.mempool.senders[sender]
 		if !found {

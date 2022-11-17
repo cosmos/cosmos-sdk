@@ -94,7 +94,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13802](https://github.com/cosmos/cosmos-sdk/pull/13802) Add --output-document flag to the export CLI command to allow writing genesis state to a file.
 * [#13794](https://github.com/cosmos/cosmos-sdk/pull/13794) `types/module.Manager` now supports the
 `cosmossdk.io/core/appmodule.AppModule` API via the new `NewManagerFromMap` constructor.
-* [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) optimize iteration on nested cache context and other operations in general.
+* [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) Optimize iteration on nested cached KV stores and other operations in general.
 
 ### State Machine Breaking
 

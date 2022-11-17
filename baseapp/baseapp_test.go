@@ -108,7 +108,7 @@ func TestLoadVersionPruning(t *testing.T) {
 
 	for _, v := range []int64{1, 2, 4} {
 		_, err = app.cms.CacheMultiStoreWithVersion(v)
-		require.NoError(t, err)
+		require.Error(t, err)
 	}
 
 	for _, v := range []int64{3, 5, 6, 7} {

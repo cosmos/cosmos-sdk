@@ -124,7 +124,7 @@ func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator 
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
 	for _, sender := range snm.senders {
-		count = count + sender.txQueue.Len()
+		count += sender.txQueue.Len()
 	}
 	return count
 }

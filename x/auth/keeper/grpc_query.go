@@ -24,7 +24,7 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Id > 0 || req.Id < 0 { // ignoring `0` case since it is default value.
+	if req.Id != 0 { // ignoring `0` case since it is default value.
 		return nil, status.Error(codes.InvalidArgument, "requesting with id isn't supported, try to request using account-id")
 	}
 

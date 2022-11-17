@@ -150,7 +150,6 @@ func GetAccountAddressByIDCmd() *cobra.Command {
 			res, err := queryClient.AccountAddressByID(cmd.Context(), &types.QueryAccountAddressByIDRequest{
 				AccountId: accNum,
 			})
-
 			if err != nil {
 				return err
 			}

@@ -27,12 +27,12 @@ func newSenderTxs() senderTxs {
 	}
 }
 
-func (s senderTxs) insert(key txKey, tx sdk.Tx) {
+func (s *senderTxs) insert(key txKey, tx sdk.Tx) {
 	s.txQueue.Set(key, tx)
 	s.head = s.txQueue.Front()
 }
 
-func (s senderTxs) getMove() *huandu.Element {
+func (s *senderTxs) getMove() *huandu.Element {
 	if s.head == nil {
 		return nil
 	}
@@ -41,7 +41,7 @@ func (s senderTxs) getMove() *huandu.Element {
 	return currentHead
 }
 
-func (s senderTxs) remove(key txKey) error {
+func (s *senderTxs) remove(key txKey) error {
 	res := s.txQueue.Remove(key)
 	if res == nil {
 		return ErrTxNotFound
@@ -53,13 +53,13 @@ func (s senderTxs) remove(key txKey) error {
 }
 
 type senderNonceMempool struct {
-	senders map[string]senderTxs
+	senders map[string]*senderTxs
 	txCount int
 	rnd     *rand.Rand
 }
 
 func NewSenderNonceMempool() Mempool {
-	senderMap := make(map[string]senderTxs)
+	senderMap := make(map[string]*senderTxs)
 	snp := &senderNonceMempool{
 		senders: senderMap,
 		txCount: 0,
@@ -68,12 +68,12 @@ func NewSenderNonceMempool() Mempool {
 	return snp
 }
 
-func (snm senderNonceMempool) SetSeed(seed int64) {
+func (snm *senderNonceMempool) SetSeed(seed int64) {
 	s1 := rand.NewSource(seed)
 	snm.rnd = rand.New(s1)
 }
 
-func (snm senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
+func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -85,39 +85,43 @@ func (snm senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	sig := sigs[0]
 	sender := sig.PubKey.Address().String()
 	nonce := sig.Sequence
-	tk := txKey{nonce: nonce, sender: sender}
 	senderTxs, found := snm.senders[sender]
 	if !found {
-		senderTxs = newSenderTxs()
+		newSenderTx := newSenderTxs()
+		senderTxs = &newSenderTx
 	}
-
+	tk := txKey{nonce: nonce, sender: sender}
 	senderTxs.insert(tk, tx)
 	snm.senders[sender] = senderTxs
 	snm.txCount = snm.txCount + 1
 	return nil
 }
 
-func (snm senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator {
+func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator {
 	var senders []string
 	for key := range snm.senders {
 		senders = append(senders, key)
 	}
 	iter := &senderNonceMepoolIterator{
-		mempool: &snm,
+		mempool: snm,
 		senders: senders,
 	}
-	iter.Next()
-	return iter
+
+	newIter := iter.Next()
+	if newIter == nil {
+		return nil
+	}
+	return newIter
 }
 
 // CountTx returns the total count of txs in the mempool.
-func (snm senderNonceMempool) CountTx() int {
+func (snm *senderNonceMempool) CountTx() int {
 	return snm.txCount
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
 // was not found in the pool.
-func (snm senderNonceMempool) Remove(tx sdk.Tx) error {
+func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -154,7 +158,7 @@ type senderNonceMepoolIterator struct {
 	seed      int
 }
 
-func (i senderNonceMepoolIterator) Next() Iterator {
+func (i *senderNonceMepoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.mempool.rnd.Intn(len(i.senders))
 		sender := i.senders[senderIndex]
@@ -168,7 +172,7 @@ func (i senderNonceMepoolIterator) Next() Iterator {
 			i.senders = removeAtIndex(i.senders, senderIndex)
 			continue
 		}
-		return senderNonceMepoolIterator{
+		return &senderNonceMepoolIterator{
 			senders:   i.senders,
 			currentTx: tx,
 			mempool:   i.mempool,
@@ -178,7 +182,7 @@ func (i senderNonceMepoolIterator) Next() Iterator {
 	return nil
 }
 
-func (i senderNonceMepoolIterator) Tx() sdk.Tx {
+func (i *senderNonceMepoolIterator) Tx() sdk.Tx {
 	return i.currentTx.Value.(sdk.Tx)
 }
 

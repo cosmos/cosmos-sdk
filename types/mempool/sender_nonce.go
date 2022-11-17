@@ -123,8 +123,8 @@ func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
-	for _, sender := range snm.senders {
-		count += sender.txQueue.Len()
+	for senderKey := range snm.senders {
+		count += snm.senders[senderKey].txQueue.Len()
 	}
 	return count
 }

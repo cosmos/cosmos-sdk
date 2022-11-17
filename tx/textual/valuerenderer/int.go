@@ -40,29 +40,41 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return nilValue, err
 	}
 
-	if vr.fd != nil {
-		switch vr.fd.Kind() {
-		case protoreflect.Uint32Kind:
-			value, err := strconv.ParseUint(parsedInt, 10, 32)
-			if err != nil {
-				return nilValue, err
-			}
-			return protoreflect.ValueOfUint32(uint32(value)), nil
-
-		case protoreflect.Uint64Kind:
-			value, err := strconv.ParseUint(parsedInt, 10, 64)
-			if err != nil {
-				return nilValue, err
-			}
-			return protoreflect.ValueOfUint64(value), nil
-
-		default:
-			return protoreflect.ValueOfString(parsedInt), nil
+	switch vr.fd.Kind() {
+	case protoreflect.Uint32Kind:
+		value, err := strconv.ParseUint(parsedInt, 10, 32)
+		if err != nil {
+			return nilValue, err
 		}
+		return protoreflect.ValueOfUint32(uint32(value)), nil
+
+	case protoreflect.Uint64Kind:
+		value, err := strconv.ParseUint(parsedInt, 10, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return protoreflect.ValueOfUint64(value), nil
+
+	case protoreflect.Int64Kind:
+		value, err := strconv.ParseInt(parsedInt, 10, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return protoreflect.ValueOfInt64(value), nil
+
+	case protoreflect.Int32Kind:
+		value, err := strconv.ParseInt(parsedInt, 10, 32)
+		if err != nil {
+			return nilValue, err
+		}
+		return protoreflect.ValueOfInt32(int32(value)), nil
+
+	case protoreflect.StringKind:
+		return protoreflect.ValueOfString(parsedInt), nil
+
+	default:
+		return nilValue, fmt.Errorf("parsing integers into a %s field is not supported", vr.fd.Kind())
 	}
-
-	return protoreflect.ValueOfString(parsedInt), nil
-
 }
 
 // parseInt parses a value-rendered string into an integer

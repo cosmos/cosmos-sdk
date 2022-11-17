@@ -27,8 +27,8 @@ type queryProtoGen struct {
 func (g queryProtoGen) gen() error {
 	g.imports[g.Desc.Path()] = true
 
-	g.svc.F("// %s queries the state of the tables specified by %s.", g.queryServiceName(), g.Desc.Path())
-	g.svc.F("service %s {", g.queryServiceName())
+	g.svc.F("// %sService queries the state of the tables specified by %s.", g.queryServiceName(), g.Desc.Path())
+	g.svc.F("service %sService {", g.queryServiceName())
 	g.svc.Indent()
 	for _, msg := range g.Messages {
 		tableDesc := proto.GetExtension(msg.Desc.Options(), ormv1.E_Table).(*ormv1.TableDescriptor)

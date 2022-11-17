@@ -164,7 +164,6 @@ require (
 )
 
 replace (
-
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	// Temporary until we tag a new version

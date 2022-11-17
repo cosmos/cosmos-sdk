@@ -172,7 +172,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 extension interfaces. `module.Manager.Modules` is now of type `map[string]interface{}` to support in parallel the new 
 `cosmossdk.io/core/appmodule.AppModule` API.
 * (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
-* (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) querying with `id` (type of int64) in `AccountAddressByID` grpc query is now throws error, update to use account-id(type of uint64) to request `AccountAddressByID`.
+* (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) Querying with `id` (type of int64) in `AccountAddressByID` grpc query now throws error, use account-id(type of uint64) instead.
 
 ### CLI Breaking Changes
 

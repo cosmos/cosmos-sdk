@@ -164,7 +164,6 @@ type senderNonceMepoolIterator struct {
 	mempool   *senderNonceMempool
 	currentTx *huandu.Element
 	senders   []string
-	seed      int
 }
 
 func (i *senderNonceMepoolIterator) Next() Iterator {

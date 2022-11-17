@@ -19,6 +19,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -277,7 +278,13 @@ func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoR
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
 	}
 
-	encodedBytes, err := s.clientCtx.LegacyAmino.Marshal(req.AminoJson)
+	var stdTx legacytx.StdTx
+	err := s.clientCtx.LegacyAmino.UnmarshalJSON([]byte(req.AminoJson), &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	encodedBytes, err := s.clientCtx.LegacyAmino.MarshalJSON(stdTx)
 	if err != nil {
 		return nil, err
 	}

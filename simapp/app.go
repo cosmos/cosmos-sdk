@@ -3,19 +3,20 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,6 +31,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/streaming"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -232,17 +234,20 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
-	// register streaming service
-	pluginKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingPluginTomlKey)
-	pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-	if len(pluginName) > 0 {
-		logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-		plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-		if err != nil {
-			tmos.Exit(err.Error())
-		}
-		if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-			tmos.Exit(err.Error())
+	// register streaming services
+	streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
+	for service := range streamingCfg {
+		pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingPluginTomlKey)
+		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
+		if len(pluginName) > 0 {
+			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
+			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
+			if err != nil {
+				tmos.Exit(err.Error())
+			}
+			if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
+				tmos.Exit(err.Error())
+			}
 		}
 	}
 
@@ -329,7 +334,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/spf13/cast"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 

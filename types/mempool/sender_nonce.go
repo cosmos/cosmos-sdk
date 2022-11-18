@@ -163,6 +163,8 @@ type senderNonceMepoolIterator struct {
 	sendersCurosors map[string]*senderTxs
 }
 
+// Next it returns the iterator next state where a iterator will contain a tx that was the smallest
+// nonce of a randomly selected sender
 func (i *senderNonceMepoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.rnd.Intn(len(i.senders))

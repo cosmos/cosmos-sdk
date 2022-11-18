@@ -26,3 +26,9 @@ func (m Migrator) Migrate2to3(ctx context.Context) error {
 func (m Migrator) Migrate3to4(ctx context.Context) error {
 	return nil
 }
+
+// Migrate3_V046_4_To_V046_5 fixes migrations from version 2 to for chains based on SDK 0.46.0 - v0.46.4 ONLY.
+// See v046.Migrate_V046_4_To_V046_5 for more details.
+func (m Migrator) Migrate3_V046_4_To_V046_5(ctx sdk.Context) error {
+	return v046.Migrate_V046_4_To_V046_5(ctx.KVStore(m.keeper.storeKey))
+}

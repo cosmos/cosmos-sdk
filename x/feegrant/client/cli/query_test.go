@@ -3,10 +3,10 @@ package cli_test
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func (s *CLITestSuite) TestCmdGetFeeGrant() {
@@ -26,7 +26,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				"wrong_granter",
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"decoding bech32 failed",
 			true, nil, nil,
@@ -36,7 +36,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				granter.String(),
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"decoding bech32 failed",
 			true, nil, nil,
@@ -76,7 +76,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"wrong grantee",
 			[]string{
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil, 0,
 		},
@@ -84,7 +84,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"valid req",
 			[]string{
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesResponse{}, 1,
 		},
@@ -123,7 +123,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGranter() {
 			"wrong grantee",
 			[]string{
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil, 0,
 		},
@@ -131,7 +131,7 @@ func (s *CLITestSuite) TestCmdGetFeeGrantsByGranter() {
 			"valid req",
 			[]string{
 				granter.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesByGranterResponse{}, 1,
 		},

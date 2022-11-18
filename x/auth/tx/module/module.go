@@ -79,8 +79,9 @@ func ProvideModule(in TxInputs) TxOutputs {
 			app.SetPostHandler(postHandler)
 		}
 
-		// TxDecoder
+		// TxDecoder/TxEncoder
 		app.SetTxDecoder(txConfig.TxDecoder())
+		app.SetTxEncoder(txConfig.TxEncoder())
 	}
 
 	return TxOutputs{TxConfig: txConfig, BaseAppOption: baseAppOption}

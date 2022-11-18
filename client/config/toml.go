@@ -23,7 +23,7 @@ keyring-backend = "{{ .KeyringBackend }}"
 output = "{{ .Output }}"
 # <host>:<port> to Tendermint RPC interface for this chain
 node = "{{ .Node }}"
-# Transaction broadcasting mode (sync|async|block)
+# Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
 `
 
@@ -42,7 +42,7 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 		return err
 	}
 
-	return os.WriteFile(configFilePath, buffer.Bytes(), 0600)
+	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
 // ensureConfigPath creates a directory configPath if it does not exist

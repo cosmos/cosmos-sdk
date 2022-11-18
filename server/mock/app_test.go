@@ -1,6 +1,10 @@
 package mock
 
 import (
+	"math/rand"
+	"time"
+
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,7 +28,7 @@ func TestInitApp(t *testing.T) {
 	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
 	require.NoError(t, err)
 
-	//TODO test validators in the init chain?
+	// TODO test validators in the init chain?
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}
@@ -53,7 +57,11 @@ func TestDeliverTx(t *testing.T) {
 
 	key := "my-special-key"
 	value := "top-secret-data!!"
-	tx := NewTx(key, value)
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomAccounts := simtypes.RandomAccounts(r, 1)
+
+	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
 	header := tmproto.Header{

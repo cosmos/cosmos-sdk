@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 		{
 			"success",
 			func() {
-				space = suite.app.ParamsKeeper.Subspace("test").
+				space = suite.paramsKeeper.Subspace("test").
 					WithKeyTable(types.NewKeyTable(types.NewParamSetPair(key, paramJSON{}, validateNoOp)))
 				req = &proposal.QueryParamsRequest{Subspace: "test", Key: "key"}
 				expValue = ""

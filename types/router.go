@@ -2,7 +2,6 @@ package types
 
 import (
 	"regexp"
-	"strings"
 )
 
 var (
@@ -26,40 +25,3 @@ var (
 	// characters only.
 	IsNumeric = regexp.MustCompile(`^[0-9]+$`).MatchString
 )
-
-// Router provides handlers for each transaction type.
-type Router interface {
-	AddRoute(r Route) Router
-	Route(ctx Context, path string) Handler
-}
-
-type Route struct {
-	path    string
-	handler Handler
-}
-
-// NewRoute returns an instance of Route.
-func NewRoute(p string, h Handler) Route {
-	return Route{path: strings.TrimSpace(p), handler: h}
-}
-
-// Path returns the path the route has assigned.
-func (r Route) Path() string {
-	return r.path
-}
-
-// Handler returns the handler that handles the route.
-func (r Route) Handler() Handler {
-	return r.handler
-}
-
-// Empty returns true only if both handler and path are not empty.
-func (r Route) Empty() bool {
-	return r.handler == nil || r.path == ""
-}
-
-// QueryRouter provides queryables for each query path.
-type QueryRouter interface {
-	AddRoute(r string, h Querier) QueryRouter
-	Route(path string) Querier
-}

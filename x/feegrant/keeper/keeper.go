@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
@@ -22,7 +23,7 @@ type Keeper struct {
 	authKeeper feegrant.AccountKeeper
 }
 
-var _ middleware.FeegrantKeeper = &Keeper{}
+var _ ante.FeegrantKeeper = &Keeper{}
 
 // NewKeeper creates a fee grant Keeper
 func NewKeeper(cdc codec.BinaryCodec, storeKey storetypes.StoreKey, ak feegrant.AccountKeeper) Keeper {
@@ -40,7 +41,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // GrantAllowance creates a new grant
 func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress, feeAllowance feegrant.FeeAllowanceI) error {
-
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
@@ -73,19 +73,24 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	newExp, err := feeAllowance.ExpiresAt()
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
-	} else if newExp != nil && newExp.Before(ctx.BlockTime()) {
+
+	case newExp != nil && newExp.Before(ctx.BlockTime()):
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "expiration is before current block time")
-	} else if oldExp == nil && newExp != nil {
+
+	case oldExp == nil && newExp != nil:
 		// when old oldExp is nil there won't be any key added before to queue.
 		// add the new key to queue directly.
 		k.addToFeeAllowanceQueue(ctx, key[1:], newExp)
-	} else if oldExp != nil && newExp == nil {
+
+	case oldExp != nil && newExp == nil:
 		// when newExp is nil no need of adding the key to the pruning queue
 		// remove the old key from queue.
 		k.removeFromGrantQueue(ctx, oldExp, key[1:])
-	} else if oldExp != nil && newExp != nil && !oldExp.Equal(*newExp) {
+
+	case oldExp != nil && newExp != nil && !oldExp.Equal(*newExp):
 		// `key` formed here with the prefix of `FeeAllowanceKeyPrefix` (which is `0x00`)
 		// remove the 1st byte and reuse the remaining key as it is.
 
@@ -107,7 +112,6 @@ func (k Keeper) GrantAllowance(ctx sdk.Context, granter, grantee sdk.AccAddress,
 	}
 
 	store.Set(key, bz)
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			feegrant.EventTypeSetFeeGrant,
@@ -217,7 +221,6 @@ func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.
 		if err := k.cdc.Unmarshal(bz, &feeGrant); err != nil {
 			return err
 		}
-
 		stop = cb(feeGrant)
 	}
 

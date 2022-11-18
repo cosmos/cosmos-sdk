@@ -100,13 +100,6 @@ type Keyring interface {
 	Migrator
 }
 
-// UnsafeKeyring exposes unsafe operations such as unsafe unarmored export in
-// addition to those that are made available by the Keyring interface.
-type UnsafeKeyring interface {
-	Keyring
-	UnsafeExporter
-}
-
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
@@ -125,9 +118,9 @@ type Importer interface {
 	ImportPubKey(uid string, armor string) error
 }
 
-// Migrator is implemented by key stores and enables migration of  keys from amino to proto
+// Migrator is implemented by key stores and enables migration of keys from amino to proto
 type Migrator interface {
-	MigrateAll() (bool, error)
+	MigrateAll() ([]*Record, error)
 }
 
 // Exporter is implemented by key stores that support export of public and private keys.
@@ -142,13 +135,6 @@ type Exporter interface {
 	ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassphrase string) (armor string, err error)
 }
 
-// UnsafeExporter is implemented by key stores that support unsafe export
-// of private keys' material.
-type UnsafeExporter interface {
-	// UnsafeExportPrivKeyHex returns a private key in unarmored hex format
-	UnsafeExportPrivKeyHex(uid string) (string, error)
-}
-
 // Option overrides keyring configuration options.
 type Option func(options *Options)
 
@@ -158,13 +144,28 @@ type Options struct {
 	SupportedAlgos SigningAlgoList
 	// supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
+	// define Ledger Derivation function
+	LedgerDerivation func() (ledger.SECP256K1, error)
+	// define Ledger key generation function
+	LedgerCreateKey func([]byte) types.PubKey
+	// define Ledger app name
+	LedgerAppName string
+	// indicate whether Ledger should skip DER Conversion on signature,
+	// depending on which format (DER or BER) the Ledger app returns signatures
+	LedgerSigSkipDERConv bool
 }
 
 // NewInMemory creates a transient keyring useful for testing
 // purposes and on-the-fly key generation.
 // Keybase options can be applied when generating this new Keybase.
 func NewInMemory(cdc codec.Codec, opts ...Option) Keyring {
-	return newKeystore(keyring.NewArrayKeyring(nil), cdc, BackendMemory, opts...)
+	return NewInMemoryWithKeyring(keyring.NewArrayKeyring(nil), cdc, opts...)
+}
+
+// NewInMemoryWithKeyring returns an in memory keyring using the specified keyring.Keyring
+// as the backing keyring.
+func NewInMemoryWithKeyring(kr keyring.Keyring, cdc codec.Codec, opts ...Option) Keyring {
+	return newKeystore(kr, cdc, BackendMemory, opts...)
 }
 
 // New creates a new instance of a keyring.
@@ -219,6 +220,22 @@ func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Op
 
 	for _, optionFn := range opts {
 		optionFn(&options)
+	}
+
+	if options.LedgerDerivation != nil {
+		ledger.SetDiscoverLedger(options.LedgerDerivation)
+	}
+
+	if options.LedgerCreateKey != nil {
+		ledger.SetCreatePubkey(options.LedgerCreateKey)
+	}
+
+	if options.LedgerAppName != "" {
+		ledger.SetAppName(options.LedgerAppName)
+	}
+
+	if options.LedgerSigSkipDERConv {
+		ledger.SetSkipDERConversion()
 	}
 
 	return keystore{
@@ -500,40 +517,7 @@ func wrapKeyNotFound(err error, msg string) error {
 }
 
 func (ks keystore) List() ([]*Record, error) {
-	if _, err := ks.MigrateAll(); err != nil {
-		return nil, err
-	}
-
-	keys, err := ks.db.Keys()
-	if err != nil {
-		return nil, err
-	}
-
-	var res []*Record //nolint:prealloc
-	sort.Strings(keys)
-	for _, key := range keys {
-		if strings.Contains(key, addressSuffix) {
-			continue
-		}
-
-		item, err := ks.db.Get(key)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(item.Data) == 0 {
-			return nil, sdkerrors.ErrKeyNotFound.Wrap(key)
-		}
-
-		k, err := ks.protoUnmarshalRecord(item.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		res = append(res, k)
-	}
-
-	return res, nil
+	return ks.MigrateAll()
 }
 
 func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passphrase string, algo SignatureAlgo) (*Record, string, error) {
@@ -597,7 +581,7 @@ func (ks keystore) isSupportedSigningAlgo(algo SignatureAlgo) bool {
 }
 
 func (ks keystore) Key(uid string) (*Record, error) {
-	k, _, err := ks.migrate(uid)
+	k, err := ks.migrate(uid)
 	if err != nil {
 		return nil, err
 	}
@@ -719,7 +703,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			buf := bufio.NewReader(buf)
-			pass, err := input.GetPassword("Enter keyring passphrase:", buf)
+			pass, err := input.GetPassword(fmt.Sprintf("Enter keyring passphrase (attempt %d/%d):", failureCounter, maxPassphraseEntryAttempts), buf)
 			if err != nil {
 				// NOTE: LGTM.io reports a false positive alert that states we are printing the password,
 				// but we only log the error.
@@ -778,7 +762,11 @@ func (ks keystore) writeLocalKey(name string, privKey types.PrivKey) (*Record, e
 	return k, ks.writeRecord(k)
 }
 
-// writeRecord persists a keyring item in keystore if it does not exist there
+// writeRecord persists a keyring item in keystore if it does not exist there.
+// For each key record, we actually write 2 items:
+// - one with key `<uid>.info`, with Data = the serialized protobuf key
+// - another with key `<addr_as_hex>.address`, with Data = the uid (i.e. the key name)
+// This is to be able to query keys both by name and by address.
 func (ks keystore) writeRecord(k *Record) error {
 	addr, err := k.GetAddress()
 	if err != nil {
@@ -797,7 +785,7 @@ func (ks keystore) writeRecord(k *Record) error {
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return fmt.Errorf("unable to serialize record, err - %s", err)
+		return fmt.Errorf("unable to serialize record; %+w", err)
 	}
 
 	item := keyring.Item{
@@ -871,83 +859,99 @@ func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, erro
 	return k, ks.writeRecord(k)
 }
 
-func (ks keystore) MigrateAll() (bool, error) {
+func (ks keystore) MigrateAll() ([]*Record, error) {
 	keys, err := ks.db.Keys()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	if len(keys) == 0 {
-		return false, nil
+		return nil, nil
 	}
 
-	var migrated bool
+	sort.Strings(keys)
+	var recs []*Record
 	for _, key := range keys {
-		if strings.Contains(key, addressSuffix) {
+		// The keyring items only with `.info` consists the key info.
+		if !strings.HasSuffix(key, infoSuffix) {
 			continue
 		}
 
-		_, migrated2, err := ks.migrate(key)
+		rec, err := ks.migrate(key)
 		if err != nil {
-			fmt.Printf("migrate err: %q", err)
+			fmt.Printf("migrate err for key %s: %q\n", key, err)
 			continue
 		}
 
-		if migrated2 {
-			migrated = true
-		}
+		recs = append(recs, rec)
 	}
 
-	return migrated, nil
+	return recs, nil
 }
 
 // migrate converts keyring.Item from amino to proto serialization format.
-func (ks keystore) migrate(key string) (*Record, bool, error) {
-	if !(strings.HasSuffix(key, infoSuffix)) && !(strings.HasPrefix(key, sdk.Bech32PrefixAccAddr)) {
+// the `key` argument can be a key uid (e.g. "alice") or with the '.info'
+// suffix (e.g. "alice.info").
+//
+// It operates as follows:
+// 1. retrieve any key
+// 2. try to decode it using protobuf
+// 3. if ok, then return the key, do nothing else
+// 4. if it fails, then try to decode it using amino
+// 5. convert from the amino struct to the protobuf struct
+// 6. write the proto-encoded key back to the keyring
+func (ks keystore) migrate(key string) (*Record, error) {
+	if !strings.HasSuffix(key, infoSuffix) {
 		key = infoKey(key)
 	}
+
+	// 1. get the key.
 	item, err := ks.db.Get(key)
 	if err != nil {
-		return nil, false, wrapKeyNotFound(err, key)
+		return nil, wrapKeyNotFound(err, key)
 	}
 
 	if len(item.Data) == 0 {
-		return nil, false, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
-	// 2.try to deserialize using proto, if good then continue, otherwise try to deserialize using amino
+	// 2. Try to deserialize using proto
 	k, err := ks.protoUnmarshalRecord(item.Data)
+	// 3. If ok then return the key
 	if err == nil {
-		return k, false, nil
+		return k, nil
 	}
 
-	LegacyInfo, err := unMarshalLegacyInfo(item.Data)
+	// 4. Try to decode with amino
+	legacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
+		return nil, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
 	}
 
-	// 4.serialize info using proto
-	k, err = ks.convertFromLegacyInfo(LegacyInfo)
+	// 5. Convert and serialize info using proto
+	k, err = ks.convertFromLegacyInfo(legacyInfo)
 	if err != nil {
-		return nil, false, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
+		return nil, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return nil, false, fmt.Errorf("unable to serialize record, err: %w", err)
+		return nil, fmt.Errorf("unable to serialize record, err: %w", err)
 	}
 
 	item = keyring.Item{
-		Key:         key,
-		Data:        serializedRecord,
-		Description: "SDK kerying version",
-	}
-	// 5.overwrite the keyring entry with
-	if err := ks.SetItem(item); err != nil {
-		return nil, false, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		Key:  key,
+		Data: serializedRecord,
 	}
 
-	return k, true, nil
+	// 6. Overwrite the keyring entry with the new proto-encoded key.
+	if err := ks.SetItem(item); err != nil {
+		return nil, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+	}
+
+	fmt.Printf("Successfully migrated key %s.\n", key)
+
+	return k, nil
 }
 
 func (ks keystore) protoUnmarshalRecord(bz []byte) (*Record, error) {
@@ -994,29 +998,6 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 		return nil, errors.New("unknown LegacyInfo type")
 
 	}
-}
-
-type unsafeKeystore struct {
-	keystore
-}
-
-// NewUnsafe returns a new keyring that provides support for unsafe operations.
-func NewUnsafe(kr Keyring) UnsafeKeyring {
-	// The type assertion is against the only keystore
-	// implementation that is currently provided.
-	ks := kr.(keystore)
-
-	return unsafeKeystore{ks}
-}
-
-// UnsafeExportPrivKeyHex exports private keys in unarmored hexadecimal format.
-func (ks unsafeKeystore) UnsafeExportPrivKeyHex(uid string) (privkey string, err error) {
-	priv, err := ks.ExportPrivateKeyObject(uid)
-	if err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(priv.Bytes()), nil
 }
 
 func addrHexKeyAsString(address sdk.Address) string {

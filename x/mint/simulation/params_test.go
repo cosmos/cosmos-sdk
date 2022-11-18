@@ -34,5 +34,4 @@ func TestParamChangest(t *testing.T) {
 		require.Equal(t, expected[i].simValue, p.SimValue()(r))
 		require.Equal(t, expected[i].subspace, p.Subspace())
 	}
-
 }

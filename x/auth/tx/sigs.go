@@ -89,7 +89,7 @@ func ModeInfoAndSigToSignatureData(modeInfo *tx.ModeInfo, sig []byte) (signing.S
 	}
 }
 
-// decodeMultisignatures safely decodes the the raw bytes as a MultiSignature protobuf message
+// decodeMultisignatures safely decodes the raw bytes as a MultiSignature protobuf message
 func decodeMultisignatures(bz []byte) ([][]byte, error) {
 	multisig := cryptotypes.MultiSignature{}
 	err := multisig.Unmarshal(bz)

@@ -1,12 +1,16 @@
 package math_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -170,7 +174,6 @@ func (s *intTestSuite) TestArithInt() {
 			s.Require().Equal(tc.nres, tc.ires.Int64(), "Int arithmetic operation does not match with int64 operation. tc #%d", tcnum)
 		}
 	}
-
 }
 
 func (s *intTestSuite) TestCompInt() {
@@ -394,7 +397,7 @@ func (s *intTestSuite) TestIntEq() {
 }
 
 func TestRoundTripMarshalToInt(t *testing.T) {
-	var values = []int64{
+	values := []int64{
 		0,
 		1,
 		1 << 10,
@@ -421,6 +424,50 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 			}
 			if !rt.Equal(iv) {
 				t.Fatalf("roundtrip=%q != original=%q", rt, iv)
+			}
+		})
+	}
+}
+
+func TestFormatInt(t *testing.T) {
+	type integerTest []string
+	var testcases []integerTest
+	raw, err := os.ReadFile("../tx/textual/internal/testdata/integers.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		out, err := math.FormatInt(tc[0])
+		require.NoError(t, err)
+		require.Equal(t, tc[1], out)
+	}
+}
+
+func TestFormatIntNonDigits(t *testing.T) {
+	badCases := []string{
+		"a10",
+		"1a10",
+		"p1a10",
+		"10p",
+		"--10",
+		"😎😎",
+		"11111111111133333333333333333333333333333a",
+		"11111111111133333333333333333333333333333 192892",
+	}
+
+	for _, value := range badCases {
+		value := value
+		t.Run(value, func(t *testing.T) {
+			s, err := math.FormatInt(value)
+			if err == nil {
+				t.Fatal("Expected an error")
+			}
+			if g, w := err.Error(), "but got non-digits in"; !strings.Contains(g, w) {
+				t.Errorf("Error mismatch\nGot:  %q\nWant substring: %q", g, w)
+			}
+			if s != "" {
+				t.Fatalf("Got a non-empty string: %q", s)
 			}
 		})
 	}

@@ -134,7 +134,7 @@ func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 
 	res := Coin{coin.Denom, coin.Amount.Sub(coinB.Amount)}
 	if res.IsNegative() {
-		return Coin{}, fmt.Errorf("negative coin amount")
+		return Coin{}, fmt.Errorf("negative coin amount: %s", res)
 	}
 
 	return res, nil
@@ -288,6 +288,15 @@ func (coins Coins) IsValid() bool {
 	return coins.Validate() == nil
 }
 
+// Denoms returns all denoms associated with a Coins object
+func (coins Coins) Denoms() []string {
+	res := make([]string, len(coins))
+	for i, coin := range coins {
+		res[i] = coin.Denom
+	}
+	return res
+}
+
 // Add adds two sets of coins.
 //
 // e.g.
@@ -310,7 +319,7 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 // The function panics if `coins` or  `coinsB` are not sorted (ascending).
-func (coins Coins) safeAdd(coinsB Coins) Coins {
+func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 	// probably the best way will be to make Coins and interface and hide the structure
 	// definition (type alias)
 	if !coins.isSorted() {
@@ -320,51 +329,24 @@ func (coins Coins) safeAdd(coinsB Coins) Coins {
 		panic("Wrong argument: coins must be sorted")
 	}
 
-	sum := ([]Coin)(nil)
-	indexA, indexB := 0, 0
-	lenA, lenB := len(coins), len(coinsB)
-
-	for {
-		if indexA == lenA {
-			if indexB == lenB {
-				// return nil coins if both sets are empty
-				return sum
-			}
-
-			// return set B (excluding zero coins) if set A is empty
-			return append(sum, removeZeroCoins(coinsB[indexB:])...)
-		} else if indexB == lenB {
-			// return set A (excluding zero coins) if set B is empty
-			return append(sum, removeZeroCoins(coins[indexA:])...)
-		}
-
-		coinA, coinB := coins[indexA], coinsB[indexB]
-
-		switch strings.Compare(coinA.Denom, coinB.Denom) {
-		case -1: // coin A denom < coin B denom
-			if !coinA.IsZero() {
-				sum = append(sum, coinA)
-			}
-
-			indexA++
-
-		case 0: // coin A denom == coin B denom
-			res := coinA.Add(coinB)
-			if !res.IsZero() {
-				sum = append(sum, res)
-			}
-
-			indexA++
-			indexB++
-
-		case 1: // coin A denom > coin B denom
-			if !coinB.IsZero() {
-				sum = append(sum, coinB)
-			}
-
-			indexB++
+	uniqCoins := make(map[string]Coins, len(coins)+len(coinsB))
+	// Traverse all the coins for each of the coins and coinsB.
+	for _, cL := range []Coins{coins, coinsB} {
+		for _, c := range cL {
+			uniqCoins[c.Denom] = append(uniqCoins[c.Denom], c)
 		}
 	}
+
+	for denom, cL := range uniqCoins { //#nosec
+		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
+		for _, c := range cL {
+			comboCoin = comboCoin.Add(c)
+		}
+		if !comboCoin.IsZero() {
+			coalesced = append(coalesced, comboCoin)
+		}
+	}
+	return coalesced.Sort()
 }
 
 // DenomsSubsetOf returns true if receiver's denom set
@@ -411,7 +393,7 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 }
 
 // MulInt performs the scalar multiplication of coins with a `multiplier`
-// All coins are multipled by x
+// All coins are multiplied by x
 // e.g.
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics
@@ -480,10 +462,11 @@ func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//     a.IsAllLTE(a.Max(b))
-//     b.IsAllLTE(a.Max(b))
-//     a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
-//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+//	a.IsAllLTE(a.Max(b))
+//	b.IsAllLTE(a.Max(b))
+//	a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
+//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
@@ -525,10 +508,11 @@ func (coins Coins) Max(coinsB Coins) Coins {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//     a.Min(b).IsAllLTE(a)
-//     a.Min(b).IsAllLTE(b)
-//     c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
-//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+//	a.Min(b).IsAllLTE(a)
+//	a.Min(b).IsAllLTE(b)
+//	c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
+//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
@@ -703,28 +687,37 @@ func (coins Coins) AmountOf(denom string) Int {
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
 func (coins Coins) AmountOfNoDenomValidation(denom string) Int {
+	if ok, c := coins.Find(denom); ok {
+		return c.Amount
+	}
+	return ZeroInt()
+}
+
+// Find returns true and coin if the denom exists in coins. Otherwise it returns false
+// and a zero coin. Uses binary search.
+// CONTRACT: coins must be valid (sorted).
+func (coins Coins) Find(denom string) (bool, Coin) {
 	switch len(coins) {
 	case 0:
-		return ZeroInt()
+		return false, Coin{}
 
 	case 1:
 		coin := coins[0]
 		if coin.Denom == denom {
-			return coin.Amount
+			return true, coin
 		}
-		return ZeroInt()
+		return false, Coin{}
 
 	default:
-		// Binary search the amount of coins remaining
 		midIdx := len(coins) / 2 // 2:1, 3:1, 4:2
 		coin := coins[midIdx]
 		switch {
 		case denom < coin.Denom:
-			return coins[:midIdx].AmountOfNoDenomValidation(denom)
+			return coins[:midIdx].Find(denom)
 		case denom == coin.Denom:
-			return coin.Amount
+			return true, coin
 		default:
-			return coins[midIdx+1:].AmountOfNoDenomValidation(denom)
+			return coins[midIdx+1:].Find(denom)
 		}
 	}
 }

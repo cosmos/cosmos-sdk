@@ -19,13 +19,31 @@ import (
 
 var _ types.QueryServer = AccountKeeper{}
 
+func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid account number")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
+	if len(address) == 0 {
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
+	}
+
+	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
+}
+
 func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequest) (*types.QueryAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	store := ctx.KVStore(ak.key)
+	store := ctx.KVStore(ak.storeKey)
 	accountsStore := prefix.NewStore(store, types.AddressStoreKeyPrefix)
 
 	var accounts []*codectypes.Any
@@ -39,7 +57,6 @@ func (ak AccountKeeper) Accounts(c context.Context, req *types.QueryAccountsRequ
 		accounts = append(accounts, any)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
 	}
@@ -59,7 +76,6 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 
 	ctx := sdk.UnwrapSDKContext(c)
 	addr, err := sdk.AccAddressFromBech32(req.Address)
-
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +135,31 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
 }
 
+// ModuleAccountByName returns module account by module name
+func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryModuleAccountByNameRequest) (*types.QueryModuleAccountByNameResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.Name) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "module name is empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	moduleName := req.Name
+
+	account := ak.GetModuleAccount(ctx, moduleName)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
+	}
+	any, err := codectypes.NewAnyWithValue(account)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
+}
+
 // Bech32Prefix returns the keeper internally stored bech32 prefix.
 func (ak AccountKeeper) Bech32Prefix(ctx context.Context, req *types.Bech32PrefixRequest) (*types.Bech32PrefixResponse, error) {
 	bech32Prefix, err := ak.getBech32Prefix()
@@ -165,4 +206,40 @@ func (ak AccountKeeper) AddressStringToBytes(ctx context.Context, req *types.Add
 	}
 
 	return &types.AddressStringToBytesResponse{AddressBytes: bz}, nil
+}
+
+// AccountInfo implements the AccountInfo query.
+func (ak AccountKeeper) AccountInfo(goCtx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if req.Address == "" {
+		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	account := ak.GetAccount(ctx, addr)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", req.Address)
+	}
+
+	pkAny, err := codectypes.NewAnyWithValue(account.GetPubKey())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAccountInfoResponse{
+		Info: &types.BaseAccount{
+			Address:       addr.String(),
+			PubKey:        pkAny,
+			AccountNumber: account.GetAccountNumber(),
+			Sequence:      account.GetSequence(),
+		},
+	}, nil
 }

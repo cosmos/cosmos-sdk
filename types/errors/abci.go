@@ -4,9 +4,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-// ResponseCheckTx returns an ABCI ResponseCheckTx object with fields filled in
-// from the given error and gas values.
-func ResponseCheckTx(err error, gw, gu uint64, debug bool) abci.ResponseCheckTx {
+// ResponseCheckTxWithEvents returns an ABCI ResponseCheckTx object with fields filled in
+// from the given error, gas values and events.
+func ResponseCheckTxWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) abci.ResponseCheckTx {
 	space, code, log := ABCIInfo(err, debug)
 	return abci.ResponseCheckTx{
 		Codespace: space,
@@ -14,12 +14,13 @@ func ResponseCheckTx(err error, gw, gu uint64, debug bool) abci.ResponseCheckTx 
 		Log:       log,
 		GasWanted: int64(gw),
 		GasUsed:   int64(gu),
+		Events:    events,
 	}
 }
 
-// ResponseDeliverTx returns an ABCI ResponseDeliverTx object with fields filled in
-// from the given error and gas values.
-func ResponseDeliverTx(err error, gw, gu uint64, debug bool) abci.ResponseDeliverTx {
+// ResponseDeliverTxWithEvents returns an ABCI ResponseDeliverTx object with fields filled in
+// from the given error, gas values and events.
+func ResponseDeliverTxWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) abci.ResponseDeliverTx {
 	space, code, log := ABCIInfo(err, debug)
 	return abci.ResponseDeliverTx{
 		Codespace: space,
@@ -27,6 +28,7 @@ func ResponseDeliverTx(err error, gw, gu uint64, debug bool) abci.ResponseDelive
 		Log:       log,
 		GasWanted: int64(gw),
 		GasUsed:   int64(gu),
+		Events:    events,
 	}
 }
 

@@ -3,11 +3,11 @@ package mock
 import (
 	"io"
 
-	protoio "github.com/gogo/protobuf/io"
+	protoio "github.com/cosmos/gogoproto/io"
 	dbm "github.com/tendermint/tm-db"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -125,7 +125,12 @@ func (ms multiStore) SetSnapshotInterval(snapshotInterval uint64) {
 func (ms multiStore) SetInterBlockCache(_ sdk.MultiStorePersistentCache) {
 	panic("not implemented")
 }
+
 func (ms multiStore) SetIAVLCacheSize(size int) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
 	panic("not implemented")
 }
 
@@ -140,6 +145,14 @@ func (ms multiStore) Snapshot(height uint64, protoWriter protoio.Writer) error {
 func (ms multiStore) Restore(
 	height uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
+	panic("not implemented")
+}
+
+func (ms multiStore) RollbackToVersion(version int64) error {
+	panic("not implemented")
+}
+
+func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
 

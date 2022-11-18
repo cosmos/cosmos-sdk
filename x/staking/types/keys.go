@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -18,9 +20,6 @@ const (
 
 	// StoreKey is the string store representation
 	StoreKey = ModuleName
-
-	// QuerierRoute is the querier route for the staking module
-	QuerierRoute = ModuleName
 
 	// RouterKey is the msg router key for the staking module
 	RouterKey = ModuleName
@@ -43,12 +42,43 @@ var (
 	RedelegationByValSrcIndexKey     = []byte{0x35} // prefix for each key for an redelegation, by source validator operator
 	RedelegationByValDstIndexKey     = []byte{0x36} // prefix for each key for an redelegation, by destination validator operator
 
+	UnbondingIDKey    = []byte{0x37} // key for the counter for the incrementing id for UnbondingOperations
+	UnbondingIndexKey = []byte{0x38} // prefix for an index for looking up unbonding operations by their IDs
+	UnbondingTypeKey  = []byte{0x39} // prefix for an index containing the type of unbonding operations
+
 	UnbondingQueueKey    = []byte{0x41} // prefix for the timestamps in unbonding queue
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+	HistoricalInfoKey   = []byte{0x50} // prefix for the historical info
+	ValidatorUpdatesKey = []byte{0x61} // prefix for the end block validator updates key
+
+	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 )
+
+// UnbondingType defines the type of unbonding operation
+type UnbondingType int
+
+const (
+	UnbondingType_Undefined UnbondingType = iota
+	UnbondingType_UnbondingDelegation
+	UnbondingType_Redelegation
+	UnbondingType_ValidatorUnbonding
+)
+
+// Returns a key for an index containing the type of unbonding operations
+func GetUnbondingTypeKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(UnbondingTypeKey, bz...)
+}
+
+// Returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
+func GetUnbondingIndexKey(id uint64) []byte {
+	bz := make([]byte, 8)
+	binary.BigEndian.PutUint64(bz, id)
+	return append(UnbondingIndexKey, bz...)
+}
 
 // GetValidatorKey creates the key for the validator with address
 // VALUE: staking/Validator
@@ -78,7 +108,7 @@ func AddressFromLastValidatorPowerKey(key []byte) []byte {
 // Power index is the key used in the power-store, and represents the relative
 // power ranking of the validator.
 // VALUE: validator operator address ([]byte)
-func GetValidatorsByPowerIndexKey(validator Validator, powerReduction sdk.Int) []byte {
+func GetValidatorsByPowerIndexKey(validator Validator, powerReduction math.Int) []byte {
 	// NOTE the address doesn't need to be stored because counter bytes must always be different
 	// NOTE the larger values are of higher value
 

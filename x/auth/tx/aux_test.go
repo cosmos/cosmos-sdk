@@ -5,15 +5,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 )
 
 var (
@@ -37,8 +39,18 @@ var (
 // Then it tests integrating the 2 AuxSignerData into a
 // client.TxBuilder created by the fee payer.
 func TestBuilderWithAux(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	testdata.RegisterInterfaces(encCfg.InterfaceRegistry)
+	var (
+		interfaceRegistry codectypes.InterfaceRegistry
+		txConfig          client.TxConfig
+	)
+
+	err := depinject.Inject(testutil.AppConfig,
+		&interfaceRegistry,
+		&txConfig,
+	)
+	require.NoError(t, err)
+
+	testdata.RegisterInterfaces(interfaceRegistry)
 
 	// Create an AuxTxBuilder for tipper (1st signer)
 	tipperBuilder, tipperSig := makeTipperTxBuilder(t)
@@ -71,7 +83,7 @@ func TestBuilderWithAux(t *testing.T) {
 	require.NoError(t, err)
 
 	// Fee payer (3rd and last signer) creates a TxBuilder.
-	w := encCfg.TxConfig.NewTxBuilder()
+	w := txConfig.NewTxBuilder()
 	// Note: we're testing calling AddAuxSignerData in the wrong order, i.e.
 	// adding the aux2 signer data first before the tipper.
 	err = w.AddAuxSignerData(aux2SignerData)
@@ -128,7 +140,7 @@ func TestBuilderWithAux(t *testing.T) {
 		PubKey:   feepayerPk,
 		Sequence: 15,
 	})
-	signBz, err = encCfg.TxConfig.SignModeHandler().GetSignBytes(
+	signBz, err = txConfig.SignModeHandler().GetSignBytes(
 		signing.SignMode_SIGN_MODE_DIRECT,
 		authsigning.SignerData{
 			Address:       feepayerAddr.String(),
@@ -153,9 +165,9 @@ func TestBuilderWithAux(t *testing.T) {
 	})
 
 	// Make sure tx is correct.
-	txBz, err := encCfg.TxConfig.TxEncoder()(w.GetTx())
+	txBz, err := txConfig.TxEncoder()(w.GetTx())
 	require.NoError(t, err)
-	tx, err := encCfg.TxConfig.TxDecoder()(txBz)
+	tx, err := txConfig.TxDecoder()(txBz)
 	require.NoError(t, err)
 	require.Equal(t, tx.(sdk.FeeTx).FeePayer(), feepayerAddr)
 	require.Equal(t, tx.(sdk.FeeTx).GetFee(), fee)

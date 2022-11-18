@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -69,7 +70,7 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 		// compute x and y per the specification, where:
 		// X := min(max(V - DV, 0), D)
 		// Y := D - X
-		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), sdk.ZeroInt()), coin.Amount)
+		x := sdk.MinInt(sdk.MaxInt(vestingAmt.Sub(delVestingAmt), math.ZeroInt()), coin.Amount)
 		y := coin.Amount.Sub(x)
 
 		if !x.IsZero() {
@@ -193,8 +194,10 @@ func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
 
 // Continuous Vesting Account
 
-var _ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*ContinuousVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*ContinuousVestingAccount)(nil)
+)
 
 // NewContinuousVestingAccountRaw creates a new ContinuousVestingAccount object from BaseVestingAccount
 func NewContinuousVestingAccountRaw(bva *BaseVestingAccount, startTime int64) *ContinuousVestingAccount {
@@ -235,7 +238,7 @@ func (cva ContinuousVestingAccount) GetVestedCoins(blockTime time.Time) sdk.Coin
 	// calculate the vesting scalar
 	x := blockTime.Unix() - cva.StartTime
 	y := cva.EndTime - cva.StartTime
-	s := sdk.NewDec(x).Quo(sdk.NewDec(y))
+	s := math.LegacyNewDec(x).Quo(math.LegacyNewDec(y))
 
 	for _, ovc := range cva.OriginalVesting {
 		vestedAmt := sdk.NewDecFromInt(ovc.Amount).Mul(s).RoundInt()
@@ -307,8 +310,10 @@ func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
 
 // Periodic Vesting Account
 
-var _ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*PeriodicVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*PeriodicVestingAccount)(nil)
+)
 
 // NewPeriodicVestingAccountRaw creates a new PeriodicVestingAccount object from BaseVestingAccount
 func NewPeriodicVestingAccountRaw(bva *BaseVestingAccount, startTime int64, periods Periods) *PeriodicVestingAccount {
@@ -451,8 +456,10 @@ func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
 
 // Delayed Vesting Account
 
-var _ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
-var _ authtypes.GenesisAccount = (*DelayedVestingAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
+	_ authtypes.GenesisAccount    = (*DelayedVestingAccount)(nil)
+)
 
 // NewDelayedVestingAccountRaw creates a new DelayedVestingAccount object from BaseVestingAccount
 func NewDelayedVestingAccountRaw(bva *BaseVestingAccount) *DelayedVestingAccount {
@@ -519,8 +526,10 @@ func (dva DelayedVestingAccount) String() string {
 //-----------------------------------------------------------------------------
 // Permanent Locked Vesting Account
 
-var _ vestexported.VestingAccount = (*PermanentLockedAccount)(nil)
-var _ authtypes.GenesisAccount = (*PermanentLockedAccount)(nil)
+var (
+	_ vestexported.VestingAccount = (*PermanentLockedAccount)(nil)
+	_ authtypes.GenesisAccount    = (*PermanentLockedAccount)(nil)
+)
 
 // NewPermanentLockedAccount returns a PermanentLockedAccount
 func NewPermanentLockedAccount(baseAcc *authtypes.BaseAccount, coins sdk.Coins) *PermanentLockedAccount {

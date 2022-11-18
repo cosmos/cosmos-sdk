@@ -50,6 +50,11 @@ Users *must* add a replace directive in their go.mod for the new `ics23` package
 ```go
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go
 ```
+### Improvements
+
+* [\#11693](https://github.com/cosmos/cosmos-sdk/pull/11693) Add validation for gentx cmd.
+* (store) [\#13325](https://github.com/cosmos/cosmos-sdk/pull/13325) Implementation of ADR-038 file StreamingService, backport #8664
+
 ## [v0.44.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.44.8) - 2022-04-12
 
 ### Improvements

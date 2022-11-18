@@ -57,3 +57,5 @@ ignore:
   - "x/**/test_common.go"
   - "scripts/"
   - "contrib"
+  - "**/*.pb.gw.go"
+  - "**/*.pulsar.go"

@@ -13,7 +13,7 @@ require (
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.22.3
-	github.com/btcsuite/btcd/btcec/v2 v2.3.1
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/confio/ics23/go v0.7.0
@@ -54,7 +54,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.37.0-rc1
 	github.com/tendermint/tm-db v0.6.7
-	golang.org/x/crypto v0.2.0
+	golang.org/x/crypto v0.3.0
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
 	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e
 	google.golang.org/grpc v1.50.1
@@ -179,4 +179,12 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 )
 
-retract v0.43.0
+retract (
+	// subject to the dragonberry vulnerability
+	// and/or the bank coin metadata migration issue
+	[v0.46.0, v0.46.4]
+	// subject to the dragonberry vulnerability
+	[v0.45.0, v0.45.8]
+	// do not use
+	v0.43.0
+)

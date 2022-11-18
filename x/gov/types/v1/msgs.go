@@ -297,10 +297,10 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 // NewMsgCancelProposal creates a new MsgCancelProposal instance
 //
 //nolint:interfacer
-func NewMsgCancelProposal(proposalID uint64, proposer sdk.AccAddress) *MsgCancelProposal {
+func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal {
 	return &MsgCancelProposal{
 		ProposalId: proposalID,
-		Proposer:   proposer.String(),
+		Proposer:   proposer,
 	}
 }
 

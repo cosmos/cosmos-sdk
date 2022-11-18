@@ -158,9 +158,7 @@ func NewCmdCancelProposal() *cobra.Command {
 
 			// Get proposer address
 			from := clientCtx.GetFromAddress()
-
-			msg := v1.NewMsgCancelProposal(proposalID, from)
-
+			msg := v1.NewMsgCancelProposal(proposalID, from.String())
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -164,10 +165,10 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // BurnAndSendDepositsToCommunityPool will burn the (deposits * proposal_cancel_burn_rate) amount of proposal deposits
 // and send remaining deposits of the proposal to community pool.
-func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposalID uint64, totalDeposits []sdk.Coin) error {
+func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposalID uint64, destAddress string, totalDeposits []sdk.Coin) error {
 	store := ctx.KVStore(keeper.storeKey)
 
-	proposalCancelBurnRate := keeper.GetParams(ctx).ProposalCancelBurnRate
+	proposalCancelBurnRate := keeper.GetParams(ctx).ProposalCancelRate
 	// burn the deposits * proposal_cancel_burn_rate amount from proposal deposits (gov module)
 	burnRate := sdk.MustNewDecFromStr(proposalCancelBurnRate)
 
@@ -192,10 +193,29 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 	}
 
 	// send (deposits - burnAmount) to community pool from proposal deposits (gov module)
-	communityPoolAmount := sdk.NewCoins(totalDeposits...).Sub(burnDepositAmount...)
-	err := keeper.distrkeeper.FundCommunityPool(ctx, communityPoolAmount, keeper.ModuleAccountAddress())
-	if err != nil {
-		return err
+	remainingAmount := sdk.Coins(totalDeposits).Sub(burnDepositAmount...)
+
+	// get the distribution module account address
+	distributionAddress := keeper.authKeeper.GetModuleAddress(distributiontypes.ModuleName)
+	if distributionAddress.String() == destAddress {
+		err := keeper.distrkeeper.FundCommunityPool(ctx, remainingAmount, keeper.ModuleAccountAddress())
+		if err != nil {
+			return err
+		}
+	} else {
+		if len(destAddress) == 0 {
+			// burn the remaining deposits also
+			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, remainingAmount)
+			if err != nil {
+				return err
+			}
+		} else {
+			destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destAccAddress, remainingAmount)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	store.Delete(types.DepositsKey(proposalID))

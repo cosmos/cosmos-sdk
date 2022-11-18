@@ -15,12 +15,13 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens       = sdk.NewInt(10000000)
-	DefaultQuorum                 = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio = sdk.ZeroDec()
-	DefaultProposalCancelBurnRate = sdk.ZeroDec()
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
+	DefaultProposalCancelRate        = sdk.ZeroDec()
+	DefaultProposalCancelDestAddress = ""
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -49,7 +50,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum, threshold, vetoThreshold, minInitialDepositRatio, proposalCancelBurnRate string,
+	quorum, threshold, vetoThreshold, minInitialDepositRatio, proposalCancelRate, proposalCancelDest string,
 ) Params {
 	return Params{
 		MinDeposit:             minDeposit,
@@ -59,7 +60,8 @@ func NewParams(
 		Threshold:              threshold,
 		VetoThreshold:          vetoThreshold,
 		MinInitialDepositRatio: minInitialDepositRatio,
-		ProposalCancelBurnRate: proposalCancelBurnRate,
+		ProposalCancelRate:     proposalCancelRate,
+		ProposalCancelDest:     proposalCancelDest,
 	}
 }
 
@@ -73,7 +75,8 @@ func DefaultParams() Params {
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
 		DefaultMinInitialDepositRatio.String(),
-		DefaultProposalCancelBurnRate.String(),
+		DefaultProposalCancelRate.String(),
+		DefaultProposalCancelDestAddress,
 	)
 }
 
@@ -142,7 +145,7 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
-	proposalCancelBurnRate, err := sdk.NewDecFromStr(p.ProposalCancelBurnRate)
+	proposalCancelBurnRate, err := sdk.NewDecFromStr(p.ProposalCancelRate)
 	if err != nil {
 		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
 	}
@@ -151,6 +154,13 @@ func (p Params) ValidateBasic() error {
 	}
 	if proposalCancelBurnRate.GT(math.LegacyOneDec()) {
 		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelBurnRate)
+	}
+
+	if len(p.ProposalCancelDest) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.ProposalCancelDest)
+		if err != nil {
+			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
+		}
 	}
 
 	return nil

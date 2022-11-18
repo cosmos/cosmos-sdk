@@ -124,8 +124,9 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 	}
 
 	// burn the (deposits * proposal_cancel_burn_rate) amount.
-	// and deposits * (1 - proposal_cancel_burn_rate) will be move to community pool.
-	err := keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, proposal.TotalDeposit)
+	// and deposits * (1 - proposal_cancel_burn_rate) will be move to community pool or deposits destination address or will be burned.
+	destAddress := keeper.GetParams(ctx).ProposalCancelDest
+	err := keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, destAddress, proposal.TotalDeposit)
 	if err != nil {
 		return err
 	}

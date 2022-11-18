@@ -163,6 +163,9 @@ func (rs *Store) PopStateCache() []types.StoreKVPair {
 	for _, ls := range rs.listeners {
 		cache = append(cache, ls.PopStateCache()...)
 	}
+	sort.SliceStable(cache, func(i, j int) bool {
+		return cache[i].StoreKey < cache[j].StoreKey
+	})
 	return cache
 }
 ```
@@ -216,13 +219,13 @@ so that the service can group the state changes with the ABCI requests.
 // ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
     // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-    ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
+    ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
     // ListenEndBlock updates the steaming service with the latest EndBlock messages
-    ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+    ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
     // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-    ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+    ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
     // ListenCommit updates the steaming service with the latest Commit messages and state changes
-    ListenCommit(ctx types.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error
+    ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error
 }
 ```
 
@@ -581,12 +584,13 @@ is helper function and not a requirement. Plugin registration can easily be move
 ```go
 // baseapp/streaming.go
 
-// RegisterStreamingPlugin registers the ABCI streaming service provided by the streaming plugin.
+// RegisterStreamingPlugin registers streaming plugins with the App.
+// This method returns an error if a plugin is not supported.
 func RegisterStreamingPlugin(
     bApp *BaseApp,
     appOpts servertypes.AppOptions,
     keys map[string]*types.KVStoreKey,
-    streamingService interface{},
+    streamingPlugin interface{},
 ) error {
     switch t := streamingPlugin.(type) {
     case ABCIListener:
@@ -609,7 +613,7 @@ func registerABCIListenerPlugin(
     stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
     keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
     exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-    bApp.cms.AddListeners(exposeStoreKeysSorted(exposeKeysStr, keys))
+    bApp.cms.AddListeners(exposeStoreKeys(exposeKeysStr, keys))
     bApp.abciListener = abciListener
     bApp.stopNodeOnStreamingErr = stopNodeOnErr
 }
@@ -625,7 +629,7 @@ func exposeAll(list []string) bool {
     return false
 }
 
-func exposeStoreKeysSorted(keysStr []string, keys map[string]*types.KVStoreKey) []types.StoreKey {
+func exposeStoreKeys(keysStr []string, keys map[string]*types.KVStoreKey) []types.StoreKey {
     var exposeStoreKeys []types.StoreKey
     if exposeAll(keysStr) {
         exposeStoreKeys = make([]types.StoreKey, 0, len(keys))
@@ -640,10 +644,6 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*types.KVStoreKey) 
             }
         }
     }
-    // sort storeKeys for deterministic output
-    sort.SliceStable(exposeStoreKeys, func(i, j int) bool {
-        return strings.Compare(exposeStoreKeys[i].Name(), exposeStoreKeys[j].Name()) < 0
-    })
 
     return exposeStoreKeys
 }
@@ -674,19 +674,21 @@ func NewSimApp(
 
     ...
 
-    // enable streaming
-    enableKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingEnableTomlKey)
-    if enable := cast.ToBool(appOpts.Get(enableKey)); enable {
-       pluginKey := fmt.Sprintf("%s.%s", baseapp.StreamingTomlKey, baseapp.StreamingPluginTomlKey)
-       pluginName := cast.ToString(appOpts.Get(pluginKey))
-       logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-       plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-       if err != nil {
-           tmos.Exit(err.Error())
-       }
-       if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-           tmos.Exit(err.Error())
-       }
+    // register streaming services
+    streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
+    for service := range streamingCfg {
+        pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingPluginTomlKey)
+        pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
+        if len(pluginName) > 0 {
+            logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
+            plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
+            if err != nil {
+                tmos.Exit(err.Error())
+            }
+            if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
+                tmos.Exit(err.Error())
+            }
+        }
     }
 
     return app
@@ -700,11 +702,11 @@ The plugin system will be configured within an App's TOML configuration files.
 # gRPC streaming
 [streaming]
 
-# StreamingEnale defines if the gRPC streaming plugins should be enabled.
-enable = true
+# ABCI streaming service
+[streaming.abci]
 
 # The plugin version to use for ABCI listening
-plugin = "grpc_abci_v1"
+plugin = "abci_v1"
 
 # List of kv store keys to listen to for state changes.
 # Set to ["*"] to expose all keys.
@@ -714,9 +716,15 @@ keys = ["*"]
 stop-node-on-err = true
 ```
 
-There will be four parameters for configuring the streaming plugin system: `streaming.enable`, `streaming.keys`, `streaming.plugin` and `streaming.stop-node-on-err`.
-`streaming.enable` is a bool that turns on or off the streaming service, `streaming.keys` is a set of store keys for stores it listens to,
-`streaming.plugin` is the name of the plugin we want to use for streaming and `streaming.stop-node-on-err` is a bool that stops the node when true and operates in a fire-and-forget mode when false.
+There will be three parameters for configuring `ABCIListener` plugin: `streaming.abci.plugin`, `streaming.abci.keys` and `streaming.abci.stop-node-on-err`.
+`streaming.abci.plugin` is the name of the plugin we want to use for streaming, `streaming.abci.keys` is a set of store keys for stores it listens to,
+ and `streaming.abci.stop-node-on-err` is a bool that stops the node when true and operates in a fire-and-forget mode when false.
+
+The configuration above support additional streaming plugins by adding the plugin to the `[streaming]` configuration section
+and registering the plugin with `RegisterStreamingPlugin` helper function.
+
+Note the that each plugin must include `streaming.{service}.plugin` property as it is a requirement for doing the lookup and registration of the plugin
+with the App. All other properties are unique to the individual services.
 
 #### Encoding and decoding streams
 

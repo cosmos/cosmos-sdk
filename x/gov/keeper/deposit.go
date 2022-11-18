@@ -168,9 +168,9 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposalID uint64, destAddress string, totalDeposits []sdk.Coin) error {
 	store := ctx.KVStore(keeper.storeKey)
 
-	proposalCancelBurnRate := keeper.GetParams(ctx).ProposalCancelRatio
-	// burn the deposits * proposal_cancel_burn_rate amount from proposal deposits (gov module)
-	burnRate := sdk.MustNewDecFromStr(proposalCancelBurnRate)
+	proposalCancelRate := keeper.GetParams(ctx).ProposalCancelRatio
+	// burn the deposits * proposal_cancel_rate amount from proposal deposits (gov module)
+	burnRate := sdk.MustNewDecFromStr(proposalCancelRate)
 
 	var burnDepositAmount sdk.Coins
 

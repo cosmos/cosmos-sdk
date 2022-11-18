@@ -4,12 +4,13 @@ import (
 	"fmt"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	mempool2 "github.com/cosmos/cosmos-sdk/types/mempool"
+	mempool "github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"sort"
 
 	"math/rand"
 	"pgregory.net/rapid"
@@ -30,7 +31,7 @@ var (
 func testMempoolProperties(t *rapid.T) {
 
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	mempool := mempool2.NewSenderNonceMempool()
+	mp := mempool.NewSenderNonceMempool()
 	genAddress := rapid.Custom(func(t *rapid.T) simtypes.Account {
 		accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(rapid.Int64().Draw(t, "seed for account"))), 1)
 		return accounts[0]
@@ -40,45 +41,64 @@ func testMempoolProperties(t *rapid.T) {
 	})
 
 	accounts := genMultipleAddress.Draw(t, "address")
-	fmt.Println(accounts)
 	genTx := rapid.Custom(func(t *rapid.T) testTx {
 		return testTx{
 			priority: rapid.Int64Range(0, 1000).Draw(t, "priority"),
 			nonce:    rapid.Uint64().Draw(t, "nonce"),
 			address:  rapid.SampledFrom(accounts).Draw(t, "acc").Address,
 		}
-		//fmt.Println("genTX:", tx)
-		//return tx
-
 	})
-	fmt.Println(genTx)
 	genMultipleTX := rapid.SliceOf(genTx)
 
 	txs := genMultipleTX.Draw(t, "txs")
-	fmt.Println("txs:", txs)
+	senderTxRaw := getSenderTxMap(txs)
 
 	for _, tx := range txs {
-		fmt.Println("tx", tx)
-		fmt.Println(ctx)
-		fmt.Println(mempool)
-		//err := mempool.Insert(ctx, tx)
-		//require.NoError(t, err)
+		err := mp.Insert(ctx, tx)
+		require.NoError(t, err)
 	}
 
-	test := rapid.SliceOf(rapid.Int().AsAny())
-	for i := 0; i < 5; i++ {
-		fmt.Println(i)
-		fmt.Println(test.Example(i))
-		fmt.Println(genMultipleAddress.Example(i))
-		fmt.Println(genMultipleTX.Example(i))
-
+	iter := mp.Select(ctx, nil)
+	orderTx := make([]testTx, 0)
+	for _, tx := range fetchAllTxs(iter) {
+		orderTx = append(orderTx, tx.(testTx))
 	}
-
-	require.True(t, false)
-
+	senderTxOrdered := getSenderTxMap(orderTx)
+	fmt.Println(senderTxOrdered)
+	for key := range senderTxOrdered {
+		ordered, found := senderTxOrdered[key]
+		require.True(t, found)
+		raw, found := senderTxRaw[key]
+		require.True(t, found)
+		sort.Slice(raw, func(i, j int) bool { return raw[i].nonce < raw[j].nonce })
+		require.Equal(t, raw, ordered)
+	}
 }
 
 func (s *MempoolTestSuite) TestProperties() {
 	t := s.T()
 	rapid.Check(t, testMempoolProperties)
+}
+
+func getSenderTxMap(txs []testTx) map[string][]testTx {
+	senderTxs := make(map[string][]testTx)
+	for _, tx := range txs {
+		stx, found := senderTxs[tx.address.String()]
+		if !found {
+			stx = make([]testTx, 0)
+		}
+		stx = append(stx, tx)
+		senderTxs[tx.address.String()] = stx
+	}
+	return senderTxs
+}
+
+func fetchAllTxs(iterator mempool.Iterator) []sdk.Tx {
+	var txs []sdk.Tx
+	for iterator != nil {
+		txs = append(txs, iterator.Tx())
+		i := iterator.Next()
+		iterator = i
+	}
+	return txs
 }

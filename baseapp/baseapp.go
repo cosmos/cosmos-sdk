@@ -63,7 +63,7 @@ type BaseApp struct { //nolint: maligned
 
 	mempool         mempool.Mempool            // application side mempool
 	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
+	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
 	initChainer     sdk.InitChainer            // initialize state with validators and state blob
 	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
 	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
@@ -739,7 +739,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
-			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
+			newCtx, err := app.postHandler(runMsgCtx, tx, result, mode == runTxModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, nil, priority, err
 			}

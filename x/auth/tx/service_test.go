@@ -331,8 +331,8 @@ func (s IntegrationTestSuite) TestGetTx_GRPC() {
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tx.GetTxRequest{}, true, "transaction hash cannot be empty"},
-		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "tx (DEADBEEF) not found"},
+		{"empty request", &tx.GetTxRequest{}, true, "tx hash cannot be empty"},
+		{"request with dummy hash", &tx.GetTxRequest{Hash: "deadbeef"}, true, "code = NotFound desc = tx not found: deadbeef"},
 		{"good request", &tx.GetTxRequest{Hash: s.txRes.TxHash}, false, ""},
 	}
 	for _, tc := range testCases {
@@ -361,12 +361,12 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 		{
 			"empty params",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/", val.APIAddress),
-			true, "transaction hash cannot be empty",
+			true, "tx hash cannot be empty",
 		},
 		{
 			"dummy hash",
 			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs/%s", val.APIAddress, "deadbeef"),
-			true, "tx (DEADBEEF) not found",
+			true, "code = NotFound desc = tx not found: deadbeef",
 		},
 		{
 			"good hash",

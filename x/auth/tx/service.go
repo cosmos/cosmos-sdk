@@ -131,10 +131,18 @@ func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtype
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
+	if len(req.Hash) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "tx hash cannot be empty")
+	}
+
 	// TODO We should also check the proof flag in gRPC header.
 	// https://github.com/cosmos/cosmos-sdk/issues/7036.
 	result, err := QueryTx(s.clientCtx, req.Hash)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return nil, status.Errorf(codes.NotFound, "tx not found: %s", req.Hash)
+		}
+
 		return nil, err
 	}
 

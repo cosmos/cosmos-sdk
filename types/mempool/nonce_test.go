@@ -158,7 +158,3 @@ func (s *MempoolTestSuite) TestTxOrder() {
 		})
 	}
 }
-
-func (s *MempoolTestSuite) TestNormalDistributionTxSelection() {
-
-}

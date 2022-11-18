@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -219,7 +218,7 @@ func makeOutputFilepath(rootDir, nodeID string) (string, error) {
 }
 
 func readUnsignedGenTxFile(clientCtx client.Context, r io.Reader) (sdk.Tx, error) {
-	bz, err := ioutil.ReadAll(r)
+	bz, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}

@@ -48,7 +48,7 @@ func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
 func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	bodies := [][]byte{}
 	for chunk := range chunks {
-		body, err := ioutil.ReadAll(chunk)
+		body, err := io.ReadAll(chunk)
 		if err != nil {
 			panic(err)
 		}
@@ -76,7 +76,7 @@ func (m *mockSnapshotter) Restore(
 
 	m.chunks = [][]byte{}
 	for reader := range chunks {
-		chunk, err := ioutil.ReadAll(reader)
+		chunk, err := io.ReadAll(reader)
 		if err != nil {
 			return err
 		}

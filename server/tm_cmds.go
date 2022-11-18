@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	tcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
 	tversion "github.com/tendermint/tendermint/version"
@@ -116,6 +115,9 @@ against which this app has been compiled.
 	}
 }
 
+// NOTE: to get unsafe-reset-all in your app again, you'll need to add it to your root.go and ignite can complicate this.
+
+/*
 // UnsafeResetAllCmd - extension of the tendermint command, resets initialization
 func UnsafeResetAllCmd() *cobra.Command {
 	return &cobra.Command{
@@ -130,3 +132,4 @@ func UnsafeResetAllCmd() *cobra.Command {
 		},
 	}
 }
+*/

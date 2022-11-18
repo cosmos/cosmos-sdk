@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io/ioutil" //nolint:staticcheck // in this file we will want to use ioutil.  Can't catch e'm all.
 	"os"
 	"path/filepath"
 	"runtime"

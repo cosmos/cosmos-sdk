@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -135,7 +135,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 // ReadRESTReq reads and unmarshals a Request's body to the the BaseReq struct.
 // Writes an error response to ResponseWriter and returns false if errors occurred.
 func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.LegacyAmino, req interface{}) bool {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if CheckBadRequestError(w, err) {
 		return false
 	}
@@ -416,7 +416,7 @@ func GetRequest(url string) ([]byte, error) {
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +436,7 @@ func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}
 
-	bz, err := ioutil.ReadAll(res.Body)
+	bz, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}

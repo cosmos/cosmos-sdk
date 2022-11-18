@@ -342,15 +342,8 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
-<<<<<<< HEAD
-	// Create a proposal where the handler will pass for the test proposal
-	// because the value of contextKeyBadProposal is true.
-	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
-=======
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "")
->>>>>>> 5581f7f30 (fix: correctly propagate msg errors in gov (#13918))
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "")
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
@@ -369,15 +362,11 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	ctx = ctx.WithBlockHeader(newHeader)
 
 	// validate that the proposal fails/has been rejected
-<<<<<<< HEAD
 	gov.EndBlocker(ctx, app.GovKeeper)
-=======
-	gov.EndBlocker(ctx, suite.GovKeeper)
 
-	proposal, ok := suite.GovKeeper.GetProposal(ctx, proposal.Id)
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.Id)
 	require.True(t, ok)
 	require.Equal(t, v1.StatusFailed, proposal.Status)
->>>>>>> 5581f7f30 (fix: correctly propagate msg errors in gov (#13918))
 }
 
 func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {

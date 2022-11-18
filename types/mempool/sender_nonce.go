@@ -86,9 +86,10 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	senderTxs, found := snm.senders[sender]
 	if !found {
 		senderTxs = huandu.New(huandu.Uint64)
+		snm.senders[sender] = senderTxs
 	}
 	senderTxs.Set(nonce, tx)
-	snm.senders[sender] = senderTxs
+
 	return nil
 }
 
@@ -150,8 +151,6 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 
 	if senderTxs.Len() == 0 {
 		delete(snm.senders, sender)
-	} else {
-		snm.senders[sender] = senderTxs
 	}
 	return nil
 }

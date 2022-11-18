@@ -58,10 +58,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (config) [#13894](https://github.com/cosmos/cosmos-sdk/pull/13894) Support state streaming configuration in `app.toml` template and default configuration.
 * (x/nft) [#13836](https://github.com/cosmos/cosmos-sdk/pull/13836) Remove the validation for `classID` and `nftID` from the NFT module.
 * [#13789](https://github.com/cosmos/cosmos-sdk/pull/13789) Add tx `encode` and `decode` endpoints to tx service.
   > Note: This endpoint will only encode proto messages, Amino encoding is not supported.
-* [#13826](https://github.com/cosmos/cosmos-sdk/pull/13826) Support custom `GasConfig` configuration for applications.
 * [#13619](https://github.com/cosmos/cosmos-sdk/pull/13619) Add new function called LogDeferred to report errors in defers. Use the function in x/bank files.
 * (tools) [#13603](https://github.com/cosmos/cosmos-sdk/pull/13603) Rename cosmovisor package name to `cosmossdk.io/tools/cosmovisor`. The new tool directory contains Cosmos SDK tools.
 * (deps) [#13397](https://github.com/cosmos/cosmos-sdk/pull/13397) Bump Go version minimum requirement to `1.19`.
@@ -90,7 +90,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13528](https://github.com/cosmos/cosmos-sdk/pull/13528) Update `ValidateMemoDecorator` to only check memo against `MaxMemoCharacters` param when a memo is present.
 * [#13651](https://github.com/cosmos/cosmos-sdk/pull/13651) Update `server/config/config.GetConfig` function.
 * [#13781](https://github.com/cosmos/cosmos-sdk/pull/13781) Remove `client/keys.KeysCdc`.
-* [#13803](https://github.com/cosmos/cosmos-sdk/pull/13803) Add an error log if iavl set operation failed.
 * [#13802](https://github.com/cosmos/cosmos-sdk/pull/13802) Add --output-document flag to the export CLI command to allow writing genesis state to a file.
 * [#13794](https://github.com/cosmos/cosmos-sdk/pull/13794) `types/module.Manager` now supports the
 `cosmossdk.io/core/appmodule.AppModule` API via the new `NewManagerFromMap` constructor.
@@ -115,7 +114,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#12771](https://github.com/cosmos/cosmos-sdk/pull/12771) Initial deposit requirement for proposals at submission time.
 * (x/staking) [#12967](https://github.com/cosmos/cosmos-sdk/pull/12967) `unbond` now creates only one unbonding delegation entry when multiple unbondings exist at a single height (e.g. through multiple messages in a transaction).
 * (x/auth/vesting) [#13502](https://github.com/cosmos/cosmos-sdk/pull/13502) Add Amino Msg registration for `MsgCreatePeriodicVestingAccount`.
-* (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Fix group MinExecutionPeriod that is checked on execution now, instead of voting period end.
 
 ### API Breaking Changes
 
@@ -171,7 +169,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#13794](https://github.com/cosmos/cosmos-sdk/pull/13794) Most methods on `types/module.AppModule` have been moved to 
 extension interfaces. `module.Manager.Modules` is now of type `map[string]interface{}` to support in parallel the new 
 `cosmossdk.io/core/appmodule.AppModule` API.
-* (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
 
 ### CLI Breaking Changes
 
@@ -180,7 +177,6 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 
 ### Bug Fixes
 
-* (x/group) [#13869](https://github.com/cosmos/cosmos-sdk/pull/13869) Group members weight must be positive and a finite number.
 * (x/auth) [#13838](https://github.com/cosmos/cosmos-sdk/pull/13838) Fix calling `String()` and `MarshalYAML` panics when pubkey is set on a `BaseAccount`. 
 * (rosetta) [#13583](https://github.com/cosmos/cosmos-sdk/pull/13583) Misc fixes for cosmos-rosetta.
 * (x/evidence) [#13740](https://github.com/cosmos/cosmos-sdk/pull/13740) Fix evidence query API to decode the hash properly.
@@ -198,9 +194,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (x/gov) [#13051](https://github.com/cosmos/cosmos-sdk/pull/13051) In SubmitPropsal, when a legacy msg fails it's handler call, wrap the error as ErrInvalidProposalContent (instead of ErrNoProposalHandlerExists).
 * (x/gov) [#13045](https://github.com/cosmos/cosmos-sdk/pull/13045) Fix gov migrations for v3(0.46).
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
-* (x/gov) [#13728](https://github.com/cosmos/cosmos-sdk/pull/13728) Fix propagation of message events to the current context in `EndBlocker`.
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
-* [#13861](https://github.com/cosmos/cosmos-sdk/pull/13861) Allow `_` characters in tx event queries, i.e. `GetTxsEvent`.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
 
 ### Deprecated
@@ -210,6 +204,34 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
   The information can now be accessed using the BankKeeper.
   Setting can be done using MsgSetSendEnabled as a governance proposal.
   A SendEnabled query has been added to both GRPC and CLI.
+
+## [v0.46.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.5) - 2022-11-17
+
+### Features
+
+* (x/bank) [#13891](https://github.com/cosmos/cosmos-sdk/pull/13891) Provide a helper function `Migrate_V0464_To_V0465` for migrating a chain **already on v0.46 with versions <=v0.46.4** to the latest v0.46.5 correct state.
+
+### Improvements
+
+* [#13826](https://github.com/cosmos/cosmos-sdk/pull/13826) Support custom `GasConfig` configuration for applications.
+* (deps) Bump Tendermint version to [v0.34.23](https://github.com/tendermint/tendermint/releases/tag/v0.34.23).
+
+### State Machine Breaking
+
+* (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Fix group MinExecutionPeriod that is checked on execution now, instead of voting period end.
+
+### API Breaking Changes
+
+* (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
+
+### Bug Fixes
+
+* (x/group) [#13869](https://github.com/cosmos/cosmos-sdk/pull/13869) Group members weight must be positive and a finite number.
+* (x/bank) [#13821](https://github.com/cosmos/cosmos-sdk/pull/13821) Fix bank store migration of coin metadata.
+* (x/group) [#13808](https://github.com/cosmos/cosmos-sdk/pull/13808) Fix propagation of message events to the current context in `EndBlocker`.
+* (x/gov) [#13728](https://github.com/cosmos/cosmos-sdk/pull/13728) Fix propagation of message events to the current context in `EndBlocker`.
+* (store) [#13803](https://github.com/cosmos/cosmos-sdk/pull/13803) Add an error log if IAVL set operation failed.
+* [#13861](https://github.com/cosmos/cosmos-sdk/pull/13861) Allow `_` characters in tx event queries, i.e. `GetTxsEvent`.
 
 ## [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) - 2022-11-01
 

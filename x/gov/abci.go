@@ -71,7 +71,9 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)
-					res, err := handler(cacheCtx, msg)
+
+					var res *sdk.Result
+					res, err = handler(cacheCtx, msg)
 					if err != nil {
 						break
 					}

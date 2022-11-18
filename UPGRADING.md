@@ -113,8 +113,7 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
-##### Proposer field to Proposal
-
+##### New Proposal.Proposer field
 
 The `Proposal` proto has been updated with proposer field. For proposal state migraton
 developers should ensure to call `v4.AddProposerAddressToProposal` in their upgrade handler.
@@ -144,14 +143,14 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 #####  New Feature: Cancelling Proposals
 
-The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRate` parameter.
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
 
 ```
-	1. deposits * proposal_cancel_rate will be burned
-	2. deposits * (1 - proposal_cancel_rate) will be sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then all remaining deposits will be burned.
+	1. deposits * proposal_cancel_ratio will be burned
+	2. deposits * (1 - proposal_cancel_ratio) will be sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then all remaining deposits will be burned.
 ```
 
-By default, the new `ProposalCancelRate` parameter is set to zero during migration and `ProposalCancelDest` is set to empty string.
+By default, the new `ProposalCancelRatio` parameter is set to zero during migration and `ProposalCancelDest` is set to empty string.
 
 #### `x/consensus`
 

@@ -168,7 +168,7 @@ message Params {
   // The burn rate of deposits when cancel the proposal
   //
   // Since: cosmos-sdk 0.47
-  string proposal_cancel_rate = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  string proposal_cancel_ratio = 8 [(cosmos_proto.scalar) = "cosmos.Dec"];
   // The proposal cancel destination address will receive the remaining deposits of cancel proposal.
   //
   // Since: cosmos-sdk 0.47

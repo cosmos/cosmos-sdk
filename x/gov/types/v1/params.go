@@ -20,7 +20,7 @@ var (
 	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
 	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
 	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
-	DefaultProposalCancelRate        = sdk.ZeroDec()
+	DefaultProposalCancelRatio       = sdk.ZeroDec()
 	DefaultProposalCancelDestAddress = ""
 )
 
@@ -50,7 +50,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum, threshold, vetoThreshold, minInitialDepositRatio, proposalCancelRate, proposalCancelDest string,
+	quorum, threshold, vetoThreshold, minInitialDepositRatio, ProposalCancelRatio, proposalCancelDest string,
 ) Params {
 	return Params{
 		MinDeposit:             minDeposit,
@@ -60,7 +60,7 @@ func NewParams(
 		Threshold:              threshold,
 		VetoThreshold:          vetoThreshold,
 		MinInitialDepositRatio: minInitialDepositRatio,
-		ProposalCancelRate:     proposalCancelRate,
+		ProposalCancelRatio:    ProposalCancelRatio,
 		ProposalCancelDest:     proposalCancelDest,
 	}
 }
@@ -75,7 +75,7 @@ func DefaultParams() Params {
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
 		DefaultMinInitialDepositRatio.String(),
-		DefaultProposalCancelRate.String(),
+		DefaultProposalCancelRatio.String(),
 		DefaultProposalCancelDestAddress,
 	)
 }
@@ -145,7 +145,7 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
-	proposalCancelBurnRate, err := sdk.NewDecFromStr(p.ProposalCancelRate)
+	proposalCancelBurnRate, err := sdk.NewDecFromStr(p.ProposalCancelRatio)
 	if err != nil {
 		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
 	}

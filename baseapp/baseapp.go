@@ -170,7 +170,7 @@ func NewBaseApp(
 	}
 
 	if app.mempool == nil {
-		app.SetMempool(mempool.NewNonceMempool())
+		app.SetMempool(mempool.NewSenderNonceMempool())
 	}
 
 	if app.processProposal == nil {

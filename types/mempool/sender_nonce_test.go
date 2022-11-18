@@ -1,102 +1,160 @@
 package mempool_test
 
 import (
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	mempool "github.com/cosmos/cosmos-sdk/types/mempool"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"math/rand"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"sort"
 
-	"math/rand"
-	"pgregory.net/rapid"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-var (
-	_ sdk.Tx                  = (*testTx)(nil)
-	_ signing.SigVerifiableTx = (*testTx)(nil)
-	_ cryptotypes.PubKey      = (*testPubKey)(nil)
-)
-
-// Property Based Testing
-// Split the senders tx in independent slices and then test the following properties in each slice
-// same elements input output
-// the reverse of the reverse of the list is the same
-// for every sequence element pair a, b a < b
-
-func testMempoolProperties(t *rapid.T) {
-
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
-	mp := mempool.NewSenderNonceMempool()
-	genAddress := rapid.Custom(func(t *rapid.T) simtypes.Account {
-		accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(rapid.Int64().Draw(t, "seed for account"))), 1)
-		return accounts[0]
-	})
-	genMultipleAddress := rapid.SliceOfDistinct(genAddress, func(acc simtypes.Account) string {
-		return acc.Address.String()
-	})
-
-	accounts := genMultipleAddress.Draw(t, "address")
-	genTx := rapid.Custom(func(t *rapid.T) testTx {
-		return testTx{
-			priority: rapid.Int64Range(0, 1000).Draw(t, "priority"),
-			nonce:    rapid.Uint64().Draw(t, "nonce"),
-			address:  rapid.SampledFrom(accounts).Draw(t, "acc").Address,
-		}
-	})
-	genMultipleTX := rapid.SliceOf(genTx)
-
-	txs := genMultipleTX.Draw(t, "txs")
-	senderTxRaw := getSenderTxMap(txs)
-
-	for _, tx := range txs {
-		err := mp.Insert(ctx, tx)
-		require.NoError(t, err)
-	}
-
-	iter := mp.Select(ctx, nil)
-	orderTx := make([]testTx, 0)
-	for _, tx := range fetchAllTxs(iter) {
-		orderTx = append(orderTx, tx.(testTx))
-	}
-	senderTxOrdered := getSenderTxMap(orderTx)
-	for key := range senderTxOrdered {
-		ordered, found := senderTxOrdered[key]
-		require.True(t, found)
-		raw, found := senderTxRaw[key]
-		require.True(t, found)
-		sort.Slice(raw, func(i, j int) bool { return raw[i].nonce < raw[j].nonce })
-		require.Equal(t, raw, ordered)
-	}
-}
-
-func (s *MempoolTestSuite) TestProperties() {
+func (s *MempoolTestSuite) TestTxOrder() {
 	t := s.T()
-	rapid.Check(t, testMempoolProperties)
-}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
+	sa := accounts[0].Address
+	sb := accounts[1].Address
 
-func getSenderTxMap(txs []testTx) map[string][]testTx {
-	senderTxs := make(map[string][]testTx)
-	for _, tx := range txs {
-		stx, found := senderTxs[tx.address.String()]
-		if !found {
-			stx = make([]testTx, 0)
-		}
-		stx = append(stx, tx)
-		senderTxs[tx.address.String()] = stx
+	tests := []struct {
+		txs   []txSpec
+		order [][]int
+		fail  bool
+		seed  int64
+	}{
+		{
+			txs: []txSpec{
+				{p: 21, n: 4, a: sa},
+				{p: 8, n: 3, a: sa},
+				{p: 6, n: 2, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 20, n: 1, a: sa},
+			},
+			order: [][]int{
+				{4, 2, 3, 1, 0},
+				{3, 4, 2, 1, 0},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  0
+			seed: 0,
+		},
+		{
+			txs: []txSpec{
+				{p: 3, n: 0, a: sa},
+				{p: 5, n: 1, a: sa},
+				{p: 9, n: 2, a: sa},
+				{p: 6, n: 0, a: sb},
+				{p: 5, n: 1, a: sb},
+				{p: 8, n: 2, a: sb},
+			},
+			order: [][]int{
+				{0, 1, 3, 2, 4, 5},
+				{3, 4, 0, 5, 1, 2},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  0
+			seed: 0,
+		},
+		{
+			txs: []txSpec{
+				{p: 21, n: 4, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 20, n: 1, a: sa},
+			},
+			order: [][]int{
+				{2, 0, 1},
+				{1, 2, 0},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  0
+			seed: 0,
+		},
+		{
+			txs: []txSpec{
+				{p: 50, n: 3, a: sa},
+				{p: 30, n: 2, a: sa},
+				{p: 10, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 21, n: 2, a: sb},
+			},
+			order: [][]int{
+				{2, 1, 3, 0, 4},
+				{3, 4, 2, 1, 0},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  0
+			seed: 0,
+		},
+		{
+			txs: []txSpec{
+				{p: 50, n: 3, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 99, n: 1, a: sa},
+				{p: 15, n: 1, a: sb},
+				{p: 8, n: 2, a: sb},
+			},
+			order: [][]int{
+				{2, 1, 3, 0, 4},
+				{3, 4, 2, 1, 0},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  0
+			seed: 0,
+		},
+		{
+			txs: []txSpec{
+				{p: 30, a: sa, n: 2},
+				{p: 20, a: sb, n: 1},
+				{p: 15, a: sa, n: 1},
+				{p: 10, a: sa, n: 0},
+				{p: 8, a: sb, n: 0},
+				{p: 6, a: sa, n: 3},
+				{p: 4, a: sb, n: 3},
+			},
+			order: [][]int{
+				{3, 2, 4, 0, 1, 5, 6},
+				{4, 1, 3, 6, 2, 0, 5},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  1 1 0
+			seed: 0,
+		},
+		{
+			txs: []txSpec{
+				{p: 6, n: 1, a: sa},
+				{p: 10, n: 2, a: sa},
+				{p: 5, n: 1, a: sb},
+				{p: 99, n: 2, a: sb},
+			},
+			order: [][]int{
+				{0, 1, 2, 3},
+				{2, 3, 0, 1},
+			},
+			// Index order base on seed 0: 0  0  1  0  1  0  1 1 0
+			seed: 0,
+		},
 	}
-	return senderTxs
-}
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			pool := mempool.NewSenderNonceMempoolWithSeed(tt.seed)
+			// create test txs and insert into mempool
+			for i, ts := range tt.txs {
+				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
+				c := ctx.WithPriority(tx.priority)
+				err := pool.Insert(c, tx)
+				require.NoError(t, err)
+			}
 
-func fetchAllTxs(iterator mempool.Iterator) []sdk.Tx {
-	var txs []sdk.Tx
-	for iterator != nil {
-		txs = append(txs, iterator.Tx())
-		i := iterator.Next()
-		iterator = i
+			itr := pool.Select(ctx, nil)
+			orderedTxs := fetchTxs(itr, 1000)
+			var txOrder []int
+			for _, tx := range orderedTxs {
+				txOrder = append(txOrder, tx.(testTx).id)
+			}
+			for _, tx := range orderedTxs {
+				require.NoError(t, pool.Remove(tx))
+			}
+			require.Contains(t, fmt.Sprintf("%v", tt.order), fmt.Sprintf("%v", txOrder))
+			require.Equal(t, 0, pool.CountTx())
+		})
 	}
-	return txs
 }

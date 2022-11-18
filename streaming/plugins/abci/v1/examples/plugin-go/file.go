@@ -28,8 +28,8 @@ func (a FilePlugin) writeToFile(file string, data []byte) error {
 
 func (a FilePlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
 	a.BlockHeight = req.Header.Height
-	d1 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, req))
-	d2 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, res))
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
 	if err := a.writeToFile("begin-block-req", d1); err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func (a FilePlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginB
 }
 
 func (a FilePlugin) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
-	d1 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, req))
-	d2 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, req))
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
 	if err := a.writeToFile("end-block-req", d1); err != nil {
 		return err
 	}
@@ -52,8 +52,8 @@ func (a FilePlugin) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock
 }
 
 func (a FilePlugin) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
-	d1 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, req))
-	d2 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, res))
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, req))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
 	if err := a.writeToFile("deliver-tx-req", d1); err != nil {
 		return err
 	}
@@ -65,8 +65,8 @@ func (a FilePlugin) ListenDeliverTx(ctx context.Context, req abci.RequestDeliver
 
 func (a FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
 	fmt.Printf("listen-commit: block_height=%d data=%v", res.RetainHeight, changeSet)
-	d1 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, res))
-	d2 := []byte(fmt.Sprintf("%d:::%v", a.BlockHeight, changeSet))
+	d1 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, res))
+	d2 := []byte(fmt.Sprintf("%d:::%v\n", a.BlockHeight, changeSet))
 	if err := a.writeToFile("commit-res", d1); err != nil {
 		return err
 	}

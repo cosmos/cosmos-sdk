@@ -154,25 +154,12 @@ jobs:
       - run: |
           cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
         if: env.GIT_DIFF
-      - name: filter out DONTCOVER
-        run: |
-          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
-          excludelist+=" $(find ./ -type f -name '*.pb.go')"
-          excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
-          excludelist+=" $(find ./ -type f -path './tests/mocks/*.go')"
-          for filename in ${excludelist}; do
-            filename=$(echo $filename | sed 's/^./github.com\/cosmos\/cosmos-sdk/g')
-            echo "Excluding ${filename} from coverage report..."
-            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
-          done
-        if: env.GIT_DIFF
       - uses: codecov/codecov-action@v3
         with:
           file: ./coverage.txt
         if: env.GIT_DIFF
 
   sonarcloud:
-    name: SonarCloud
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -7,14 +7,12 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     # - errcheck
     - goconst
     - gocritic
-    - gofmt
-    - goimports
+    - gofumpt
     - gosec
     - gosimple
     - govet
@@ -25,7 +23,6 @@ linters:
     - revive
     - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
@@ -37,6 +34,9 @@ linters:
 
 issues:
   exclude-rules:
+    - text: "leading space"
+      linters:
+        - nolintlint
     - text: "Use of weak random number generator"
       linters:
         - gosec

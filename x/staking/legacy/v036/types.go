@@ -77,7 +77,6 @@ func NewGenesisState(
 	validators Validators, delegations v034staking.Delegations,
 	ubds []v034staking.UnbondingDelegation, reds []v034staking.Redelegation, exported bool,
 ) GenesisState {
-
 	return GenesisState{
 		Params:               params,
 		LastTotalPower:       lastTotalPower,

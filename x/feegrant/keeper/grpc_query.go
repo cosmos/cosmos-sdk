@@ -86,7 +86,6 @@ func (q Keeper) Allowances(c context.Context, req *feegrant.QueryAllowancesReque
 		grants = append(grants, &grant)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

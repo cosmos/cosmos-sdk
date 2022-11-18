@@ -327,29 +327,24 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-containerMarkdownLintImage=tmknom/markdownlint
-containerMarkdownLint=cosmos-sdk-markdownlint
-containerMarkdownLintFix=cosmos-sdk-markdownlint-fix
+golangci_lint_cmd=golangci-lint
+golangci_version=v1.50.1
 
-golangci_lint_cmd=go run github.com/golangci/golangci-lint/cmd/golangci-lint
-
-lint: lint-go
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLint}$$"; then docker start -a $(containerMarkdownLint); else docker run --name $(containerMarkdownLint) -i -v "$(CURDIR):/work" $(markdownLintImage); fi
+lint:
+	@echo "--> Running linter"
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@$(golangci_lint_cmd) run --timeout=10m
 
 lint-fix:
-	$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerMarkdownLintFix}$$"; then docker start -a $(containerMarkdownLintFix); else docker run --name $(containerMarkdownLintFix) -i -v "$(CURDIR):/work" $(markdownLintImage) . --fix; fi
-
-lint-go:
-	echo $(GIT_DIFF)
-	$(golangci_lint_cmd) run --out-format=tab $(GIT_DIFF)
+	@echo "--> Running linter"
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
 
 .PHONY: lint lint-fix
 
 format:
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs gofmt -w -s
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs misspell -w
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name '*.pb.go' | xargs goimports -w -local github.com/cosmos/cosmos-sdk
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	$(golangci_lint_cmd) run --fix
 .PHONY: format
 
 ###############################################################################

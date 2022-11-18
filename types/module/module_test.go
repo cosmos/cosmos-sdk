@@ -107,8 +107,8 @@ func TestManager_RegisterInvariants(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -126,8 +126,8 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -149,8 +149,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)
@@ -180,8 +180,8 @@ func TestManager_ExportGenesis(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
-	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	mm := module.NewManager(mockAppModule1, mockAppModule2)

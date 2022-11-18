@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -130,7 +129,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				"wrong_granter",
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"decoding bech32 failed",
 			true, nil, nil,
@@ -140,7 +139,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				granter.String(),
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"decoding bech32 failed",
 			true, nil, nil,
@@ -150,7 +149,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"fee-grant not found",
 			true, nil, nil,
@@ -160,7 +159,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				granter.String(),
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"",
 			false,
@@ -213,7 +212,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"wrong grantee",
 			[]string{
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil, 0,
 		},
@@ -221,7 +220,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"non existent grantee",
 			[]string{
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesResponse{}, 0,
 		},
@@ -229,7 +228,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"valid req",
 			[]string{
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesResponse{}, 1,
 		},
@@ -270,7 +269,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 			"wrong grantee",
 			[]string{
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil, 0,
 		},
@@ -278,7 +277,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 			"non existent grantee",
 			[]string{
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesByGranterResponse{}, 0,
 		},
@@ -286,7 +285,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 			"valid req",
 			[]string{
 				granter.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesByGranterResponse{}, 1,
 		},
@@ -898,7 +897,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	args := []string{
 		granter.String(),
 		grantee.String(),
-		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+		fmt.Sprintf("--%s=json", flags.FlagOutput),
 	}
 
 	// get filtered fee allowance and check info

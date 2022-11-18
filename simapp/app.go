@@ -189,6 +189,21 @@ func NewSimApp(
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
+		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
+		// handlers.  These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+		// them.
+		//
+		//nonceMempool = mempool.NewNonceMempool()
+		//mempoolOpt   = baseapp.SetMempool(nonceMempool)
+		//prepareOpt   = func(app *baseapp.BaseApp) {
+		//	app.SetPrepareProposal(app.DefaultPrepareProposal())
+		//}
+		//processOpt = func(app *baseapp.BaseApp) {
+		//	app.SetProcessProposal(app.DefaultProcessProposal())
+		//}
+		//
+		// Further down we'd set the options in the AppBuilder like below.
+		//baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -197,16 +212,28 @@ func NewSimApp(
 				// supply the application options
 				appOpts,
 
+				// ADVANCED CONFIGURATION
+
+				//
+				// AUTH
+				//
+				// For providing a custom function required in auth to generate custom account types
+				// add it below. By default the auth module uses simulation.RandomGenesisAccounts.
+				//
+				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
+
+				// For providing a custom a base account type add it below.
+				// By default the auth module uses authtypes.ProtoBaseAccount().
+				//
+				// func() authtypes.AccountI { return authtypes.ProtoBaseAccount() },
+
+				//
+				// MINT
+				//
+
 				// For providing a custom inflation function for x/mint add here your
 				// custom function that implements the minttypes.InflationCalculationFn
 				// interface.
-
-				// For providing a custom authority to a module simply add it below. By
-				// default the governance module is the default authority.
-				//
-				// map[string]sdk.AccAddress{
-				// 	minttypes.ModuleName: authtypes.NewModuleAddress(authtypes.ModuleName),
-				// },
 			),
 		)
 	)
@@ -240,10 +267,9 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
-	// configure state listening capabilities using AppOptions
-	// we are doing nothing with the returned streamingServices and waitGroup in this case
+	// load state streaming if enabled
 	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, app.keys); err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("failed to load state streaming: %s", err)
 		os.Exit(1)
 	}
 

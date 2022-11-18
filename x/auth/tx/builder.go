@@ -9,7 +9,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -32,8 +31,6 @@ type wrapper struct {
 	authInfoBz []byte
 
 	txBodyHasUnknownNonCriticals bool
-
-	txSize int64
 }
 
 var (
@@ -43,7 +40,6 @@ var (
 	_ ante.HasExtensionOptionsTx = &wrapper{}
 	_ ExtensionOptionsTxBuilder  = &wrapper{}
 	_ tx.TipTx                   = &wrapper{}
-	_ mempool.Tx                 = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.
@@ -64,12 +60,6 @@ func newBuilder(cdc codec.Codec) *wrapper {
 			},
 		},
 	}
-}
-
-// Size returns the size of the transaction, but is only correct immediately after decoding a proto-marshal transaction.
-// It should not be used in any other cases.
-func (w *wrapper) Size() int64 {
-	return w.txSize
 }
 
 func (w *wrapper) GetMsgs() []sdk.Msg {
@@ -199,10 +189,12 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			if err != nil {
 				return nil, err
 			}
+			// sequence number is functionally a transaction nonce and referred to as such in the SDK
+			nonce := si.GetSequence()
 			res[i] = signing.SignatureV2{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
-				Sequence: si.GetSequence(),
+				Sequence: nonce,
 			}
 
 		}
@@ -221,8 +213,6 @@ func (w *wrapper) SetMsgs(msgs ...sdk.Msg) error {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 
 	return nil
 }
@@ -233,8 +223,6 @@ func (w *wrapper) SetTimeoutHeight(height uint64) {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetMemo(memo string) {
@@ -242,8 +230,6 @@ func (w *wrapper) SetMemo(memo string) {
 
 	// set bodyBz to nil because the cached bodyBz no longer matches tx.Body
 	w.bodyBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetGasLimit(limit uint64) {
@@ -255,8 +241,6 @@ func (w *wrapper) SetGasLimit(limit uint64) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
@@ -268,8 +252,6 @@ func (w *wrapper) SetFeeAmount(coins sdk.Coins) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetTip(tip *tx.Tip) {
@@ -277,8 +259,6 @@ func (w *wrapper) SetTip(tip *tx.Tip) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
@@ -290,8 +270,6 @@ func (w *wrapper) SetFeePayer(feePayer sdk.AccAddress) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
@@ -303,8 +281,6 @@ func (w *wrapper) SetFeeGranter(feeGranter sdk.AccAddress) {
 
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetSignatures(signatures ...signing.SignatureV2) error {
@@ -336,8 +312,6 @@ func (w *wrapper) setSignerInfos(infos []*tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos = infos
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
@@ -348,8 +322,6 @@ func (w *wrapper) setSignerInfoAtIndex(index int, info *tx.SignerInfo) {
 	w.tx.AuthInfo.SignerInfos[index] = info
 	// set authInfoBz to nil because the cached authInfoBz no longer matches tx.AuthInfo
 	w.authInfoBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) setSignatures(sigs [][]byte) {
@@ -396,15 +368,11 @@ func (w *wrapper) GetNonCriticalExtensionOptions() []*codectypes.Any {
 func (w *wrapper) SetExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.ExtensionOptions = extOpts
 	w.bodyBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) SetNonCriticalExtensionOptions(extOpts ...*codectypes.Any) {
 	w.tx.Body.NonCriticalExtensionOptions = extOpts
 	w.bodyBz = nil
-	// set txSize to 0 because it is no longer correct
-	w.txSize = 0
 }
 
 func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {

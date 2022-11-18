@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -108,6 +107,14 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -192,29 +199,22 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 }
 
-// New App Wiring Setup
+// App Wiring Setup
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule))
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+		appmodule.Provide(ProvideModule),
+	)
 }
 
 type BankInputs struct {
 	depinject.In
 
-	ModuleKey depinject.OwnModuleKey
-	Config    *modulev1.Module
-	Cdc       codec.Codec
-	Key       *store.KVStoreKey
+	Config *modulev1.Module
+	Cdc    codec.Codec
+	Key    *store.KVStoreKey
 
 	AccountKeeper types.AccountKeeper
-	Authority     map[string]sdk.AccAddress `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -224,7 +224,7 @@ type BankOutputs struct {
 	depinject.Out
 
 	BankKeeper keeper.BaseKeeper
-	Module     runtime.AppModuleWrapper
+	Module     appmodule.AppModule
 }
 
 func ProvideModule(in BankInputs) BankOutputs {
@@ -244,10 +244,10 @@ func ProvideModule(in BankInputs) BankOutputs {
 		}
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	bankKeeper := keeper.NewBaseKeeper(
@@ -259,5 +259,5 @@ func ProvideModule(in BankInputs) BankOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
-	return BankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
+	return BankOutputs{BankKeeper: bankKeeper, Module: m}
 }

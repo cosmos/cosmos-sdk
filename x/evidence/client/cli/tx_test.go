@@ -8,17 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -26,42 +23,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 )
 
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
-}
-
-func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
-	return mockTendermintRPC{responseQuery: respQuery}
-}
-
-func (mockTendermintRPC) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{}, nil
-}
-
-func (m mockTendermintRPC) ABCIQueryWithOptions(
-	_ context.Context,
-	_ string, _ tmbytes.HexBytes,
-	_ rpcclient.ABCIQueryOptions,
-) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
-}
-
 func TestGetQueryCmd(t *testing.T) {
-	cmd := cli.GetQueryCmd()
-	cmd.SetOut(io.Discard)
-	require.NotNil(t, cmd)
-
 	encCfg := testutilmod.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	baseCtx := client.Context{}.
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -77,7 +46,7 @@ func TestGetQueryCmd(t *testing.T) {
 			[]string{"DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"},
 			func() client.Context {
 				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return baseCtx.WithClient(c)
@@ -90,13 +59,28 @@ func TestGetQueryCmd(t *testing.T) {
 			[]string{},
 			func() client.Context {
 				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return baseCtx.WithClient(c)
 			},
 			"",
 			"evidence: []\npagination: null",
+			false,
+		},
+		"all evidence (json output)": {
+			[]string{
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			func() client.Context {
+				bz, _ := encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return baseCtx.WithClient(c)
+			},
+			"",
+			`{"evidence":[],"pagination":null}`,
 			false,
 		},
 	}
@@ -109,6 +93,10 @@ func TestGetQueryCmd(t *testing.T) {
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd := cli.GetQueryCmd()
+			cmd.SetOut(io.Discard)
+			require.NotNil(t, cmd)
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)

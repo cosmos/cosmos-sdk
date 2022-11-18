@@ -11,12 +11,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -42,30 +37,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
-}
-
-func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
-	return mockTendermintRPC{responseQuery: respQuery}
-}
-
-func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{Code: 0}, nil
-}
-
-func (m mockTendermintRPC) ABCIQueryWithOptions(
-	_ context.Context,
-	_ string, _ tmbytes.HexBytes,
-	_ rpcclient.ABCIQueryOptions,
-) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
-}
-
 type CLITestSuite struct {
 	suite.Suite
 
@@ -88,7 +59,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -96,7 +67,7 @@ func (s *CLITestSuite) SetupSuite() {
 	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := newMockTendermintRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -218,18 +189,18 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {
 		},
 		{
 			"with invalid hash",
-			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"somethinginvalid", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`[somethinginvalid --output=json]`,
 		},
 		{
 			"with valid and not existing hash",
-			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`[C7E7D3A86A17AB3A321172239F3B61357937AF0F25D9FA4D2F4DCCAD9B0D7747 --output=json`,
 		},
 		{
 			"happy case",
-			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			fmt.Sprintf("%s --%s=json", txRes.TxHash, tmcli.OutputFlag),
+			[]string{txRes.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			fmt.Sprintf("%s --%s=json", txRes.TxHash, flags.FlagOutput),
 		},
 	}
 
@@ -257,7 +228,7 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 			[]string{
 				fmt.Sprintf("--type=%s", "foo"),
 				"bar",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"--type=foo bar --output=json",
 		},
@@ -266,7 +237,7 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 			[]string{
 				"--type=acc_seq",
 				"",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"--type=acc_seq  --output=json",
 		},
@@ -275,7 +246,7 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 			[]string{
 				"--type=acc_seq",
 				"foobar",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"--type=acc_seq foobar --output=json",
 		},
@@ -284,7 +255,7 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 			[]string{
 				"--type=signature",
 				"",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"--type=signature  --output=json",
 		},
@@ -293,7 +264,7 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 			[]string{
 				"--type=signature",
 				"foo",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"--type=signature foo --output=json",
 		},
@@ -323,7 +294,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf("--events=tx.fee=%s",
 					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"",
 		},
@@ -332,7 +303,7 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 			[]string{
 				fmt.Sprintf("--events=tx.fee=%s",
 					sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(0))).String()),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"",
 		},
@@ -839,12 +810,12 @@ func (s *CLITestSuite) TestQueryParamsCmd() {
 	}{
 		{
 			"happy case",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 		},
 		{
 			"with specific height",
-			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=1", flags.FlagHeight), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 		},
 	}

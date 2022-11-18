@@ -85,6 +85,14 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -123,36 +131,31 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type ConsensusParamInputs struct {
 	depinject.In
 
-	Cdc       codec.Codec
-	Key       *store.KVStoreKey
-	ModuleKey depinject.OwnModuleKey
-	Authority map[string]sdk.AccAddress `optional:"true"`
+	Config *modulev1.Module
+	Cdc    codec.Codec
+	Key    *store.KVStoreKey
 }
 
 type ConsensusParamOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
-	Module        runtime.AppModuleWrapper
+	Module        appmodule.AppModule
 	BaseAppOption runtime.BaseAppOption
 }
 
 func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(in.Cdc, in.Key, authority.String())
@@ -163,7 +166,7 @@ func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
 
 	return ConsensusParamOutputs{
 		Keeper:        k,
-		Module:        runtime.WrapAppModule(m),
+		Module:        m,
 		BaseAppOption: baseappOpt,
 	}
 }

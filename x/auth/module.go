@@ -5,17 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	"cosmossdk.io/depinject"
+
+	"cosmossdk.io/core/appmodule"
+
+	modulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -99,6 +101,14 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc codec.Codec, accountKeeper keeper.AccountKeeper, randGenAccountsFn types.RandomGenesisAccountsFn, ss exported.Subspace) AppModule {
 	return AppModule{
@@ -125,11 +135,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	m := keeper.NewMigrator(am.accountKeeper, cfg.QueryServer(), am.legacySubspace)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
 	}
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
 	}
 
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
@@ -179,17 +189,13 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type AuthInputs struct {
@@ -199,6 +205,9 @@ type AuthInputs struct {
 	Key    *store.KVStoreKey
 	Cdc    codec.Codec
 
+	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
+	AccountI                func() types.AccountI         `optional:"true"`
+
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
 }
@@ -207,7 +216,7 @@ type AuthOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
-	Module        runtime.AppModuleWrapper
+	Module        appmodule.AppModule
 }
 
 func ProvideModule(in AuthInputs) AuthOutputs {
@@ -216,8 +225,22 @@ func ProvideModule(in AuthInputs) AuthOutputs {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.Key, types.ProtoBaseAccount, maccPerms, in.Config.Bech32Prefix, types.NewModuleAddress(govtypes.ModuleName).String())
-	m := NewAppModule(in.Cdc, k, simulation.RandomGenesisAccounts, in.LegacySubspace)
+	// default to governance authority if not provided
+	authority := types.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 
-	return AuthOutputs{AccountKeeper: k, Module: runtime.WrapAppModule(m)}
+	if in.RandomGenesisAccountsFn == nil {
+		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
+	}
+
+	if in.AccountI == nil {
+		in.AccountI = types.ProtoBaseAccount
+	}
+
+	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
+	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
+
+	return AuthOutputs{AccountKeeper: k, Module: m}
 }

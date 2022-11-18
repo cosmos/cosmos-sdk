@@ -14,10 +14,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -103,6 +103,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppMod
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the capability module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
@@ -170,19 +178,13 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
-		))
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+		appmodule.Provide(ProvideModule),
+	)
 }
 
 type CapabilityInputs struct {
@@ -199,7 +201,7 @@ type CapabilityOutputs struct {
 	depinject.Out
 
 	CapabilityKeeper *keeper.Keeper
-	Module           runtime.AppModuleWrapper
+	Module           appmodule.AppModule
 }
 
 func ProvideModule(in CapabilityInputs) CapabilityOutputs {
@@ -208,6 +210,6 @@ func ProvideModule(in CapabilityInputs) CapabilityOutputs {
 
 	return CapabilityOutputs{
 		CapabilityKeeper: k,
-		Module:           runtime.WrapAppModule(m),
+		Module:           m,
 	}
 }

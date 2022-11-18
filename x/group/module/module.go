@@ -13,11 +13,11 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -52,6 +52,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 		registry:       registry,
 	}
 }
+
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -148,51 +156,6 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-func init() {
-	appmodule.Register(
-		&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
-		),
-	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type GroupInputs struct {
-	depinject.In
-
-	Config           *modulev1.Module
-	Key              *store.KVStoreKey
-	Cdc              codec.Codec
-	AccountKeeper    group.AccountKeeper
-	BankKeeper       group.BankKeeper
-	Registry         cdctypes.InterfaceRegistry
-	MsgServiceRouter *baseapp.MsgServiceRouter
-}
-
-type GroupOutputs struct {
-	depinject.Out
-
-	GroupKeeper keeper.Keeper
-	Module      runtime.AppModuleWrapper
-}
-
-func ProvideModule(in GroupInputs) GroupOutputs {
-	/*
-		Example of setting group params:
-		in.Config.MaxMetadataLen = 1000
-		in.Config.MaxExecutionPeriod = "1209600s"
-	*/
-
-	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return GroupOutputs{GroupKeeper: k, Module: runtime.WrapAppModule(m)}
-}
-
 // ____________________________________________________________________________
 
 // AppModuleSimulation functions
@@ -220,4 +183,46 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		simState.AppParams, simState.Cdc,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
+}
+
+//
+// App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(
+		&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+type GroupInputs struct {
+	depinject.In
+
+	Config           *modulev1.Module
+	Key              *store.KVStoreKey
+	Cdc              codec.Codec
+	AccountKeeper    group.AccountKeeper
+	BankKeeper       group.BankKeeper
+	Registry         cdctypes.InterfaceRegistry
+	MsgServiceRouter *baseapp.MsgServiceRouter
+}
+
+type GroupOutputs struct {
+	depinject.Out
+
+	GroupKeeper keeper.Keeper
+	Module      appmodule.AppModule
+}
+
+func ProvideModule(in GroupInputs) GroupOutputs {
+	/*
+		Example of setting group params:
+		in.Config.MaxMetadataLen = 1000
+		in.Config.MaxExecutionPeriod = "1209600s"
+	*/
+
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
+	return GroupOutputs{GroupKeeper: k, Module: m}
 }

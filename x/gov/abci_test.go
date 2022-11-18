@@ -22,8 +22,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// trigger CI
-
 func TestTickExpiredDepositPeriod(t *testing.T) {
 	suite := createTestSuite(t)
 	app := suite.App

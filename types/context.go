@@ -269,7 +269,8 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 
 	writeCache = func() {
-		c.EventManager().EmitEvents(cc.EventManager().Events())
+		// commented out for compatability with SDK v0.45.10. Relayers depend on this
+		// c.EventManager().EmitEvents(cc.EventManager().Events())
 		cms.Write()
 	}
 

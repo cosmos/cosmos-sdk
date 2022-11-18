@@ -141,7 +141,7 @@ Where proposal.json contains:
 func NewCmdCancelProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cancel-proposal [proposal-id]",
-		Short:   "Cancel governance proposal before the voting period ends.",
+		Short:   "Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.",
 		Args:    cobra.ExactArgs(1),
 		Example: fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {

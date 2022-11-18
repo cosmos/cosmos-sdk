@@ -116,7 +116,7 @@ modified to set the new parameter to the desired value.
 ##### Proposer field to Proposal
 
 
-The `Proposal` state has been updated with proposer field. For proposal state migraton
+The `Proposal` proto has been updated with proposer field. For proposal state migraton
 developers should ensure to call `v4.AddProposerAddressToProposal` in their upgrade handler.
 
 > This migration is optional, if chain wants to cancel previous proposals which are active (deposit or voting period) they can do this proposals state migration.
@@ -142,16 +142,16 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 ```
 
-##### Proposal Cancel Burn Rate Param
+#####  New Feature: Cancelling Proposals
 
-The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to community pool. The deposits burn rate will be determined by a new parameter called `ProposalCancelBurnRate` parameter.
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRate` parameter.
 
 ```
-	1. deposits * proposal_cancel_burn_rate will be burned
-	2. deposits * (1 - proposal_cancel_burn_rate) will be sent to community pool
+	1. deposits * proposal_cancel_rate will be burned
+	2. deposits * (1 - proposal_cancel_rate) will be sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then all remaining deposits will be burned.
 ```
 
-By default, the new `ProposalCancelBurnRate` parameter is set to zero during migration. 
+By default, the new `ProposalCancelRate` parameter is set to zero during migration and `ProposalCancelDest` is set to empty string.
 
 #### `x/consensus`
 

@@ -20,7 +20,6 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 5)
 	sa := accounts[0].Address
 	sb := accounts[1].Address
-	//sc := accounts[2].Address
 
 	tests := []struct {
 		txs   []txSpec

@@ -133,8 +133,8 @@ replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alp
 // cosmos keyring
 replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 
-replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
+
+replace github.com/confio/ics23/go => ./ics23/go

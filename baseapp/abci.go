@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -120,24 +121,6 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
 	// TODO: Implement!
 	return
-}
-
-// FilterPeerByAddrPort filters peers by address/port.
-func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
-	if app.addrPeerFilter != nil {
-		return app.addrPeerFilter(info)
-	}
-
-	return abci.ResponseQuery{}
-}
-
-// FilterPeerByID filters peers by node ID.
-func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
-	if app.idPeerFilter != nil {
-		return app.idPeerFilter(info)
-	}
-
-	return abci.ResponseQuery{}
 }
 
 // BeginBlock implements the ABCI application interface.
@@ -621,9 +604,18 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{}, err
 	}
 
+	lastBlockHeight := app.LastBlockHeight()
+	if height > lastBlockHeight {
+		return sdk.Context{},
+			sdkerrors.Wrap(
+				sdkerrors.ErrInvalidHeight,
+				"cannot query with height in the future; please provide a valid height",
+			)
+	}
+
 	// when a client did not provide a query height, manually inject the latest
 	if height == 0 {
-		height = app.LastBlockHeight()
+		height = lastBlockHeight
 	}
 
 	if height <= 1 && prove {
@@ -639,7 +631,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{},
 			sdkerrors.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"failed to load state at height %d; %s (latest height: %d)", height, err, app.LastBlockHeight(),
+				"failed to load state at height %d; %s (latest height: %d)", height, err, lastBlockHeight,
 			)
 	}
 
@@ -772,6 +764,22 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 				Value:     []byte(app.version),
 			}
 
+		case "snapshots":
+			var responseValue []byte
+
+			response := app.ListSnapshots(abci.RequestListSnapshots{})
+
+			responseValue, err := json.Marshal(response)
+			if err != nil {
+				sdkerrors.QueryResult(sdkerrors.Wrap(err, fmt.Sprintf("failed to marshal list snapshots response %v", response)))
+			}
+
+			return abci.ResponseQuery{
+				Codespace: sdkerrors.RootCodespace,
+				Height:    req.Height,
+				Value:     responseValue,
+			}
+
 		default:
 			return sdkerrors.QueryResult(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query: %s", path))
 		}
@@ -805,36 +813,6 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 
 	resp := queryable.Query(req)
 	resp.Height = req.Height
-
-	return resp
-}
-
-func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {
-	// "/p2p" prefix for p2p queries
-	if len(path) < 4 {
-		return sdkerrors.QueryResult(
-			sdkerrors.Wrap(
-				sdkerrors.ErrUnknownRequest, "path should be p2p filter <addr|id> <parameter>",
-			),
-		)
-	}
-
-	var resp abci.ResponseQuery
-
-	cmd, typ, arg := path[1], path[2], path[3]
-	switch cmd {
-	case "filter":
-		switch typ {
-		case "addr":
-			resp = app.FilterPeerByAddrPort(arg)
-
-		case "id":
-			resp = app.FilterPeerByID(arg)
-		}
-
-	default:
-		resp = sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "expected second parameter to be 'filter'"))
-	}
 
 	return resp
 }

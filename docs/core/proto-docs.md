@@ -1268,6 +1268,9 @@ tags are stringified and the log is JSON decoded.
 | `gas_used` | [int64](#int64) |  | Amount of gas consumed by transaction. |
 | `tx` | [google.protobuf.Any](#google.protobuf.Any) |  | The request transaction bytes. |
 | `timestamp` | [string](#string) |  | Time of the previous block. For heights > 1, it's the weighted median of the timestamps of the valid votes in the block.LastCommit. For height == 1, it's genesis time. |
+| `events` | [tendermint.abci.Event](#tendermint.abci.Event) | repeated | Events defines all the events emitted by processing a transaction. Note, these events include those emitted by processing all the messages and those emitted from the ante handler. Whereas Logs contains the events, with additional metadata, emitted only by processing the messages.
+
+Since: cosmos-sdk 0.42.11, 0.44.5, 0.45 |
 
 
 

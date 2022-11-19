@@ -14,9 +14,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	pruningtypes "github.com/cosmos/store/pruning/types"
 )
 
 func defaultLogger() log.Logger {

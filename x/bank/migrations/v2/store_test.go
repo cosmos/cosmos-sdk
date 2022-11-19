@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +13,7 @@ import (
 	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	v2bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/store/prefix"
 )
 
 func TestSupplyMigration(t *testing.T) {

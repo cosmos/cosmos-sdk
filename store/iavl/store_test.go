@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/store/cachekv"
 
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
@@ -13,8 +13,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/store/types"
 )
 
 var (

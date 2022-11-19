@@ -5,9 +5,9 @@ import (
 	"reflect"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/store/prefix"
+	storetypes "github.com/cosmos/store/types"
 )
 
 const (

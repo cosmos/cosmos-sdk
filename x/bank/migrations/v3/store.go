@@ -2,12 +2,12 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/store/prefix"
+	storetypes "github.com/cosmos/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 

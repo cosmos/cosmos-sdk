@@ -5,12 +5,12 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/store/cachekv"
+	"github.com/cosmos/store/dbadapter"
+	"github.com/cosmos/store/listenkv"
+	pruningtypes "github.com/cosmos/store/pruning/types"
+	"github.com/cosmos/store/tracekv"
+	"github.com/cosmos/store/types"
 )
 
 var (

@@ -17,17 +17,17 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/cachemulti"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/mem"
-	"github.com/cosmos/cosmos-sdk/store/pruning"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/transient"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/store/cachemulti"
+	"github.com/cosmos/store/dbadapter"
+	"github.com/cosmos/store/iavl"
+	"github.com/cosmos/store/listenkv"
+	"github.com/cosmos/store/mem"
+	"github.com/cosmos/store/pruning"
+	pruningtypes "github.com/cosmos/store/pruning/types"
+	"github.com/cosmos/store/tracekv"
+	"github.com/cosmos/store/transient"
+	"github.com/cosmos/store/types"
 )
 
 const (

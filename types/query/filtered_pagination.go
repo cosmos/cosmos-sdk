@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/store/types"
 )
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the

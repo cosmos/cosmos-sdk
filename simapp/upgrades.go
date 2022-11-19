@@ -2,11 +2,11 @@ package simapp
 
 import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	storetypes "github.com/cosmos/store/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade

@@ -13,13 +13,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/cachemulti"
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/store/cachemulti"
+	"github.com/cosmos/store/iavl"
+	sdkmaps "github.com/cosmos/store/internal/maps"
+	"github.com/cosmos/store/listenkv"
+	pruningtypes "github.com/cosmos/store/pruning/types"
+	"github.com/cosmos/store/types"
 )
 
 func TestStoreType(t *testing.T) {

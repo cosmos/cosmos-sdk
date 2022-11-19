@@ -4,10 +4,10 @@ import (
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/exported"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	storetypes "github.com/cosmos/store/types"
 )
 
 // MigrateStore performs in-place store migrations from v3 to v4.

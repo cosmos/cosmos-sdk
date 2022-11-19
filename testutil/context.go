@@ -8,9 +8,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/store"
+	storetypes "github.com/cosmos/store/types"
 )
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.

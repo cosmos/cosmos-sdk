@@ -3,10 +3,10 @@ package keeper
 import (
 	"encoding/binary"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/store/prefix"
+	storetypes "github.com/cosmos/store/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.

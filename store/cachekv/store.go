@@ -9,11 +9,11 @@ import (
 	"github.com/tendermint/tendermint/libs/math"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/store/internal/conv"
+	"github.com/cosmos/store/listenkv"
+	"github.com/cosmos/store/tracekv"
+	"github.com/cosmos/store/types"
 )
 
 // cValue represents a cached value.

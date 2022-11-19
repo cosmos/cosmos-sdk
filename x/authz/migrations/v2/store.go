@@ -3,10 +3,10 @@ package v2
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/store/prefix"
+	storetypes "github.com/cosmos/store/types"
 )
 
 // MigrateStore performs in-place store migrations from v0.45 to v0.46. The

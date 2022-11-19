@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	v4 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	storetypes "github.com/cosmos/store/types"
 	"github.com/stretchr/testify/require"
 )
 

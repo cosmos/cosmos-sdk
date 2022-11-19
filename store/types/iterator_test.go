@@ -7,8 +7,8 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/store/iavl"
+	"github.com/cosmos/store/types"
 )
 
 func newMemTestKVStore(t *testing.T) types.KVStore {

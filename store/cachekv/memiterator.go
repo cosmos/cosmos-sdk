@@ -5,7 +5,7 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/store/types"
 )
 
 // memIterator iterates over iterKVCache items.

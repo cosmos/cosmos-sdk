@@ -7,11 +7,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/store/prefix"
 )
 
 var _ authz.QueryServer = Keeper{}

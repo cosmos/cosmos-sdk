@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -15,6 +14,7 @@ import (
 	v2 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v2"
 	v3 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v3"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/store/prefix"
 )
 
 func TestMigrateStore(t *testing.T) {

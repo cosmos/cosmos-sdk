@@ -8,10 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/cache"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	iavlstore "github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/store/cache"
+	"github.com/cosmos/store/cachekv"
+	iavlstore "github.com/cosmos/store/iavl"
+	"github.com/cosmos/store/types"
 )
 
 func TestGetOrSetStoreCache(t *testing.T) {

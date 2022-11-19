@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	storetypes "github.com/cosmos/store/types"
 )
 
 // BaseAppOption is a depinject.AutoGroupType which can be used to pass

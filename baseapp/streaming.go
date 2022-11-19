@@ -6,8 +6,8 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	store "github.com/cosmos/store/types"
 )
 
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp

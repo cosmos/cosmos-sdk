@@ -11,14 +11,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/store"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	storetypes "github.com/cosmos/store/types"
 )
 
 type invariantTestSuite struct {

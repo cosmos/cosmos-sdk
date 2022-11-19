@@ -5,14 +5,14 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/store/cachekv"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/store/dbadapter"
+	"github.com/cosmos/store/types"
 )
 
 var errFoo = errors.New("dummy")

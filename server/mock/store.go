@@ -7,9 +7,9 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	pruningtypes "github.com/cosmos/store/pruning/types"
+	storetypes "github.com/cosmos/store/types"
 )
 
 var _ sdk.MultiStore = multiStore{}

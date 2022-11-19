@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -196,7 +196,7 @@ func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposa
 	remainingAmount := sdk.Coins(totalDeposits).Sub(burnDepositAmount...)
 
 	// get the distribution module account address
-	distributionAddress := keeper.authKeeper.GetModuleAddress(distributiontypes.ModuleName)
+	distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
 	if distributionAddress.String() == destAddress {
 		err := keeper.distrkeeper.FundCommunityPool(ctx, remainingAmount, keeper.ModuleAccountAddress())
 		if err != nil {

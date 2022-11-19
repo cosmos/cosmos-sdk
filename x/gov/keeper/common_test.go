@@ -16,6 +16,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -27,6 +28,7 @@ import (
 var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
+	distAcct     = authtypes.NewModuleAddress(disttypes.ModuleName)
 	TestProposal = getTestProposal()
 )
 
@@ -71,6 +73,8 @@ func setupGovKeeper(t *testing.T) (
 	distributionKeeper := govtestutil.NewMockDistributionKeeper(ctrl)
 
 	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
+	acctKeeper.EXPECT().GetModuleAddress(disttypes.ModuleName).Return(distAcct).AnyTimes()
+
 	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 	trackMockBalances(bankKeeper)
 	stakingKeeper.EXPECT().TokensFromConsensusPower(ctx, gomock.Any()).DoAndReturn(func(ctx sdk.Context, power int64) math.Int {

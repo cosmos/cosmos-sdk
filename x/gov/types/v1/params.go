@@ -145,15 +145,15 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
-	proposalCancelBurnRate, err := sdk.NewDecFromStr(p.ProposalCancelRatio)
+	proposalCancelRate, err := sdk.NewDecFromStr(p.ProposalCancelRatio)
 	if err != nil {
 		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
 	}
-	if proposalCancelBurnRate.IsNegative() {
-		return fmt.Errorf("burn rate of cancel proposal must be positive: %s", proposalCancelBurnRate)
+	if proposalCancelRate.IsNegative() {
+		return fmt.Errorf("burn rate of cancel proposal must be positive: %s", proposalCancelRate)
 	}
-	if proposalCancelBurnRate.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelBurnRate)
+	if proposalCancelRate.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelRate)
 	}
 
 	if len(p.ProposalCancelDest) != 0 {

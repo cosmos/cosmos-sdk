@@ -23,7 +23,7 @@ const (
 	TallyParamsQuorum          = "tally_params_quorum"
 	TallyParamsThreshold       = "tally_params_threshold"
 	TallyParamsVeto            = "tally_params_veto"
-	ProposalCancelBurnRate     = "proposal_cancel_burn_rate"
+	ProposalCancelRate         = "proposal_cancel_rate"
 )
 
 // GenDepositParamsDepositPeriod randomized DepositParamsDepositPeriod
@@ -41,8 +41,8 @@ func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }
 
-// GenProposalCancelBurnRate randomized ProposalCancelBurnRate
-func GenProposalCancelBurnRate(r *rand.Rand) sdk.Dec {
+// GenProposalCancelRaterandomized ProposalCancelRate
+func GenProposalCancelRate(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }
 
@@ -88,10 +88,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { minInitialDepositRatio = GenDepositMinInitialDepositRatio(r) },
 	)
 
-	var proposalCancelBurnRate sdk.Dec
+	var proposalCancelRate sdk.Dec
 	simState.AppParams.GetOrGenerate(
-		simState.Cdc, ProposalCancelBurnRate, &proposalCancelBurnRate, simState.Rand,
-		func(r *rand.Rand) { proposalCancelBurnRate = GenProposalCancelBurnRate(r) },
+		simState.Cdc, ProposalCancelRate, &proposalCancelRate, simState.Rand,
+		func(r *rand.Rand) { proposalCancelRate = GenProposalCancelRate(r) },
 	)
 
 	var votingPeriod time.Duration
@@ -120,7 +120,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	govGenesis := v1.NewGenesisState(
 		startingProposalID,
-		v1.NewParams(minDeposit, depositPeriod, votingPeriod, quorum.String(), threshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelBurnRate.String(), ""),
+		v1.NewParams(minDeposit, depositPeriod, votingPeriod, quorum.String(), threshold.String(), veto.String(), minInitialDepositRatio.String(), proposalCancelRate.String(), ""),
 	)
 
 	bz, err := json.MarshalIndent(&govGenesis, "", " ")

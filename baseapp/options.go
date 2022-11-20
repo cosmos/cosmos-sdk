@@ -70,6 +70,11 @@ func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
 }
 
+// SetLazyLoading enables(false)/disables(true) IAVL store should be loaded lazily or not.
+func SetLazyLoading(disable bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(disable) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {

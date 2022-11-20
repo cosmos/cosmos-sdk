@@ -47,7 +47,7 @@ func TestABCIv1TestSuite(t *testing.T) {
 func (s *ABCIv1TestSuite) SetupTest() {
 	t := s.T()
 	anteKey := []byte("ante-key")
-	pool := mempool.NewNonceMempool()
+	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}

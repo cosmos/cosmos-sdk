@@ -1,7 +1,5 @@
 package server
 
-// DONTCOVER
-
 import (
 	"fmt"
 	"os"
@@ -20,6 +18,7 @@ const (
 	FlagForZeroHeight    = "for-zero-height"
 	FlagJailAllowedAddrs = "jail-allowed-addrs"
 	FlagModulesToExport  = "modules-to-export"
+	FlagOutputDocument   = "output-document"
 )
 
 // ExportCmd dumps app state to JSON.
@@ -67,6 +66,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			forZeroHeight, _ := cmd.Flags().GetBool(FlagForZeroHeight)
 			jailAllowedAddrs, _ := cmd.Flags().GetStringSlice(FlagJailAllowedAddrs)
 			modulesToExport, _ := cmd.Flags().GetStringSlice(FlagModulesToExport)
+			outputDocument, _ := cmd.Flags().GetString(FlagOutputDocument)
 
 			exported, err := appExporter(serverCtx.Logger, db, traceWriter, height, forZeroHeight, jailAllowedAddrs, serverCtx.Viper, modulesToExport)
 			if err != nil {
@@ -106,7 +106,21 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.OutOrStderr())
-			cmd.Println(string(sdk.MustSortJSON(encoded)))
+			out := sdk.MustSortJSON(encoded)
+
+			if outputDocument == "" {
+				cmd.Println(string(out))
+				return nil
+			}
+
+			var exportedGenDoc tmtypes.GenesisDoc
+			if err = tmjson.Unmarshal(out, &exportedGenDoc); err != nil {
+				return err
+			}
+			if err = exportedGenDoc.SaveAs(outputDocument); err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}
@@ -116,6 +130,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
 	cmd.Flags().StringSlice(FlagModulesToExport, []string{}, "Comma-separated list of modules to export. If empty, will export all modules")
+	cmd.Flags().String(FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")
 
 	return cmd
 }

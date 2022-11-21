@@ -91,4 +91,22 @@ func TxAuxToFeeExec(clientCtx client.Context, filename string, extraArgs ...stri
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAuxToFeeCommand(), append(args, extraArgs...))
 }
 
-// DONTCOVER
+func QueryAccountExec(clientCtx client.Context, address fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)}
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetAccountCmd(), append(args, extraArgs...))
+}
+
+func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string, sigFile1 string, sigFile2 string, extraArgs ...string) (testutil.BufferWriter, error) {
+	args := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		filename,
+		from,
+		sigFile1,
+		sigFile2,
+	}
+
+	args = append(args, extraArgs...)
+
+	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignBatchCmd(), args)
+}

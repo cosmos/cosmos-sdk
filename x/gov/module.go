@@ -1,7 +1,5 @@
 package gov
 
-// DONTCOVER
-
 import (
 	"context"
 	"encoding/json"
@@ -17,11 +15,11 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -147,15 +145,19 @@ func NewAppModule(
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule, ProvideKeyTable),
+		appmodule.Provide(ProvideModule, ProvideKeyTable),
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type GovInputs struct {
@@ -178,7 +180,7 @@ type GovInputs struct {
 type GovOutputs struct {
 	depinject.Out
 
-	Module       runtime.AppModuleWrapper
+	Module       appmodule.AppModule
 	Keeper       *keeper.Keeper
 	HandlerRoute v1beta1.HandlerRoute
 }
@@ -208,7 +210,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return GovOutputs{Module: runtime.WrapAppModule(m), Keeper: k, HandlerRoute: hr}
+	return GovOutputs{Module: m, Keeper: k, HandlerRoute: hr}
 }
 
 func ProvideKeyTable() paramtypes.KeyTable {
@@ -280,15 +282,15 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
 	err := cfg.RegisterMigration(govtypes.ModuleName, 1, m.Migrate1to2)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 1 to 2: %v", err))
 	}
 	err = cfg.RegisterMigration(govtypes.ModuleName, 2, m.Migrate2to3)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 2 to 3: %v", err))
 	}
 	err = cfg.RegisterMigration(govtypes.ModuleName, 3, m.Migrate3to4)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to migrate x/gov from version 3 to 4: %v", err))
 	}
 }
 

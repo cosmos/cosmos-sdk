@@ -14,14 +14,14 @@
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
-  <a href="https://codecov.io/gh/cosmos/cosmos-sdk">
-    <img alt="Code Coverage" src="https://codecov.io/gh/cosmos/cosmos-sdk/branch/main/graph/badge.svg" />
+  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
+    <img alt="Code Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=coverage" />
+  </a>
+  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
+    <img alt="SonarCloud Analysis" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=alert_status">
   </a>
 </div>
 <div align="center">
-  <a href="https://github.com/cosmos/cosmos-sdk">
-    <img alt="Lines Of Code" src="https://tokei.rs/b1/github/cosmos/cosmos-sdk" />
-  </a>
   <a href="https://discord.gg/AzefAFd">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>

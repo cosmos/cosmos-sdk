@@ -18,10 +18,10 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// BankQueryClient is the client API for BankQuery service.
+// BankQueryServiceClient is the client API for BankQueryService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type BankQueryClient interface {
+type BankQueryServiceClient interface {
 	// Get queries the Balance table by its primary key.
 	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
 	// ListBalance queries the Balance table using prefix and range queries against defined indexes.
@@ -32,54 +32,54 @@ type BankQueryClient interface {
 	ListSupply(ctx context.Context, in *ListSupplyRequest, opts ...grpc.CallOption) (*ListSupplyResponse, error)
 }
 
-type bankQueryClient struct {
+type bankQueryServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBankQueryClient(cc grpc.ClientConnInterface) BankQueryClient {
-	return &bankQueryClient{cc}
+func NewBankQueryServiceClient(cc grpc.ClientConnInterface) BankQueryServiceClient {
+	return &bankQueryServiceClient{cc}
 }
 
-func (c *bankQueryClient) GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error) {
+func (c *bankQueryServiceClient) GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error) {
 	out := new(GetBalanceResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQuery/GetBalance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/GetBalance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bankQueryClient) ListBalance(ctx context.Context, in *ListBalanceRequest, opts ...grpc.CallOption) (*ListBalanceResponse, error) {
+func (c *bankQueryServiceClient) ListBalance(ctx context.Context, in *ListBalanceRequest, opts ...grpc.CallOption) (*ListBalanceResponse, error) {
 	out := new(ListBalanceResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQuery/ListBalance", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/ListBalance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bankQueryClient) GetSupply(ctx context.Context, in *GetSupplyRequest, opts ...grpc.CallOption) (*GetSupplyResponse, error) {
+func (c *bankQueryServiceClient) GetSupply(ctx context.Context, in *GetSupplyRequest, opts ...grpc.CallOption) (*GetSupplyResponse, error) {
 	out := new(GetSupplyResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQuery/GetSupply", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/GetSupply", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bankQueryClient) ListSupply(ctx context.Context, in *ListSupplyRequest, opts ...grpc.CallOption) (*ListSupplyResponse, error) {
+func (c *bankQueryServiceClient) ListSupply(ctx context.Context, in *ListSupplyRequest, opts ...grpc.CallOption) (*ListSupplyResponse, error) {
 	out := new(ListSupplyResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQuery/ListSupply", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/ListSupply", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// BankQueryServer is the server API for BankQuery service.
-// All implementations must embed UnimplementedBankQueryServer
+// BankQueryServiceServer is the server API for BankQueryService service.
+// All implementations must embed UnimplementedBankQueryServiceServer
 // for forward compatibility
-type BankQueryServer interface {
+type BankQueryServiceServer interface {
 	// Get queries the Balance table by its primary key.
 	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
 	// ListBalance queries the Balance table using prefix and range queries against defined indexes.
@@ -88,132 +88,132 @@ type BankQueryServer interface {
 	GetSupply(context.Context, *GetSupplyRequest) (*GetSupplyResponse, error)
 	// ListSupply queries the Supply table using prefix and range queries against defined indexes.
 	ListSupply(context.Context, *ListSupplyRequest) (*ListSupplyResponse, error)
-	mustEmbedUnimplementedBankQueryServer()
+	mustEmbedUnimplementedBankQueryServiceServer()
 }
 
-// UnimplementedBankQueryServer must be embedded to have forward compatible implementations.
-type UnimplementedBankQueryServer struct {
+// UnimplementedBankQueryServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedBankQueryServiceServer struct {
 }
 
-func (UnimplementedBankQueryServer) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
+func (UnimplementedBankQueryServiceServer) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
 }
-func (UnimplementedBankQueryServer) ListBalance(context.Context, *ListBalanceRequest) (*ListBalanceResponse, error) {
+func (UnimplementedBankQueryServiceServer) ListBalance(context.Context, *ListBalanceRequest) (*ListBalanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListBalance not implemented")
 }
-func (UnimplementedBankQueryServer) GetSupply(context.Context, *GetSupplyRequest) (*GetSupplyResponse, error) {
+func (UnimplementedBankQueryServiceServer) GetSupply(context.Context, *GetSupplyRequest) (*GetSupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSupply not implemented")
 }
-func (UnimplementedBankQueryServer) ListSupply(context.Context, *ListSupplyRequest) (*ListSupplyResponse, error) {
+func (UnimplementedBankQueryServiceServer) ListSupply(context.Context, *ListSupplyRequest) (*ListSupplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListSupply not implemented")
 }
-func (UnimplementedBankQueryServer) mustEmbedUnimplementedBankQueryServer() {}
+func (UnimplementedBankQueryServiceServer) mustEmbedUnimplementedBankQueryServiceServer() {}
 
-// UnsafeBankQueryServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BankQueryServer will
+// UnsafeBankQueryServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to BankQueryServiceServer will
 // result in compilation errors.
-type UnsafeBankQueryServer interface {
-	mustEmbedUnimplementedBankQueryServer()
+type UnsafeBankQueryServiceServer interface {
+	mustEmbedUnimplementedBankQueryServiceServer()
 }
 
-func RegisterBankQueryServer(s grpc.ServiceRegistrar, srv BankQueryServer) {
-	s.RegisterService(&BankQuery_ServiceDesc, srv)
+func RegisterBankQueryServiceServer(s grpc.ServiceRegistrar, srv BankQueryServiceServer) {
+	s.RegisterService(&BankQueryService_ServiceDesc, srv)
 }
 
-func _BankQuery_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BankQueryService_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetBalanceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServer).GetBalance(ctx, in)
+		return srv.(BankQueryServiceServer).GetBalance(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQuery/GetBalance",
+		FullMethod: "/testpb.BankQueryService/GetBalance",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServer).GetBalance(ctx, req.(*GetBalanceRequest))
+		return srv.(BankQueryServiceServer).GetBalance(ctx, req.(*GetBalanceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BankQuery_ListBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BankQueryService_ListBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListBalanceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServer).ListBalance(ctx, in)
+		return srv.(BankQueryServiceServer).ListBalance(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQuery/ListBalance",
+		FullMethod: "/testpb.BankQueryService/ListBalance",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServer).ListBalance(ctx, req.(*ListBalanceRequest))
+		return srv.(BankQueryServiceServer).ListBalance(ctx, req.(*ListBalanceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BankQuery_GetSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BankQueryService_GetSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetSupplyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServer).GetSupply(ctx, in)
+		return srv.(BankQueryServiceServer).GetSupply(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQuery/GetSupply",
+		FullMethod: "/testpb.BankQueryService/GetSupply",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServer).GetSupply(ctx, req.(*GetSupplyRequest))
+		return srv.(BankQueryServiceServer).GetSupply(ctx, req.(*GetSupplyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BankQuery_ListSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _BankQueryService_ListSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListSupplyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServer).ListSupply(ctx, in)
+		return srv.(BankQueryServiceServer).ListSupply(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQuery/ListSupply",
+		FullMethod: "/testpb.BankQueryService/ListSupply",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServer).ListSupply(ctx, req.(*ListSupplyRequest))
+		return srv.(BankQueryServiceServer).ListSupply(ctx, req.(*ListSupplyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// BankQuery_ServiceDesc is the grpc.ServiceDesc for BankQuery service.
+// BankQueryService_ServiceDesc is the grpc.ServiceDesc for BankQueryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var BankQuery_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testpb.BankQuery",
-	HandlerType: (*BankQueryServer)(nil),
+var BankQueryService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "testpb.BankQueryService",
+	HandlerType: (*BankQueryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetBalance",
-			Handler:    _BankQuery_GetBalance_Handler,
+			Handler:    _BankQueryService_GetBalance_Handler,
 		},
 		{
 			MethodName: "ListBalance",
-			Handler:    _BankQuery_ListBalance_Handler,
+			Handler:    _BankQueryService_ListBalance_Handler,
 		},
 		{
 			MethodName: "GetSupply",
-			Handler:    _BankQuery_GetSupply_Handler,
+			Handler:    _BankQueryService_GetSupply_Handler,
 		},
 		{
 			MethodName: "ListSupply",
-			Handler:    _BankQuery_ListSupply_Handler,
+			Handler:    _BankQueryService_ListSupply_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

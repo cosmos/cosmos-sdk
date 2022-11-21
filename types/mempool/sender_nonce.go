@@ -84,7 +84,9 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	senderCursors := make(map[string]*huandu.Element)
 
 	orderedSenders := huandu.New(huandu.String)
-	for s, _ := range snm.senders {
+
+	// #nosec
+	for s := range snm.senders {
 		orderedSenders.Set(s, s)
 	}
 

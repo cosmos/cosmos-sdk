@@ -37,7 +37,7 @@ func testMempoolProperties(t *rapid.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	mp := mempool.NewSenderNonceMempool()
 
-	genMultipleAddress := rapid.SliceOfDistinct(genAddress, func(acc simtypes.Account) string {
+	genMultipleAddress := rapid.SliceOfNDistinct(genAddress, 1, 10, func(acc simtypes.Account) string {
 		return acc.Address.String()
 	})
 
@@ -49,7 +49,7 @@ func testMempoolProperties(t *rapid.T) {
 			address:  rapid.SampledFrom(accounts).Draw(t, "acc").Address,
 		}
 	})
-	genMultipleTX := rapid.SliceOf(genTx)
+	genMultipleTX := rapid.SliceOfN(genTx, 1, 500)
 
 	txs := genMultipleTX.Draw(t, "txs")
 	senderTxRaw := getSenderTxMap(txs)

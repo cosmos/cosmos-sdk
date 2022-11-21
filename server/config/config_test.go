@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,28 +31,54 @@ func TestIndexEventsMarshalling(t *testing.T) {
 	err := configTemplate.Execute(&buffer, cfg)
 	require.NoError(t, err, "executing template")
 	actual := buffer.String()
-	assert.Contains(t, actual, expectedIn, "config file contents")
+	require.Contains(t, actual, expectedIn, "config file contents")
+}
+
+func TestParseStoreStreaming(t *testing.T) {
+	expectedContents := `[store]
+streamers = ["file", ]
+
+[streamers]
+[streamers.file]
+keys = ["*", ]
+write_dir = "/foo/bar"
+prefix = ""`
+
+	cfg := DefaultConfig()
+	cfg.Store.Streamers = []string{FileStreamer}
+	cfg.Streamers.File.Keys = []string{"*"}
+	cfg.Streamers.File.WriteDir = "/foo/bar"
+
+	var buffer bytes.Buffer
+	require.NoError(t, configTemplate.Execute(&buffer, cfg), "executing template")
+	require.Contains(t, buffer.String(), expectedContents, "config file contents")
 }
 
 func TestIndexEventsWriteRead(t *testing.T) {
 	expected := []string{"key3", "key4"}
+
 	// Create config with two IndexEvents entries, and write it to a file.
 	confFile := filepath.Join(t.TempDir(), "app.toml")
 	conf := DefaultConfig()
 	conf.IndexEvents = expected
+
 	WriteConfigFile(confFile, conf)
 
-	// Read that file into viper.
+	// read the file into Viper
 	vpr := viper.New()
 	vpr.SetConfigFile(confFile)
+
 	err := vpr.ReadInConfig()
 	require.NoError(t, err, "reading config file into viper")
+
 	// Check that the raw viper value is correct.
 	actualRaw := vpr.GetStringSlice("index-events")
 	require.Equal(t, expected, actualRaw, "viper's index events")
+
 	// Check that it is parsed into the config correctly.
 	cfg, perr := ParseConfig(vpr)
 	require.NoError(t, perr, "parsing config")
+
 	actual := cfg.IndexEvents
 	require.Equal(t, expected, actual, "config value")
 }
@@ -62,7 +87,7 @@ func TestGlobalLabelsEventsMarshalling(t *testing.T) {
 	expectedIn := `global-labels = [
   ["labelname1", "labelvalue1"],
   ["labelname2", "labelvalue2"],
-]` + "\n"
+]`
 	cfg := DefaultConfig()
 	cfg.Telemetry.GlobalLabels = [][]string{{"labelname1", "labelvalue1"}, {"labelname2", "labelvalue2"}}
 	var buffer bytes.Buffer
@@ -70,7 +95,7 @@ func TestGlobalLabelsEventsMarshalling(t *testing.T) {
 	err := configTemplate.Execute(&buffer, cfg)
 	require.NoError(t, err, "executing template")
 	actual := buffer.String()
-	assert.Contains(t, actual, expectedIn, "config file contents")
+	require.Contains(t, actual, expectedIn, "config file contents")
 }
 
 func TestGlobalLabelsWriteRead(t *testing.T) {

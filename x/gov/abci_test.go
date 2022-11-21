@@ -10,6 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -340,10 +342,8 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
-	// Create a proposal where the handler will pass for the test proposal
-	// because the value of contextKeyBadProposal is true.
-	ctx = ctx.WithValue(contextKeyBadProposal, true)
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "")
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
@@ -361,12 +361,12 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(*app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
 	ctx = ctx.WithBlockHeader(newHeader)
 
-	// Set the contextKeyBadProposal value to false so that the handler will fail
-	// during the processing of the proposal in the EndBlocker.
-	ctx = ctx.WithValue(contextKeyBadProposal, false)
-
 	// validate that the proposal fails/has been rejected
 	gov.EndBlocker(ctx, app.GovKeeper)
+
+	proposal, ok := app.GovKeeper.GetProposal(ctx, proposal.Id)
+	require.True(t, ok)
+	require.Equal(t, v1.StatusFailed, proposal.Status)
 }
 
 func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {

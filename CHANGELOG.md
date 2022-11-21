@@ -45,7 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* Bring in Cosmos-SDK [v0.46.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.5) changes [#365](https://github.com/provenance-io/cosmos-sdk/pull/365).
+* Bring in Cosmos-SDK [v0.46.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.6) changes [#367](https://github.com/provenance-io/cosmos-sdk/pull/367).
 
 ---
 
@@ -186,6 +186,18 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 
 # Cosmos-SDK releases
 
+## [v0.46.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.6) - 2022-11-18
+
+### Improvements
+
+* (config) [#13894](https://github.com/cosmos/cosmos-sdk/pull/13894) Support state streaming configuration in `app.toml` template and default configuration.
+
+## Bug Fixes
+
+* (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Fix propagation of message errors when executing a proposal.
+
+---
+
 ## [v0.46.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.5) - 2022-11-17
 
 ### Features
@@ -214,6 +226,8 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 * (store) [#13803](https://github.com/cosmos/cosmos-sdk/pull/13803) Add an error log if IAVL set operation failed.
 * [#13861](https://github.com/cosmos/cosmos-sdk/pull/13861) Allow `_` characters in tx event queries, i.e. `GetTxsEvent`.
 
+---
+
 ## [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) - 2022-11-01
 
 ### Features
@@ -236,6 +250,8 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 ### API Breaking Changes
 
 * (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
+
+---
 
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 

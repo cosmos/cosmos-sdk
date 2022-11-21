@@ -235,6 +235,19 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
+
+###############################################################################
+###                         Store / State Streaming                         ###
+###############################################################################
+
+[store]
+streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
+
+[streamers]
+[streamers.file]
+keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
+write_dir = "{{ .Streamers.File.WriteDir }}"
+prefix = "{{ .Streamers.File.Prefix }}"
 `
 
 var configTemplate *template.Template

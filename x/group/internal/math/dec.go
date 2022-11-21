@@ -46,10 +46,6 @@ func (x Dec) IsPositive() bool {
 	return !x.dec.Negative && !x.dec.IsZero()
 }
 
-func (x Dec) IsFinite() bool {
-	return x.dec.Form != apd.Finite
-}
-
 // NewDecFromString returns a new Dec from a string
 // It only support finite numbers, not NaN, +Inf, -Inf
 func NewDecFromString(s string) (Dec, error) {

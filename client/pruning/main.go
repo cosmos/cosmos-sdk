@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
@@ -40,7 +39,7 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 		`,
 		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			vp := viper.New()
+			vp := server.GetServerContextFromCmd(cmd).Viper
 
 			// Bind flags to the Context's Viper so we can get pruning options.
 			if err := vp.BindPFlags(cmd.Flags()); err != nil {

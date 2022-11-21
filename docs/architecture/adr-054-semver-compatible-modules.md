@@ -389,7 +389,7 @@ This approach will allow for both maximal correctness and enable a clear path to
 languages, possibly executed within a WASM VM.
 
 The inter-module router will need to provide a capability for clients to introspect the minor API revision of the
-server.
+server, and it will need to perform the correct [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering).
 
 We will also need to define how interface methods are defined on types that are serialized as `google.protobuf.Any`'s.
 In light of the desire to support modules in other languages, we may want to think of solutions that will accommodate
@@ -405,17 +405,26 @@ the migration overhead.
 
 ### Positive
 
-TODO
+* we will be able to deliver interoperable semantically versioned modules which should dramatically increase the
+ability of the Cosmos SDK ecosystem to iterate on new features
+* it will be possible to write Cosmos SDK modules in other languages in the near future
 
 ### Negative
 
-TODO
+* all modules will need to be refactored somewhat dramatically
 
 ### Neutral
 
 ## Further Discussions
 
-TODO
+The decision described above is considered in draft mode and is pending final buy-in from the team and key stakeholders.
+Key outstanding discussions if we do adopt that direction are:
+* how do module clients introspect dependency module API revisions
+* how do modules determine a minor dependency module API revision requirement
+* how do modules appropriately test compatibility with different dependency versions 
+* how to register and resolve interface implementations
+* how do modules register their protobuf file descriptors depending on the approach they take to generated code (the
+API module approach may still be viable as a supported strategy and would need pinned file descriptors) 
 
 ## References
 

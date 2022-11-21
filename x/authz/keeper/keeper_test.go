@@ -109,9 +109,10 @@ func (s *TestSuite) TestKeeperIter() {
 	granteeAddr := addrs[1]
 	granter2Addr := addrs[2]
 	e := ctx.BlockTime().AddDate(1, 0, 0)
+	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
-	s.app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, banktypes.NewSendAuthorization(coins100), &e)
-	s.app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, banktypes.NewSendAuthorization(coins100), &e)
+	s.app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
+	s.app.AuthzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
 
 	app.AuthzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granteeAddr, grantee)
@@ -128,7 +129,7 @@ func (s *TestSuite) TestDispatchAction() {
 	granterAddr := addrs[0]
 	granteeAddr := addrs[1]
 	recipientAddr := addrs[2]
-	a := banktypes.NewSendAuthorization(coins100)
+	a := banktypes.NewSendAuthorization(coins100, nil)
 
 	require.NoError(testutil.FundAccount(app.BankKeeper, s.ctx, granterAddr, coins1000))
 
@@ -374,7 +375,7 @@ func (s *TestSuite) TestGetAuthorization() {
 
 	genAuthMulti := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgMultiSend{}))
 	genAuthSend := authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{}))
-	sendAuth := banktypes.NewSendAuthorization(coins10)
+	sendAuth := banktypes.NewSendAuthorization(coins10, nil)
 
 	start := s.ctx.BlockHeader().Time
 	expired := start.Add(time.Duration(1) * time.Second)

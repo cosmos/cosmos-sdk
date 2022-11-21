@@ -45,7 +45,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val := s.network.Validators[0]
-	s.grantee = make([]sdk.AccAddress, 3)
+	s.grantee = make([]sdk.AccAddress, 6)
 
 	// Send some funds to the new account.
 	// Create new account in the keyring.
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee[2] = s.createAccount("grantee3")
 
 	// grant send authorization to grantee3
-	out, err = CreateGrant(val, []string{
+	_, err = CreateGrant(val, []string{
 		s.grantee[2].String(),
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
@@ -96,6 +96,30 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 		fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 	})
+	s.Require().NoError(err)
+
+	// Create new accounts in the keyring.
+	s.grantee[3] = s.createAccount("grantee4")
+	s.msgSendExec(s.grantee[3])
+
+	s.grantee[4] = s.createAccount("grantee5")
+	s.grantee[5] = s.createAccount("grantee6")
+
+	// grant send authorization with allow list to grantee4
+	out, err = CreateGrant(
+		val,
+		[]string{
+			s.grantee[3].String(),
+			"send",
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowList, s.grantee[4]),
+		},
+	)
 	s.Require().NoError(err)
 
 	err = s.network.WaitForNextBlock()
@@ -403,6 +427,40 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 			0,
 			false,
 			"",
+		},
+		{
+			"Valid tx send authorization with allow list",
+			[]string{
+				grantee.String(),
+				"send",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowList, s.grantee[1]),
+			},
+			0,
+			false,
+			"",
+		},
+		{
+			"Invalid tx send authorization with duplicate allow list",
+			[]string{
+				grantee.String(),
+				"send",
+				fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+				fmt.Sprintf("--%s=%s", cli.FlagAllowList, fmt.Sprintf("%s,%s", s.grantee[1], s.grantee[1])),
+			},
+			0,
+			true,
+			"duplicate entry",
 		},
 		{
 			"Valid tx generic authorization",
@@ -873,6 +931,86 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
+	val := s.network.Validators[0]
+	grantee := s.grantee[3]
+	allowedAddr := s.grantee[4]
+	notAllowedAddr := s.grantee[5]
+	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
+
+	_, err := CreateGrant(
+		val,
+		[]string{
+			grantee.String(),
+			"send",
+			fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", cli.FlagAllowList, allowedAddr),
+		},
+	)
+	s.Require().NoError(err)
+
+	tokens := sdk.NewCoins(
+		sdk.NewCoin("stake", sdk.NewInt(12)),
+	)
+
+	validGeneratedTx, err := banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		allowedAddr,
+		tokens,
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+	execMsg := testutil.WriteToNewTempFile(s.T(), validGeneratedTx.String())
+
+	invalidGeneratedTx, err := banktestutil.MsgSendExec(
+		val.ClientCtx,
+		val.Address,
+		notAllowedAddr,
+		tokens,
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+	)
+	s.Require().NoError(err)
+	execMsg1 := testutil.WriteToNewTempFile(s.T(), invalidGeneratedTx.String())
+
+	// test sending to allowed address
+	args := []string{
+		execMsg.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	}
+	var response sdk.TxResponse
+	cmd := cli.NewCmdExecAuthorization()
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+
+	// test sending to not allowed address
+	args = []string{
+		execMsg1.Name(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+	}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+	s.Contains(out.String(), fmt.Sprintf("cannot send to %s address", notAllowedAddr))
 }
 
 func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {

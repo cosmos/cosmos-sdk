@@ -42,6 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
+* (x/authz) [#12648](https://github.com/cosmos/cosmos-sdk/pull/12648) Add an allow list, an optional list of addresses allowed to receive bank assests via authz MsgSend grant.
 
 ### Improvements
 

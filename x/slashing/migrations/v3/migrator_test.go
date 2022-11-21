@@ -27,9 +27,7 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 }
 
 func TestMigrate(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(slashing.AppModuleBasic{})
-	cdc := encCfg.Codec
-
+	cdc := moduletestutil.MakeTestEncodingConfig(slashing.AppModuleBasic{}).Codec
 	storeKey := sdk.NewKVStoreKey(v3.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)

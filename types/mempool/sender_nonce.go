@@ -1,10 +1,10 @@
 package mempool
 
 import (
-	crand "crypto/rand" //nolint:gosec // crypto/rand is used for seed generation
+	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
 	"encoding/binary"
 	"fmt"
-	"math/rand" //notlint:gosec // math/rand is used for random selection and seeded from crypto/rand
+	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 
 	huandu "github.com/huandu/skiplist"
 
@@ -67,7 +67,7 @@ func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 
 func (snm *senderNonceMempool) setSeed(seed int64) {
 	s1 := rand.NewSource(seed)
-	snm.rnd = rand.New(s1) //nolint:gosec // math/rand is seeded from crypto/rand by default
+	snm.rnd = rand.New(s1) //#nosec // math/rand is seeded from crypto/rand by default
 }
 
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
@@ -98,6 +98,7 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
 	senderCursors := make(map[string]*senderTxs)
+	// #nosec
 	for key := range snm.senders {
 		senders = append(senders, key)
 		senderTx := newSenderTxs(snm.senders[key].Front())
@@ -122,9 +123,10 @@ func (snm *senderNonceMempool) CountTx() int {
 	count := 0
 
 	// Disable gosec here since we need neither strong randomness nor deterministic iteration.
-	for _, value := range snm.senders { //nolint:gosec
-		count += value.Len() //nolint:gosec
-	} //nolint:gosec
+	// #nosec
+	for _, value := range snm.senders {
+		count += value.Len()
+	}
 	return count
 }
 

@@ -376,13 +376,32 @@ is properly addressed.
 
 ## Decision
 
-More discussion is needed to make a clear and decisive decision.
+Based on discussions within the team, the current draft consensus is the following:
+1. we are alignment on adopting [ADR 033](./adr-033-protobuf-inter-module-comm.md) not just as an addition to the
+framework, but as a core replacement to the keeper paradigm entirely.
+2. the ADR 033 inter-module router will accommodate any variation of approach (A) or (B) given the following rules:
+    a. if the client type is the same as the server type then pass it directly through,
+    b. if both client and server use the zero-copy generated code wrappers (which still need to be defined), then pass
+the memory buffers from one wrapper to the other, or
+    c. marshal/unmarshal types between client and server.
+
+This approach will allow for both maximal correctness and enable a clear path to enabling modules within in other
+languages, possibly executed within a WASM VM.
+
+The inter-module router will need to provide a capability for clients to introspect the minor API revision of the
+server.
+
+We will also need to define how interface methods are defined on types that are serialized as `google.protobuf.Any`'s.
+In light of the desire to support modules in other languages, we may want to think of solutions that will accommodate
+other languages such as plugins described briefly in [ADR 033](./adr-033-protobuf-inter-module-comm.md#internal-methods).
 
 ## Consequences
 
 ### Backwards Compatibility
 
-TODO
+Modules which migrate fully to ADR 033 will not be compatible with existing modules which use the keeper paradigm.
+As a temporary workaround we may create some wrapper types that emulate the current keeper interface to minimize
+the migration overhead.
 
 ### Positive
 
@@ -406,3 +425,4 @@ TODO
 * https://github.com/cosmos/cosmos-sdk/pull/11340
 * https://github.com/cosmos/cosmos-sdk/issues/11899
 * [ADR 020](./adr-020-protobuf-transaction-encoding.md)
+* [ADR 033](./adr-033-protobuf-inter-module-comm.md)

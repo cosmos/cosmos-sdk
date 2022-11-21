@@ -10,13 +10,18 @@ sidebar_position: 1
 
 `x/nft` is an implementation of a Cosmos SDK module, per [ADR 43](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-043-nft-module.md), that allows you to create nft classification, create nft, transfer nft, update nft, and support various queries by integrating the module. It is fully compatible with the ERC721 specification.
 
-* [Concept](#concepts)
+* [Concepts](#concepts)
     * [Class](#class)
     * [NFT](#nft)
-*[State](#state)
-*[Messages](#messages)
+* [State](#state)
+    * [Class](#class-1)
+    * [NFT](#nft-1)
+    * [NFTOfClassByOwner](#nftofclassbyowner)
+    * [Owner](#owner)
+    * [TotalSupply](#totalsupply)
+* [Messages](#messages)
     * [MsgSend](#msgsend)
-*[Events](#events)
+* [Events](#events)
 
 ## Concepts
 
@@ -62,7 +67,12 @@ TotalSupply is responsible for tracking the number of all nfts under a certain c
 
 ## Messages
 
-In this section we describe the processing of messages for the nft module.
+In this section we describe the processing of messages for the NFT module.
+
+:::warning
+The validation of `ClassID` and `NftID` is left to the app developer.  
+The SDK does not provide any validation for these fields.
+:::
 
 ### MsgSend
 
@@ -70,9 +80,9 @@ You can use the `MsgSend` message to transfer the ownership of nft. This is a fu
 
 The message handling should fail if:
 
-* provided `ClassID` is not exist.
-* provided `Id` is not exist.
-* provided `Sender` is not the owner of nft.
+* provided `ClassID` does not exist.
+* provided `Id` does not exist.
+* provided `Sender` does not the owner of nft.
 
 ## Events
 

@@ -76,7 +76,9 @@ const (
 	FlagReverse          = "reverse"
 	FlagTip              = "tip"
 	FlagAux              = "aux"
-	FlagOutput           = tmcli.OutputFlag
+	// FlagOutput is the flag to set the output format.
+	// This differs from FlagOutputDocument that is used to set the output file.
+	FlagOutput = tmcli.OutputFlag
 
 	// Tendermint logging flags
 	FlagLogLevel  = "log_level"

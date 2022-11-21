@@ -13,7 +13,6 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
@@ -68,8 +67,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 ifeq ($(ENABLE_ROCKSDB),true)
   BUILD_TAGS += rocksdb_build
   test_tags += rocksdb_build
-else
-  $(warning RocksDB support is disabled; to build and test with RocksDB support, set ENABLE_ROCKSDB=true)
 endif
 
 # DB backend selection
@@ -187,24 +184,8 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
-# This builds the docs.cosmos.network docs using docusaurus.
-# Old documentation, which have not been migrated to docusaurus are generated with vuepress.
 build-docs:
-	@echo "building docusaurus docs"
-	@cd docs && npm ci && npm run build
-	mv docs/build ~/output
-
-	@echo "building old docs"
-	@cd docs && \
-			while read -r branch path_prefix; do \
-			echo "building vuepress $${branch} docs" ; \
-			(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-			mkdir -p ~/output/$${path_prefix} ; \
-			cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
-	done < vuepress_versions ;	
-
-	@echo "setup domain"
-	@echo $(DOCS_DOMAIN) > ~/output/CNAME
+	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
 
 .PHONY: build-docs
 
@@ -357,7 +338,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-golangci_version=v1.50.0
+golangci_version=v1.50.1
 
 lint:
 	@echo "--> Running linter"
@@ -372,9 +353,7 @@ lint-fix:
 .PHONY: lint lint-fix
 
 format:
-	@go install mvdan.cc/gofumpt@latest
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go" -not -path "./crypto/keys/secp256k1/*" | xargs gofumpt -w -l
 	$(golangci_lint_cmd) run --fix
 .PHONY: format
 
@@ -408,38 +387,30 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.0
+protoVer=0.11.2
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-containerProtoGen=$(PROJECT_NAME)-proto-gen-$(protoVer)
-containerProtoGenSwagger=$(PROJECT_NAME)-proto-gen-swagger-$(protoVer)
-containerProtoFmt=$(PROJECT_NAME)-proto-fmt-$(protoVer)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.9.0
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
 proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen.sh; fi
+	@$(protoImage) sh ./scripts/protocgen.sh
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGenSwagger}$$"; then docker start -a $(containerProtoGenSwagger); else docker run --name $(containerProtoGenSwagger) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protoc-swagger-gen.sh; fi
+	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
 proto-format:
-	@echo "Formatting Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoFmt}$$"; then docker start -a $(containerProtoFmt); else docker run --name $(containerProtoFmt) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		find ./ -name "*.proto" -exec clang-format -i {} \; ; fi
-
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
 proto-lint:
-	@$(DOCKER_BUF) lint --error-format=json
+	@$(protoImage) buf lint --error-format=json
 
 proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-alpha.2/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-rc1/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci
@@ -473,6 +444,8 @@ proto-update-deps:
 
 	@mkdir -p $(TM_P2P)
 	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
+
+	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 

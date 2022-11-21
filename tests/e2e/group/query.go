@@ -10,8 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
-
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func (s *IntegrationTestSuite) TestQueryGroupInfo() {
@@ -27,21 +25,21 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 	}{
 		{
 			"group not found",
-			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"group: not found",
 			0,
 		},
 		{
 			"group id invalid",
-			[]string{"", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
 			0,
 		},
 		{
 			"group found",
-			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -78,7 +76,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require := s.Require()
 
 	cmd := client.QueryGroupsByAdminCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	require.NoError(err)
 
 	var groups group.QueryGroupsByAdminResponse
@@ -86,7 +84,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	require.Len(groups.Groups, 1)
 
 	cmd = client.QueryGroupMembersCmd()
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].Id), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, []string{fmt.Sprintf("%d", groups.Groups[0].Id), fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	require.NoError(err)
 
 	var members group.QueryGroupMembersResponse
@@ -105,7 +103,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	}{
 		{
 			"invalid address",
-			[]string{"abcd", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"abcd", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"invalid bech32 string",
 			0,
@@ -113,7 +111,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 		},
 		{
 			"not part of any group",
-			[]string{testAddr.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{testAddr.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -121,7 +119,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 		},
 		{
 			"expect one group",
-			[]string{members.Members[0].Member.Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{members.Members[0].Member.Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			1,
@@ -163,7 +161,7 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 	}{
 		{
 			"no group",
-			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -171,7 +169,7 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 		},
 		{
 			"members found",
-			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -236,7 +234,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 		},
 		{
 			"no group",
-			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -244,7 +242,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 		},
 		{
 			"found groups",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -294,14 +292,14 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 	}{
 		{
 			"group policy not found",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"group policy: not found",
 			0,
 		},
 		{
 			"group policy found",
-			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -359,7 +357,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 		},
 		{
 			"no group policy",
-			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -367,7 +365,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 		},
 		{
 			"found group policies",
-			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -435,7 +433,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 		},
 		{
 			"no group policy",
-			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -443,7 +441,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 		},
 		{
 			"found group policies",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -502,14 +500,14 @@ func (s *IntegrationTestSuite) TestQueryProposal() {
 	}{
 		{
 			"not found",
-			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"not found",
 			0,
 		},
 		{
 			"invalid proposal id",
-			[]string{"", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
 			0,
@@ -554,7 +552,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupPolicy() {
 		},
 		{
 			"no group policy",
-			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.network.Validators[1].Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -562,7 +560,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupPolicy() {
 		},
 		{
 			"found proposals",
-			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -608,14 +606,14 @@ func (s *IntegrationTestSuite) TestQueryVoteByProposalVoter() {
 	}{
 		{
 			"invalid voter address",
-			[]string{"1", "invalid", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"1", "invalid", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"decoding bech32 failed: invalid bech32",
 			0,
 		},
 		{
 			"invalid proposal id",
-			[]string{"", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"", val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
 			0,
@@ -652,7 +650,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByProposal() {
 	}{
 		{
 			"invalid proposal id",
-			[]string{"", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"strconv.ParseUint: parsing \"\": invalid syntax",
 			0,
@@ -660,7 +658,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByProposal() {
 		},
 		{
 			"no votes",
-			[]string{"12345", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"12345", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -668,7 +666,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByProposal() {
 		},
 		{
 			"found votes",
-			[]string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -715,7 +713,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 	}{
 		{
 			"invalid voter address",
-			[]string{"abcd", fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{"abcd", fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"decoding bech32 failed: invalid bech32",
 			0,
@@ -723,7 +721,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 		},
 		{
 			"no votes",
-			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{s.groupPolicies[0].Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			true,
 			"",
 			0,
@@ -731,7 +729,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 		},
 		{
 			"found votes",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			false,
 			"",
 			0,
@@ -810,7 +808,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 			"not found",
 			[]string{
 				"12345",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			group.TallyResult{},
@@ -821,7 +819,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 			"invalid proposal id",
 			[]string{
 				"",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			group.TallyResult{},
@@ -832,7 +830,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 			"valid proposal id with no votes",
 			[]string{
 				proposalID,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			group.DefaultTallyResult(),
@@ -843,7 +841,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 			"valid proposal id",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			group.TallyResult{

@@ -21,11 +21,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
+	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -85,7 +86,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.msgSendExec(s.grantee[0])
 
 	// create a proposal with deposit
-	_, err := govtestutil.MsgSubmitLegacyProposal(s.clientCtx, val[0].Address.String(),
+	_, err := govclitestutil.MsgSubmitLegacyProposal(s.clientCtx, val[0].Address.String(),
 		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin("stake", govv1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
@@ -96,7 +97,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.msgSendExec(s.grantee[1])
 
 	// grant send authorization to grantee2
-	out, err := s.createGrant([]string{
+	out, err := authzclitestutil.CreateGrant(s.clientCtx, []string{
 		s.grantee[1].String(),
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
@@ -115,7 +116,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.grantee[2] = s.createAccount("grantee3")
 
 	// grant send authorization to grantee3
-	_, err = s.createGrant([]string{
+	_, err = authzclitestutil.CreateGrant(s.clientCtx, []string{
 		s.grantee[2].String(),
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
@@ -135,7 +136,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.grantee[5] = s.createAccount("grantee6")
 
 	// grant send authorization with allow list to grantee4
-	out, err = s.createGrant(
+	out, err = authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			s.grantee[3].String(),
 			"send",
@@ -177,11 +178,6 @@ func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	)
 	s.Require().NoError(err)
 	s.Require().Contains(out.String(), `"code":0`)
-}
-
-func (s *CLITestSuite) createGrant(args []string) (testutil.BufferWriter, error) {
-	cmd := cli.NewCmdGrantAuthorization()
-	return clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 }
 
 func (s *CLITestSuite) TestCLITxGrantAuthorization() {
@@ -429,7 +425,7 @@ func (s *CLITestSuite) TestCLITxGrantAuthorization() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			out, err := s.createGrant(
+			out, err := authzclitestutil.CreateGrant(s.clientCtx,
 				tc.args,
 			)
 			if tc.expectErr {
@@ -451,7 +447,7 @@ func (s *CLITestSuite) TestCmdRevokeAuthorizations() {
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
-	_, err := s.createGrant(
+	_, err := authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -466,7 +462,7 @@ func (s *CLITestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization
-	_, err = s.createGrant(
+	_, err = authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -481,7 +477,7 @@ func (s *CLITestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(err)
 
 	// generic-authorization used for amino testing
-	_, err = s.createGrant(
+	_, err = authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -586,7 +582,7 @@ func (s *CLITestSuite) TestExecAuthorizationWithExpiration() {
 	grantee := s.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
-	_, err := s.createGrant(
+	_, err := authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -626,7 +622,7 @@ func (s *CLITestSuite) TestNewExecGenericAuthorized() {
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := s.createGrant(
+	_, err := authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -720,7 +716,7 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := s.createGrant(
+	_, err := authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -815,7 +811,7 @@ func (s *CLITestSuite) TestExecSendAuthzWithAllowList() {
 	notAllowedAddr := s.grantee[5]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := s.createGrant(
+	_, err := authzclitestutil.CreateGrant(s.clientCtx,
 		[]string{
 			grantee.String(),
 			"send",

@@ -5,8 +5,8 @@ package testpb;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "testpb/bank.proto";
 
-// BankQuery queries the state of the tables specified by testpb/bank.proto.
-service BankQuery {
+// BankQueryService queries the state of the tables specified by testpb/bank.proto.
+service BankQueryService {
   // Get queries the Balance table by its primary key.
   rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
   // ListBalance queries the Balance table using prefix and range queries against defined indexes.

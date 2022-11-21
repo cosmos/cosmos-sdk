@@ -1,4 +1,4 @@
-// Package math provides helper functions for doing mathematical calculations and parsing for the ecocredit module.
+// Package math provides helper functions for doing mathematical calculations and parsing for the group module.
 package math
 
 import (
@@ -46,11 +46,18 @@ func (x Dec) IsPositive() bool {
 	return !x.dec.Negative && !x.dec.IsZero()
 }
 
+// NewDecFromString returns a new Dec from a string
+// It only support finite numbers, not NaN, +Inf, -Inf
 func NewDecFromString(s string) (Dec, error) {
 	d, _, err := apd.NewFromString(s)
 	if err != nil {
 		return Dec{}, errors.ErrInvalidDecString.Wrap(err.Error())
 	}
+
+	if d.Form != apd.Finite {
+		return Dec{}, errors.ErrInvalidDecString.Wrapf("expected a finite decimal, got %s", s)
+	}
+
 	return Dec{*d}, nil
 }
 

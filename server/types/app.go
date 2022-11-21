@@ -57,7 +57,7 @@ type (
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context)
 
-		// Return the multistore instance
+		// CommitMultiStore return the multistore instance
 		CommitMultiStore() sdk.CommitMultiStore
 	}
 

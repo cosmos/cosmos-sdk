@@ -108,13 +108,14 @@ func (m *ModuleAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ModuleAccount proto.InternalMessageInfo
 
-// ModuleCredential represents a unclaimable pubkey for base accounts
+// ModuleCredential represents a unclaimable pubkey for base accounts controlled by modules.
 //
 // Since: cosmos-sdk 0.47
 type ModuleCredential struct {
+	// module_name is the name of the module used for address derivation (passed into address.Module).
 	ModuleName string `protobuf:"bytes,1,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
-	// derivation_keys is for deriving a module account (passed into address.Module)
-	// adding more keys creates sub-accounts (passed into address.Derive)
+	// derivation_keys is for deriving a module account address (passed into address.Module)
+	// adding more keys creates sub-account addresses (passed into address.Derive)
 	DerivationKeys [][]byte `protobuf:"bytes,2,rep,name=derivation_keys,json=derivationKeys,proto3" json:"derivation_keys,omitempty"`
 }
 

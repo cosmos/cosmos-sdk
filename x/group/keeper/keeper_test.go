@@ -126,10 +126,10 @@ func (s TestSuite) setNextAccount() {
 
 	accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{keeper.GroupPolicyTablePrefix}, derivationKey})
 
-	groupPolicyAcc, err := authtypes.NewAccountWithModuleCredential(accountCredentials)
+	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
 	s.Require().NoError(err)
 
-	groupPolicyAccBumpAccountNumber, err := authtypes.NewAccountWithModuleCredential(accountCredentials)
+	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
 	s.Require().NoError(err)
 	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 

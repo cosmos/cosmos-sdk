@@ -17,19 +17,22 @@ func TestNewModuleCrendentials(t *testing.T) {
 	addr, err := sdk.AccAddressFromHexUnsafe(credential.Address().String())
 	require.NoError(t, err)
 	require.Equal(t, expected.String(), addr.String())
+
+	require.Equal(t, credential, authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}))
+	require.NotEqual(t, credential, authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x1}}))
 }
 
-func TestNewAccountWithModuleCredential(t *testing.T) {
+func TestNewBaseAccountWithPubKey(t *testing.T) {
 	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
 
 	credential := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}})
-	account, err := authtypes.NewAccountWithModuleCredential(credential)
+	account, err := authtypes.NewBaseAccountWithPubKey(credential)
 	require.NoError(t, err)
 	require.Equal(t, expected, account.GetAddress())
 	require.Equal(t, credential, account.GetPubKey())
 }
 
-func TestNewAccountWithModuleCredential_WrongCredentials(t *testing.T) {
-	_, err := authtypes.NewAccountWithModuleCredential(cryptotypes.PubKey(nil))
+func TestNewBaseAccountWithPubKey_WrongCredentials(t *testing.T) {
+	_, err := authtypes.NewBaseAccountWithPubKey(cryptotypes.PubKey(nil))
 	require.Error(t, err)
 }

@@ -60,7 +60,7 @@ func Migrate(
 		}
 
 		accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey})
-		baseAccount, err := authtypes.NewAccountWithModuleCredential(accountCredentials)
+		baseAccount, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
 		if err != nil {
 			return fmt.Errorf("failed to create new group policy account: %w", err)
 		}

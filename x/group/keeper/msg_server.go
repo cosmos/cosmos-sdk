@@ -345,7 +345,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		}
 
 		// group policy accounts are unclaimable base accounts
-		account, err := authtypes.NewAccountWithModuleCredential(accountCredentials)
+		account, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "could not create group policy account")
 		}

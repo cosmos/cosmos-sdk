@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-// NewAccountWithModuleCredential creates an account with an unclaimable module credential.
-func NewAccountWithModuleCredential(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
+// NewBaseAccountWithPubKey creates an account with an a pubkey.
+func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
 	if pubkey == nil {
 		return nil, fmt.Errorf("pubkey cannot be nil")
 	}
@@ -39,17 +39,17 @@ func NewModuleCredential(moduleName string, derivationKeys [][]byte) *ModuleCred
 }
 
 func (m *ModuleCredential) Address() cryptotypes.Address {
-	var module []byte
+	var addr []byte
 	for i, dk := range m.DerivationKeys {
 		if i == 0 {
-			module = address.Module(m.ModuleName, dk)
+			addr = address.Module(m.ModuleName, dk)
 			continue
 		}
 
-		module = address.Derive(module, dk)
+		addr = address.Derive(addr, dk)
 	}
 
-	return module
+	return addr
 }
 
 func (m *ModuleCredential) Bytes() []byte {
@@ -62,7 +62,7 @@ func (m *ModuleCredential) VerifySignature(_ []byte, _ []byte) bool {
 }
 
 func (m *ModuleCredential) Equals(other cryptotypes.PubKey) bool {
-	return false
+	return m.String() == other.String()
 }
 
 func (m *ModuleCredential) Type() string {

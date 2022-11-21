@@ -115,8 +115,7 @@ modified to set the new parameter to the desired value.
 
 ##### New Proposal.Proposer field
 
-The `Proposal` proto has been updated with proposer field. For proposal state migraton
-developers should ensure to call `v4.AddProposerAddressToProposal` in their upgrade handler.
+The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible. 
 
 > This migration is optional, if chain wants to cancel previous proposals which are active (deposit or voting period) they can do this proposals state migration.
 
@@ -124,17 +123,18 @@ developers should ensure to call `v4.AddProposerAddressToProposal` in their upgr
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	// v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
 		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			// add proposal ids with proposers which are active (deposit or voting period)
-			proposals := make(map[uint64]string)
+			//// this migration is optional
+			//// add proposal ids with proposers which are active (deposit or voting period)
+			// proposals := make(map[uint64]string)
 			// proposals[1] = "cosmos1luyncewxk4lm24k6gqy8y5dxkj0klr4tu0lmnj" ...
-			v4.AddProposerAddressToProposal(ctx, sdk.NewKVStoreKey(v4.ModuleName), app.appCodec, proposals)
+			// v4.AddProposerAddressToProposal(ctx, sdk.NewKVStoreKey(v4.ModuleName), app.appCodec, proposals)
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		})
 }
@@ -146,8 +146,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burned or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
 
 ```
-	1. deposits * proposal_cancel_ratio will be burned
-	2. deposits * (1 - proposal_cancel_ratio) will be sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then all remaining deposits will be burned.
+	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
 ```
 
 By default, the new `ProposalCancelRatio` parameter is set to zero during migration and `ProposalCancelDest` is set to empty string.

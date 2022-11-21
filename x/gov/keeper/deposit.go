@@ -165,56 +165,62 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 // BurnAndSendDepositsToCommunityPool will burn the (deposits * proposal_cancel_burn_rate) amount of proposal deposits
 // and send remaining deposits of the proposal to community pool.
-func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposalID uint64, destAddress string, totalDeposits []sdk.Coin) error {
+func (keeper Keeper) BurnAndSendDepositsToCommunityPool(ctx sdk.Context, proposalID uint64, destAddress, proposalCancelRate string, totalDeposits []sdk.Coin) error {
 	store := ctx.KVStore(keeper.storeKey)
 
-	proposalCancelRate := keeper.GetParams(ctx).ProposalCancelRatio
-	// burn the deposits * proposal_cancel_rate amount from proposal deposits (gov module)
-	burnRate := sdk.MustNewDecFromStr(proposalCancelRate)
+	rate := sdk.MustNewDecFromStr(proposalCancelRate)
+	var cancellationCharges sdk.Coins
 
-	var burnDepositAmount sdk.Coins
-
-	if burnRate.IsPositive() {
+	if rate.IsPositive() {
 		for _, deposit := range totalDeposits {
 			burnAmount := sdk.NewCoin(
 				deposit.Denom,
-				sdk.NewDecFromInt(deposit.Amount).Mul(burnRate).RoundInt(),
+				sdk.NewDecFromInt(deposit.Amount).Mul(rate).RoundInt(),
 			)
-			burnDepositAmount = burnDepositAmount.Add(burnAmount)
+			cancellationCharges = cancellationCharges.Add(burnAmount)
 		}
 	}
 
-	// burn the deposits
-	if !burnDepositAmount.IsZero() {
-		err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, burnDepositAmount)
-		if err != nil {
-			return err
-		}
-	}
-
-	// send (deposits - burnAmount) to community pool from proposal deposits (gov module)
-	remainingAmount := sdk.Coins(totalDeposits).Sub(burnDepositAmount...)
-
-	// get the distribution module account address
-	distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
-	if distributionAddress.String() == destAddress {
-		err := keeper.distrkeeper.FundCommunityPool(ctx, remainingAmount, keeper.ModuleAccountAddress())
-		if err != nil {
-			return err
-		}
-	} else {
-		if len(destAddress) == 0 {
-			// burn the remaining deposits also
-			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, remainingAmount)
+	// burn the cancellation fee or sent to cancellation changes to destination address
+	if !cancellationCharges.IsZero() {
+		// get the distribution module account address
+		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
+		if distributionAddress.String() == destAddress {
+			err := keeper.distrkeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
 			if err != nil {
 				return err
 			}
 		} else {
-			destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
-			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destAccAddress, remainingAmount)
-			if err != nil {
-				return err
+			if len(destAddress) == 0 {
+				// burn the remaining deposits also
+				err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
+				if err != nil {
+					return err
+				}
+			} else {
+				destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
+				err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destAccAddress, cancellationCharges)
+				if err != nil {
+					return err
+				}
 			}
+		}
+	}
+
+	// send remaining (deposits - cancellationCharges) to depositors
+	for _, deposits := range keeper.GetDeposits(ctx, proposalID) {
+		depositerAddress := sdk.MustAccAddressFromBech32(deposits.Depositor)
+		var remainingAmount sdk.Coins
+		for _, deposit := range deposits.Amount {
+			remainAmount := sdk.NewCoin(
+				deposit.Denom,
+				sdk.NewDecFromInt(deposit.Amount).Sub(sdk.NewDec(1).Sub(rate)).RoundInt(),
+			)
+			remainingAmount = remainingAmount.Add(remainAmount)
+		}
+		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositerAddress, remainingAmount)
+		if err != nil {
+			return err
 		}
 	}
 

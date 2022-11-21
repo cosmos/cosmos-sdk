@@ -99,7 +99,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, proposer sdk.AccAddress, me
 func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
 	proposal, ok := keeper.GetProposal(ctx, proposalID)
 	if !ok {
-		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal not found with %d id", proposalID)
+		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
 	}
 
 	// Checking proposal have proposer or not because old proposal doesn't have proposer feild,
@@ -123,10 +123,10 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 		return sdkerrors.Wrapf(types.ErrVotingPeriodEnded, "voting period is already ended for this proposal %d", proposalID)
 	}
 
-	// burn the (deposits * proposal_cancel_burn_rate) amount.
-	// and deposits * (1 - proposal_cancel_burn_rate) will be move to community pool or deposits destination address or will be burned.
-	destAddress := keeper.GetParams(ctx).ProposalCancelDest
-	err := keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, destAddress, proposal.TotalDeposit)
+	// burn the (deposits * proposal_cancel_rate) amount or sent to cancellation destination address.
+	// and deposits * (1 - proposal_cancel_rate) will be sent to depositors.
+	params := keeper.GetParams(ctx)
+	err := keeper.BurnAndSendDepositsToCommunityPool(ctx, proposal.Id, params.ProposalCancelDest, params.ProposalCancelRatio, proposal.TotalDeposit)
 	if err != nil {
 		return err
 	}

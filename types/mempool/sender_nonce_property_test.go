@@ -23,8 +23,7 @@ var (
 
 // Property Based Testing
 // Split the senders tx in independent slices and then test the following properties in each slice
-// same elements input output
-// the reverse of the reverse of the list is the same
+// same elements input output and overwrite the nonce duplicates
 // for every sequence element pair a, b a < b
 
 var genAddress = rapid.Custom(func(t *rapid.T) simtypes.Account {

@@ -122,8 +122,8 @@ func (snm *senderNonceMempool) CountTx() int {
 	count := 0
 
 	for _, value := range snm.senders { //nolint:gosec // we need neither strong randomness nor deterministic iteration
-		count += value.Len()
-	}
+		count += value.Len() //nolint:gosec
+	} //nolint:gosec
 	return count
 }
 

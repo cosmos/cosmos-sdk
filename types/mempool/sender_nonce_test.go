@@ -2,7 +2,6 @@ package mempool_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"math/rand"
 	"testing"
 
@@ -11,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 

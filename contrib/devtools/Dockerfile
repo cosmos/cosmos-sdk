@@ -14,11 +14,6 @@ RUN apk add --no-cache \
 
 RUN npm install -g swagger-combine
 
-ARG UNAME=protobuild
-ARG UID=1000
-RUN adduser -u $UID -s /bin/sh $UNAME -D
-USER $UNAME
-
 ENV GOLANG_PROTOBUF_VERSION=1.28.1 \
   GRPC_GATEWAY_VERSION=1.16.0
 

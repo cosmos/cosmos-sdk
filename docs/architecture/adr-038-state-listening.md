@@ -229,6 +229,36 @@ type ABCIListener interface {
 }
 ```
 
+#### BaseApp Registration
+
+We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
+
+ ```go
+ // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
+func (app *BaseApp) SetStreamingService(s ABCIListener) {
+    // register the StreamingService within the BaseApp
+    // BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
+    app.abciListeners = append(app.abciListeners, s)
+}
+```
+
+We will add two new fields to the `BaseApp` struct:
+```go
+type BaseApp struct {
+
+    ...
+
+    // abciListenersAsync for determining if abciListeners will run asynchronously.
+    // When abciListenersAsync=false and stopNodeOnABCIListenerErr=false listeners will run synchronized but will not stop the node.
+    // When abciListenersAsync=true stopNodeOnABCIListenerErr will be ignored.
+    abciListenersAsync bool
+
+    // stopNodeOnABCIListenerErr halts the node when ABCI streaming service listening results in an error.
+    // stopNodeOnABCIListenerErr=true must be paired with abciListenersAsync=false.
+    stopNodeOnABCIListenerErr bool
+}
+```
+
 #### ABCI Event Hooks
 
 We will modify the `BeginBlock`, `EndBlock`, `DeliverTx` and `Commit` methods to pass ABCI requests and responses
@@ -240,20 +270,22 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
     ...
 
     // call the streaming service hook with the BeginBlock messages
-    if app.abciListener != nil {
+    for _, abciListener := range app.abciListeners {
         ctx := app.deliverState.ctx
         blockHeight := ctx.BlockHeight()
-        if app.stopNodeOnStreamingErr {
-            if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
-                app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-                os.Exit(1)
-            }
-        } else {
+        if app.abciListenersAsync {
             go func(req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
                 if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
-                   app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
+                    app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
                 }
             }(req, res)
+        } else {
+            if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
+                app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
+                if app.stopNodeOnABCIListenerErr {
+                    os.Exit(1)
+                }
+            }
         }
     }
 
@@ -267,22 +299,22 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
     ...
 
     // call the streaming service hook with the EndBlock messages
-    if app.abciListener != nil {
+    for _, abciListener := range app.abciListeners {
         ctx := app.deliverState.ctx
         blockHeight := ctx.BlockHeight()
-        if app.stopNodeOnStreamingErr {
-            if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
-                app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-                os.Exit(1)
-            }
-        } else {
+        if app.abciListenersAsync {
             go func(req abci.RequestEndBlock, res abci.ResponseEndBlock) {
-                if reqErr == nil && resErr == nil {
-                    if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
-                        app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-                    }
+                if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
+                    app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
                 }
             }(req, res)
+        } else {
+            if err := app.abciListener.ListenEndBlock(blockHeight, req, res); err != nil {
+                app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
+                if app.stopNodeOnABCIListenerErr {
+                    os.Exit(1)
+                }
+            }
         }
     }
 
@@ -296,22 +328,22 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
     var abciRes abci.ResponseDeliverTx
     defer func() {
         // call the streaming service hook with the EndBlock messages
-        if app.abciListener != nil {
+        for _, abciListener := range app.abciListeners {
             ctx := app.deliverState.ctx
             blockHeight := ctx.BlockHeight()
-            if app.stopNodeOnStreamingErr {
-                if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
-                    app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-                    os.Exit(1)
-                }
-            } else {
+            if app.abciListenersAsync {
                 go func(req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
-                    if reqErr == nil && resErr == nil {
-                        if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
-                            app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-                        }
+                    if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
+                        app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
                     }
                 }(req, abciRes)
+            } else {
+                if err := app.abciListener.ListenDeliverTx(blockHeight, req, res); err != nil {
+                    app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
+                    if app.stopNodeOnABCIListenerErr {
+                        os.Exit(1)
+                    }
+                }
             }
         }
     }()
@@ -333,21 +365,23 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
     }
 
     // call the streaming service hook with the Commit messages
-    if app.abciListener != nil {
+    for _, abciListener := range app.abciListeners {
         ctx := app.deliverState.ctx
         blockHeight := ctx.BlockHeight()
         changeSet := app.cms.PopStateCache()
-        if app.stopNodeOnStreamingErr {
-            if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
-                app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
-                os.Exit(1)
-            }
-        } else {
+        if app.abciListenersAsync {
             go func(res abci.ResponseCommit, changeSet []store.StoreKVPair) {
                 if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
                     app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
                 }
             }(res, changeSet)
+        } else {
+            if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+                app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
+                if app.stopNodeOnABCIListenerErr {
+                    os.Exit(1)
+                }
+            }
         }
     }
 
@@ -609,13 +643,17 @@ func registerABCIListenerPlugin(
     keys map[string]*store.KVStoreKey,
     abciListener ABCIListener,
 ) {
-    stopNodeOnErrKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingStopNodeOnErrTomlKey)
+    asyncKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIAsync)
+    async := cast.ToBool(appOpts.Get(asyncKey))
+    stopNodeOnErrKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIStopNodeOnErrTomlKey)
     stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
-    keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
+    keysKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIKeysTomlKey)
     exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-    bApp.cms.AddListeners(exposeStoreKeys(exposeKeysStr, keys))
-    bApp.abciListener = abciListener
-    bApp.stopNodeOnStreamingErr = stopNodeOnErr
+    exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
+    bApp.cms.AddListeners(exposedKeys)
+    bApp.SetStreamingService(abciListener)
+    bApp.stopNodeOnABCIListenerErr = stopNodeOnErr
+    bApp.abciListenersAsync = async
 }
 ```
 
@@ -644,6 +682,10 @@ func exposeStoreKeys(keysStr []string, keys map[string]*types.KVStoreKey) []type
             }
         }
     }
+    // sort storeKeys for deterministic output
+    sort.SliceStable(exposeStoreKeys, func(i, j int) bool {
+        return exposeStoreKeys[i].Name() < exposeStoreKeys[j].Name()
+    })
 
     return exposeStoreKeys
 }
@@ -712,13 +754,19 @@ plugin = "abci_v1"
 # Set to ["*"] to expose all keys.
 keys = ["*"]
 
+# Enable abciListeners to run asynchronously.
+# When abciListenersAsync=false and stopNodeOnABCIListenerErr=false listeners will run synchronized but will not stop the node.
+# When abciListenersAsync=true stopNodeOnABCIListenerErr will be ignored.
+async = false
+
 # Whether to stop the node on message deliver error.
 stop-node-on-err = true
 ```
 
-There will be three parameters for configuring `ABCIListener` plugin: `streaming.abci.plugin`, `streaming.abci.keys` and `streaming.abci.stop-node-on-err`.
+There will be four parameters for configuring `ABCIListener` plugin: `streaming.abci.plugin`, `streaming.abci.keys`, `streaming.abci.async` and `streaming.abci.stop-node-on-err`.
 `streaming.abci.plugin` is the name of the plugin we want to use for streaming, `streaming.abci.keys` is a set of store keys for stores it listens to,
- and `streaming.abci.stop-node-on-err` is a bool that stops the node when true and operates in a fire-and-forget mode when false.
+`streaming.abci.async` is bool enabling asynchronous listening and `streaming.abci.stop-node-on-err` is a bool that stops the node when true and when operating
+on synchronized mode `streaming.abci.async=false`. Note that `streaming.abci.stop-node-on-err=true` will be ignored if `streaming.abci.async=true`.
 
 The configuration above support additional streaming plugins by adding the plugin to the `[streaming]` configuration section
 and registering the plugin with `RegisterStreamingPlugin` helper function.

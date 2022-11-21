@@ -120,9 +120,8 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
-	// We need neither strong randomness nor deterministic iteration here.
-	//nolint:gosec
-	for _, value := range snm.senders {
+
+	for _, value := range snm.senders { //nolint:gosec // we need neither strong randomness nor deterministic iteration
 		count += value.Len()
 	}
 	return count

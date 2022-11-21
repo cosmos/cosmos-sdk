@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErrMsg: "block.MaxBytes must be greater than 0. Got -10",
 		},
 		{
-			name: "invalid  authority",
+			name: "invalid authority",
 			input: &types.MsgUpdateParams{
 				Authority: "invalid",
 				Block:     defaultConsensusParams.Block,

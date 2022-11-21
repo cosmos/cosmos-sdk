@@ -1,10 +1,10 @@
 package mempool
 
 import (
-	crand "crypto/rand"
+	crand "crypto/rand" //nolint:gosec // crypto/rand is used for seed generation
 	"encoding/binary"
 	"fmt"
-	"math/rand"
+	"math/rand" //notlint:gosec // math/rand is used for random selection and seeded from crypto/rand
 
 	huandu "github.com/huandu/skiplist"
 
@@ -67,7 +67,7 @@ func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 
 func (snm *senderNonceMempool) setSeed(seed int64) {
 	s1 := rand.NewSource(seed)
-	snm.rnd = rand.New(s1)
+	snm.rnd = rand.New(s1) //nolint:gosec // math/rand is seeded from crypto/rand by default
 }
 
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.

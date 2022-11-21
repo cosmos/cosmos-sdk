@@ -13,6 +13,7 @@ import (
 
 	"cosmossdk.io/math"
 	simappparams "cosmossdk.io/simapp/params"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -233,7 +234,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
-		a, ok := acc.GetCachedValue().(authtypes.AccountI)
+		a, ok := acc.GetCachedValue().(sdk.AccountI)
 		if !ok {
 			panic("expected account")
 		}

@@ -17,25 +17,6 @@ var (
 	_ Iterator = (*senderNonceMepoolIterator)(nil)
 )
 
-type senderTxs struct {
-	cursor *huandu.Element
-}
-
-func newSenderTxs(tx *huandu.Element) senderTxs {
-	return senderTxs{
-		cursor: tx,
-	}
-}
-
-func (s *senderTxs) next() *huandu.Element {
-	if s.cursor == nil {
-		return nil
-	}
-	currentCursor := s.cursor
-	s.cursor = s.cursor.Next()
-	return currentCursor
-}
-
 type senderNonceMempool struct {
 	senders map[string]*huandu.SkipList
 	rnd     *rand.Rand
@@ -100,18 +81,17 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 // Select returns an iterator ordering transactions the mempool with the lowest nonce of a random selected sender first.
 func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
-	senderCursors := make(map[string]*senderTxs)
+	senderCursors := make(map[string]*huandu.Element)
 	// #nosec
 	for key := range snm.senders {
 		senders = append(senders, key)
-		senderTx := newSenderTxs(snm.senders[key].Front())
-		senderCursors[key] = &senderTx
+		senderCursors[key] = snm.senders[key].Front()
 	}
 
 	iter := &senderNonceMepoolIterator{
-		senders:         senders,
-		rnd:             snm.rnd,
-		sendersCurosors: senderCursors,
+		senders:       senders,
+		rnd:           snm.rnd,
+		senderCursors: senderCursors,
 	}
 
 	newIter := iter.Next()
@@ -164,10 +144,10 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 }
 
 type senderNonceMepoolIterator struct {
-	rnd             *rand.Rand
-	currentTx       *huandu.Element
-	senders         []string
-	sendersCurosors map[string]*senderTxs
+	rnd           *rand.Rand
+	currentTx     *huandu.Element
+	senders       []string
+	senderCursors map[string]*huandu.Element
 }
 
 // Next it returns the iterator next state where a iterator will contain a tx that was the smallest
@@ -176,21 +156,24 @@ func (i *senderNonceMepoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.rnd.Intn(len(i.senders))
 		sender := i.senders[senderIndex]
-		senderTxs, found := i.sendersCurosors[sender]
+		senderCursor, found := i.senderCursors[sender]
 		if !found {
 			i.senders = removeAtIndex(i.senders, senderIndex)
 			continue
 		}
-		tx := senderTxs.next()
-		if tx == nil {
+
+		if senderCursor == nil {
 			i.senders = removeAtIndex(i.senders, senderIndex)
 			continue
 		}
+
+		i.senderCursors[sender] = senderCursor.Next()
+
 		return &senderNonceMepoolIterator{
-			senders:         i.senders,
-			currentTx:       tx,
-			rnd:             i.rnd,
-			sendersCurosors: i.sendersCurosors,
+			senders:       i.senders,
+			currentTx:     senderCursor,
+			rnd:           i.rnd,
+			senderCursors: i.senderCursors,
 		}
 	}
 

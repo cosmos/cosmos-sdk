@@ -1,10 +1,10 @@
 package mempool
 
 import (
-	crand "crypto/rand"
+	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
 	"encoding/binary"
 	"fmt"
-	"math/rand"
+	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 
 	huandu "github.com/huandu/skiplist"
 
@@ -48,7 +48,7 @@ func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 
 func (snm *senderNonceMempool) setSeed(seed int64) {
 	s1 := rand.NewSource(seed)
-	snm.rnd = rand.New(s1)
+	snm.rnd = rand.New(s1) //#nosec // math/rand is seeded from crypto/rand by default
 }
 
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
@@ -78,7 +78,8 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 // Select returns an iterator ordering transactions the mempool with the lowest nonce of a random selected sender first.
 func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
-	senderCursors := make(map[string]*huandu.Element)
+	senderCursors := make(map[string]*senderTxs)
+	// #nosec
 	for key := range snm.senders {
 		senders = append(senders, key)
 		senderCursors[key] = snm.senders[key].Front()
@@ -100,8 +101,9 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
-	// We need neither strong randomness nor deterministic iteration here.
-	//nolint:gosec
+
+	// Disable gosec here since we need neither strong randomness nor deterministic iteration.
+	// #nosec
 	for _, value := range snm.senders {
 		count += value.Len()
 	}

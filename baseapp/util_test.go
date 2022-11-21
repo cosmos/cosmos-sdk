@@ -150,7 +150,7 @@ func makeTestConfig() depinject.Config {
 }
 
 func makeMinimalConfig() depinject.Config {
-	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewNonceMempool())
+	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewSenderNonceMempool())
 	return depinject.Configs(
 		depinject.Supply(mempoolOpt),
 		appconfig.Compose(&appv1alpha1.Config{

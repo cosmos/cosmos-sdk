@@ -141,7 +141,7 @@ When using `depinject.Inject`, the injected types must be pointers.
 :::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/0d8787c/simapp/app.go#L227-L254
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app.go#L241-L266
 ```
 
 ## Debugging

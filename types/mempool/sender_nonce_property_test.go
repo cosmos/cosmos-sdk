@@ -70,8 +70,9 @@ func testMempoolProperties(t *rapid.T) {
 		require.True(t, found)
 		raw, found := senderTxRaw[key]
 		require.True(t, found)
-		sort.Slice(raw, func(i, j int) bool { return raw[i].nonce < raw[j].nonce })
-		require.Equal(t, raw, ordered)
+		rawSet := rewriteDuplicateNonce(raw)
+		sort.Slice(rawSet, func(i, j int) bool { return rawSet[i].nonce < rawSet[j].nonce })
+		require.Equal(t, rawSet, ordered)
 	}
 }
 
@@ -101,4 +102,16 @@ func fetchAllTxs(iterator mempool.Iterator) []sdk.Tx {
 		iterator = i
 	}
 	return txs
+}
+
+func rewriteDuplicateNonce(raw []testTx) []testTx {
+	rawMap := make(map[uint64]testTx)
+	for _, v := range raw {
+		rawMap[v.nonce] = v
+	}
+	result := make([]testTx, 0)
+	for _, v := range rawMap {
+		result = append(result, v)
+	}
+	return result
 }

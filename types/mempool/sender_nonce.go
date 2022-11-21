@@ -17,6 +17,14 @@ var (
 	_ Iterator = (*senderNonceMepoolIterator)(nil)
 )
 
+// senderNonceMempool is a mempool that prioritizes transactions within a sender by nonce, the lowest first,
+// but selects a random sender on each iteration.  The mempool is iterated by:
+//
+// 1) Maintaining a separate list of nonce ordered txs per sender
+// 2) For each select iteration, randomly choose a sender and pick the next nonce ordered tx from their list
+// 3) Repeat 1,2 until the mempool is exhausted
+//
+// Note that PrepareProposal could choose to stop iteration before reaching the end if maxBytes is reached.
 type senderNonceMempool struct {
 	senders map[string]*huandu.SkipList
 	rnd     *rand.Rand
@@ -160,8 +168,8 @@ type senderNonceMepoolIterator struct {
 	senderCursors map[string]*huandu.Element
 }
 
-// Next it returns the iterator next state where a iterator will contain a tx that was the smallest
-// nonce of a randomly selected sender
+// Next returns the next iterator state which will contain a tx with the next smallest nonce of a randomly
+// selected sender.
 func (i *senderNonceMepoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.rnd.Intn(len(i.senders))

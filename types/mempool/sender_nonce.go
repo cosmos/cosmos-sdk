@@ -82,10 +82,18 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
 	senderCursors := make(map[string]*huandu.Element)
-	// #nosec
-	for key := range snm.senders {
-		senders = append(senders, key)
-		senderCursors[key] = snm.senders[key].Front()
+
+	orderedSenders := huandu.New(huandu.String)
+	for s := range snm.senders {
+		orderedSenders.Set(s, s)
+	}
+
+	s := orderedSenders.Front()
+	for s != nil {
+		sender := s.Value.(string)
+		senders = append(senders, sender)
+		senderCursors[sender] = snm.senders[sender].Front()
+		s = s.Next()
 	}
 
 	iter := &senderNonceMepoolIterator{

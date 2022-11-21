@@ -23,7 +23,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 
 	tests := []struct {
 		txs   []txSpec
-		order [][]int
+		order []int
 		fail  bool
 		seed  int64
 	}{
@@ -35,10 +35,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: [][]int{
-				{4, 2, 3, 1, 0},
-				{3, 4, 2, 1, 0},
-			},
+			order: []int{3, 4, 2, 1, 0},
 			// Index order base on seed 0: 0  0  1  0  1  0  0
 			seed: 0,
 		},
@@ -51,10 +48,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: [][]int{
-				{0, 1, 3, 2, 4, 5},
-				{3, 4, 0, 5, 1, 2},
-			},
+			order: []int{3, 4, 0, 5, 1, 2},
 			// Index order base on seed 0: 0  0  1  0  1  0  0
 			seed: 0,
 		},
@@ -64,10 +58,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 20, n: 1, a: sa},
 			},
-			order: [][]int{
-				{2, 0, 1},
-				{1, 2, 0},
-			},
+			order: []int{1, 2, 0},
 			// Index order base on seed 0: 0  0  1  0  1  0  0
 			seed: 0,
 		},
@@ -79,10 +70,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 21, n: 2, a: sb},
 			},
-			order: [][]int{
-				{2, 1, 3, 0, 4},
-				{3, 4, 2, 1, 0},
-			},
+			order: []int{3, 4, 2, 1, 0},
 			// Index order base on seed 0: 0  0  1  0  1  0  0
 			seed: 0,
 		},
@@ -94,10 +82,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 15, n: 1, a: sb},
 				{p: 8, n: 2, a: sb},
 			},
-			order: [][]int{
-				{2, 1, 3, 0, 4},
-				{3, 4, 2, 1, 0},
-			},
+			order: []int{3, 4, 2, 1, 0},
 			// Index order base on seed 0: 0  0  1  0  1  0  0
 			seed: 0,
 		},
@@ -111,10 +96,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 6, a: sa, n: 3},
 				{p: 4, a: sb, n: 3},
 			},
-			order: [][]int{
-				{3, 2, 4, 0, 1, 5, 6},
-				{4, 1, 3, 6, 2, 0, 5},
-			},
+			order: []int{4, 1, 3, 6, 2, 0, 5},
 			// Index order base on seed 0: 0  0  1  0  1  0  1 1 0
 			seed: 0,
 		},
@@ -125,10 +107,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 				{p: 5, n: 1, a: sb},
 				{p: 99, n: 2, a: sb},
 			},
-			order: [][]int{
-				{0, 1, 2, 3},
-				{2, 3, 0, 1},
-			},
+			order: []int{2, 3, 0, 1},
 			// Index order base on seed 0: 0  0  1  0  1  0  1 1 0
 			seed: 0,
 		},
@@ -153,7 +132,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			for _, tx := range orderedTxs {
 				require.NoError(t, pool.Remove(tx))
 			}
-			require.Contains(t, fmt.Sprintf("%v", tt.order), fmt.Sprintf("%v", txOrder))
+			require.Equal(t, tt.order, txOrder)
 			require.Equal(t, 0, pool.CountTx())
 		})
 	}

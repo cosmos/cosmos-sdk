@@ -164,24 +164,24 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		pub := pubkeyGenerator(t).Draw(t, "pubkey")
 		addr := sdk.AccAddress(pub.Address())
 
-		accNum := rapid.Int64Min(0).Draw(t, "account-number")
+		accNum := rapid.Uint64().Draw(t, "account-number")
 		seq := rapid.Uint64().Draw(t, "sequence")
 
-		acc1 := types.NewBaseAccount(addr, &pub, uint64(accNum), seq)
+		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
 		suite.accountKeeper.SetAccount(suite.ctx, acc1)
 
-		req := &types.QueryAccountAddressByIDRequest{Id: accNum}
+		req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
 		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AccountAddressByID, 0, true)
 	})
 
 	// Regression test
-	accNum := int64(10087)
+	accNum := uint64(10087)
 	seq := uint64(0)
 
-	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, uint64(accNum), seq)
+	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
 	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	req := &types.QueryAccountAddressByIDRequest{Id: accNum}
+	req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
 	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AccountAddressByID, 1123, false)
 }
 

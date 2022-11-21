@@ -78,7 +78,7 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 // Select returns an iterator ordering transactions the mempool with the lowest nonce of a random selected sender first.
 func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
-	senderCursors := make(map[string]*senderTxs)
+	senderCursors := make(map[string]*huandu.Element)
 	// #nosec
 	for key := range snm.senders {
 		senders = append(senders, key)

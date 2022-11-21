@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/tendermint/tendermint/crypto"
 	"sigs.k8s.io/yaml"
 
@@ -19,7 +18,7 @@ import (
 )
 
 var (
-	_ AccountI                           = (*BaseAccount)(nil)
+	_ sdk.AccountI                       = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
@@ -45,7 +44,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNu
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() AccountI {
+func ProtoBaseAccount() sdk.AccountI {
 	return &BaseAccount{}
 }
 
@@ -313,35 +312,10 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
-// AccountI is an interface used to store coins at a given address within state.
-// It presumes a notion of sequence numbers for replay protection,
-// a notion of account numbers for replay protection for previously pruned accounts,
-// and a pubkey for authentication purposes.
-//
-// Many complex conditions can be used in the concrete struct which implements AccountI.
-type AccountI interface {
-	proto.Message
-
-	GetAddress() sdk.AccAddress
-	SetAddress(sdk.AccAddress) error // errors if already set.
-
-	GetPubKey() cryptotypes.PubKey // can return nil.
-	SetPubKey(cryptotypes.PubKey) error
-
-	GetAccountNumber() uint64
-	SetAccountNumber(uint64) error
-
-	GetSequence() uint64
-	SetSequence(uint64) error
-
-	// Ensure that account implements stringer
-	String() string
-}
-
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 type ModuleAccountI interface {
-	AccountI
+	sdk.AccountI
 
 	GetName() string
 	GetPermissions() []string
@@ -365,7 +339,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
 type GenesisAccount interface {
-	AccountI
+	sdk.AccountI
 
 	Validate() error
 }

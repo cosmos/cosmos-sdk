@@ -10,10 +10,9 @@ import (
 
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	exported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	gomock "github.com/golang/mock/gomock"
-	types1 "github.com/tendermint/tendermint/abci/types"
+	types0 "github.com/tendermint/tendermint/abci/types"
 )
 
 // MockStakingKeeper is a mock of StakingKeeper interface.
@@ -40,10 +39,10 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // ApplyAndReturnValidatorSetUpdates mocks base method.
-func (m *MockStakingKeeper) ApplyAndReturnValidatorSetUpdates(arg0 types.Context) ([]types1.ValidatorUpdate, error) {
+func (m *MockStakingKeeper) ApplyAndReturnValidatorSetUpdates(arg0 types.Context) ([]types0.ValidatorUpdate, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ApplyAndReturnValidatorSetUpdates", arg0)
-	ret0, _ := ret[0].([]types1.ValidatorUpdate)
+	ret0, _ := ret[0].([]types0.ValidatorUpdate)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -78,7 +77,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types0.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }
@@ -90,10 +89,10 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process interface{
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types0.AccountI) types0.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types.AccountI) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -104,7 +103,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountI) {
+func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", arg0, arg1)
 }
@@ -139,7 +138,7 @@ func (m *MockGenesisAccountsIterator) EXPECT() *MockGenesisAccountsIteratorMockR
 }
 
 // IterateGenesisAccounts mocks base method.
-func (m *MockGenesisAccountsIterator) IterateGenesisAccounts(cdc *codec.LegacyAmino, appGenesis map[string]json.RawMessage, cb func(types0.AccountI) bool) {
+func (m *MockGenesisAccountsIterator) IterateGenesisAccounts(cdc *codec.LegacyAmino, appGenesis map[string]json.RawMessage, cb func(types.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateGenesisAccounts", cdc, appGenesis, cb)
 }

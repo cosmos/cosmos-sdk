@@ -81,13 +81,7 @@ All methods, structs and their fields must be public for `depinject`.
   https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L184-L192
   ```
 
-2. `ProvideModuleBasic` is calls `WrapAppModuleBasic` for wrapping the module `AppModuleBasic`, so that it can be injected and used by the runtime module.
-
-  ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L194-L196
-  ```
-
-3. Define a struct that inherits `depinject.In` and define the module inputs (i.e. module dependencies):
+2. Define a struct that inherits `depinject.In` and define the module inputs (i.e. module dependencies):
    * `depinject` provides the right dependencies to the module.
    * `depinject` also checks that all dependencies are provided.
 
@@ -99,18 +93,21 @@ All methods, structs and their fields must be public for `depinject`.
   https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L198-L208
   ```
 
-4. Define the module outputs with a public struct that inherits `depinject.Out`:
+3. Define the module outputs with a public struct that inherits `depinject.Out`:
    The module outputs are the dependencies that the module provides to other modules. It is usually the module itself and its keeper.
 
   ```go reference
   https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L210-L215
   ```
 
-5. Create a function named `ProvideModule` (as called in 1.) and use the inputs for instantitating the module outputs.
+4. Create a function named `ProvideModule` (as called in 1.) and use the inputs for instantiating the module outputs.
 
   ```go reference
   https://github.com/cosmos/cosmos-sdk/blob/main/x/group/module/module.go#L217-L227
   ```
+
+The `ProvideModule` function should return an instance of `cosmossdk.io/core/appmodule.AppModule` which implements
+one or more app module extension interfaces for initializing the module.
 
 Following is the complete app wiring configuration for `group`:
 

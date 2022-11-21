@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math/rand"
 
+	huandu "github.com/huandu/skiplist"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
-	huandu "github.com/huandu/skiplist"
 )
 
 var (
@@ -119,6 +120,8 @@ func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
+	// nolint:gosec
+	// We neither need strong randomness here nor deterministic iteration.
 	for _, value := range snm.senders {
 		count += value.Len()
 	}

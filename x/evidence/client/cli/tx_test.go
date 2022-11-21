@@ -24,10 +24,6 @@ import (
 )
 
 func TestGetQueryCmd(t *testing.T) {
-	cmd := cli.GetQueryCmd()
-	cmd.SetOut(io.Discard)
-	require.NotNil(t, cmd)
-
 	encCfg := testutilmod.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	baseCtx := client.Context{}.
@@ -97,6 +93,10 @@ func TestGetQueryCmd(t *testing.T) {
 
 			clientCtx := tc.ctxGen().WithOutput(&outBuf)
 			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd := cli.GetQueryCmd()
+			cmd.SetOut(io.Discard)
+			require.NotNil(t, cmd)
 
 			cmd.SetContext(ctx)
 			cmd.SetArgs(tc.args)

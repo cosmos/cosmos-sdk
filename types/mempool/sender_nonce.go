@@ -121,7 +121,8 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
 
-	for _, value := range snm.senders { //nolint:gosec // we need neither strong randomness nor deterministic iteration
+	// Disable gosec here since we need neither strong randomness nor deterministic iteration.
+	for _, value := range snm.senders { //nolint:gosec
 		count += value.Len() //nolint:gosec
 	} //nolint:gosec
 	return count

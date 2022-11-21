@@ -95,7 +95,7 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 }
 
 // Select returns an iterator ordering transactions the mempool with the lowest nonce of a random selected sender first.
-func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator {
+func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
 	senderCursors := make(map[string]*senderTxs)
 	for key := range snm.senders {
@@ -120,8 +120,8 @@ func (snm *senderNonceMempool) Select(context sdk.Context, i [][]byte) Iterator 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
 	count := 0
-	// nolint:gosec
-	// We neither need strong randomness here nor deterministic iteration.
+	// We need neither strong randomness nor deterministic iteration here.
+	//nolint:gosec
 	for _, value := range snm.senders {
 		count += value.Len()
 	}

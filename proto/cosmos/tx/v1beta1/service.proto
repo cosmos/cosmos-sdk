@@ -40,6 +40,24 @@ service Service {
   rpc GetBlockWithTxs(GetBlockWithTxsRequest) returns (GetBlockWithTxsResponse) {
     option (google.api.http).get = "/cosmos/tx/v1beta1/txs/block/{height}";
   }
+  // TxDecode decodes the transaction.
+  //
+  // Since: cosmos-sdk 0.47
+  rpc TxDecode(TxDecodeRequest) returns (TxDecodeResponse) {
+    option (google.api.http) = {
+      post: "/cosmos/tx/v1beta1/decode"
+      body: "*"
+    };
+  }
+  // TxEncode encodes the transaction.
+  //
+  // Since: cosmos-sdk 0.47
+  rpc TxEncode(TxEncodeRequest) returns (TxEncodeResponse) {
+    option (google.api.http) = {
+      post: "/cosmos/tx/v1beta1/encode"
+      body: "*"
+    };
+  }
 }
 
 // GetTxsEventRequest is the request type for the Service.TxsByEvents
@@ -170,4 +188,40 @@ message GetBlockWithTxsResponse {
   .tendermint.types.Block       block    = 3;
   // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 4;
+}
+
+// TxDecodeRequest is the request type for the Service.TxDecode
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+message TxDecodeRequest {
+  // tx_bytes is the raw transaction.
+  bytes tx_bytes = 1;
+}
+
+// TxDecodeResponse is the response type for the
+// Service.TxDecode method.
+//
+// Since: cosmos-sdk 0.47
+message TxDecodeResponse {
+  // tx is the decoded transaction.
+  cosmos.tx.v1beta1.Tx tx = 1;
+}
+
+// TxEncodeResponse is the request type for the Service.TxEncode
+// RPC method.
+//
+// Since: cosmos-sdk 0.47
+message TxEncodeRequest {
+  // tx is the transaction to encode.
+  cosmos.tx.v1beta1.Tx tx = 1;
+}
+
+// TxEncodeResponse is the response type for the
+// Service.TxEncode method.
+//
+// Since: cosmos-sdk 0.47
+message TxEncodeResponse {
+  // tx_bytes is the encoded transaction bytes.
+  bytes tx_bytes = 1;
 }

@@ -7,8 +7,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// DONTCOVER
-
 type (
 	// AppMap map modules names with their json raw representation.
 	AppMap map[string]json.RawMessage

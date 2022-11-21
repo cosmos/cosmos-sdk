@@ -20,8 +20,14 @@ func (ak AccountKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	}
 	accounts = types.SanitizeGenesisAccounts(accounts)
 
-	for _, a := range accounts {
-		acc := ak.NewAccount(ctx, a)
+	// Set the accounts and make sure the global account number matches the largest account number (even if zero).
+	var lastAccNum *uint64
+	for _, acc := range accounts {
+		accNum := acc.GetAccountNumber()
+		for lastAccNum == nil || *lastAccNum < accNum {
+			n := ak.NextAccountNumber(ctx)
+			lastAccNum = &n
+		}
 		ak.SetAccount(ctx, acc)
 	}
 

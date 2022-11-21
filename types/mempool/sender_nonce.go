@@ -49,7 +49,10 @@ func NewSenderNonceMempool() Mempool {
 	}
 
 	var seed int64
-	binary.Read(crand.Reader, binary.BigEndian, &seed)
+	err := binary.Read(crand.Reader, binary.BigEndian, &seed)
+	if err != nil {
+		panic(err)
+	}
 	snp.setSeed(seed)
 
 	return snp

@@ -49,8 +49,6 @@ func TestMigrate(t *testing.T) {
 	require.Equal(t, oldAcc.GetAddress(), newAcc.GetAddress())
 	require.Equal(t, oldAcc.GetAccountNumber(), newAcc.GetAccountNumber())
 	require.Equal(t, newAcc.GetPubKey().Address().Bytes(), newAcc.GetAddress().Bytes())
-
-	t.FailNow()
 }
 
 func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec) (orm.PrimaryKeyTable, orm.Sequence, error) {

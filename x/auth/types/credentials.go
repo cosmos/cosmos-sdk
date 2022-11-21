@@ -62,7 +62,28 @@ func (m *ModuleCredential) VerifySignature(_ []byte, _ []byte) bool {
 }
 
 func (m *ModuleCredential) Equals(other cryptotypes.PubKey) bool {
-	return m.String() == other.String()
+	om, ok := other.(*ModuleCredential)
+	if !ok {
+		return false
+	}
+
+	if m.ModuleName != om.ModuleName {
+		return false
+	}
+
+	if len(m.DerivationKeys) != len(om.DerivationKeys) {
+		return false
+	}
+
+	for i := range m.DerivationKeys {
+		for j := range m.DerivationKeys[i] {
+			if m.DerivationKeys[i][j] != om.DerivationKeys[i][j] {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 func (m *ModuleCredential) Type() string {

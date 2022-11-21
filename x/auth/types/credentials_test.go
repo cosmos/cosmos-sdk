@@ -18,8 +18,9 @@ func TestNewModuleCrendentials(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expected.String(), addr.String())
 
-	require.Equal(t, credential, authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}))
-	require.NotEqual(t, credential, authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x1}}))
+	require.True(t, credential.Equals(authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}})))
+	require.False(t, credential.Equals(authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x1}})))
+	require.False(t, credential.Equals(authtypes.NewModuleCredential("group", [][]byte{{0x20}})))
 }
 
 func TestNewBaseAccountWithPubKey(t *testing.T) {

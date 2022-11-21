@@ -20,7 +20,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -61,12 +60,9 @@ func (s *TestSuite) SetupTest() {
 	// setup gomock and initialize some globally expected executions
 	ctrl := gomock.NewController(s.T())
 	s.accountKeeper = grouptestutil.NewMockAccountKeeper(ctrl)
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[0]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[0])).AnyTimes()
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[1]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[1])).AnyTimes()
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[2]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[2])).AnyTimes()
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[3]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[3])).AnyTimes()
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[4]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[4])).AnyTimes()
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[5]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[5])).AnyTimes()
+	for i := range s.addrs {
+		s.accountKeeper.EXPECT().GetAccount(gomock.Any(), s.addrs[i]).Return(authtypes.NewBaseAccountWithAddress(s.addrs[i])).AnyTimes()
+	}
 	s.bankKeeper = grouptestutil.NewMockBankKeeper(ctrl)
 
 	bApp := baseapp.NewBaseApp(
@@ -125,25 +121,21 @@ func (s *TestSuite) SetupTest() {
 
 func (s TestSuite) setNextAccount() {
 	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, nextAccVal)
+	derivationKey := make([]byte, 8)
+	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-	var accountAddr sdk.AccAddress
-	parentAcc := address.Module(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix})
-	accountAddr = address.Derive(parentAcc, buf)
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), accountAddr).Return(nil).AnyTimes()
-	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), &authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: accountAddr.String(),
-		},
-		Name: accountAddr.String(),
-	}).Return(authtypes.NewModuleAccount(authtypes.NewBaseAccountWithAddress(accountAddr), accountAddr.String())).AnyTimes()
-	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), &authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: accountAddr.String(),
-		},
-		Name: accountAddr.String(),
-	}).Return().AnyTimes()
+	accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{keeper.GroupPolicyTablePrefix}, derivationKey})
+
+	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+	s.Require().NoError(err)
+
+	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+	s.Require().NoError(err)
+	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
+
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(accountCredentials.Address())).Return(nil).AnyTimes()
+	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
+	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), authtypes.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {

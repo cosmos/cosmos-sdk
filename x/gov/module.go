@@ -1,7 +1,5 @@
 package gov
 
-// DONTCOVER
-
 import (
 	"context"
 	"encoding/json"

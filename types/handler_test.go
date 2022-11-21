@@ -45,3 +45,35 @@ func (s *handlerTestSuite) TestChainAnteDecorators() {
 		mockAnteDecorator2)(ctx, tx, true)
 	s.Require().NoError(err)
 }
+
+func (s *handlerTestSuite) TestChainPostDecorators() {
+	// test panic when passing an empty sclice of PostDecorators
+	s.Require().Nil(sdk.ChainPostDecorators([]sdk.PostDecorator{}...))
+
+	// Create empty context as well as transaction
+	ctx := sdk.Context{}
+	tx := sdk.Tx(nil)
+	res := &sdk.Result{}
+
+	// Create mocks
+	mockCtrl := gomock.NewController(s.T())
+	mockPostDecorator1 := mock.NewMockPostDecorator(mockCtrl)
+	mockPostDecorator2 := mock.NewMockPostDecorator(mockCtrl)
+
+	// Test chaining only one post decorator
+	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res), true, gomock.Eq(true), gomock.Any()).Times(1)
+	_, err := sdk.ChainPostDecorators(mockPostDecorator1)(ctx, tx, res, true, true)
+	s.Require().NoError(err)
+
+	// Tests chaining multiple post decorators
+	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res), true, gomock.Eq(true), gomock.Any()).Times(1)
+	mockPostDecorator2.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res), true, gomock.Eq(true), gomock.Any()).Times(1)
+	// NOTE: we can't check that mockAnteDecorator2 is passed as the last argument because
+	// ChainAnteDecorators wraps the decorators into closures, so each decorator is
+	// receiving a closure.
+	_, err = sdk.ChainPostDecorators(
+		mockPostDecorator1,
+		mockPostDecorator2,
+	)(ctx, tx, res, true, true)
+	s.Require().NoError(err)
+}

@@ -50,7 +50,7 @@ application.
 		},
 	}
 	cmd.Flags().Bool(flags.FlagOfflineRollback, false, "Offline rollback")
-	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+	cmd.Flags().Bool(FlagIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	return cmd
 }

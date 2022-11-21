@@ -3,8 +3,8 @@ package baseapp
 import (
 	"context"
 	"fmt"
-
 	"github.com/spf13/cast"
+	"sort"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -24,10 +24,12 @@ type ABCIListener interface {
 }
 
 const (
-	StreamingTomlKey              = "streaming"
-	StreamingPluginTomlKey        = "plugin"
-	StreamingKeysTomlKey          = "keys"
-	StreamingStopNodeOnErrTomlKey = "stop-node-on-err"
+	StreamingTomlKey                  = "streaming"
+	StreamingABCITomlKey              = "abci"
+	StreamingABCIPluginTomlKey        = "plugin"
+	StreamingABCIKeysTomlKey          = "keys"
+	StreamingABCIStopNodeOnErrTomlKey = "stop-node-on-err"
+	StreamingABCIAsync                = "async"
 )
 
 // RegisterStreamingPlugin registers streaming plugins with the App.
@@ -52,13 +54,17 @@ func registerABCIListenerPlugin(
 	keys map[string]*store.KVStoreKey,
 	abciListener ABCIListener,
 ) {
-	stopNodeOnErrKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingStopNodeOnErrTomlKey)
+	asyncKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIAsync)
+	async := cast.ToBool(appOpts.Get(asyncKey))
+	stopNodeOnErrKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIStopNodeOnErrTomlKey)
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
-	keysKey := fmt.Sprintf("%s.%s", StreamingTomlKey, StreamingKeysTomlKey)
+	keysKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIKeysTomlKey)
 	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
-	bApp.cms.AddListeners(exposeStoreKeys(exposeKeysStr, keys))
-	bApp.abciListener = abciListener
-	bApp.stopNodeOnStreamingErr = stopNodeOnErr
+	exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
+	bApp.cms.AddListeners(exposedKeys)
+	bApp.abciListeners = append(bApp.abciListeners, abciListener)
+	bApp.stopNodeOnABCIListenerErr = stopNodeOnErr
+	bApp.abciListenersAsync = async
 }
 
 func exposeAll(list []string) bool {
@@ -70,7 +76,7 @@ func exposeAll(list []string) bool {
 	return false
 }
 
-func exposeStoreKeys(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
+func exposeStoreKeysSorted(keysStr []string, keys map[string]*store.KVStoreKey) []store.StoreKey {
 	var exposeStoreKeys []store.StoreKey
 	if exposeAll(keysStr) {
 		exposeStoreKeys = make([]store.StoreKey, 0, len(keys))
@@ -85,6 +91,10 @@ func exposeStoreKeys(keysStr []string, keys map[string]*store.KVStoreKey) []stor
 			}
 		}
 	}
+	// sort storeKeys for deterministic output
+	sort.SliceStable(exposeStoreKeys, func(i, j int) bool {
+		return exposeStoreKeys[i].Name() < exposeStoreKeys[j].Name()
+	})
 
 	return exposeStoreKeys
 }

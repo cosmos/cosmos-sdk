@@ -190,20 +190,22 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 
 	// call the streaming service hook with the BeginBlock messages
-	if app.abciListener != nil {
+	for _, abciListener := range app.abciListeners {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
-		if app.stopNodeOnStreamingErr {
-			if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
-				app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
-				os.Exit(1)
-			}
-		} else {
+		if app.abciListenersAsync {
 			go func(req abci.RequestBeginBlock, res abci.ResponseBeginBlock) {
-				if err := app.abciListener.ListenBeginBlock(ctx, req, res); err != nil {
+				if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
 					app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 				}
 			}(req, res)
+		} else {
+			if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
+				app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
+				if app.stopNodeOnABCIListenerErr {
+					os.Exit(1)
+				}
+			}
 		}
 	}
 
@@ -227,20 +229,22 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	// call the streaming service hook with the EndBlock messages
-	if app.abciListener != nil {
+	for _, abciListener := range app.abciListeners {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
-		if app.stopNodeOnStreamingErr {
-			if err := app.abciListener.ListenEndBlock(ctx, req, res); err != nil {
-				app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
-				os.Exit(1)
-			}
-		} else {
+		if app.abciListenersAsync {
 			go func(req abci.RequestEndBlock, res abci.ResponseEndBlock) {
-				if err := app.abciListener.ListenEndBlock(ctx, req, res); err != nil {
+				if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
 					app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
 				}
 			}(req, res)
+		} else {
+			if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
+				app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
+				if app.stopNodeOnABCIListenerErr {
+					os.Exit(1)
+				}
+			}
 		}
 	}
 
@@ -292,20 +296,22 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx 
 	var abciRes abci.ResponseDeliverTx
 	defer func() {
 		// call the streaming service hook with the EndBlock messages
-		if app.abciListener != nil {
+		for _, abciListener := range app.abciListeners {
 			ctx := app.deliverState.ctx
 			blockHeight := ctx.BlockHeight()
-			if app.stopNodeOnStreamingErr {
-				if err := app.abciListener.ListenDeliverTx(ctx, req, abciRes); err != nil {
-					app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
-					os.Exit(1)
-				}
-			} else {
+			if app.abciListenersAsync {
 				go func(req abci.RequestDeliverTx, res abci.ResponseDeliverTx) {
-					if err := app.abciListener.ListenDeliverTx(ctx, req, res); err != nil {
+					if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
 						app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
 					}
 				}(req, abciRes)
+			} else {
+				if err := abciListener.ListenDeliverTx(ctx, req, abciRes); err != nil {
+					app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
+					if app.stopNodeOnABCIListenerErr {
+						os.Exit(1)
+					}
+				}
 			}
 		}
 	}()
@@ -350,21 +356,23 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	}
 
 	// call the streaming service hook with the EndBlock messages
-	if app.abciListener != nil {
+	for _, abciListener := range app.abciListeners {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
 		changeSet := app.cms.PopStateCache()
-		if app.stopNodeOnStreamingErr {
-			if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
-				app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
-				os.Exit(1)
-			}
-		} else {
+		if app.abciListenersAsync {
 			go func(res abci.ResponseCommit) {
-				if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+				if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
 					app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
 				}
 			}(res)
+		} else {
+			if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+				app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
+				if app.stopNodeOnABCIListenerErr {
+					os.Exit(1)
+				}
+			}
 		}
 	}
 

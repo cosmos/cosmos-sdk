@@ -125,12 +125,18 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// abciListener for hooking into the ABCI message processing of the BaseApp
-	// and exposing the requests and responses through gRPC
-	abciListener ABCIListener
+	// abciListeners for hooking into the ABCI message processing of the BaseApp
+	// and exposing the requests and responses to external consumers
+	abciListeners []ABCIListener
 
-	// stopNodeOnStreamingErr halts the node when ABCI streaming service listening results in an error
-	stopNodeOnStreamingErr bool
+	// abciListenersAsync for determining if abciListeners will run asynchronously.
+	// When abciListenersAsync=false and stopNodeOnABCIListenerErr=false listeners will run synchronized but will not stop the node.
+	// When abciListenersAsync=true stopNodeOnABCIListenerErr will be ignored.
+	abciListenersAsync bool
+
+	// stopNodeOnABCIListenerErr halts the node when ABCI streaming service listening results in an error.
+	// stopNodeOnABCIListenerErr=true must be paired with abciListenersAsync=false.
+	stopNodeOnABCIListenerErr bool
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

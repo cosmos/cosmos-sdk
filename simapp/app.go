@@ -237,7 +237,7 @@ func NewSimApp(
 	// register streaming services
 	streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
 	for service := range streamingCfg {
-		pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingPluginTomlKey)
+		pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
 		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
 		if len(pluginName) > 0 {
 			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
@@ -334,7 +334,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 	// set the governance module account as the authority for conducting upgrades

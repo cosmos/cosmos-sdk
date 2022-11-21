@@ -16,14 +16,33 @@ import (
 // For Go plugins this is all that is required to process data sent over gRPC.
 type FilePlugin struct {
 	BlockHeight int64
+	fileDict    map[string]*os.File
 }
 
 func (a FilePlugin) writeToFile(file string, data []byte) error {
+	if f, ok := a.fileDict[file]; ok {
+		_, err := f.Write(data)
+		return err
+	}
+	a.fileDict = make(map[string]*os.File, 0)
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(fmt.Sprintf("%s/%s.txt", home, file), data, 0644)
+
+	filename := fmt.Sprintf("%s/%s.txt", home, file)
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	a.fileDict[file] = f
+
+	if _, err := f.Write(data); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a FilePlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {

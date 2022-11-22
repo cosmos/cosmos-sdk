@@ -47,7 +47,7 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += legacy_simapp
+  build_tags += app_v1
 endif
 
 whitespace :=

@@ -13,11 +13,11 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -27,6 +27,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/simulation"
 )
+
+// ConsensusVersion defines the current x/group module consensus version.
+const ConsensusVersion = 2
 
 var (
 	_ module.EndBlockAppModule   = AppModule{}
@@ -52,6 +55,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper,
 		registry:       registry,
 	}
 }
+
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 type AppModuleBasic struct {
 	cdc codec.Codec
@@ -137,10 +148,15 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	m := keeper.NewMigrator(am.keeper)
+	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
+	}
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // EndBlock implements the group module's EndBlock.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
@@ -184,15 +200,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
-		),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type GroupInputs struct {
@@ -211,7 +220,7 @@ type GroupOutputs struct {
 	depinject.Out
 
 	GroupKeeper keeper.Keeper
-	Module      runtime.AppModuleWrapper
+	Module      appmodule.AppModule
 }
 
 func ProvideModule(in GroupInputs) GroupOutputs {
@@ -223,5 +232,5 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return GroupOutputs{GroupKeeper: k, Module: runtime.WrapAppModule(m)}
+	return GroupOutputs{GroupKeeper: k, Module: m}
 }

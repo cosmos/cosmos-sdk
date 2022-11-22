@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -120,6 +119,14 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
 func AddModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
@@ -180,7 +187,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
 }
 
@@ -201,12 +208,8 @@ type CrisisInputs struct {
 type CrisisOutputs struct {
 	depinject.Out
 
-	Module       runtime.AppModuleWrapper
+	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 func ProvideModule(in CrisisInputs) CrisisOutputs {
@@ -242,5 +245,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
+	return CrisisOutputs{CrisisKeeper: k, Module: m}
 }

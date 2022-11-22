@@ -33,6 +33,9 @@ const (
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
+
+	// FileStreamer defines the store streaming type for file streaming.
+	FileStreamer = "file"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -196,6 +199,28 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
+type (
+	// StoreConfig defines application configuration for state streaming and other
+	// storage related operations.
+	StoreConfig struct {
+		Streamers []string `mapstructure:"streamers"`
+	}
+
+	// StreamersConfig defines concrete state streaming configuration options. These
+	// fields are required to be set when state streaming is enabled via a non-empty
+	// list defined by 'StoreConfig.Streamers'.
+	StreamersConfig struct {
+		File FileStreamerConfig `mapstructure:"file"`
+	}
+
+	// FileStreamerConfig defines the file streaming configuration options.
+	FileStreamerConfig struct {
+		Keys     []string `mapstructure:"keys"`
+		WriteDir string   `mapstructure:"write_dir"`
+		Prefix   string   `mapstructure:"prefix"`
+	}
+)
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -207,6 +232,8 @@ type Config struct {
 	Rosetta   RosettaConfig    `mapstructure:"rosetta"`
 	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
+	Store     StoreConfig      `mapstructure:"store"`
+	Streamers StreamersConfig  `mapstructure:"streamers"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -287,6 +314,14 @@ func DefaultConfig() *Config {
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,
+		},
+		Store: StoreConfig{
+			Streamers: []string{},
+		},
+		Streamers: StreamersConfig{
+			File: FileStreamerConfig{
+				Keys: []string{"*"},
+			},
 		},
 	}
 }

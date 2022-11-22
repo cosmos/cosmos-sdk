@@ -4,6 +4,8 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
+
 ### Simulation
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
@@ -18,7 +20,13 @@ is typically found in `RegisterAPIRoutes`.
 
 ### AppModule Interface
 
-Remove `Querier`, `Route` and `LegacyQuerier` from the app module interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
+Support for the `AppModule` `Querier`, `Route` and `LegacyQuerier` methods has been entirely removed from the `AppModule`
+interface. This removes and fully deprecates all legacy queriers. All modules no longer support the REST API previously
+known as the LCD, and the `sdk.Msg#Route` method won't be used anymore.
+
+Most other existing `AppModule` methods have been moved to extension interfaces in preparation for the migration
+to the `cosmossdk.io/core/appmodule` API in the next release. Most `AppModule` implementations should not be broken
+by this change.
 
 ### SimApp
 
@@ -26,10 +34,12 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
-The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
-If you are using a legacy `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
+The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go) and is not going anywhere.
+
+If you are using a `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
+
 ```go
 autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
@@ -150,6 +160,11 @@ After:
 app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
 bApp.SetParamStore(&app.ConsensusParamsKeeper)
 ```
+
+#### `x/nft`
+
+The SDK does not validate anymore the `classID` and `nftID` of an NFT, for extra flexibility in your NFT implementation.
+This means chain developers need to validate the `classID` and `nftID` of an NFT.
 
 ### Ledger
 

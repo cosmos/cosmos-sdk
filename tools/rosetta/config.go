@@ -16,8 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// rosetta
-
 // configuration defaults constants
 const (
 	// DefaultBlockchain defines the default blockchain identifier name

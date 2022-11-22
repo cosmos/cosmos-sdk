@@ -240,7 +240,7 @@ and a build script we can probably come up with a solution for embedding
 #### Potential limitations to generated code
 
 One challenge with this approach is that it places heavy restrictions on what
-can go in API modules and requires that node of this is state machine breaking.
+can go in API modules and requires that most of this is state machine breaking.
 All or most of the code in the API module would be generated from protobuf
 files, so we can probably control this with how code generation is done, but
 it is a risk to be aware of.

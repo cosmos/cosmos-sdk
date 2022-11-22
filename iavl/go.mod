@@ -1,4 +1,4 @@
-module github.com/cosmos/iavl
+module cosmossdk.io/iavl
 
 go 1.18
 

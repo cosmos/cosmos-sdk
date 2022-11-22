@@ -112,11 +112,7 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 		senderCursors: senderCursors,
 	}
 
-	newIter := iter.Next()
-	if newIter == nil {
-		return nil
-	}
-	return newIter
+	return iter.Next()
 }
 
 // CountTx returns the total count of txs in the mempool.

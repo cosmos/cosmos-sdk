@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -18,6 +17,7 @@ import (
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	v2 "github.com/cosmos/cosmos-sdk/x/group/migrations/v2"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	storetypes "github.com/cosmos/store/types"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
 
-	huandu "github.com/huandu/skiplist"
+	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -26,13 +26,13 @@ var (
 //
 // Note that PrepareProposal could choose to stop iteration before reaching the end if maxBytes is reached.
 type senderNonceMempool struct {
-	senders map[string]*huandu.SkipList
+	senders map[string]*skiplist.SkipList
 	rnd     *rand.Rand
 }
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
 func NewSenderNonceMempool() Mempool {
-	senderMap := make(map[string]*huandu.SkipList)
+	senderMap := make(map[string]*skiplist.SkipList)
 	snp := &senderNonceMempool{
 		senders: senderMap,
 	}
@@ -49,7 +49,7 @@ func NewSenderNonceMempool() Mempool {
 
 // NewSenderNonceMempoolWithSeed creates a new mempool that prioritizes transactions by nonce, the lowest first and sets the random seed.
 func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
-	senderMap := make(map[string]*huandu.SkipList)
+	senderMap := make(map[string]*skiplist.SkipList)
 	snp := &senderNonceMempool{
 		senders: senderMap,
 	}
@@ -78,7 +78,7 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	nonce := sig.Sequence
 	senderTxs, found := snm.senders[sender]
 	if !found {
-		senderTxs = huandu.New(huandu.Uint64)
+		senderTxs = skiplist.New(skiplist.Uint64)
 		snm.senders[sender] = senderTxs
 	}
 	senderTxs.Set(nonce, tx)
@@ -89,9 +89,9 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 // Select returns an iterator ordering transactions the mempool with the lowest nonce of a random selected sender first.
 func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 	var senders []string
-	senderCursors := make(map[string]*huandu.Element)
+	senderCursors := make(map[string]*skiplist.Element)
 
-	orderedSenders := huandu.New(huandu.String)
+	orderedSenders := skiplist.New(skiplist.String)
 
 	// #nosec
 	for s := range snm.senders {
@@ -159,9 +159,9 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 
 type senderNonceMepoolIterator struct {
 	rnd           *rand.Rand
-	currentTx     *huandu.Element
+	currentTx     *skiplist.Element
 	senders       []string
-	senderCursors map[string]*huandu.Element
+	senderCursors map[string]*skiplist.Element
 }
 
 // Next returns the next iterator state which will contain a tx with the next smallest nonce of a randomly

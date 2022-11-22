@@ -4,35 +4,23 @@ import (
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msg "cosmossdk.io/api/cosmos/msg/v1"
-
-	// Import the descriptors
-	_ "cosmossdk.io/api/cosmos/auth/v1beta1"
-	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
-	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
-	_ "cosmossdk.io/api/cosmos/consensus/v1"
-	_ "cosmossdk.io/api/cosmos/crisis/v1beta1"
-	_ "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	_ "cosmossdk.io/api/cosmos/evidence/v1beta1"
-	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	_ "cosmossdk.io/api/cosmos/gov/v1"
-	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
-	_ "cosmossdk.io/api/cosmos/group/v1"
-	_ "cosmossdk.io/api/cosmos/mint/v1beta1"
-	_ "cosmossdk.io/api/cosmos/nft/v1beta1"
-	_ "cosmossdk.io/api/cosmos/slashing/v1beta1"
-	_ "cosmossdk.io/api/cosmos/staking/v1beta1"
-	_ "cosmossdk.io/api/cosmos/upgrade/v1beta1"
-	_ "cosmossdk.io/api/cosmos/vesting/v1beta1"
 )
 
 // ValidateServiceAnnotations validates that all Msg services have the
 // `(cosmos.msg.v1.service) = true` proto annotation.
-func ValidateServiceAnnotations(serviceName string) error {
-	sd, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(serviceName))
+//
+// If `fileResolver` is nil, then protoregistry.GlobalFile will be used.
+func ValidateServiceAnnotations(fileResolver protodesc.Resolver, serviceName string) error {
+	if fileResolver == nil {
+		fileResolver = protoregistry.GlobalFiles
+	}
+
+	sd, err := fileResolver.FindDescriptorByName(protoreflect.FullName(serviceName))
 	if err != nil {
 		// If we don't find the pulsar-generated descriptors, we just skip
 		// validation. This allows chain developers to migrate to pulsar at
@@ -55,8 +43,14 @@ func ValidateServiceAnnotations(serviceName string) error {
 
 // ValidateMsgAnnotations validates that all sdk.Msg services have the correct
 // `(cosmos.msg.v1.signer) = "..."` proto annotation.
-func ValidateMsgAnnotations(fqName string) error {
-	d, err := protoregistry.GlobalFiles.FindDescriptorByName(protoreflect.FullName(fqName))
+//
+// If `fileResolver` is nil, then protoregistry.GlobalFile will be used.
+func ValidateMsgAnnotations(fileResolver protodesc.Resolver, fqName string) error {
+	if fileResolver == nil {
+		fileResolver = protoregistry.GlobalFiles
+	}
+
+	d, err := fileResolver.FindDescriptorByName(protoreflect.FullName(fqName))
 	if err != nil {
 		// If we don't find the pulsar-generated descriptors, we just skip
 		// validation. This allows chain developers to migrate to pulsar at

@@ -6,18 +6,18 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/tendermint/tendermint/libs/log"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protodesc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/types/reflection"
 )
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
-	logger            log.Logger
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
 }
@@ -53,9 +53,18 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	err := msgservice.ValidateServiceAnnotations(sd.ServiceName)
+	fdSet, err := reflection.GetFileDescriptorSet()
 	if err != nil {
-		// We might panic here in the future, instead of logging.
+		panic(err)
+	}
+	fdFiles, err := protodesc.NewFiles(fdSet)
+	if err != nil {
+		panic(err)
+	}
+
+	err = msgservice.ValidateServiceAnnotations(fdFiles, sd.ServiceName)
+	if err != nil {
+		// We might panic here in the future, instead of simply logging.
 		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)
 	}
 
@@ -78,7 +87,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
 			}
 
-			err := msgservice.ValidateMsgAnnotations(proto.MessageName(msg))
+			err := msgservice.ValidateMsgAnnotations(fdFiles, proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.
 				fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)

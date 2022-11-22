@@ -173,7 +173,7 @@ it is hard to know whether these pernicious hard to detect bugs are getting into
 our app and a client-server layer such as [ADR 033: Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
 may be needed to do this.
 
-### Solutions
+## Solutions
 
 ### Approach A) Separate API and State Machine Modules
 

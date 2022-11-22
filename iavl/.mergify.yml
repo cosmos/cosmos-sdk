@@ -1,0 +1,10 @@
+pull_request_rules:
+  - name: Automerge to master
+    conditions:
+      - base=master
+      - label=S:automerge
+    actions:
+      merge:
+        method: squash
+        strict: true
+        commit_message: title+body

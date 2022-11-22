@@ -1,6 +1,11 @@
 package mempool_test
 
 import (
+	"math/rand"
+	"sort"
+
+	"pgregory.net/rapid"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mempool "github.com/cosmos/cosmos-sdk/types/mempool"
@@ -9,10 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"sort"
-
-	"math/rand"
-	"pgregory.net/rapid"
 )
 
 var (

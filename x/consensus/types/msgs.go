@@ -5,6 +5,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // bank message types
@@ -12,7 +13,7 @@ const (
 	TypeMsgUpdateParams = "update_params"
 )
 
-var _ sdk.Msg = &MsgUpdateParams{}
+var _ legacytx.LegacyMsg = &MsgUpdateParams{}
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
@@ -24,13 +25,21 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
-	return []byte{}
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+func (msg MsgUpdateParams) Route() string {
+	return sdk.MsgTypeURL(&msg)
+}
+
+func (msg MsgUpdateParams) Type() string {
+	return sdk.MsgTypeURL(&msg)
 }
 
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
 	params := tmtypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
-	return Validate(params)
+	return params.ValidateBasic()
 }
 
 func (msg MsgUpdateParams) ToProtoConsensusParams() tmproto.ConsensusParams {
@@ -47,6 +56,6 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() tmproto.ConsensusParams {
 		Validator: &tmproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
-		Version: tmtypes.DefaultConsensusParams().ToProto().Version,
+		Version: tmtypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
 }

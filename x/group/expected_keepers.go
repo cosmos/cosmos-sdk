@@ -14,6 +14,8 @@ type AccountKeeper interface {
 
 	// Set an account in the store.
 	SetAccount(sdk.Context, authtypes.AccountI)
+	// Remove an account in the store.
+	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

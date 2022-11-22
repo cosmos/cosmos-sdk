@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -334,23 +333,24 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, nextAccVal)
+		derivationKey := make([]byte, 8)
+		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
-		accountAddr = address.Derive(parentAcc, buf)
-
+		accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey})
+		accountAddr = sdk.AccAddress(accountCredentials.Address())
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision, in which case we just go on to the
 			// next sequence value and derive a new address.
 			continue
 		}
-		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
-			BaseAccount: &authtypes.BaseAccount{
-				Address: accountAddr.String(),
-			},
-			Name: accountAddr.String(),
-		})
+
+		// group policy accounts are unclaimable base accounts
+		account, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "could not create group policy account")
+		}
+
+		acc := k.accKeeper.NewAccount(ctx, account)
 		k.accKeeper.SetAccount(ctx, acc)
 
 		break

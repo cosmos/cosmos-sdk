@@ -197,13 +197,13 @@ func Module(moduleName string, key []byte) []byte{
 **Example**  A lending BTC pool address would be:
 
 ```go
-btcPool := address.Module("lending", btc.Addrress()})
+btcPool := address.Module("lending", btc.Address()})
 ```
 
 If we want to create an address for a module account depending on more than one key, we can concatenate them:
 
 ```go
-btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
+btcAtomAMM := address.Module("amm", btc.Address() + atom.Address()})
 ```
 
 #### Derived Addresses

@@ -60,10 +60,7 @@ func testMempoolProperties(t *rapid.T) {
 	}
 
 	iter := mp.Select(ctx, nil)
-	orderTx := make([]testTx, 0)
-	for _, tx := range fetchAllTxs(iter) {
-		orderTx = append(orderTx, tx.(testTx))
-	}
+	orderTx := fetchAllTxs(iter)
 	senderTxOrdered := getSenderTxMap(orderTx)
 	for key := range senderTxOrdered {
 		ordered, found := senderTxOrdered[key]
@@ -94,10 +91,11 @@ func getSenderTxMap(txs []testTx) map[string][]testTx {
 	return senderTxs
 }
 
-func fetchAllTxs(iterator mempool.Iterator) []sdk.Tx {
-	var txs []sdk.Tx
+func fetchAllTxs(iterator mempool.Iterator) []testTx {
+	var txs []testTx
 	for iterator != nil {
-		txs = append(txs, iterator.Tx())
+		tx := iterator.Tx()
+		txs = append(txs, tx.(testTx))
 		i := iterator.Next()
 		iterator = i
 	}

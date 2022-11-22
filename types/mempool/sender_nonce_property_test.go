@@ -25,7 +25,7 @@ var (
 // Property Based Testing
 // Split the senders tx in independent slices and then test the following properties in each slice
 // same elements input on the mempool should be in the output except for sender nonce duplicates, which are overwritten by the later duplicate entries.
-// for every sequence element pair a, b a < b
+// for every sender transaction tx_n, tx_0.nonce < tx_1.nonce ... < tx_n.nonce
 
 var genAddress = rapid.Custom(func(t *rapid.T) simtypes.Account {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(rapid.Int64().Draw(t, "seed for account"))), 1)

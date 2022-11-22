@@ -17,6 +17,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}-tests-integration
+  cancel-in-progress: true
+
 jobs:
   test-integration:
     runs-on: ubuntu-latest

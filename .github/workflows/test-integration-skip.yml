@@ -8,6 +8,10 @@ on:
       - "go.mod"
       - "go.sum"
 
+concurrency:
+  group: ci-${{ github.ref }}-tests-integration
+  cancel-in-progress: true
+
 jobs:
   test-integration:
     runs-on: ubuntu-latest

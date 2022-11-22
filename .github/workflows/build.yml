@@ -36,6 +36,5 @@ jobs:
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
       - name: Build Legacy
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
-
       - name: Build Cosmovisor
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor

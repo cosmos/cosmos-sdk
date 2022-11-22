@@ -87,8 +87,8 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/cosmos/cosmos/store/streaming"
-	storetypes "github.com/cosmos/cosmos/store/types"
+	"github.com/cosmos/store/streaming"
+	storetypes "github.com/cosmos/store/types"
 )
 
 var (

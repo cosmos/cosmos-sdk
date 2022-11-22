@@ -176,12 +176,11 @@ func (i *senderNonceMepoolIterator) Next() Iterator {
 			continue
 		}
 
-		if senderCursor == nil {
+		if nextCursor := senderCursor.Next(); nextCursor != nil {
+			i.senderCursors[sender] = nextCursor
+		} else {
 			i.senders = removeAtIndex(i.senders, senderIndex)
-			continue
 		}
-
-		i.senderCursors[sender] = senderCursor.Next()
 
 		return &senderNonceMepoolIterator{
 			senders:       i.senders,

@@ -445,11 +445,106 @@ other languages such as plugins described briefly in [ADR 033](./adr-033-protobu
 
 ### Testing
 
+In order to ensure that modules are indeed with multiple versions of their dependencies, we plan to provide specialized
+unit and integration testing infrastructure that automatically tests multiple versions of dependencies. 
+
 #### Unit Testing
+
+Unit tests should be conducted inside SDK modules by mocking their dependencies. In a full ADR 033 scenario,
+this means that all interaction with other modules is done via the inter-module router, so mocking of dependencies
+means mocking their msg and query server implementations. We will provide both a test runner and fixture to make this
+streamlined. The test fixture will be an interface like the following:
+
+```go
+package moduletesting
+
+import (
+	"context"
+	"testing"
+
+	"cosmossdk.io/core/intermodule"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
+)
+
+type TestFixture interface {
+	context.Context
+	intermodule.Client    // for making calls to the module we're testing
+	BeginBlock()          
+	EndBlock()
+}
+
+type UnitTestFixture interface {
+	TestFixture
+	grpc.ServiceRegistrar // for registering mock service implementations
+}
+
+type UnitTestConfig struct {
+	ModuleConfig proto.Message
+}
+
+func (cfg UnitTestConfig) Run(t *testing.T, f func(t *testing.T, f UnitTestFixture)) {
+	// ...
+}
+```
+
+```go
+func TestBar(t *testing.T) {
+	UnitTestConfig
+	moduletesting.RunUnitTests(t, &foomodulev1.Module{}, func(t *testing.T, f moduletesting.UnitTestFixture) {
+        ctrl := gomock.NewController(t)
+        mockFooMsgServer := footestutil.NewMockMsgServer()
+        foov1.RegisterMsgServer(f, mockFooMsgServer)
+		barMsgClient := barv1.NewMsgClient(f)
+		mockFooMsgServer.EXPECT().DoSomething(gomock.Any(), gomock.Any()).Return(&foov1.MsgDoSomething.Response{}, nil)
+		res, err := barMsgClient.CallFoo(f, &MsgCallFoo{})
+		...
+    })
+}
+```
 
 #### Integration Testing
 
-### Proto File Versioning
+
+```go
+type IntegrationTestFixture interface {
+	TestFixture
+}
+
+type IntegrationTestConfig struct {
+	ModuleConfig proto.Message
+	DependencyMatrix map[string][]proto.Message
+}
+
+func (cfg IntegationTestConfig) Run(t *testing.T, f func(t *testing.T, f IntegrationTestFixture)) {
+    // ...
+}
+```
+
+```go
+func TestBarIntegration(t *testing.T) {
+	IntegrationTestConfig{
+		ModuleConfig: &barmodulev1.Module{},
+		DependencyMatrix: map[string][]proto.Message{
+            "runtime": []proto.Message{
+                &runtimev1.Module{},
+				&runtimev2.Module{},
+            },
+			"foo": []proto.Message{
+				&foomodulev1.Module{},
+                &foomodulev2.Module{},
+                &foomodulev3.Module{},
+             }
+        }   
+    }.Run(t, func(t *testing.T, f moduletesting.IntegrationTestFixture) {
+        barMsgClient := barv1.NewMsgClient(f)
+        res, err := barMsgClient.CallFoo(f, &MsgCallFoo{})
+        ...
+    })
+}
+```
+
+### Proto File and Module Versioning
 
 ## Consequences
 
@@ -470,6 +565,15 @@ ability of the Cosmos SDK ecosystem to iterate on new features
 * all modules will need to be refactored somewhat dramatically
 
 ### Neutral
+
+* the `cosmossdk.io/core/appconfig` framework will play a more central role in terms of how modules are defined, this
+is likely generally a good thing but does mean additional changes for users wanting to stick to the pre-depinject way
+of wiring up modules
+* `depinject` is somewhat less needed or maybe even obviated because of the full ADR 033 approach. If we adopt the
+core API proposed in https://github.com/cosmos/cosmos-sdk/pull/12239, then a module would probably always instantiate
+itself with a method `ProvideModule(appmodule.Service) (appmodule.AppModule, error)`. There is no complex wiring of
+keeper dependencies in this scenario and dependency injection may not have as much of (or any) use case.
+
 
 ## Further Discussions
 

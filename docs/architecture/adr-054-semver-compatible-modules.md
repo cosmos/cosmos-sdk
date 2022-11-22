@@ -208,7 +208,7 @@ func (k Keeper) DoSomething(msg MsgDoSomething) error {
 	err := k.resolver.Resolve(&validateBasic, msg)
 	if err != nil {
 		return err
-    }   
+	}   
 	
 	err = validateBasicHandler.ValidateBasic()
 	...

@@ -35,6 +35,17 @@ message ModuleAccount {
   repeated string permissions  = 3;
 }
 
+// ModuleCredential represents a unclaimable pubkey for base accounts controlled by modules.
+//
+// Since: cosmos-sdk 0.47
+message ModuleCredential {
+  // module_name is the name of the module used for address derivation (passed into address.Module).
+  string module_name = 1;
+  // derivation_keys is for deriving a module account address (passed into address.Module)
+  // adding more keys creates sub-account addresses (passed into address.Derive)
+  repeated bytes derivation_keys = 2;
+}
+
 // Params defines the parameters for the auth module.
 message Params {
   option (amino.name)      = "cosmos-sdk/x/auth/Params";

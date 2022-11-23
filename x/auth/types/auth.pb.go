@@ -109,6 +109,64 @@ func (m *ModuleAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ModuleAccount proto.InternalMessageInfo
 
+// ModuleCredential represents a unclaimable pubkey for base accounts controlled by modules.
+//
+// Since: cosmos-sdk 0.47
+type ModuleCredential struct {
+	// module_name is the name of the module used for address derivation (passed into address.Module).
+	ModuleName string `protobuf:"bytes,1,opt,name=module_name,json=moduleName,proto3" json:"module_name,omitempty"`
+	// derivation_keys is for deriving a module account address (passed into address.Module)
+	// adding more keys creates sub-account addresses (passed into address.Derive)
+	DerivationKeys [][]byte `protobuf:"bytes,2,rep,name=derivation_keys,json=derivationKeys,proto3" json:"derivation_keys,omitempty"`
+}
+
+func (m *ModuleCredential) Reset()         { *m = ModuleCredential{} }
+func (m *ModuleCredential) String() string { return proto.CompactTextString(m) }
+func (*ModuleCredential) ProtoMessage()    {}
+func (*ModuleCredential) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7e1f7e915d020d2d, []int{2}
+}
+func (m *ModuleCredential) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ModuleCredential) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ModuleCredential.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ModuleCredential) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModuleCredential.Merge(m, src)
+}
+func (m *ModuleCredential) XXX_Size() int {
+	return m.Size()
+}
+func (m *ModuleCredential) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModuleCredential.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModuleCredential proto.InternalMessageInfo
+
+func (m *ModuleCredential) GetModuleName() string {
+	if m != nil {
+		return m.ModuleName
+	}
+	return ""
+}
+
+func (m *ModuleCredential) GetDerivationKeys() [][]byte {
+	if m != nil {
+		return m.DerivationKeys
+	}
+	return nil
+}
+
 // Params defines the parameters for the auth module.
 type Params struct {
 	MaxMemoCharacters      uint64 `protobuf:"varint,1,opt,name=max_memo_characters,json=maxMemoCharacters,proto3" json:"max_memo_characters,omitempty"`
@@ -122,7 +180,7 @@ func (m *Params) Reset()         { *m = Params{} }
 func (m *Params) String() string { return proto.CompactTextString(m) }
 func (*Params) ProtoMessage()    {}
 func (*Params) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7e1f7e915d020d2d, []int{2}
+	return fileDescriptor_7e1f7e915d020d2d, []int{3}
 }
 func (m *Params) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -189,6 +247,7 @@ func (m *Params) GetSigVerifyCostSecp256k1() uint64 {
 func init() {
 	proto.RegisterType((*BaseAccount)(nil), "cosmos.auth.v1beta1.BaseAccount")
 	proto.RegisterType((*ModuleAccount)(nil), "cosmos.auth.v1beta1.ModuleAccount")
+	proto.RegisterType((*ModuleCredential)(nil), "cosmos.auth.v1beta1.ModuleCredential")
 	proto.RegisterType((*Params)(nil), "cosmos.auth.v1beta1.Params")
 }
 
@@ -378,6 +437,45 @@ func (m *ModuleAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ModuleCredential) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ModuleCredential) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ModuleCredential) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DerivationKeys) > 0 {
+		for iNdEx := len(m.DerivationKeys) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.DerivationKeys[iNdEx])
+			copy(dAtA[i:], m.DerivationKeys[iNdEx])
+			i = encodeVarintAuth(dAtA, i, uint64(len(m.DerivationKeys[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.ModuleName) > 0 {
+		i -= len(m.ModuleName)
+		copy(dAtA[i:], m.ModuleName)
+		i = encodeVarintAuth(dAtA, i, uint64(len(m.ModuleName)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *Params) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -477,6 +575,25 @@ func (m *ModuleAccount) Size() (n int) {
 	if len(m.Permissions) > 0 {
 		for _, s := range m.Permissions {
 			l = len(s)
+			n += 1 + l + sovAuth(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ModuleCredential) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ModuleName)
+	if l > 0 {
+		n += 1 + l + sovAuth(uint64(l))
+	}
+	if len(m.DerivationKeys) > 0 {
+		for _, b := range m.DerivationKeys {
+			l = len(b)
 			n += 1 + l + sovAuth(uint64(l))
 		}
 	}
@@ -797,6 +914,120 @@ func (m *ModuleAccount) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Permissions = append(m.Permissions, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAuth(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAuth
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ModuleCredential) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAuth
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ModuleCredential: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ModuleCredential: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ModuleName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuth
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAuth
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuth
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ModuleName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DerivationKeys", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAuth
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthAuth
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAuth
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DerivationKeys = append(m.DerivationKeys, make([]byte, postIndex-iNdEx))
+			copy(m.DerivationKeys[len(m.DerivationKeys)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

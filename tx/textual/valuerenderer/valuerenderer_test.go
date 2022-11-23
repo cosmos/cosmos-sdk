@@ -26,6 +26,7 @@ func TestDispatcher(t *testing.T) {
 		{"DURATION", false, valuerenderer.NewDurationValueRenderer()},
 		{"COIN", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"COINS", false, valuerenderer.NewCoinsValueRenderer(nil)},
+		{"ENUM", false, valuerenderer.NewEnumValueRenderer(fieldDescriptorFromName("ENUM"))},
 		{"FLOAT", true, nil},
 	}
 

@@ -131,8 +131,6 @@
           "Params": "FeegrantParams"
         }
       }
-<<<<<<< HEAD
-=======
     },
     {
       "url": "./tmp-swagger-gen/cosmos/nft/v1beta1/query.swagger.json",
@@ -152,7 +150,6 @@
           "TallyResult": "GroupTallyResult"
         }
       }
->>>>>>> cfa224c04 (chore: add group and gov/v1 in swagger (#13984))
     }
   ]
 }

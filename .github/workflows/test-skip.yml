@@ -1,0 +1,111 @@
+name: Tests / Code Coverage
+# This workflow allows to skip the test step if the PR does not contain any changes to the code
+# See https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+on:
+  pull_request:
+    paths-ignore:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+
+concurrency:
+  group: ci-${{ github.ref }}-tests
+  cancel-in-progress: true
+
+jobs:
+  test-submodules:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["00", "01", "02", "03"]
+    steps:
+      - run: 'echo "No tests required"'
+
+  tests-legacy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ["00", "01", "02", "03"]
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  repo-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  liveness-test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-sim-nondeterminism:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  ##################################
+  #### Cosmos SDK Go Submodules ####
+  ##################################
+
+  test-clientv2:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-core:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-depinject:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-errors:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-math:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-simapp:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-tx:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-rosetta:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  test-cosmovisor:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'

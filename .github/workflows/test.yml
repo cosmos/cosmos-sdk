@@ -100,7 +100,7 @@ jobs:
           go-version: 1.19.2
       - name: integration tests
         run: |
-          make test-integration
+          make test-integration-cov
       - uses: actions/upload-artifact@v3
         with:
           name: "${{ github.sha }}-integration-coverage"

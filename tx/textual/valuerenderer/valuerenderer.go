@@ -78,6 +78,9 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 	case fd.Kind() == protoreflect.StringKind:
 		return stringValueRenderer{}, nil
 
+	case fd.Kind() == protoreflect.EnumKind:
+		return NewEnumValueRenderer(fd), nil
+
 	case fd.Kind() == protoreflect.MessageKind:
 		md := fd.Message()
 		fullName := md.FullName()

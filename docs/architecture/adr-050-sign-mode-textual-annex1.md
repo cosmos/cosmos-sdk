@@ -153,23 +153,17 @@ Vote object
 > Vote: cosmos1abc...def
 > Options: 2 WeightedVoteOptions
 > Options (1/2): WeightedVoteOption object
->> Option: Yes
+>> Option: VOTE_OPTION_YES
 >> Weight: 0.7
 > Options (2/2): WeightedVoteOption object
->> Option: No
+>> Option: VOTE_OPTION_NO
 >> Weight: 0.3
 > End of Options
 ```
 
 ### Enums
 
-- String case convention: snake case to sentence case
-- Allow optional annotation for textual name (TBD)
-- Algorithm:
-  - convert enum name (`VoteOption`) to snake_case (`VOTE_OPTION`)
-  - truncate that prefix + `_` from the enum name if it exists (`VOTE_OPTION_` gets stripped from `VOTE_OPTION_YES` -> `YES`)
-  - convert rest to sentence case: `YES` -> `Yes`
-  - in summary: `VOTE_OPTION_YES` -> `Yes`
+- Show the enum variant name as string.
 
 #### Examples
 

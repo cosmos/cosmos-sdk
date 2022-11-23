@@ -1,17 +1,9 @@
 name: Tests / Code Coverage
 on:
   pull_request:
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
   push:
     branches:
       - release/v0.47.x
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
 
 permissions:
   contents: read
@@ -61,13 +53,24 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.2
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: test & coverage report creation
+        if: env.GIT_DIFF
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
       - uses: actions/upload-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
@@ -84,10 +87,20 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.2
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: test app (v1)
+        if: env.GIT_DIFF
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -tags='app_v1 norace ledger test_ledger_mock'
 
@@ -98,10 +111,23 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.2
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
       - name: integration tests
+        if: env.GIT_DIFF
         run: |
           make test-integration-cov
       - uses: actions/upload-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
           path: ./tests/integration-profile.out
@@ -113,41 +139,70 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.2
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
       - name: e2e tests
+        if: env.GIT_DIFF
         run: |
           make test-e2e-cov
       - uses: actions/upload-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"
           path: ./tests/e2e-profile.out
 
   repo-analysis:
     runs-on: ubuntu-latest
-    needs: [tests, tests-integration, tests-e2e]
+    needs: [tests, test-integration, test-e2e]
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-00-coverage"
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-01-coverage"
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-02-coverage"
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-03-coverage"
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
       - uses: actions/download-artifact@v3
+        if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
       - name: sonarcloud
+        if: env.GIT_DIFF
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -161,10 +216,23 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.2
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
       - name: start localnet
+        if: env.GIT_DIFF
         run: |
           make clean localnet-start
       - name: test liveness
+        if: env.GIT_DIFF
         run: |
           ./contrib/localnet_liveness.sh 100 5 50 localhost
 
@@ -175,7 +243,19 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.2
+      - uses: technote-space/get-diff-action@v6.1.1
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
       - name: test-sim-nondeterminism
+        if: env.GIT_DIFF
         run: |
           make test-sim-nondeterminism
 
@@ -410,6 +490,8 @@ jobs:
             tools/rosetta/**/*.go
             tools/rosetta/go.mod
             tools/rosetta/go.sum
+            tools/rosetta/Makefile
+            Makefile
       - name: tests
         if: env.GIT_DIFF
         run: |

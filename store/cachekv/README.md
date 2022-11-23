@@ -1,10 +1,19 @@
 # CacheKVStore specification
 
-A `CacheKVStore` is cache wrapper for a `KVStore`. It extends the operations of the `KVStore` to work with a cache, allowing for reduced I/O operations and more efficient disposing of changes (e.g. after processing a failed transaction). 
+A `CacheKVStore` is cache wrapper for a `KVStore`. It extends the operations of the `KVStore` to work with a cache, allowing for reduced I/O operations and more efficient disposing of changes (e.g. after processing a failed transaction).
+ 
+The core goals the CacheKVStore seeks to solve are:
+* Buffer all writes to the parent store, so they can be dropped if they needs to be reverted
+* Allow iteration over contiguous spans of keys
+* Act as a cache, so we don't repeat I/O to disk for reads we've already done
+  * Note: We actually fail to achieve this for iteration right now
+  * Note: Need to consider this getting too large and dropping some cached reads
+* Make subsequent reads, account for prior buffered writes
+* Write all changes to the parent store
+
+We should revisit these goals with time (for instance its unclear that all disk writes need to be buffered to the end of the block), but this is the current status.
 
 ## Types and Structs
-
----
 
 ```go
 type Store struct {
@@ -17,13 +26,13 @@ type Store struct {
 }
 ```
 
-The Store struct wraps the underlying `KVStore` (referred to as `parent`) with additional data structures for implementing the cache. Mutex is needed as IAVL trees (the `KVStore` in application) are not safe for concurrent use.
+The Store struct wraps the underlying `KVStore` (referred to as `parent`) with additional data structures for implementing the cache. Mutex is used as IAVL trees (the `KVStore` in application) are not safe for concurrent use.
 
 ### `cache`
 
 The main mapping of key-value pairs stored in cache. This map contains both keys that are cached from read operations as well as ‘dirty’ keys which map to a value that is different than what is in the underlying `KVStore`.
 
-Values that are mapped to in the `cache` map are wrapped in a `cValue` struct, which contains the value and a boolean flag (`dirty`) representing whether the value differs from the `parent`.
+Values that are mapped to in `cache` are wrapped in a `cValue` struct, which contains the value and a boolean flag (`dirty`) representing whether the value differs from what's in `parent`.
 
 ```go
 type cValue struct {
@@ -34,11 +43,11 @@ type cValue struct {
 
 ### `deleted`
 
-Key-value pairs that are to be deleted from the `parent`are stored in the `deleted` map. Keys are mapped to an empty struct to implement a set.
+Key-value pairs that are to be deleted from the `parent` are stored in the `deleted` map. Keys are mapped to an empty struct to implement a set.
 
 ### `unsortedCache`
 
-Similar to`deleted`, this is a set of keys that are dirty and will need to be updated in the `KVStore` upon a write. Keys are mapped to an empty struct to implement a set.
+Similar to `deleted`, this is a set of keys that are dirty and will need to be updated in the `KVStore` upon a write. Keys are mapped to an empty struct to implement a set.
 
 ### `sortedCache`
 
@@ -46,9 +55,7 @@ A database that will be populated by the keys in `unsortedCache` during iteratio
 
 ## CRUD Operations and Writing
 
----
-
-The `Set`, `Get`, and `Delete` functions all reference `setCacheValue()` , which is the only entrypoint to mutating the `cache` map. 
+The `Set`, `Get`, and `Delete` functions all reference `setCacheValue()` , which is the only entrypoint to mutating `cache`. 
 
 `setCacheValue()` is defined as follows:
 
@@ -70,11 +77,11 @@ func (store *Store) setCacheValue(key, value []byte, deleted bool, dirty bool) {
 }
 ```
 
-`setCacheValue()` inserts a key-value pair into the `cache` map. Two boolean parameters, `deleted` and `dirty`, are passed in to flag whether the inserted key should also be inserted into the `deleted` and `dirty` sets. 
+`setCacheValue()` inserts a key-value pair into `cache`. Two boolean parameters, `deleted` and `dirty`, are passed in to flag whether the inserted key should also be inserted into the `deleted` and `dirty` sets. 
 
 ### `Get`
 
-`Get` first attempts to return the value from the `cache` map. If the key does not exist in `cache`, gets the value from `store.parent` instead and calls `setCacheValue()` with `deleted=false` and `dirty=false`.
+`Get` first attempts to return the value from the `cache` map. If the key does not exist in `cache`, `parent` is called instead. This value from parent is passed into cache with `deleted=false` and `dirty=false`.
 
 ### `Set`
 
@@ -82,27 +89,25 @@ Calls `setCacheValue()` with `deleted=false` and `dirty=true`.
 
 ### `Delete`
 
-A value being deleted from the `KVStore` is represented with a `nil` value in the `cache` map, and an insertion of the key into the `deleted` map. 
+A value being deleted from the `KVStore` is represented with a `nil` value in `cache`, and an insertion of the key into the `deleted` set. 
 
-Calls `setCacheValue` with `deleted=true` and `dirty=true`.
+Calls `setCacheValue()` with `deleted=true` and `dirty=true`.
 
 ### `Write`
 
 Values in the `cache` are written to `parent` in ascending order of their keys. 
 
-A slice of all dirty keys in the `cache` is made, then sorted in increasing order. These keys are then iterated over to update `parent`.
+A slice of all dirty keys in the `cache` is made, then sorted in increasing order. These keys are iterated over to update `parent`.
 
-If a key is marked for deletion (checked with `isDeleted()`), then the `parent.Delete` is called. Otherwise, `parent.Set` is called to update the underlying `KVStore` with the value in cache.
+If a key is marked for deletion (checked with `isDeleted()`), then the `parent.Delete()` is called. Otherwise, `parent.Set()` is called to update the underlying `KVStore` with the value in cache.
 
 ## Iteration
 
----
+Efficient iteration over keys in the `KVStore` is important for generating Merkle range proofs. Iteration over the `CacheKVStore` requires producing all key-value pairs from the underlying `KVStore` while taking into account updated values from the cache. 
 
-Efficient iteration over keys in the `KVStore` is important for efficiently generating Merkle range proofs. 
+In the current implementation, there is no guarantee that all values in the underlying `KVStore` have been cached. As a result, iteration is achieved by iterating through both `parent` and the cache (failing to actually benefit from caching).
 
-To iterate over the `CacheKVStore`, `iterate()` must iterate over a merged set of keys from the parent `KVStore` and cache.
-
-`[cacheMergeIterator](https://github.com/cosmos/cosmos-sdk/blob/d8391cb6796d770b02448bee70b865d824e43449/store/cachekv/mergeiterator.go)` implements functions to provide a single iterator with an input of iterators over`parent` and `cache`. This iterator iterates over keys from both iterators in a shared lexicological order, and overrides the value provided by the parent iterator if the same key is dirty or deleted in the cache. 
+[cacheMergeIterator](https://github.com/cosmos/cosmos-sdk/blob/d8391cb6796d770b02448bee70b865d824e43449/store/cachekv/mergeiterator.go) implements functions to provide a single iterator with an input of iterators over `parent` and the cache. This iterator iterates over keys from both iterators in a shared lexicological order, and overrides the value provided by the parent iterator if the same key is dirty or deleted in the cache. 
 
 ### Implementation Overview
 
@@ -143,4 +148,4 @@ In the case that the size of `unsortedCache` is larger than `minSortSize` , a li
 
 Finally, part 4. is achieved with `memIterator`, which implements an iterator over the `sortedCache` items. 
 
-As of [PR#12885](https://github.com/cosmos/cosmos-sdk/pull/12885), an optimization to the binary search case mitigates the overhead of sorting the entirety of the key set in `unsortedCache`. To avoid wasting the compute spent sorting, we should ensure that a reasonable amount of values are removed from `unsortedCache`. If the length of the range for iteration is less than `minSortedCache`, we widen the range of values for removal from `unsortedCache` to be up to `minSortedCache` in length. This amortizes the cost of processing elements across multiple calls.
+As of [PR #12885](https://github.com/cosmos/cosmos-sdk/pull/12885), an optimization to the binary search case mitigates the overhead of sorting the entirety of the key set in `unsortedCache`. To avoid wasting the compute spent sorting, we should ensure that a reasonable amount of values are removed from `unsortedCache`. If the length of the range for iteration is less than `minSortedCache`, we widen the range of values for removal from `unsortedCache` to be up to `minSortedCache` in length. This amortizes the cost of processing elements across multiple calls.

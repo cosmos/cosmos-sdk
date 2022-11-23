@@ -34,10 +34,11 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
-The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
-If you are using a legacy `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
+The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go) and is not going anywhere.
+
+If you are using a `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
 
 ```go
 autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))

@@ -7,10 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	txsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 // An sdk.Tx which is its own sdk.Msg.
@@ -20,25 +19,27 @@ type kvstoreTx struct {
 	bytes   []byte
 	address sdk.AccAddress
 }
+
+// testPubKey is a dummy implementation of PubKey used for testing.
 type testPubKey struct {
 	address sdk.AccAddress
 }
 
-func (t testPubKey) Reset() { panic("implement me") }
+func (t testPubKey) Reset() { panic("not implemented") }
 
-func (t testPubKey) String() string { panic("implement me") }
+func (t testPubKey) String() string { panic("not implemented") }
 
-func (t testPubKey) ProtoMessage() { panic("implement me") }
+func (t testPubKey) ProtoMessage() { panic("not implemented") }
 
 func (t testPubKey) Address() cryptotypes.Address { return t.address.Bytes() }
 
-func (t testPubKey) Bytes() []byte { panic("implement me") }
+func (t testPubKey) Bytes() []byte { panic("not implemented") }
 
-func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("implement me") }
+func (t testPubKey) VerifySignature(msg []byte, sig []byte) bool { panic("not implemented") }
 
-func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("implement me") }
+func (t testPubKey) Equals(key cryptotypes.PubKey) bool { panic("not implemented") }
 
-func (t testPubKey) Type() string { panic("implement me") }
+func (t testPubKey) Type() string { panic("not implemented") }
 
 func (msg *kvstoreTx) GetSignaturesV2() (res []txsigning.SignatureV2, err error) {
 	res = append(res, txsigning.SignatureV2{
@@ -76,6 +77,7 @@ var (
 	_ sdk.Msg                 = &kvstoreTx{}
 	_ signing.SigVerifiableTx = &kvstoreTx{}
 	_ cryptotypes.PubKey      = &kvstoreTx{}
+	_ cryptotypes.PubKey      = &testPubKey{}
 )
 
 func NewTx(key, value string, accAddress sdk.AccAddress) *kvstoreTx {

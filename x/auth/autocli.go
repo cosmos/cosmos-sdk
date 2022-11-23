@@ -5,6 +5,8 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
+// trigger CI
+
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{

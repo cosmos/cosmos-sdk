@@ -11,6 +11,8 @@ import (
 
 var _ types.MsgServer = &Keeper{}
 
+// VerifyInvariant implements MsgServer.VerifyInvariant method.
+// It defines a method to verify a particular invariant.
 func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	constantFee := sdk.NewCoins(k.GetConstantFee(ctx))
@@ -62,6 +64,8 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 	return &types.MsgVerifyInvariantResponse{}, nil
 }
 
+// UpdateParams implements MsgServer.UpdateParams method.
+// It defines a method to update the x/crisis module parameters.
 func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.authority != req.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)

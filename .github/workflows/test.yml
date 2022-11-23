@@ -115,7 +115,11 @@ jobs:
           go-version: 1.19.2
       - name: e2e tests
         run: |
-          make test-e2e
+          make test-e2e-cov
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-e2e-coverage"
+          path: ./tests/e2e-profile.out
 
   repo-analysis:
     runs-on: ubuntu-latest
@@ -139,6 +143,9 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: "${{ github.sha }}-integration-coverage"
+      - uses: actions/download-artifact@v3
+        with:
+          name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
       - name: sonarcloud
         uses: SonarSource/sonarcloud-github-action@master

@@ -196,8 +196,12 @@ build-docs:
 test: test-unit
 test-e2e:
 	$(MAKE) -C tests test-e2e
+test-e2e-cov:
+	$(MAKE) -C tests test-e2e-cov
 test-integration:
 	$(MAKE) -C tests test-integration
+test-integration-cov:
+	$(MAKE) -C tests test-integration-cov
 test-all: test-unit test-e2e test-integration test-ledger-mock test-race
 
 TEST_PACKAGES=./...

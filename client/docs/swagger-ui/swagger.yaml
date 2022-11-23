@@ -1476,8 +1476,6 @@ paths:
       parameters:
         - name: id
           description: |-
-            Deprecated, use account_id instead
-
             id is the account number of the address to be queried. This field
             should have been an uint64 (like all account numbers), and will be
             updated to uint64 in a future version of the auth query.
@@ -1485,15 +1483,6 @@ paths:
           required: true
           type: string
           format: int64
-        - name: account_id
-          description: |-
-            account_id is the account number of the address to be queried.
-
-            Since: cosmos-sdk 0.47
-          in: query
-          required: false
-          type: string
-          format: uint64
       tags:
         - Query
   /cosmos/auth/v1beta1/bech32:

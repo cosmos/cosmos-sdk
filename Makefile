@@ -213,9 +213,13 @@ build-docs:
 test: test-unit
 test-e2e:
 	$(MAKE) -C tests test-e2e
+test-e2e-cov:
+	$(MAKE) -C tests test-e2e-cov
 test-integration:
 	$(MAKE) -C tests test-integration
-test-all: test-unit test-e2e test-integration test-ledger-mock test-race test-cover
+test-integration-cov:
+	$(MAKE) -C tests test-integration-cov
+test-all: test-unit test-e2e test-integration test-ledger-mock test-race
 
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
@@ -333,13 +337,6 @@ test-sim-profile:
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 .PHONY: test-sim-profile test-sim-benchmark
-
-test-cover:
-	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
-.PHONY: test-cover
-
-test-rosetta-unit:
-	$(MAKE) -C tools/rosetta test
 
 test-rosetta:
 	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .

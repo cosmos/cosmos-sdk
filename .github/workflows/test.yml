@@ -91,6 +91,32 @@ jobs:
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -tags='app_v1 norace ledger test_ledger_mock'
 
+  tests-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.2
+      - name: integration tests
+        run: |
+          make test-integration
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "${{ github.sha }}-integration-coverage"
+          path: ./tests/integration-profile.out
+
+  tests-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.2
+      - name: e2e tests
+        run: |
+          make test-e2e
+
   repo-analysis:
     runs-on: ubuntu-latest
     needs: tests
@@ -112,10 +138,8 @@ jobs:
           name: "${{ github.sha }}-03-coverage"
       - uses: actions/download-artifact@v3
         with:
-          name: "${{ github.sha }}-go-submodules-coverage"
+          name: "${{ github.sha }}-integration-coverage"
         continue-on-error: true
-      - run: |
-          cat ./*profile.out | grep -v "mode: atomic" >> coverage.txt
       - name: sonarcloud
         uses: SonarSource/sonarcloud-github-action@master
         env:

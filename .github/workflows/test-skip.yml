@@ -36,6 +36,16 @@ jobs:
     steps:
       - run: 'echo "No tests required"'
 
+  tests-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
+  tests-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No tests required"'
+
   repo-analysis:
     runs-on: ubuntu-latest
     steps:

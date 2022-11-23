@@ -36,12 +36,12 @@ jobs:
     steps:
       - run: 'echo "No tests required"'
 
-  tests-integration:
+  test-integration:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-e2e:
+  test-e2e:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
@@ -61,49 +61,51 @@ jobs:
     steps:
       - run: 'echo "No tests required"'
 
+  ##################################
   #### Cosmos SDK Go Submodules ####
+  ##################################
 
-  tests-clientv2:
+  test-clientv2:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-core:
+  test-core:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-depinject:
+  test-depinject:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-errors:
+  test-errors:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-math:
+  test-math:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-simapp:
+  test-simapp:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-tx:
+  test-tx:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-rosetta:
+  test-rosetta:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'
 
-  tests-cosmovisor:
+  test-cosmovisor:
     runs-on: ubuntu-latest
     steps:
       - run: 'echo "No tests required"'

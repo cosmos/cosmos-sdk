@@ -91,7 +91,7 @@ jobs:
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -tags='app_v1 norace ledger test_ledger_mock'
 
-  tests-integration:
+  test-integration:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -106,7 +106,7 @@ jobs:
           name: "${{ github.sha }}-integration-coverage"
           path: ./tests/integration-profile.out
 
-  tests-e2e:
+  test-e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -186,7 +186,7 @@ jobs:
   # NOTE: The following jobs are used to test the Cosmos SDK Go submodules.
   # They run when there is a diff in their respective directories.
 
-  tests-clientv2:
+  test-clientv2:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -216,7 +216,7 @@ jobs:
         with:
           projectBaseDir: client/v2/
 
-  tests-core:
+  test-core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -246,7 +246,7 @@ jobs:
         with:
           projectBaseDir: core/
 
-  tests-depinject:
+  test-depinject:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -274,7 +274,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_DEPINJECT }}
 
-  tests-errors:
+  test-errors:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -302,7 +302,7 @@ jobs:
         with:
           projectBaseDir: errors/
 
-  tests-math:
+  test-math:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -332,7 +332,7 @@ jobs:
         with:
           projectBaseDir: math/
 
-  tests-simapp:
+  test-simapp:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -365,7 +365,7 @@ jobs:
         with:
           projectBaseDir: simapp/
 
-  tests-tx:
+  test-tx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -393,7 +393,7 @@ jobs:
         with:
           projectBaseDir: tx/
 
-  tests-rosetta:
+  test-rosetta:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -425,7 +425,7 @@ jobs:
         with:
           projectBaseDir: tools/rosetta/
 
-  tests-cosmovisor:
+  test-cosmovisor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

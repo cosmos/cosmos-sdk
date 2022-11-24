@@ -84,6 +84,9 @@ func (snm *senderNonceMempool) setSeed(seed int64) {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
 func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
+	if !snm.unbounded && snm.txCount >= snm.maxTx {
+		return fmt.Errorf("pool reached max tx capacity")
+	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -141,14 +144,6 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
-	// count := 0
-	//
-	//// Disable gosec here since we need neither strong randomness nor deterministic iteration.
-	//// #nosec
-	// for _, value := range snm.senders {
-	//	count += value.Len()
-	//}
-	// return count
 	return snm.txCount
 }
 

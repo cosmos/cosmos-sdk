@@ -70,9 +70,18 @@ func (suite *AddressSuite) TestModule() {
 	addr2 := Module("myModule2", key)
 	assert.NotEqual(addr, addr2, "changing module name must change address")
 
-	addr3 := Module(modName, []byte{1, 2, 3})
+	k1 := []byte{1, 2, 3}
+	addr3 := Module(modName, k1)
 	assert.NotEqual(addr, addr3, "changing key must change address")
 	assert.NotEqual(addr2, addr3, "changing key must change address")
+
+	addr4 := Module(modName, k1, k1)
+	assert.Equal(Derive(addr3, k1), addr4)
+
+	k2 := []byte{0, 0, 7}
+	addr5 := Module(modName, k1, k1, k2)
+	assert.Equal(Derive(addr4, k2), addr5)
+
 }
 
 func (suite *AddressSuite) TestDerive() {

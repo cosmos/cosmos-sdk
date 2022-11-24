@@ -18,7 +18,9 @@ type Addressable interface {
 	Address() []byte
 }
 
-// Hash creates a new address from address type and key
+// Hash creates a new address from address type and key.
+// The functions should only be used by new types defining thier own address function
+// (eg public keys).
 func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()
 	_, err := hasher.Write(conv.UnsafeStrToBytes(typ))
@@ -59,10 +61,15 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 }
 
 // Module is a specialized version of a composed address for modules. Each module account
-// is constructed from a module name and module account key.
-func Module(moduleName string, key []byte) []byte {
+// is constructed from a module name and a sequence of derivation keys (at least one
+// derivation key must be provided).
+func Module(moduleName string, derivationKey []byte, derivationKeys ...[]byte) []byte {
 	mKey := append([]byte(moduleName), 0)
-	return Hash("module", append(mKey, key...))
+	addr := Hash("module", append(mKey, derivationKey...))
+	for _, k := range derivationKeys {
+		addr = Derive(addr, k)
+	}
+	return addr
 }
 
 // Derive derives a new address from the main `address` and a derivation `key`.

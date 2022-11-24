@@ -17,6 +17,11 @@ done
 mkdir -p docs/modules/vesting
 cp -r ../x/auth/vesting/README.md ./docs/modules/vesting/README.md
 
+## Tx is a submodule of auth, but we still want to display it in docs
+## TODO to be removed if we extract tx out of auth
+mkdir -p docs/modules/tx
+cp -r ../x/auth/tx/README.md ./docs/modules/tx/README.md
+
 ## Add modules page list
 cat ../x/README.md | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-modules\/intro\.html/g' > ./docs/modules/README.md
 

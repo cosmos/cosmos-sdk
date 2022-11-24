@@ -182,17 +182,18 @@ Object: <type_url>
 #### Examples
 
 ```
-Object: /cosmos.gov.v1.Vote
-> Proposal id: 4
-> Vote: cosmos1abc...def
-> Options: 2 WeightedVoteOptions
-> Options (1/2): WeightedVoteOption object
->> Option: Yes
->> Weight: 0.7
-> Options (2/2): WeightedVoteOption object
->> Option: No
->> Weight: 0.3
-> End of Options
+Object: type.googleapis.com/cosmos.gov.v1.Vote
+> Vote object
+>> Proposal id: 4
+>> Vote: cosmos1abc...def
+>> Options: 2 WeightedVoteOptions
+>> Options (1/2): WeightedVoteOption object
+>>> Option: Yes
+>>> Weight: 0.7
+>> Options (2/2): WeightedVoteOption object
+>>> Option: No
+>>> Weight: 0.3
+>> End of Options
 ```
 
 ### `google.protobuf.Timestamp`

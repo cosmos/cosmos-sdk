@@ -39,6 +39,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+### Improvements
+
+### State Machine Breaking
+
+### API Breaking Changes
+
+### CLI Breaking Changes
+
+### Bug Fixes
+
+### Deprecated
+
+## [v0.47.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc1) - Unreleased
+
+### Features
+
 * (x/evidence) [#13740](https://github.com/cosmos/cosmos-sdk/pull/13740) Add new proto field `hash` of type `string` to `QueryEvidenceRequest` which helps to decode the hash properly while using query API.
 * (core) [#13306](https://github.com/cosmos/cosmos-sdk/pull/13306) Add a `FormatCoins` function to in `core/coins` to format sdk Coins following the Value Renderers spec.
 * (math) [#13306](https://github.com/cosmos/cosmos-sdk/pull/13306) Add `FormatInt` and `FormatDec` functiosn in `math` to format integers and decimals following the Value Renderers spec.

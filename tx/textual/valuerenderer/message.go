@@ -42,13 +42,13 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 	screens[0].Text = mr.header()
 
 	for _, fd := range mr.fds {
-		vr, err := mr.tr.GetValueRenderer(fd)
+		if !v.Message().Has(fd) {
+			// Skip default values.
+			continue
+		}
+		vr, err := mr.tr.GetFieldValueRenderer(fd)
 		if err != nil {
 			return nil, err
-		}
-		// Skip default values.
-		if !v.Message().Has(fd) {
-			continue
 		}
 
 		subscreens, err := vr.Format(ctx, v.Message().Get(fd))
@@ -116,7 +116,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			break
 		}
 
-		vr, err := mr.tr.GetValueRenderer(fd)
+		vr, err := mr.tr.GetFieldValueRenderer(fd)
 		if err != nil {
 			return nilValue, err
 		}

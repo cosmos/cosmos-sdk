@@ -185,7 +185,6 @@ func Derive(address []byte, derivationKey []byte) []byte {
 
 ### Module Account Addresses
 
-
 A module account will have `"module"` type. Module accounts can have sub accounts. The submodule account will be created based on module name, and sequence of derivation keys. Typically, the first derivation key should be a class of the derived accounts. The derivation process has a defined order: module name, submodule key, subsubmodule key... An example module account is created using:
 
 ```go

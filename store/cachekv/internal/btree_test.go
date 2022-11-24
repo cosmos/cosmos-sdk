@@ -190,6 +190,7 @@ func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string
 		i++
 	}
 	require.Equal(t, i, len(expected), "expected to have fully iterated over all the elements in iter")
+	require.NoError(t, itr.Close())
 }
 
 func int642Bytes(i int64) []byte {

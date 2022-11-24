@@ -29,7 +29,7 @@ func NewBTree() *BTree {
 	return &BTree{tree: *btree.NewBTreeGOptions(byKeys, btree.Options{
 		Degree: bTreeDegree,
 		// Contract: cachekv store must not be called concurrently
-		NoLocks: true,
+		NoLocks: false,
 	})}
 }
 

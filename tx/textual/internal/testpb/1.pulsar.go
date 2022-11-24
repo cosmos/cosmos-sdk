@@ -174,6 +174,7 @@ var (
 	fd_A_BYTES     protoreflect.FieldDescriptor
 	fd_A_TIMESTAMP protoreflect.FieldDescriptor
 	fd_A_DURATION  protoreflect.FieldDescriptor
+	fd_A_ENUM      protoreflect.FieldDescriptor
 	fd_A_SINT32    protoreflect.FieldDescriptor
 	fd_A_SINT64    protoreflect.FieldDescriptor
 	fd_A_SFIXED32  protoreflect.FieldDescriptor
@@ -199,6 +200,7 @@ func init() {
 	fd_A_BYTES = md_A.Fields().ByName("BYTES")
 	fd_A_TIMESTAMP = md_A.Fields().ByName("TIMESTAMP")
 	fd_A_DURATION = md_A.Fields().ByName("DURATION")
+	fd_A_ENUM = md_A.Fields().ByName("ENUM")
 	fd_A_SINT32 = md_A.Fields().ByName("SINT32")
 	fd_A_SINT64 = md_A.Fields().ByName("SINT64")
 	fd_A_SFIXED32 = md_A.Fields().ByName("SFIXED32")
@@ -341,6 +343,12 @@ func (x *fastReflection_A) Range(f func(protoreflect.FieldDescriptor, protorefle
 			return
 		}
 	}
+	if x.ENUM != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.ENUM))
+		if !f(fd_A_ENUM, value) {
+			return
+		}
+	}
 	if x.SINT32 != int32(0) {
 		value := protoreflect.ValueOfInt32(x.SINT32)
 		if !f(fd_A_SINT32, value) {
@@ -432,6 +440,8 @@ func (x *fastReflection_A) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.TIMESTAMP != nil
 	case "A.DURATION":
 		return x.DURATION != nil
+	case "A.ENUM":
+		return x.ENUM != 0
 	case "A.SINT32":
 		return x.SINT32 != int32(0)
 	case "A.SINT64":
@@ -488,6 +498,8 @@ func (x *fastReflection_A) Clear(fd protoreflect.FieldDescriptor) {
 		x.TIMESTAMP = nil
 	case "A.DURATION":
 		x.DURATION = nil
+	case "A.ENUM":
+		x.ENUM = 0
 	case "A.SINT32":
 		x.SINT32 = int32(0)
 	case "A.SINT64":
@@ -558,6 +570,9 @@ func (x *fastReflection_A) Get(descriptor protoreflect.FieldDescriptor) protoref
 	case "A.DURATION":
 		value := x.DURATION
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "A.ENUM":
+		value := x.ENUM
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
 	case "A.SINT32":
 		value := x.SINT32
 		return protoreflect.ValueOfInt32(value)
@@ -632,6 +647,8 @@ func (x *fastReflection_A) Set(fd protoreflect.FieldDescriptor, value protorefle
 		x.TIMESTAMP = value.Message().Interface().(*timestamppb.Timestamp)
 	case "A.DURATION":
 		x.DURATION = value.Message().Interface().(*durationpb.Duration)
+	case "A.ENUM":
+		x.ENUM = (ExternalEnum)(value.Enum())
 	case "A.SINT32":
 		x.SINT32 = int32(value.Int())
 	case "A.SINT64":
@@ -713,6 +730,8 @@ func (x *fastReflection_A) Mutable(fd protoreflect.FieldDescriptor) protoreflect
 		panic(fmt.Errorf("field SDKDEC of message A is not mutable"))
 	case "A.BYTES":
 		panic(fmt.Errorf("field BYTES of message A is not mutable"))
+	case "A.ENUM":
+		panic(fmt.Errorf("field ENUM of message A is not mutable"))
 	case "A.SINT32":
 		panic(fmt.Errorf("field SINT32 of message A is not mutable"))
 	case "A.SINT64":
@@ -768,6 +787,8 @@ func (x *fastReflection_A) NewField(fd protoreflect.FieldDescriptor) protoreflec
 	case "A.DURATION":
 		m := new(durationpb.Duration)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "A.ENUM":
+		return protoreflect.ValueOfEnum(0)
 	case "A.SINT32":
 		return protoreflect.ValueOfInt32(int32(0))
 	case "A.SINT64":
@@ -897,6 +918,9 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 		if x.DURATION != nil {
 			l = options.Size(x.DURATION)
 			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.ENUM != 0 {
+			n += 1 + runtime.Sov(uint64(x.ENUM))
 		}
 		if x.SINT32 != 0 {
 			n += 2 + runtime.Soz(uint64(x.SINT32))
@@ -1090,6 +1114,11 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 			dAtA[i] = 0x6
 			i--
 			dAtA[i] = 0xa8
+		}
+		if x.ENUM != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ENUM))
+			i--
+			dAtA[i] = 0x60
 		}
 		if x.DURATION != nil {
 			encoded, err := options.Marshal(x.DURATION)
@@ -1555,6 +1584,25 @@ func (x *fastReflection_A) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 12:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ENUM", wireType)
+				}
+				x.ENUM = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ENUM |= ExternalEnum(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			case 101:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SINT32", wireType)
@@ -3109,6 +3157,506 @@ func (x *fastReflection_Bar) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_Baz        protoreflect.MessageDescriptor
+	fd_Baz_ee     protoreflect.FieldDescriptor
+	fd_Baz_ie     protoreflect.FieldDescriptor
+	fd_Baz_option protoreflect.FieldDescriptor
+)
+
+func init() {
+	file__1_proto_init()
+	md_Baz = File__1_proto.Messages().ByName("Baz")
+	fd_Baz_ee = md_Baz.Fields().ByName("ee")
+	fd_Baz_ie = md_Baz.Fields().ByName("ie")
+	fd_Baz_option = md_Baz.Fields().ByName("option")
+}
+
+var _ protoreflect.Message = (*fastReflection_Baz)(nil)
+
+type fastReflection_Baz Baz
+
+func (x *Baz) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_Baz)(x)
+}
+
+func (x *Baz) slowProtoReflect() protoreflect.Message {
+	mi := &file__1_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_Baz_messageType fastReflection_Baz_messageType
+var _ protoreflect.MessageType = fastReflection_Baz_messageType{}
+
+type fastReflection_Baz_messageType struct{}
+
+func (x fastReflection_Baz_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_Baz)(nil)
+}
+func (x fastReflection_Baz_messageType) New() protoreflect.Message {
+	return new(fastReflection_Baz)
+}
+func (x fastReflection_Baz_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_Baz
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_Baz) Descriptor() protoreflect.MessageDescriptor {
+	return md_Baz
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_Baz) Type() protoreflect.MessageType {
+	return _fastReflection_Baz_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_Baz) New() protoreflect.Message {
+	return new(fastReflection_Baz)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_Baz) Interface() protoreflect.ProtoMessage {
+	return (*Baz)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_Baz) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Ee != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Ee))
+		if !f(fd_Baz_ee, value) {
+			return
+		}
+	}
+	if x.Ie != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Ie))
+		if !f(fd_Baz_ie, value) {
+			return
+		}
+	}
+	if x.Option != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Option))
+		if !f(fd_Baz_option, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_Baz) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "Baz.ee":
+		return x.Ee != 0
+	case "Baz.ie":
+		return x.Ie != 0
+	case "Baz.option":
+		return x.Option != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Baz"))
+		}
+		panic(fmt.Errorf("message Baz does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Baz) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "Baz.ee":
+		x.Ee = 0
+	case "Baz.ie":
+		x.Ie = 0
+	case "Baz.option":
+		x.Option = 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Baz"))
+		}
+		panic(fmt.Errorf("message Baz does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_Baz) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "Baz.ee":
+		value := x.Ee
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
+	case "Baz.ie":
+		value := x.Ie
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
+	case "Baz.option":
+		value := x.Option
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Baz"))
+		}
+		panic(fmt.Errorf("message Baz does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Baz) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "Baz.ee":
+		x.Ee = (ExternalEnum)(value.Enum())
+	case "Baz.ie":
+		x.Ie = (Baz_Internal_Enum)(value.Enum())
+	case "Baz.option":
+		x.Option = (BallotOption)(value.Enum())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Baz"))
+		}
+		panic(fmt.Errorf("message Baz does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Baz) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "Baz.ee":
+		panic(fmt.Errorf("field ee of message Baz is not mutable"))
+	case "Baz.ie":
+		panic(fmt.Errorf("field ie of message Baz is not mutable"))
+	case "Baz.option":
+		panic(fmt.Errorf("field option of message Baz is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Baz"))
+		}
+		panic(fmt.Errorf("message Baz does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_Baz) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "Baz.ee":
+		return protoreflect.ValueOfEnum(0)
+	case "Baz.ie":
+		return protoreflect.ValueOfEnum(0)
+	case "Baz.option":
+		return protoreflect.ValueOfEnum(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Baz"))
+		}
+		panic(fmt.Errorf("message Baz does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_Baz) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in Baz", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_Baz) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_Baz) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_Baz) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_Baz) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*Baz)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Ee != 0 {
+			n += 1 + runtime.Sov(uint64(x.Ee))
+		}
+		if x.Ie != 0 {
+			n += 1 + runtime.Sov(uint64(x.Ie))
+		}
+		if x.Option != 0 {
+			n += 1 + runtime.Sov(uint64(x.Option))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*Baz)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Option != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Option))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.Ie != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Ie))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Ee != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Ee))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*Baz)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Baz: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Baz: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Ee", wireType)
+				}
+				x.Ee = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Ee |= ExternalEnum(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Ie", wireType)
+				}
+				x.Ie = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Ie |= Baz_Internal_Enum(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Option", wireType)
+				}
+				x.Option = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Option |= BallotOption(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -3122,50 +3670,154 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Enumeration int32
+type ExternalEnum int32
 
 const (
-	Enumeration_One Enumeration = 0
-	Enumeration_Two Enumeration = 1
+	ExternalEnum_One                 ExternalEnum = 0
+	ExternalEnum_Two                 ExternalEnum = 1
+	ExternalEnum_EXTERNAL_ENUM_THREE ExternalEnum = 127
 )
 
-// Enum value maps for Enumeration.
+// Enum value maps for ExternalEnum.
 var (
-	Enumeration_name = map[int32]string{
-		0: "One",
-		1: "Two",
+	ExternalEnum_name = map[int32]string{
+		0:   "One",
+		1:   "Two",
+		127: "EXTERNAL_ENUM_THREE",
 	}
-	Enumeration_value = map[string]int32{
-		"One": 0,
-		"Two": 1,
+	ExternalEnum_value = map[string]int32{
+		"One":                 0,
+		"Two":                 1,
+		"EXTERNAL_ENUM_THREE": 127,
 	}
 )
 
-func (x Enumeration) Enum() *Enumeration {
-	p := new(Enumeration)
+func (x ExternalEnum) Enum() *ExternalEnum {
+	p := new(ExternalEnum)
 	*p = x
 	return p
 }
 
-func (x Enumeration) String() string {
+func (x ExternalEnum) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (Enumeration) Descriptor() protoreflect.EnumDescriptor {
+func (ExternalEnum) Descriptor() protoreflect.EnumDescriptor {
 	return file__1_proto_enumTypes[0].Descriptor()
 }
 
-func (Enumeration) Type() protoreflect.EnumType {
+func (ExternalEnum) Type() protoreflect.EnumType {
 	return &file__1_proto_enumTypes[0]
 }
 
-func (x Enumeration) Number() protoreflect.EnumNumber {
+func (x ExternalEnum) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use Enumeration.Descriptor instead.
-func (Enumeration) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use ExternalEnum.Descriptor instead.
+func (ExternalEnum) EnumDescriptor() ([]byte, []int) {
 	return file__1_proto_rawDescGZIP(), []int{0}
+}
+
+type BallotOption int32
+
+const (
+	BallotOption_BALLOT_OPTION_UNSPECIFIED  BallotOption = 0
+	BallotOption_BALLOT_OPTION_YES          BallotOption = 1
+	BallotOption_BALLOT_OPTION_ABSTAIN      BallotOption = 2
+	BallotOption_BALLOT_OPTION_NO           BallotOption = 3
+	BallotOption_BALLOT_OPTION_NO_WITH_VETO BallotOption = 4
+)
+
+// Enum value maps for BallotOption.
+var (
+	BallotOption_name = map[int32]string{
+		0: "BALLOT_OPTION_UNSPECIFIED",
+		1: "BALLOT_OPTION_YES",
+		2: "BALLOT_OPTION_ABSTAIN",
+		3: "BALLOT_OPTION_NO",
+		4: "BALLOT_OPTION_NO_WITH_VETO",
+	}
+	BallotOption_value = map[string]int32{
+		"BALLOT_OPTION_UNSPECIFIED":  0,
+		"BALLOT_OPTION_YES":          1,
+		"BALLOT_OPTION_ABSTAIN":      2,
+		"BALLOT_OPTION_NO":           3,
+		"BALLOT_OPTION_NO_WITH_VETO": 4,
+	}
+)
+
+func (x BallotOption) Enum() *BallotOption {
+	p := new(BallotOption)
+	*p = x
+	return p
+}
+
+func (x BallotOption) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BallotOption) Descriptor() protoreflect.EnumDescriptor {
+	return file__1_proto_enumTypes[1].Descriptor()
+}
+
+func (BallotOption) Type() protoreflect.EnumType {
+	return &file__1_proto_enumTypes[1]
+}
+
+func (x BallotOption) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BallotOption.Descriptor instead.
+func (BallotOption) EnumDescriptor() ([]byte, []int) {
+	return file__1_proto_rawDescGZIP(), []int{1}
+}
+
+type Baz_Internal_Enum int32
+
+const (
+	Baz_Four Baz_Internal_Enum = 0
+	Baz_Five Baz_Internal_Enum = 1
+)
+
+// Enum value maps for Baz_Internal_Enum.
+var (
+	Baz_Internal_Enum_name = map[int32]string{
+		0: "Four",
+		1: "Five",
+	}
+	Baz_Internal_Enum_value = map[string]int32{
+		"Four": 0,
+		"Five": 1,
+	}
+)
+
+func (x Baz_Internal_Enum) Enum() *Baz_Internal_Enum {
+	p := new(Baz_Internal_Enum)
+	*p = x
+	return p
+}
+
+func (x Baz_Internal_Enum) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Baz_Internal_Enum) Descriptor() protoreflect.EnumDescriptor {
+	return file__1_proto_enumTypes[2].Descriptor()
+}
+
+func (Baz_Internal_Enum) Type() protoreflect.EnumType {
+	return &file__1_proto_enumTypes[2]
+}
+
+func (x Baz_Internal_Enum) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Baz_Internal_Enum.Descriptor instead.
+func (Baz_Internal_Enum) EnumDescriptor() ([]byte, []int) {
+	return file__1_proto_rawDescGZIP(), []int{3, 0}
 }
 
 // A is used for testing value renderers.
@@ -3186,6 +3838,7 @@ type A struct {
 	BYTES     []byte                 `protobuf:"bytes,9,opt,name=BYTES,proto3" json:"BYTES,omitempty"`
 	TIMESTAMP *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=TIMESTAMP,proto3" json:"TIMESTAMP,omitempty"`
 	DURATION  *durationpb.Duration   `protobuf:"bytes,11,opt,name=DURATION,proto3" json:"DURATION,omitempty"`
+	ENUM      ExternalEnum           `protobuf:"varint,12,opt,name=ENUM,proto3,enum=ExternalEnum" json:"ENUM,omitempty"`
 	// Fields that are not handled by SIGN_MODE_TEXTUAL.
 	SINT32   int32         `protobuf:"zigzag32,101,opt,name=SINT32,proto3" json:"SINT32,omitempty"`
 	SINT64   int64         `protobuf:"zigzag64,102,opt,name=SINT64,proto3" json:"SINT64,omitempty"`
@@ -3293,6 +3946,13 @@ func (x *A) GetDURATION() *durationpb.Duration {
 		return x.DURATION
 	}
 	return nil
+}
+
+func (x *A) GetENUM() ExternalEnum {
+	if x != nil {
+		return x.ENUM
+	}
+	return ExternalEnum_One
 }
 
 func (x *A) GetSINT32() int32 {
@@ -3478,6 +4138,58 @@ func (x *Bar) GetData() []byte {
 	return nil
 }
 
+// Baz is a sampel message type used for testing enum rendering.
+type Baz struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ee     ExternalEnum      `protobuf:"varint,1,opt,name=ee,proto3,enum=ExternalEnum" json:"ee,omitempty"`
+	Ie     Baz_Internal_Enum `protobuf:"varint,2,opt,name=ie,proto3,enum=Baz_Internal_Enum" json:"ie,omitempty"`
+	Option BallotOption      `protobuf:"varint,3,opt,name=option,proto3,enum=BallotOption" json:"option,omitempty"`
+}
+
+func (x *Baz) Reset() {
+	*x = Baz{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file__1_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Baz) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Baz) ProtoMessage() {}
+
+// Deprecated: Use Baz.ProtoReflect.Descriptor instead.
+func (*Baz) Descriptor() ([]byte, []int) {
+	return file__1_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Baz) GetEe() ExternalEnum {
+	if x != nil {
+		return x.Ee
+	}
+	return ExternalEnum_One
+}
+
+func (x *Baz) GetIe() Baz_Internal_Enum {
+	if x != nil {
+		return x.Ie
+	}
+	return Baz_Four
+}
+
+func (x *Baz) GetOption() BallotOption {
+	if x != nil {
+		return x.Option
+	}
+	return BallotOption_BALLOT_OPTION_UNSPECIFIED
+}
+
 var File__1_proto protoreflect.FileDescriptor
 
 var file__1_proto_rawDesc = []byte{
@@ -3491,7 +4203,7 @@ var file__1_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69,
-	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbb, 0x05, 0x0a, 0x01, 0x41, 0x12, 0x16, 0x0a,
+	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xde, 0x05, 0x0a, 0x01, 0x41, 0x12, 0x16, 0x0a,
 	0x06, 0x55, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x55,
 	0x49, 0x4e, 0x54, 0x33, 0x32, 0x12, 0x16, 0x0a, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x18,
 	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x55, 0x49, 0x4e, 0x54, 0x36, 0x34, 0x12, 0x14, 0x0a,
@@ -3517,46 +4229,69 @@ var file__1_proto_rawDesc = []byte{
 	0x41, 0x54, 0x49, 0x4f, 0x4e, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75,
 	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x08, 0x44, 0x55, 0x52, 0x41, 0x54, 0x49, 0x4f, 0x4e,
-	0x12, 0x16, 0x0a, 0x06, 0x53, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x65, 0x20, 0x01, 0x28, 0x11,
-	0x52, 0x06, 0x53, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x12, 0x16, 0x0a, 0x06, 0x53, 0x49, 0x4e, 0x54,
-	0x36, 0x34, 0x18, 0x66, 0x20, 0x01, 0x28, 0x12, 0x52, 0x06, 0x53, 0x49, 0x4e, 0x54, 0x36, 0x34,
-	0x12, 0x1a, 0x0a, 0x08, 0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x18, 0x69, 0x20, 0x01,
-	0x28, 0x0f, 0x52, 0x08, 0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x12, 0x18, 0x0a, 0x07,
-	0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x18, 0x6a, 0x20, 0x01, 0x28, 0x07, 0x52, 0x07, 0x46,
-	0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x12, 0x14, 0x0a, 0x05, 0x46, 0x4c, 0x4f, 0x41, 0x54, 0x18,
-	0x6b, 0x20, 0x01, 0x28, 0x02, 0x52, 0x05, 0x46, 0x4c, 0x4f, 0x41, 0x54, 0x12, 0x1a, 0x0a, 0x08,
-	0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x36, 0x34, 0x18, 0x6c, 0x20, 0x01, 0x28, 0x10, 0x52, 0x08,
-	0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x36, 0x34, 0x12, 0x18, 0x0a, 0x07, 0x46, 0x49, 0x58, 0x45,
-	0x44, 0x36, 0x34, 0x18, 0x6d, 0x20, 0x01, 0x28, 0x06, 0x52, 0x07, 0x46, 0x49, 0x58, 0x45, 0x44,
-	0x36, 0x34, 0x12, 0x16, 0x0a, 0x06, 0x44, 0x4f, 0x55, 0x42, 0x4c, 0x45, 0x18, 0x6e, 0x20, 0x01,
-	0x28, 0x01, 0x52, 0x06, 0x44, 0x4f, 0x55, 0x42, 0x4c, 0x45, 0x12, 0x1d, 0x0a, 0x03, 0x4d, 0x41,
-	0x50, 0x18, 0x6f, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x41, 0x2e, 0x4d, 0x41, 0x50, 0x45,
-	0x6e, 0x74, 0x72, 0x79, 0x52, 0x03, 0x4d, 0x41, 0x50, 0x1a, 0x3a, 0x0a, 0x08, 0x4d, 0x41, 0x50,
-	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x02, 0x2e, 0x41, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xbe, 0x01, 0x0a, 0x03, 0x46, 0x6f, 0x6f, 0x12, 0x1b, 0x0a,
-	0x09, 0x66, 0x75, 0x6c, 0x6c, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x6e, 0x69,
-	0x63, 0x6b, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6e, 0x69,
-	0x63, 0x6b, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x30, 0x0a, 0x05, 0x6d, 0x74, 0x69, 0x6d, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x52, 0x05, 0x6d, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x04, 0x6c, 0x65, 0x66, 0x74,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x04, 0x6c, 0x65,
-	0x66, 0x74, 0x12, 0x1a, 0x0a, 0x05, 0x72, 0x69, 0x67, 0x68, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x04, 0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x05, 0x72, 0x69, 0x67, 0x68, 0x74, 0x12, 0x16,
-	0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x42, 0x61,
-	0x72, 0x52, 0x03, 0x62, 0x61, 0x72, 0x22, 0x30, 0x0a, 0x03, 0x42, 0x61, 0x72, 0x12, 0x15, 0x0a,
-	0x06, 0x62, 0x61, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x62,
-	0x61, 0x72, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x2a, 0x1f, 0x0a, 0x0b, 0x45, 0x6e, 0x75, 0x6d,
-	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e, 0x65, 0x10, 0x00,
-	0x12, 0x07, 0x0a, 0x03, 0x54, 0x77, 0x6f, 0x10, 0x01, 0x42, 0x33, 0x42, 0x06, 0x31, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x27, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
-	0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69,
-	0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x21, 0x0a, 0x04, 0x45, 0x4e, 0x55, 0x4d, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0d,
+	0x2e, 0x45, 0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x45, 0x6e, 0x75, 0x6d, 0x52, 0x04, 0x45,
+	0x4e, 0x55, 0x4d, 0x12, 0x16, 0x0a, 0x06, 0x53, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x18, 0x65, 0x20,
+	0x01, 0x28, 0x11, 0x52, 0x06, 0x53, 0x49, 0x4e, 0x54, 0x33, 0x32, 0x12, 0x16, 0x0a, 0x06, 0x53,
+	0x49, 0x4e, 0x54, 0x36, 0x34, 0x18, 0x66, 0x20, 0x01, 0x28, 0x12, 0x52, 0x06, 0x53, 0x49, 0x4e,
+	0x54, 0x36, 0x34, 0x12, 0x1a, 0x0a, 0x08, 0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x18,
+	0x69, 0x20, 0x01, 0x28, 0x0f, 0x52, 0x08, 0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x12,
+	0x18, 0x0a, 0x07, 0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x18, 0x6a, 0x20, 0x01, 0x28, 0x07,
+	0x52, 0x07, 0x46, 0x49, 0x58, 0x45, 0x44, 0x33, 0x32, 0x12, 0x14, 0x0a, 0x05, 0x46, 0x4c, 0x4f,
+	0x41, 0x54, 0x18, 0x6b, 0x20, 0x01, 0x28, 0x02, 0x52, 0x05, 0x46, 0x4c, 0x4f, 0x41, 0x54, 0x12,
+	0x1a, 0x0a, 0x08, 0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x36, 0x34, 0x18, 0x6c, 0x20, 0x01, 0x28,
+	0x10, 0x52, 0x08, 0x53, 0x46, 0x49, 0x58, 0x45, 0x44, 0x36, 0x34, 0x12, 0x18, 0x0a, 0x07, 0x46,
+	0x49, 0x58, 0x45, 0x44, 0x36, 0x34, 0x18, 0x6d, 0x20, 0x01, 0x28, 0x06, 0x52, 0x07, 0x46, 0x49,
+	0x58, 0x45, 0x44, 0x36, 0x34, 0x12, 0x16, 0x0a, 0x06, 0x44, 0x4f, 0x55, 0x42, 0x4c, 0x45, 0x18,
+	0x6e, 0x20, 0x01, 0x28, 0x01, 0x52, 0x06, 0x44, 0x4f, 0x55, 0x42, 0x4c, 0x45, 0x12, 0x1d, 0x0a,
+	0x03, 0x4d, 0x41, 0x50, 0x18, 0x6f, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x41, 0x2e, 0x4d,
+	0x41, 0x50, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x03, 0x4d, 0x41, 0x50, 0x1a, 0x3a, 0x0a, 0x08,
+	0x4d, 0x41, 0x50, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x02, 0x2e, 0x41, 0x52, 0x05, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xbe, 0x01, 0x0a, 0x03, 0x46, 0x6f, 0x6f,
+	0x12, 0x1b, 0x0a, 0x09, 0x66, 0x75, 0x6c, 0x6c, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x75, 0x6c, 0x6c, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a,
+	0x08, 0x6e, 0x69, 0x63, 0x6b, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x6e, 0x69, 0x63, 0x6b, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x30, 0x0a, 0x05, 0x6d, 0x74, 0x69,
+	0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x52, 0x05, 0x6d, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x04, 0x6c,
+	0x65, 0x66, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x46, 0x6f, 0x6f, 0x52,
+	0x04, 0x6c, 0x65, 0x66, 0x74, 0x12, 0x1a, 0x0a, 0x05, 0x72, 0x69, 0x67, 0x68, 0x74, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x04, 0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x05, 0x72, 0x69, 0x67, 0x68,
+	0x74, 0x12, 0x16, 0x0a, 0x03, 0x62, 0x61, 0x72, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x04,
+	0x2e, 0x42, 0x61, 0x72, 0x52, 0x03, 0x62, 0x61, 0x72, 0x22, 0x30, 0x0a, 0x03, 0x42, 0x61, 0x72,
+	0x12, 0x15, 0x0a, 0x06, 0x62, 0x61, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x62, 0x61, 0x72, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x94, 0x01, 0x0a, 0x03,
+	0x42, 0x61, 0x7a, 0x12, 0x1d, 0x0a, 0x02, 0x65, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32,
+	0x0d, 0x2e, 0x45, 0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x45, 0x6e, 0x75, 0x6d, 0x52, 0x02,
+	0x65, 0x65, 0x12, 0x22, 0x0a, 0x02, 0x69, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x12,
+	0x2e, 0x42, 0x61, 0x7a, 0x2e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5f, 0x45, 0x6e,
+	0x75, 0x6d, 0x52, 0x02, 0x69, 0x65, 0x12, 0x25, 0x0a, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0d, 0x2e, 0x42, 0x61, 0x6c, 0x6c, 0x6f, 0x74, 0x4f,
+	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x06, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x23, 0x0a,
+	0x0d, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5f, 0x45, 0x6e, 0x75, 0x6d, 0x12, 0x08,
+	0x0a, 0x04, 0x46, 0x6f, 0x75, 0x72, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x46, 0x69, 0x76, 0x65,
+	0x10, 0x01, 0x2a, 0x39, 0x0a, 0x0c, 0x45, 0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x45, 0x6e,
+	0x75, 0x6d, 0x12, 0x07, 0x0a, 0x03, 0x4f, 0x6e, 0x65, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x54,
+	0x77, 0x6f, 0x10, 0x01, 0x12, 0x17, 0x0a, 0x13, 0x45, 0x58, 0x54, 0x45, 0x52, 0x4e, 0x41, 0x4c,
+	0x5f, 0x45, 0x4e, 0x55, 0x4d, 0x5f, 0x54, 0x48, 0x52, 0x45, 0x45, 0x10, 0x7f, 0x2a, 0x95, 0x01,
+	0x0a, 0x0c, 0x42, 0x61, 0x6c, 0x6c, 0x6f, 0x74, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1d,
+	0x0a, 0x19, 0x42, 0x41, 0x4c, 0x4c, 0x4f, 0x54, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f,
+	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x15, 0x0a,
+	0x11, 0x42, 0x41, 0x4c, 0x4c, 0x4f, 0x54, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x59,
+	0x45, 0x53, 0x10, 0x01, 0x12, 0x19, 0x0a, 0x15, 0x42, 0x41, 0x4c, 0x4c, 0x4f, 0x54, 0x5f, 0x4f,
+	0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x41, 0x42, 0x53, 0x54, 0x41, 0x49, 0x4e, 0x10, 0x02, 0x12,
+	0x14, 0x0a, 0x10, 0x42, 0x41, 0x4c, 0x4c, 0x4f, 0x54, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e,
+	0x5f, 0x4e, 0x4f, 0x10, 0x03, 0x12, 0x1e, 0x0a, 0x1a, 0x42, 0x41, 0x4c, 0x4c, 0x4f, 0x54, 0x5f,
+	0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x4e, 0x4f, 0x5f, 0x57, 0x49, 0x54, 0x48, 0x5f, 0x56,
+	0x45, 0x54, 0x4f, 0x10, 0x04, 0x42, 0x33, 0x42, 0x06, 0x31, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x27, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -3571,34 +4306,41 @@ func file__1_proto_rawDescGZIP() []byte {
 	return file__1_proto_rawDescData
 }
 
-var file__1_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file__1_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file__1_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file__1_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file__1_proto_goTypes = []interface{}{
-	(Enumeration)(0),              // 0: Enumeration
-	(*A)(nil),                     // 1: A
-	(*Foo)(nil),                   // 2: Foo
-	(*Bar)(nil),                   // 3: Bar
-	nil,                           // 4: A.MAPEntry
-	(*v1beta1.Coin)(nil),          // 5: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),   // 7: google.protobuf.Duration
+	(ExternalEnum)(0),             // 0: ExternalEnum
+	(BallotOption)(0),             // 1: BallotOption
+	(Baz_Internal_Enum)(0),        // 2: Baz.Internal_Enum
+	(*A)(nil),                     // 3: A
+	(*Foo)(nil),                   // 4: Foo
+	(*Bar)(nil),                   // 5: Bar
+	(*Baz)(nil),                   // 6: Baz
+	nil,                           // 7: A.MAPEntry
+	(*v1beta1.Coin)(nil),          // 8: cosmos.base.v1beta1.Coin
+	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),   // 10: google.protobuf.Duration
 }
 var file__1_proto_depIdxs = []int32{
-	5,  // 0: A.COIN:type_name -> cosmos.base.v1beta1.Coin
-	5,  // 1: A.COINS:type_name -> cosmos.base.v1beta1.Coin
-	6,  // 2: A.TIMESTAMP:type_name -> google.protobuf.Timestamp
-	7,  // 3: A.DURATION:type_name -> google.protobuf.Duration
-	4,  // 4: A.MAP:type_name -> A.MAPEntry
-	6,  // 5: Foo.mtime:type_name -> google.protobuf.Timestamp
-	2,  // 6: Foo.left:type_name -> Foo
-	2,  // 7: Foo.right:type_name -> Foo
-	3,  // 8: Foo.bar:type_name -> Bar
-	1,  // 9: A.MAPEntry.value:type_name -> A
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	8,  // 0: A.COIN:type_name -> cosmos.base.v1beta1.Coin
+	8,  // 1: A.COINS:type_name -> cosmos.base.v1beta1.Coin
+	9,  // 2: A.TIMESTAMP:type_name -> google.protobuf.Timestamp
+	10, // 3: A.DURATION:type_name -> google.protobuf.Duration
+	0,  // 4: A.ENUM:type_name -> ExternalEnum
+	7,  // 5: A.MAP:type_name -> A.MAPEntry
+	9,  // 6: Foo.mtime:type_name -> google.protobuf.Timestamp
+	4,  // 7: Foo.left:type_name -> Foo
+	4,  // 8: Foo.right:type_name -> Foo
+	5,  // 9: Foo.bar:type_name -> Bar
+	0,  // 10: Baz.ee:type_name -> ExternalEnum
+	2,  // 11: Baz.ie:type_name -> Baz.Internal_Enum
+	1,  // 12: Baz.option:type_name -> BallotOption
+	3,  // 13: A.MAPEntry.value:type_name -> A
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file__1_proto_init() }
@@ -3643,14 +4385,26 @@ func file__1_proto_init() {
 				return nil
 			}
 		}
+		file__1_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Baz); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file__1_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   4,
+			NumEnums:      3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

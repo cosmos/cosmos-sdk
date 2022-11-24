@@ -8,11 +8,6 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-enum Enumeration {
-  One = 0;
-  Two = 1;
-}
-
 // A is used for testing value renderers.
 message A {
   // Fields that are parseable by SIGN_MODE_TEXTUAL.
@@ -27,6 +22,7 @@ message A {
   bytes                             BYTES     = 9;
   google.protobuf.Timestamp         TIMESTAMP = 10;
   google.protobuf.Duration          DURATION  = 11;
+  ExternalEnum ENUM                           = 12;
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
   sint32         SINT32   = 101;
@@ -54,4 +50,31 @@ message Foo {
 message Bar {
   string bar_id = 1;
   bytes  data   = 2;
+}
+
+enum ExternalEnum {
+  One = 0;
+  Two = 1;
+  EXTERNAL_ENUM_THREE = 127;
+}
+
+// Baz is a sample message type used for testing enum rendering.
+message Baz {
+  enum Internal_Enum {
+    Four = 0;
+    Five = 1;
+  }
+
+  ExternalEnum ee = 1;
+  Internal_Enum ie = 2;
+  BallotOption option = 3;
+
+}
+
+enum BallotOption {
+  BALLOT_OPTION_UNSPECIFIED  = 0;
+  BALLOT_OPTION_YES          = 1;
+  BALLOT_OPTION_ABSTAIN      = 2;
+  BALLOT_OPTION_NO           = 3;
+  BALLOT_OPTION_NO_WITH_VETO = 4;
 }

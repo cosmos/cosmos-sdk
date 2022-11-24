@@ -355,11 +355,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		app.RegisterNodeService(clientCtx)
 	}
 
-	metrics, err := startTelemetry(config)
-	if err != nil {
-		return err
-	}
-
 	var apiSrv *api.Server
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
@@ -407,9 +402,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
 		app.RegisterAPIRoutes(apiSrv, config.API)
-		if config.Telemetry.Enabled {
-			apiSrv.SetTelemetry(metrics)
-		}
 		errCh := make(chan error)
 
 		go func() {

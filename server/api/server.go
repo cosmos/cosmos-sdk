@@ -88,6 +88,13 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
 
+	if cfg.Telemetry.Enabled {
+		if err := s.SetTelemetry(cfg); err != nil {
+			s.mtx.Unlock()
+			return err
+		}
+	}
+
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
 	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
@@ -126,11 +133,14 @@ func (s *Server) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 }
 
-func (s *Server) SetTelemetry(m *telemetry.Metrics) {
-	s.mtx.Lock()
-	s.metrics = m
+func (s *Server) SetTelemetry(cfg config.Config) error {
+	metrics, err := telemetry.New(cfg.Telemetry)
+	if err != nil {
+		return err
+	}
+	s.metrics = metrics
 	s.registerMetrics()
-	s.mtx.Unlock()
+	return nil
 }
 
 func (s *Server) registerMetrics() {

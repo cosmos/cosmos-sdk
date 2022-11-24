@@ -8,6 +8,10 @@
         "encoding": "81a0"
     },
     {
+        "screens": [{"text": ""}, {"indent": 0}, {"expert": false}],
+        "encoding": "83a0a0a0"
+    },
+    {
         "screens": [
             {"text": "a"},
             {"indent": 1},

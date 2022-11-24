@@ -42,11 +42,11 @@ type ServiceClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	TxEncode(ctx context.Context, in *TxEncodeRequest, opts ...grpc.CallOption) (*TxEncodeResponse, error)
-	// TxEncodeAmino encodes an amino transaction.
+	// TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
 	//
 	// Since: cosmos-sdk 0.47
 	TxEncodeAmino(ctx context.Context, in *TxEncodeAminoRequest, opts ...grpc.CallOption) (*TxEncodeAminoResponse, error)
-	// TxDecodeAmino decodes an amino transaction.
+	// TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
 	//
 	// Since: cosmos-sdk 0.47
 	TxDecodeAmino(ctx context.Context, in *TxDecodeAminoRequest, opts ...grpc.CallOption) (*TxDecodeAminoResponse, error)
@@ -165,11 +165,11 @@ type ServiceServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	TxEncode(context.Context, *TxEncodeRequest) (*TxEncodeResponse, error)
-	// TxEncodeAmino encodes an amino transaction.
+	// TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
 	//
 	// Since: cosmos-sdk 0.47
 	TxEncodeAmino(context.Context, *TxEncodeAminoRequest) (*TxEncodeAminoResponse, error)
-	// TxDecodeAmino decodes an amino transaction.
+	// TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
 	//
 	// Since: cosmos-sdk 0.47
 	TxDecodeAmino(context.Context, *TxDecodeAminoRequest) (*TxDecodeAminoResponse, error)

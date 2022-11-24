@@ -29,7 +29,7 @@ func TestIntJsonTestcases(t *testing.T) {
 			// Parse test case strings as protobuf uint64
 			i, err := strconv.ParseUint(tc[0], 10, 64)
 			if err == nil {
-				r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT64"))
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("UINT64"))
 				require.NoError(t, err)
 
 				checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
@@ -38,7 +38,7 @@ func TestIntJsonTestcases(t *testing.T) {
 			// Parse test case strings as protobuf uint32
 			i, err = strconv.ParseUint(tc[0], 10, 32)
 			if err == nil {
-				r, err := textual.GetValueRenderer(fieldDescriptorFromName("UINT32"))
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("UINT32"))
 				require.NoError(t, err)
 
 				checkNumberTest(t, r, protoreflect.ValueOf(i), tc[1])
@@ -47,7 +47,7 @@ func TestIntJsonTestcases(t *testing.T) {
 			// Parse test case strings as sdk.Ints
 			_, ok := math.NewIntFromString(tc[0])
 			if ok {
-				r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKINT"))
+				r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKINT"))
 				require.NoError(t, err)
 
 				checkNumberTest(t, r, protoreflect.ValueOf(tc[0]), tc[1])

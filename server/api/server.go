@@ -89,7 +89,7 @@ func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
 
 	if cfg.Telemetry.Enabled {
-		if err := s.SetTelemetry(cfg); err != nil {
+		if err := s.setTelemetry(cfg); err != nil {
 			s.mtx.Unlock()
 			return err
 		}
@@ -133,7 +133,7 @@ func (s *Server) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 }
 
-func (s *Server) SetTelemetry(cfg config.Config) error {
+func (s *Server) setTelemetry(cfg config.Config) error {
 	metrics, err := telemetry.New(cfg.Telemetry)
 	if err != nil {
 		return err

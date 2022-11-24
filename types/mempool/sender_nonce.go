@@ -26,15 +26,29 @@ var (
 //
 // Note that PrepareProposal could choose to stop iteration before reaching the end if maxBytes is reached.
 type senderNonceMempool struct {
-	senders map[string]*skiplist.SkipList
-	rnd     *rand.Rand
+	senders    map[string]*skiplist.SkipList
+	rnd        *rand.Rand
+	maxTx      int
+	unbounded  bool
+	txCount    int
+	existingTx map[txKey]bool
+}
+
+type txKey struct {
+	address string
+	nonce   uint64
 }
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
 func NewSenderNonceMempool() Mempool {
 	senderMap := make(map[string]*skiplist.SkipList)
+	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{
-		senders: senderMap,
+		senders:    senderMap,
+		txCount:    0,
+		unbounded:  true,
+		maxTx:      0,
+		existingTx: existingTx,
 	}
 
 	var seed int64
@@ -50,8 +64,13 @@ func NewSenderNonceMempool() Mempool {
 // NewSenderNonceMempoolWithSeed creates a new mempool that prioritizes transactions by nonce, the lowest first and sets the random seed.
 func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 	senderMap := make(map[string]*skiplist.SkipList)
+	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{
-		senders: senderMap,
+		senders:    senderMap,
+		txCount:    0,
+		unbounded:  true,
+		maxTx:      0,
+		existingTx: existingTx,
 	}
 	snp.setSeed(seed)
 	return snp
@@ -82,7 +101,12 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 		snm.senders[sender] = senderTxs
 	}
 	senderTxs.Set(nonce, tx)
-
+	key := txKey{nonce: nonce, address: sender}
+	_, found = snm.existingTx[key]
+	if !found {
+		snm.existingTx[key] = true
+		snm.txCount += 1
+	}
 	return nil
 }
 
@@ -117,14 +141,15 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
-	count := 0
-
-	// Disable gosec here since we need neither strong randomness nor deterministic iteration.
-	// #nosec
-	for _, value := range snm.senders {
-		count += value.Len()
-	}
-	return count
+	// count := 0
+	//
+	//// Disable gosec here since we need neither strong randomness nor deterministic iteration.
+	//// #nosec
+	// for _, value := range snm.senders {
+	//	count += value.Len()
+	//}
+	// return count
+	return snm.txCount
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
@@ -154,6 +179,13 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	if senderTxs.Len() == 0 {
 		delete(snm.senders, sender)
 	}
+	key := txKey{nonce: nonce, address: sender}
+	_, found = snm.existingTx[key]
+	if found {
+		delete(snm.existingTx, key)
+		snm.txCount -= 1
+	}
+
 	return nil
 }
 

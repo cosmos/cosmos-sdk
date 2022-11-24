@@ -61,6 +61,7 @@ func testMempoolProperties(t *rapid.T) {
 
 	iter := mp.Select(ctx, nil)
 	orderTx := fetchAllTxs(iter)
+	require.Equal(t, len(orderTx), mp.CountTx())
 	senderTxOrdered := getSenderTxMap(orderTx)
 	for key := range senderTxOrdered {
 		ordered, found := senderTxOrdered[key]

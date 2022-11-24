@@ -2,6 +2,7 @@ syntax = "proto3";
 
 option go_package = "cosmossdk.io/tx/textual/internal/testpb";
 
+import "google/protobuf/any.proto";
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -23,6 +24,7 @@ message A {
   google.protobuf.Timestamp         TIMESTAMP = 10;
   google.protobuf.Duration          DURATION  = 11;
   ExternalEnum ENUM                           = 12;
+  google.protobuf.Any               ANY       = 13;
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
   sint32         SINT32   = 101;
@@ -48,8 +50,9 @@ message Foo {
 
 // Bar is a sample message type used for testing message rendering.
 message Bar {
-  string bar_id = 1;
-  bytes  data   = 2;
+  string              bar_id  = 1;
+  bytes               data    = 2;
+  google.protobuf.Any payload = 3;
 }
 
 enum ExternalEnum {

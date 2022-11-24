@@ -284,7 +284,7 @@ func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoR
 		return nil, err
 	}
 
-	encodedBytes, err := s.clientCtx.LegacyAmino.MarshalJSON(stdTx)
+	encodedBytes, err := s.clientCtx.LegacyAmino.Marshal(stdTx)
 	if err != nil {
 		return nil, err
 	}
@@ -321,14 +321,19 @@ func (s txServer) TxDecodeAmino(ctx context.Context, req *txtypes.TxDecodeAminoR
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}
 
-	var res txtypes.TxDecodeAminoResponse
-	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &res)
+	var stdTx legacytx.StdTx
+	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.clientCtx.LegacyAmino.MarshalJSON(stdTx)
 	if err != nil {
 		return nil, err
 	}
 
 	return &txtypes.TxDecodeAminoResponse{
-		AminoJson: res.AminoJson,
+		AminoJson: string(res),
 	}, nil
 }
 

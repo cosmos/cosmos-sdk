@@ -964,10 +964,10 @@ func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetAminoBinary())
 
+				var tx legacytx.StdTx
 				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
-				newStdTx, err := stdTxConfig.TxJSONDecoder()(res.GetAminoBinary())
-				s.Require().NoError(err)
-				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
+				stdTxConfig.Cdc.Unmarshal(res.AminoBinary, &tx)
+				s.Require().Equal(tx.GetMsgs(), stdTx.GetMsgs())
 			}
 		})
 	}
@@ -1006,9 +1006,9 @@ func (s *IntegrationTestSuite) TestTxEncodeAmino_GRPCGateway() {
 				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
+				var newStdTx legacytx.StdTx
 				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
-				newStdTx, err := stdTxConfig.TxJSONDecoder()(result.GetAminoBinary())
-				s.Require().NoError(err)
+				stdTxConfig.Cdc.Unmarshal(result.AminoBinary, &newStdTx)
 				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
 			}
 		})
@@ -1019,7 +1019,10 @@ func (s IntegrationTestSuite) TestTxDecodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
-	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	encodedTx, err := stdTxConfig.Cdc.Marshal(stdTx)
 	s.Require().NoError(err)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -1047,6 +1050,11 @@ func (s IntegrationTestSuite) TestTxDecodeAmino_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetAminoJson())
+
+				var tx legacytx.StdTx
+				err := stdTxConfig.Cdc.UnmarshalJSON([]byte(res.GetAminoJson()), &tx)
+				s.Require().NoError(err)
+				s.Require().Equal(stdTx.GetMsgs(), tx.GetMsgs())
 			}
 		})
 	}
@@ -1056,7 +1064,10 @@ func (s IntegrationTestSuite) TestTxDecodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
-	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	encodedTx, err := stdTxConfig.Cdc.Marshal(stdTx)
 	s.Require().NoError(err)
 
 	invalidTxBytes := append(encodedTx, byte(0o00))
@@ -1082,7 +1093,13 @@ func (s IntegrationTestSuite) TestTxDecodeAmino_GRPCGateway() {
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
+				var result tx.TxDecodeAminoResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
+
+				var newStdTx legacytx.StdTx
+				stdTxConfig.Cdc.UnmarshalJSON([]byte(result.AminoJson), &newStdTx)
+				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
 			}
 		})
 	}

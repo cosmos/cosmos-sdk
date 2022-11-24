@@ -47,7 +47,7 @@ func NewTextual(q CoinMetadataQueryFn) Textual {
 }
 
 // GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
-func (r Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
+func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":
@@ -97,7 +97,7 @@ func (r Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRe
 			// This will be implemented in https://github.com/cosmos/cosmos-sdk/issues/12714
 			return nil, fmt.Errorf("repeated field renderer not yet implemented")
 		}
-		return NewMessageValueRenderer(&r, md), nil
+		return NewMessageValueRenderer(r, md), nil
 
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())
@@ -107,13 +107,13 @@ func (r Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRe
 // GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
 // It is useful when the message type is discovered outside the context of a field,
 // e.g. when handling a google.protobuf.Any.
-func (r Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
+func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
 	fullName := md.FullName()
 	vr, found := r.messages[fullName]
 	if found {
 		return vr, nil
 	}
-	return NewMessageValueRenderer(&r, md), nil
+	return NewMessageValueRenderer(r, md), nil
 }
 
 func (r *Textual) init() {

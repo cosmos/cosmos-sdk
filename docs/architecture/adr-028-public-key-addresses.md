@@ -195,10 +195,10 @@ An example sub-module account is created using:
 
 ```go
 groupPolicyAddresses := []byte{1}
-address.Module (moduleName, groupPolicyAddresses, policyID)
+address.Module(moduleName, groupPolicyAddresses, policyID)
 ```
 
-The `address.Module` function is using `addres.Hash` with `"module"` as the type argument, and byte representation of the module name concatenated with submodule key. The two last component must be uniquely separated to avoid potential clashes (example: modulename="ab" & submodulekey="bc" will have the same derivation key as modulename="a" & submodulekey="bbc").
+The `address.Module` function is using `address.Hash` with `"module"` as the type argument, and byte representation of the module name concatenated with submodule key. The two last component must be uniquely separated to avoid potential clashes (example: modulename="ab" & submodulekey="bc" will have the same derivation key as modulename="a" & submodulekey="bbc").
 We use a null byte (`'\x00'`) to separate module name from the submodule key. This works, because null byte is not a part of a valid module name. Finally, the sub-submodule accounts are created by applying the `Derive` function recursively.
 We could use `Derive` function also in the first step (rather than concatenating module name with zero byte and the submodule key). We decided to do concatenation to avoid one level of derivation and speed up computation.
 
@@ -225,7 +225,7 @@ btcAtomAMM := address.Module("amm", btc.Address() + atom.Address()})
 
 ```go
 smartContractAddr := Module("cosmwasm", smartContractsNamespace, smartContractKey})
-// wich equals to:
+// which equals to:
     Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
 ```
 

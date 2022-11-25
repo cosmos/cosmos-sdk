@@ -160,3 +160,19 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
 
 }
+
+func (s *MempoolTestSuite) TestTxNotFound() {
+	t := s.T()
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	mp := mempool.NewSenderNonceMempool()
+
+	tx := testTx{
+		nonce:    0,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+
+	err := mp.Remove(tx)
+	require.Equal(t, mempool.ErrTxNotFound, err)
+
+}

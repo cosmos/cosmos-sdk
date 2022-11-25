@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-rm -rf docs/modules
+find docs/modules ! -name '_category_.json' -type f -exec echo {} +
+find docs/pkg ! -name '_category_.json' -type f -exec rm -rf {} +
 rm -rf docs/tooling/01-cosmovisor.md
 rm -rf docs/tooling/02-depinject.md
 rm -rf docs/run-node/04-rosetta.md

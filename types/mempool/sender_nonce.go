@@ -75,6 +75,25 @@ func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 	return snp
 }
 
+// NewSenderNonceMempoolWithSeed creates a new mempool that prioritizes transactions by nonce, the lowest first and sets the random seed.
+func NewSenderNonceMempoolWithMaxTx(maxTx int) Mempool {
+	senderMap := make(map[string]*skiplist.SkipList)
+	existingTx := make(map[txKey]bool)
+	snp := &senderNonceMempool{
+		senders:    senderMap,
+		txCount:    0,
+		maxTx:      maxTx,
+		existingTx: existingTx,
+	}
+	var seed int64
+	err := binary.Read(crand.Reader, binary.BigEndian, &seed)
+	if err != nil {
+		panic(err)
+	}
+	snp.setSeed(seed)
+	return snp
+}
+
 func (snm *senderNonceMempool) setSeed(seed int64) {
 	s1 := rand.NewSource(seed)
 	snm.rnd = rand.New(s1) //#nosec // math/rand is seeded from crypto/rand by default
@@ -84,7 +103,7 @@ func (snm *senderNonceMempool) setSeed(seed int64) {
 // priority is ignored.
 func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	if snm.txCount >= snm.maxTx {
-		return fmt.Errorf("pool reached max tx capacity")
+		return ErrMempoolTxMaxCapacity
 	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {

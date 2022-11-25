@@ -49,7 +49,7 @@ func testMempoolProperties(t *rapid.T) {
 			address:  rapid.SampledFrom(accounts).Draw(t, "acc"),
 		}
 	})
-	genMultipleTX := rapid.SliceOfN(genTx, 1, 500)
+	genMultipleTX := rapid.SliceOfN(genTx, 1, 5000)
 
 	txs := genMultipleTX.Draw(t, "txs")
 	senderTxRaw := getSenderTxMap(txs)

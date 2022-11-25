@@ -221,12 +221,15 @@ If we want to create an address for a module account depending on more than one 
 btcAtomAMM := address.Module("amm", btc.Address() + atom.Address()})
 ```
 
-**Example 2**  cosmwasm smart-contract address could be constructed by:
+**Example 2**  a smart-contract address could be constructed by:
 
 ```go
-smartContractAddr := Module("cosmwasm", smartContractsNamespace, smartContractKey})
+smartContractAddr = Module("mySmartContractVM", smartContractsNamespace, smartContractKey})
+
 // which equals to:
-    Derived(Module("cosmwasm", smartContractsNamespace), []{smartContractKey})
+smartContractAddr = Derived(
+    Module("mySmartContractVM", smartContractsNamespace), 
+    []{smartContractKey})
 ```
 
 ### Schema Types

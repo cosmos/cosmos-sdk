@@ -35,13 +35,15 @@ type senderNonceMempool struct {
 	existingTx map[txKey]bool
 }
 
+type SenderNonceOptions func(mp *senderNonceMempool)
+
 type txKey struct {
 	address string
 	nonce   uint64
 }
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
-func NewSenderNonceMempool() Mempool {
+func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 	senderMap := make(map[string]*skiplist.SkipList)
 	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{
@@ -58,40 +60,25 @@ func NewSenderNonceMempool() Mempool {
 	}
 	snp.setSeed(seed)
 
+	for _, opt := range opts {
+		opt(snp)
+	}
+
 	return snp
 }
 
-// NewSenderNonceMempoolWithSeed creates a new mempool that prioritizes transactions by nonce, the lowest first and sets the random seed.
-func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
-	senderMap := make(map[string]*skiplist.SkipList)
-	existingTx := make(map[txKey]bool)
-	snp := &senderNonceMempool{
-		senders:    senderMap,
-		txCount:    0,
-		maxTx:      DefaultMaxTx,
-		existingTx: existingTx,
+// SenderNonceWithSeed Option To add a Seed for random struct
+func SenderNonceWithSeed(seed int64) SenderNonceOptions {
+	return func(snp *senderNonceMempool) {
+		snp.setSeed(seed)
 	}
-	snp.setSeed(seed)
-	return snp
 }
 
-// NewSenderNonceMempoolWithSeed creates a new mempool that prioritizes transactions by nonce, the lowest first and sets the random seed.
-func NewSenderNonceMempoolWithMaxTx(maxTx int) Mempool {
-	senderMap := make(map[string]*skiplist.SkipList)
-	existingTx := make(map[txKey]bool)
-	snp := &senderNonceMempool{
-		senders:    senderMap,
-		txCount:    0,
-		maxTx:      maxTx,
-		existingTx: existingTx,
+// SenderNonceWithMaxTx Option To set limit of max tx
+func SenderNonceWithMaxTx(maxTx int) SenderNonceOptions {
+	return func(snp *senderNonceMempool) {
+		snp.maxTx = maxTx
 	}
-	var seed int64
-	err := binary.Read(crand.Reader, binary.BigEndian, &seed)
-	if err != nil {
-		panic(err)
-	}
-	snp.setSeed(seed)
-	return snp
 }
 
 func (snm *senderNonceMempool) setSeed(seed int64) {

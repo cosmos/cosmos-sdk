@@ -28,7 +28,6 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 				binary.BigEndian.PutUint64(derivationKey, groupPolicyAccountCounter)
 
 				baseAccount, err := authtypes.NewBaseAccountWithPubKey(
-					// NOTE: The derivation key may not properly be migrated because the state isn't accessible by genesis migration only
 					authtypes.NewModuleCredential(ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey}),
 				)
 				if err != nil {

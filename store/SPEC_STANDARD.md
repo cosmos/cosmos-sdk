@@ -1,3 +1,5 @@
+## What is a store specification document?
+
 A store specification document is a design document describing a particular store feature such as a store interface or implementation that it is expected to be used (or already in use) by the Cosmos SDK. This also includes other store-related features such as caches and wrappers.
 
 ## Sections
@@ -98,7 +100,7 @@ function get(
 
 ## History
 
-This specification was significantly inspired by and derived from , which
+This specification was significantly inspired by and derived from IBC's [ICS](https://github.com/cosmos/ibc/blob/main/spec/ics-001-ics-standard/README.md), which
 was in turn derived from Ethereum's [EIP 1](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1.md).
 
 Nov 24, 2022 - Initial draft finished and submitted as a PR

@@ -17,9 +17,8 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 		panic(err)
 	}
 
+	var groupPolicyAccountCounter = uint64(0)
 	for i, acc := range accounts {
-		var groupPolicyAccountCounter = uint64(0)
-
 		if modAcc, ok := acc.(authtypes.ModuleAccountI); ok {
 			// Replace group policy accounts from module accounts to base accounts.
 			// These accounts were wrongly created and the address was equal to the module name.
@@ -34,9 +33,10 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 					panic(err)
 				}
 
-				baseAccount.SetAccountNumber(modAcc.GetAccountNumber())
+				if err := baseAccount.SetAccountNumber(modAcc.GetAccountNumber()); err != nil {
+					panic(err)
+				}
 				accounts[i] = baseAccount
-
 				groupPolicyAccountCounter++
 			}
 		}

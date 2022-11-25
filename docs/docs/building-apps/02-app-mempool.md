@@ -48,4 +48,6 @@ https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go#L200-L203
 
 Now that we have walked through the `PrepareProposal` & `ProcessProposal`, we can move on to walking through the mempool. 
 
-There are countless designs that an application developer can write for a mempool, the core team opted to provide a simple implementation of a nonce mempool. The nonce mempool is a mempool that keeps transactions sorted by nonce. 
+There are countless designs that an application developer can write for a mempool, the core team opted to provide a simple implementation of a nonce mempool. The nonce mempool is a mempool that keeps transactions from an sorted by nonce in order to avoid the issues with nonces. 
+
+It works by storing the transation in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 

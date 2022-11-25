@@ -1,0 +1,53 @@
+package v2
+
+import (
+	"encoding/binary"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+)
+
+// MigrateGenState accepts exported v0.46 x/auth genesis state and migrates it to
+// v0.47 x/auth genesis state. The migration includes:
+// - If the group module is enabled, replace group policy accounts from module accounts to base accounts.
+func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
+	newState := *oldState
+
+	accounts, err := authtypes.UnpackAccounts(newState.Accounts)
+	if err != nil {
+		panic(err)
+	}
+
+	for i, acc := range accounts {
+		var groupPolicyAccountCounter = uint64(0)
+
+		if modAcc, ok := acc.(authtypes.ModuleAccountI); ok {
+			// Replace group policy accounts from module accounts to base accounts.
+			// These accounts were wrongly created and the address was equal to the module name.
+			if modAcc.GetName() == modAcc.GetAddress().String() {
+				derivationKey := make([]byte, 8)
+				binary.BigEndian.PutUint64(derivationKey, groupPolicyAccountCounter)
+
+				baseAccount, err := authtypes.NewBaseAccountWithPubKey(
+					// NOTE: The derivation key may not properly be migrated because the state isn't accessible by genesis migration only
+					authtypes.NewModuleCredential(ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey}),
+				)
+				if err != nil {
+					panic(err)
+				}
+
+				baseAccount.SetAccountNumber(modAcc.GetAccountNumber())
+				accounts[i] = baseAccount
+
+				groupPolicyAccountCounter++
+			}
+		}
+	}
+
+	packedAccounts, err := authtypes.PackAccounts(accounts)
+	if err != nil {
+		panic(err)
+	}
+	newState.Accounts = packedAccounts
+
+	return &newState
+}

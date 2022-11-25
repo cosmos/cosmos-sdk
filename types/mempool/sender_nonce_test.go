@@ -114,7 +114,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := mempool.NewSenderNonceMempool(mempool.SenderNonceWithSeedOpt(tt.seed))
+			pool := mempool.NewSenderNonceMempool(mempool.SenderNonceSeedOpt(tt.seed))
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
@@ -142,7 +142,7 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceWithMaxTxOpt(0))
+	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(0))
 
 	tx := testTx{
 		nonce:    0,

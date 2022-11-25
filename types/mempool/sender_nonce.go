@@ -67,15 +67,15 @@ func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 	return snp
 }
 
-// SenderNonceWithSeedOpt Option To add a Seed for random struct
-func SenderNonceWithSeedOpt(seed int64) SenderNonceOptions {
+// SenderNonceSeedOpt Option To add a Seed for random struct
+func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
 	return func(snp *senderNonceMempool) {
 		snp.setSeed(seed)
 	}
 }
 
-// SenderNonceWithMaxTxOpt Option To set limit of max tx
-func SenderNonceWithMaxTxOpt(maxTx int) SenderNonceOptions {
+// SenderNonceMaxTxOpt Option To set limit of max tx
+func SenderNonceMaxTxOpt(maxTx int) SenderNonceOptions {
 	return func(snp *senderNonceMempool) {
 		snp.maxTx = maxTx
 	}

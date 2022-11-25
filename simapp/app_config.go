@@ -22,7 +22,6 @@ import (
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
@@ -169,7 +168,7 @@ var (
 			},
 			{
 				Name:   "tx",
-				Config: appconfig.WrapAny(&txmodulev1.Module{}),
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,

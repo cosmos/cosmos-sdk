@@ -3,7 +3,7 @@ package tx
 import (
 	"fmt"
 
-	modulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -19,7 +19,7 @@ import (
 )
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
+	appmodule.Register(&txconfigv1.Config{},
 		appmodule.Provide(ProvideModule),
 	)
 }
@@ -27,7 +27,7 @@ func init() {
 type TxInputs struct {
 	depinject.In
 
-	Config              *modulev1.Module
+	Config              *txconfigv1.Config
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
 	AccountKeeper  ante.AccountKeeper    `optional:"true"`

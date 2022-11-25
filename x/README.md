@@ -8,6 +8,7 @@ slug : /modules
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
 
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
+  * [Vesting](./auth/vesting) - Vesting account implementation.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
 * [Capability](./capability/README.md) - Object capability implementation.
@@ -23,7 +24,6 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
 * [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).
 * [Consensus](./consensus/README.md) - Consensus module for modifying Tendermint's ABCI consensus params.
-* [Vesting](./auth/vesting/README.md) - Vesting account implementation.
 
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).

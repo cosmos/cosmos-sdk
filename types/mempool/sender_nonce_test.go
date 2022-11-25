@@ -161,18 +161,28 @@ func (s *MempoolTestSuite) TestMaxTx() {
 
 }
 
-func (s *MempoolTestSuite) TestTxNotFound() {
+func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	t := s.T()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
 	mp := mempool.NewSenderNonceMempool()
 
-	tx := testTx{
+	txSender := testTx{
 		nonce:    0,
 		address:  accounts[0].Address,
 		priority: rand.Int63(),
 	}
 
-	err := mp.Remove(tx)
+	tx := testTx{
+		nonce:    1,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+
+	ctx = ctx.WithPriority(tx.priority)
+	err := mp.Insert(ctx, txSender)
+	require.NoError(t, err)
+	err = mp.Remove(tx)
 	require.Equal(t, mempool.ErrTxNotFound, err)
 
 }

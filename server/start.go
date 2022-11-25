@@ -77,6 +77,9 @@ const (
 	flagGRPCAddress    = "grpc.address"
 	flagGRPCWebEnable  = "grpc-web.enable"
 	flagGRPCWebAddress = "grpc-web.address"
+
+	// mempool flags
+	FlagMempoolMaxTx = "mempool.max-tx"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with

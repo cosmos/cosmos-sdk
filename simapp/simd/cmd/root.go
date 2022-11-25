@@ -3,6 +3,7 @@ package cmd
 import (
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"io"
 	"os"
 	"path/filepath"
@@ -306,6 +307,7 @@ func newApp(
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
+		baseapp.SetMempool(mempool.NewSenderNonceMempool(mempool.SenderNonceWithMaxTx(cast.ToInt(appOpts.Get(server.FlagMempoolMaxTx))))),
 	)
 }
 

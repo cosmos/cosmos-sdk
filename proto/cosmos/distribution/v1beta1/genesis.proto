@@ -133,7 +133,7 @@ message GenesisState {
   repeated ValidatorOutstandingRewardsRecord outstanding_rewards = 5
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
-  // fee_pool defines the accumulated commisions of all validators at genesis.
+  // fee_pool defines the accumulated commissions of all validators at genesis.
   repeated ValidatorAccumulatedCommissionRecord validator_accumulated_commissions = 6
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 

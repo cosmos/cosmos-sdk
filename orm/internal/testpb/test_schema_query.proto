@@ -6,8 +6,8 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/protobuf/timestamp.proto";
 import "testpb/test_schema.proto";
 
-// TestSchemaQuery queries the state of the tables specified by testpb/test_schema.proto.
-service TestSchemaQuery {
+// TestSchemaQueryService queries the state of the tables specified by testpb/test_schema.proto.
+service TestSchemaQueryService {
   // Get queries the ExampleTable table by its primary key.
   rpc GetExampleTable(GetExampleTableRequest) returns (GetExampleTableResponse) {}
   // GetExampleTableByU64Str queries the ExampleTable table by its U64Str index

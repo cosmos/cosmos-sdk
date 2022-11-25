@@ -29,7 +29,7 @@ func TestValidateParams(t *testing.T) {
 	// default params have no error
 	require.NoError(t, params.Validate())
 
-	// validate mincommision
+	// validate mincommission
 	params.MinCommissionRate = math.LegacyNewDec(-1)
 	require.Error(t, params.Validate())
 

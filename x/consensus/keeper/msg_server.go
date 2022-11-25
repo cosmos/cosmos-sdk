@@ -31,7 +31,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	consensusParams := req.ToProtoConsensusParams()
-	if err := types.Validate(tmtypes.ConsensusParamsFromProto(consensusParams)); err != nil {
+	if err := tmtypes.ConsensusParamsFromProto(consensusParams).ValidateBasic(); err != nil {
 		return nil, err
 	}
 

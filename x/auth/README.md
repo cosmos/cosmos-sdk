@@ -217,7 +217,7 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	GetNextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) uint64
 }
 ```
 

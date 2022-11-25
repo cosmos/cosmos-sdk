@@ -21,7 +21,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 	require.NoError(t, err)
 
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
-	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COINS"))
+	vr, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("COINS"))
 	require.NoError(t, err)
 
 	for _, tc := range testcases {

@@ -17,6 +17,8 @@ var (
 	_ Iterator = (*senderNonceMepoolIterator)(nil)
 )
 
+var DefaultMaxTx = 1000000
+
 // senderNonceMempool is a mempool that prioritizes transactions within a sender by nonce, the lowest first,
 // but selects a random sender on each iteration.  The mempool is iterated by:
 //
@@ -29,7 +31,6 @@ type senderNonceMempool struct {
 	senders    map[string]*skiplist.SkipList
 	rnd        *rand.Rand
 	maxTx      int
-	unbounded  bool
 	txCount    int
 	existingTx map[txKey]bool
 }
@@ -46,8 +47,7 @@ func NewSenderNonceMempool() Mempool {
 	snp := &senderNonceMempool{
 		senders:    senderMap,
 		txCount:    0,
-		unbounded:  true,
-		maxTx:      0,
+		maxTx:      DefaultMaxTx,
 		existingTx: existingTx,
 	}
 
@@ -68,8 +68,7 @@ func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
 	snp := &senderNonceMempool{
 		senders:    senderMap,
 		txCount:    0,
-		unbounded:  true,
-		maxTx:      0,
+		maxTx:      DefaultMaxTx,
 		existingTx: existingTx,
 	}
 	snp.setSeed(seed)
@@ -84,7 +83,7 @@ func (snm *senderNonceMempool) setSeed(seed int64) {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
 func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
-	if !snm.unbounded && snm.txCount >= snm.maxTx {
+	if snm.txCount >= snm.maxTx {
 		return fmt.Errorf("pool reached max tx capacity")
 	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()

@@ -48,9 +48,11 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	})
 
 	for acc := range BlockedAddresses() {
+		accAddr, err := sdk.AccAddressFromBech32(acc)
+		require.NoError(t, err)
 		require.True(
 			t,
-			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
+			app.BankKeeper.BlockedAddr(accAddr),
 			fmt.Sprintf("ensure that blocked addresses are properly set in bank keeper: %s should be blocked", acc),
 		)
 	}

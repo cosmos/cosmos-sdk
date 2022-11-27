@@ -234,7 +234,7 @@ const config = {
           },
           {
             from: "/main/modules/auth/05_vesting",
-            to: "/main/modules/vesting",
+            to: "/main/modules/auth/vesting",
           },
           {
             from: [

@@ -89,7 +89,7 @@ func (snm *senderNonceMempool) setSeed(seed int64) {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
 func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
-	if snm.txCount >= snm.maxTx {
+	if snm.maxTx >= 0 && snm.txCount >= snm.maxTx {
 		return ErrMempoolTxMaxCapacity
 	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.3
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	github.com/cosmos/cosmos-sdk v0.46.1
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220909113810-4882f933b1a1
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -161,6 +161,9 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+// TODO to remove after this PR
+replace cosmossdk.io/api => ../api
 
 replace (
 	// We always want to test against the latest version of the simapp.

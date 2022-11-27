@@ -59,7 +59,7 @@ The data file contains a series of length-prefixed protobuf encoded `StoreKVPair
 
 Both meta and data files are prefixed with the length of the data content for consumer to detect completeness of the file, the length is encoded as 8 bytes with big endianness.
 
-The files are written at abci commit event, by default the error happens will be propogated to interuppted consensus state machine, but fsync is not called, it'll have good performance but have the risk of lossing data in face of rare event of system crash.
+The files are written at abci commit event, by default the error happens will be propagated to interuppted consensus state machine, but fsync is not called, it'll have good performance but have the risk of lossing data in face of rare event of system crash.
 
 ### Decoding
 

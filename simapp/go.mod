@@ -160,6 +160,9 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// TODO remove after this PR
+replace cosmossdk.io/api => ../api
+
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449

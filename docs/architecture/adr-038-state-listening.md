@@ -289,14 +289,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	...
 
-  defer func() {
-    // call the hooks with the BeginBlock messages
-    for _, streamingListener := range app.abciListeners {
-      if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-        panic(sdkerrors.Wrapf(err, "BeginBlock listening hook failed, height: %d", req.Header.Height))
-      }
-    }
-  }()
+	defer func() {
+		// call the hooks with the BeginBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "BeginBlock listening hook failed, height: %d", req.Header.Height))
+			}
+		}
+	}()
 
 	return res
 }
@@ -311,7 +311,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		// Call the streaming service hooks with the EndBlock messages
 		for _, streamingListener := range app.abciListeners {
 			if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-      	panic(sdkerrors.Wrapf(err, "EndBlock listening hook failed, height: %d", req.Height))
+				panic(sdkerrors.Wrapf(err, "EndBlock listening hook failed, height: %d", req.Height))
 			}
 		}
   }()
@@ -326,9 +326,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	defer func() {
 		// call the hooks with the DeliverTx messages
 		for _, streamingListener := range app.abciListeners {
-      if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
-        panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
-      }
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
+			}
 		}
 	}()
 
@@ -357,7 +357,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// call the hooks with the Commit message
 	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
-      panic(sdkerrors.Wrapf(err, "Commit listening hook failed, height: %d", header.Height)
+			panic(sdkerrors.Wrapf(err, "Commit listening hook failed, height: %d", header.Height))
 		}
 	}
 

@@ -3,10 +3,10 @@ module cosmossdk.io/simapp
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.4
+	cosmossdk.io/api v0.2.5
 	cosmossdk.io/core v0.3.2
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/math v1.0.0-beta.3
+	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/tools/rosetta v0.1.0
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220909113810-4882f933b1a1
 	github.com/golang/mock v1.6.0
@@ -159,9 +159,6 @@ require (
 	pgregory.net/rapid v0.5.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// TODO remove after this PR
-replace cosmossdk.io/api => ../api
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

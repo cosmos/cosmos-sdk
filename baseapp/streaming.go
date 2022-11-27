@@ -11,7 +11,8 @@ import (
 )
 
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp.
-// the error result won't stop consensus state machine, if you want to stop if, need to call panic explicitly.
+// the error results are propogated to consensus state machine,
+// if you don't want to affect consensus, handle the errors internally and always return `nil` in these APIs.
 type ABCIListener interface {
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
 	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error

@@ -1795,9 +1795,12 @@ type MsgVerifyInvariant struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Sender              string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// sender is the account address of private key to send coins to fee collector account.
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	// name of the invariant module.
 	InvariantModuleName string `protobuf:"bytes,2,opt,name=invariant_module_name,json=invariantModuleName,proto3" json:"invariant_module_name,omitempty"`
-	InvariantRoute      string `protobuf:"bytes,3,opt,name=invariant_route,json=invariantRoute,proto3" json:"invariant_route,omitempty"`
+	// invariant_route is the msg's invariant route.
+	InvariantRoute string `protobuf:"bytes,3,opt,name=invariant_route,json=invariantRoute,proto3" json:"invariant_route,omitempty"`
 }
 
 func (x *MsgVerifyInvariant) Reset() {

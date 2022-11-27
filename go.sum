@@ -63,11 +63,16 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
+<<<<<<< HEAD
 cloud.google.com/go/storage v1.22.1/go.mod h1:S8N1cAStu7BOeFfE8KAQzmyyLkK8p/vmRq6kuBTW58Y=
 cloud.google.com/go/storage v1.23.0 h1:wWRIaDURQA8xxHguFCshYepGlrWIrbBnAmc7wfg07qY=
 cloud.google.com/go/storage v1.23.0/go.mod h1:vOEEDNFnciUMhBeT6hsJIn3ieU5cFRmzeLgDvXzfIXc=
 cosmossdk.io/api v0.2.4 h1:o2t77GXWWEN5egCzD2ZyyFgbsoAif/XdF3T+/sAYiHQ=
 cosmossdk.io/api v0.2.4/go.mod h1:7xfxe8ghXHoKj3W2oG/HcuxGVwUHN3q8piiIEiJ3CEU=
+=======
+cloud.google.com/go/storage v1.27.0 h1:YOO045NZI9RKfCj1c5A/ZtuuENUc8OAW+gHdGnDgyMQ=
+cloud.google.com/go/storage v1.27.0/go.mod h1:x9DOL8TK/ygDUMieqwfhdpQryTeEkhGKMi80i/iqR2s=
+>>>>>>> 6f329d70c (docs: add docs about `x/auth/tx` (#14021))
 cosmossdk.io/core v0.3.2 h1:KlQIufpJHJvOs7YLGTZsZcCo1WlkencDXepsr8STKZQ=
 cosmossdk.io/core v0.3.2/go.mod h1:CO7vbe+evrBvHc0setFHL/u7nlY7HJGzdRSBkT/sirc=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=

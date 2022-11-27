@@ -43,7 +43,6 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 	if authOldState, ok := appState[v1auth.ModuleName]; ok {
 		var old authtypes.GenesisState
 		clientCtx.Codec.MustUnmarshalJSON(authOldState, &old)
-
 		newAuthState := groupv2.MigrateGenState(&old)
 		appState[v1auth.ModuleName] = clientCtx.Codec.MustMarshalJSON(newAuthState)
 	}

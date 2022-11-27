@@ -19,26 +19,29 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 
 	groupPolicyAccountCounter := uint64(0)
 	for i, acc := range accounts {
-		if modAcc, ok := acc.(authtypes.ModuleAccountI); ok {
-			// Replace group policy accounts from module accounts to base accounts.
-			// These accounts were wrongly created and the address was equal to the module name.
-			if modAcc.GetName() == modAcc.GetAddress().String() {
-				derivationKey := make([]byte, 8)
-				binary.BigEndian.PutUint64(derivationKey, groupPolicyAccountCounter)
+		modAcc, ok := acc.(authtypes.ModuleAccountI)
+		if !ok {
+			continue
+		}
 
-				baseAccount, err := authtypes.NewBaseAccountWithPubKey(
-					authtypes.NewModuleCredential(ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey}),
-				)
-				if err != nil {
-					panic(err)
-				}
+		// Replace group policy accounts from module accounts to base accounts.
+		// These accounts were wrongly created and the address was equal to the module name.
+		if modAcc.GetName() == modAcc.GetAddress().String() {
+			derivationKey := make([]byte, 8)
+			binary.BigEndian.PutUint64(derivationKey, groupPolicyAccountCounter)
 
-				if err := baseAccount.SetAccountNumber(modAcc.GetAccountNumber()); err != nil {
-					panic(err)
-				}
-				accounts[i] = baseAccount
-				groupPolicyAccountCounter++
+			baseAccount, err := authtypes.NewBaseAccountWithPubKey(
+				authtypes.NewModuleCredential(ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey}),
+			)
+			if err != nil {
+				panic(err)
 			}
+
+			if err := baseAccount.SetAccountNumber(modAcc.GetAccountNumber()); err != nil {
+				panic(err)
+			}
+			accounts[i] = baseAccount
+			groupPolicyAccountCounter++
 		}
 	}
 

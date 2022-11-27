@@ -221,7 +221,7 @@ type (
 		// OutputMetadata specifies if output the block metadata file which includes
 		// the abci requests/responses, otherwise only the data file is outputted.
 		OutputMetadata bool `mapstructure:"output-metadata"`
-		// StopNodeOnError specifies if propogate the streamer errors to the consensus
+		// StopNodeOnError specifies if propagate the streamer errors to the consensus
 		// state machine, it's nesserary for data integrity of output.
 		StopNodeOnError bool `mapstructure:"stop-node-on-error"`
 		// Fsync specifies if calling fsync after writing the files, it slows down

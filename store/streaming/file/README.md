@@ -25,11 +25,14 @@ We turn the service on by adding its name, "file", to `store.streamers`- the lis
 
 In `streamers.file` we include three configuration parameters for the file streaming service:
 
-1. `streamers.x.keys` contains the list of `StoreKey` names for the KVStores to expose using this service.
-In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the service off.
+1. `streamers.file.keys` contains the list of `StoreKey` names for the KVStores to expose using this service.
+    In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the service off.
 2. `streamers.file.write_dir` contains the path to the directory to write the files to.
 3. `streamers.file.prefix` contains an optional prefix to prepend to the output files to prevent potential collisions
-with other App `StreamingService` output files.
+    with other App `StreamingService` output files.
+4. `streamers.file.output-metadata` specifies if output the metadata file, otherwise only data file is outputted.
+5. `streamers.file.stop-node-on-error` specifies if propagate the error to consensus state machine, it's nesserary for data integrity when node restarts.
+6. `streamers.file.fsync` specifies if call fsync after writing the files, it's nesserary for data integrity when system crash, but slows down the commit time.
 
 ### Encoding
 
@@ -56,15 +59,7 @@ The data file contains a series of length-prefixed protobuf encoded `StoreKVPair
 
 Both meta and data files are prefixed with the length of the data content for consumer to detect completeness of the file, the length is encoded as 8 bytes with big endianness.
 
-The files are written at abci commit event, by default the error happens don't interuppted consensus state machine, and fsync is not called explicitly, it'll have good performance but have the risk of lossing data in face of system crash.
-
-There are several parameters in streaming service constructor to configure the behaviors:
-
-- `stopNodeOnErr`: Call panic when error happens during commit, which will stop the block from commiting succesfully, so when the block is replayed after issue resolved, the process will run again, and data is eventually consistent.
-- `fsync`: Call `file.Sync()` after writing the file data, so we don't lose data in face of system crash.
-- `outputMetadata`: If `false`, don't write the block meta file, only the data file is outputted.
-
-The default setting is: `stopNodeOnErr=false, fsync=false, outputMetadata=true`, these parameters are not reflected in the configuration system for now, there'll be newly designed plugin and configuration system soon.
+The files are written at abci commit event, by default the error happens will be propogated to interuppted consensus state machine, but fsync is not called, it'll have good performance but have the risk of lossing data in face of rare event of system crash.
 
 ### Decoding
 

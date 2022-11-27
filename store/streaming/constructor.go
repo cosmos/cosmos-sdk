@@ -68,8 +68,8 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 func NewFileStreamingService(opts serverTypes.AppOptions, keys []types.StoreKey, marshaller codec.BinaryCodec, logger log.Logger) (baseapp.StreamingService, error) {
 	filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
 	fileDir := cast.ToString(opts.Get("streamers.file.write_dir"))
-	outputMetadata := cast.ToBool(opts.Get("streamers.file.output_metadata"))
-	stopNodeOnErr := cast.ToBool(opts.Get("streamers.file.stop_node_on_error"))
+	outputMetadata := cast.ToBool(opts.Get("streamers.file.output-metadata"))
+	stopNodeOnErr := cast.ToBool(opts.Get("streamers.file.stop-node-on-error"))
 	fsync := cast.ToBool(opts.Get("streamers.file.fsync"))
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, logger, outputMetadata, stopNodeOnErr, fsync)
 }

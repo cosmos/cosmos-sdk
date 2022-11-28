@@ -26,12 +26,8 @@ require (
 )
 
 // temporary until we tag a new go module
-<<<<<<< HEAD
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/core => ../core
 	cosmossdk.io/math => ../math
 )
-=======
-replace cosmossdk.io/core => ../core
->>>>>>> e5038d8d76de9d4e6b01a8a21e7d8e6d3d5de6e4

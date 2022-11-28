@@ -183,16 +183,26 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 		{
-			"valid request",
+			"valid account-id",
 			func() {
 				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
 				suite.accountKeeper.SetAccount(suite.ctx, account)
-				req = &types.QueryAccountAddressByIDRequest{Id: int64(account.GetAccountNumber())}
+				req = &types.QueryAccountAddressByIDRequest{AccountId: account.GetAccountNumber()}
 			},
 			true,
 			func(res *types.QueryAccountAddressByIDResponse) {
 				suite.Require().NotNil(res.AccountAddress)
 			},
+		},
+		{
+			"invalid request",
+			func() {
+				account := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+				suite.accountKeeper.SetAccount(suite.ctx, account)
+				req = &types.QueryAccountAddressByIDRequest{Id: 1}
+			},
+			false,
+			func(res *types.QueryAccountAddressByIDResponse) {},
 		},
 	}
 

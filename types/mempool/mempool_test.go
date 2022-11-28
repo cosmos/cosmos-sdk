@@ -132,6 +132,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	for i := 0; i < txCount; i++ {
 		acc := accounts[i%len(accounts)]
 		tx := testTx{
+			nonce:    0,
 			address:  acc.Address,
 			priority: rand.Int63(),
 		}
@@ -201,7 +202,7 @@ type MempoolTestSuite struct {
 
 func (s *MempoolTestSuite) resetMempool() {
 	s.iterations = 0
-	s.mempool = mempool.NewNonceMempool()
+	s.mempool = mempool.NewSenderNonceMempool()
 }
 
 func (s *MempoolTestSuite) SetupTest() {

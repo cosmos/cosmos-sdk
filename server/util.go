@@ -32,8 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
-// DONTCOVER
-
 // ServerContextKey defines the context key used to retrieve a server.Context from
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")

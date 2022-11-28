@@ -17,14 +17,14 @@ type AutoCLIQueryService struct {
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
-func NewAutoCLIQueryService(appModules map[string]module.AppModule) *AutoCLIQueryService {
+func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryService {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
 			AutoCLIOptions() *autocliv1.ModuleOptions
 		}); ok {
 			moduleOptions[modName] = autoCliMod.AutoCLIOptions()
-		} else {
+		} else if mod, ok := mod.(module.HasServices); ok {
 			// try to auto-discover options based on the last msg and query
 			// services registered for the module
 			cfg := &autocliConfigurator{}

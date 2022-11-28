@@ -27,7 +27,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 		data, err := base64.StdEncoding.DecodeString(tc.base64)
 		require.NoError(t, err)
 
-		valrend, err := textual.GetValueRenderer(fieldDescriptorFromName("BYTES"))
+		valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
 		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))

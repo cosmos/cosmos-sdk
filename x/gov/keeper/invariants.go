@@ -1,7 +1,5 @@
 package keeper
 
-// DONTCOVER
-
 import (
 	"fmt"
 

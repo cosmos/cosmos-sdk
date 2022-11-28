@@ -1,7 +1,5 @@
 package simulation
 
-// DONTCOVER
-
 import (
 	"fmt"
 	"math/rand"

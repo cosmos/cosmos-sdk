@@ -173,7 +173,7 @@ it is hard to know whether these pernicious hard to detect bugs are getting into
 our app and a client-server layer such as [ADR 033: Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
 may be needed to do this.
 
-### Solutions
+## Solutions
 
 ### Approach A) Separate API and State Machine Modules
 
@@ -208,7 +208,7 @@ func (k Keeper) DoSomething(msg MsgDoSomething) error {
 	err := k.resolver.Resolve(&validateBasic, msg)
 	if err != nil {
 		return err
-    }   
+	}   
 	
 	err = validateBasicHandler.ValidateBasic()
 	...
@@ -240,7 +240,7 @@ and a build script we can probably come up with a solution for embedding
 #### Potential limitations to generated code
 
 One challenge with this approach is that it places heavy restrictions on what
-can go in API modules and requires that node of this is state machine breaking.
+can go in API modules and requires that most of this is state machine breaking.
 All or most of the code in the API module would be generated from protobuf
 files, so we can probably control this with how code generation is done, but
 it is a risk to be aware of.

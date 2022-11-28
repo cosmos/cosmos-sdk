@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govclitestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -345,6 +346,14 @@ func (s *IntegrationTestSuite) TestNewCmdCancelProposal() {
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdCancelProposal()
 			clientCtx := val.ClientCtx
+			var balRes banktypes.QueryAllBalancesResponse
+			var newBalance banktypes.QueryAllBalancesResponse
+			if !tc.expectErr && tc.expectedCode == 0 {
+				resp, err := clitestutil.QueryBalancesExec(clientCtx, val.Address)
+				s.Require().NoError(err)
+				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
+				s.Require().NoError(err)
+			}
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
@@ -354,6 +363,16 @@ func (s *IntegrationTestSuite) TestNewCmdCancelProposal() {
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, tc.expectedCode))
+
+				if !tc.expectErr && tc.expectedCode == 0 {
+					resp, err := clitestutil.QueryBalancesExec(clientCtx, val.Address)
+					s.Require().NoError(err)
+					err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &newBalance)
+					s.Require().NoError(err)
+					s.Require().True(
+						newBalance.Balances.AmountOf(s.network.Config.BondDenom).GT(balRes.Balances.AmountOf(s.network.Config.BondDenom)),
+					)
+				}
 			}
 		})
 	}

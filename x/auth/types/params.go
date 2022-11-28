@@ -2,8 +2,6 @@ package types
 
 import (
 	"fmt"
-
-	"sigs.k8s.io/yaml"
 )
 
 // Default parameter values
@@ -49,12 +47,6 @@ func DefaultParams() Params {
 // because we are we don't compare the cgo implementation of secp256k1, which is faster.
 func (p Params) SigVerifyCostSecp256r1() uint64 {
 	return p.SigVerifyCostSecp256k1 / 2
-}
-
-// String implements the stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 func validateTxSigLimit(i interface{}) error {

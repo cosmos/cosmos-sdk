@@ -60,7 +60,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// get the minter
+// GetMinter returns the minter.
 func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.MinterKey)
@@ -72,7 +72,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	return
 }
 
-// set the minter
+// GetMinter sets the minter.
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&minter)

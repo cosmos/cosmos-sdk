@@ -8,6 +8,7 @@
 - Aug 11, 2022: Require signing over tx raw bytes.
 - Sep 07, 2022: Add custom `Msg`-renderers.
 - Sep 18, 2022: Structured format instead of lines of text
+- Nov 23, 2022: Specify CBOR encoding.
 
 ## Status
 
@@ -127,8 +128,31 @@ type SignDocTextual = []Screen
 We do not plan to use protobuf serialization to form the sequence of bytes
 that will be tranmitted and signed, in order to keep the decoder simple.
 We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
+The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor.org/rfc/rfc8610)):
 
-TODO: specify the details of the CBOR encoding.
+```
+;;; CDDL (RFC 8610) Specification of SignDoc for SIGN_MODE_TEXTUAL.
+;;; Must be encoded using CBOR deterministic encoding (RFC 8949, section 4.2.1).
+
+;; A Textual document is an array of screens.
+screens = [* screen]
+
+;; A screen consists of a text string, an indentation, and the expert flag,
+;; represented as an integer-keyed map. All entries are optional
+;; and MUST be omitted from the encoding if empty, zero, or false.
+;; Text defaults to the empty string, indent defaults to zero,
+;; and expert defaults to false.
+screen = {
+  ? text_key: tstr,
+  ? indent_key: uint,
+  ? expert_key: bool,
+}
+
+;; Keys are small integers to keep the encoding small.
+text_key = 1
+indent_key = 2
+expert_key = 3
+```
 
 ## Details
 

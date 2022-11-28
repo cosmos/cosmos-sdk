@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -144,6 +145,17 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 			}
 
 			clientCtx = clientCtx.WithClient(client)
+		}
+	}
+
+	if clientCtx.GRPCClient == nil || flagSet.Changed(flags.FlagGRPC) {
+		grpcURI, _ := flagSet.GetString(flags.FlagGRPC)
+		if grpcURI != "" {
+			grpcClient, err := grpc.Dial(grpcURI)
+			if err != nil {
+				return Context{}, err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
 		}
 	}
 

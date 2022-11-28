@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"sigs.k8s.io/yaml"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -29,11 +27,6 @@ func NewOwner(module, name string) Owner {
 // Key returns a composite key for an Owner.
 func (o Owner) Key() string {
 	return fmt.Sprintf("%s/%s", o.Module, o.Name)
-}
-
-func (o Owner) String() string {
-	bz, _ := yaml.Marshal(o)
-	return string(bz)
 }
 
 func NewCapabilityOwners() *CapabilityOwners {

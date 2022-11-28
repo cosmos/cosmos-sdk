@@ -275,7 +275,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 			// move all data
 			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return fmt.Errorf("failed to move store %s -> %s", oldName, key.Name(), err)
+				return fmt.Errorf("failed to move store %s -> %s, %w", oldName, key.Name(), err)
 			}
 
 			// add the old key so its deletion is committed

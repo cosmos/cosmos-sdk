@@ -34,7 +34,7 @@ func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Me
 func TestMetadataQuerier(t *testing.T) {
 	// Errors on nil metadata querier
 	textual := valuerenderer.NewTextual(nil)
-	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+	vr, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.Error(t, err)
@@ -44,7 +44,7 @@ func TestMetadataQuerier(t *testing.T) {
 	textual = valuerenderer.NewTextual(func(_ context.Context, _ string) (*bankv1beta1.Metadata, error) {
 		return nil, expErr
 	})
-	vr, err = textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+	vr, err = textual.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.ErrorIs(t, err, expErr)
@@ -60,7 +60,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 	require.NoError(t, err)
 
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
-	vr, err := textual.GetValueRenderer(fieldDescriptorFromName("COIN"))
+	vr, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("COIN"))
 	require.NoError(t, err)
 
 	for _, tc := range testcases {

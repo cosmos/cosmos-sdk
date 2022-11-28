@@ -73,6 +73,8 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 		return f.unmarshalRawModuleWithField(rawBz, field)
 	}
 
+	// Otherwise let's try to read the the root genesis.
+
 	// unmarshal module rawJSON from genesis.AppState
 	doc := tmtypes.GenesisDoc{}
 	err := json.Unmarshal(rawBz, &doc)

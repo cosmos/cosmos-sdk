@@ -31,8 +31,8 @@ func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 }
 
 func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	if len(screens) != 1 {
-		return nilValue, fmt.Errorf("expected single screen: %v", screens)
+	if n := len(screens); n != 1 {
+		return nilValue, fmt.Errorf("expected 1 screen, got: %d", n)
 	}
 
 	parsedInt, err := parseInt(screens[0].Text)
@@ -86,7 +86,7 @@ func parseInt(v string) (string, error) {
 	}
 
 	// remove the 1000 separators (ex: 1'000'000 -> 1000000)
-	v = strings.Replace(v, "'", "", -1)
+	v = strings.ReplaceAll(v, "'", "")
 
 	return sign + v, nil
 }

@@ -103,7 +103,7 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	for i, coin := range coins {
 		coinArr := strings.Split(coin, " ")
 		if len(coinArr) != 2 {
-			return nilValue, fmt.Errorf("invalid coin %s", coins)
+			return nilValue, fmt.Errorf("invalid coin %s", coin)
 		}
 		metadatas[i], err = vr.coinMetadataQuerier(ctx, coinArr[1])
 		if err != nil {
@@ -132,7 +132,7 @@ func parseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta
 	for i, coinStr := range coins {
 		coin, err := parseCoin(coinStr, metadata[i])
 		if err != nil {
-			return []*basev1beta1.Coin{}, err
+			return nil, err
 		}
 		parsedCoins[i] = coin
 	}
@@ -151,10 +151,14 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 
 	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
 		dec, err := parseDec(amt1)
+		if err != nil {
+			return nil, err
+		}
+
 		return &basev1beta1.Coin{
 			Amount: dec,
 			Denom:  coinDenom,
-		}, err
+		}, nil
 	}
 	baseDenom := metadata.Base
 
@@ -175,17 +179,21 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 	// If we didn't find either exponent, then we return early.
 	if !foundCoinExp || !foundBaseExp {
 		amt, err := parseDec(amt1)
+		if err != nil {
+			return nil, err
+		}
+
 		return &basev1beta1.Coin{
 			Amount: amt,
 			Denom:  baseDenom,
-		}, err
+		}, nil
 	}
 
 	// remove 1000 separators, (ex: 1'000'000 -> 1000000)
-	amt1 = strings.Replace(amt1, "'", "", -1)
+	amt1 = strings.ReplaceAll(amt1, "'", "")
 	amt, err := math.LegacyNewDecFromStr(amt1)
 	if err != nil {
-		return &basev1beta1.Coin{}, err
+		return nil, err
 	}
 
 	if coinExp > baseExp {
@@ -195,8 +203,12 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 	}
 
 	amtStr, err := parseDec(amt.String())
+	if err != nil {
+		return nil, err
+	}
+
 	return &basev1beta1.Coin{
 		Amount: amtStr,
 		Denom:  baseDenom,
-	}, err
+	}, nil
 }

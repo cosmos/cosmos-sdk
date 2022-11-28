@@ -29,8 +29,8 @@ func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 }
 
 func (vr decValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
-	if len(screens) != 1 {
-		return nilValue, fmt.Errorf("expected single screen: %v", screens)
+	if n := len(screens); n != 1 {
+		return nilValue, fmt.Errorf("expected 1 screen, got: %d", n)
 	}
 
 	parsed, err := parseDec(screens[0].Text)

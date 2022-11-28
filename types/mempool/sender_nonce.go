@@ -90,6 +90,9 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	if snm.maxTx > 0 && len(snm.existingTx) >= snm.maxTx {
 		return ErrMempoolTxMaxCapacity
 	}
+	if snm.maxTx < 0 {
+		return nil
+	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

@@ -46,7 +46,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

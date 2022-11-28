@@ -3,9 +3,9 @@ module cosmossdk.io/core
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.4
+	cosmossdk.io/api v0.2.5
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/math v1.0.0-beta.3
+	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.51.0
@@ -30,6 +30,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// temporary until we tag a new go module
-replace cosmossdk.io/math => ../math

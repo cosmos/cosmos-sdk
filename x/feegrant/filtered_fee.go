@@ -24,7 +24,12 @@ var (
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	var allowance FeeAllowanceI
-	return unpacker.UnpackAny(a.Allowance, &allowance)
+
+	if a.Allowance != nil {
+		return unpacker.UnpackAny(a.Allowance, &allowance)
+	}
+
+	return nil
 }
 
 // NewAllowedMsgFeeAllowance creates new filtered fee allowance.

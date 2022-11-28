@@ -3,7 +3,6 @@ package reflection
 import (
 	"bytes"
 	"compress/gzip"
-	"fmt"
 	"io"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -18,7 +17,6 @@ import (
 // GetFileDescriptorSet returns the global file descriptor set by merging
 // the one from gogoproto global registry and from protoregistry.GlobalFiles.
 func GetFileDescriptorSet() (*descriptorpb.FileDescriptorSet, error) {
-	fmt.Println("Calling GetFileDescriptorSet")
 	fds := &descriptorpb.FileDescriptorSet{}
 
 	// load gogo proto file descriptors
@@ -39,6 +37,14 @@ func GetFileDescriptorSet() (*descriptorpb.FileDescriptorSet, error) {
 		err = protov2.Unmarshal(bz, fd)
 		if err != nil {
 			return nil, err
+		}
+
+		// It seems we're registering twice gogo.proto.
+		// See Frojdi's comments in server/grpc/gogoreflection/fix_registration.go.
+		if *fd.Name == "gogo.proto" ||
+			// WHY?? TODO
+			*fd.Name == "descriptor.proto" {
+			continue
 		}
 
 		fds.File = append(fds.File, fd)

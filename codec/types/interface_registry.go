@@ -292,6 +292,7 @@ func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error
 // on x if x implements UnpackInterfacesMessage
 func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
 	if msg, ok := x.(UnpackInterfacesMessage); ok {
+		fmt.Printf("UnpackInterfaces %T %s=\n", msg, msg)
 		return msg.UnpackInterfaces(unpacker)
 	}
 	return nil

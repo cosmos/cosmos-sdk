@@ -31,7 +31,6 @@ type senderNonceMempool struct {
 	senders    map[string]*skiplist.SkipList
 	rnd        *rand.Rand
 	maxTx      int
-	txCount    int
 	existingTx map[txKey]bool
 }
 
@@ -48,7 +47,6 @@ func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{
 		senders:    senderMap,
-		txCount:    0,
 		maxTx:      DefaultMaxTx,
 		existingTx: existingTx,
 	}
@@ -89,7 +87,7 @@ func (snm *senderNonceMempool) setSeed(seed int64) {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
 func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
-	if snm.maxTx >= 0 && snm.txCount >= snm.maxTx {
+	if snm.maxTx >= 0 && len(snm.existingTx) >= snm.maxTx {
 		return ErrMempoolTxMaxCapacity
 	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
@@ -113,7 +111,6 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	_, found = snm.existingTx[key]
 	if !found {
 		snm.existingTx[key] = true
-		snm.txCount += 1
 	}
 	return nil
 }
@@ -149,7 +146,7 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
-	return snm.txCount
+	return len(snm.existingTx)
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
@@ -183,7 +180,6 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	_, found = snm.existingTx[key]
 	if found {
 		delete(snm.existingTx, key)
-		snm.txCount -= 1
 	}
 
 	return nil

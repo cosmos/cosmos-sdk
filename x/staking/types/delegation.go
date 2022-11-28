@@ -214,13 +214,13 @@ func (e RedelegationEntry) OnHold() bool {
 }
 
 // Equals compares two RedelegationEntry objects
-// Note the UnbondingId are not compared
 func (e RedelegationEntry) Equals(other RedelegationEntry) bool {
 	return e.CreationHeight == other.CreationHeight &&
 		e.CompletionTime.Equal(other.CompletionTime) &&
 		e.InitialBalance.Equal(other.InitialBalance) &&
 		e.SharesDst.Equal(other.SharesDst) &&
-		e.UnbondingOnHoldRefCount == other.UnbondingOnHoldRefCount
+		e.UnbondingOnHoldRefCount == other.UnbondingOnHoldRefCount &&
+		e.UnbondingId == other.UnbondingId
 }
 
 //nolint:interfacer

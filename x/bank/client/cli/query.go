@@ -149,7 +149,6 @@ Example:
 			}
 
 			return clientCtx.PrintProto(res)
-
 		},
 	}
 

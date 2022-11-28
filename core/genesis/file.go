@@ -99,7 +99,7 @@ func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field stri
 	fieldState := make(map[string]json.RawMessage)
 	err := json.Unmarshal(rawBz, &fieldState)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal fields from module state %s", f.moduleName)
+		return nil, fmt.Errorf("failed to unmarshal fields from module state %s, err: %w", f.moduleName, err)
 	}
 
 	fieldRawData := fieldState[field]

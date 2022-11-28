@@ -30,7 +30,7 @@ const (
 
 // NewFileGenesisSource returns a new GenesisSource for the provided
 // source directory and the provided module name where it is assumed
-// that the encoded json data of file.
+// that it contains encoded JSON data in the file.
 func NewFileGenesisSource(sourceDir, moduleName string) GenesisSource {
 	return &FileGenesisSource{sourceDir: filepath.Clean(sourceDir), moduleName: moduleName}
 }

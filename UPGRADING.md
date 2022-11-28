@@ -4,6 +4,15 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Protobuf
+
+The SDK is in the process of removing all `gogoproto` annotations.
+
+#### Stringer
+
+The `Stringer` implementation of some packages use `proto.CompactTextString` for _stringify_ a struct.
+Please [verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the `.String()` method in your application. An chain should not rely on it for any state-machine related operation.
+
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation

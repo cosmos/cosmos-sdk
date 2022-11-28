@@ -142,10 +142,15 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	t := s.T()
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
-	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(0))
+	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(1))
 
 	tx := testTx{
 		nonce:    0,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+	tx2 := testTx{
+		nonce:    1,
 		address:  accounts[0].Address,
 		priority: rand.Int63(),
 	}
@@ -157,6 +162,9 @@ func (s *MempoolTestSuite) TestMaxTx() {
 
 	ctx = ctx.WithPriority(tx.priority)
 	err := mp.Insert(ctx, tx)
+	require.NoError(t, err)
+	ctx = ctx.WithPriority(tx.priority)
+	err = mp.Insert(ctx, tx2)
 	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
 
 }

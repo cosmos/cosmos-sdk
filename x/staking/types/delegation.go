@@ -9,23 +9,10 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sigs.k8s.io/yaml"
 )
 
 // Implements Delegation interface
 var _ DelegationI = Delegation{}
-
-// String implements the Stringer interface for a DVPair object.
-func (dv DVPair) String() string {
-	out, _ := yaml.Marshal(dv)
-	return string(out)
-}
-
-// String implements the Stringer interface for a DVVTriplet object.
-func (dvv DVVTriplet) String() string {
-	out, _ := yaml.Marshal(dvv)
-	return string(out)
-}
 
 // NewDelegation creates a new delegation object
 //
@@ -75,12 +62,6 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 }
 func (d Delegation) GetShares() math.LegacyDec { return d.Shares }
 
-// String returns a human readable string representation of a Delegation.
-func (d Delegation) String() string {
-	out, _ := yaml.Marshal(d)
-	return string(out)
-}
-
 // Delegations is a collection of delegations
 type Delegations []Delegation
 
@@ -101,12 +82,6 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 		UnbondingId:             unbondingID,
 		UnbondingOnHoldRefCount: 0,
 	}
-}
-
-// String implements the stringer interface for a UnbondingDelegationEntry.
-func (e UnbondingDelegationEntry) String() string {
-	out, _ := yaml.Marshal(e)
-	return string(out)
 }
 
 // IsMature - is the current entry mature
@@ -244,12 +219,6 @@ func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balanc
 		UnbondingId:             id,
 		UnbondingOnHoldRefCount: 0,
 	}
-}
-
-// String implements the Stringer interface for a RedelegationEntry object.
-func (e RedelegationEntry) String() string {
-	out, _ := yaml.Marshal(e)
-	return string(out)
 }
 
 // IsMature - is the current entry mature

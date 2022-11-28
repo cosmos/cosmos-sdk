@@ -27,6 +27,7 @@ func TestDispatcher(t *testing.T) {
 		{"COIN", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"COINS", false, valuerenderer.NewCoinsValueRenderer(nil)},
 		{"ENUM", false, valuerenderer.NewEnumValueRenderer(fieldDescriptorFromName("ENUM"))},
+		{"ANY", false, valuerenderer.NewAnyValueRenderer(nil)},
 		{"FLOAT", true, nil},
 	}
 
@@ -34,7 +35,7 @@ func TestDispatcher(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			textual := valuerenderer.NewTextual(nil)
-			rend, err := textual.GetValueRenderer(fieldDescriptorFromName(tc.name))
+			rend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName(tc.name))
 
 			if tc.expErr {
 				require.Error(t, err)

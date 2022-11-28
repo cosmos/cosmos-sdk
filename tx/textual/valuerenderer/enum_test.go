@@ -37,7 +37,7 @@ func TestEnumJsonTestcases(t *testing.T) {
 			require.NoError(t, err)
 
 			fd := getFd(tc.Proto, m)
-			valrend, err := textual.GetValueRenderer(fd)
+			valrend, err := textual.GetFieldValueRenderer(fd)
 			require.NoError(t, err)
 
 			val := m.ProtoReflect().Get(fd)

@@ -41,7 +41,7 @@ func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }
 
-// GenProposalCancelRaterandomized ProposalCancelRate
+// GenProposalCancelRate randomized ProposalCancelRate
 func GenProposalCancelRate(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }

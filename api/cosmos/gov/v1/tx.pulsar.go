@@ -7338,7 +7338,7 @@ func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
 
 // MsgCancelProposal is the Msg/CancelProposal request type.
 //
-// Since: cosmos-sdk 0.47
+// Since: cosmos-sdk 0.48
 type MsgCancelProposal struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -7385,7 +7385,7 @@ func (x *MsgCancelProposal) GetProposer() string {
 // MsgCancelProposalResponse defines the response structure for executing a
 // MsgCancelProposal message.
 //
-// Since: cosmos-sdk 0.47
+// Since: cosmos-sdk 0.48
 type MsgCancelProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

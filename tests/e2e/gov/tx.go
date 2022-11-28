@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
-	// create a proposal4 with deposit for check the cancel proposal cli tx
+	// create a proposal4 with deposit to check the cancel proposal cli tx
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 4", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))

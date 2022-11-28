@@ -182,7 +182,7 @@ func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 		}
 	}
 
-	// burn the cancellation fee or sent to cancellation changes to destination address
+	// burn the cancellation fee or sent the cancellation charges to destination address.
 	if !cancellationCharges.IsZero() {
 		// get the distribution module account address
 		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
@@ -215,7 +215,7 @@ func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 		for _, deposit := range deposits.Amount {
 			remainAmount := sdk.NewCoin(
 				deposit.Denom,
-				sdk.NewDecFromInt(deposit.Amount).Sub(sdk.NewDec(1).Sub(rate)).RoundInt(),
+				sdk.NewDecFromInt(deposit.Amount).Mul(sdk.NewDec(1).Sub(rate)).RoundInt(),
 			)
 			remainingAmount = remainingAmount.Add(remainAmount)
 		}

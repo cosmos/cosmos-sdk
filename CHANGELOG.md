@@ -170,7 +170,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#13430](https://github.com/cosmos/cosmos-sdk/pull/13430) Remove unused code `ResponseCheckTx` and `ResponseDeliverTx`
 * (store) [#13529](https://github.com/cosmos/cosmos-sdk/pull/13529) Add method `LatestVersion` to `MultiStore` interface, add method `SetQueryMultiStore` to baesapp to support alternative `MultiStore` implementation for query service.
 * (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) Add `proposer` parameter to `NewProposal` method.
-* (pruning) [#13609](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning pacakge to be under store pacakge.
+* (pruning) [#13609](https://github.com/cosmos/cosmos-sdk/pull/13609) Move pruning package to be under store package.
 * [#13794](https://github.com/cosmos/cosmos-sdk/pull/13794) Most methods on `types/module.AppModule` have been moved to 
 extension interfaces. `module.Manager.Modules` is now of type `map[string]interface{}` to support in parallel the new 
 `cosmossdk.io/core/appmodule.AppModule` API.

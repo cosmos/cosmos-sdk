@@ -1229,8 +1229,7 @@ simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" -
 
 #### cancel-proposal
 
-The `cancel-proposal` command allows the proposer to cancel the goverance proposal before voting period ends.
-Once proposal is canceled, from the deposits of proposal `proposal_cancel_burn_rate * deposits` will be sent to community pool and `remaining deposits` will be burned.
+Once proposal is canceled, from the deposits of proposal `proposal_cancel_burn_rate * deposits` will be sent to the `ProposalCancelDest` address and `remaining deposits` will be burned.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

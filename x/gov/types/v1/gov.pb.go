@@ -254,7 +254,7 @@ type Proposal struct {
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// proposer defines the address of the proposal's proposer.
 	//
-	// Since: cosmos-sdk 0.47
+	// Since: cosmos-sdk 0.48
 	Proposer string `protobuf:"bytes,11,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }
 
@@ -699,14 +699,12 @@ type Params struct {
 	MinInitialDepositRatio string `protobuf:"bytes,7,opt,name=min_initial_deposit_ratio,json=minInitialDepositRatio,proto3" json:"min_initial_deposit_ratio,omitempty"`
 	// The cancel ratio which will not be returned back to the depositors when a proposal is cancelled.
 	//
-	// Since: cosmos-sdk 0.47
+	// Since: cosmos-sdk 0.48
 	ProposalCancelRatio string `protobuf:"bytes,8,opt,name=proposal_cancel_ratio,json=proposalCancelRatio,proto3" json:"proposal_cancel_ratio,omitempty"`
-	// The proposal cancel destination address will receive the remaining deposits of cancel proposal.
-	//
 	// The address which will receive (proposal_cancel_ratio * deposit) proposal deposits.
 	// If empty, the (proposal_cancel_ratio * deposit) proposal deposits will be burned.
 	//
-	// Since: cosmos-sdk 0.47
+	// Since: cosmos-sdk 0.48
 	ProposalCancelDest string `protobuf:"bytes,9,opt,name=proposal_cancel_dest,json=proposalCancelDest,proto3" json:"proposal_cancel_dest,omitempty"`
 }
 

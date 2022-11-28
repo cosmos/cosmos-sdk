@@ -1,5 +1,6 @@
 [
 	{
+		"name": "minimal",
 		"proto": {
 			"body": {
 				"messages": [
@@ -7,12 +8,7 @@
 						"@type": "/cosmos.bank.v1beta1.MsgSend",
 						"from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
 						"to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t",
-						"amount": [
-							{
-								"denom": "uatom",
-								"amount": "5000"
-							}
-						]
+						"amount": [{ "denom": "uatom", "amount": "10000000" }]
 					}
 				]
 			},
@@ -28,110 +24,8 @@
 					}
 				],
 				"fee": {
-					"amount": [
-						{
-							"denom": "uatom",
-							"amount": "5000"
-						}
-					],
+					"amount": [{ "denom": "uatom", "amount": "2000" }],
 					"gas_limit": 100000
-				}
-			},
-			"signer_data": {
-				"chainId": "my-chain",
-				"pubKey": {
-					"@type": "/cosmos.crypto.secp256k1.PubKey",
-					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-				},
-				"sequence": 2
-			}
-		},
-		"screens": [
-			{ "text": "Chain id: my-chain" },
-			{ "text": "Sequence: 2" },
-			{ "text": "Fees: 5'000 uatom" },
-			{ "text": "Gas limit: 100'000", "expert": true },
-			{
-				"text": "Hash of raw bytes: e237dc2e3f8f0b1d0310e1cd0b0ab5fc4a59e4bc3454d67eb65c3fdb0fa599c9",
-				"expert": true
-			}
-		]
-	},
-	{
-		"proto": {
-			"body": {
-				"messages": []
-			},
-			"auth_info": {
-				"signer_infos": [
-					{
-						"public_key": {
-							"@type": "/cosmos.crypto.secp256k1.PubKey",
-							"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-						},
-						"mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
-						"sequence": 2
-					},
-					{
-						"public_key": {
-							"@type": "/cosmos.crypto.multisig.LegacyAminoPubKey",
-							"threshold": 2,
-							"public_keys": [
-								{
-									"@type": "/cosmos.crypto.secp256k1.PubKey",
-									"key": "AldOvgv8dU9ZZzuhGydQD5FYreLhfhoBgrDKi8ZSTbCQ"
-								},
-								{
-									"@type": "/cosmos.crypto.secp256k1.PubKey",
-									"key": "AxUMR/GKoycWplR+2otzaQZ9zhHRQWJFt3h1bPg1ltha"
-								},
-								{
-									"@type": "/cosmos.crypto.secp256k1.PubKey",
-									"key": "AlI9yVj2Aejow6bYl2nTRylfU+9LjQLEl3keq0sERx9+"
-								},
-								{
-									"@type": "/cosmos.crypto.secp256k1.PubKey",
-									"key": "A0UvHPcvCCaIoFY9Ygh0Pxq9SZTAWtduOyinit/8uo+Q"
-								},
-								{
-									"@type": "/cosmos.crypto.secp256k1.PubKey",
-									"key": "As7R9fDUnwsUVLDr1cxspp+cY9UfXfUf7i9/w+N0EzKA"
-								}
-							]
-						},
-						"mode_info": {
-							"multi": {
-								"bitarray": {
-									"extra_bits_stored": 5,
-									"elems": "SA=="
-								},
-								"mode_infos": [
-									{
-										"single": {
-											"mode": "SIGN_MODE_LEGACY_AMINO_JSON"
-										}
-									},
-									{
-										"single": {
-											"mode": "SIGN_MODE_LEGACY_AMINO_JSON"
-										}
-									}
-								]
-							}
-						},
-						"sequence": "102"
-					}
-				],
-				"fee": {
-					"amount": [
-						{
-							"denom": "uatom",
-							"amount": "5000"
-						}
-					],
-					"gas_limit": 100000,
-					"payer": "cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
-					"granter": "cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45"
 				}
 			},
 			"signer_data": {
@@ -148,20 +42,150 @@
 			{ "text": "Chain id: my-chain" },
 			{ "text": "Account number: 1" },
 			{ "text": "Sequence: 2" },
-			{ "text": "Fees: 5'000 uatom" },
 			{
-				"text": "Fee payer: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
+				"text": "Public key: Object: /cosmos.crypto.secp256k1.PubKey",
 				"expert": true
 			},
+			{ "text": "PubKey object", "indent": 1, "expert": true },
 			{
-				"text": "Fee granter: cosmos1ey69r37gfxvxg62sh4r0ktpuc46pzjrmz29g45",
+				"text": "Key: 02EBDD7FE4FDEB76DC8A205EF65D790CD30E8A375A5C2528EB3A923AF1FB4D794D",
+				"indent": 2,
 				"expert": true
 			},
+			{ "text": "Fees: 2'000 uatom" },
 			{ "text": "Gas limit: 100'000", "expert": true },
 			{
-				"text": "Hash of raw bytes: f7442f0b4797874e399a552f58a2678bc7f5194ceb48be510cc59f03e41e3757",
+				"text": "Hash of raw bytes: 785bd306ea8962cdb9600089bdd65f3dc029e1aea112dee69e19546c9adad86e",
 				"expert": true
 			}
-		]
+		],
+		"cbor": "8fa10172436861696e2069643a206d792d636861696ea101714163636f756e74206e756d6265723a2031a1016b53657175656e63653a2032a201782a5075626c6963206b65793a20636f736d6f732e63727970746f2e736563703235366b312e5075624b657903f5a3016d5075624b6579206f626a656374020103f5a30178314b65793a2041757664662b54393633626369694265396c3135444e4d4f696a64615843556f367a71534f76483754586c4e020203f5a101775472616e73616374696f6e3a2031204d65737361676573a201782a4d6573736167652028312f31293a20636f736d6f732e62616e6b2e763162657461312e4d736753656e640201a201783b46726f6d20616464726573733a20636f736d6f7331756c6176336873656e7570737771666b77327933737570356b677471776e76716138657968730201a2017839546f20616464726573733a20636f736d6f7331656a726634637572327779366b667572673966326a707070326833616665356836706b6835740201a2016f416d6f756e743a2031302041544f4d0201a1016f456e64206f66204d65737361676573a10171466565733a20302e303032207561746f6da20172476173206c696d69743a203130302730303003f5a201785348617368206f66207261772062797465733a206532333764633265336638663062316430333130653163643062306162356663346135396534626333343534643637656236356333666462306661353939633903f5"
+	},
+	{
+		"name": "tricky memo (starts with >, utf-8, trailing whitespaces)",
+		"proto": {
+			"body": {
+				"messages": [
+					{
+						"@type": "/cosmos.bank.v1beta1.MsgSend",
+						"from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+						"to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t",
+						"amount": [{ "denom": "uatom", "amount": "10000000" }]
+					}
+				],
+				"memo": "> ⚛️\\u269B⚛️     "
+			},
+			"auth_info": {
+				"signer_infos": [
+					{
+						"public_key": {
+							"@type": "/cosmos.crypto.secp256k1.PubKey",
+							"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+						},
+						"mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
+						"sequence": 2
+					}
+				],
+				"fee": {
+					"amount": [{ "denom": "uatom", "amount": "2000" }],
+					"gas_limit": 100000
+				}
+			},
+			"signer_data": {
+				"accountNumber": 1,
+				"chainId": "my-chain",
+				"pubKey": {
+					"@type": "/cosmos.crypto.secp256k1.PubKey",
+					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+				},
+				"sequence": 2
+			}
+		},
+		"screens": [
+			{ "text": "Chain id: my-chain" },
+			{ "text": "Account number: 1" },
+			{ "text": "Sequence: 2" },
+			{
+				"text": "Public key: Object: /cosmos.crypto.secp256k1.PubKey",
+				"expert": true
+			},
+			{ "text": "PubKey object", "indent": 1, "expert": true },
+			{
+				"text": "Key: 02EBDD7FE4FDEB76DC8A205EF65D790CD30E8A375A5C2528EB3A923AF1FB4D794D",
+				"indent": 2,
+				"expert": true
+			},
+			{ "text": "Memo: > ⚛️\\u269B⚛️     " },
+			{ "text": "Fees: 2'000 uatom" },
+			{ "text": "Gas limit: 100'000", "expert": true },
+			{
+				"text": "Hash of raw bytes: 9c043290109c270b2ffa9f3c0fa55a090c0125ebef881f7da53978dbf93f7385",
+				"expert": true
+			}
+		],
+		"cbor": "90a10172436861696e2069643a206d792d636861696ea101714163636f756e74206e756d6265723a2031a1016b53657175656e63653a2032a201782a5075626c6963206b65793a20636f736d6f732e63727970746f2e736563703235366b312e5075624b657903f5a3016d5075624b6579206f626a656374020103f5a30178314b65793a2041757664662b54393633626369694265396c3135444e4d4f696a64615843556f367a71534f76483754586c4e020203f5a101775472616e73616374696f6e3a2031204d65737361676573a201782a4d6573736167652028312f31293a20636f736d6f732e62616e6b2e763162657461312e4d736753656e640201a201783b46726f6d20616464726573733a20636f736d6f7331756c6176336873656e7570737771666b77327933737570356b677471776e76716138657968730201a2017839546f20616464726573733a20636f736d6f7331656a726634637572327779366b667572673966326a707070326833616665356836706b6835740201a2016f416d6f756e743a2031302041544f4d0201a1016f456e64206f66204d65737361676573a101781f4d656d6f3a203e20e29a9befb88f5c7532363942e29a9befb88f2020202020a10171466565733a20302e303032207561746f6da20172476173206c696d69743a203130302730303003f5a201785348617368206f66207261772062797465733a206532333764633265336638663062316430333130653163643062306162356663346135396534626333343534643637656236356333666462306661353939633903f5"
+	},
+	{
+		"name": "long text in nested value",
+		"proto": {
+			"body": {
+				"messages": [
+					{
+						"@type": "/cosmos.gov.v1.MsgVote",
+						"proposal_id": 1,
+						"voter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+						"option": "VOTE_OPTION_YES",
+						"metadata": "a very long line of text, please coöperate and break into multiple lines. Also it ends in  a single ampersand @"
+					}
+				]
+			},
+			"auth_info": {
+				"signer_infos": [
+					{
+						"public_key": {
+							"@type": "/cosmos.crypto.secp256k1.PubKey",
+							"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+						},
+						"mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
+						"sequence": 2
+					}
+				],
+				"fee": {
+					"amount": [{ "denom": "uatom", "amount": "2000" }],
+					"gas_limit": 100000
+				}
+			},
+			"signer_data": {
+				"accountNumber": 1,
+				"chainId": "my-chain",
+				"pubKey": {
+					"@type": "/cosmos.crypto.secp256k1.PubKey",
+					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+				},
+				"sequence": 2
+			}
+		},
+		"screens": [
+			{ "text": "Chain id: my-chain" },
+			{ "text": "Account number: 1" },
+			{ "text": "Sequence: 2" },
+			{
+				"text": "Public key: Object: /cosmos.crypto.secp256k1.PubKey",
+				"expert": true
+			},
+			{ "text": "PubKey object", "indent": 1, "expert": true },
+			{
+				"text": "Key: 02EBDD7FE4FDEB76DC8A205EF65D790CD30E8A375A5C2528EB3A923AF1FB4D794D",
+				"indent": 2,
+				"expert": true
+			},
+			{ "text": "Fees: 2'000 uatom" },
+			{ "text": "Gas limit: 100'000", "expert": true },
+			{
+				"text": "Hash of raw bytes: 4a35d995d35312d9b137523f765679db9c24148ce86da5ef5bcfb3fb1a52192e",
+				"expert": true
+			}
+		],
+		"cbor": "90a10172436861696e2069643a206d792d636861696ea101714163636f756e74206e756d6265723a2031a1016b53657175656e63653a2032a201782a5075626c6963206b65793a20636f736d6f732e63727970746f2e736563703235366b312e5075624b657903f5a3016d5075624b6579206f626a656374020103f5a30178314b65793a2041757664662b54393633626369694265396c3135444e4d4f696a64615843556f367a71534f76483754586c4e020203f5a101775472616e73616374696f6e3a2031204d65737361676573a20178244d6573736167652028312f31293a20636f736d6f732e676f762e76312e4d7367566f74650201a2016e50726f706f73616c2069643a20310201a2017834566f7465723a20636f736d6f7331756c6176336873656e7570737771666b77327933737570356b677471776e76716138657968730201a201774f7074696f6e3a20564f54455f4f5054494f4e5f5945530201a201787a4d657461646174613a20612076657279206c6f6e67206c696e65206f6620746578742c20706c6561736520636fc3b670657261746520616e6420627265616b20696e746f206d756c7469706c65206c696e65732e20416c736f20697420656e647320696e2020612073696e676c6520616d70657273616e6420400201a1016f456e64206f66204d65737361676573a10171466565733a20302e303032207561746f6da20172476173206c696d69743a203130302730303003f5a201785348617368206f66207261772062797465733a206532333764633265336638663062316430333130653163643062306162356663346135396534626333343534643637656236356333666462306661353939633903f5"
 	}
 ]

@@ -3,7 +3,6 @@ package valuerenderer_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -16,6 +15,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	_ "cosmossdk.io/api/cosmos/gov/v1"
 	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -33,6 +33,7 @@ type txJsonTestTx struct {
 }
 
 type txJsonTest struct {
+	Name    string
 	Proto   txJsonTestTx
 	Error   bool
 	Screens []valuerenderer.Screen
@@ -46,8 +47,8 @@ func TestTxJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	for i, tc := range testcases {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+	for _, tc := range testcases {
+		t.Run(tc.Name, func(t *testing.T) {
 
 			textualData := createTextualData(t, tc.Proto)
 
@@ -62,6 +63,9 @@ func TestTxJsonTestcases(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)
+
+			// TODO Add CBOR equality
+			// Needs https://github.com/cosmos/cosmos-sdk/pull/13697
 
 			// Round trip.
 			// parsedVal, err := rend.Parse(context.Background(), screens)

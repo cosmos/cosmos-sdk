@@ -55,7 +55,9 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		AccountNumber: textualData.SignerData.AccountNumber,
 		Sequence:      textualData.SignerData.Sequence,
 	}
-	p2 := &enveloppe.Part2{}
+	p2 := &enveloppe.Part2{
+		PublicKey: textualData.SignerData.PubKey,
+	}
 	p3 := &enveloppe.Part3{
 		Memo: txBody.Memo,
 		Fees: txAuthInfo.Fee.Amount,

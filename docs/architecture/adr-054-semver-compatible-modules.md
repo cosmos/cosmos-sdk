@@ -319,24 +319,13 @@ type MsgSend interface {
 func NewMsgSend() MsgSend { return &msgSendImpl{memoryBuffers: ...} }
 ```
 
-Under the hood, `MsgSend` could be implemented based on some raw memory buffers, ex:
-```go
-type msgSendImpl struct {
-	memoryBuffers []interface{}
-}
-
-func (m *msgSendImpl) GetFromAddress() {
-	return m.memoryBuffers[0].(string)
-}
-
-func (m *msgSendImpl) GetToAddress() {
-    return m.memoryBuffers[1].(string)
-}
-```
-
-This approach would have the added benefits of allowing zero-copy message passing to modules written in other languages
-such as Rust. It could also make unknown field filtering in inter-module communication simpler if we require that all
-new fields are added in sequential order, ex. just checking that no field `> 5` is set.
+Under the hood, `MsgSend` could be implemented based on some raw memory buffer in the same way
+that [Cap'n Proto](https://capnproto.org)
+and [FlatBuffers](https://google.github.io/flatbuffers/) so that we could convert between one version of `MsgSend`
+and another without serialization (i.e. zero-copy). This approach would have the added benefits of allowing zero-copy
+message passing to modules written in other languages such as Rust and accessed through a VM or FFI. It could also make
+unknown field filtering in inter-module communication simpler if we require that all new fields are added in sequential
+order, ex. just checking that no field `> 5` is set.
 
 Also, we wouldn't have any issues with state machine breaking code on generated types because all the generated
 code used in the state machine would actually live in the state machine module itself. Depending on how interface

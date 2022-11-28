@@ -382,7 +382,6 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 // TallyProposalsAtVPEnd iterates over all proposals whose voting period
 // has ended, tallies their votes, prunes them, and updates the proposal's
 // `FinalTallyResult` field.
-
 func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 	proposals, err := k.proposalsByVPEnd(ctx, ctx.BlockTime())
 	if err != nil {
@@ -409,8 +408,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return err
 			}
 		} else {
-			err = k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo)
-			if err != nil {
+			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 				return sdkerrors.Wrap(err, "doTallyAndUpdate")
 			}
 

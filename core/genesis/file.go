@@ -72,13 +72,13 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 		doc := tmtypes.GenesisDoc{}
 		err := json.Unmarshal(rawBz, &doc)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal rawJSON to GenesisDoc")
+			return nil, fmt.Errorf("failed to unmarshal rawJSON to GenesisDoc: %w", err)
 		}
 
 		appState := make(map[string]json.RawMessage)
 		err = json.Unmarshal(doc.AppState, &appState)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal app state from GenesisDoc")
+			return nil, fmt.Errorf("failed to unmarshal app state from GenesisDoc: %w", err)
 		}
 
 		moduleState := appState[f.moduleName]
@@ -219,7 +219,7 @@ func (f *FileGenesisTarget) OpenWriter(field string) (io.WriteCloser, error) {
 		fileName := fmt.Sprintf("%s.json", field)
 		fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, f.moduleName, fileName)), fileOpenflag, flieOpenMode)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open writer, %s: %v", fileName, err)
+			return nil, fmt.Errorf("failed to open writer, %s: %w", fileName, err)
 		}
 		return fp, nil
 	}

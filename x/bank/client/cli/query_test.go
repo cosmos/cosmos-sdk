@@ -120,6 +120,73 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 	}
 }
 
+func (s *CLITestSuite) TestGetSpendableBalancesCmd() {
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
+
+	cmd := cli.GetSpendableBalancesCmd()
+	cmd.SetOutput(io.Discard)
+
+	testCases := []struct {
+		name         string
+		ctxGen       func() client.Context
+		args         []string
+		expectResult proto.Message
+		expectErr    bool
+	}{
+		{
+			"valid query",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySpendableBalancesResponse{})
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			[]string{
+				accounts[0].Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			&types.QuerySpendableBalancesResponse{},
+			false,
+		},
+		{
+			"invalid Address",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{
+				"foo",
+			},
+			nil,
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			var outBuf bytes.Buffer
+
+			clientCtx := tc.ctxGen().WithOutput(&outBuf)
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+
+			err := cmd.Execute()
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
 func (s *CLITestSuite) TestGetCmdDenomsMetadata() {
 	cmd := cli.GetCmdDenomsMetadata()
 	cmd.SetOutput(io.Discard)

@@ -108,6 +108,57 @@ Example:
 	return cmd
 }
 
+func GetSpendableBalancesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "spendable-balances [address]",
+		Short: "Query for account spendable balances by address",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query the spendable balances of an account.
+
+Example:
+  $ %s query %s spendable-balances [address]
+`,
+				version.AppName, types.ModuleName,
+			),
+		),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			ctx := cmd.Context()
+			params := types.NewQuerySpendableBalancesRequest(addr, pageReq)
+
+			res, err := queryClient.SpendableBalances(ctx, params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "spendable balances")
+
+	return cmd
+}
+
 // GetCmdDenomsMetadata defines the cobra command to query client denomination metadata.
 func GetCmdDenomsMetadata() *cobra.Command {
 	cmd := &cobra.Command{

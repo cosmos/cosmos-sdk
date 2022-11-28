@@ -16,7 +16,6 @@ func TestCapabilityKey(t *testing.T) {
 	cap := types.NewCapability(idx)
 	require.Equal(t, idx, cap.GetIndex())
 	require.Equal(t, fmt.Sprintf("index:%d", idx), strings.TrimSpace(cap.String()))
-	require.Equal(t, fmt.Sprintf("Capability{%p, %d}", cap, idx), cap.String())
 }
 
 func TestOwner(t *testing.T) {

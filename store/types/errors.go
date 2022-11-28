@@ -1,6 +1,9 @@
 package types
 
-import errorsmod "cosmossdk.io/errors"
+import (
+	errorsmod "cosmossdk.io/errors"
+	abci "github.com/tendermint/tendermint/abci/types"
+)
 
 const StoreCodespace = "store"
 
@@ -141,3 +144,16 @@ var (
 	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
 )
+
+// ABCI QueryResult
+
+// QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
+// info from the error.
+func QueryResult(err error, debug bool) abci.ResponseQuery {
+	space, code, log := errorsmod.ABCIInfo(err, debug)
+	return abci.ResponseQuery{
+		Codespace: space,
+		Code:      code,
+		Log:       log,
+	}
+}

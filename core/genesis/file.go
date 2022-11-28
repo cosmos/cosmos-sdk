@@ -28,16 +28,6 @@ const (
 	dirCreateMode = fs.FileMode(0o700)
 )
 
-// readCloserWrapper is io.ReadCloser wrapper for bytes.Reader
-type readCloserWrapper struct {
-	io.Reader
-}
-
-// Close implements io.Closer interface
-func (r readCloserWrapper) Close() error {
-	return nil
-}
-
 // NewFileGenesisSource returns a new GenesisSource for the provided
 // source directory and the provided module name where it is assumed
 // that the encoded json data of file.
@@ -117,8 +107,8 @@ func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field stri
 		return nil, fmt.Errorf("failed to retrieve module field %s/%s from genesis.json", f.moduleName, field)
 	}
 
-	// wrap raw field data to reader
-	return readCloserWrapper{bytes.NewReader(fieldRawData)}, nil
+	// wrap raw field data to a ReadCloser
+	return io.NopCloser(bytes.NewReader(fieldRawData)), nil
 }
 
 // ReadMessage reads rawJSON data from source file and unmarshal it into proto.Message

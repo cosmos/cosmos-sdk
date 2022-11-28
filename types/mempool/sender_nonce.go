@@ -109,9 +109,7 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 	senderTxs.Set(nonce, tx)
 	key := txKey{nonce: nonce, address: sender}
 	_, found = snm.existingTx[key]
-	if !found {
-		snm.existingTx[key] = true
-	}
+	snm.existingTx[key] = true
 	return nil
 }
 
@@ -177,10 +175,7 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 		delete(snm.senders, sender)
 	}
 	key := txKey{nonce: nonce, address: sender}
-	_, found = snm.existingTx[key]
-	if found {
-		delete(snm.existingTx, key)
-	}
+	delete(snm.existingTx, key)
 
 	return nil
 }

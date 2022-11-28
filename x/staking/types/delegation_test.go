@@ -61,16 +61,11 @@ func TestRedelegationEqual(t *testing.T) {
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), sdk.NewInt(0),
 		math.LegacyNewDec(0), 2)
-
-	// This should not be true because the redelegation ID are different (1 and 2)
-	ok := r1.String() == r2.String()
-	require.True(t, ok)
+	require.True(t, r1.Equals(r2))
 
 	r2.Entries[0].SharesDst = math.LegacyNewDec(10)
 	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
-
-	ok = r1.String() == r2.String()
-	require.False(t, ok)
+	require.False(t, r1.Equals(r2))
 }
 
 func TestRedelegationString(t *testing.T) {

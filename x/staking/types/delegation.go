@@ -213,6 +213,16 @@ func (e RedelegationEntry) OnHold() bool {
 	return e.UnbondingOnHoldRefCount > 0
 }
 
+// Equals compares two RedelegationEntry objects
+// Note the UnbondingId are not compared
+func (e RedelegationEntry) Equals(other RedelegationEntry) bool {
+	return e.CreationHeight == other.CreationHeight &&
+		e.CompletionTime.Equal(other.CompletionTime) &&
+		e.InitialBalance.Equal(other.InitialBalance) &&
+		e.SharesDst.Equal(other.SharesDst) &&
+		e.UnbondingOnHoldRefCount == other.UnbondingOnHoldRefCount
+}
+
 //nolint:interfacer
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
@@ -237,6 +247,23 @@ func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balan
 // RemoveEntry - remove entry at index i to the unbonding delegation
 func (red *Redelegation) RemoveEntry(i int64) {
 	red.Entries = append(red.Entries[:i], red.Entries[i+1:]...)
+}
+
+func (red *Redelegation) Equals(other Redelegation) bool {
+	if red.DelegatorAddress != other.DelegatorAddress ||
+		red.ValidatorDstAddress != other.ValidatorDstAddress ||
+		red.ValidatorSrcAddress != other.ValidatorSrcAddress ||
+		len(red.Entries) != len(other.Entries) {
+		return false
+	}
+
+	for i, entry := range red.Entries {
+		if !entry.Equals(other.Entries[i]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // MustMarshalRED returns the Redelegation bytes. Panics if fails.

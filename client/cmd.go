@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -151,7 +152,14 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 	if clientCtx.GRPCClient == nil || flagSet.Changed(flags.FlagGRPC) {
 		grpcURI, _ := flagSet.GetString(flags.FlagGRPC)
 		if grpcURI != "" {
-			grpcClient, err := grpc.Dial(grpcURI)
+			var dialOpts []grpc.DialOption
+
+			useInsecure, _ := flagSet.GetBool(flags.FlagGRPCInsecure)
+			if useInsecure {
+				dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			}
+
+			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
 			if err != nil {
 				return Context{}, err
 			}

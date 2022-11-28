@@ -46,6 +46,7 @@ const (
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
 	FlagGRPC             = "grpc"
+	FlagGRPCInsecure     = "grpc-insecure"
 	FlagHeight           = "height"
 	FlagGasAdjustment    = "gas-adjustment"
 	FlagFrom             = "from"
@@ -94,6 +95,7 @@ var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
 	cmd.Flags().String(FlagGRPC, "", "URL of the gRPC endpoint for this chain")
+	cmd.Flags().Bool(FlagGRPCInsecure, false, "allow gRPC over insecure channels")
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 	cmd.Flags().StringP(FlagOutput, "o", "text", "Output format (text|json)")
 

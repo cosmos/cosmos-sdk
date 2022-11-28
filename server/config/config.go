@@ -330,6 +330,7 @@ func DefaultConfig() *Config {
 		Streamers: StreamersConfig{
 			File: FileStreamerConfig{
 				Keys:            []string{"*"},
+				WriteDir:        "data/file_streamer",
 				OutputMetadata:  true,
 				StopNodeOnError: true,
 				// NOTICE: the default config don't protect the streamer data integrity

@@ -222,19 +222,6 @@ func (s *IntegrationTestSuite) TestQueryOwner() {
 		expectResult string
 	}{
 		{
-			name: "class id is invalid",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: "invalid_class_id",
-				ID:      testID,
-			},
-			expectErr:    true,
-			errorMsg:     "invalid class id",
-			expectResult: "",
-		},
-		{
 			name: "class id does not exist",
 			args: struct {
 				ClassID string
@@ -244,18 +231,6 @@ func (s *IntegrationTestSuite) TestQueryOwner() {
 				ID:      testID,
 			},
 			expectErr:    false,
-			expectResult: "",
-		},
-		{
-			name: "nft id is invalid",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: testClassID,
-				ID:      "invalid_nft_id",
-			},
-			expectErr:    true,
 			expectResult: "",
 		},
 		{
@@ -311,19 +286,6 @@ func (s *IntegrationTestSuite) TestQueryBalance() {
 		errorMsg     string
 		expectResult uint64
 	}{
-		{
-			name: "class id is invalid",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: "invalid_class_id",
-				Owner:   val.Address.String(),
-			},
-			expectErr:    true,
-			errorMsg:     "invalid class id",
-			expectResult: 0,
-		},
 		{
 			name: "class id does not exist",
 			args: struct {
@@ -389,14 +351,14 @@ func (s *IntegrationTestSuite) TestQuerySupply() {
 		expectResult uint64
 	}{
 		{
-			name: "class id is invalid",
+			name: "class id is empty",
 			args: struct {
 				ClassID string
 			}{
-				ClassID: "invalid_class_id",
+				ClassID: "",
 			},
 			expectErr:    true,
-			errorMsg:     "invalid class id",
+			errorMsg:     nft.ErrEmptyClassID.Error(),
 			expectResult: 0,
 		},
 		{

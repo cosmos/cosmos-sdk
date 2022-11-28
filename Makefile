@@ -13,7 +13,6 @@ MOCKS_DIR = $(CURDIR)/tests/mocks
 HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
-DOCS_DOMAIN=docs.cosmos.network
 # RocksDB is a native dependency, so we don't assume the library is installed.
 # Instead, it must be explicitly enabled and we warn when it is not.
 ENABLE_ROCKSDB ?= false
@@ -48,7 +47,7 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += legacy_simapp
+  build_tags += app_v1
 endif
 
 whitespace :=
@@ -185,24 +184,8 @@ godocs:
 	@echo "--> Wait a few seconds and visit http://localhost:6060/pkg/github.com/cosmos/cosmos-sdk/types"
 	godoc -http=:6060
 
-# This builds the docs.cosmos.network docs using docusaurus.
-# Old documentation, which have not been migrated to docusaurus are generated with vuepress.
 build-docs:
-	@echo "building docusaurus docs"
-	@cd docs && npm ci && npm run build
-	mv docs/build ~/output
-
-	@echo "building old docs"
-	@cd docs && \
-			while read -r branch path_prefix; do \
-			echo "building vuepress $${branch} docs" ; \
-			(git clean -fdx && git reset --hard && git checkout $${branch} && npm install && VUEPRESS_BASE="/$${path_prefix}/" npm run build) ; \
-			mkdir -p ~/output/$${path_prefix} ; \
-			cp -r .vuepress/dist/* ~/output/$${path_prefix}/ ; \
-	done < vuepress_versions ;	
-
-	@echo "setup domain"
-	@echo $(DOCS_DOMAIN) > ~/output/CNAME
+	@cd docs && DOCS_DOMAIN=docs.cosmos.network sh ./build-all.sh
 
 .PHONY: build-docs
 
@@ -213,9 +196,13 @@ build-docs:
 test: test-unit
 test-e2e:
 	$(MAKE) -C tests test-e2e
+test-e2e-cov:
+	$(MAKE) -C tests test-e2e-cov
 test-integration:
 	$(MAKE) -C tests test-integration
-test-all: test-unit test-e2e test-integration test-ledger-mock test-race test-cover
+test-integration-cov:
+	$(MAKE) -C tests test-integration-cov
+test-all: test-unit test-e2e test-integration test-ledger-mock test-race
 
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
@@ -334,13 +321,6 @@ test-sim-profile:
 
 .PHONY: test-sim-profile test-sim-benchmark
 
-test-cover:
-	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
-.PHONY: test-cover
-
-test-rosetta-unit:
-	$(MAKE) -C tools/rosetta test
-
 test-rosetta:
 	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
 	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
@@ -355,7 +335,7 @@ benchmark:
 ###############################################################################
 
 golangci_lint_cmd=golangci-lint
-golangci_version=v1.50.0
+golangci_version=v1.50.1
 
 lint:
 	@echo "--> Running linter"
@@ -370,9 +350,7 @@ lint-fix:
 .PHONY: lint lint-fix
 
 format:
-	@go install mvdan.cc/gofumpt@latest
 	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go" -not -path "./crypto/keys/secp256k1/*" | xargs gofumpt -w -l
 	$(golangci_lint_cmd) run --fix
 .PHONY: format
 

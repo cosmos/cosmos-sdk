@@ -11,8 +11,9 @@ type Mempool interface {
 	// an error upon failure.
 	Insert(sdk.Context, sdk.Tx) error
 
-	// Select returns an Iterator over the app-side mempool.  If txs are specified, then they shall be incorporated
-	// into the Iterator.  The Iterator must be closed by the caller.
+	// Select returns an Iterator over the app-side mempool. If txs are specified,
+	// then they shall be incorporated into the Iterator. The Iterator must
+	// closed by the caller.
 	Select(sdk.Context, [][]byte) Iterator
 
 	// CountTx returns the number of transactions currently in the mempool.
@@ -23,10 +24,12 @@ type Mempool interface {
 	Remove(sdk.Tx) error
 }
 
-// Iterator defines an app-side mempool iterator interface that is as minimal as possible.  The order of iteration
-// is determined by the app-side mempool implementation.
+// Iterator defines an app-side mempool iterator interface that is as minimal as
+// possible. The order of iteration is determined by the app-side mempool
+// implementation.
 type Iterator interface {
-	// Next returns the next transaction from the mempool. If there are no more transactions, it returns nil.
+	// Next returns the next transaction from the mempool. If there are no more
+	// transactions, it returns nil.
 	Next() Iterator
 
 	// Tx returns the transaction at the current position of the iterator.

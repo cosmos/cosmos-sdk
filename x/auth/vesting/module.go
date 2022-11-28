@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -91,6 +90,14 @@ func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // RegisterInvariants performs a no-op; there are no invariants to enforce.
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
@@ -118,12 +125,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type VestingInputs struct {
@@ -136,11 +139,11 @@ type VestingInputs struct {
 type VestingOutputs struct {
 	depinject.Out
 
-	Module runtime.AppModuleWrapper
+	Module appmodule.AppModule
 }
 
 func ProvideModule(in VestingInputs) VestingOutputs {
 	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
 
-	return VestingOutputs{Module: runtime.WrapAppModule(m)}
+	return VestingOutputs{Module: m}
 }

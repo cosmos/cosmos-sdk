@@ -28,7 +28,7 @@ func (b BaseAppOption) IsManyPerContainerType() {}
 func init() {
 	appmodule.Register(&runtimev1alpha1.Module{},
 		appmodule.Provide(
-			Provide,
+			ProvideApp,
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
@@ -38,7 +38,7 @@ func init() {
 	)
 }
 
-func Provide(moduleBasics map[string]AppModuleBasicWrapper) (
+func ProvideApp() (
 	codectypes.InterfaceRegistry,
 	codec.Codec,
 	*codec.LegacyAmino,
@@ -49,13 +49,6 @@ func Provide(moduleBasics map[string]AppModuleBasicWrapper) (
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
 
-	// build codecs
-	basicManager := module.BasicManager{}
-	for name, wrapper := range moduleBasics {
-		basicManager[name] = wrapper
-		wrapper.RegisterInterfaces(interfaceRegistry)
-		wrapper.RegisterLegacyAminoCodec(amino)
-	}
 	std.RegisterInterfaces(interfaceRegistry)
 	std.RegisterLegacyAminoCodec(amino)
 
@@ -67,7 +60,7 @@ func Provide(moduleBasics map[string]AppModuleBasicWrapper) (
 			interfaceRegistry: interfaceRegistry,
 			cdc:               cdc,
 			amino:             amino,
-			basicManager:      basicManager,
+			basicManager:      module.BasicManager{},
 			msgServiceRouter:  msgServiceRouter,
 		},
 	}
@@ -78,23 +71,30 @@ func Provide(moduleBasics map[string]AppModuleBasicWrapper) (
 type AppInputs struct {
 	depinject.In
 
-	AppConfig      *appv1alpha1.Config
-	Config         *runtimev1alpha1.Module
-	AppBuilder     *AppBuilder
-	Modules        map[string]AppModuleWrapper
-	BaseAppOptions []BaseAppOption
+	AppConfig         *appv1alpha1.Config
+	Config            *runtimev1alpha1.Module
+	AppBuilder        *AppBuilder
+	Modules           map[string]appmodule.AppModule
+	BaseAppOptions    []BaseAppOption
+	InterfaceRegistry codectypes.InterfaceRegistry
+	LegacyAmino       *codec.LegacyAmino
 }
 
 func SetupAppBuilder(inputs AppInputs) {
-	mm := &module.Manager{Modules: map[string]module.AppModule{}}
-	for name, wrapper := range inputs.Modules {
-		mm.Modules[name] = wrapper.AppModule
-	}
+	mm := module.NewManagerFromMap(inputs.Modules)
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
 	app.ModuleManager = mm
 	app.appConfig = inputs.AppConfig
+
+	for name, mod := range inputs.Modules {
+		if basicMod, ok := mod.(module.AppModuleBasic); ok {
+			app.basicManager[name] = basicMod
+			basicMod.RegisterInterfaces(inputs.InterfaceRegistry)
+			basicMod.RegisterLegacyAminoCodec(inputs.LegacyAmino)
+		}
+	}
 }
 
 func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {

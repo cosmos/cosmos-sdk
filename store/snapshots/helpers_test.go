@@ -16,7 +16,7 @@ import (
 	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

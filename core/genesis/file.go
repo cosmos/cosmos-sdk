@@ -67,32 +67,32 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 		}
 	}
 
-	if f.readFromRootGenesis {
-		// unmarshal module rawJSON from genesis.AppState
-		doc := tmtypes.GenesisDoc{}
-		err := json.Unmarshal(rawBz, &doc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal rawJSON to GenesisDoc: %w", err)
-		}
-
-		appState := make(map[string]json.RawMessage)
-		err = json.Unmarshal(doc.AppState, &appState)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal app state from GenesisDoc: %w", err)
-		}
-
-		moduleState := appState[f.moduleName]
-		if moduleState == nil {
-			return nil, fmt.Errorf("failed to retrieve module state %s from genesis.json", f.moduleName)
-		}
-		f.moduleRootJson = moduleState
-
-		return f.unmarshalRawModuleWithField(moduleState, field)
+	if !f.readFromRootGenesis {
+		// rawBz has been loaded from the <module>.json
+		f.moduleRootJson = rawBz
+		return f.unmarshalRawModuleWithField(rawBz, field)
 	}
 
-	// rawBz has been loaded from the <module>.json
-	f.moduleRootJson = rawBz
-	return f.unmarshalRawModuleWithField(rawBz, field)
+	// unmarshal module rawJSON from genesis.AppState
+	doc := tmtypes.GenesisDoc{}
+	err := json.Unmarshal(rawBz, &doc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal rawJSON to GenesisDoc: %w", err)
+	}
+
+	appState := make(map[string]json.RawMessage)
+	err = json.Unmarshal(doc.AppState, &appState)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal app state from GenesisDoc: %w", err)
+	}
+
+	moduleState := appState[f.moduleName]
+	if moduleState == nil {
+		return nil, fmt.Errorf("failed to retrieve module state %s from genesis.json", f.moduleName)
+	}
+	f.moduleRootJson = moduleState
+
+	return f.unmarshalRawModuleWithField(moduleState, field)
 }
 
 func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field string) (io.ReadCloser, error) {

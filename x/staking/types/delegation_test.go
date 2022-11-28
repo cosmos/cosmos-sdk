@@ -62,6 +62,7 @@ func TestRedelegationEqual(t *testing.T) {
 		time.Unix(0, 0), sdk.NewInt(0),
 		math.LegacyNewDec(0), 2)
 
+	// This should not be true because the redelegation ID are different (1 and 2)
 	ok := r1.String() == r2.String()
 	require.True(t, ok)
 

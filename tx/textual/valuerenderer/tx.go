@@ -128,7 +128,8 @@ func (vr txValueRenderer) formatPart(ctx context.Context, m proto.Message, exper
 	return screens, nil
 }
 
-// getHash gets the hash of raw bytes to be signed over.
+// getHash gets the hash of raw bytes to be signed over:
+// HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))
 func getHash(bodyBz, authInfoBz []byte) string {
 	bodyLen, authInfoLen := make([]byte, 8), make([]byte, 8)
 	binary.BigEndian.PutUint64(bodyLen, uint64(len(bodyBz)))
@@ -147,7 +148,29 @@ func getHash(bodyBz, authInfoBz []byte) string {
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
-	tx := &textualv1.TextualData{}
+	res := &textualv1.TextualData{}
 
-	return protoreflect.ValueOfMessage(tx.ProtoReflect()), nil
+	_, _, err := vr.parsePart(ctx, screens, &enveloppe.Part1{})
+	if err != nil {
+		return nilValue, err
+	}
+
+	return protoreflect.ValueOfMessage(res.ProtoReflect()), nil
+}
+
+func (vr txValueRenderer) parsePart(ctx context.Context, screens []Screen, m proto.Message) ([]Screen, proto.Message, error) {
+	messageVR := NewMessageValueRenderer(vr.tr, m.ProtoReflect().Descriptor())
+
+	// Manually add the "<message_name> object" header screen, and indent correctly
+	for i := range screens {
+		screens[i].Indent++
+	}
+	screens = append([]Screen{{Text: "Part1 object"}}, screens...)
+
+	v, err := messageVR.Parse(ctx, screens)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return screens, v.Message().Interface(), err
 }

@@ -4,6 +4,15 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Protobuf
+
+The SDK is in the process of removing all `gogoproto` annotations.
+
+#### Stringer
+
+The `Stringer` implementation of some packages use `proto.CompactTextString` for _stringify_ a struct.
+Please [verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the `.String()` method in your application. An chain should not rely on it for any state-machine related operation.
+
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation
@@ -34,10 +43,11 @@ The `simapp` package **should not be imported in your own app**. Instead, you sh
 
 #### App Wiring
 
-SimApp's `app.go` is now using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go), the dependency injection framework of the Cosmos SDK.
+SimApp's `app_v2.go` is using [App Wiring](https://docs.cosmos.network/main/building-apps/app-go-v2), the dependency injection framework of the Cosmos SDK.
 This means that modules are injected directly into SimApp thanks to a [configuration file](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_config.go).
-The old behavior is preserved and can still be used, without the dependency injection framework, as shows [`app_legacy.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app_legacy.go).
-If you are using a legacy `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
+The previous behavior, without the dependency injection framework, is still present in [`app.go`](https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go) and is not going anywhere.
+
+If you are using a `app.go` without dependency injection, add the following lines to your `app.go` in order to provide newer gRPC services:
 
 ```go
 autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))

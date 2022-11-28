@@ -65,6 +65,18 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccount", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccount), arg0, arg1)
 }
 
+// RemoveAccount mocks base method.
+func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types0.AccountI) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RemoveAccount", ctx, acc)
+}
+
+// RemoveAccount indicates an expected call of RemoveAccount.
+func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAccount", reflect.TypeOf((*MockAccountKeeper)(nil).RemoveAccount), ctx, acc)
+}
+
 // SetAccount mocks base method.
 func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountI) {
 	m.ctrl.T.Helper()

@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -45,8 +46,8 @@ func NewTextual(q CoinMetadataQueryFn) Textual {
 	return t
 }
 
-// GetValueRenderer returns the value renderer for the given FieldDescriptor.
-func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
+// GetFieldValueRenderer returns the value renderer for the given FieldDescriptor.
+func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueRenderer, error) {
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind && proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "":
@@ -78,6 +79,9 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 	case fd.Kind() == protoreflect.StringKind:
 		return stringValueRenderer{}, nil
 
+	case fd.Kind() == protoreflect.EnumKind:
+		return NewEnumValueRenderer(fd), nil
+
 	case fd.Kind() == protoreflect.MessageKind:
 		md := fd.Message()
 		fullName := md.FullName()
@@ -93,11 +97,23 @@ func (r Textual) GetValueRenderer(fd protoreflect.FieldDescriptor) (ValueRendere
 			// This will be implemented in https://github.com/cosmos/cosmos-sdk/issues/12714
 			return nil, fmt.Errorf("repeated field renderer not yet implemented")
 		}
-		return NewMessageValueRenderer(&r, md), nil
+		return NewMessageValueRenderer(r, md), nil
 
 	default:
 		return nil, fmt.Errorf("value renderers cannot format value of type %s", fd.Kind())
 	}
+}
+
+// GetMessageValueRenderer is a specialization of GetValueRenderer for messages.
+// It is useful when the message type is discovered outside the context of a field,
+// e.g. when handling a google.protobuf.Any.
+func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (ValueRenderer, error) {
+	fullName := md.FullName()
+	vr, found := r.messages[fullName]
+	if found {
+		return vr, nil
+	}
+	return NewMessageValueRenderer(r, md), nil
 }
 
 func (r *Textual) init() {
@@ -111,6 +127,7 @@ func (r *Textual) init() {
 		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
+		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = NewAnyValueRenderer(r)
 	}
 }
 

@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
-	"sigs.k8s.io/yaml"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -122,12 +121,6 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{proposer}
 }
 
-// String implements the Stringer interface
-func (m MsgSubmitProposal) String() string {
-	out, _ := yaml.Marshal(m)
-	return string(out)
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
@@ -160,12 +153,6 @@ func (msg MsgDeposit) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// String implements the Stringer interface
-func (msg MsgDeposit) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSignBytes implements Msg
@@ -203,12 +190,6 @@ func (msg MsgVote) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// String implements the Stringer interface
-func (msg MsgVote) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSignBytes implements Msg
@@ -267,12 +248,6 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// String implements the Stringer interface
-func (msg MsgVoteWeighted) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
 }
 
 // GetSignBytes implements Msg

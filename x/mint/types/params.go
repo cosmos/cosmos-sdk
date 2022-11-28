@@ -34,7 +34,7 @@ func DefaultParams() Params {
 	}
 }
 
-// validate params
+// Validate does the sanity check on the params.
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err

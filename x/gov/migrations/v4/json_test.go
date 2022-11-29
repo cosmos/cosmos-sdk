@@ -37,6 +37,7 @@ func TestMigrateJSON(t *testing.T) {
 	// Make sure about:
 	// - Proposals use MsgExecLegacyContent
 	expected := `{
+	"constitution": "",
 	"deposit_params": null,
 	"deposits": [],
 	"params": {

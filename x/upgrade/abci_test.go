@@ -213,15 +213,8 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 }
 
 func TestPlanStringer(t *testing.T) {
-	require.Equal(t, `Upgrade Plan
-  Name: test
-  height: 100
-  Info: .`, types.Plan{Name: "test", Height: 100, Info: ""}.String())
-
-	require.Equal(t, fmt.Sprintf(`Upgrade Plan
-  Name: test
-  height: 100
-  Info: .`), types.Plan{Name: "test", Height: 100, Info: ""}.String())
+	require.Equal(t, "name:\"test\" time:<seconds:-62135596800 > height:100 ", (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
+	require.Equal(t, fmt.Sprintf(`name:"test" time:<seconds:-62135596800 > height:100 `), (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {
@@ -516,7 +509,7 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	testCases := map[string]struct{
+	testCases := map[string]struct {
 		preRun      func(keeper.Keeper, sdk.Context, string)
 		expectPanic bool
 	}{

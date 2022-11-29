@@ -1,7 +1,5 @@
 package server
 
-// DONTCOVER
-
 import (
 	"fmt"
 	"os"

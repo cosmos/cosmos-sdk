@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
 	v2 "github.com/cosmos/cosmos-sdk/x/crisis/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/x/crisis/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
 )
 
 type mockSubspace struct {
@@ -26,9 +26,7 @@ func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 }
 
 func TestMigrate(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
-	cdc := encCfg.Codec
-
+	cdc := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{}).Codec
 	storeKey := sdk.NewKVStoreKey(v2.ModuleName)
 	tKey := sdk.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)

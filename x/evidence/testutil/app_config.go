@@ -2,7 +2,7 @@ package testutil
 
 import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/evidence"
@@ -32,7 +32,7 @@ import (
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 )
 
 var AppConfig = appconfig.Compose(&appv1alpha1.Config{
@@ -107,7 +107,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		},
 		{
 			Name:   "tx",
-			Config: appconfig.WrapAny(&txmodulev1.Module{}),
+			Config: appconfig.WrapAny(&txconfigv1.Config{}),
 		},
 		{
 			Name:   genutiltypes.ModuleName,

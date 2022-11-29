@@ -325,8 +325,8 @@ func (red Redelegation) String() string {
     Creation height:           %v
     Min time to unbond (unix): %v
     Dest Shares:               %s
-	Unbonding ID:              %d
-	Unbonding Ref Count:	   %d
+    Unbonding ID:              %d
+    Unbonding Ref Count:	   %d
 `,
 			i, entry.CreationHeight, entry.CompletionTime, entry.SharesDst, entry.UnbondingId, entry.UnbondingOnHoldRefCount,
 		)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -76,10 +77,8 @@ func (m *ModuleCredential) Equals(other cryptotypes.PubKey) bool {
 	}
 
 	for i := range m.DerivationKeys {
-		for j := range m.DerivationKeys[i] {
-			if m.DerivationKeys[i][j] != om.DerivationKeys[i][j] {
-				return false
-			}
+		if !bytes.Equal(m.DerivationKeys[i], om.DerivationKeys[i]) {
+			return false
 		}
 	}
 

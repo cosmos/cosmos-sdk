@@ -59,9 +59,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			suite.SetupTest()
 
 			tc.malleate()
-			ctx := suite.ctx
-
-			res, err := suite.queryClient.Evidence(ctx, req)
+			res, err := suite.queryClient.Evidence(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -120,9 +118,7 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 			suite.SetupTest()
 
 			tc.malleate()
-			ctx := suite.ctx
-
-			res, err := suite.queryClient.AllEvidence(ctx, req)
+			res, err := suite.queryClient.AllEvidence(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)

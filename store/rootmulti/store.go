@@ -761,40 +761,49 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		if err != nil {
 			return err
 		}
-		defer exporter.Close()
-		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-			Item: &snapshottypes.SnapshotItem_Store{
-				Store: &snapshottypes.SnapshotStoreItem{
-					Name: store.name,
-				},
-			},
-		})
-		if err != nil {
-			return err
-		}
 
-		for {
-			node, err := exporter.Next()
-			if err == iavltree.ExportDone {
-				break
-			} else if err != nil {
-				return err
-			}
-			err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-				Item: &snapshottypes.SnapshotItem_IAVL{
-					IAVL: &snapshottypes.SnapshotIAVLItem{
-						Key:     node.Key,
-						Value:   node.Value,
-						Height:  int32(node.Height),
-						Version: node.Version,
+		err = func() error {
+			defer exporter.Close()
+
+			err := protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+				Item: &snapshottypes.SnapshotItem_Store{
+					Store: &snapshottypes.SnapshotStoreItem{
+						Name: store.name,
 					},
 				},
 			})
 			if err != nil {
 				return err
 			}
+
+			for {
+				node, err := exporter.Next()
+				if err == iavltree.ExportDone {
+					break
+				} else if err != nil {
+					return err
+				}
+				err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+					Item: &snapshottypes.SnapshotItem_IAVL{
+						IAVL: &snapshottypes.SnapshotIAVLItem{
+							Key:     node.Key,
+							Value:   node.Value,
+							Height:  int32(node.Height),
+							Version: node.Version,
+						},
+					},
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}()
+
+		if err != nil {
+			return err
 		}
-		exporter.Close()
 	}
 
 	return nil

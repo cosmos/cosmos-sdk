@@ -315,7 +315,7 @@ const SdkContextKey ContextKey = "sdk-context"
 // stdlib context.Context parameter such as generated gRPC methods. To get the original
 // sdk.Context back, call UnwrapSDKContext.
 //
-// Depreacted: there is no need to wrap anymore as the sdk context implements context.Context.
+// Deprecated: there is no need to wrap anymore as the Cosmos SDK context implements context.Context.
 func WrapSDKContext(ctx Context) context.Context {
 	return ctx
 }

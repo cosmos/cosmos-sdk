@@ -208,20 +208,23 @@ func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 		}
 	}
 
-	// send remaining (deposits - cancellationCharges) to depositors
-	for _, deposits := range keeper.GetDeposits(ctx, proposalID) {
-		depositerAddress := sdk.MustAccAddressFromBech32(deposits.Depositor)
-		var remainingAmount sdk.Coins
-		for _, deposit := range deposits.Amount {
-			remainAmount := sdk.NewCoin(
-				deposit.Denom,
-				sdk.NewDecFromInt(deposit.Amount).Mul(sdk.NewDec(1).Sub(rate)).RoundInt(),
-			)
-			remainingAmount = remainingAmount.Add(remainAmount)
-		}
-		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositerAddress, remainingAmount)
-		if err != nil {
-			return err
+	// proposal cancel rate is not 100% then we have remaining deposits after the cancellation charges
+	if !rate.Equal(sdk.MustNewDecFromStr("1")) {
+		// send remaining (deposits - cancellationCharges) to depositors
+		for _, deposits := range keeper.GetDeposits(ctx, proposalID) {
+			depositerAddress := sdk.MustAccAddressFromBech32(deposits.Depositor)
+			var remainingAmount sdk.Coins
+			for _, deposit := range deposits.Amount {
+				remainAmount := sdk.NewCoin(
+					deposit.Denom,
+					sdk.NewDecFromInt(deposit.Amount).Mul(sdk.NewDec(1).Sub(rate)).RoundInt(),
+				)
+				remainingAmount = remainingAmount.Add(remainAmount)
+			}
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositerAddress, remainingAmount)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

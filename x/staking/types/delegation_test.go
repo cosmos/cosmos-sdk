@@ -61,15 +61,15 @@ func TestRedelegationEqual(t *testing.T) {
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
 		time.Unix(0, 0), sdk.NewInt(0),
 		math.LegacyNewDec(0), 2)
-
-	ok := r1.String() == r2.String()
-	require.True(t, ok)
+	require.False(t, r1.String() == r2.String())
+	r2 = types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
+		time.Unix(0, 0), sdk.NewInt(0),
+		math.LegacyNewDec(0), 1)
+	require.True(t, r1.String() == r2.String())
 
 	r2.Entries[0].SharesDst = math.LegacyNewDec(10)
 	r2.Entries[0].CompletionTime = time.Unix(20*20*2, 0)
-
-	ok = r1.String() == r2.String()
-	require.False(t, ok)
+	require.False(t, r1.String() == r2.String())
 }
 
 func TestRedelegationString(t *testing.T) {

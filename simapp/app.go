@@ -675,19 +675,12 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
-// ModuleAccountAddrsLegacy returns all the app's module account addresses.
-func ModuleAccountAddrsLegacy() map[string]bool {
+// BlockedAddresses returns all the app's blocked account addresses.
+func BlockedAddresses() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range GetMaccPerms() {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
-
-	return modAccAddrs
-}
-
-// BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses() map[string]bool {
-	modAccAddrs := ModuleAccountAddrsLegacy()
 
 	// allow the following addresses to receive funds
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())

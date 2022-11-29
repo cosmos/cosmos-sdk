@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -13,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ baseapp.StreamingService = &StreamingService{}
@@ -87,7 +87,7 @@ func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListene
 // ListenBeginBlock satisfies the baseapp.ABCIListener interface
 // It writes the received BeginBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) (rerr error) {
+func (fss *StreamingService) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openBeginBlockFile(req)
 	if err != nil {
@@ -142,7 +142,7 @@ func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os
 // ListenDeliverTx satisfies the baseapp.ABCIListener interface
 // It writes the received DeliverTx request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) (rerr error) {
+func (fss *StreamingService) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openDeliverTxFile()
 	if err != nil {
@@ -196,7 +196,7 @@ func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
 // ListenEndBlock satisfies the baseapp.ABCIListener interface
 // It writes the received EndBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) (rerr error) {
+func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) (rerr error) {
 	// generate the new file
 	dstFile, err := fss.openEndBlockFile()
 	if err != nil {

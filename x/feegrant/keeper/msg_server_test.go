@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestGrantAllowance() {
 				}
 			},
 			true,
-			"",
+			"expiration is before current block time",
 		},
 		{
 			"valid: basic fee allowance",

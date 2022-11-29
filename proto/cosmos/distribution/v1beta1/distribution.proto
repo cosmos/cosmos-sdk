@@ -105,7 +105,6 @@ message ValidatorSlashEvent {
 
 // ValidatorSlashEvents is a collection of ValidatorSlashEvent messages.
 message ValidatorSlashEvents {
-  option (gogoproto.goproto_stringer)                 = false;
   repeated ValidatorSlashEvent validator_slash_events = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -130,7 +129,6 @@ message CommunityPoolSpendProposal {
   option deprecated                          = true;
   option (gogoproto.equal)                   = false;
   option (gogoproto.goproto_getters)         = false;
-  option (gogoproto.goproto_stringer)        = false;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string   title                           = 1;
@@ -163,8 +161,7 @@ message DelegatorStartingInfo {
 // DelegationDelegatorReward represents the properties
 // of a delegator's delegation reward.
 message DelegationDelegatorReward {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters) = false;
 
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -179,7 +176,6 @@ message DelegationDelegatorReward {
 // with a deposit
 message CommunityPoolSpendProposalWithDeposit {
   option (gogoproto.goproto_getters)         = false;
-  option (gogoproto.goproto_stringer)        = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
 
   string title       = 1;

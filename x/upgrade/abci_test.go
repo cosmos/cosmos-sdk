@@ -483,3 +483,91 @@ func TestBinaryVersion(t *testing.T) {
 		}
 	}
 }
+
+func TestDowngradeVerification(t *testing.T) {
+	// could not use setupTest() here, because we have to use the same key
+	// for the two keepers.
+	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	key := sdk.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now(), Height: 10})
+
+	skip := map[int64]bool{}
+	tempDir := t.TempDir()
+	k := keeper.NewKeeper(skip, key, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	m := upgrade.NewAppModule(k)
+	handler := upgrade.NewSoftwareUpgradeProposalHandler(k)
+
+	// submit a plan.
+	planName := "downgrade"
+	err := handler(ctx, &types.SoftwareUpgradeProposal{Title: "test", Plan: types.Plan{Name: planName, Height: ctx.BlockHeight() + 1}})
+	require.NoError(t, err)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// set the handler.
+	k.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	// successful upgrade.
+	req := abci.RequestBeginBlock{Header: ctx.BlockHeader()}
+	require.NotPanics(t, func() {
+		m.BeginBlock(ctx, req)
+	})
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	testCases := map[string]struct{
+		preRun      func(keeper.Keeper, sdk.Context, string)
+		expectPanic bool
+	}{
+		"valid binary": {
+			preRun: func(k keeper.Keeper, ctx sdk.Context, name string) {
+				k.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+					return vm, nil
+				})
+			},
+		},
+		"downgrade with an active plan": {
+			preRun: func(k keeper.Keeper, ctx sdk.Context, name string) {
+				handler := upgrade.NewSoftwareUpgradeProposalHandler(k)
+				err := handler(ctx, &types.SoftwareUpgradeProposal{Title: "test", Plan: types.Plan{Name: "another" + planName, Height: ctx.BlockHeight() + 1}})
+				require.NoError(t, err, name)
+			},
+			expectPanic: true,
+		},
+		"downgrade without any active plan": {
+			expectPanic: true,
+		},
+	}
+
+	for name, tc := range testCases {
+		ctx, _ := ctx.CacheContext()
+
+		// downgrade. now keeper does not have the handler.
+		k := keeper.NewKeeper(skip, key, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		m := upgrade.NewAppModule(k)
+
+		// assertions
+		lastAppliedPlan, _ := k.GetLastCompletedUpgrade(ctx)
+		require.Equal(t, planName, lastAppliedPlan)
+		require.False(t, k.HasHandler(planName))
+		require.False(t, k.DowngradeVerified())
+		_, found := k.GetUpgradePlan(ctx)
+		require.False(t, found)
+
+		if tc.preRun != nil {
+			tc.preRun(k, ctx, name)
+		}
+
+		req := abci.RequestBeginBlock{Header: ctx.BlockHeader()}
+		if tc.expectPanic {
+			require.Panics(t, func() {
+				m.BeginBlock(ctx, req)
+			}, name)
+		} else {
+			require.NotPanics(t, func() {
+				m.BeginBlock(ctx, req)
+			}, name)
+		}
+	}
+}

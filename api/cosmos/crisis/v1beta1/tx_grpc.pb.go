@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	// VerifyInvariant defines a method to verify a particular invariance.
+	// VerifyInvariant defines a method to verify a particular invariant.
 	VerifyInvariant(ctx context.Context, in *MsgVerifyInvariant, opts ...grpc.CallOption) (*MsgVerifyInvariantResponse, error)
 	// UpdateParams defines a governance operation for updating the x/crisis module
 	// parameters. The authority is defined in the keeper.
@@ -61,7 +61,7 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	// VerifyInvariant defines a method to verify a particular invariance.
+	// VerifyInvariant defines a method to verify a particular invariant.
 	VerifyInvariant(context.Context, *MsgVerifyInvariant) (*MsgVerifyInvariantResponse, error)
 	// UpdateParams defines a governance operation for updating the x/crisis module
 	// parameters. The authority is defined in the keeper.

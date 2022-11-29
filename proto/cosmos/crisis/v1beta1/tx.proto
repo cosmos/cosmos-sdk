@@ -13,7 +13,7 @@ import "cosmos/base/v1beta1/coin.proto";
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // VerifyInvariant defines a method to verify a particular invariance.
+  // VerifyInvariant defines a method to verify a particular invariant.
   rpc VerifyInvariant(MsgVerifyInvariant) returns (MsgVerifyInvariantResponse);
 
   // UpdateParams defines a governance operation for updating the x/crisis module
@@ -31,8 +31,13 @@ message MsgVerifyInvariant {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
+  // sender is the account address of private key to send coins to fee collector account.
   string sender                = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  
+  // name of the invariant module.
   string invariant_module_name = 2;
+
+  // invariant_route is the msg's invariant route.
   string invariant_route       = 3;
 }
 

@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetBalancesCmd(),
+		GetSpendableBalancesCmd(),
 		GetCmdQueryTotalSupply(),
 		GetCmdDenomsMetadata(),
 		GetCmdQuerySendEnabled(),

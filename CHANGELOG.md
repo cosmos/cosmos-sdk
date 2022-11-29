@@ -179,7 +179,12 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
 * (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) Querying with `id` (type of int64) in `AccountAddressByID` grpc query now throws error, use account-id(type of uint64) instead.
 * (baseapp) [#14050](https://github.com/cosmos/cosmos-sdk/pull/14050) refactor `ABCIListener` interface to accept go contexts
-* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Add method `ListenCommit` to `ABCIListener`, move `ListeningEnabled` `AddListener` methods to `CommitMultiStore`, remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces, remove listening apis from caching layer, should only listen to the `rootmulti.Store`, add three new options to file streaming service constructor.
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Update State Streaming APIs:
+  * Add method `ListenCommit` to `ABCIListener`
+  * Move `ListeningEnabled` and  `AddListener` methods to `CommitMultiStore`
+  * Remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces
+  * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
+  * Add three new options to file streaming service constructor
 
 ### CLI Breaking Changes
 

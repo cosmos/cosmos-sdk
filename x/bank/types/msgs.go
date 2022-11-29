@@ -9,7 +9,7 @@ import (
 const (
 	TypeMsgSend           = "send"
 	TypeMsgMultiSend      = "multisend"
-	TypeMsgSetSendEnabled = "set-send-enabled"
+	TypeMsgSetSendEnabled = "set_send_enabled"
 	TypeMsgUpdateParams   = "update_params"
 )
 

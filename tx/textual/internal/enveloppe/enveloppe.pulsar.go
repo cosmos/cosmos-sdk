@@ -966,66 +966,119 @@ func (x *fastReflection_Part2) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var _ protoreflect.List = (*_Part3_2_list)(nil)
+var _ protoreflect.List = (*_Part3_1_list)(nil)
 
-type _Part3_2_list struct {
-	list *[]*v1beta1.Coin
+type _Part3_1_list struct {
+	list *[]*anypb.Any
 }
 
-func (x *_Part3_2_list) Len() int {
+func (x *_Part3_1_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_Part3_2_list) Get(i int) protoreflect.Value {
+func (x *_Part3_1_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_Part3_2_list) Set(i int, value protoreflect.Value) {
+func (x *_Part3_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_Part3_2_list) Append(value protoreflect.Value) {
+func (x *_Part3_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_Part3_2_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
+func (x *_Part3_1_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_Part3_2_list) Truncate(n int) {
+func (x *_Part3_1_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_Part3_2_list) NewElement() protoreflect.Value {
+func (x *_Part3_1_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part3_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Part3_3_list)(nil)
+
+type _Part3_3_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_Part3_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Part3_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Part3_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Part3_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Part3_3_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part3_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Part3_3_list) NewElement() protoreflect.Value {
 	v := new(v1beta1.Coin)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_Part3_2_list) IsValid() bool {
+func (x *_Part3_3_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_Part3      protoreflect.MessageDescriptor
-	fd_Part3_memo protoreflect.FieldDescriptor
-	fd_Part3_fees protoreflect.FieldDescriptor
+	md_Part3          protoreflect.MessageDescriptor
+	fd_Part3_messages protoreflect.FieldDescriptor
+	fd_Part3_memo     protoreflect.FieldDescriptor
+	fd_Part3_fees     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_enveloppe_proto_init()
 	md_Part3 = File_enveloppe_proto.Messages().ByName("Part3")
+	fd_Part3_messages = md_Part3.Fields().ByName("messages")
 	fd_Part3_memo = md_Part3.Fields().ByName("memo")
 	fd_Part3_fees = md_Part3.Fields().ByName("fees")
 }
@@ -1095,6 +1148,12 @@ func (x *fastReflection_Part3) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Part3) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Messages) != 0 {
+		value := protoreflect.ValueOfList(&_Part3_1_list{list: &x.Messages})
+		if !f(fd_Part3_messages, value) {
+			return
+		}
+	}
 	if x.Memo != "" {
 		value := protoreflect.ValueOfString(x.Memo)
 		if !f(fd_Part3_memo, value) {
@@ -1102,7 +1161,7 @@ func (x *fastReflection_Part3) Range(f func(protoreflect.FieldDescriptor, protor
 		}
 	}
 	if len(x.Fees) != 0 {
-		value := protoreflect.ValueOfList(&_Part3_2_list{list: &x.Fees})
+		value := protoreflect.ValueOfList(&_Part3_3_list{list: &x.Fees})
 		if !f(fd_Part3_fees, value) {
 			return
 		}
@@ -1122,6 +1181,8 @@ func (x *fastReflection_Part3) Range(f func(protoreflect.FieldDescriptor, protor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Part3) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "Part3.messages":
+		return len(x.Messages) != 0
 	case "Part3.memo":
 		return x.Memo != ""
 	case "Part3.fees":
@@ -1142,6 +1203,8 @@ func (x *fastReflection_Part3) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Part3) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "Part3.messages":
+		x.Messages = nil
 	case "Part3.memo":
 		x.Memo = ""
 	case "Part3.fees":
@@ -1162,14 +1225,20 @@ func (x *fastReflection_Part3) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Part3) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "Part3.messages":
+		if len(x.Messages) == 0 {
+			return protoreflect.ValueOfList(&_Part3_1_list{})
+		}
+		listValue := &_Part3_1_list{list: &x.Messages}
+		return protoreflect.ValueOfList(listValue)
 	case "Part3.memo":
 		value := x.Memo
 		return protoreflect.ValueOfString(value)
 	case "Part3.fees":
 		if len(x.Fees) == 0 {
-			return protoreflect.ValueOfList(&_Part3_2_list{})
+			return protoreflect.ValueOfList(&_Part3_3_list{})
 		}
-		listValue := &_Part3_2_list{list: &x.Fees}
+		listValue := &_Part3_3_list{list: &x.Fees}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -1191,11 +1260,15 @@ func (x *fastReflection_Part3) Get(descriptor protoreflect.FieldDescriptor) prot
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Part3) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "Part3.messages":
+		lv := value.List()
+		clv := lv.(*_Part3_1_list)
+		x.Messages = *clv.list
 	case "Part3.memo":
 		x.Memo = value.Interface().(string)
 	case "Part3.fees":
 		lv := value.List()
-		clv := lv.(*_Part3_2_list)
+		clv := lv.(*_Part3_3_list)
 		x.Fees = *clv.list
 	default:
 		if fd.IsExtension() {
@@ -1217,11 +1290,17 @@ func (x *fastReflection_Part3) Set(fd protoreflect.FieldDescriptor, value protor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Part3) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "Part3.messages":
+		if x.Messages == nil {
+			x.Messages = []*anypb.Any{}
+		}
+		value := &_Part3_1_list{list: &x.Messages}
+		return protoreflect.ValueOfList(value)
 	case "Part3.fees":
 		if x.Fees == nil {
 			x.Fees = []*v1beta1.Coin{}
 		}
-		value := &_Part3_2_list{list: &x.Fees}
+		value := &_Part3_3_list{list: &x.Fees}
 		return protoreflect.ValueOfList(value)
 	case "Part3.memo":
 		panic(fmt.Errorf("field memo of message Part3 is not mutable"))
@@ -1238,11 +1317,14 @@ func (x *fastReflection_Part3) Mutable(fd protoreflect.FieldDescriptor) protoref
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Part3) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "Part3.messages":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_Part3_1_list{list: &list})
 	case "Part3.memo":
 		return protoreflect.ValueOfString("")
 	case "Part3.fees":
 		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_Part3_2_list{list: &list})
+		return protoreflect.ValueOfList(&_Part3_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
@@ -1312,6 +1394,12 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		if len(x.Messages) > 0 {
+			for _, e := range x.Messages {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		l = len(x.Memo)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -1364,7 +1452,7 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x12
+				dAtA[i] = 0x1a
 			}
 		}
 		if len(x.Memo) > 0 {
@@ -1372,7 +1460,23 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.Memo)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Memo)))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x12
+		}
+		if len(x.Messages) > 0 {
+			for iNdEx := len(x.Messages) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Messages[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1425,6 +1529,40 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Messages", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Messages = append(x.Messages, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Messages[len(x.Messages)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Memo", wireType)
 				}
 				var stringLen uint64
@@ -1455,7 +1593,7 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 				}
 				x.Memo = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 2:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Fees", wireType)
 				}
@@ -3188,8 +3326,9 @@ type Part3 struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Memo string          `protobuf:"bytes,1,opt,name=memo,proto3" json:"memo,omitempty"`
-	Fees []*v1beta1.Coin `protobuf:"bytes,2,rep,name=fees,proto3" json:"fees,omitempty"`
+	Messages []*anypb.Any    `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	Memo     string          `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
+	Fees     []*v1beta1.Coin `protobuf:"bytes,3,rep,name=fees,proto3" json:"fees,omitempty"`
 }
 
 func (x *Part3) Reset() {
@@ -3210,6 +3349,13 @@ func (*Part3) ProtoMessage() {}
 // Deprecated: Use Part3.ProtoReflect.Descriptor instead.
 func (*Part3) Descriptor() ([]byte, []int) {
 	return file_enveloppe_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Part3) GetMessages() []*anypb.Any {
+	if x != nil {
+		return x.Messages
+	}
+	return nil
 }
 
 func (x *Part3) GetMemo() string {
@@ -3382,33 +3528,36 @@ var file_enveloppe_proto_rawDesc = []byte{
 	0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x32, 0x12, 0x33, 0x0a, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69,
 	0x63, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
-	0x79, 0x52, 0x09, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x22, 0x4a, 0x0a, 0x05,
-	0x50, 0x61, 0x72, 0x74, 0x33, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x66, 0x65, 0x65,
-	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x79, 0x52, 0x09, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x22, 0x7c, 0x0a, 0x05,
+	0x50, 0x61, 0x72, 0x74, 0x33, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x66,
+	0x65, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x43, 0x6f, 0x69, 0x6e, 0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0x45, 0x0a, 0x05, 0x50, 0x61,
+	0x72, 0x74, 0x34, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x5f, 0x70, 0x61, 0x79, 0x65, 0x72,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72,
+	0x12, 0x1f, 0x0a, 0x0b, 0x66, 0x65, 0x65, 0x5f, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x66, 0x65, 0x65, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x65,
+	0x72, 0x22, 0x4c, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x35, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x69,
+	0x70, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
-	0x69, 0x6e, 0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0x45, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74,
-	0x34, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x5f, 0x70, 0x61, 0x79, 0x65, 0x72, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72, 0x12, 0x1f,
-	0x0a, 0x0b, 0x66, 0x65, 0x65, 0x5f, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0a, 0x66, 0x65, 0x65, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x22,
-	0x4c, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x35, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x69, 0x70, 0x18,
-	0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
-	0x52, 0x03, 0x74, 0x69, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x18,
-	0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x22, 0x76, 0x0a,
-	0x05, 0x50, 0x61, 0x72, 0x74, 0x36, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61, 0x73, 0x5f, 0x6c, 0x69,
-	0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x67, 0x61, 0x73, 0x4c, 0x69,
-	0x6d, 0x69, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x68,
-	0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x74, 0x69, 0x6d,
-	0x65, 0x6f, 0x75, 0x74, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x29, 0x0a, 0x11, 0x68, 0x61,
-	0x73, 0x68, 0x5f, 0x6f, 0x66, 0x5f, 0x72, 0x61, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18,
-	0x64, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52, 0x61, 0x77,
-	0x42, 0x79, 0x74, 0x65, 0x73, 0x42, 0x3e, 0x42, 0x0e, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70,
-	0x70, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75,
-	0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x65, 0x6e, 0x76, 0x65,
-	0x6c, 0x6f, 0x70, 0x70, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6e, 0x52, 0x03, 0x74, 0x69, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65,
+	0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x22,
+	0x76, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x36, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61, 0x73, 0x5f,
+	0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x67, 0x61, 0x73,
+	0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74,
+	0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x74,
+	0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x29, 0x0a, 0x11,
+	0x68, 0x61, 0x73, 0x68, 0x5f, 0x6f, 0x66, 0x5f, 0x72, 0x61, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65,
+	0x73, 0x18, 0x64, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52,
+	0x61, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x42, 0x3e, 0x42, 0x0e, 0x45, 0x6e, 0x76, 0x65, 0x6c,
+	0x6f, 0x70, 0x70, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2a, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78,
+	0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x65, 0x6e,
+	0x76, 0x65, 0x6c, 0x6f, 0x70, 0x70, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3436,13 +3585,14 @@ var file_enveloppe_proto_goTypes = []interface{}{
 }
 var file_enveloppe_proto_depIdxs = []int32{
 	6, // 0: Part2.public_key:type_name -> google.protobuf.Any
-	7, // 1: Part3.fees:type_name -> cosmos.base.v1beta1.Coin
-	7, // 2: Part5.tip:type_name -> cosmos.base.v1beta1.Coin
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 1: Part3.messages:type_name -> google.protobuf.Any
+	7, // 2: Part3.fees:type_name -> cosmos.base.v1beta1.Coin
+	7, // 3: Part5.tip:type_name -> cosmos.base.v1beta1.Coin
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_enveloppe_proto_init() }

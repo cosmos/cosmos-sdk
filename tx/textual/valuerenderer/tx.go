@@ -59,8 +59,9 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		PublicKey: textualData.SignerData.PubKey,
 	}
 	p3 := &enveloppe.Part3{
-		Memo: txBody.Memo,
-		Fees: txAuthInfo.Fee.Amount,
+		Messages: txBody.Messages,
+		Memo:     txBody.Memo,
+		Fees:     txAuthInfo.Fee.Amount,
 	}
 	p4 := &enveloppe.Part4{
 		FeePayer:   txAuthInfo.Fee.Payer,
@@ -89,6 +90,11 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	if err != nil {
 		return nil, err
 	}
+	// Replace:
+	// "Messages: <N> Any"
+	// with:
+	// "This transaction has <N> Message"
+	screens3[0].Text = fmt.Sprintf("This transaction has %d Message", len(txBody.Messages))
 	screens4, err := vr.formatPart(ctx, p4, true)
 	if err != nil {
 		return nil, err

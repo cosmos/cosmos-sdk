@@ -416,7 +416,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return sdkerrors.Wrap(err, "proposal update")
 			}
 		}
-		// Note: we do nothing if the proposal has been marked as ACCEPTED or
+		// Note: We do nothing if the proposal has been marked as ACCEPTED or
 		// REJECTED.
 	}
 	return nil

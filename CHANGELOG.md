@@ -178,7 +178,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 `cosmossdk.io/core/appmodule.AppModule` API.
 * (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
 * (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) Querying with `id` (type of int64) in `AccountAddressByID` grpc query now throws error, use account-id(type of uint64) instead.
-* (snapshots) [14048](https://github.com/cosmos/cosmos-sdk/pull/14048) Snapshot package lives under store now. this was done in an effort group all storage related logic under one package. 
+* (snapshots) [14048](https://github.com/cosmos/cosmos-sdk/pull/14048) Move the Snapshot package to the store package. This is done in an effort group all storage related logic under one package. 
 * (baseapp) [#14050](https://github.com/cosmos/cosmos-sdk/pull/14050) refactor `ABCIListener` interface to accept go contexts
 
 ### CLI Breaking Changes

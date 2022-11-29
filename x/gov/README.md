@@ -268,6 +268,16 @@ Validators and full nodes can use an automation tool, such as [Cosmovisor](https
 
 ## State
 
+### Constitution
+
+`Constitution` is found in the genesis state.  It is a string field intended to be used to descibe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
+
+* define the purpose of the chain, laying a foundation for its future development
+* set expectations for delegators 
+* set expectations for validators
+* define the chain's relationship to "meatspace" entities, like a foundation or corporation
+
+
 ### Proposals
 
 `Proposal` objects are used to tally votes and generally track the proposal's state.

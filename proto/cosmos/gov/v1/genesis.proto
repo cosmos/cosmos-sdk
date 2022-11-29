@@ -9,7 +9,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // GenesisState defines the gov module's genesis state.
 message GenesisState {
-  // constitution is the foundational document of a chain, describing its purpose and the duties of its user groups, eg: delegators and validators. It may contain ideas for the evolution of the chain, or not, but should at the least be a statement of purpose and intent.
+  // constitution is the foundational document of a chain, describing its purpose and the duties of its user groups, eg:
+  // delegators and validators. It may contain ideas for the evolution of the chain, or not, but should at the least be
+  // a statement of purpose and intent.
   string constitution = 1;
   // starting_proposal_id is the ID of the starting proposal.
   uint64 starting_proposal_id = 2;

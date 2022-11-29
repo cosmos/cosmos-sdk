@@ -1231,7 +1231,9 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// constitution is the foundational document of a chain, describing its purpose and the duties of its user groups, eg: delegators and validators. It may contain ideas for the evolution of the chain, or not, but should at the least be a statement of purpose and intent.
+	// constitution is the foundational document of a chain, describing its purpose and the duties of its user groups, eg:
+	// delegators and validators. It may contain ideas for the evolution of the chain, or not, but should at the least be
+	// a statement of purpose and intent.
 	Constitution string `protobuf:"bytes,1,opt,name=constitution,proto3" json:"constitution,omitempty"`
 	// starting_proposal_id is the ID of the starting proposal.
 	StartingProposalId uint64 `protobuf:"varint,2,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty"`

@@ -73,7 +73,6 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 	}
 
 	return &v1.GenesisState{
-		Constitution:	    constitution,
 		StartingProposalId: startingProposalID,
 		Deposits:           proposalsDeposits,
 		Votes:              proposalsVotes,

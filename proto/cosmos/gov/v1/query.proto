@@ -12,6 +12,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // Query defines the gRPC querier service for gov module
 service Query {
+  // Constitution queries the chain's constitution.
   rpc Constitution (QueryConstitutionRequest) returns (QueryConstitutionResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/constitution";
   }

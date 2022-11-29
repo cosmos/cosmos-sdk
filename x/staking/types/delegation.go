@@ -322,11 +322,13 @@ func (red Redelegation) String() string {
 
 	for i, entry := range red.Entries {
 		out += fmt.Sprintf(`    Redelegation Entry #%d:
-      Creation height:           %v
-      Min time to unbond (unix): %v
-      Dest Shares:               %s
+    Creation height:           %v
+    Min time to unbond (unix): %v
+    Dest Shares:               %s
+    Unbonding ID:              %d
+    Unbonding Ref Count:       %d
 `,
-			i, entry.CreationHeight, entry.CompletionTime, entry.SharesDst,
+			i, entry.CreationHeight, entry.CompletionTime, entry.SharesDst, entry.UnbondingId, entry.UnbondingOnHoldRefCount,
 		)
 	}
 

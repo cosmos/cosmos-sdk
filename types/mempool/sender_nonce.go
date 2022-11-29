@@ -73,6 +73,8 @@ func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
 }
 
 // SenderNonceMaxTxOpt Option To set limit of max tx
+// Example:
+// > NewSenderNonceMempool(SenderNonceMaxTxOpt(100))
 func SenderNonceMaxTxOpt(maxTx int) SenderNonceOptions {
 	return func(snp *senderNonceMempool) {
 		snp.maxTx = maxTx

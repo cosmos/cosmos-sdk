@@ -56,6 +56,7 @@ It works by storing the transation in a list sorted by the transaction nonce. Wh
 ### Configurations
 
 #### MaxTx
+
 Its an integer value that sets the mempool in one of three modes, bounded, unbounded, or disabled. 
 
 | MaxTx Mode | Behavior                                                               |

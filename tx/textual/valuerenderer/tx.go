@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
@@ -72,10 +73,22 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		p5.Tip = txAuthInfo.Tip.Amount
 		p5.Tipper = txAuthInfo.Tip.Tipper
 	}
+	// Find all other tx signers than the current signer.
+	otherSigners := make([]*txv1beta1.SignerInfo, len(txAuthInfo.SignerInfos)-1)
+	for _, si := range txAuthInfo.SignerInfos {
+		if bytes.Equal(si.PublicKey.Value, textualData.SignerData.PubKey.Value) {
+			continue
+		}
+
+		otherSigners = append(otherSigners, si)
+	}
 	p6 := &enveloppe.Part6{
-		GasLimit:       txAuthInfo.Fee.GasLimit,
-		TimeoutHeight:  txBody.TimeoutHeight,
-		HashOfRawBytes: getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
+		GasLimit:                    txAuthInfo.Fee.GasLimit,
+		TimeoutHeight:               txBody.TimeoutHeight,
+		OtherSigner:                 otherSigners,
+		ExtensionOptions:            txBody.ExtensionOptions,
+		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
+		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
 	}
 
 	screens1, err := vr.formatPart(ctx, p1, false)

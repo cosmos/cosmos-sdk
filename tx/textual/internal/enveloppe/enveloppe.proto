@@ -5,6 +5,7 @@ option go_package = "cosmossdk.io/tx/textual/internal/testpb";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 
 message Part1 {
     string chain_id = 1;
@@ -35,5 +36,8 @@ message Part5 {
 message Part6 {
     uint64 gas_limit = 1;
     uint64 timeout_height = 2;
+    repeated cosmos.tx.v1beta1.SignerInfo other_signer = 3;
+    repeated google.protobuf.Any extension_options = 4;
+    repeated google.protobuf.Any non_critical_extension_options = 5;
     string hash_of_raw_bytes = 100;
 }

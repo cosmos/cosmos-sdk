@@ -3,6 +3,7 @@ package enveloppe
 
 import (
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	v1beta11 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -2704,11 +2705,167 @@ func (x *fastReflection_Part5) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_Part6_3_list)(nil)
+
+type _Part6_3_list struct {
+	list *[]*v1beta11.SignerInfo
+}
+
+func (x *_Part6_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Part6_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Part6_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta11.SignerInfo)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Part6_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta11.SignerInfo)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Part6_3_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta11.SignerInfo)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part6_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Part6_3_list) NewElement() protoreflect.Value {
+	v := new(v1beta11.SignerInfo)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part6_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Part6_4_list)(nil)
+
+type _Part6_4_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_Part6_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Part6_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Part6_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Part6_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Part6_4_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part6_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Part6_4_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part6_4_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Part6_5_list)(nil)
+
+type _Part6_5_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_Part6_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Part6_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Part6_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Part6_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Part6_5_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part6_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Part6_5_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Part6_5_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_Part6                   protoreflect.MessageDescriptor
-	fd_Part6_gas_limit         protoreflect.FieldDescriptor
-	fd_Part6_timeout_height    protoreflect.FieldDescriptor
-	fd_Part6_hash_of_raw_bytes protoreflect.FieldDescriptor
+	md_Part6                                protoreflect.MessageDescriptor
+	fd_Part6_gas_limit                      protoreflect.FieldDescriptor
+	fd_Part6_timeout_height                 protoreflect.FieldDescriptor
+	fd_Part6_other_signer                   protoreflect.FieldDescriptor
+	fd_Part6_extension_options              protoreflect.FieldDescriptor
+	fd_Part6_non_critical_extension_options protoreflect.FieldDescriptor
+	fd_Part6_hash_of_raw_bytes              protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2716,6 +2873,9 @@ func init() {
 	md_Part6 = File_enveloppe_proto.Messages().ByName("Part6")
 	fd_Part6_gas_limit = md_Part6.Fields().ByName("gas_limit")
 	fd_Part6_timeout_height = md_Part6.Fields().ByName("timeout_height")
+	fd_Part6_other_signer = md_Part6.Fields().ByName("other_signer")
+	fd_Part6_extension_options = md_Part6.Fields().ByName("extension_options")
+	fd_Part6_non_critical_extension_options = md_Part6.Fields().ByName("non_critical_extension_options")
 	fd_Part6_hash_of_raw_bytes = md_Part6.Fields().ByName("hash_of_raw_bytes")
 }
 
@@ -2796,6 +2956,24 @@ func (x *fastReflection_Part6) Range(f func(protoreflect.FieldDescriptor, protor
 			return
 		}
 	}
+	if len(x.OtherSigner) != 0 {
+		value := protoreflect.ValueOfList(&_Part6_3_list{list: &x.OtherSigner})
+		if !f(fd_Part6_other_signer, value) {
+			return
+		}
+	}
+	if len(x.ExtensionOptions) != 0 {
+		value := protoreflect.ValueOfList(&_Part6_4_list{list: &x.ExtensionOptions})
+		if !f(fd_Part6_extension_options, value) {
+			return
+		}
+	}
+	if len(x.NonCriticalExtensionOptions) != 0 {
+		value := protoreflect.ValueOfList(&_Part6_5_list{list: &x.NonCriticalExtensionOptions})
+		if !f(fd_Part6_non_critical_extension_options, value) {
+			return
+		}
+	}
 	if x.HashOfRawBytes != "" {
 		value := protoreflect.ValueOfString(x.HashOfRawBytes)
 		if !f(fd_Part6_hash_of_raw_bytes, value) {
@@ -2821,6 +2999,12 @@ func (x *fastReflection_Part6) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.GasLimit != uint64(0)
 	case "Part6.timeout_height":
 		return x.TimeoutHeight != uint64(0)
+	case "Part6.other_signer":
+		return len(x.OtherSigner) != 0
+	case "Part6.extension_options":
+		return len(x.ExtensionOptions) != 0
+	case "Part6.non_critical_extension_options":
+		return len(x.NonCriticalExtensionOptions) != 0
 	case "Part6.hash_of_raw_bytes":
 		return x.HashOfRawBytes != ""
 	default:
@@ -2843,6 +3027,12 @@ func (x *fastReflection_Part6) Clear(fd protoreflect.FieldDescriptor) {
 		x.GasLimit = uint64(0)
 	case "Part6.timeout_height":
 		x.TimeoutHeight = uint64(0)
+	case "Part6.other_signer":
+		x.OtherSigner = nil
+	case "Part6.extension_options":
+		x.ExtensionOptions = nil
+	case "Part6.non_critical_extension_options":
+		x.NonCriticalExtensionOptions = nil
 	case "Part6.hash_of_raw_bytes":
 		x.HashOfRawBytes = ""
 	default:
@@ -2867,6 +3057,24 @@ func (x *fastReflection_Part6) Get(descriptor protoreflect.FieldDescriptor) prot
 	case "Part6.timeout_height":
 		value := x.TimeoutHeight
 		return protoreflect.ValueOfUint64(value)
+	case "Part6.other_signer":
+		if len(x.OtherSigner) == 0 {
+			return protoreflect.ValueOfList(&_Part6_3_list{})
+		}
+		listValue := &_Part6_3_list{list: &x.OtherSigner}
+		return protoreflect.ValueOfList(listValue)
+	case "Part6.extension_options":
+		if len(x.ExtensionOptions) == 0 {
+			return protoreflect.ValueOfList(&_Part6_4_list{})
+		}
+		listValue := &_Part6_4_list{list: &x.ExtensionOptions}
+		return protoreflect.ValueOfList(listValue)
+	case "Part6.non_critical_extension_options":
+		if len(x.NonCriticalExtensionOptions) == 0 {
+			return protoreflect.ValueOfList(&_Part6_5_list{})
+		}
+		listValue := &_Part6_5_list{list: &x.NonCriticalExtensionOptions}
+		return protoreflect.ValueOfList(listValue)
 	case "Part6.hash_of_raw_bytes":
 		value := x.HashOfRawBytes
 		return protoreflect.ValueOfString(value)
@@ -2894,6 +3102,18 @@ func (x *fastReflection_Part6) Set(fd protoreflect.FieldDescriptor, value protor
 		x.GasLimit = value.Uint()
 	case "Part6.timeout_height":
 		x.TimeoutHeight = value.Uint()
+	case "Part6.other_signer":
+		lv := value.List()
+		clv := lv.(*_Part6_3_list)
+		x.OtherSigner = *clv.list
+	case "Part6.extension_options":
+		lv := value.List()
+		clv := lv.(*_Part6_4_list)
+		x.ExtensionOptions = *clv.list
+	case "Part6.non_critical_extension_options":
+		lv := value.List()
+		clv := lv.(*_Part6_5_list)
+		x.NonCriticalExtensionOptions = *clv.list
 	case "Part6.hash_of_raw_bytes":
 		x.HashOfRawBytes = value.Interface().(string)
 	default:
@@ -2916,6 +3136,24 @@ func (x *fastReflection_Part6) Set(fd protoreflect.FieldDescriptor, value protor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Part6) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "Part6.other_signer":
+		if x.OtherSigner == nil {
+			x.OtherSigner = []*v1beta11.SignerInfo{}
+		}
+		value := &_Part6_3_list{list: &x.OtherSigner}
+		return protoreflect.ValueOfList(value)
+	case "Part6.extension_options":
+		if x.ExtensionOptions == nil {
+			x.ExtensionOptions = []*anypb.Any{}
+		}
+		value := &_Part6_4_list{list: &x.ExtensionOptions}
+		return protoreflect.ValueOfList(value)
+	case "Part6.non_critical_extension_options":
+		if x.NonCriticalExtensionOptions == nil {
+			x.NonCriticalExtensionOptions = []*anypb.Any{}
+		}
+		value := &_Part6_5_list{list: &x.NonCriticalExtensionOptions}
+		return protoreflect.ValueOfList(value)
 	case "Part6.gas_limit":
 		panic(fmt.Errorf("field gas_limit of message Part6 is not mutable"))
 	case "Part6.timeout_height":
@@ -2939,6 +3177,15 @@ func (x *fastReflection_Part6) NewField(fd protoreflect.FieldDescriptor) protore
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "Part6.timeout_height":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "Part6.other_signer":
+		list := []*v1beta11.SignerInfo{}
+		return protoreflect.ValueOfList(&_Part6_3_list{list: &list})
+	case "Part6.extension_options":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_Part6_4_list{list: &list})
+	case "Part6.non_critical_extension_options":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_Part6_5_list{list: &list})
 	case "Part6.hash_of_raw_bytes":
 		return protoreflect.ValueOfString("")
 	default:
@@ -3016,6 +3263,24 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 		if x.TimeoutHeight != 0 {
 			n += 1 + runtime.Sov(uint64(x.TimeoutHeight))
 		}
+		if len(x.OtherSigner) > 0 {
+			for _, e := range x.OtherSigner {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ExtensionOptions) > 0 {
+			for _, e := range x.ExtensionOptions {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.NonCriticalExtensionOptions) > 0 {
+			for _, e := range x.NonCriticalExtensionOptions {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		l = len(x.HashOfRawBytes)
 		if l > 0 {
 			n += 2 + l + runtime.Sov(uint64(l))
@@ -3057,6 +3322,54 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 			dAtA[i] = 0x6
 			i--
 			dAtA[i] = 0xa2
+		}
+		if len(x.NonCriticalExtensionOptions) > 0 {
+			for iNdEx := len(x.NonCriticalExtensionOptions) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.NonCriticalExtensionOptions[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.ExtensionOptions) > 0 {
+			for iNdEx := len(x.ExtensionOptions) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ExtensionOptions[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if len(x.OtherSigner) > 0 {
+			for iNdEx := len(x.OtherSigner) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.OtherSigner[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
 		}
 		if x.TimeoutHeight != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.TimeoutHeight))
@@ -3155,6 +3468,108 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OtherSigner", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OtherSigner = append(x.OtherSigner, &v1beta11.SignerInfo{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.OtherSigner[len(x.OtherSigner)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExtensionOptions", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ExtensionOptions = append(x.ExtensionOptions, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ExtensionOptions[len(x.ExtensionOptions)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NonCriticalExtensionOptions", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.NonCriticalExtensionOptions = append(x.NonCriticalExtensionOptions, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.NonCriticalExtensionOptions[len(x.NonCriticalExtensionOptions)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			case 100:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field HashOfRawBytes", wireType)
@@ -3463,9 +3878,12 @@ type Part6 struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	GasLimit       uint64 `protobuf:"varint,1,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
-	TimeoutHeight  uint64 `protobuf:"varint,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
-	HashOfRawBytes string `protobuf:"bytes,100,opt,name=hash_of_raw_bytes,json=hashOfRawBytes,proto3" json:"hash_of_raw_bytes,omitempty"`
+	GasLimit                    uint64                 `protobuf:"varint,1,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
+	TimeoutHeight               uint64                 `protobuf:"varint,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
+	OtherSigner                 []*v1beta11.SignerInfo `protobuf:"bytes,3,rep,name=other_signer,json=otherSigner,proto3" json:"other_signer,omitempty"`
+	ExtensionOptions            []*anypb.Any           `protobuf:"bytes,4,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
+	NonCriticalExtensionOptions []*anypb.Any           `protobuf:"bytes,5,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
+	HashOfRawBytes              string                 `protobuf:"bytes,100,opt,name=hash_of_raw_bytes,json=hashOfRawBytes,proto3" json:"hash_of_raw_bytes,omitempty"`
 }
 
 func (x *Part6) Reset() {
@@ -3502,6 +3920,27 @@ func (x *Part6) GetTimeoutHeight() uint64 {
 	return 0
 }
 
+func (x *Part6) GetOtherSigner() []*v1beta11.SignerInfo {
+	if x != nil {
+		return x.OtherSigner
+	}
+	return nil
+}
+
+func (x *Part6) GetExtensionOptions() []*anypb.Any {
+	if x != nil {
+		return x.ExtensionOptions
+	}
+	return nil
+}
+
+func (x *Part6) GetNonCriticalExtensionOptions() []*anypb.Any {
+	if x != nil {
+		return x.NonCriticalExtensionOptions
+	}
+	return nil
+}
+
 func (x *Part6) GetHashOfRawBytes() string {
 	if x != nil {
 		return x.HashOfRawBytes
@@ -3518,46 +3957,62 @@ var file_enveloppe_proto_rawDesc = []byte{
 	0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69,
-	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x65, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x31,
-	0x12, 0x19, 0x0a, 0x08, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x61,
-	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x0d, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d, 0x62,
-	0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x3c,
-	0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x32, 0x12, 0x33, 0x0a, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69,
-	0x63, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
-	0x79, 0x52, 0x09, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x22, 0x7c, 0x0a, 0x05,
-	0x50, 0x61, 0x72, 0x74, 0x33, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x66,
-	0x65, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
-	0x43, 0x6f, 0x69, 0x6e, 0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0x45, 0x0a, 0x05, 0x50, 0x61,
-	0x72, 0x74, 0x34, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x5f, 0x70, 0x61, 0x79, 0x65, 0x72,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72,
-	0x12, 0x1f, 0x0a, 0x0b, 0x66, 0x65, 0x65, 0x5f, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x66, 0x65, 0x65, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x65,
-	0x72, 0x22, 0x4c, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x35, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x69,
-	0x70, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
-	0x69, 0x6e, 0x52, 0x03, 0x74, 0x69, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65,
-	0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x22,
-	0x76, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x36, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61, 0x73, 0x5f,
-	0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x67, 0x61, 0x73,
-	0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74,
-	0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x74,
-	0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x29, 0x0a, 0x11,
-	0x68, 0x61, 0x73, 0x68, 0x5f, 0x6f, 0x66, 0x5f, 0x72, 0x61, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65,
-	0x73, 0x18, 0x64, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52,
-	0x61, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x42, 0x3e, 0x42, 0x0e, 0x45, 0x6e, 0x76, 0x65, 0x6c,
-	0x6f, 0x70, 0x70, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2a, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78,
-	0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x65, 0x6e,
-	0x76, 0x65, 0x6c, 0x6f, 0x70, 0x70, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
+	0x74, 0x78, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x78, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x22, 0x65, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x31, 0x12, 0x19, 0x0a, 0x08,
+	0x63, 0x68, 0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75,
+	0x6e, 0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0d, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x1a,
+	0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x3c, 0x0a, 0x05, 0x50, 0x61,
+	0x72, 0x74, 0x32, 0x12, 0x33, 0x0a, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x5f, 0x6b, 0x65,
+	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x09, 0x70,
+	0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x22, 0x7c, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74,
+	0x33, 0x12, 0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x66, 0x65, 0x65, 0x73, 0x18,
+	0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x22, 0x45, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x34, 0x12,
+	0x1b, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x5f, 0x70, 0x61, 0x79, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x08, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72, 0x12, 0x1f, 0x0a, 0x0b,
+	0x66, 0x65, 0x65, 0x5f, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0a, 0x66, 0x65, 0x65, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x22, 0x4c, 0x0a,
+	0x05, 0x50, 0x61, 0x72, 0x74, 0x35, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x69, 0x70, 0x18, 0x04, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x03,
+	0x74, 0x69, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x22, 0xd6, 0x02, 0x0a, 0x05,
+	0x50, 0x61, 0x72, 0x74, 0x36, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61, 0x73, 0x5f, 0x6c, 0x69, 0x6d,
+	0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x67, 0x61, 0x73, 0x4c, 0x69, 0x6d,
+	0x69, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x68, 0x65,
+	0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x74, 0x69, 0x6d, 0x65,
+	0x6f, 0x75, 0x74, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x40, 0x0a, 0x0c, 0x6f, 0x74, 0x68,
+	0x65, 0x72, 0x5f, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0b,
+	0x6f, 0x74, 0x68, 0x65, 0x72, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x41, 0x0a, 0x11, 0x65,
+	0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x10, 0x65, 0x78,
+	0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x59,
+	0x0a, 0x1e, 0x6e, 0x6f, 0x6e, 0x5f, 0x63, 0x72, 0x69, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x65,
+	0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x1b, 0x6e, 0x6f,
+	0x6e, 0x43, 0x72, 0x69, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69,
+	0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x29, 0x0a, 0x11, 0x68, 0x61, 0x73,
+	0x68, 0x5f, 0x6f, 0x66, 0x5f, 0x72, 0x61, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x64,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52, 0x61, 0x77, 0x42,
+	0x79, 0x74, 0x65, 0x73, 0x42, 0x3e, 0x42, 0x0e, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x70,
+	0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61,
+	0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x65, 0x6e, 0x76, 0x65, 0x6c,
+	0x6f, 0x70, 0x70, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3574,25 +4029,29 @@ func file_enveloppe_proto_rawDescGZIP() []byte {
 
 var file_enveloppe_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_enveloppe_proto_goTypes = []interface{}{
-	(*Part1)(nil),        // 0: Part1
-	(*Part2)(nil),        // 1: Part2
-	(*Part3)(nil),        // 2: Part3
-	(*Part4)(nil),        // 3: Part4
-	(*Part5)(nil),        // 4: Part5
-	(*Part6)(nil),        // 5: Part6
-	(*anypb.Any)(nil),    // 6: google.protobuf.Any
-	(*v1beta1.Coin)(nil), // 7: cosmos.base.v1beta1.Coin
+	(*Part1)(nil),               // 0: Part1
+	(*Part2)(nil),               // 1: Part2
+	(*Part3)(nil),               // 2: Part3
+	(*Part4)(nil),               // 3: Part4
+	(*Part5)(nil),               // 4: Part5
+	(*Part6)(nil),               // 5: Part6
+	(*anypb.Any)(nil),           // 6: google.protobuf.Any
+	(*v1beta1.Coin)(nil),        // 7: cosmos.base.v1beta1.Coin
+	(*v1beta11.SignerInfo)(nil), // 8: cosmos.tx.v1beta1.SignerInfo
 }
 var file_enveloppe_proto_depIdxs = []int32{
 	6, // 0: Part2.public_key:type_name -> google.protobuf.Any
 	6, // 1: Part3.messages:type_name -> google.protobuf.Any
 	7, // 2: Part3.fees:type_name -> cosmos.base.v1beta1.Coin
 	7, // 3: Part5.tip:type_name -> cosmos.base.v1beta1.Coin
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	8, // 4: Part6.other_signer:type_name -> cosmos.tx.v1beta1.SignerInfo
+	6, // 5: Part6.extension_options:type_name -> google.protobuf.Any
+	6, // 6: Part6.non_critical_extension_options:type_name -> google.protobuf.Any
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_enveloppe_proto_init() }

@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -421,8 +423,9 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types
 // setSendEnabledEntry sets SendEnabled for the given denom to the give value in the provided store.
 func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
-	val := types.ToBoolB(value)
-	store.Set(key, []byte{val})
+
+	bz := k.cdc.MustMarshal(&gogotypes.BoolValue{Value: value})
+	store.Set(key, bz)
 }
 
 // DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
@@ -448,8 +451,11 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom
 
 	for ; iterator.Valid(); iterator.Next() {
 		denom := string(iterator.Key())
-		val := types.IsTrueB(iterator.Value())
-		if cb(denom, val) {
+
+		var enabled gogotypes.BoolValue
+		k.cdc.MustUnmarshal(iterator.Value(), &enabled)
+
+		if cb(denom, enabled.Value) {
 			break
 		}
 	}
@@ -483,21 +489,15 @@ func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, b
 		return false, false
 	}
 
-	v := store.Get(key)
-	if len(v) != 1 {
+	bz := store.Get(key)
+	if len(bz) == 0 {
 		return false, false
 	}
 
-	switch v[0] {
-	case types.TrueB:
-		return true, true
+	var enabled gogotypes.BoolValue
+	k.cdc.MustUnmarshal(bz, &enabled)
 
-	case types.FalseB:
-		return false, true
-
-	default:
-		return false, false
-	}
+	return enabled.Value, true
 }
 
 // getSendEnabledOrDefault gets the SendEnabled value for a denom. If it's not

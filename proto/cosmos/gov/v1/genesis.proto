@@ -9,25 +9,27 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // GenesisState defines the gov module's genesis state.
 message GenesisState {
+  // constitution is the foundational document of a chain, describing its purpose and the duties of its user groups, eg: delegators and validators. It may contain ideas for the evolution of the chain, or not, but should at the least be a statement of purpose and intent.
+  string constitution = 1;
   // starting_proposal_id is the ID of the starting proposal.
-  uint64 starting_proposal_id = 1;
+  uint64 starting_proposal_id = 2;
   // deposits defines all the deposits present at genesis.
-  repeated Deposit deposits = 2;
+  repeated Deposit deposits = 3;
   // votes defines all the votes present at genesis.
-  repeated Vote votes = 3;
+  repeated Vote votes = 4;
   // proposals defines all the proposals present at genesis.
-  repeated Proposal proposals = 4;
+  repeated Proposal proposals = 5;
   // Deprecated: Prefer to use `params` instead.
   // deposit_params defines all the paramaters of related to deposit.
-  DepositParams deposit_params = 5 [deprecated = true];
+  DepositParams deposit_params = 6 [deprecated = true];
   // Deprecated: Prefer to use `params` instead.
   // voting_params defines all the paramaters of related to voting.
-  VotingParams voting_params = 6 [deprecated = true];
+  VotingParams voting_params = 7 [deprecated = true];
   // Deprecated: Prefer to use `params` instead.
   // tally_params defines all the paramaters of related to tally.
-  TallyParams tally_params = 7 [deprecated = true];
+  TallyParams tally_params = 8 [deprecated = true];
   // params defines all the paramaters of x/gov module.
   //
   // Since: cosmos-sdk 0.47
-  Params params = 8;
+  Params params = 9;
 }

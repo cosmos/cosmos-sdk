@@ -54,21 +54,19 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 	switch {
 	// Scalars, such as sdk.Int and sdk.Dec encoded as strings.
 	case fd.Kind() == protoreflect.StringKind:
-		{
-			if proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "" {
-				scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
-				if !ok || scalar == "" {
-					return nil, fmt.Errorf("got extension option %s of type %T", scalar, scalar)
-				}
-
-				vr := r.scalars[scalar]
-				if vr != nil {
-					return vr, nil
-				}
+		if proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar) != "" {
+			scalar, ok := proto.GetExtension(fd.Options(), cosmos_proto.E_Scalar).(string)
+			if !ok || scalar == "" {
+				return nil, fmt.Errorf("got extension option %s of type %T", scalar, scalar)
 			}
 
-			return stringValueRenderer{}, nil
+			vr := r.scalars[scalar]
+			if vr != nil {
+				return vr, nil
+			}
 		}
+
+		return NewStringValueRenderer(), nil
 
 	case fd.Kind() == protoreflect.BytesKind:
 		return NewBytesValueRenderer(), nil
@@ -78,9 +76,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		fd.Kind() == protoreflect.Uint64Kind ||
 		fd.Kind() == protoreflect.Int32Kind ||
 		fd.Kind() == protoreflect.Int64Kind:
-		{
-			return NewIntValueRenderer(), nil
-		}
+		return NewIntValueRenderer(), nil
 
 	case fd.Kind() == protoreflect.EnumKind:
 		return NewEnumValueRenderer(fd), nil
@@ -95,10 +91,6 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		}
 		if fd.IsMap() {
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
-		}
-		if fd.IsList() {
-			// This will be implemented in https://github.com/cosmos/cosmos-sdk/issues/12714
-			return nil, fmt.Errorf("repeated field renderer not yet implemented")
 		}
 		return NewMessageValueRenderer(r, md), nil
 

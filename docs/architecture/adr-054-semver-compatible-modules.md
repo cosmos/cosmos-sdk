@@ -372,6 +372,48 @@ Note, however, that all of these ad-hoc approaches, would be vulnerable to the m
 described above unless [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering)
 is properly addressed.
 
+### Approach D) Avoid protobuf generated code in public APIs
+
+An alternative approach would be to avoid protobuf generated code in public module APIs. This would help avoid the
+discrepancy between state machine versions and client API versions at the module to module boundaries. It would mean
+that we wouldn't do inter-module message passing based on ADR 033, but rather stick to the existing keeper approach
+and take it one step further by avoiding any protobuf generated code in the keeper interface methods.
+
+Using this approach, our `foo.Keeper.DoSomething` method wouldn't have the generated `MsgDoSomething` struct (which
+comes from the protobuf API), but instead positional parameters. Then in order for `foo/v2` to support the `foo/v1`
+keeper it would simply need to implement both the v1 and v2 keeper APIs. The `DoSomething` method in v2 could have the
+additional `condition` parameter, but this wouldn't be present in v1 at all so there would be no danger of a client
+accidentally setting this when it isn't available. 
+
+So this approach would avoid the challenge around minor version incompatibilities because the existing module keeper
+API would not get new fields when they are added to protobuf files.
+
+Taking this approach, however, would likely require making all protobuf generated code internal in order to prevent
+it from leaking into the keeper API. This means we would still need to modify the protobuf code generator to not
+register `internal/` code with the global registry, and we would still need to manually register protobuf
+`FileDescriptor`s (this is probably true in all scenarios). It may, however, be possible to avoid needing to refactor
+interface methods on generated types to handlers.
+
+Also, this approach doesn't address what would be done in scenarios where modules still want to use the message router.
+Either way, we probably still want a way to pass messages from one module to another router safely even if it's just for
+use cases like `x/gov`, `x/authz`, CosmWasm, etc. That would still require most of the things outlined in approach (B),
+although we could advise modules to prefer keepers for communicating with other modules.
+
+The biggest downside of this approach is probably that it requires a strict refactoring of keeper interfaces to avoid
+generated code leaking into the API. This may result in cases where we need to duplicate types that are already defined
+in proto files and then write methods for converting between the golang and protobuf version. This may end up in a lot
+of unnecessary boilerplate and that may discourage modules from actually adopting it and achieving effective version
+compatibility. Approaches (A) and (B), although heavy handed initially, aim to provide a system which once adopted
+more or less gives the developer version compatibility for free with minimal boilerplate. Approach (D) may not be able
+to provide such a straightforward system since it requires a golang API to be defined alongside a protobuf API in a
+way that requires duplication and differing sets of design principles (protobuf APIs encourage additive changes
+while golang APIs would forbid it).
+
+Other downsides to this approach are:
+* no clear roadmap to supporting modules in other languages like Rust
+* doesn't get us any closer to proper object capability security (one of the goals of ADR 033)
+* ADR 033 needs to be done properly anyway for the set of use cases which do need it
+
 ## Decision
 
 Based on discussions within the team, the current draft consensus is the following:

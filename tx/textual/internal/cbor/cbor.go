@@ -12,30 +12,30 @@ import (
 )
 
 const (
-	major_uint        byte = 0
-	major_negint      byte = 1
-	major_byte_string byte = 2
-	major_text_string byte = 3
-	major_array       byte = 4
-	major_map         byte = 5
-	major_tagged      byte = 6
-	major_simple      byte = 7
+	majorUint       byte = 0
+	majorNegInt     byte = 1
+	majorByteString byte = 2
+	majorTextString byte = 3
+	majorArray      byte = 4
+	majorMap        byte = 5
+	majorTagged     byte = 6
+	majorSimple     byte = 7
 )
 
-func encode_first_byte(major byte, extra byte) byte {
+func encodeFirstByte(major byte, extra byte) byte {
 	return (major << 5) | extra&0x1F
 }
 
-func encode_prefix(major byte, arg uint64, w io.Writer) error {
+func encodePrefix(major byte, arg uint64, w io.Writer) error {
 	switch {
 	case arg < 24:
-		_, err := w.Write([]byte{encode_first_byte(major, byte(arg))})
+		_, err := w.Write([]byte{encodeFirstByte(major, byte(arg))})
 		return err
 	case arg <= math.MaxUint8:
-		_, err := w.Write([]byte{encode_first_byte(major, 24), byte(arg)})
+		_, err := w.Write([]byte{encodeFirstByte(major, 24), byte(arg)})
 		return err
 	case arg <= math.MaxUint16:
-		_, err := w.Write([]byte{encode_first_byte(major, 25)})
+		_, err := w.Write([]byte{encodeFirstByte(major, 25)})
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func encode_prefix(major byte, arg uint64, w io.Writer) error {
 		// Since we're under the limit, narrowing is safe.
 		return binary.Write(w, binary.BigEndian, uint16(arg))
 	case arg <= math.MaxUint32:
-		_, err := w.Write([]byte{encode_first_byte(major, 26)})
+		_, err := w.Write([]byte{encodeFirstByte(major, 26)})
 		if err != nil {
 			return err
 		}
@@ -51,7 +51,7 @@ func encode_prefix(major byte, arg uint64, w io.Writer) error {
 		// Since we're under the limit, narrowing is safe.
 		return binary.Write(w, binary.BigEndian, uint32(arg))
 	}
-	_, err := w.Write([]byte{encode_first_byte(major, 27)})
+	_, err := w.Write([]byte{encodeFirstByte(major, 27)})
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ var _ Cbor = NewUint(0)
 func (n Uint) Encode(w io.Writer) error {
 	// #nosec G701
 	// Widening is safe.
-	return encode_prefix(major_uint, uint64(n), w)
+	return encodePrefix(majorUint, uint64(n), w)
 }
 
 // Text is the CBOR text string type.
@@ -93,7 +93,7 @@ var _ Cbor = NewText("")
 
 // Encode implements the Cbor interface.
 func (s Text) Encode(w io.Writer) error {
-	err := encode_prefix(major_text_string, uint64(len(s)), w)
+	err := encodePrefix(majorTextString, uint64(len(s)), w)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (a Array) Append(c Cbor) Array {
 
 // Encode implements the Cbor interface.
 func (a Array) Encode(w io.Writer) error {
-	err := encode_prefix(major_array, uint64(len(a.elts)), w)
+	err := encodePrefix(majorArray, uint64(len(a.elts)), w)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ type keyIdx struct {
 
 // Encode implements the Cbor interface.
 func (m Map) Encode(w io.Writer) error {
-	err := encode_prefix(major_map, uint64(len(m.entries)), w)
+	err := encodePrefix(majorMap, uint64(len(m.entries)), w)
 	if err != nil {
 		return err
 	}
@@ -207,16 +207,16 @@ func (m Map) Encode(w io.Writer) error {
 }
 
 const (
-	simple_false     byte = 20
-	simple_true      byte = 21
-	simple_null      byte = 22
-	simple_undefined byte = 32
+	simpleFalse     byte = 20
+	simpleTrue      byte = 21
+	simpleNull      byte = 22
+	simpleUndefined byte = 32
 )
 
 func encodeSimple(b byte, w io.Writer) error {
 	// #nosec G701
 	// Widening is safe.
-	return encode_prefix(major_simple, uint64(b), w)
+	return encodePrefix(majorSimple, uint64(b), w)
 }
 
 // Bool is the type of CBOR booleans.
@@ -225,9 +225,9 @@ type Bool byte
 // NewBool returns a CBOR boolean data item.
 func NewBool(b bool) Bool {
 	if b {
-		return Bool(simple_true)
+		return Bool(simpleTrue)
 	}
-	return Bool(simple_false)
+	return Bool(simpleFalse)
 }
 
 var _ Cbor = NewBool(false)

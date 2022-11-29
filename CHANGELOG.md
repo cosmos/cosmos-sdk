@@ -122,6 +122,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (modules) [#13850](https://github.com/cosmos/cosmos-sdk/pull/13850) and [#14046](https://github.com/cosmos/cosmos-sdk/pull/14046) Remove gogoproto stringer annotations. This removes the custom `String()` methods on all types that were using the annotations.
 * (x/auth) [#13850](https://github.com/cosmos/cosmos-sdk/pull/13850/) Remove `MarshalYAML` methods from module (`x/...`) types.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Rename `AccountKeeper`'s `GetNextAccountNumber` to `NextAccountNumber`.
 * (x/evidence) [#13740](https://github.com/cosmos/cosmos-sdk/pull/13740) The `NewQueryEvidenceRequest` function now takes `hash` as a HEX encoded `string`.
@@ -177,6 +178,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 `cosmossdk.io/core/appmodule.AppModule` API.
 * (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
 * (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) Querying with `id` (type of int64) in `AccountAddressByID` grpc query now throws error, use account-id(type of uint64) instead.
+* (baseapp) [#14050](https://github.com/cosmos/cosmos-sdk/pull/14050) refactor `ABCIListener` interface to accept go contexts
 * (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Add method `ListenCommit` to `ABCIListener`, move `ListeningEnabled` `AddListener` methods to `CommitMultiStore`, remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces, remove listening apis from caching layer, should only listen to the `rootmulti.Store`, add three new options to file streaming service constructor.
 
 ### CLI Breaking Changes

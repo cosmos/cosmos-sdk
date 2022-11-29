@@ -2,6 +2,7 @@ package file
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -83,7 +84,7 @@ func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListene
 // ListenBeginBlock satisfies the baseapp.ABCIListener interface
 // It writes the received BeginBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) (rerr error) {
+func (fss *StreamingService) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) (rerr error) {
 	fss.blockMetadata.RequestBeginBlock = &req
 	fss.blockMetadata.ResponseBeginBlock = &res
 	fss.currentBlockNumber = req.Header.Height
@@ -93,7 +94,7 @@ func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestB
 // ListenDeliverTx satisfies the baseapp.ABCIListener interface
 // It writes the received DeliverTx request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) (rerr error) {
+func (fss *StreamingService) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) (rerr error) {
 	fss.blockMetadata.DeliverTxs = append(fss.blockMetadata.DeliverTxs, &types.BlockMetadata_DeliverTx{
 		Request:  &req,
 		Response: &res,
@@ -104,14 +105,14 @@ func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDe
 // ListenEndBlock satisfies the baseapp.ABCIListener interface
 // It writes the received EndBlock request and response and the resulting state changes
 // out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) (rerr error) {
+func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) (rerr error) {
 	fss.blockMetadata.RequestEndBlock = &req
 	fss.blockMetadata.ResponseEndBlock = &res
 	return nil
 }
 
 // ListenEndBlock satisfies the baseapp.ABCIListener interface
-func (fss *StreamingService) ListenCommit(ctx sdk.Context, res abci.ResponseCommit) error {
+func (fss *StreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit) error {
 	err := fss.doListenCommit(ctx, res)
 	if err != nil {
 		fss.logger.Error("Commit listening hook failed", "height", fss.currentBlockNumber, "err", err)
@@ -122,7 +123,7 @@ func (fss *StreamingService) ListenCommit(ctx sdk.Context, res abci.ResponseComm
 	return nil
 }
 
-func (fss *StreamingService) doListenCommit(ctx sdk.Context, res abci.ResponseCommit) (err error) {
+func (fss *StreamingService) doListenCommit(ctx context.Context, res abci.ResponseCommit) (err error) {
 	fss.blockMetadata.ResponseCommit = &res
 
 	// write to target files, the file size is written at the beginning, which can be used to detect completeness.

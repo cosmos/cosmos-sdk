@@ -55,6 +55,6 @@ func (on OnlineNetwork) AccountBalance(ctx context.Context, request *types.Accou
 
 // AccountsCoins - relevant only for UTXO based chain
 // see https://www.rosetta-api.org/docs/AccountApi.html#accountcoins
-func (o OnlineNetwork) AccountCoins(_ context.Context, _ *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
+func (on OnlineNetwork) AccountCoins(_ context.Context, _ *types.AccountCoinsRequest) (*types.AccountCoinsResponse, *types.Error) {
 	return nil, errors.ToRosetta(errors.ErrOffline)
 }

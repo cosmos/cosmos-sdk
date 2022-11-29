@@ -205,7 +205,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
 
 		if err := streamingListener.ListenBeginBlock(goCtx, req, res); err != nil {
-			panic(sdkerrors.Wrapf(err, "BeginBlock listening hook failed, height: %d", req.Header.Height))
+			panic(fmt.Errorf("BeginBlock listening hook failed, height: %d, error: %w", req.Header.Height, err))
 		}
 	}
 
@@ -232,7 +232,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
 
 		if err := streamingListener.ListenEndBlock(goCtx, req, res); err != nil {
-			panic(sdkerrors.Wrapf(err, "EndBlock listening hook failed, height: %d", req.Height))
+			panic(fmt.Errorf("EndBlock listening hook failed, height: %d, error: %w", req.Height, err))
 		}
 	}
 
@@ -337,7 +337,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 			goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
 
 			if err := streamingListener.ListenDeliverTx(goCtx, req, res); err != nil {
-				panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
+				panic(fmt.Errorf("DeliverTx listening hook failed: %w", err))
 			}
 		}
 	}()
@@ -388,8 +388,11 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// call the hooks with the Commit message
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
-			panic(sdkerrors.Wrapf(err, "Commit listening hook failed, height: %d", header.Height))
+
+		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
+
+		if err := streamingListener.ListenCommit(goCtx, res); err != nil {
+			panic(fmt.Errorf("Commit listening hook failed, height: %d, err: %w", header.Height, err))
 		}
 	}
 

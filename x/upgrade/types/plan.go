@@ -10,14 +10,6 @@ import (
 // UpgradeInfoFileName file to store upgrade information
 const UpgradeInfoFilename = "upgrade-info.json"
 
-func (p Plan) String() string {
-	due := p.DueAt()
-	return fmt.Sprintf(`Upgrade Plan
-  Name: %s
-  %s
-  Info: %s.`, p.Name, due, p.Info)
-}
-
 // ValidateBasic does basic validation of a Plan
 func (p Plan) ValidateBasic() error {
 	if !p.Time.IsZero() {

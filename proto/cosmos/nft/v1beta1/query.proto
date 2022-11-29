@@ -52,7 +52,7 @@ message QueryBalanceRequest {
   string class_id = 1;
 
   // owner is the owner address of the nft
-  string owner    = 2;
+  string owner = 2;
 }
 
 // QueryBalanceResponse is the response type for the Query/Balance RPC method
@@ -67,7 +67,7 @@ message QueryOwnerRequest {
   string class_id = 1;
 
   // id is a unique identifier of the NFT
-  string id       = 2;
+  string id = 2;
 }
 
 // QueryOwnerResponse is the response type for the Query/Owner RPC method
@@ -91,10 +91,10 @@ message QuerySupplyResponse {
 // QueryNFTstRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
   // class_id associated with the nft
-  string                                class_id   = 1;
+  string class_id = 1;
 
   // owner is the owner address of the nft
-  string                                owner      = 2;
+  string owner = 2;
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
@@ -103,7 +103,7 @@ message QueryNFTsRequest {
 // QueryNFTsResponse is the response type for the Query/NFTs RPC methods
 message QueryNFTsResponse {
   // NFT defines the NFT
-  repeated cosmos.nft.v1beta1.NFT        nfts       = 1;
+  repeated cosmos.nft.v1beta1.NFT nfts = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -115,7 +115,7 @@ message QueryNFTRequest {
   string class_id = 1;
 
   // id is a unique identifier of the NFT
-  string id       = 2;
+  string id = 2;
 }
 
 // QueryNFTResponse is the response type for the Query/NFT RPC method
@@ -145,7 +145,7 @@ message QueryClassesRequest {
 // QueryClassesResponse is the response type for the Query/Classes RPC method
 message QueryClassesResponse {
   // class defines the class of the nft type.
-  repeated cosmos.nft.v1beta1.Class      classes    = 1;
+  repeated cosmos.nft.v1beta1.Class classes = 1;
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;

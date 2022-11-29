@@ -9,10 +9,10 @@ message EventSend {
   string class_id = 1;
 
   // id is a unique identifier of the nft
-  string id       = 2;
+  string id = 2;
 
   // sender is the address of the owner of nft
-  string sender   = 3;
+  string sender = 3;
 
   // receiver is the receiver address of nft
   string receiver = 4;
@@ -24,10 +24,10 @@ message EventMint {
   string class_id = 1;
 
   // id is a unique identifier of the nft
-  string id       = 2;
+  string id = 2;
 
   // owner is the owner address of the nft
-  string owner    = 3;
+  string owner = 3;
 }
 
 // EventBurn is emitted on Burn
@@ -36,8 +36,8 @@ message EventBurn {
   string class_id = 1;
 
   // id is a unique identifier of the nft
-  string id       = 2;
+  string id = 2;
 
   // owner is the owner address of the nft
-  string owner    = 3;
+  string owner = 3;
 }

@@ -23,7 +23,7 @@ message A {
   bytes                             BYTES     = 9;
   google.protobuf.Timestamp         TIMESTAMP = 10;
   google.protobuf.Duration          DURATION  = 11;
-  ExternalEnum ENUM                           = 12;
+  ExternalEnum                      ENUM      = 12;
   google.protobuf.Any               ANY       = 13;
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
@@ -56,8 +56,8 @@ message Bar {
 }
 
 enum ExternalEnum {
-  One = 0;
-  Two = 1;
+  One                 = 0;
+  Two                 = 1;
   EXTERNAL_ENUM_THREE = 127;
 }
 
@@ -68,10 +68,9 @@ message Baz {
     Five = 1;
   }
 
-  ExternalEnum ee = 1;
-  Internal_Enum ie = 2;
-  BallotOption option = 3;
-
+  ExternalEnum  ee     = 1;
+  Internal_Enum ie     = 2;
+  BallotOption  option = 3;
 }
 
 enum BallotOption {

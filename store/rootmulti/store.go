@@ -37,6 +37,7 @@ const (
 
 const iavlDisablefastNodeDefault = false
 
+// keysForStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
 func keysForStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 	keys := make([]types.StoreKey, 0, len(m))
 	for key := range m {
@@ -761,40 +762,49 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		if err != nil {
 			return err
 		}
-		defer exporter.Close()
-		err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-			Item: &snapshottypes.SnapshotItem_Store{
-				Store: &snapshottypes.SnapshotStoreItem{
-					Name: store.name,
-				},
-			},
-		})
-		if err != nil {
-			return err
-		}
 
-		for {
-			node, err := exporter.Next()
-			if err == iavltree.ExportDone {
-				break
-			} else if err != nil {
-				return err
-			}
-			err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
-				Item: &snapshottypes.SnapshotItem_IAVL{
-					IAVL: &snapshottypes.SnapshotIAVLItem{
-						Key:     node.Key,
-						Value:   node.Value,
-						Height:  int32(node.Height),
-						Version: node.Version,
+		err = func() error {
+			defer exporter.Close()
+
+			err := protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+				Item: &snapshottypes.SnapshotItem_Store{
+					Store: &snapshottypes.SnapshotStoreItem{
+						Name: store.name,
 					},
 				},
 			})
 			if err != nil {
 				return err
 			}
+
+			for {
+				node, err := exporter.Next()
+				if err == iavltree.ExportDone {
+					break
+				} else if err != nil {
+					return err
+				}
+				err = protoWriter.WriteMsg(&snapshottypes.SnapshotItem{
+					Item: &snapshottypes.SnapshotItem_IAVL{
+						IAVL: &snapshottypes.SnapshotIAVLItem{
+							Key:     node.Key,
+							Value:   node.Value,
+							Height:  int32(node.Height),
+							Version: node.Version,
+						},
+					},
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			return nil
+		}()
+
+		if err != nil {
+			return err
 		}
-		exporter.Close()
 	}
 
 	return nil
@@ -944,14 +954,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 }
 
 func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
-	keys := make([]types.StoreKey, 0, len(rs.stores))
-	for key := range rs.stores {
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Name() < keys[j].Name()
-	})
-
+	keys := keysForStoreKeyMap(rs.stores)
 	storeInfos := []types.StoreInfo{}
 	for _, key := range keys {
 		store := rs.stores[key]

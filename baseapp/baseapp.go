@@ -17,7 +17,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -358,11 +357,11 @@ func (app *BaseApp) Init() error {
 	app.setProcessProposalState(emptyHeader)
 	app.Seal()
 
-	rms, ok := app.cms.(*rootmulti.Store)
-	if !ok {
-		return fmt.Errorf("invalid commit multi-store; expected %T, got: %T", &rootmulti.Store{}, app.cms)
+	if app.cms == nil {
+		return errors.New("commit multi-store must not be nil")
 	}
-	return rms.GetPruning().Validate()
+
+	return app.cms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

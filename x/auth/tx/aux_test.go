@@ -141,7 +141,7 @@ func TestBuilderWithAux(t *testing.T) {
 		Sequence: 15,
 	})
 	signBz, err = txConfig.SignModeHandler().GetSignBytes(
-		signing.SignMode_SIGN_MODE_DIRECT,
+		nil, signing.SignMode_SIGN_MODE_DIRECT,
 		authsigning.SignerData{
 			Address:       feepayerAddr.String(),
 			ChainID:       chainID,

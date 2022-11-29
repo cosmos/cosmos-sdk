@@ -160,7 +160,9 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 			if useInsecure {
 				dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 			} else {
-				dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+				dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+					MinVersion: tls.VersionTLS12,
+				})))
 			}
 
 			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)

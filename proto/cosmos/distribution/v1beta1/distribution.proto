@@ -11,7 +11,7 @@ import "amino/amino.proto";
 
 // Params defines the set of params for the distribution module.
 message Params {
-  option (amino.name)                 = "cosmos-sdk/x/distribution/Params";
+  option (amino.name) = "cosmos-sdk/x/distribution/Params";
 
   string community_tax = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",

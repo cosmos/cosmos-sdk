@@ -357,7 +357,11 @@ func (app *BaseApp) Init() error {
 	app.setProcessProposalState(emptyHeader)
 	app.Seal()
 
-	return app.cms.GetPruning().Validate()
+if app.cms == nil {
+	return errors.New("commit multi-store must not be nil")
+}
+
+return app.cms.GetPruning().Validate()
 }
 
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {

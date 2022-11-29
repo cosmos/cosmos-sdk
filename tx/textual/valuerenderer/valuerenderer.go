@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -131,4 +132,25 @@ func (r *Textual) init() {
 func (r *Textual) DefineScalar(scalar string, vr ValueRenderer) {
 	r.init()
 	r.scalars[scalar] = vr
+}
+
+// GetSignBytes returns the transaction sign bytes.
+func (r *Textual) GetSignBytes(ctx context.Context, data *textualv1.TextualData) ([]byte, error) {
+	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
+	if err != nil {
+		return nil, err
+	}
+
+	screens, err := vr.Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	err = encode(screens, &buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }

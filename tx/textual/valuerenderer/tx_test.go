@@ -1,7 +1,6 @@
-package valuerenderer
+package valuerenderer_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
@@ -21,6 +20,7 @@ import (
 	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
 // txJsonTestTx represents the type that in the JSON test
@@ -34,11 +34,12 @@ type txJsonTestTx struct {
 }
 
 type txJsonTest struct {
-	Name    string
-	Proto   txJsonTestTx
-	Error   bool
-	Screens []Screen
-	Cbor    string
+	Name     string
+	Proto    txJsonTestTx
+	Metadata *bankv1beta1.Metadata
+	Error    bool
+	Screens  []valuerenderer.Screen
+	Cbor     string
 }
 
 func TestTxJsonTestcases(t *testing.T) {
@@ -53,11 +54,12 @@ func TestTxJsonTestcases(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			textualData := createTextualData(t, tc.Proto)
 
-			tr := NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) { return nil, nil })
-			rend := NewTxValueRenderer(&tr)
+			tr := valuerenderer.NewTextual(mockCoinMetadataQuerier)
+			rend := valuerenderer.NewTxValueRenderer(&tr)
+			ctx := context.WithValue(context.Background(), mockCoinMetadataKey("uatom"), tc.Metadata)
 
 			val := protoreflect.ValueOf(textualData.ProtoReflect())
-			screens, err := rend.Format(context.Background(), val)
+			screens, err := rend.Format(ctx, val)
 			if tc.Error {
 				require.Error(t, err)
 				return
@@ -65,10 +67,9 @@ func TestTxJsonTestcases(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)
 
-			var buf bytes.Buffer
-			err = encode(screens, &buf)
+			bz, err := tr.GetSignBytes(ctx, textualData)
 			require.NoError(t, err)
-			require.Equal(t, tc.Cbor, hex.EncodeToString(buf.Bytes()))
+			require.Equal(t, tc.Cbor, hex.EncodeToString(bz))
 
 			// Round trip.
 			// parsedVal, err := rend.Parse(context.Background(), screens)

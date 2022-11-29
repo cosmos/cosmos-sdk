@@ -1,7 +1,9 @@
-package valuerenderer_test
+package valuerenderer
 
 import (
+	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"testing"
@@ -11,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
@@ -19,7 +21,6 @@ import (
 	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/tx/textual/valuerenderer"
 )
 
 // txJsonTestTx represents the type that in the JSON test
@@ -36,7 +37,8 @@ type txJsonTest struct {
 	Name    string
 	Proto   txJsonTestTx
 	Error   bool
-	Screens []valuerenderer.Screen
+	Screens []Screen
+	Cbor    string
 }
 
 func TestTxJsonTestcases(t *testing.T) {
@@ -49,11 +51,10 @@ func TestTxJsonTestcases(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.Name, func(t *testing.T) {
-
 			textualData := createTextualData(t, tc.Proto)
 
-			tr := valuerenderer.NewTextual(EmptyCoinMetadataQuerier)
-			rend := valuerenderer.NewTxValueRenderer(&tr)
+			tr := NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) { return nil, nil })
+			rend := NewTxValueRenderer(&tr)
 
 			val := protoreflect.ValueOf(textualData.ProtoReflect())
 			screens, err := rend.Format(context.Background(), val)
@@ -64,8 +65,10 @@ func TestTxJsonTestcases(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)
 
-			// TODO Add CBOR equality
-			// Needs https://github.com/cosmos/cosmos-sdk/pull/13697
+			var buf bytes.Buffer
+			err = encode(screens, &buf)
+			require.NoError(t, err)
+			require.Equal(t, tc.Cbor, hex.EncodeToString(buf.Bytes()))
 
 			// Round trip.
 			// parsedVal, err := rend.Parse(context.Background(), screens)

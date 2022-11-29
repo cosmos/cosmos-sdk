@@ -24,31 +24,31 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the gov module's genesis state.
 type GenesisState struct {
-	// constitution is the foundational document of a chain, describing its purpose and the duties of its user groups, eg:
-	// delegators and validators. It may contain ideas for the evolution of the chain, or not, but should at the least be
-	// a statement of purpose and intent.
-	Constitution string `protobuf:"bytes,1,opt,name=constitution,proto3" json:"constitution,omitempty"`
 	// starting_proposal_id is the ID of the starting proposal.
-	StartingProposalId uint64 `protobuf:"varint,2,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty"`
+	StartingProposalId uint64 `protobuf:"varint,1,opt,name=starting_proposal_id,json=startingProposalId,proto3" json:"starting_proposal_id,omitempty"`
 	// deposits defines all the deposits present at genesis.
-	Deposits []*Deposit `protobuf:"bytes,3,rep,name=deposits,proto3" json:"deposits,omitempty"`
+	Deposits []*Deposit `protobuf:"bytes,2,rep,name=deposits,proto3" json:"deposits,omitempty"`
 	// votes defines all the votes present at genesis.
-	Votes []*Vote `protobuf:"bytes,4,rep,name=votes,proto3" json:"votes,omitempty"`
+	Votes []*Vote `protobuf:"bytes,3,rep,name=votes,proto3" json:"votes,omitempty"`
 	// proposals defines all the proposals present at genesis.
-	Proposals []*Proposal `protobuf:"bytes,5,rep,name=proposals,proto3" json:"proposals,omitempty"`
+	Proposals []*Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals,omitempty"`
 	// Deprecated: Prefer to use `params` instead.
 	// deposit_params defines all the paramaters of related to deposit.
-	DepositParams *DepositParams `protobuf:"bytes,6,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params,omitempty"` // Deprecated: Do not use.
+	DepositParams *DepositParams `protobuf:"bytes,5,opt,name=deposit_params,json=depositParams,proto3" json:"deposit_params,omitempty"` // Deprecated: Do not use.
 	// Deprecated: Prefer to use `params` instead.
 	// voting_params defines all the paramaters of related to voting.
-	VotingParams *VotingParams `protobuf:"bytes,7,opt,name=voting_params,json=votingParams,proto3" json:"voting_params,omitempty"` // Deprecated: Do not use.
+	VotingParams *VotingParams `protobuf:"bytes,6,opt,name=voting_params,json=votingParams,proto3" json:"voting_params,omitempty"` // Deprecated: Do not use.
 	// Deprecated: Prefer to use `params` instead.
 	// tally_params defines all the paramaters of related to tally.
-	TallyParams *TallyParams `protobuf:"bytes,8,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"` // Deprecated: Do not use.
+	TallyParams *TallyParams `protobuf:"bytes,7,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"` // Deprecated: Do not use.
 	// params defines all the paramaters of x/gov module.
 	//
 	// Since: cosmos-sdk 0.47
-	Params *Params `protobuf:"bytes,9,opt,name=params,proto3" json:"params,omitempty"`
+	Params *Params `protobuf:"bytes,8,opt,name=params,proto3" json:"params,omitempty"`
+	// The constitution allows builders to lay a foundation and define purpose.
+	// This is an immutable string set in genesis.
+	// There are no amendments, to go outside of scope, just fork.
+	Constitution string `protobuf:"bytes,9,opt,name=constitution,proto3" json:"constitution,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -83,13 +83,6 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
-
-func (m *GenesisState) GetConstitution() string {
-	if m != nil {
-		return m.Constitution
-	}
-	return ""
-}
 
 func (m *GenesisState) GetStartingProposalId() uint64 {
 	if m != nil {
@@ -150,6 +143,13 @@ func (m *GenesisState) GetParams() *Params {
 	return nil
 }
 
+func (m *GenesisState) GetConstitution() string {
+	if m != nil {
+		return m.Constitution
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "cosmos.gov.v1.GenesisState")
 }
@@ -157,7 +157,7 @@ func init() {
 func init() { proto.RegisterFile("cosmos/gov/v1/genesis.proto", fileDescriptor_ef7cfd15e3ded621) }
 
 var fileDescriptor_ef7cfd15e3ded621 = []byte{
-	// 378 bytes of a gzipped FileDescriptorProto
+	// 379 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x92, 0xcd, 0x4e, 0xfa, 0x40,
 	0x14, 0xc5, 0x19, 0xbe, 0xfe, 0x30, 0x94, 0xff, 0x62, 0xfc, 0xa0, 0x01, 0xd3, 0x34, 0xac, 0x6a,
 	0x0c, 0xad, 0x60, 0x7c, 0x00, 0x09, 0x86, 0xb8, 0x23, 0xd5, 0xb8, 0x70, 0x43, 0x0a, 0x6d, 0x6a,
@@ -165,23 +165,23 @@ var fileDescriptor_ef7cfd15e3ded621 = []byte{
 	0x31, 0xcc, 0xb4, 0x02, 0xd5, 0xd5, 0x24, 0xf7, 0xfc, 0xce, 0x99, 0x93, 0x9b, 0x8b, 0x5b, 0x53,
 	0xa0, 0x73, 0xa0, 0x96, 0x0f, 0xdc, 0xe2, 0x5d, 0xcb, 0xf7, 0x42, 0x8f, 0x06, 0xd4, 0x8c, 0x62,
 	0x60, 0x40, 0xea, 0x52, 0x34, 0x7d, 0xe0, 0x26, 0xef, 0x36, 0x1b, 0x19, 0x16, 0xb8, 0xe4, 0xda,
-	0x5f, 0x05, 0xac, 0x0c, 0xa5, 0xf3, 0x9e, 0x39, 0xcc, 0x23, 0x6d, 0xac, 0x4c, 0x21, 0xa4, 0x2c,
-	0x60, 0x0b, 0x16, 0x40, 0xa8, 0x22, 0x1d, 0x19, 0x55, 0xfb, 0x60, 0x46, 0x2e, 0xf1, 0x31, 0x65,
-	0x4e, 0xcc, 0x82, 0xd0, 0x1f, 0x47, 0x31, 0x44, 0x40, 0x9d, 0xd9, 0x38, 0x70, 0xd5, 0xbc, 0x8e,
-	0x8c, 0xa2, 0x4d, 0x52, 0x6d, 0x94, 0x48, 0x77, 0x2e, 0xe9, 0xe1, 0x8a, 0xeb, 0x45, 0x40, 0x03,
-	0x46, 0xd5, 0x82, 0x5e, 0x30, 0x6a, 0xbd, 0x53, 0xf3, 0xa0, 0xa1, 0x39, 0x90, 0xb2, 0xfd, 0xc3,
-	0x91, 0x73, 0x5c, 0xe2, 0xc0, 0x3c, 0xaa, 0x16, 0x85, 0xe1, 0x28, 0x63, 0x78, 0x04, 0xe6, 0xd9,
-	0x92, 0x20, 0xd7, 0xb8, 0x9a, 0xf6, 0xa0, 0x6a, 0x49, 0xe0, 0x8d, 0x0c, 0x9e, 0x96, 0xb1, 0x77,
-	0x24, 0x19, 0xe2, 0xff, 0xc9, 0x6f, 0xe3, 0xc8, 0x89, 0x9d, 0x39, 0x55, 0xcb, 0x3a, 0x32, 0x6a,
-	0xbd, 0xb3, 0xbf, 0xbb, 0x8d, 0x04, 0xd3, 0xcf, 0xab, 0xc8, 0xae, 0xbb, 0xfb, 0x23, 0x32, 0xc0,
-	0x75, 0x0e, 0x72, 0x1d, 0x32, 0xe7, 0x9f, 0xc8, 0x69, 0xfd, 0xae, 0xbc, 0x5d, 0xcb, 0x2e, 0x46,
-	0xe1, 0x7b, 0x13, 0x72, 0x83, 0x15, 0xe6, 0xcc, 0x66, 0xcb, 0x34, 0xa4, 0x22, 0x42, 0x9a, 0x99,
-	0x90, 0x87, 0x2d, 0xb2, 0x97, 0x51, 0x63, 0xbb, 0x01, 0xe9, 0xe0, 0x72, 0x62, 0xae, 0x0a, 0xf3,
-	0x49, 0x76, 0x0b, 0x42, 0xb4, 0x13, 0xa8, 0x7f, 0xfb, 0xbe, 0xd6, 0xd0, 0x6a, 0xad, 0xa1, 0xcf,
-	0xb5, 0x86, 0xde, 0x36, 0x5a, 0x6e, 0xb5, 0xd1, 0x72, 0x1f, 0x1b, 0x2d, 0xf7, 0x74, 0xe1, 0x07,
-	0xec, 0x79, 0x31, 0x31, 0xa7, 0x30, 0xb7, 0x92, 0xdb, 0x91, 0x4f, 0x87, 0xba, 0x2f, 0xd6, 0xab,
-	0x38, 0x24, 0xb6, 0x8c, 0x3c, 0x6a, 0xf1, 0xee, 0xa4, 0x2c, 0x6e, 0xe9, 0xea, 0x3b, 0x00, 0x00,
-	0xff, 0xff, 0x65, 0x28, 0x36, 0xbe, 0x92, 0x02, 0x00, 0x00,
+	0x5f, 0x05, 0xac, 0x0c, 0xa5, 0xf3, 0x9e, 0x39, 0xcc, 0x23, 0x97, 0xf8, 0x98, 0x32, 0x27, 0x66,
+	0x41, 0xe8, 0x8f, 0xa3, 0x18, 0x22, 0xa0, 0xce, 0x6c, 0x1c, 0xb8, 0x2a, 0xd2, 0x91, 0x51, 0xb4,
+	0x49, 0xaa, 0x8d, 0x12, 0xe9, 0xce, 0x25, 0x3d, 0x5c, 0x71, 0xbd, 0x08, 0x68, 0xc0, 0xa8, 0x9a,
+	0xd7, 0x0b, 0x46, 0xad, 0x77, 0x6a, 0x1e, 0xfc, 0x6e, 0x0e, 0xa4, 0x6c, 0xff, 0x70, 0xe4, 0x1c,
+	0x97, 0x38, 0x30, 0x8f, 0xaa, 0x05, 0x61, 0x38, 0xca, 0x18, 0x1e, 0x81, 0x79, 0xb6, 0x24, 0xc8,
+	0x35, 0xae, 0xa6, 0x3d, 0xa8, 0x5a, 0x14, 0x78, 0x23, 0x83, 0xa7, 0x65, 0xec, 0x1d, 0x49, 0x86,
+	0xf8, 0x7f, 0xf2, 0xdb, 0x38, 0x72, 0x62, 0x67, 0x4e, 0xd5, 0x92, 0x8e, 0x8c, 0x5a, 0xef, 0xec,
+	0xef, 0x6e, 0x23, 0xc1, 0xf4, 0xf3, 0x2a, 0xb2, 0xeb, 0xee, 0xfe, 0x88, 0x0c, 0x70, 0x9d, 0x83,
+	0x5c, 0x87, 0xcc, 0x29, 0x8b, 0x9c, 0xd6, 0xef, 0xca, 0xdb, 0xb5, 0xec, 0x62, 0x14, 0xbe, 0x37,
+	0x21, 0x37, 0x58, 0x61, 0xce, 0x6c, 0xb6, 0x4c, 0x43, 0xfe, 0x89, 0x90, 0x66, 0x26, 0xe4, 0x61,
+	0x8b, 0xec, 0x65, 0xd4, 0xd8, 0x6e, 0x40, 0x3a, 0xb8, 0x9c, 0x98, 0x2b, 0xc2, 0x7c, 0x92, 0xdd,
+	0x82, 0x10, 0xed, 0x04, 0x22, 0x6d, 0xac, 0x4c, 0x21, 0xa4, 0x2c, 0x60, 0x0b, 0x16, 0x40, 0xa8,
+	0x56, 0x75, 0x64, 0x54, 0xed, 0x83, 0x59, 0xff, 0xf6, 0x7d, 0xad, 0xa1, 0xd5, 0x5a, 0x43, 0x9f,
+	0x6b, 0x0d, 0xbd, 0x6d, 0xb4, 0xdc, 0x6a, 0xa3, 0xe5, 0x3e, 0x36, 0x5a, 0xee, 0xe9, 0xc2, 0x0f,
+	0xd8, 0xf3, 0x62, 0x62, 0x4e, 0x61, 0x6e, 0x25, 0xb7, 0x23, 0x9f, 0x0e, 0x75, 0x5f, 0xac, 0x57,
+	0x71, 0x48, 0x6c, 0x19, 0x79, 0xd4, 0xe2, 0xdd, 0x49, 0x59, 0xdc, 0xd2, 0xd5, 0x77, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x1b, 0x69, 0x07, 0x35, 0x92, 0x02, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -204,6 +204,13 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Constitution) > 0 {
+		i -= len(m.Constitution)
+		copy(dAtA[i:], m.Constitution)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Constitution)))
+		i--
+		dAtA[i] = 0x4a
+	}
 	if m.Params != nil {
 		{
 			size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
@@ -214,7 +221,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintGenesis(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x42
 	}
 	if m.TallyParams != nil {
 		{
@@ -226,7 +233,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintGenesis(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x3a
 	}
 	if m.VotingParams != nil {
 		{
@@ -238,7 +245,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintGenesis(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x32
 	}
 	if m.DepositParams != nil {
 		{
@@ -250,7 +257,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintGenesis(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x2a
 	}
 	if len(m.Proposals) > 0 {
 		for iNdEx := len(m.Proposals) - 1; iNdEx >= 0; iNdEx-- {
@@ -263,7 +270,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x2a
+			dAtA[i] = 0x22
 		}
 	}
 	if len(m.Votes) > 0 {
@@ -277,7 +284,7 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x1a
 		}
 	}
 	if len(m.Deposits) > 0 {
@@ -291,20 +298,13 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x12
 		}
 	}
 	if m.StartingProposalId != 0 {
 		i = encodeVarintGenesis(dAtA, i, uint64(m.StartingProposalId))
 		i--
-		dAtA[i] = 0x10
-	}
-	if len(m.Constitution) > 0 {
-		i -= len(m.Constitution)
-		copy(dAtA[i:], m.Constitution)
-		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Constitution)))
-		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -326,10 +326,6 @@ func (m *GenesisState) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Constitution)
-	if l > 0 {
-		n += 1 + l + sovGenesis(uint64(l))
-	}
 	if m.StartingProposalId != 0 {
 		n += 1 + sovGenesis(uint64(m.StartingProposalId))
 	}
@@ -365,6 +361,10 @@ func (m *GenesisState) Size() (n int) {
 	}
 	if m.Params != nil {
 		l = m.Params.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.Constitution)
+	if l > 0 {
 		n += 1 + l + sovGenesis(uint64(l))
 	}
 	return n
@@ -406,38 +406,6 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Constitution", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Constitution = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field StartingProposalId", wireType)
 			}
@@ -456,7 +424,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Deposits", wireType)
 			}
@@ -490,7 +458,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Votes", wireType)
 			}
@@ -524,7 +492,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Proposals", wireType)
 			}
@@ -558,7 +526,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DepositParams", wireType)
 			}
@@ -594,7 +562,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VotingParams", wireType)
 			}
@@ -630,7 +598,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 8:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TallyParams", wireType)
 			}
@@ -666,7 +634,7 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 9:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
 			}
@@ -701,6 +669,38 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Constitution", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Constitution = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -15,7 +15,7 @@ import (
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -27,7 +27,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -143,14 +143,14 @@ func makeTestConfig() depinject.Config {
 			},
 			{
 				Name:   "tx",
-				Config: appconfig.WrapAny(&txmodulev1.Module{}),
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 		},
 	})
 }
 
 func makeMinimalConfig() depinject.Config {
-	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewNonceMempool())
+	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewSenderNonceMempool())
 	return depinject.Configs(
 		depinject.Supply(mempoolOpt),
 		appconfig.Compose(&appv1alpha1.Config{

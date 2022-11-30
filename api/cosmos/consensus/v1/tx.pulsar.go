@@ -2,17 +2,18 @@
 package consensusv1
 
 import (
+	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	_ "cosmossdk.io/api/cosmos/msg/v1"
 	types "cosmossdk.io/api/tendermint/types"
-	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -1052,6 +1053,8 @@ type MsgUpdateParams struct {
 	// authority is the address of the governance account.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/consensus_params parameters to update.
+	// VersionsParams is not included in this Msg because it is tracked
+	// separarately in x/upgrade.
 	//
 	// NOTE: All parameters must be supplied.
 	Block     *types.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`

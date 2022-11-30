@@ -110,5 +110,3 @@ func TxMultiSignBatchExec(clientCtx client.Context, filename string, from string
 
 	return clitestutil.ExecTestCLICmd(clientCtx, cli.GetMultiSignBatchCmd(), args)
 }
-
-// DONTCOVER

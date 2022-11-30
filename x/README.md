@@ -24,6 +24,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).
 * [Consensus](./consensus/README.md) - Consensus module for modifying Tendermint's ABCI consensus params.
 
+
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 
 ## IBC

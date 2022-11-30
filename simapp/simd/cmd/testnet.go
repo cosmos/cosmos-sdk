@@ -1,9 +1,8 @@
 package cmd
 
-// DONTCOVER
-
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -316,7 +315,8 @@ func initTestnetFiles(
 			WithKeybase(kb).
 			WithTxConfig(clientCtx.TxConfig)
 
-		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+		// When Textual is wired up, the context argument should be retrieved from the client context.
+		if err := tx.Sign(context.TODO(), txFactory, nodeDirName, txBuilder, true); err != nil {
 			return err
 		}
 

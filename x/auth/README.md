@@ -138,7 +138,7 @@ message BaseAccount {
 
 ### Vesting Account
 
-See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
+See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
 ## AnteHandlers
 
@@ -217,7 +217,7 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	GetNextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) uint64
 }
 ```
 
@@ -480,30 +480,6 @@ simd tx broadcast tx.signed.json
 ```
 
 More information about the `broadcast` command can be found running `simd tx broadcast --help`.
-
-#### `encode`
-
-The `encode` command encodes a transaction created with the `--generate-only` flag or signed with the sign command.
-The transaction is seralized it to Protobuf and returned as base64.
-
-```bash
-$ simd tx encode tx.json
-Co8BCowBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmwKLWNvc21vczFsNnZzcWhoN3Jud3N5cjJreXozampnM3FkdWF6OGd3Z3lsODI3NRItY29zbW9zMTU4c2FsZHlnOHBteHU3Znd2dDBkNng3amVzd3A0Z3d5a2xrNnkzGgwKBXN0YWtlEgMxMDASBhIEEMCaDA==
-$ simd tx encode tx.signed.json
-```
-
-More information about the `encode` command can be found running `simd tx encode --help`.
-
-#### `decode`
-
-The `decode` commands decodes a transaction encoded with the `encode` command.
-
-
-```bash
-simd tx decode Co8BCowBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmwKLWNvc21vczFsNnZzcWhoN3Jud3N5cjJreXozampnM3FkdWF6OGd3Z3lsODI3NRItY29zbW9zMTU4c2FsZHlnOHBteHU3Znd2dDBkNng3amVzd3A0Z3d5a2xrNnkzGgwKBXN0YWtlEgMxMDASBhIEEMCaDA==
-```
-
-More information about the `decode` command can be found running `simd tx decode --help`.
 
 #### `aux-to-fee`
 

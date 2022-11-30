@@ -13,13 +13,6 @@ func NewCapability(index uint64) *Capability {
 	return &Capability{Index: index}
 }
 
-// String returns the string representation of a Capability. The string contains
-// the Capability's memory reference as the string is to be used in a composite
-// key and to authenticate capabilities.
-func (ck *Capability) String() string {
-	return fmt.Sprintf("Capability{%p, %d}", ck, ck.Index)
-}
-
 func NewOwner(module, name string) Owner {
 	return Owner{Module: module, Name: name}
 }

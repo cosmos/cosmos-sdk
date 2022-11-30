@@ -51,7 +51,7 @@ require (
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.37.0-rc1
+	github.com/tendermint/tendermint v0.37.0-rc2
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.3.0
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
@@ -163,6 +163,9 @@ require (
 )
 
 replace (
+	// Temporary until we tag a new version
+	cosmossdk.io/tools/rosetta => ./tools/rosetta
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

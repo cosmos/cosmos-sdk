@@ -20,9 +20,11 @@ import (
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	mintKeeper keeper.Keeper
-	ctx        sdk.Context
-	msgServer  types.MsgServer
+	mintKeeper    keeper.Keeper
+	ctx           sdk.Context
+	msgServer     types.MsgServer
+	stakingKeeper *minttestutil.MockStakingKeeper
+	bankKeeper    *minttestutil.MockBankKeeper
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -52,6 +54,11 @@ func (s *IntegrationTestSuite) SetupTest() {
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	s.stakingKeeper = stakingKeeper
+	s.bankKeeper = bankKeeper
+
+	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
+		s.mintKeeper.Logger(testCtx.Ctx))
 
 	err := s.mintKeeper.SetParams(s.ctx, types.DefaultParams())
 	s.Require().NoError(err)
@@ -109,4 +116,23 @@ func (s *IntegrationTestSuite) TestParams() {
 			s.Require().Equal(expected, p)
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestAliasFunctions() {
+	stakingTokenSupply := sdk.NewIntFromUint64(100000000000)
+	s.stakingKeeper.EXPECT().StakingTokenSupply(s.ctx).Return(stakingTokenSupply)
+	s.Require().Equal(s.mintKeeper.StakingTokenSupply(s.ctx), stakingTokenSupply)
+
+	bondedRatio := sdk.NewDecWithPrec(15, 2)
+	s.stakingKeeper.EXPECT().BondedRatio(s.ctx).Return(bondedRatio)
+	s.Require().Equal(s.mintKeeper.BondedRatio(s.ctx), bondedRatio)
+
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000)))
+	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, coins).Return(nil)
+	s.Require().Equal(s.mintKeeper.MintCoins(s.ctx, sdk.NewCoins()), nil)
+	s.Require().Nil(s.mintKeeper.MintCoins(s.ctx, coins))
+
+	fees := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))
+	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, fees).Return(nil)
+	s.Require().Nil(s.mintKeeper.AddCollectedFees(s.ctx, fees))
 }

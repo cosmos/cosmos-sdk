@@ -57,6 +57,9 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper
 
+	s.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
+		s.mintKeeper.Logger(testCtx.Ctx))
+
 	err := s.mintKeeper.SetParams(s.ctx, types.DefaultParams())
 	s.Require().NoError(err)
 	s.mintKeeper.SetMinter(s.ctx, types.DefaultInitialMinter())

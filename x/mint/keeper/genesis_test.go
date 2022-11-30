@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -27,6 +28,7 @@ type GenesisTestSuite struct {
 	keeper        keeper.Keeper
 	cdc           codec.BinaryCodec
 	accountKeeper types.AccountKeeper
+	key           *storetypes.KVStoreKey
 }
 
 func TestGenesisTestSuite(t *testing.T) {
@@ -42,6 +44,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	s.sdkCtx = testCtx.Ctx
+	s.key = key
 
 	stakingKeeper := minttestutil.NewMockStakingKeeper(ctrl)
 	accountKeeper := minttestutil.NewMockAccountKeeper(ctrl)
@@ -53,7 +56,7 @@ func (s *GenesisTestSuite) SetupTest() {
 	s.keeper = keeper.NewKeeper(s.cdc, key, stakingKeeper, accountKeeper, bankKeeper, "", "")
 }
 
-func (s *GenesisTestSuite) TestInitGenesis() {
+func (s *GenesisTestSuite) TestImportExportGenesis() {
 	genesisState := types.DefaultGenesisState()
 	genesisState.Minter = types.NewMinter(sdk.NewDecWithPrec(20, 2), math.LegacyNewDec(1))
 	genesisState.Params = types.NewParams(
@@ -69,6 +72,9 @@ func (s *GenesisTestSuite) TestInitGenesis() {
 
 	minter := s.keeper.GetMinter(s.sdkCtx)
 	s.Require().Equal(genesisState.Minter, minter)
+
+	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, sdk.NewTransientStoreKey("transient_test"))
+	s.Require().Panics(func() { s.keeper.GetMinter(invalidCtx.Ctx) }, "stored minter should not have been nil")
 	params := s.keeper.GetParams(s.sdkCtx)
 	s.Require().Equal(genesisState.Params, params)
 

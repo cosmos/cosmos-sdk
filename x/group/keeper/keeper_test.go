@@ -479,8 +479,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-			_, err := s.groupKeeper.UpdateGroupMetadata(ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupMetadata(sdkCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -488,7 +487,7 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.groupKeeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
+			res, err := s.groupKeeper.GroupInfo(sdkCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
 		})
@@ -741,8 +740,7 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-			_, err := s.groupKeeper.UpdateGroupMembers(ctx, spec.req)
+			_, err := s.groupKeeper.UpdateGroupMembers(sdkCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -750,12 +748,12 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			s.Require().NoError(err)
 
 			// then
-			res, err := s.groupKeeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
+			res, err := s.groupKeeper.GroupInfo(sdkCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroup, res.Info)
 
 			// and members persisted
-			membersRes, err := s.groupKeeper.GroupMembers(ctx, &group.QueryGroupMembersRequest{GroupId: groupID})
+			membersRes, err := s.groupKeeper.GroupMembers(sdkCtx, &group.QueryGroupMembersRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
 			s.Require().Equal(len(spec.expMembers), len(loadedMembers))
@@ -2228,12 +2226,10 @@ func (s *TestSuite) TestVote() {
 				sdkCtx = spec.srcCtx
 			}
 			sdkCtx, _ = sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-
 			if spec.doBefore != nil {
-				spec.doBefore(ctx)
+				spec.doBefore(sdkCtx)
 			}
-			_, err := s.groupKeeper.Vote(ctx, spec.req)
+			_, err := s.groupKeeper.Vote(sdkCtx, spec.req)
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -2242,7 +2238,7 @@ func (s *TestSuite) TestVote() {
 
 			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 				// vote is stored and all data persisted
-				res, err := s.groupKeeper.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
+				res, err := s.groupKeeper.VoteByProposalVoter(sdkCtx, &group.QueryVoteByProposalVoterRequest{
 					ProposalId: spec.req.ProposalId,
 					Voter:      spec.req.Voter,
 				})
@@ -2255,7 +2251,7 @@ func (s *TestSuite) TestVote() {
 				s.Assert().Equal(s.blockTime, loaded.SubmitTime)
 
 				// query votes by proposal
-				votesByProposalRes, err := s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{
+				votesByProposalRes, err := s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{
 					ProposalId: spec.req.ProposalId,
 				})
 				s.Require().NoError(err)
@@ -2270,7 +2266,7 @@ func (s *TestSuite) TestVote() {
 
 				// query votes by voter
 				voter := spec.req.Voter
-				votesByVoterRes, err := s.groupKeeper.VotesByVoter(ctx, &group.QueryVotesByVoterRequest{
+				votesByVoterRes, err := s.groupKeeper.VotesByVoter(sdkCtx, &group.QueryVotesByVoterRequest{
 					Voter: voter,
 				})
 				s.Require().NoError(err)
@@ -2282,7 +2278,7 @@ func (s *TestSuite) TestVote() {
 				s.Assert().Equal(spec.req.Metadata, votesByVoter[0].Metadata)
 				s.Assert().Equal(s.blockTime, votesByVoter[0].SubmitTime)
 
-				proposalRes, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{
+				proposalRes, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{
 					ProposalId: spec.req.ProposalId,
 				})
 				s.Require().NoError(err)
@@ -2493,9 +2489,7 @@ func (s *TestSuite) TestExecProposal() {
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
-				ctx = sdk.WrapSDKContext(sdkCtx)
-
-				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.Require().NoError(err)
 				return myProposalID
 			},
@@ -2527,10 +2521,8 @@ func (s *TestSuite) TestExecProposal() {
 				// Wait after min execution period end before Exec
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod)) // MinExecutionPeriod is 5s
-				ctx = sdk.WrapSDKContext(sdkCtx)
-
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, fmt.Errorf("error"))
-				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
 				s.Require().NoError(err)
@@ -2547,15 +2539,13 @@ func (s *TestSuite) TestExecProposal() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-			proposalID := spec.setupProposal(ctx)
+			proposalID := spec.setupProposal(sdkCtx)
 
 			if !spec.srcBlockTime.IsZero() {
 				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
 			}
 
-			ctx = sdk.WrapSDKContext(sdkCtx)
-			_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				return
@@ -2565,7 +2555,7 @@ func (s *TestSuite) TestExecProposal() {
 			if !(spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS) {
 
 				// and proposal is updated
-				res, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				proposal := res.Proposal
 
@@ -2733,9 +2723,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 				// Wait for min execution period end
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
-				ctx = sdk.WrapSDKContext(sdkCtx)
-
-				_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
+				_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: myProposalID})
 				s.bankKeeper.EXPECT().Send(gomock.Any(), msgSend2).Return(nil, nil)
 
 				s.Require().NoError(err)
@@ -2749,8 +2737,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-			proposalID := spec.setupProposal(ctx)
+			proposalID := spec.setupProposal(sdkCtx)
 
 			if !spec.srcBlockTime.IsZero() {
 				sdkCtx = sdkCtx.WithBlockTime(spec.srcBlockTime)
@@ -2758,8 +2745,7 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 			// Wait for min execution period end
 			sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(minExecutionPeriod))
-			ctx = sdk.WrapSDKContext(sdkCtx)
-			_, err := s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
+			_, err := s.groupKeeper.Exec(sdkCtx, &group.MsgExec{Executor: addr1.String(), ProposalId: proposalID})
 			if spec.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
@@ -2769,17 +2755,17 @@ func (s *TestSuite) TestExecPrunedProposalsAndVotes() {
 
 			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// Make sure proposal is deleted from state
-				_, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				_, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().Contains(err.Error(), spec.expErrMsg)
-				res, err := s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
 
 			} else {
 				// Check that proposal and votes exists
-				res, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(sdkCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
+				_, err = s.groupKeeper.VotesByProposal(sdkCtx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
 				s.Require().NoError(err)
 				s.Require().Equal("", spec.expErrMsg)
 

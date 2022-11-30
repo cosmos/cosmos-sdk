@@ -7,9 +7,9 @@ import (
 
 const StoreCodespace = "store"
 
-var ErrInvalidProof = errorsmod.Register(StoreCodespace, 2, "invalid proof")
-
 var (
+	// ErrInvalidProof is returned when a proof is invalid
+	ErrInvalidProof = errorsmod.Register(StoreCodespace, 2, "invalid proof")
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errorsmod.Register(StoreCodespace, 3, "tx parse error")
 

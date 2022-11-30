@@ -16,7 +16,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -24,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/pruning"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/transient"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -37,6 +37,7 @@ const (
 
 const iavlDisablefastNodeDefault = false
 
+// keysForStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
 func keysForStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 	keys := make([]types.StoreKey, 0, len(m))
 	for key := range m {
@@ -953,14 +954,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 }
 
 func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
-	keys := make([]types.StoreKey, 0, len(rs.stores))
-	for key := range rs.stores {
-		keys = append(keys, key)
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Name() < keys[j].Name()
-	})
-
+	keys := keysForStoreKeyMap(rs.stores)
 	storeInfos := []types.StoreInfo{}
 	for _, key := range keys {
 		store := rs.stores[key]

@@ -17,7 +17,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -201,10 +201,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// call the hooks with the BeginBlock messages
 	for _, streamingListener := range app.abciListeners {
-
-		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
-
-		if err := streamingListener.ListenBeginBlock(goCtx, req, res); err != nil {
+		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
 			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
 		}
 	}
@@ -229,9 +226,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	// call the streaming service hooks with the EndBlock messages
 	for _, streamingListener := range app.abciListeners {
-		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
-
-		if err := streamingListener.ListenEndBlock(goCtx, req, res); err != nil {
+		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
 			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
 		}
 	}
@@ -334,9 +329,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 
 	defer func() {
 		for _, streamingListener := range app.abciListeners {
-			goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
-
-			if err := streamingListener.ListenDeliverTx(goCtx, req, res); err != nil {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
 				app.logger.Error("DeliverTx listening hook failed", "err", err)
 			}
 		}

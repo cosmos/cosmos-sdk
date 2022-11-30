@@ -36,9 +36,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgSubmitEvidence represents a message that supports submitting arbitrary
 // Evidence of misbehavior such as equivocation or counterfactual signing.
 type MsgSubmitEvidence struct {
-	// submitter is the signer account address of evidence
+	// submitter is the signer account address of evidence.
 	Submitter string `protobuf:"bytes,1,opt,name=submitter,proto3" json:"submitter,omitempty"`
-	// evidence defines the evidence of misbehavior
+	// evidence defines the evidence of misbehavior.
 	Evidence *types.Any `protobuf:"bytes,2,opt,name=evidence,proto3" json:"evidence,omitempty"`
 }
 

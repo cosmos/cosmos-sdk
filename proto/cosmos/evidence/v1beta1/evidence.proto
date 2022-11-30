@@ -23,9 +23,9 @@ message Equivocation {
   google.protobuf.Timestamp time   = 2
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
   
-  // power is the equivocation validator power
+  // power is the equivocation validator power.
   int64  power             = 3;
 
-  // consensus_address is the equivocation validator consensus address
+  // consensus_address is the equivocation validator consensus address.
   string consensus_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

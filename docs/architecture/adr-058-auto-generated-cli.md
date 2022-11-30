@@ -42,6 +42,7 @@ The basic design for automatically generating CLI commands is to:
 
 In order to make the auto-generated CLI as easy to use (or easier) than handwritten CLI, we need to do custom handling
 of specific protobuf field types so that the input format is easy for humans:
+
 * `Coin`, `Coins`, `DecCoin`, and `DecCoins` should be input using the existing format (i.e. `1000uatom`)
 * it should be possible to specify an address using either the bech32 address string or a named key in the keyring
 * `Timestamp` and `Duration` should accept strings like `2001-01-01T00:00:00Z` and `1h3m` respectively
@@ -74,12 +75,14 @@ this functionality.
 ## Further Discussions
 
 We would like to be able to customize:
+
 * short and long usage strings for commands
 * aliases for flags (ex. `-a` for `--amount`)
 * which fields are positional parameters rather than flags
 
 It is an [open discussion](https://github.com/cosmos/cosmos-sdk/pull/11725#issuecomment-1108676129)
 as to whether these customizations options should line in:
+
 * the .proto files themselves,
 * separate config files (ex. YAML), or
 * directly in code

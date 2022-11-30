@@ -58,7 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (signing) [#TODO](https://github.com/cosmos/cosmos-sdk/pull/) Add a new SignModeHandlerWithContext interface with a new GetSignBytesWithContext to get the sign bytes using `context.Context` as an argument to access state.
+* (signing) [#14087](https://github.com/cosmos/cosmos-sdk/pull/14087) Add SignModeHandlerWithContext interface with a new `GetSignBytesWithContext` to get the sign bytes using `context.Context` as an argument to access state.
 * [13882] (https://github.com/cosmos/cosmos-sdk/pull/13882) Add tx `encode` and `decode` endpoints to amino tx service.
   > Note: These endpoints encodes and decodes only amino txs.
 * (config) [#13894](https://github.com/cosmos/cosmos-sdk/pull/13894) Support state streaming configuration in `app.toml` template and default configuration.

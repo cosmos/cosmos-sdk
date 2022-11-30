@@ -55,13 +55,9 @@ It works by storing the transation in a list sorted by the transaction nonce. Wh
 
 ### Configurations
 
-#### MaxTx
+#### MaxTxs
 
-Its an integer value that sets the mempool in one of three modes, bounded, unbounded, or disabled. 
-
-| MaxTx Mode | Behavior                                                               |
-|------------|------------------------------------------------------------------------|
-| negative     |  Disabled, mempool does not insert new tx and return early. |
-| zero  | Unbounded mempool has no tx limit and will never fail with ErrMempoolTxMaxCapacity      |
- | postive |  Bounded, it fails with ErrMempoolTxMaxCapacity when maxTx value is the same as CountTx() |
-
+Its an integer value that sets the mempool in one of three modes, bounded, unbounded, or disabled.
+- **negative**:  Disabled, mempool does not insert new tx and return early.
+- **zero**: Unbounded mempool has no tx limit and will never fail with ErrMempoolTxMaxCapacity.
+- **positive**: Bounded, it fails with ErrMempoolTxMaxCapacity when maxTx value is the same as CountTx()

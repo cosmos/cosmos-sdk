@@ -25,12 +25,8 @@ message Minter {
 
 // Params defines the parameters for the x/mint module.
 message Params {
-<<<<<<< HEAD
   option (gogoproto.goproto_stringer) = false;
   option (amino.name)                 = "cosmos-sdk/x/mint/Params";
-=======
-  option (amino.name) = "cosmos-sdk/x/mint/Params";
->>>>>>> ac6b19df2 (refactor: x/nft audit changes (#14055))
 
   // type of coin to mint
   string mint_denom = 1;

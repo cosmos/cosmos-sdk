@@ -27,11 +27,6 @@ message A {
   bytes                             BYTES     = 9;
   google.protobuf.Timestamp         TIMESTAMP = 10;
   google.protobuf.Duration          DURATION  = 11;
-<<<<<<< HEAD
-=======
-  ExternalEnum                      ENUM      = 12;
-  google.protobuf.Any               ANY       = 13;
->>>>>>> ac6b19df2 (refactor: x/nft audit changes (#14055))
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
   sint32         SINT32   = 101;
@@ -58,61 +53,5 @@ message Foo {
 // Bar is a sample message type used for testing message rendering.
 message Bar {
   string bar_id = 1;
-<<<<<<< HEAD
   bytes  data   = 2;
-=======
-  bytes data = 2;
-  google.protobuf.Any payload = 3;
-}
-
-enum ExternalEnum {
-  One                 = 0;
-  Two                 = 1;
-  EXTERNAL_ENUM_THREE = 127;
-}
-
-// Baz is a sample message type used for testing enum rendering.
-message Baz {
-  enum Internal_Enum {
-    Four = 0;
-    Five = 1;
-  }
-
-  ExternalEnum  ee     = 1;
-  Internal_Enum ie     = 2;
-  BallotOption  option = 3;
-}
-
-enum BallotOption {
-  BALLOT_OPTION_UNSPECIFIED = 0;
-  BALLOT_OPTION_YES = 1;
-  BALLOT_OPTION_ABSTAIN = 2;
-  BALLOT_OPTION_NO = 3;
-  BALLOT_OPTION_NO_WITH_VETO = 4;
-}
-
-// Qux is a sample message type used for testing repeated rendering.
-message Qux {
-  repeated Foo messages = 1;
-  repeated string string_messages = 2;
-  Ballot vote = 3;
-  repeated cosmos.base.v1beta1.Coin price = 4;
-  repeated google.protobuf.Timestamp expirations = 5;
-}
-
-message WeightedBallotOption {
-  // TODO: Enumeration rendering
-  // BallotOption option = 1;
-  string option = 1;
-  string weight = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
-}
-
-message Ballot {
-  uint64 proposal_id = 1;
-  // TODO: cosmos.AddressString rendering
-  // string voter       = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string voter = 2;
-  reserved 3;
-  repeated WeightedBallotOption options = 4;
->>>>>>> ac6b19df2 (refactor: x/nft audit changes (#14055))
 }

@@ -47,10 +47,18 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome),
 	})
 
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app v2.
 	for acc := range BlockedAddresses() {
+		var addr sdk.AccAddress
+		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
+			addr = modAddr
+		} else {
+			addr = app.AccountKeeper.GetModuleAddress(acc)
+		}
+
 		require.True(
 			t,
-			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
+			app.BankKeeper.BlockedAddr(addr),
 			fmt.Sprintf("ensure that blocked addresses are properly set in bank keeper: %s should be blocked", acc),
 		)
 	}

@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -772,6 +773,7 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
 }
 
 func (s IntegrationTestSuite) TestTxEncode_GRPC() {
+	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	protoTx, err := txBuilderToProtoTx(txBuilder)
 	s.Require().NoError(err)
@@ -784,7 +786,7 @@ func (s IntegrationTestSuite) TestTxEncode_GRPC() {
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
 		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
-		{"valid request with tx bytes", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -798,6 +800,10 @@ func (s IntegrationTestSuite) TestTxEncode_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetTxBytes())
+
+				tx, err := val.ClientCtx.TxConfig.TxDecoder()(res.TxBytes)
+				s.Require().NoError(err)
+				s.Require().Equal(protoTx.GetMsgs(), tx.GetMsgs())
 			}
 		})
 	}
@@ -816,7 +822,7 @@ func (s *IntegrationTestSuite) TestTxEncode_GRPCGateway() {
 		expErrMsg string
 	}{
 		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
-		{"valid request with tx bytes", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -829,7 +835,13 @@ func (s *IntegrationTestSuite) TestTxEncode_GRPCGateway() {
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
+				var result tx.TxEncodeResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
+
+				tx, err := val.ClientCtx.TxConfig.TxDecoder()(result.TxBytes)
+				s.Require().NoError(err)
+				s.Require().Equal(protoTx.GetMsgs(), tx.GetMsgs())
 			}
 		})
 	}
@@ -867,6 +879,11 @@ func (s IntegrationTestSuite) TestTxDecode_GRPC() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetTx())
+
+				txb := authtx.WrapTx(res.Tx)
+				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
+				s.Require().NoError(err)
+				s.Require().Equal(encodedTx, tx)
 			}
 		})
 	}
@@ -876,10 +893,10 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
-	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	encodedTxBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
 	s.Require().NoError(err)
 
-	invalidTxBytes := append(txBytes, byte(0o00))
+	invalidTxBytes := append(encodedTxBytes, byte(0o00))
 
 	testCases := []struct {
 		name      string
@@ -889,7 +906,7 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 	}{
 		{"empty request", &tx.TxDecodeRequest{}, true, "invalid empty tx bytes"},
 		{"invalid tx bytes", &tx.TxDecodeRequest{TxBytes: invalidTxBytes}, true, "tx parse error"},
-		{"valid request with tx_bytes", &tx.TxDecodeRequest{TxBytes: txBytes}, false, ""},
+		{"valid request with tx_bytes", &tx.TxDecodeRequest{TxBytes: encodedTxBytes}, false, ""},
 	}
 
 	for _, tc := range testCases {
@@ -902,7 +919,187 @@ func (s IntegrationTestSuite) TestTxDecode_GRPCGateway() {
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
+				var result tx.TxDecodeResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
+
+				txb := authtx.WrapTx(result.Tx)
+				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
+				s.Require().NoError(err)
+				s.Require().Equal(encodedTxBytes, tx)
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetAminoBinary())
+
+				var tx legacytx.StdTx
+				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+				stdTxConfig.Cdc.Unmarshal(res.AminoBinary, &tx)
+				s.Require().Equal(tx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestTxEncodeAmino_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode/amino", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxEncodeAminoResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+
+				var newStdTx legacytx.StdTx
+				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+				stdTxConfig.Cdc.Unmarshal(result.AminoBinary, &newStdTx)
+				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestTxDecodeAmino_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	encodedTx, err := stdTxConfig.Cdc.Marshal(stdTx)
+	s.Require().NoError(err)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxDecodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetAminoJson())
+
+				var tx legacytx.StdTx
+				err := stdTxConfig.Cdc.UnmarshalJSON([]byte(res.GetAminoJson()), &tx)
+				s.Require().NoError(err)
+				s.Require().Equal(stdTx.GetMsgs(), tx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s IntegrationTestSuite) TestTxDecodeAmino_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	encodedTx, err := stdTxConfig.Cdc.Marshal(stdTx)
+	s.Require().NoError(err)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode/amino", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxDecodeAminoResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+
+				var newStdTx legacytx.StdTx
+				stdTxConfig.Cdc.UnmarshalJSON([]byte(result.AminoJson), &newStdTx)
+				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
 			}
 		})
 	}
@@ -930,6 +1127,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
+	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.

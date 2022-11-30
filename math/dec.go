@@ -178,7 +178,7 @@ func LegacyNewDecFromStr(str string) (LegacyDec, error) {
 
 	// add some extra zero's to correct to the Precision factor
 	zerosToAdd := LegacyPrecision - lenDecs
-	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
+	zeros := strings.Repeat("0", zerosToAdd)
 	combinedStr += zeros
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10

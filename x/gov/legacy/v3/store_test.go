@@ -1,4 +1,4 @@
-package v4_test
+package v3_test
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v4"
+	v3 "github.com/cosmos/cosmos-sdk/x/gov/legacy/v3"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
@@ -37,19 +37,19 @@ func TestGovStoreMigrationToV4ConsensusVersion(t *testing.T) {
 	paramstore.Set(ctx, types.ParamStoreKeyTallyParams, originalTallyParams)
 
 	// Run migrations.
-	err := v4.MigrateStore(ctx, paramstore)
+	err := v3.MigrateStore(ctx, paramstore)
 	require.NoError(t, err)
 
 	// Make sure the new params are set.
 	var depositParams types.DepositParams
 	paramstore.Get(ctx, types.ParamStoreKeyDepositParams, &depositParams)
-	require.Equal(t, v4.MinExpeditedDeposit, depositParams.MinExpeditedDeposit)
+	require.Equal(t, v3.MinExpeditedDeposit, depositParams.MinExpeditedDeposit)
 
 	var votingParams types.VotingParams
 	paramstore.Get(ctx, types.ParamStoreKeyVotingParams, &votingParams)
-	require.Equal(t, v4.ExpeditedVotingPeriod, votingParams.ExpeditedVotingPeriod)
+	require.Equal(t, v3.ExpeditedVotingPeriod, votingParams.ExpeditedVotingPeriod)
 
 	var tallyParams types.TallyParams
 	paramstore.Get(ctx, types.ParamStoreKeyTallyParams, &tallyParams)
-	require.Equal(t, v4.ExpeditedThreshold, tallyParams.ExpeditedThreshold)
+	require.Equal(t, v3.ExpeditedThreshold, tallyParams.ExpeditedThreshold)
 }

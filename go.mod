@@ -168,7 +168,7 @@ replace (
 )
 
 retract (
-	// sbuject to a bug in the group module,
+	// subject to a bug in the group module,
 	// these versions are safe to use when not using the group module
 	[v0.46.5, v0.46.6]
 	// subject to the dragonberry vulnerability

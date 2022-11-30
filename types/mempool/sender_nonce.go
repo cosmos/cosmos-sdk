@@ -66,6 +66,9 @@ func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 }
 
 // SenderNonceSeedOpt Option To add a Seed for random struct
+// Example:
+// > random_seed := int64(1000)
+// > NewSenderNonceMempool(SenderNonceSeedTxOpt(random_seed))
 func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
 	return func(snp *senderNonceMempool) {
 		snp.setSeed(seed)

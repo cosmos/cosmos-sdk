@@ -126,7 +126,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestCLITxSend() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
-	args := []string{
+	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -138,7 +138,41 @@ func (s *CLITestSuite) TestCLITxSend() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expErrMsg    string
 	}{
+		{
+			"class id is empty",
+			[]string{
+				"",
+				testID,
+				accounts[0].Address.String(),
+			},
+			0,
+			true,
+			"empty class id",
+		},
+		{
+			"nft id is empty",
+			[]string{
+				testClassID,
+				"",
+				accounts[0].Address.String(),
+			},
+			0,
+			true,
+			"empty nft id",
+		},
+		{
+			"invalid receiver address",
+			[]string{
+				testClassID,
+				testID,
+				"invalid receiver",
+			},
+			0,
+			true,
+			"Invalid receiver address",
+		},
 		{
 			"valid transaction",
 			[]string{
@@ -148,13 +182,14 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			args = append(args, tc.args...)
+			args := append(tc.args, extraArgs...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)
 			cmd.SetArgs(args)
@@ -164,6 +199,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)

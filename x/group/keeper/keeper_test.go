@@ -3041,3 +3041,74 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	s.Require().NoError(s.app.GroupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() { module.EndBlocker(ctx, s.app.GroupKeeper) })
 }
+
+// TestTallyProposalsAtVPEnd_GroupMemberLeaving test that the node doesn't
+// panic if a member leaves after the voting period end.
+func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr3 := addrs[2]
+	votingPeriod := time.Duration(4 * time.Minute)
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "0.3"},
+			{Address: addr2.String(), Weight: "7"},
+			{Address: addr3.String(), Weight: "0.6"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"3",
+		votingPeriod,
+		minExecutionPeriod,
+	)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	groupRes, err := s.app.GroupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+	groupPolicy, err := sdk.AccAddressFromBech32(accountAddr)
+	s.Require().NoError(err)
+	s.Require().NotNil(groupPolicy)
+
+	proposalRes, err := s.app.GroupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	// group members vote
+	_, err = s.app.GroupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_NO,
+	})
+	s.Require().NoError(err)
+	_, err = s.app.GroupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr2.String(),
+		Option:     group.VOTE_OPTION_NO,
+	})
+	s.Require().NoError(err)
+
+	// move forward in time
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+
+	// Tally the result. This saves the tally result to state.
+	s.Require().NoError(s.app.GroupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.NotPanics(func() { module.EndBlocker(ctx, s.app.GroupKeeper) })
+
+	// member 2 (high weight) leaves group.
+	_, err = s.app.GroupKeeper.LeaveGroup(ctx, &group.MsgLeaveGroup{
+		Address: addr2.String(),
+		GroupId: groupRes.GroupId,
+	})
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.app.GroupKeeper.TallyProposalsAtVPEnd(ctx))
+	s.NotPanics(func() { module.EndBlocker(ctx, s.app.GroupKeeper) })
+}

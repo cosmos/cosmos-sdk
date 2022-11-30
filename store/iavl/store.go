@@ -13,7 +13,7 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
 
-	errorsmod "cosmossdk.io/errors"
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
@@ -273,7 +273,7 @@ func (st *Store) SetInitialVersion(version int64) {
 func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	istore, err := st.GetImmutable(version)
 	if err != nil {
-		return nil, errorsmod.Wrapf(err, "iavl export failed for version %v", version)
+		return nil, sdkerrors.Wrapf(err, "iavl export failed for version %v", version)
 	}
 	tree, ok := istore.tree.(*immutableTree)
 	if !ok || tree == nil {
@@ -316,7 +316,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 	defer telemetry.MeasureSince(time.Now(), "store", "iavl", "query")
 
 	if len(req.Data) == 0 {
-		return types.QueryResult(errorsmod.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
+		return types.QueryResult(sdkerrors.Wrap(types.ErrTxDecode, "query cannot be zero length"), false)
 	}
 
 	tree := st.tree
@@ -381,7 +381,7 @@ func (st *Store) Query(req abci.RequestQuery) (res abci.ResponseQuery) {
 		res.Value = bz
 
 	default:
-		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
+		return types.QueryResult(sdkerrors.Wrapf(types.ErrUnknownRequest, "unexpected query path: %v", req.Path), false)
 	}
 
 	return res

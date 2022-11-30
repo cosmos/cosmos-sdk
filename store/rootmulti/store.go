@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -11,12 +12,11 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
-	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	errorsmod "cosmossdk.io/errors"
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
@@ -250,7 +250,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		store, err := rs.loadCommitStoreFromParams(key, commitID, storeParams)
 		if err != nil {
-			return errorsmod.Wrap(err, "failed to load store")
+			return sdkerrors.Wrap(err, "failed to load store")
 		}
 
 		newStores[key] = store
@@ -258,7 +258,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
 			if err := deleteKVStore(store.(types.KVStore)); err != nil {
-				return errorsmod.Wrapf(err, "failed to delete store %s", key.Name())
+				return sdkerrors.Wrapf(err, "failed to delete store %s", key.Name())
 			}
 			rs.removalMap[key] = true
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
@@ -271,12 +271,12 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			// load from the old name
 			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)
 			if err != nil {
-				return errorsmod.Wrapf(err, "failed to load old store %s", oldName)
+				return sdkerrors.Wrapf(err, "failed to load old store %s", oldName)
 			}
 
 			// move all data
 			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
-				return errorsmod.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
+				return sdkerrors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
 			}
 
 			// add the old key so its deletion is committed
@@ -606,7 +606,7 @@ func (rs *Store) PruneStores(clearPruningManager bool, pruningHeights []int64) (
 			continue
 		}
 
-		if errCause := errors.Cause(err); errCause != nil && errCause != iavltree.ErrVersionDoesNotExist {
+		if errors.Is(err, iavltree.ErrVersionDoesNotExist) && err != nil {
 			return err
 		}
 	}
@@ -639,12 +639,12 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 
 	store := rs.GetStoreByName(storeName)
 	if store == nil {
-		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "no such store: %s", storeName), false)
+		return types.QueryResult(sdkerrors.Wrapf(types.ErrUnknownRequest, "no such store: %s", storeName), false)
 	}
 
 	queryable, ok := store.(types.Queryable)
 	if !ok {
-		return types.QueryResult(errorsmod.Wrapf(types.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store), false)
+		return types.QueryResult(sdkerrors.Wrapf(types.ErrUnknownRequest, "store %s (type %T) doesn't support queries", storeName, store), false)
 	}
 
 	// trim the path and make the query
@@ -656,7 +656,7 @@ func (rs *Store) Query(req abci.RequestQuery) abci.ResponseQuery {
 	}
 
 	if res.ProofOps == nil || len(res.ProofOps.Ops) == 0 {
-		return types.QueryResult(errorsmod.Wrap(types.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"), false)
+		return types.QueryResult(sdkerrors.Wrap(types.ErrInvalidRequest, "proof is unexpectedly empty; ensure height has not been pruned"), false)
 	}
 
 	// If the request's height is the latest height we've committed, then utilize
@@ -703,7 +703,7 @@ func (rs *Store) SetInitialVersion(version int64) error {
 // Returns error if it doesn't start with /
 func parsePath(path string) (storeName string, subpath string, err error) {
 	if !strings.HasPrefix(path, "/") {
-		return storeName, subpath, errorsmod.Wrapf(types.ErrUnknownRequest, "invalid path: %s", path)
+		return storeName, subpath, sdkerrors.Wrapf(types.ErrUnknownRequest, "invalid path: %s", path)
 	}
 
 	paths := strings.SplitN(path[1:], "/", 2)
@@ -724,10 +724,10 @@ func parsePath(path string) (storeName string, subpath string, err error) {
 // TestMultistoreSnapshot_Checksum test.
 func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	if height == 0 {
-		return errorsmod.Wrap(types.ErrLogic, "cannot snapshot height 0")
+		return sdkerrors.Wrap(types.ErrLogic, "cannot snapshot height 0")
 	}
 	if height > uint64(GetLatestVersion(rs.db)) {
-		return errorsmod.Wrapf(types.ErrLogic, "cannot snapshot future height %v", height)
+		return sdkerrors.Wrapf(types.ErrLogic, "cannot snapshot future height %v", height)
 	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
@@ -745,7 +745,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 			// Non-persisted stores shouldn't be snapshotted
 			continue
 		default:
-			return errorsmod.Wrapf(types.ErrLogic,
+			return sdkerrors.Wrapf(types.ErrLogic,
 				"don't know how to snapshot store %q of type %T", key.Name(), store)
 		}
 	}
@@ -827,7 +827,7 @@ loop:
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "invalid protobuf message")
 		}
 
 		switch item := snapshotItem.Item.(type) {
@@ -835,26 +835,26 @@ loop:
 			if importer != nil {
 				err = importer.Commit()
 				if err != nil {
-					return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL commit failed")
+					return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL commit failed")
 				}
 				importer.Close()
 			}
 			store, ok := rs.GetStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(types.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
 			}
 			importer, err = store.Import(int64(height))
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "import failed")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "import failed")
 			}
 			defer importer.Close()
 
 		case *snapshottypes.SnapshotItem_IAVL:
 			if importer == nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(types.ErrLogic, "received IAVL node item before store item")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(types.ErrLogic, "received IAVL node item before store item")
 			}
 			if item.IAVL.Height > math.MaxInt8 {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "node height %v cannot exceed %v",
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrapf(types.ErrLogic, "node height %v cannot exceed %v",
 					item.IAVL.Height, math.MaxInt8)
 			}
 			node := &iavltree.ExportNode{
@@ -873,7 +873,7 @@ loop:
 			}
 			err := importer.Add(node)
 			if err != nil {
-				return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL node import failed")
+				return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL node import failed")
 			}
 
 		default:
@@ -884,7 +884,7 @@ loop:
 	if importer != nil {
 		err := importer.Commit()
 		if err != nil {
-			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "IAVL commit failed")
+			return snapshottypes.SnapshotItem{}, sdkerrors.Wrap(err, "IAVL commit failed")
 		}
 		importer.Close()
 	}
@@ -1081,14 +1081,14 @@ func getCommitInfo(db dbm.DB, ver int64) (*types.CommitInfo, error) {
 
 	bz, err := db.Get([]byte(cInfoKey))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get commit info")
+		return nil, sdkerrors.Wrap(err, "failed to get commit info")
 	} else if bz == nil {
 		return nil, errors.New("no commit info found")
 	}
 
 	cInfo := &types.CommitInfo{}
 	if err = cInfo.Unmarshal(bz); err != nil {
-		return nil, errors.Wrap(err, "failed unmarshal commit info")
+		return nil, sdkerrors.Wrap(err, "failed unmarshal commit info")
 	}
 
 	return cInfo, nil

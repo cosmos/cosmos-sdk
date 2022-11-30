@@ -74,5 +74,5 @@ func (h SignModeHandlerMap) GetSignBytesWithContext(ctx context.Context, mode si
 
 	// Default to stateless GetSignBytes if the underlying handler does not
 	// implement WithContext.
-	return handlerWithContext.GetSignBytes(mode, data, tx)
+	return handler.GetSignBytes(mode, data, tx)
 }

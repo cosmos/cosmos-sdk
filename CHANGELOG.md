@@ -101,6 +101,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### State Machine Breaking
 
 * (x/group) [#13742](https://github.com/cosmos/cosmos-sdk/pull/13742) Migrate group policy account from module accounts to base account.
+* (x/group) [#14071](https://github.com/cosmos/cosmos-sdk/pull/14071) Don't re-tally proposal after voting period end if they have been marked as ACCEPTED or REJECTED.
 * (codec) [#13307](https://github.com/cosmos/cosmos-sdk/pull/13307) Register all modules' `Msg`s with group's ModuleCdc so that Amino sign bytes are correctly generated.
 * (codec) [#13196](https://github.com/cosmos/cosmos-sdk/pull/13196) Register all modules' `Msg`s with gov's ModuleCdc so that Amino sign bytes are correctly generated.
 * (group) [#13592](https://github.com/cosmos/cosmos-sdk/pull/13592) Fix group types registration with Amino.
@@ -180,7 +181,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (signing) [#13701](https://github.com/cosmos/cosmos-sdk/pull/) Add `context.Context` as an argument to SignModeHandler's `GetSignBytes` method and `x/auth/signing.VerifySignature`. You can pass `nil` for now, it will only be used once SIGN_MODE_TEXTUAL is live.
 * (x/group) [#13876](https://github.com/cosmos/cosmos-sdk/pull/13876) Add `GetMinExecutionPeriod` method on DecisionPolicy interface.
 * (x/auth)[#13780](https://github.com/cosmos/cosmos-sdk/pull/13780) Querying with `id` (type of int64) in `AccountAddressByID` grpc query now throws error, use account-id(type of uint64) instead.
-* (snapshots) [14048](https://github.com/cosmos/cosmos-sdk/pull/14048) Snapshot package lives under store now. this was done in an effort group all storage related logic under one package. 
+* (snapshots) [14048](https://github.com/cosmos/cosmos-sdk/pull/14048) Move the Snapshot package to the store package. This is done in an effort group all storage related logic under one package. 
 * (baseapp) [#14050](https://github.com/cosmos/cosmos-sdk/pull/14050) refactor `ABCIListener` interface to accept go contexts
 
 ### CLI Breaking Changes

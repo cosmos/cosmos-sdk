@@ -197,10 +197,24 @@ message AddressStringToBytesResponse {
 //
 // Since: cosmos-sdk 0.46.2
 message QueryAccountAddressByIDRequest {
+<<<<<<< HEAD
   // id is the account number of the address to be queried. This field
   // should have been an uint64 (like all account numbers), and will be
   // updated to uint64 in a future version of the auth query.
   int64 id = 1;
+=======
+  // Deprecated, use account_id instead
+  //
+  // id is the account number of the address to be queried. This field
+  // should have been an uint64 (like all account numbers), and will be
+  // updated to uint64 in a future version of the auth query.
+  int64 id = 1 [deprecated = true];
+
+  // account_id is the account number of the address to be queried.
+  //
+  // Since: cosmos-sdk 0.47
+  uint64 account_id = 2;
+>>>>>>> ac6b19df2 (refactor: x/nft audit changes (#14055))
 }
 
 // QueryAccountAddressByIDResponse is the response type for AccountAddressByID rpc method

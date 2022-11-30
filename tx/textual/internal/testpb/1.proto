@@ -12,19 +12,19 @@ option go_package = "cosmossdk.io/tx/textual/internal/testpb";
 // A is used for testing value renderers.
 message A {
   // Fields that are parseable by SIGN_MODE_TEXTUAL.
-  uint32 UINT32 = 1;
-  uint64 UINT64 = 2;
-  int32 INT32 = 3;
-  int64 INT64 = 4;
-  string SDKINT = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
-  string SDKDEC = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
-  cosmos.base.v1beta1.Coin COIN = 7;
-  repeated cosmos.base.v1beta1.Coin COINS = 8;
-  bytes BYTES = 9;
-  google.protobuf.Timestamp TIMESTAMP = 10;
-  google.protobuf.Duration DURATION = 11;
-  ExternalEnum ENUM = 12;
-  google.protobuf.Any ANY = 13;
+  uint32                   UINT32             = 1;
+  uint64                   UINT64             = 2;
+  int32                    INT32              = 3;
+  int64                    INT64              = 4;
+  string                   SDKINT             = 5 [(cosmos_proto.scalar) = "cosmos.Int"];
+  string                   SDKDEC             = 6 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  cosmos.base.v1beta1.Coin COIN               = 7;
+  repeated cosmos.base.v1beta1.Coin COINS     = 8;
+  bytes                             BYTES     = 9;
+  google.protobuf.Timestamp         TIMESTAMP = 10;
+  google.protobuf.Duration          DURATION  = 11;
+  ExternalEnum                      ENUM      = 12;
+  google.protobuf.Any               ANY       = 13;
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
   sint32 SINT32 = 101;
@@ -56,8 +56,8 @@ message Bar {
 }
 
 enum ExternalEnum {
-  One = 0;
-  Two = 1;
+  One                 = 0;
+  Two                 = 1;
   EXTERNAL_ENUM_THREE = 127;
 }
 
@@ -68,9 +68,9 @@ message Baz {
     Five = 1;
   }
 
-  ExternalEnum ee = 1;
-  Internal_Enum ie = 2;
-  BallotOption option = 3;
+  ExternalEnum  ee     = 1;
+  Internal_Enum ie     = 2;
+  BallotOption  option = 3;
 }
 
 enum BallotOption {

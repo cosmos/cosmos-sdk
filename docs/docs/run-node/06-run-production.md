@@ -64,6 +64,7 @@ or
 ```bash
 sudo ufw allow 22
 ```
+
 Both of the above commands are the same. 
 
 3. Allow Port 26656 (tendermint p2p port). If the node has a modified p2p port then that port must be used here.
@@ -158,6 +159,7 @@ cargo install tmkms --features=softsign
 tmkms init config
 tmkms softsign keygen ./config/secrets/secret_connection_key
 ```
+
 or 
 
 Cargo install: 
@@ -245,6 +247,7 @@ It is recommended to comment or delete the lines that specify the path of the va
 # Path to the JSON file containing the last sign state of a validator
 # priv_validator_state_file = "data/priv_validator_state.json"
 ```
+
 :::
 
 6. Start the two processes. 

@@ -201,9 +201,10 @@ type StateSyncConfig struct {
 
 // MempoolConfig defines the configurations for the appside mempool
 type MempoolConfig struct {
-	// MaxTxs negative means disabled, 0 unbounded
-	// and positive bounded where the integer value is the maximum
-	// amount of tx the mempool will hold before returning an error
+	// MaxTxs defines the behavior of the mempool. A negative value indicates
+	// the mempool is disabled entirely, zero indicates that the mempool is
+	// unbounded in how many txs it may contain, and a postive value indicates
+	// the maximum amount of txs it may contain.
 	MaxTxs int
 }
 

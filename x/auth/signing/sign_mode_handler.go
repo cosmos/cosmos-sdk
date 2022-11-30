@@ -27,6 +27,8 @@ type SignModeHandler interface {
 // method which takes an additional context.Context argument, to be used to
 // access state. Consumers should preferably type-cast to this interface and
 // pass in the context.Context arg, and default to SignModeHandler otherwise.
+// This interface is created for backwards compatibility, and will be
+// deleted once SDK versions <v0.47 are not supported anymore.
 type SignModeHandlerWithContext interface {
 	SignModeHandler
 

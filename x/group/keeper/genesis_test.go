@@ -66,7 +66,7 @@ func (s *GenesisTestSuite) SetupTest() {
 
 	s.sdkCtx = testCtx.Ctx
 	s.cdc = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	s.ctx = sdk.WrapSDKContext(s.sdkCtx)
+	s.ctx = s.sdkCtx
 
 	s.keeper = keeper.NewKeeper(key, s.cdc, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 }

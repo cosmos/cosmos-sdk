@@ -4,7 +4,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
@@ -47,9 +46,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 			s.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(s.ctx)
-
-			res, err := s.queryClient.Params(ctx, &tc.req)
+			res, err := s.queryClient.Params(s.ctx, &tc.req)
 
 			if tc.expPass {
 				s.Require().NoError(err)

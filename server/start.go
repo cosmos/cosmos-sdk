@@ -80,7 +80,7 @@ const (
 	flagGRPCWebAddress = "grpc-web.address"
 
 	// mempool flags
-	FlagMempoolMaxTx = "mempool.max-tx"
+	FlagMempoolMaxTxs = "mempool.max-txs"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -192,7 +192,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 
-	cmd.Flags().Int(FlagMempoolMaxTx, mempool.DefaultMaxTx, "Sets MaxTx value for the app side mempool")
+	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app side mempool")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

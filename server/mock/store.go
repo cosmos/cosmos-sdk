@@ -6,8 +6,8 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	dbm "github.com/tendermint/tm-db"
 
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

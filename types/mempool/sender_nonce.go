@@ -178,6 +178,7 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	if senderTxs.Len() == 0 {
 		delete(snm.senders, sender)
 	}
+
 	key := txKey{nonce: nonce, address: sender}
 	delete(snm.existingTx, key)
 

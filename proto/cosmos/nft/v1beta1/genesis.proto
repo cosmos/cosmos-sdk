@@ -11,7 +11,7 @@ message GenesisState {
   repeated cosmos.nft.v1beta1.Class classes = 1;
 
   // entry defines all nft owned by a person.
-  repeated Entry                    entries = 2;
+  repeated Entry entries = 2;
 }
 
 // Entry Defines all nft owned by a person

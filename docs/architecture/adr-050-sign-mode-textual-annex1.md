@@ -74,9 +74,9 @@ where:
 
 - `field_name` is the Protobuf field name of the repeated field
 - `field_kind`:
-   - if the type of the repeated field is a message, `field_kind` is the message name
-   - if the type of the repeated field is an enum, `field_kind` is the enum name
-   - in any other case, `field_kind` is the protobuf primitive type (e.g. "string" or "bytes")
+  - if the type of the repeated field is a message, `field_kind` is the message name
+  - if the type of the repeated field is an enum, `field_kind` is the enum name
+  - in any other case, `field_kind` is the protobuf primitive type (e.g. "string" or "bytes")
 - `int` is the length of the array
 - `index` is one based index of the repeated field
 
@@ -116,10 +116,12 @@ End of Allowed messages
 - Field names are ordered by their Protobuf field number
 - Nesting:
   - if a field contains a nested message, we value-render the underlying message using the template:
+
   ```
   <field_name>: <1st line of value-rendered message>
   > <lines 2-n of value-rendered message>             // Notice the `>` prefix.
   ```
+
   - `>` character is used to denote nesting. For each additional level of nesting, add `>`.
 
 #### Examples
@@ -222,7 +224,7 @@ The duration proto expresses a raw number of seconds and nanoseconds.
 This will be rendered as longer time units of days, hours, and minutes,
 plus any remaining seconds, in that order.
 Leading and trailing zero-quantity units will be omitted, but all
-units in between nonzero units will be shown, e.g. ` 3 days, 0 hours, 0 minutes, 5 seconds`.
+units in between nonzero units will be shown, e.g. `3 days, 0 hours, 0 minutes, 5 seconds`.
 
 Even longer time units such as months or years are imprecise.
 Weeks are precise, but not commonly used - `91 days` is more immediately

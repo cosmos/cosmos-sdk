@@ -77,8 +77,8 @@ grpc plugin, which for a service named `Query` generates an interface named
 
 ```go
 type QueryServer interface {
-	QueryBalance(context.Context, *QueryBalanceParams) (*types.Coin, error)
-	QueryAllBalances(context.Context, *QueryAllBalancesParams) (*QueryAllBalancesResponse, error)
+ QueryBalance(context.Context, *QueryBalanceParams) (*types.Coin, error)
+ QueryAllBalances(context.Context, *QueryAllBalancesParams) (*QueryAllBalancesResponse, error)
 }
 ```
 
@@ -96,12 +96,12 @@ look something like:
 
 ```go
 type Querier struct {
-	Keeper
+ Keeper
 }
 
 func (q Querier) QueryBalance(ctx context.Context, params *types.QueryBalanceParams) (*sdk.Coin, error) {
-	balance := q.GetBalance(sdk.UnwrapSDKContext(ctx), params.Address, params.Denom)
-	return &balance, nil
+ balance := q.GetBalance(sdk.UnwrapSDKContext(ctx), params.Address, params.Denom)
+ return &balance, nil
 }
 ```
 
@@ -114,7 +114,7 @@ as below:
 ```go
 // x/bank/module.go
 func (am AppModule) RegisterQueryService(server grpc.Server) {
-	types.RegisterQueryServer(server, keeper.Querier{am.keeper})
+ types.RegisterQueryServer(server, keeper.Querier{am.keeper})
 }
 ```
 
@@ -199,8 +199,8 @@ interface like:
 
 ```go
 type QueryClient interface {
-	QueryBalance(ctx context.Context, in *QueryBalanceParams, opts ...grpc.CallOption) (*types.Coin, error)
-	QueryAllBalances(ctx context.Context, in *QueryAllBalancesParams, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
+ QueryBalance(ctx context.Context, in *QueryBalanceParams, opts ...grpc.CallOption) (*types.Coin, error)
+ QueryAllBalances(ctx context.Context, in *QueryAllBalancesParams, opts ...grpc.CallOption) (*QueryAllBalancesResponse, error)
 }
 ```
 

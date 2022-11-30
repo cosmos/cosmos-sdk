@@ -26,10 +26,10 @@ that `Msg` return types be captured using a protobuf extension field, ex:
 package cosmos.gov;
 
 message MsgSubmitProposal
-	option (cosmos_proto.msg_return) = “uint64”;
-	string delegator_address = 1;
-	string validator_address = 2;
-	repeated sdk.Coin amount = 3;
+ option (cosmos_proto.msg_return) = “uint64”;
+ string delegator_address = 1;
+ string validator_address = 2;
+ repeated sdk.Coin amount = 3;
 }
 ```
 
@@ -41,7 +41,7 @@ This isn’t really documented anywhere and clients would need to know the inter
 of the Cosmos SDK to parse that value and return it to users.
 
 Also, there may be cases where we want to use these return values programatically.
-For instance, https://github.com/cosmos/cosmos-sdk/issues/7093 proposes a method for
+For instance, <https://github.com/cosmos/cosmos-sdk/issues/7093> proposes a method for
 doing inter-module Ocaps using the `Msg` router. A well-defined return type would
 improve the developer UX for this approach.
 
@@ -141,8 +141,8 @@ type Configurator interface {
 
 // example module:
 func (am AppModule) RegisterServices(cfg Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), keeper)
-	types.RegisterMsgServer(cfg.MsgServer(), keeper)
+ types.RegisterQueryServer(cfg.QueryServer(), keeper)
+ types.RegisterMsgServer(cfg.MsgServer(), keeper)
 }
 ```
 
@@ -164,7 +164,7 @@ method:
 package gov
 
 func (k Keeper) SubmitProposal(goCtx context.Context, params *types.MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+ ctx := sdk.UnwrapSDKContext(goCtx)
     ...
 }
 ```

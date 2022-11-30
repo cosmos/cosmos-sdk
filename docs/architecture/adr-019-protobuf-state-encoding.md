@@ -233,12 +233,12 @@ import "github.com/cosmos/cosmos-sdk/codec"
 
 // note: eviexported.Evidence is an interface type
 func MarshalEvidence(cdc codec.BinaryCodec, e eviexported.Evidence) ([]byte, error) {
-	return cdc.MarshalInterface(e)
+ return cdc.MarshalInterface(e)
 }
 
 func UnmarshalEvidence(cdc codec.BinaryCodec, bz []byte) (eviexported.Evidence, error) {
-	var evi eviexported.Evidence
-	err := cdc.UnmarshalInterface(&evi, bz)
+ var evi eviexported.Evidence
+ err := cdc.UnmarshalInterface(&evi, bz)
     return err, nil
 }
 ```
@@ -375,5 +375,5 @@ seamless.
 
 ## References
 
-1. https://github.com/cosmos/cosmos-sdk/issues/4977
-2. https://github.com/cosmos/cosmos-sdk/issues/5444
+1. <https://github.com/cosmos/cosmos-sdk/issues/4977>
+2. <https://github.com/cosmos/cosmos-sdk/issues/5444>

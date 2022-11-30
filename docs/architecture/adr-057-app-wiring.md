@@ -90,7 +90,7 @@ message ModuleConfig {
 }
 ```
 
-(See also https://github.com/cosmos/cosmos-sdk/blob/6e18f582bf69e3926a1e22a6de3c35ea327aadce/proto/cosmos/app/v1alpha1/config.proto)
+(See also <https://github.com/cosmos/cosmos-sdk/blob/6e18f582bf69e3926a1e22a6de3c35ea327aadce/proto/cosmos/app/v1alpha1/config.proto>)
 
 The configuration for every module is itself a protobuf message and modules will be identified and loaded based
 on the protobuf type URL of their config object (ex. `cosmos.bank.module.v1.Module`). Modules are given a unique short `name`
@@ -181,28 +181,28 @@ Ex:
 
 ```go
 func init() {
-	appmodule.Register("cosmos.bank.module.v1.Module",
-		appmodule.Types(
-			types.Types_tx_proto,
+ appmodule.Register("cosmos.bank.module.v1.Module",
+  appmodule.Types(
+   types.Types_tx_proto,
             types.Types_query_proto,
             types.Types_types_proto,
-	    ),
-	    appmodule.Provide(
-			provideBankModule,
-	    )
-	)
+     ),
+     appmodule.Provide(
+   provideBankModule,
+     )
+ )
 }
 
 type Inputs struct {
-	container.In
-	
-	AuthKeeper auth.Keeper
-	DB ormdb.ModuleDB
+ container.In
+ 
+ AuthKeeper auth.Keeper
+ DB ormdb.ModuleDB
 }
 
 type Outputs struct {
-	Keeper bank.Keeper
-	AppModule appmodule.AppModule
+ Keeper bank.Keeper
+ AppModule appmodule.AppModule
 }
 
 func ProvideBankModule(config *bankmodulev1.Module, Inputs) (Outputs, error) { ... }
@@ -223,19 +223,19 @@ With this setup, `app.go` might now look something like this:
 package main
 
 import (
-	// Each go package which registers a module must be imported just for side-effects
-	// so that module implementations are registered.
-	_ "github.com/cosmos/cosmos-sdk/x/auth/module"
-	_ "github.com/cosmos/cosmos-sdk/x/bank/module"
-	_ "github.com/cosmos/cosmos-sdk/x/staking/module"
-	"github.com/cosmos/cosmos-sdk/core/app"
+ // Each go package which registers a module must be imported just for side-effects
+ // so that module implementations are registered.
+ _ "github.com/cosmos/cosmos-sdk/x/auth/module"
+ _ "github.com/cosmos/cosmos-sdk/x/bank/module"
+ _ "github.com/cosmos/cosmos-sdk/x/staking/module"
+ "github.com/cosmos/cosmos-sdk/core/app"
 )
 
 // go:embed app.yaml
 var appConfigYAML []byte
 
 func main() {
-	app.Run(app.LoadYAML(appConfigYAML))
+ app.Run(app.LoadYAML(appConfigYAML))
 }
 ```
 
@@ -252,20 +252,21 @@ when certain events happen.
 
 With the app wiring framework, these hooks interfaces can be defined as a `OnePerModuleType`s and then the module
 which consumes these hooks can collect these hooks as a map of module name to hook type (ex. `map[string]FooHooks`). Ex:
+
 ```go
 func init() {
     appmodule.Register(
         &foomodulev1.Module{},
         appmodule.Invoke(InvokeSetFooHooks),
-	    ...
+     ...
     )
 }
 func InvokeSetFooHooks(
     keeper *keeper.Keeper,
     fooHooks map[string]FooHooks,
 ) error {
-	for k in sort.Strings(maps.Keys(fooHooks)) {
-		keeper.AddFooHooks(fooHooks[k])
+ for k in sort.Strings(maps.Keys(fooHooks)) {
+  keeper.AddFooHooks(fooHooks[k])
     }
 }
 ```
@@ -275,6 +276,7 @@ in its config object.
 
 An alternative way for registering hooks via reflection was considered where all keeper types are inspected to see if
 they implement the hook interface by the modules exposing hooks. This has the downsides of:
+
 * needing to expose all the keepers of all modules to the module providing hooks,
 * not allowing for encapsulating hooks on a different type which doesn't expose all keeper methods,
 * harder to know statically which module expose hooks or are checking for them.
@@ -286,6 +288,7 @@ With the approach proposed here, hooks registration will be obviously observable
 
 The `depinject` framework will optionally allow the app configuration and dependency injection wiring to be code
 generated. This will allow:
+
 * dependency injection wiring to be inspected as regular go code just like the existing `app.go`,
 * dependency injection to be opt-in with manual wiring 100% still possible.
 
@@ -324,9 +327,9 @@ light of code generation. It may be better to do this type registration with a D
 
 ## References
 
-* https://github.com/cosmos/cosmos-sdk/blob/c3edbb22cab8678c35e21fe0253919996b780c01/simapp/app.go
-* https://github.com/allinbits/cosmos-sdk-poc
-* https://github.com/uber-go/dig
-* https://github.com/google/wire
-* https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
-* https://github.com/cosmos/cosmos-sdk/pull/11802
+* <https://github.com/cosmos/cosmos-sdk/blob/c3edbb22cab8678c35e21fe0253919996b780c01/simapp/app.go>
+* <https://github.com/allinbits/cosmos-sdk-poc>
+* <https://github.com/uber-go/dig>
+* <https://github.com/google/wire>
+* <https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container>
+* <https://github.com/cosmos/cosmos-sdk/pull/11802>

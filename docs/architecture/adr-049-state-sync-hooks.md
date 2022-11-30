@@ -11,28 +11,28 @@ Implemented
 
 ## Abstract
 
-This ADR outlines a hooks-based mechanism for application modules to provide additional state (outside of the IAVL tree) to be used 
+This ADR outlines a hooks-based mechanism for application modules to provide additional state (outside of the IAVL tree) to be used
 during state sync.
 
 ## Context
 
 New clients use state-sync to download snapshots of module state from peers. Currently, the snapshot consists of a
-stream of `SnapshotStoreItem` and `SnapshotIAVLItem`, which means that application modules that define their state outside of the IAVL 
+stream of `SnapshotStoreItem` and `SnapshotIAVLItem`, which means that application modules that define their state outside of the IAVL
 tree cannot include their state as part of the state-sync process.
 
-Note, Even though the module state data is outside of the tree, for determinism we require that the hash of the external data should 
+Note, Even though the module state data is outside of the tree, for determinism we require that the hash of the external data should
 be posted in the IAVL tree.
 
 ## Decision
 
-A simple proposal based on our existing implementation is that, we can add two new message types: `SnapshotExtensionMeta` 
-and `SnapshotExtensionPayload`, and they are appended to the existing multi-store stream with `SnapshotExtensionMeta` 
-acting as a delimiter between extensions. As the chunk hashes should be able to ensure data integrity, we don't need 
+A simple proposal based on our existing implementation is that, we can add two new message types: `SnapshotExtensionMeta`
+and `SnapshotExtensionPayload`, and they are appended to the existing multi-store stream with `SnapshotExtensionMeta`
+acting as a delimiter between extensions. As the chunk hashes should be able to ensure data integrity, we don't need
 a delimiter to mark the end of the snapshot stream.
 
-Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
+Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking
 snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should
-implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
+implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call
 `RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 
 ```protobuf
@@ -66,7 +66,7 @@ message SnapshotExtensionPayload {
 }
 ```
 
-When we create a snapshot stream, the `multistore` snapshot is always placed at the beginning of the binary stream, and other extension snapshots are alphabetically ordered by the name of the corresponding `ExtensionSnapshotter`. 
+When we create a snapshot stream, the `multistore` snapshot is always placed at the beginning of the binary stream, and other extension snapshots are alphabetically ordered by the name of the corresponding `ExtensionSnapshotter`.
 
 The snapshot stream would look like as follows:
 
@@ -85,19 +85,19 @@ We add an `extensions` field to snapshot `Manager` for extension snapshotters. T
 
 ```go
 type Manager struct {
-	store      *Store
-	multistore types.Snapshotter
-	extensions map[string]types.ExtensionSnapshotter
-	mtx                sync.Mutex
-	operation          operation
-	chRestore          chan<- io.ReadCloser
-	chRestoreDone      <-chan restoreDone
-	restoreChunkHashes [][]byte
-	restoreChunkIndex  uint32
+ store      *Store
+ multistore types.Snapshotter
+ extensions map[string]types.ExtensionSnapshotter
+ mtx                sync.Mutex
+ operation          operation
+ chRestore          chan<- io.ReadCloser
+ chRestoreDone      <-chan restoreDone
+ restoreChunkHashes [][]byte
+ restoreChunkIndex  uint32
 }
 ```
 
-For extension snapshotters that implement the `ExtensionSnapshotter` interface, their names should be registered to the snapshot `Manager` by 
+For extension snapshotters that implement the `ExtensionSnapshotter` interface, their names should be registered to the snapshot `Manager` by
 calling `RegisterExtensions` when setting up the application. The snapshotters will handle both taking snapshot and restoration.
 
 ```go
@@ -118,29 +118,28 @@ type ExtensionPayloadWriter = func([]byte) error
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
 // ExtensionSnapshotter has an unique name and manages it's own internal formats.
 type ExtensionSnapshotter interface {
-	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
-	SnapshotName() string
+ // SnapshotName returns the name of snapshotter, it should be unique in the manager.
+ SnapshotName() string
 
-	// SnapshotFormat returns the default format used to take a snapshot.
-	SnapshotFormat() uint32
+ // SnapshotFormat returns the default format used to take a snapshot.
+ SnapshotFormat() uint32
 
-	// SupportedFormats returns a list of formats it can restore from.
-	SupportedFormats() []uint32
+ // SupportedFormats returns a list of formats it can restore from.
+ SupportedFormats() []uint32
 
-	// SnapshotExtension writes extension payloads into the underlying protobuf stream.
-	SnapshotExtension(height uint64, payloadWriter ExtensionPayloadWriter) error
+ // SnapshotExtension writes extension payloads into the underlying protobuf stream.
+ SnapshotExtension(height uint64, payloadWriter ExtensionPayloadWriter) error
 
-	// RestoreExtension restores an extension state snapshot,
-	// the payload reader returns `io.EOF` when reached the extension boundaries.
-	RestoreExtension(height uint64, format uint32, payloadReader ExtensionPayloadReader) error
+ // RestoreExtension restores an extension state snapshot,
+ // the payload reader returns `io.EOF` when reached the extension boundaries.
+ RestoreExtension(height uint64, format uint32, payloadReader ExtensionPayloadReader) error
 
 }
 ```
 
 ## Consequences
 
-As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes. 
-
+As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes.
 
 ### Backwards Compatibility
 
@@ -169,6 +168,6 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-- https://github.com/cosmos/cosmos-sdk/pull/10961
-- https://github.com/cosmos/cosmos-sdk/issues/7340
-- https://hackmd.io/gJoyev6DSmqqkO667WQlGw
+- <https://github.com/cosmos/cosmos-sdk/pull/10961>
+- <https://github.com/cosmos/cosmos-sdk/issues/7340>
+- <https://hackmd.io/gJoyev6DSmqqkO667WQlGw>

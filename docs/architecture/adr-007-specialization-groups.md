@@ -29,19 +29,19 @@ A specialization group can be broadly broken down into the following functions
 * Membership Admittance
 * Membership Acceptance
 * Membership Revocation
-    * (probably) Without Penalty
-        * member steps down (self-Revocation)
-        * replaced by new member from governance
-    * (probably) With Penalty
-        * due to breach of soft-agreement (determined through governance)
-        * due to breach of hard-agreement (determined by code)
+  * (probably) Without Penalty
+    * member steps down (self-Revocation)
+    * replaced by new member from governance
+  * (probably) With Penalty
+    * due to breach of soft-agreement (determined through governance)
+    * due to breach of hard-agreement (determined by code)
 * Execution of Duties
-    * Special transactions which only execute for members of a specialization
+  * Special transactions which only execute for members of a specialization
      group (for example, dCERT members voting to turn off transaction routes in
      an emergency scenario)
 * Compensation
-    * Group compensation (further distribution decided by the specialization group)
-    * Individual compensation for all constituents of a group from the
+  * Group compensation (further distribution decided by the specialization group)
+  * Individual compensation for all constituents of a group from the
      greater community
 
 Membership admittance to a specialization group could take place over a wide

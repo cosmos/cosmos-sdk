@@ -30,10 +30,10 @@ In a new file, `store/types/listening.go`, we will create a `WriteListener` inte
 ```go
 // WriteListener interface for streaming data out from a listenkv.Store
 type WriteListener interface {
-	// if value is nil then it was deleted
-	// storeKey indicates the source KVStore, to facilitate using the same WriteListener across separate KVStores
-	// delete bool indicates if it was a delete; true: delete, false: set
-	OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
+ // if value is nil then it was deleted
+ // storeKey indicates the source KVStore, to facilitate using the same WriteListener across separate KVStores
+ // delete bool indicates if it was a delete; true: delete, false: set
+ OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 ```
 
@@ -59,16 +59,16 @@ message StoreKVPair {
 // StoreKVPairWriteListener is used to configure listening to a KVStore by writing out length-prefixed
 // protobuf encoded StoreKVPairs to an underlying io.Writer
 type StoreKVPairWriteListener struct {
-	writer io.Writer
-	marshaller codec.BinaryCodec
+ writer io.Writer
+ marshaller codec.BinaryCodec
 }
 
 // NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryCodec
 func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
-	return &StoreKVPairWriteListener{
-		writer: w,
-		marshaller: m,
-	}
+ return &StoreKVPairWriteListener{
+  writer: w,
+  marshaller: m,
+ }
 }
 
 // OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
@@ -251,13 +251,13 @@ We will add a new method to the `BaseApp` to enable the registration of `Streami
 ```go
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
 func (app *BaseApp) SetStreamingService(s StreamingService) {
-	// add the listeners for each StoreKey
-	for key, lis := range s.Listeners() {
-		app.cms.AddListeners(key, lis)
-	}
-	// register the StreamingService within the BaseApp
-	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-	app.abciListeners = append(app.abciListeners, s)
+ // add the listeners for each StoreKey
+ for key, lis := range s.Listeners() {
+  app.cms.AddListeners(key, lis)
+ }
+ // register the StreamingService within the BaseApp
+ // BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
+ app.abciListeners = append(app.abciListeners, s)
 }
 ```
 
@@ -267,111 +267,111 @@ with the `BaseApp`.
 ```go
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 
-	...
+ ...
 
-	// call the hooks with the BeginBlock messages
-	wg := new(sync.WaitGroup)
-	for _, streamingListener := range app.abciListeners {
-		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-		if streamingListener.HaltAppOnDeliveryError() {
-			// increment the wait group counter
-			wg.Add(1)
-			go func() {
-				// decrement the counter when the go routine completes
-				defer wg.Done()
-				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-					app.halt()
-				}
-			}()
-		} else {
-			// fire and forget semantics
-			go func() {
-				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-				}
-			}()
-		}
-	}
-	// wait for all the listener calls to finish
-	wg.Wait()
+ // call the hooks with the BeginBlock messages
+ wg := new(sync.WaitGroup)
+ for _, streamingListener := range app.abciListeners {
+  streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+  if streamingListener.HaltAppOnDeliveryError() {
+   // increment the wait group counter
+   wg.Add(1)
+   go func() {
+    // decrement the counter when the go routine completes
+    defer wg.Done()
+    if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+     app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+     app.halt()
+    }
+   }()
+  } else {
+   // fire and forget semantics
+   go func() {
+    if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+     app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+    }
+   }()
+  }
+ }
+ // wait for all the listener calls to finish
+ wg.Wait()
 
-	return res
+ return res
 }
 ```
 
 ```go
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 
-	...
+ ...
 
-	// Call the streaming service hooks with the EndBlock messages
-	wg := new(sync.WaitGroup)
-	for _, streamingListener := range app.abciListeners {
-		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-		if streamingListener.HaltAppOnDeliveryError() {
-			// increment the wait group counter
-			wg.Add(1)
-			go func() {
-				// decrement the counter when the go routine completes
-				defer wg.Done()
-				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-					app.halt()
-				}
-			}()
-		} else {
-			// fire and forget semantics
-			go func() {
-				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-				}
-			}()
-		}
-	}
-	// wait for all the listener calls to finish
-	wg.Wait()
+ // Call the streaming service hooks with the EndBlock messages
+ wg := new(sync.WaitGroup)
+ for _, streamingListener := range app.abciListeners {
+  streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+  if streamingListener.HaltAppOnDeliveryError() {
+   // increment the wait group counter
+   wg.Add(1)
+   go func() {
+    // decrement the counter when the go routine completes
+    defer wg.Done()
+    if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+     app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+     app.halt()
+    }
+   }()
+  } else {
+   // fire and forget semantics
+   go func() {
+    if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+     app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+    }
+   }()
+  }
+ }
+ // wait for all the listener calls to finish
+ wg.Wait()
 
-	return res
+ return res
 }
 ```
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	
-	var abciRes abci.ResponseDeliverTx
-	defer func() {
-		// call the hooks with the BeginBlock messages
-		wg := new(sync.WaitGroup)
-		for _, streamingListener := range app.abciListeners {
-			streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-			if streamingListener.HaltAppOnDeliveryError() {
-				// increment the wait group counter
-				wg.Add(1)
-				go func() {
-					// decrement the counter when the go routine completes
-					defer wg.Done()
-					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-						app.logger.Error("DeliverTx listening hook failed", "err", err)
-						app.halt()
-					}
-				}()
-			} else {
-				// fire and forget semantics
-				go func() {
-					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-						app.logger.Error("DeliverTx listening hook failed", "err", err)
-					}
-				}()
-			}
-		}
-		// wait for all the listener calls to finish
-		wg.Wait()
-	}()
-	
-	...
+ 
+ var abciRes abci.ResponseDeliverTx
+ defer func() {
+  // call the hooks with the BeginBlock messages
+  wg := new(sync.WaitGroup)
+  for _, streamingListener := range app.abciListeners {
+   streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
+   if streamingListener.HaltAppOnDeliveryError() {
+    // increment the wait group counter
+    wg.Add(1)
+    go func() {
+     // decrement the counter when the go routine completes
+     defer wg.Done()
+     if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+      app.logger.Error("DeliverTx listening hook failed", "err", err)
+      app.halt()
+     }
+    }()
+   } else {
+    // fire and forget semantics
+    go func() {
+     if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
+      app.logger.Error("DeliverTx listening hook failed", "err", err)
+     }
+    }()
+   }
+  }
+  // wait for all the listener calls to finish
+  wg.Wait()
+ }()
+ 
+ ...
 
-	return res
+ return res
 }
 ```
 
@@ -385,19 +385,19 @@ must implement the following interface:
 // Plugin is the base interface for all kinds of cosmos-sdk plugins
 // It will be included in interfaces of different Plugins
 type Plugin interface {
-	// Name should return unique name of the plugin
-	Name() string
+ // Name should return unique name of the plugin
+ Name() string
 
-	// Version returns current version of the plugin
-	Version() string
+ // Version returns current version of the plugin
+ Version() string
 
-	// Init is called once when the Plugin is being loaded
-	// The plugin is passed the AppOptions for configuration
-	// A plugin will not necessarily have a functional Init
-	Init(env serverTypes.AppOptions) error
+ // Init is called once when the Plugin is being loaded
+ // The plugin is passed the AppOptions for configuration
+ // A plugin will not necessarily have a functional Init
+ Init(env serverTypes.AppOptions) error
 
-	// Closer interface for shutting down the plugin process
-	io.Closer
+ // Closer interface for shutting down the plugin process
+ io.Closer
 }
 ```
 
@@ -412,14 +412,14 @@ We will define a `StateStreamingPlugin` interface which extends the above `Plugi
 ```go
 // StateStreamingPlugin interface for plugins that load a baseapp.StreamingService onto a baseapp.BaseApp
 type StateStreamingPlugin interface {
-	// Register configures and registers the plugin streaming service with the BaseApp
-	Register(bApp *baseapp.BaseApp, marshaller codec.BinaryCodec, keys map[string]*types.KVStoreKey) error
+ // Register configures and registers the plugin streaming service with the BaseApp
+ Register(bApp *baseapp.BaseApp, marshaller codec.BinaryCodec, keys map[string]*types.KVStoreKey) error
 
-	// Start starts the background streaming process of the plugin streaming service
-	Start(wg *sync.WaitGroup) error
+ // Start starts the background streaming process of the plugin streaming service
+ Start(wg *sync.WaitGroup) error
 
-	// Plugin is the base Plugin interface
-	Plugin
+ // Plugin is the base Plugin interface
+ Plugin
 }
 ```
 
@@ -430,54 +430,53 @@ e.g. in `NewSimApp`:
 
 ```go
 func NewSimApp(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
+ logger log.Logger,
+ db dbm.DB,
+ traceStore io.Writer,
+ loadLatest bool,
+ appOpts servertypes.AppOptions,
+ baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 
-	...
+ ...
 
-	keys := sdk.NewKVStoreKeys(
-	authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-	minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-	govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-	evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-	)
+ keys := sdk.NewKVStoreKeys(
+ authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+ minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
+ govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
+ evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+ )
 
-	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
-	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
-		// this loads the preloaded and any plugins found in `plugins.dir`
-		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
-		if err != nil {
-			// handle error
-		}
+ pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
+ if cast.ToBool(appOpts.Get(pluginsOnKey)) {
+  // this loads the preloaded and any plugins found in `plugins.dir`
+  pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
+  if err != nil {
+   // handle error
+  }
 
-		// initialize the loaded plugins
-		if err := pluginLoader.Initialize(); err != nil {
-			// handle error
-		}
+  // initialize the loaded plugins
+  if err := pluginLoader.Initialize(); err != nil {
+   // handle error
+  }
 
-		// register the plugin(s) with the BaseApp
-		if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
-			// handle error
-		}
+  // register the plugin(s) with the BaseApp
+  if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
+   // handle error
+  }
 
-		// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
-		wg := new(sync.WaitGroup)
-		if err := pluginLoader.Start(wg); err != nil {
-			// handler error
-		}
-	}
+  // start the plugin services, optionally use wg to synchronize shutdown using io.Closer
+  wg := new(sync.WaitGroup)
+  if err := pluginLoader.Start(wg); err != nil {
+   // handler error
+  }
+ }
 
-	...
+ ...
 
-	return app
+ return app
 }
 ```
-
 
 #### Configuration
 

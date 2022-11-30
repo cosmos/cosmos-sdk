@@ -80,19 +80,19 @@ Continuing to use `x/auth`, we demonstrate a more complete example:
 
 ```go
 type Params struct {
-	MaxMemoCharacters      uint64
-	TxSigLimit             uint64
-	TxSizeCostPerByte      uint64
-	SigVerifyCostED25519   uint64
-	SigVerifyCostSecp256k1 uint64
+ MaxMemoCharacters      uint64
+ TxSigLimit             uint64
+ TxSizeCostPerByte      uint64
+ SigVerifyCostED25519   uint64
+ SigVerifyCostSecp256k1 uint64
 }
 
 type MsgUpdateParams struct {
-	MaxMemoCharacters      uint64
-	TxSigLimit             uint64
-	TxSizeCostPerByte      uint64
-	SigVerifyCostED25519   uint64
-	SigVerifyCostSecp256k1 uint64
+ MaxMemoCharacters      uint64
+ TxSigLimit             uint64
+ TxSizeCostPerByte      uint64
+ SigVerifyCostED25519   uint64
+ SigVerifyCostSecp256k1 uint64
 }
 
 type MsgUpdateParamsResponse struct {}
@@ -163,8 +163,8 @@ module may be removed entirely in a future release.
 ### Negative
 
 * Module parameters becomes slightly more burdensome for module developers:
-    * Modules are now responsible for persisting and retrieving parameter state
-    * Modules are now required to have unique message handlers to handle parameter
+  * Modules are now responsible for persisting and retrieving parameter state
+  * Modules are now required to have unique message handlers to handle parameter
       changes per unique parameter data structure.
 
 ### Neutral
@@ -179,6 +179,6 @@ Later, this section can optionally list ideas or improvements the author or revi
 
 ## References
 
-* https://github.com/cosmos/cosmos-sdk/pull/9810
-* https://github.com/cosmos/cosmos-sdk/issues/9438
-* https://github.com/cosmos/cosmos-sdk/discussions/9913
+* <https://github.com/cosmos/cosmos-sdk/pull/9810>
+* <https://github.com/cosmos/cosmos-sdk/issues/9438>
+* <https://github.com/cosmos/cosmos-sdk/discussions/9913>

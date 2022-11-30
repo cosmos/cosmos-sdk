@@ -52,16 +52,17 @@ as to how to do this, with some developers arguing for larger vs smaller
 module scopes. There are pros and cons to both approaches (which will be
 discussed below in the [Consequences](#consequences) section), but the
 approach being adopted is the following:
+
 * a go module should generally be scoped to a specific coherent set of
 functionality (such as math, errors, store, etc.)
-* when code is removed from the core SDK and moved to a new module path, every 
+* when code is removed from the core SDK and moved to a new module path, every
 effort should be made to avoid API breaking changes in the existing code using
-aliases and wrapper types (as done in https://github.com/cosmos/cosmos-sdk/pull/10779
-and https://github.com/cosmos/cosmos-sdk/pull/11788)
+aliases and wrapper types (as done in <https://github.com/cosmos/cosmos-sdk/pull/10779>
+and <https://github.com/cosmos/cosmos-sdk/pull/11788>)
 * new go modules should be moved to a standalone domain (`cosmossdk.io`) before
 being tagged as `v1.0.0` to accommodate the possibility that they may be
 better served by a standalone repository in the future
-* all go modules should follow the guidelines in https://go.dev/blog/module-compatibility
+* all go modules should follow the guidelines in <https://go.dev/blog/module-compatibility>
 before `v1.0.0` is tagged and should make use of `internal` packages to limit
 the exposed API surface
 * the new go module's API may deviate from the existing code where there are
@@ -69,7 +70,7 @@ clear improvements to be made or to remove legacy dependencies (for instance on
 amino or gogo proto), as long the old package attempts
 to avoid API breakage with aliases and wrappers
 * care should be taken when simply trying to turn an existing package into a
-new go module: https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository.
+new go module: <https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository>.
 In general, it seems safer to just create a new module path (appending v2, v3, etc.
 if necessary), rather than trying to make an old package a new module.
 
@@ -84,7 +85,7 @@ very limited breaking changes to existing APIs.
 ### Positive
 
 * standalone pieces of software will reach `v1.0.0` sooner
-* new features to specific functionality will be released sooner 
+* new features to specific functionality will be released sooner
 
 ### Negative
 
@@ -96,14 +97,14 @@ per-project, although most of these will hopefully be indirect
 ## Further Discussions
 
 Further discussions are occurring in primarily in
-https://github.com/cosmos/cosmos-sdk/discussions/10582 and within
+<https://github.com/cosmos/cosmos-sdk/discussions/10582> and within
 the Cosmos SDK Framework Working Group.
 
 ## References
 
-* https://go.dev/doc/modules/release-workflow
-* https://go.dev/blog/module-compatibility
-* https://github.com/cosmos/cosmos-sdk/discussions/10162
-* https://github.com/cosmos/cosmos-sdk/discussions/10582
-* https://github.com/cosmos/cosmos-sdk/pull/10779
-* https://github.com/cosmos/cosmos-sdk/pull/11788
+* <https://go.dev/doc/modules/release-workflow>
+* <https://go.dev/blog/module-compatibility>
+* <https://github.com/cosmos/cosmos-sdk/discussions/10162>
+* <https://github.com/cosmos/cosmos-sdk/discussions/10582>
+* <https://github.com/cosmos/cosmos-sdk/pull/10779>
+* <https://github.com/cosmos/cosmos-sdk/pull/11788>

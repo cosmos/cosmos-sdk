@@ -39,8 +39,8 @@ The [weave project](https://github.com/iov-one/weave) achieves AnteHandler modul
 // Decorator wraps a Handler to provide common functionality
 // like authentication, or fee-handling, to many Handlers
 type Decorator interface {
-	Check(ctx Context, store KVStore, tx Tx, next Checker) (*CheckResult, error)
-	Deliver(ctx Context, store KVStore, tx Tx, next Deliverer) (*DeliverResult, error)
+ Check(ctx Context, store KVStore, tx Tx, next Checker) (*CheckResult, error)
+ Deliver(ctx Context, store KVStore, tx Tx, next Deliverer) (*DeliverResult, error)
 }
 ```
 

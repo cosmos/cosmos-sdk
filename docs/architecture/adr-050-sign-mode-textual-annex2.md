@@ -65,22 +65,22 @@ character is appended to the line.
 to a backslash followed by a letter code, in the manner of string literals
 in many languages:
 
-    - a: U+0007 alert or bell
-    - b: U+0008 backspace
-    - f: U+000C form feed
-    - n: U+000A line feed
-    - r: U+000D carriage return
-    - t: U+0009 horizontal tab
-    - v: U+000B vertical tab
-    - `\`: U+005C backslash
+  - a: U+0007 alert or bell
+  - b: U+0008 backspace
+  - f: U+000C form feed
+  - n: U+000A line feed
+  - r: U+000D carriage return
+  - t: U+0009 horizontal tab
+  - v: U+000B vertical tab
+  - `\`: U+005C backslash
 
 - All other ASCII control characters, plus non-ASCII Unicode code points,
 are shown as either:
 
-    - `\u` followed by 4 uppercase hex chacters for code points
+  - `\u` followed by 4 uppercase hex chacters for code points
     in the basic multilingual plane (BMP).
 
-    - `\U` followed by 8 uppercase hex characters for other code points.
+  - `\U` followed by 8 uppercase hex characters for other code points.
 
 - The screen will be broken into multiple lines to fit the 80-character
 limit, considering the above transformations in a way that attempts to

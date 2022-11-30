@@ -52,32 +52,32 @@ the `Msg` method is defined. `Authorization`s reference `Msg`s using their TypeU
 
 ```go
 type Authorization interface {
-	proto.Message
+ proto.Message
 
-	// MsgTypeURL returns the fully-qualified Msg TypeURL (as described in ADR 020),
-	// which will process and accept or reject a request.
-	MsgTypeURL() string
+ // MsgTypeURL returns the fully-qualified Msg TypeURL (as described in ADR 020),
+ // which will process and accept or reject a request.
+ MsgTypeURL() string
 
-	// Accept determines whether this grant permits the provided sdk.Msg to be performed, and if
-	// so provides an upgraded authorization instance.
-	Accept(ctx sdk.Context, msg sdk.Msg) (AcceptResponse, error)
+ // Accept determines whether this grant permits the provided sdk.Msg to be performed, and if
+ // so provides an upgraded authorization instance.
+ Accept(ctx sdk.Context, msg sdk.Msg) (AcceptResponse, error)
 
-	// ValidateBasic does a simple validation check that
-	// doesn't require access to any other information.
-	ValidateBasic() error
+ // ValidateBasic does a simple validation check that
+ // doesn't require access to any other information.
+ ValidateBasic() error
 }
 
 // AcceptResponse instruments the controller of an authz message if the request is accepted
 // and if it should be updated or deleted.
 type AcceptResponse struct {
-	// If Accept=true, the controller can accept and authorization and handle the update.
-	Accept bool
-	// If Delete=true, the controller must delete the authorization object and release
-	// storage resources.
-	Delete bool
-	// Controller, who is calling Authorization.Accept must check if `Updated != nil`. If yes,
-	// it must use the updated version and handle the update on the storage level.
-	Updated Authorization
+ // If Accept=true, the controller can accept and authorization and handle the update.
+ Accept bool
+ // If Delete=true, the controller must delete the authorization object and release
+ // storage resources.
+ Delete bool
+ // Controller, who is calling Authorization.Accept must check if `Updated != nil`. If yes,
+ // it must use the updated version and handle the update on the storage level.
+ Updated Authorization
 }
 ```
 
@@ -86,30 +86,30 @@ a `SpendLimit` and updates it down to zero:
 
 ```go
 type SendAuthorization struct {
-	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this authorization and will be updated as tokens are spent. This field is required. (Generic authorization 
-	// can be used with bank msg type url to create limit less bank authorization).
-	SpendLimit sdk.Coins
+ // SpendLimit specifies the maximum amount of tokens that can be spent
+ // by this authorization and will be updated as tokens are spent. This field is required. (Generic authorization 
+ // can be used with bank msg type url to create limit less bank authorization).
+ SpendLimit sdk.Coins
 }
 
 func (a SendAuthorization) MsgTypeURL() string {
-	return sdk.MsgTypeURL(&MsgSend{})
+ return sdk.MsgTypeURL(&MsgSend{})
 }
 
 func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptResponse, error) {
-	mSend, ok := msg.(*MsgSend)
-	if !ok {
-		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
-	}
-	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
-	if isNegative {
-		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
-	}
-	if limitLeft.IsZero() {
-		return authz.AcceptResponse{Accept: true, Delete: true}, nil
-	}
+ mSend, ok := msg.(*MsgSend)
+ if !ok {
+  return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
+ }
+ limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount)
+ if isNegative {
+  return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
+ }
+ if limitLeft.IsZero() {
+  return authz.AcceptResponse{Accept: true, Delete: true}, nil
+ }
 
-	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft}}, nil
+ return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft}}, nil
 }
 ```
 
@@ -176,8 +176,8 @@ to the router based on `Authorization` grants:
 
 ```go
 type Keeper interface {
-	// DispatchActions routes the provided msgs to their respective handlers if the grantee was granted an authorization
-	// to send those messages by the first (and only) signer of each msg.
+ // DispatchActions routes the provided msgs to their respective handlers if the grantee was granted an authorization
+ // to send those messages by the first (and only) signer of each msg.
     DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) sdk.Result`
 }
 ```
@@ -253,6 +253,6 @@ SDK users
 
 ## References
 
-* Initial Hackatom implementation: https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation
-* Post-Hackatom spec: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module
-* B-Harvest subkeys spec: https://github.com/cosmos/cosmos-sdk/issues/4480
+* Initial Hackatom implementation: <https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation>
+* Post-Hackatom spec: <https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module>
+* B-Harvest subkeys spec: <https://github.com/cosmos/cosmos-sdk/issues/4480>

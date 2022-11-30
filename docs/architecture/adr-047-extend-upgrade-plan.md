@@ -19,6 +19,7 @@ The `upgrade` module in conjunction with Cosmovisor are designed to facilitate a
 
 Users submit a software upgrade governance proposal containing an upgrade `Plan`.
 The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
+
 - `name`: A short string identifying the new version.
 - `height`: The chain height at which the upgrade is to be performed.
 - `info`: A string containing information about the upgrade.
@@ -40,6 +41,7 @@ Both `DAEMON_HOME` and `DAEMON_NAME` are [environment variables used to configur
 Currently, there is no mechanism that makes Cosmovisor run a command after the upgraded chain has been restarted.
 
 The current upgrade process has this timeline:
+
 1. An upgrade governance proposal is submitted and approved.
 1. The upgrade height is reached.
 1. The `x/upgrade` module writes the `upgrade_info.json` file.
@@ -78,6 +80,7 @@ message UpgradeInstructions {
 ```
 
 All fields in the `UpgradeInstructions` are optional.
+
 - `pre_run` is a command to run prior to the upgraded chain restarting.
   If defined, it will be executed after halting and downloading the new artifact but before restarting the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.
@@ -140,22 +143,23 @@ We will update the creation of the `upgrade-info.json` file to include the `Upgr
 
 We will update the optional validation available via CLI to account for the new `Plan` structure.
 We will add the following validation:
-1.  If `UpgradeInstructions` are provided:
-    1.  There MUST be at least one entry in `artifacts`.
-    1.  All of the `artifacts` MUST have a unique `platform`.
-    1.  For each `Artifact`, if the `url` contains a `checksum` query parameter:
+
+1. If `UpgradeInstructions` are provided:
+    1. There MUST be at least one entry in `artifacts`.
+    1. All of the `artifacts` MUST have a unique `platform`.
+    1. For each `Artifact`, if the `url` contains a `checksum` query parameter:
         1. The `checksum` query parameter value MUST be in the format of `{checksum_algo}:{checksum}`.
         1. The `{checksum}` from the query parameter MUST equal the `checksum` provided in the `Artifact`.
         1. The `{checksum_algo}` from the query parameter MUST equal the `checksum_algo` provided in the `Artifact`.
-1.  The following validation is currently done using the `info` field. We will apply similar validation to the `UpgradeInstructions`.
+1. The following validation is currently done using the `info` field. We will apply similar validation to the `UpgradeInstructions`.
     For each `Artifact`:
-    1.  The `platform` MUST have the format `{OS}/{CPU}` or be `"any"`.
-    1.  The `url` field MUST NOT be empty.
-    1.  The `url` field MUST be a proper URL.
-    1.  A `checksum` MUST be provided either in the `checksum` field or as a query parameter in the `url`.
-    1.  If the `checksum` field has a value and the `url` also has a `checksum` query parameter, the two values MUST be equal.
-    1.  The `url` MUST return either a file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
-    1.  If a `checksum` is provided (in the field or as a query param), the checksum of the result of the `url` MUST equal the provided checksum.
+    1. The `platform` MUST have the format `{OS}/{CPU}` or be `"any"`.
+    1. The `url` field MUST NOT be empty.
+    1. The `url` field MUST be a proper URL.
+    1. A `checksum` MUST be provided either in the `checksum` field or as a query parameter in the `url`.
+    1. If the `checksum` field has a value and the `url` also has a `checksum` query parameter, the two values MUST be equal.
+    1. The `url` MUST return either a file or an archive containing either `bin/{DAEMON_NAME}` or `{DAEMON_NAME}`.
+    1. If a `checksum` is provided (in the field or as a query param), the checksum of the result of the `url` MUST equal the provided checksum.
 
 Downloading of an `Artifact` will happen the same way that URLs from `info` are currently downloaded.
 
@@ -165,12 +169,13 @@ If the `upgrade-info.json` file does not contain any `UpgradeInstructions`, exis
 
 We will update Cosmovisor to look for and handle the new `UpgradeInstructions` in `upgrade-info.json`.
 If the `UpgradeInstructions` are provided, we will do the following:
-1.  The `info` field will be ignored.
-1.  The `artifacts` field will be used to identify the artifact to download based on the `platform` that Cosmovisor is running in.
-1.  If a `checksum` is provided (either in the field or as a query param in the `url`), and the downloaded artifact has a different checksum, the upgrade process will be interrupted and Cosmovisor will exit with an error.
-1.  If a `pre_run` command is defined, it will be executed at the same point in the process where the `app pre-upgrade` command would have been executed.
+
+1. The `info` field will be ignored.
+1. The `artifacts` field will be used to identify the artifact to download based on the `platform` that Cosmovisor is running in.
+1. If a `checksum` is provided (either in the field or as a query param in the `url`), and the downloaded artifact has a different checksum, the upgrade process will be interrupted and Cosmovisor will exit with an error.
+1. If a `pre_run` command is defined, it will be executed at the same point in the process where the `app pre-upgrade` command would have been executed.
     It will be executed using the same environment as other commands run by Cosmovisor.
-1.  If a `post_run` command is defined, it will be executed after executing the command that restarts the chain.
+1. If a `post_run` command is defined, it will be executed after executing the command that restarts the chain.
     It will be executed in a background process using the same environment as the other commands.
     Any output generated by the command will be logged.
     Once complete, the exit code will be logged.
@@ -179,6 +184,7 @@ We will deprecate the use of the `info` field for anything other than human read
 A warning will be logged if the `info` field is used to define the assets (either by URL or JSON).
 
 The new upgrade timeline is very similar to the current one. Changes are in bold:
+
 1. An upgrade governance proposal is submitted and approved.
 1. The upgrade height is reached.
 1. The `x/upgrade` module writes the `upgrade_info.json` file **(now possibly with `UpgradeInstructions`)**.
@@ -199,20 +205,21 @@ Additionally, current behavior will be maintained when no `UpgradeInstructions` 
 ### Forwards Compatibility
 
 In order to utilize the `UpgradeInstructions` as part of a software upgrade, both of the following must be true:
-1.  The chain must already be using a sufficiently advanced version of the Cosmos SDK.
-1.  The chain's nodes must be using a sufficiently advanced version of Cosmovisor.
+
+1. The chain must already be using a sufficiently advanced version of the Cosmos SDK.
+1. The chain's nodes must be using a sufficiently advanced version of Cosmovisor.
 
 ### Positive
 
-1.  The structure for defining artifacts is clearer since it is now defined in the proto instead of in documentation.
-1.  Availability of a pre-run command becomes more obvious.
-1.  A post-run command becomes possible.
+1. The structure for defining artifacts is clearer since it is now defined in the proto instead of in documentation.
+1. Availability of a pre-run command becomes more obvious.
+1. A post-run command becomes possible.
 
 ### Negative
 
-1.  The `Plan` message becomes larger. This is negligible because A) the `x/upgrades` module only stores at most one upgrade plan, and B) upgrades are rare enough that the increased gas cost isn't a concern.
-1.  There is no option for providing a URL that will return the `UpgradeInstructions`.
-1.  The only way to provide multiple assets (executables and other files) for a platform is to use an archive as the platform's artifact.
+1. The `Plan` message becomes larger. This is negligible because A) the `x/upgrades` module only stores at most one upgrade plan, and B) upgrades are rare enough that the increased gas cost isn't a concern.
+1. There is no option for providing a URL that will return the `UpgradeInstructions`.
+1. The only way to provide multiple assets (executables and other files) for a platform is to use an archive as the platform's artifact.
 
 ### Neutral
 
@@ -220,19 +227,19 @@ In order to utilize the `UpgradeInstructions` as part of a software upgrade, bot
 
 ## Further Discussions
 
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r698708349):
+1. [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r698708349):
     Consider different names for `UpgradeInstructions instructions` (either the message type or field name).
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754655072):
-    1.  Consider putting the `string platform` field inside `UpgradeInstructions` and make `UpgradeInstructions` a repeated field in `Plan`.
-    1.  Consider using a `oneof` field in the `Plan` which could either be `UpgradeInstructions` or else a URL that should return the `UpgradeInstructions`.
-    1.  Consider allowing `info` to either be a JSON serialized version of `UpgradeInstructions` or else a URL that returns that.
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r755462876):
+1. [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754655072):
+    1. Consider putting the `string platform` field inside `UpgradeInstructions` and make `UpgradeInstructions` a repeated field in `Plan`.
+    1. Consider using a `oneof` field in the `Plan` which could either be `UpgradeInstructions` or else a URL that should return the `UpgradeInstructions`.
+    1. Consider allowing `info` to either be a JSON serialized version of `UpgradeInstructions` or else a URL that returns that.
+1. [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r755462876):
     Consider not including the `UpgradeInstructions.description` field, using the `info` field for that purpose instead.
-1.  [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754643691):
+1. [Draft PR #10032 Comment](https://github.com/cosmos/cosmos-sdk/pull/10032/files?authenticity_token=pLtzpnXJJB%2Fif2UWiTp9Td3MvRrBF04DvjSuEjf1azoWdLF%2BSNymVYw9Ic7VkqHgNLhNj6iq9bHQYnVLzMXd4g%3D%3D&file-filters%5B%5D=.go&file-filters%5B%5D=.proto#r754643691):
     Consider allowing multiple artifacts to be downloaded for any given `platform` by adding a `name` field to the `Artifact` message.
-1.  [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
+1. [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
     Allow the new `UpgradeInstructions` to be provided via URL.
-1.  [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
+1. [PR #10502 Comment](https://github.com/cosmos/cosmos-sdk/pull/10602#discussion_r781438288)
     Allow definition of a `signer` for assets (as an alternative to using a `checksum`).
 
 ## References

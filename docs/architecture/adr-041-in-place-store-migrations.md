@@ -71,7 +71,7 @@ Migration functions should live inside the `migrations/` folder of each module, 
 ```go
 // Migrate1to2 migrates from version 1 to 2.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return v2bank.MigrateStore(ctx, m.keeper.storeKey) // v043bank is package `x/bank/migrations/v2`.
+ return v2bank.MigrateStore(ctx, m.keeper.storeKey) // v043bank is package `x/bank/migrations/v2`.
 }
 ```
 
@@ -119,7 +119,7 @@ Once all the migration handlers are registered inside the configurator (which ha
 * Get the old ConsensusVersion of the module from its `VersionMap` argument (let's call it `M`).
 * Fetch the new ConsensusVersion of the module from the `ConsensusVersion()` method on `AppModule` (call it `N`).
 * If `N>M`, run all registered migrations for the module sequentially `M -> M+1 -> M+2...` until `N`.
-    * There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
+  * There is a special case where there is no ConsensusVersion for the module, as this means that the module has been newly added during the upgrade. In this case, no migration function is run, and the module's current ConsensusVersion is saved to `x/upgrade`'s store.
 
 If a required migration is missing (e.g. if it has not been registered in the `Configurator`), then the `RunMigrations` function will error.
 
@@ -162,6 +162,6 @@ While modules MUST register their migration functions when bumping ConsensusVers
 
 ## References
 
-* Initial discussion: https://github.com/cosmos/cosmos-sdk/discussions/8429
-* Implementation of `ConsensusVersion` and `RunMigrations`: https://github.com/cosmos/cosmos-sdk/pull/8485
-* Issue discussing `x/upgrade` design: https://github.com/cosmos/cosmos-sdk/issues/8514
+* Initial discussion: <https://github.com/cosmos/cosmos-sdk/discussions/8429>
+* Implementation of `ConsensusVersion` and `RunMigrations`: <https://github.com/cosmos/cosmos-sdk/pull/8485>
+* Issue discussing `x/upgrade` design: <https://github.com/cosmos/cosmos-sdk/issues/8514>

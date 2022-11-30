@@ -270,7 +270,7 @@ processors because:
   not `TxBody`)
 
 There are also scenarios where we may choose to safely ignore unknown fields
-(https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188) to
+(<https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-624400188>) to
 provide graceful forwards compatibility with newer clients.
 
 We propose that field numbers with bit 11 set (for most use cases this is
@@ -359,13 +359,13 @@ import "github.com/cosmos/cosmos-sdk/client"
 import "github.com/cosmos/cosmos-sdk/client/tx"
 
 func NewCmdDoSomething(clientCtx client.Context) *cobra.Command {
-	return &cobra.Command{
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := ctx.InitWithInput(cmd.InOrStdin())
-			msg := NewSomeMsg{...}
-			tx.GenerateOrBroadcastTx(clientCtx, msg)
-		},
-	}
+ return &cobra.Command{
+  RunE: func(cmd *cobra.Command, args []string) error {
+   clientCtx := ctx.InitWithInput(cmd.InOrStdin())
+   msg := NewSomeMsg{...}
+   tx.GenerateOrBroadcastTx(clientCtx, msg)
+  },
+ }
 }
 ```
 
@@ -437,7 +437,7 @@ To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
 
 ### `SIGN_MODE_DIRECT_RELAXED`
 
-(_Documented as option (1)(a) in https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933_)
+(_Documented as option (1)(a) in <https://github.com/cosmos/cosmos-sdk/issues/6078#issuecomment-628026933>_)
 
 This is a variation of `SIGN_MODE_DIRECT` where multiple signers wouldn't need to
 coordinate public keys and signing modes in advance. It would involve an alternate

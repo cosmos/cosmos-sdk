@@ -138,13 +138,13 @@ Basic chain of middlewares processing would look like:
 
 ```go
 func processRecovery(recoveryObj interface{}, middleware recoveryMiddleware) error {
-	if middleware == nil { return nil }
+ if middleware == nil { return nil }
 
-	next, err := middleware(recoveryObj)
-	if err != nil { return err }
-	if next == nil { return nil }
+ next, err := middleware(recoveryObj)
+ if err != nil { return err }
+ if next == nil { return nil }
 
-	return processRecovery(recoveryObj, next)
+ return processRecovery(recoveryObj, next)
 }
 ```
 
@@ -197,9 +197,9 @@ This method would prepend handlers to an existing chain.
 ### Positive
 
 * Developers of Cosmos SDK based projects can add custom panic handlers to:
-    * add error context for custom panic sources (panic inside of custom keepers);
-    * emit `panic()`: passthrough recovery object to the Tendermint core;
-    * other necessary handling;
+  * add error context for custom panic sources (panic inside of custom keepers);
+  * emit `panic()`: passthrough recovery object to the Tendermint core;
+  * other necessary handling;
 * Developers can use standard Cosmos SDK `BaseApp` implementation, rather that rewriting it in their projects;
 * Proposed solution doesn't break the current "standard" `runTx()` flow;
 

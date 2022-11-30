@@ -40,27 +40,27 @@ where we define the following arguments and return types:
 
 ```go
 type Request struct {
-	Tx      sdk.Tx
-	TxBytes []byte
+ Tx      sdk.Tx
+ TxBytes []byte
 }
 
 type Response struct {
-	GasWanted uint64
-	GasUsed   uint64
-	// MsgResponses is an array containing each Msg service handler's response
-	// type, packed in an Any. This will get proto-serialized into the `Data` field
-	// in the ABCI Check/DeliverTx responses.
-	MsgResponses []*codectypes.Any
-	Log          string
-	Events       []abci.Event
+ GasWanted uint64
+ GasUsed   uint64
+ // MsgResponses is an array containing each Msg service handler's response
+ // type, packed in an Any. This will get proto-serialized into the `Data` field
+ // in the ABCI Check/DeliverTx responses.
+ MsgResponses []*codectypes.Any
+ Log          string
+ Events       []abci.Event
 }
 
 type RequestCheckTx struct {
-	Type abci.CheckTxType
+ Type abci.CheckTxType
 }
 
 type ResponseCheckTx struct {
-	Priority int64
+ Priority int64
 }
 ```
 
@@ -80,38 +80,38 @@ Baseapp's ABCI `{Check,Deliver}Tx()` and `Simulate()` methods simply call `app.t
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
     var abciRes abci.ResponseDeliverTx
-	ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
-	res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
-	if err != nil {
-		abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
-		return abciRes
-	}
+ ctx := app.getContextForTx(runTxModeDeliver, req.Tx)
+ res, err := app.txHandler.DeliverTx(ctx, tx.Request{TxBytes: req.Tx})
+ if err != nil {
+  abciRes = sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+  return abciRes
+ }
 
-	abciRes, err = convertTxResponseToDeliverTx(res)
-	if err != nil {
-		return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
-	}
+ abciRes, err = convertTxResponseToDeliverTx(res)
+ if err != nil {
+  return sdkerrors.ResponseDeliverTx(err, uint64(res.GasUsed), uint64(res.GasWanted), app.trace)
+ }
 
-	return abciRes
+ return abciRes
 }
 
 // convertTxResponseToDeliverTx converts a tx.Response into a abci.ResponseDeliverTx.
 func convertTxResponseToDeliverTx(txRes tx.Response) (abci.ResponseDeliverTx, error) {
-	data, err := makeABCIData(txRes)
-	if err != nil {
-		return abci.ResponseDeliverTx{}, nil
-	}
+ data, err := makeABCIData(txRes)
+ if err != nil {
+  return abci.ResponseDeliverTx{}, nil
+ }
 
-	return abci.ResponseDeliverTx{
-		Data:   data,
-		Log:    txRes.Log,
-		Events: txRes.Events,
-	}, nil
+ return abci.ResponseDeliverTx{
+  Data:   data,
+  Log:    txRes.Log,
+  Events: txRes.Events,
+ }, nil
 }
 
 // makeABCIData generates the Data field to be sent to ABCI Check/DeliverTx.
 func makeABCIData(txRes tx.Response) ([]byte, error) {
-	return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
+ return proto.Marshal(&sdk.TxMsgData{MsgResponses: txRes.MsgResponses})
 }
 ```
 
@@ -308,5 +308,5 @@ For new middlewares, we introduce unit tests. Since middlewares are purposefully
 
 ## References
 
-* Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/9585
+* Initial discussion: <https://github.com/cosmos/cosmos-sdk/issues/9585>
 * Implementation: [#9920 BaseApp refactor](https://github.com/cosmos/cosmos-sdk/pull/9920) and [#10028 Antehandlers migration](https://github.com/cosmos/cosmos-sdk/pull/10028)

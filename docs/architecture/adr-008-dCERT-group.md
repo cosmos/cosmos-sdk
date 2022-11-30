@@ -67,17 +67,17 @@ following specifications:
 * In order for a new member to be added to the dCERT group they must
    send a transaction accepting their admission at which point the validity of
    their admission is to be confirmed.
-    * A sequence number is assigned when a member is added to dCERT group.
+  * A sequence number is assigned when a member is added to dCERT group.
      If a member leaves the dCERT group and then enters back, a new sequence number
      is assigned.  
 * Addresses which control the greatest amount of preferred-representation are
    eligible to join the dCERT group (up the _maximum number of dCERT members_).
    If the dCERT group is already full and new member is admitted, the existing
    dCERT member with the lowest amount of votes is kicked from the dCERT group.
-    * In the split situation where the dCERT group is full but a vying candidate
+  * In the split situation where the dCERT group is full but a vying candidate
      has the same amount of vote as an existing dCERT member, the existing
      member should maintain its position.
-    * In the split situation where somebody must be kicked out but the two
+  * In the split situation where somebody must be kicked out but the two
      addresses with the smallest number of votes have the same number of votes,
      the address with the smallest sequence number maintains its position.  
 * A stabilization period can be optionally included to reduce the

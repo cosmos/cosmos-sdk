@@ -41,69 +41,69 @@ This proposal is specifically about how to consume these events as a client of t
 
 // EmitTypedEvent takes typed event and emits converting it into sdk.Event
 func (em *EventManager) EmitTypedEvent(event proto.Message) error {
-	evtType := proto.MessageName(event)
-	evtJSON, err := codec.ProtoMarshalJSON(event)
-	if err != nil {
-		return err
-	}
+ evtType := proto.MessageName(event)
+ evtJSON, err := codec.ProtoMarshalJSON(event)
+ if err != nil {
+  return err
+ }
 
-	var attrMap map[string]json.RawMessage
-	err = json.Unmarshal(evtJSON, &attrMap)
-	if err != nil {
-		return err
-	}
+ var attrMap map[string]json.RawMessage
+ err = json.Unmarshal(evtJSON, &attrMap)
+ if err != nil {
+  return err
+ }
 
-	var attrs []abci.EventAttribute
-	for k, v := range attrMap {
-		attrs = append(attrs, abci.EventAttribute{
-			Key:   []byte(k),
-			Value: v,
-		})
-	}
+ var attrs []abci.EventAttribute
+ for k, v := range attrMap {
+  attrs = append(attrs, abci.EventAttribute{
+   Key:   []byte(k),
+   Value: v,
+  })
+ }
 
-	em.EmitEvent(Event{
-		Type:       evtType,
-		Attributes: attrs,
-	})
+ em.EmitEvent(Event{
+  Type:       evtType,
+  Attributes: attrs,
+ })
 
-	return nil
+ return nil
 }
 
 // ParseTypedEvent converts abci.Event back to typed event
 func ParseTypedEvent(event abci.Event) (proto.Message, error) {
-	concreteGoType := proto.MessageType(event.Type)
-	if concreteGoType == nil {
-		return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
-	}
+ concreteGoType := proto.MessageType(event.Type)
+ if concreteGoType == nil {
+  return nil, fmt.Errorf("failed to retrieve the message of type %q", event.Type)
+ }
 
-	var value reflect.Value
-	if concreteGoType.Kind() == reflect.Ptr {
-		value = reflect.New(concreteGoType.Elem())
-	} else {
-		value = reflect.Zero(concreteGoType)
+ var value reflect.Value
+ if concreteGoType.Kind() == reflect.Ptr {
+  value = reflect.New(concreteGoType.Elem())
+ } else {
+  value = reflect.Zero(concreteGoType)
     }
 
-	protoMsg, ok := value.Interface().(proto.Message)
-	if !ok {
-		return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
-	}
+ protoMsg, ok := value.Interface().(proto.Message)
+ if !ok {
+  return nil, fmt.Errorf("%q does not implement proto.Message", event.Type)
+ }
 
-	attrMap := make(map[string]json.RawMessage)
-	for _, attr := range event.Attributes {
-		attrMap[string(attr.Key)] = attr.Value
-	}
+ attrMap := make(map[string]json.RawMessage)
+ for _, attr := range event.Attributes {
+  attrMap[string(attr.Key)] = attr.Value
+ }
 
-	attrBytes, err := json.Marshal(attrMap)
-	if err != nil {
-		return nil, err
-	}
+ attrBytes, err := json.Marshal(attrMap)
+ if err != nil {
+  return nil, err
+ }
 
-	err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
-	if err != nil {
-		return nil, err
-	}
+ err = jsonpb.Unmarshal(strings.NewReader(string(attrBytes)), protoMsg)
+ if err != nil {
+  return nil, err
+ }
 
-	return protoMsg, nil
+ return protoMsg, nil
 }
 ```
 
@@ -237,8 +237,8 @@ func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) 
         return err
     }
 
-	// Handle all the events coming out of the bus
-	eg.Go(func() error {
+ // Handle all the events coming out of the bus
+ eg.Go(func() error {
         var err error
         for {
             select {
@@ -255,9 +255,9 @@ func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) 
             }
         }
         return nil
-	})
+ })
 
-	return group.Wait()
+ return group.Wait()
 }
 
 // PublishChainTxEvents events using tmclient. Waits on context shutdown signals to exit.
@@ -306,7 +306,7 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
             }
         }
         return err
-	})
+ })
 
     // Exit on error or context cancelation
     return g.Wait()

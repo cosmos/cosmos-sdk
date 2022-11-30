@@ -40,8 +40,8 @@ with respect to `ProcessProposal`:
 * Execution of `ProcessProposal` must be deterministic.
 * There must be coherence between `PrepareProposal` and `ProcessProposal`. In
   other words, for any two correct processes *p* and *q*, if *q*'s Tendermint
-	calls `RequestProcessProposal` on *u<sub>p</sub>*, *q*'s Application returns
-	ACCEPT in `ResponseProcessProposal`.
+ calls `RequestProcessProposal` on *u<sub>p</sub>*, *q*'s Application returns
+ ACCEPT in `ResponseProcessProposal`.
 
 It is important to note that in ABCI 1.0 integration, the application
 is NOT responsible for locking semantics -- Tendermint will still be responsible
@@ -78,33 +78,33 @@ We define the general mempool interface as follows (subject to change):
 
 ```go
 type Mempool interface {
-	// Insert attempts to insert a Tx into the app-side mempool returning
-	// an error upon failure.
-	Insert(sdk.Context, sdk.Tx) error
+ // Insert attempts to insert a Tx into the app-side mempool returning
+ // an error upon failure.
+ Insert(sdk.Context, sdk.Tx) error
 
-	// Select returns an Iterator over the app-side mempool. If txs are specified,
-	// then they shall be incorporated into the Iterator. The Iterator must
-	// closed by the caller.
-	Select(sdk.Context, [][]byte) Iterator
+ // Select returns an Iterator over the app-side mempool. If txs are specified,
+ // then they shall be incorporated into the Iterator. The Iterator must
+ // closed by the caller.
+ Select(sdk.Context, [][]byte) Iterator
 
-	// CountTx returns the number of transactions currently in the mempool.
-	CountTx() int
+ // CountTx returns the number of transactions currently in the mempool.
+ CountTx() int
 
-	// Remove attempts to remove a transaction from the mempool, returning an error
-	// upon failure.
-	Remove(sdk.Tx) error
+ // Remove attempts to remove a transaction from the mempool, returning an error
+ // upon failure.
+ Remove(sdk.Tx) error
 }
 
 // Iterator defines an app-side mempool iterator interface that is as minimal as
 // possible. The order of iteration is determined by the app-side mempool
 // implementation.
 type Iterator interface {
-	// Next returns the next transaction from the mempool. If there are no more
-	// transactions, it returns nil.
-	Next() Iterator
+ // Next returns the next transaction from the mempool. If there are no more
+ // transactions, it returns nil.
+ Next() Iterator
 
-	// Tx returns the transaction at the current position of the iterator.
-	Tx() sdk.Tx
+ // Tx returns the transaction at the current position of the iterator.
+ Tx() sdk.Tx
 }
 ```
 
@@ -112,14 +112,14 @@ We will define an implementation of `Mempool`, defined by `nonceMempool`, that
 will cover most basic application use-cases. Namely, it will prioritize transactions
 by transaction sender, allowing for multiple transactions from the same sender.
 
-The default app-side mempool implementation, `nonceMempool`, will operate on a 
+The default app-side mempool implementation, `nonceMempool`, will operate on a
 single skip list data structure. Specifically, transactions with the lowest nonce
 globally are prioritized. Transactions with the same nonce are prioritized by
 sender address.
 
 ```go
 type nonceMempool struct {
-	txQueue *huandu.SkipList
+ txQueue *huandu.SkipList
 }
 ```
 
@@ -149,7 +149,6 @@ select up to `MaxBytes` *valid* transactions.
 
 However, applications can override this default implementation with their own
 implementation and set that on `BaseApp` via `SetPrepareProposal`.
-
 
 ### `ProcessProposal`
 
@@ -233,6 +232,6 @@ the provided mempool implementation.
 
 ## References
 
-* https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md
-* [1] https://github.com/tendermint/tendermint/issues/7750#issuecomment-1076806155
-* [2] https://github.com/tendermint/tendermint/issues/7750#issuecomment-1075717151
+* <https://github.com/tendermint/tendermint/blob/master/spec/abci%2B%2B/README.md>
+* [1] <https://github.com/tendermint/tendermint/issues/7750#issuecomment-1076806155>
+* [2] <https://github.com/tendermint/tendermint/issues/7750#issuecomment-1075717151>

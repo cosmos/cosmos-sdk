@@ -69,11 +69,11 @@ some helper code. Here is a minimal example for the bank `cosmos.bank.Msg/Send` 
 package bank
 
 type MsgClient interface {
-	Send(context.Context, *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
+ Send(context.Context, *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
 }
 
 type MsgServer interface {
-	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
+ Send(context.Context, *MsgSend) (*MsgSendResponse, error)
 }
 ```
 
@@ -340,8 +340,8 @@ other modules. This will be addressed in separate ADRs or updates to this ADR.
 Other future improvements may include:
 
 * custom code generation that:
-    * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
-    * optimizes inter-module calls - for instance caching resolved methods after first invocation
+  * simplifies interfaces (ex. generates code with `sdk.Context` instead of `context.Context`)
+  * optimizes inter-module calls - for instance caching resolved methods after first invocation
 * combining `StoreKey`s and `ModuleKey`s into a single interface so that modules have a single OCAPs handle
 * code generation which makes inter-module communication more performant
 * decoupling `ModuleKey` creation from `AppModuleBasic.Name()` so that app's can override root module account names
@@ -358,8 +358,8 @@ The advantages of the approach described in this ADR are mostly around how it in
 specifically:
 
 * protobuf so that:
-    * code generation of interfaces can be leveraged for a better dev UX
-    * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
+  * code generation of interfaces can be leveraged for a better dev UX
+  * module interfaces are versioned and checked for breakage using [buf](https://docs.buf.build/breaking-overview)
 * sub-module accounts as per ADR 028
 * the general `Msg` passing paradigm and the way signers are specified by `GetSigners`
 

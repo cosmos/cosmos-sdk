@@ -264,6 +264,7 @@ Recall that the transaction bytes merklelized on chain are the Protobuf binary s
 ```
 
 where:
+
 - `++` denotes concatenation,
 - `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
 - and `len()` is encoded as a Big-Endian uint64.
@@ -610,7 +611,7 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 - [Annex 1](./adr-050-sign-mode-textual-annex1.md)
 
-- Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
-- Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
-- Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw
-- Ethereum's "Described Transactions" https://github.com/ethereum/EIPs/pull/4430
+- Initial discussion: <https://github.com/cosmos/cosmos-sdk/issues/6513>
+- Living document used in the working group: <https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both>
+- Working group meeting notes: <https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw>
+- Ethereum's "Described Transactions" <https://github.com/ethereum/EIPs/pull/4430>

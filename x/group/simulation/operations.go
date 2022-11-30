@@ -437,8 +437,7 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 		}
 
 		// Pick a random member from the group
-		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(ctx, r, k, ak, accounts, groupID)
+		acc, account, err := randomMember(sdkCtx, r, k, ak, accounts, groupID)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgSubmitProposal, ""), nil, err
 		}
@@ -867,8 +866,6 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		groupPolicyAddr := groupPolicy.Address
-		ctx := sdk.WrapSDKContext(sdkCtx)
-
 		policy, err := groupPolicy.GetDecisionPolicy()
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
@@ -878,7 +875,7 @@ func SimulateMsgWithdrawProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, err.Error()), nil, nil
 		}
 
-		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
+		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgWithdrawProposal, "fail to query group info"), nil, err
 		}
@@ -975,8 +972,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		groupPolicyAddr := groupPolicy.Address
 
 		// Pick a random member from the group
-		ctx := sdk.WrapSDKContext(sdkCtx)
-		acc, account, err := randomMember(ctx, r, k, ak, accounts, g.Id)
+		acc, account, err := randomMember(sdkCtx, r, k, ak, accounts, g.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, ""), nil, err
 		}
@@ -990,7 +986,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fee error"), nil, err
 		}
 
-		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
+		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgVote, "fail to query group info"), nil, err
 		}
@@ -1018,7 +1014,7 @@ func SimulateMsgVote(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 		}
 
 		// Ensure member hasn't already voted
-		res, _ := k.VoteByProposalVoter(ctx, &group.QueryVoteByProposalVoterRequest{
+		res, _ := k.VoteByProposalVoter(sdkCtx, &group.QueryVoteByProposalVoterRequest{
 			Voter:      acc.Address.String(),
 			ProposalId: uint64(proposalID),
 		})
@@ -1083,8 +1079,7 @@ func SimulateMsgExec(cdc *codec.ProtoCodec, ak group.AccountKeeper,
 			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "fee error"), nil, err
 		}
 
-		ctx := sdk.WrapSDKContext(sdkCtx)
-		proposalsResult, err := k.ProposalsByGroupPolicy(ctx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
+		proposalsResult, err := k.ProposalsByGroupPolicy(sdkCtx, &group.QueryProposalsByGroupPolicyRequest{Address: groupPolicyAddr})
 		if err != nil {
 			return simtypes.NoOpMsg(TypeMsgExec, TypeMsgExec, "fail to query group info"), nil, err
 		}
@@ -1144,7 +1139,6 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, sdkCtx sdk.Context, accounts []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		ctx := sdk.WrapSDKContext(sdkCtx)
 		groupInfo, policyInfo, _, _, err := randomGroupPolicy(r, k, ak, sdkCtx, accounts)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
@@ -1155,7 +1149,7 @@ func SimulateMsgLeaveGroup(cdc *codec.ProtoCodec, k keeper.Keeper, ak group.Acco
 		}
 
 		// Pick a random member from the group
-		acc, account, err := randomMember(ctx, r, k, ak, accounts, groupInfo.Id)
+		acc, account, err := randomMember(sdkCtx, r, k, ak, accounts, groupInfo.Id)
 		if err != nil {
 			return simtypes.NoOpMsg(group.ModuleName, TypeMsgLeaveGroup, ""), nil, err
 		}
@@ -1215,7 +1209,7 @@ func randomGroup(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 		initialGroupID = groupID
 	}
 
-	res, err := k.GroupInfo(sdk.WrapSDKContext(ctx), &group.QueryGroupInfoRequest{GroupId: groupID})
+	res, err := k.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 	if err != nil {
 		return nil, simtypes.Account{}, nil, err
 	}
@@ -1249,7 +1243,7 @@ func randomGroupPolicy(r *rand.Rand, k keeper.Keeper, ak group.AccountKeeper,
 	}
 	groupID := groupInfo.Id
 
-	result, err := k.GroupPoliciesByGroup(sdk.WrapSDKContext(ctx), &group.QueryGroupPoliciesByGroupRequest{GroupId: groupID})
+	result, err := k.GroupPoliciesByGroup(ctx, &group.QueryGroupPoliciesByGroupRequest{GroupId: groupID})
 	if err != nil {
 		return groupInfo, nil, simtypes.Account{}, nil, err
 	}

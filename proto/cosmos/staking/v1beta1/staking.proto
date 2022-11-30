@@ -85,9 +85,8 @@ message Description {
 // exchange rate. Voting power can be calculated as total bonded shares
 // multiplied by exchange rate.
 message Validator {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // operator_address defines the address of the validator's operator; bech encoded in JSON.
   string operator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -150,9 +149,6 @@ enum BondStatus {
 
 // ValAddresses defines a repeated set of validator addresses.
 message ValAddresses {
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = true;
-
   repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
@@ -212,9 +208,8 @@ message Delegation {
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
 // for a single validator in an time-ordered list.
 message UnbondingDelegation {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -284,9 +279,8 @@ message RedelegationEntry {
 // Redelegation contains the list of a particular delegator's redelegating bonds
 // from a particular source validator to a particular destination validator.
 message Redelegation {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // delegator_address is the bech32-encoded address of the delegator.
   string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -326,8 +320,7 @@ message Params {
 // DelegationResponse is equivalent to Delegation except that it contains a
 // balance in addition to shares which is more suitable for client responses.
 message DelegationResponse {
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal) = false;
 
   Delegation delegation = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 

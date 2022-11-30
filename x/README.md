@@ -8,7 +8,6 @@ slug : /modules
 Here are some production-grade modules that can be used in Cosmos SDK applications, along with their respective documentation:
 
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
-  * [Vesting](./auth/vesting) - Vesting account implementation.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Bank](./bank/README.md) - Token transfer functionalities.
 * [Capability](./capability/README.md) - Object capability implementation.

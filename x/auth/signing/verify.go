@@ -15,7 +15,17 @@ import (
 func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
-		signBytes, err := handler.GetSignBytes(ctx, data.SignMode, signerData, tx)
+		var (
+			signBytes []byte
+			err       error
+		)
+		handlerWithContext, ok := handler.(SignModeHandlerWithContext)
+		if ok {
+			signBytes, err = handlerWithContext.GetSignBytesWithContext(ctx, data.SignMode, signerData, tx)
+		} else {
+			signBytes, err = handler.GetSignBytes(data.SignMode, signerData, tx)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -30,7 +40,12 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-			return handler.GetSignBytes(ctx, mode, signerData, tx)
+			handlerWithContext, ok := handler.(SignModeHandlerWithContext)
+			if ok {
+				return handlerWithContext.GetSignBytesWithContext(ctx, mode, signerData, tx)
+			} else {
+				return handler.GetSignBytes(mode, signerData, tx)
+			}
 		}, data)
 		if err != nil {
 			return err

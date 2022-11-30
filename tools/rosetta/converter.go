@@ -115,7 +115,15 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		txDecode:        cfg.TxDecoder(),
 		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
-			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(context.TODO(), signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+			var bytesToSign []byte
+			h, ok := cfg.SignModeHandler().(authsigning.SignModeHandlerWithContext)
+			if ok {
+				// Replace context.TODO() with a client side context
+				// https://github.com/cosmos/cosmos-sdk/issues/13747
+				bytesToSign, err = h.GetSignBytesWithContext(context.TODO(), signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+			} else {
+				bytesToSign, err = cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+			}
 			if err != nil {
 				return nil, err
 			}

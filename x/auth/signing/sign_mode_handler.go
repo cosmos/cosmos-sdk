@@ -20,7 +20,19 @@ type SignModeHandler interface {
 
 	// GetSignBytes returns the sign bytes for the provided SignMode, SignerData and Tx,
 	// or an error
-	GetSignBytes(ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
+	GetSignBytes(mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
+}
+
+// SignModeHandlerWithContext is like SignModeHandler, with a new GetSignBytes
+// method which takes an additional context.Context argument, to be used to
+// access state. Consumers should preferably type-cast to this interface and
+// pass in the context.Context arg, and default to SignModeHandler otherwise.
+type SignModeHandlerWithContext interface {
+	SignModeHandler
+
+	// GetSignBytes returns the sign bytes for the provided SignMode, SignerData and Tx,
+	// or an error
+	GetSignBytesWithContext(ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error)
 }
 
 // SignerData is the specific information needed to sign a transaction that generally

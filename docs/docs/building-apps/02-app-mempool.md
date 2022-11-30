@@ -52,7 +52,6 @@ There are countless designs that an application developer can write for a mempoo
 
 It works by storing the transation in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
 
-
 ### Configurations
 
 #### MaxTxs

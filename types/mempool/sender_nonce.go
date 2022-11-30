@@ -65,7 +65,7 @@ func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 	return snp
 }
 
-// SenderNonceSeedOpt Option To add a Seed for random struct
+// SenderNonceSeedOpt Option To add a Seed for random type when calling the constructor NewSenderNonceMempool
 // Example:
 // > random_seed := int64(1000)
 // > NewSenderNonceMempool(SenderNonceSeedTxOpt(random_seed))
@@ -75,7 +75,7 @@ func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
 	}
 }
 
-// SenderNonceMaxTxOpt Option To set limit of max tx
+// SenderNonceMaxTxOpt Option To set limit of max tx when calling the constructor NewSenderNonceMempool
 // Example:
 // > NewSenderNonceMempool(SenderNonceMaxTxOpt(100))
 func SenderNonceMaxTxOpt(maxTx int) SenderNonceOptions {

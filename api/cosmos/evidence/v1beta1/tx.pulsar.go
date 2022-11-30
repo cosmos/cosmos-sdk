@@ -958,8 +958,10 @@ type MsgSubmitEvidence struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Submitter string     `protobuf:"bytes,1,opt,name=submitter,proto3" json:"submitter,omitempty"`
-	Evidence  *anypb.Any `protobuf:"bytes,2,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	// submitter is the signer account address of evidence
+	Submitter string `protobuf:"bytes,1,opt,name=submitter,proto3" json:"submitter,omitempty"`
+	// evidence defines the evidence of misbehavior
+	Evidence *anypb.Any `protobuf:"bytes,2,opt,name=evidence,proto3" json:"evidence,omitempty"`
 }
 
 func (x *MsgSubmitEvidence) Reset() {

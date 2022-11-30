@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/viper"
 
-	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -127,38 +126,6 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
-// RosettaConfig defines the Rosetta API listener configuration.
-type RosettaConfig struct {
-	// Address defines the API server to listen on
-	Address string `mapstructure:"address"`
-
-	// Blockchain defines the blockchain name
-	// defaults to DefaultBlockchain
-	Blockchain string `mapstructure:"blockchain"`
-
-	// Network defines the network name
-	Network string `mapstructure:"network"`
-
-	// Retries defines the maximum number of retries
-	// rosetta will do before quitting
-	Retries int `mapstructure:"retries"`
-
-	// Enable defines if the API server should be enabled.
-	Enable bool `mapstructure:"enable"`
-
-	// Offline defines if the server must be run in offline mode
-	Offline bool `mapstructure:"offline"`
-
-	// EnableFeeSuggestion defines if the server should suggest fee by default
-	EnableFeeSuggestion bool `mapstructure:"enable-fee-suggestion"`
-
-	// GasToSuggest defines gas limit when calculating the fee
-	GasToSuggest int `mapstructure:"gas-to-suggest"`
-
-	// DenomToSuggest defines the defult denom for fee suggestion
-	DenomToSuggest string `mapstructure:"denom-to-suggest"`
-}
-
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
@@ -238,7 +205,6 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
-	Rosetta   RosettaConfig    `mapstructure:"rosetta"`
 	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Store     StoreConfig      `mapstructure:"store"`
@@ -305,17 +271,6 @@ func DefaultConfig() *Config {
 			Address:        DefaultGRPCAddress,
 			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
 			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
-		},
-		Rosetta: RosettaConfig{
-			Enable:              false,
-			Address:             ":8080",
-			Blockchain:          "app",
-			Network:             "network",
-			Retries:             3,
-			Offline:             false,
-			EnableFeeSuggestion: false,
-			GasToSuggest:        clientflags.DefaultGasLimit,
-			DenomToSuggest:      "uatom",
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,

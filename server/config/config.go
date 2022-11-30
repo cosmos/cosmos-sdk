@@ -199,6 +199,14 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
+// MempoolConfig defines the configurations for the appside mempool
+type MempoolConfig struct {
+	// MaxTxs negative means disabled, 0 unbounded
+	// and positive bounded where the integer value is the maximum
+	// amount of tx the mempool will hold before returning an error
+	MaxTxs int
+}
+
 type (
 	// StoreConfig defines application configuration for state streaming and other
 	// storage related operations.
@@ -234,6 +242,7 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Store     StoreConfig      `mapstructure:"store"`
 	Streamers StreamersConfig  `mapstructure:"streamers"`
+	Mempool   MempoolConfig    `mapstructure:"mempool"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -322,6 +331,9 @@ func DefaultConfig() *Config {
 			File: FileStreamerConfig{
 				Keys: []string{"*"},
 			},
+		},
+		Mempool: MempoolConfig{
+			MaxTxs: 0,
 		},
 	}
 }

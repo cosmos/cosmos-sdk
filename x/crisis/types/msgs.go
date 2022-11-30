@@ -24,8 +24,11 @@ func NewMsgVerifyInvariant(sender sdk.AccAddress, invModeName, invRoute string) 
 	}
 }
 
+// Route returns the MsgVerifyInvariant's route.
 func (msg MsgVerifyInvariant) Route() string { return ModuleName }
-func (msg MsgVerifyInvariant) Type() string  { return TypeMsgVerifyInvariant }
+
+// Type returns the MsgVerifyInvariant's type.
+func (msg MsgVerifyInvariant) Type() string { return TypeMsgVerifyInvariant }
 
 // get the bytes for the message signer to sign on
 func (msg MsgVerifyInvariant) GetSigners() []sdk.AccAddress {
@@ -52,8 +55,11 @@ func (msg MsgVerifyInvariant) FullInvariantRoute() string {
 	return msg.InvariantModuleName + "/" + msg.InvariantRoute
 }
 
+// Route returns the MsgUpdateParams's route.
 func (msg MsgUpdateParams) Route() string { return ModuleName }
-func (msg MsgUpdateParams) Type() string  { return TypeMsgUpdateParams }
+
+// Type returns the MsgUpdateParams's type.
+func (msg MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.

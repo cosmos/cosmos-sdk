@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -448,6 +449,10 @@ func hasOnlyDigits(s string) bool {
 
 const thousandSeparator string = "'"
 
+var stringsBuilderPool = &sync.Pool{
+	New: func() any { return new(strings.Builder) },
+}
+
 // FormatInt formats an integer (encoded as in protobuf) into a value-rendered
 // string following ADR-050. This function operates with string manipulation
 // (instead of manipulating the int or sdk.Int object).
@@ -466,11 +471,34 @@ func FormatInt(v string) (string, error) {
 		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
 	}
 
-	startOffset := 3
-	for outputIndex := len(v); outputIndex > startOffset; {
-		outputIndex -= 3
-		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
+	// 1. Less than 4 digits don't need any formatting.
+	if len(v) <= 3 {
+		return sign + v, nil
 	}
 
-	return sign + v, nil
+	sb := stringsBuilderPool.Get().(*strings.Builder)
+	defer stringsBuilderPool.Put(sb)
+	sb.Reset()
+	sb.Grow(len(v) + len(v)/3) // Exactly v + numberOfThousandSeparatorsIn(v)
+
+	// 2. If the length of v is not a multiple of 3 e.g. 1234 or 12345, to achieve 1'234 or 12'345,
+	// we can simply slide to the first mod3 values of v that aren't the multiples of 3 then insert in
+	// the thousands separator so in this case: write(12'); then the remaining v will be entirely multiple
+	// of 3 hence v = 34*
+	if mod3 := len(v) % 3; mod3 != 0 {
+		sb.WriteString(v[:mod3])
+		v = v[mod3:]
+		sb.WriteString(thousandSeparator)
+	}
+
+	// 3. By this point v is entirely multiples of 3 hence we just insert the separator at every 3 digit.
+	for i := 0; i < len(v); i += 3 {
+		end := i + 3
+		sb.WriteString(v[i:end])
+		if end < len(v) {
+			sb.WriteString(thousandSeparator)
+		}
+	}
+
+	return sign + sb.String(), nil
 }

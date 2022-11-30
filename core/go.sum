@@ -1,7 +1,9 @@
-cosmossdk.io/api v0.2.4 h1:o2t77GXWWEN5egCzD2ZyyFgbsoAif/XdF3T+/sAYiHQ=
-cosmossdk.io/api v0.2.4/go.mod h1:7xfxe8ghXHoKj3W2oG/HcuxGVwUHN3q8piiIEiJ3CEU=
+cosmossdk.io/api v0.2.5 h1:XKq7CAxTWs7JObceQKkjdI9J+aLB8ofXDGBEaPcPsks=
+cosmossdk.io/api v0.2.5/go.mod h1:vxhlMTeKWgQUaanTHPq7/vR3dkhhJ6pOgXK0EIBrBYw=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
+cosmossdk.io/math v1.0.0-beta.4 h1:JtKedVLGzA0vv84xjYmZ75RKG35Kf2WwcFu8IjRkIIw=
+cosmossdk.io/math v1.0.0-beta.4/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
 github.com/alecthomas/participle/v2 v2.0.0-alpha7 h1:cK4vjj0VSgb3lN1nuKA5F7dw+1s1pWBe5bx7nNCnN+c=
 github.com/cockroachdb/apd/v3 v3.1.0 h1:MK3Ow7LH0W8zkd5GMKA1PvS9qG3bWFI95WaVNfyZJ/w=
 github.com/cosmos/cosmos-proto v1.0.0-alpha8 h1:d3pCRuMYYvGA5bM0ZbbjKn+AoQD4A7dyNG2wzwWalUw=

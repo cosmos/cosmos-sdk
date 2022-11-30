@@ -62,20 +62,23 @@ Value Renderers describe how values of different Protobuf types should be encode
 - A repeated type has the following template:
 
 ```
-<message_name> has <int> <field_name>
-<field_name> (<int>/<int>): <value rendered 1st line>
+<field_name>: <int> <field_kind>
+<field_name> (<index>/<int>): <value rendered 1st line>
 <optional value rendered in the next lines>
-<field_name> (<int>/<int>): <value rendered 1st line>
+<field_name> (<index>/<int>): <value rendered 1st line>
 <optional value rendered in the next lines>
 End of <field_name>.
 ```
 
 where:
 
-- `message_name` is the name of the Protobuf message which holds the `repeated` field,
-- `int` is the length of the array,
-- `field_name` is the Protobuf field name of the repeated field,
-  - add an optional `s` at the end if `<int> > 1` and the `field_name` doesn't already end with `s`.
+- `field_name` is the Protobuf field name of the repeated field
+- `field_kind`:
+   - if the type of the repeated field is a message, `field_kind` is the message name
+   - if the type of the repeated field is an enum, `field_kind` is the enum name
+   - in any other case, `field_kind` is the protobuf primitive type (e.g. "string" or "bytes")
+- `int` is the length of the array
+- `index` is one based index of the repeated field
 
 #### Examples
 
@@ -150,7 +153,7 @@ we get the following encoding for the `Vote` message:
 ```
 Vote object
 > Proposal id: 4
-> Vote: cosmos1abc...def
+> Voter: cosmos1abc...def
 > Options: 2 WeightedVoteOptions
 > Options (1/2): WeightedVoteOption object
 >> Option: VOTE_OPTION_YES
@@ -182,17 +185,18 @@ Object: <type_url>
 #### Examples
 
 ```
-Object: /cosmos.gov.v1.Vote
-> Proposal id: 4
-> Vote: cosmos1abc...def
-> Options: 2 WeightedVoteOptions
-> Options (1/2): WeightedVoteOption object
->> Option: Yes
->> Weight: 0.7
-> Options (2/2): WeightedVoteOption object
->> Option: No
->> Weight: 0.3
-> End of Options
+Object: type.googleapis.com/cosmos.gov.v1.Vote
+> Vote object
+>> Proposal id: 4
+>> Vote: cosmos1abc...def
+>> Options: 2 WeightedVoteOptions
+>> Options (1/2): WeightedVoteOption object
+>>> Option: Yes
+>>> Weight: 0.7
+>> Options (2/2): WeightedVoteOption object
+>>> Option: No
+>>> Weight: 0.3
+>> End of Options
 ```
 
 ### `google.protobuf.Timestamp`

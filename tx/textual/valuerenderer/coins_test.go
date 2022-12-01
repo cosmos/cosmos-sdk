@@ -39,7 +39,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				}
 
 				listValue := listpb.NewGenericList(tc.Proto)
-				screens, err := vr.Format(ctx, protoreflect.ValueOf(listValue))
+				screens, err := vr.(valuerenderer.RepeatedValueRenderer).FormatRepeated(ctx, protoreflect.ValueOf(listValue))
 
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))

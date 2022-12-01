@@ -11,14 +11,17 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
 	"cosmossdk.io/math"
-	"cosmossdk.io/tx/textual/internal/listpb"
 )
 
 const emptyCoins = "zero"
 
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
 func NewCoinsValueRenderer(q CoinMetadataQueryFn, fd protoreflect.FieldDescriptor) ValueRenderer {
-	return coinsValueRenderer{q, fd}
+	if q == nil {
+		panic(fmt.Errorf("expected non-nil coin metadata querier"))
+	}
+
+	return coinsValueRenderer{q}
 }
 
 type coinsValueRenderer struct {
@@ -27,60 +30,47 @@ type coinsValueRenderer struct {
 	// each denom's associated metadata, either using the bank keeper (for
 	// server-side code) or a gRPC query client (for client-side code).
 	coinMetadataQuerier CoinMetadataQueryFn
-	fd                  protoreflect.FieldDescriptor
 }
 
 var _ ValueRenderer = coinsValueRenderer{}
 
 func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
-	if vr.coinMetadataQuerier == nil {
-		return nil, fmt.Errorf("expected non-nil coin metadata querier")
+	// Since this value renderer has a FormatRepeated method, the Format one
+	// here only handles single coin.
+	coin := v.Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
+
+	metadata, err := vr.coinMetadataQuerier(ctx, coin.Denom)
+	if err != nil {
+		return nil, err
 	}
 
-	// Check whether we have a Coin or some Coins.
-	switch protoCoins := v.Interface().(type) {
-	// If it's a repeated Coin:
-	case protoreflect.List:
-		{
-
-			coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
-			var err error
-			for i := 0; i < protoCoins.Len(); i++ {
-				coin := protoCoins.Get(i).Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
-				coins[i] = coin
-				metadatas[i], err = vr.coinMetadataQuerier(ctx, coin.Denom)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			formatted, err := corecoins.FormatCoins(coins, metadatas)
-			if err != nil {
-				return nil, err
-			}
-
-			return []Screen{{Text: formatted}}, nil
-		}
-	// If it's a single Coin:
-	case protoreflect.Message:
-		{
-			coin := v.Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
-
-			metadata, err := vr.coinMetadataQuerier(ctx, coin.Denom)
-			if err != nil {
-				return nil, err
-			}
-
-			formatted, err := corecoins.FormatCoins([]*basev1beta1.Coin{coin}, []*bankv1beta1.Metadata{metadata})
-			if err != nil {
-				return nil, err
-			}
-
-			return []Screen{{Text: formatted}}, nil
-		}
-	default:
-		return nil, fmt.Errorf("got invalid type %t for coins", v.Interface())
+	formatted, err := corecoins.FormatCoins([]*basev1beta1.Coin{coin}, []*bankv1beta1.Metadata{metadata})
+	if err != nil {
+		return nil, err
 	}
+
+	return []Screen{{Text: formatted}}, nil
+}
+
+func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
+	protoCoins := v.List()
+	coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
+	var err error
+	for i := 0; i < protoCoins.Len(); i++ {
+		coin := protoCoins.Get(i).Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
+		coins[i] = coin
+		metadatas[i], err = vr.coinMetadataQuerier(ctx, coin.Denom)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	formatted, err := corecoins.FormatCoins(coins, metadatas)
+	if err != nil {
+		return nil, err
+	}
+
+	return []Screen{{Text: formatted}}, nil
 }
 
 func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
@@ -89,48 +79,40 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	}
 
 	if screens[0].Text == emptyCoins {
-		if vr.fd != nil && vr.fd.IsList() {
-			return protoreflect.ValueOfList(listpb.NewGenericList([]*basev1beta1.Coin{})), nil
-		}
-
 		return protoreflect.ValueOfMessage((&basev1beta1.Coin{}).ProtoReflect()), nil
 	}
 
-	coins := strings.Split(screens[0].Text, ", ")
+	parsed, err := vr.parseCoins(ctx, screens[0].Text)
+	if err != nil {
+		return nilValue, err
+	}
+
+	return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
+}
+
+func (vr coinsValueRenderer) parseCoins(ctx context.Context, coinsStr string) ([]*basev1beta1.Coin, error) {
+	coins := strings.Split(coinsStr, ", ")
 	metadatas := make([]*bankv1beta1.Metadata, len(coins))
 
 	var err error
 	for i, coin := range coins {
 		coinArr := strings.Split(coin, " ")
 		if len(coinArr) != 2 {
-			return nilValue, fmt.Errorf("invalid coin %s", coin)
+			return nil, fmt.Errorf("invalid coin %s", coin)
 		}
 		metadatas[i], err = vr.coinMetadataQuerier(ctx, coinArr[1])
 		if err != nil {
-			return nilValue, err
+			return nil, err
 		}
 	}
 
-	parsed, err := parseCoins(coins, metadatas)
-	if err != nil {
-		return nilValue, err
-	}
-
-	if vr.fd != nil && vr.fd.IsList() {
-		return protoreflect.ValueOf(listpb.NewGenericList(parsed)), err
-	} else {
-		return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
-	}
-}
-
-func parseCoins(coins []string, metadata []*bankv1beta1.Metadata) ([]*basev1beta1.Coin, error) {
-	if len(coins) != len(metadata) {
-		return []*basev1beta1.Coin{}, fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadata))
+	if len(coins) != len(metadatas) {
+		return []*basev1beta1.Coin{}, fmt.Errorf("formatCoins expect one metadata for each coin; expected %d, got %d", len(coins), len(metadatas))
 	}
 
 	parsedCoins := make([]*basev1beta1.Coin, len(coins))
 	for i, coinStr := range coins {
-		coin, err := parseCoin(coinStr, metadata[i])
+		coin, err := parseCoin(coinStr, metadatas[i])
 		if err != nil {
 			return nil, err
 		}
@@ -211,10 +193,6 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 		Amount: amtStr,
 		Denom:  baseDenom,
 	}, nil
-}
-
-func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
-	return vr.Format(ctx, v)
 }
 
 func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen, l protoreflect.List) error {

@@ -1,9 +1,9 @@
 syntax = "proto3";
-package cosmos.base.snapshots.v1beta1;
+package cosmos.base.store.snapshots.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/snapshots/types";
+option go_package = "github.com/cosmos/cosmos-sdk/store/snapshots/types";
 
 // Snapshot contains Tendermint state sync snapshot info.
 message Snapshot {
@@ -16,7 +16,7 @@ message Snapshot {
 
 // Metadata contains SDK-specific snapshot metadata.
 message Metadata {
-  repeated bytes chunk_hashes = 1; // SHA-256 chunk hashes
+  repeated bytes chunk_hashes = 1;  // SHA-256 chunk hashes
 }
 
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.

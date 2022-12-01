@@ -34,3 +34,15 @@ type ValueRenderer interface {
 	// Parse should be the inverse of Format.
 	Parse(context.Context, []Screen) (protoreflect.Value, error)
 }
+
+// RepeatedValueRenderer defines an interface to produce formatted output for
+// protobuf message fields that are repeated.
+type RepeatedValueRenderer interface {
+	ValueRenderer
+
+	// FormatRepeated should render the value to a text plus annotation.
+	FormatRepeated(context.Context, protoreflect.Value) ([]Screen, error)
+
+	// ParseRepeated should be the inverse of Format.  The list will be populated with the repeated values.
+	ParseRepeated(context.Context, []Screen, protoreflect.List) error
+}

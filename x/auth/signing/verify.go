@@ -1,6 +1,7 @@
 package signing
 
 import (
+	"context"
 	"fmt"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,10 +12,10 @@ import (
 
 // VerifySignature verifies a transaction signature contained in SignatureData abstracting over different signing modes
 // and single vs multi-signatures.
-func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx) error {
+func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
-		signBytes, err := handler.GetSignBytes(data.SignMode, signerData, tx)
+		signBytes, err := handler.GetSignBytes(ctx, data.SignMode, signerData, tx)
 		if err != nil {
 			return err
 		}
@@ -29,7 +30,7 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 			return fmt.Errorf("expected %T, got %T", (multisig.PubKey)(nil), pubKey)
 		}
 		err := multiPK.VerifyMultisignature(func(mode signing.SignMode) ([]byte, error) {
-			return handler.GetSignBytes(mode, signerData, tx)
+			return handler.GetSignBytes(ctx, mode, signerData, tx)
 		}, data)
 		if err != nil {
 			return err

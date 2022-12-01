@@ -142,7 +142,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			}
 			// Call the method handler from the service description with the handler object.
 			// We don't do any decoding here because the decoding was already done.
-			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), noopDecoder, interceptor)
+			res, err := methodHandler(handler, ctx, noopDecoder, interceptor)
 			if err != nil {
 				return nil, err
 			}

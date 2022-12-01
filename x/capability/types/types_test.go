@@ -3,6 +3,7 @@ package types_test
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,13 +15,13 @@ func TestCapabilityKey(t *testing.T) {
 	idx := uint64(3162)
 	cap := types.NewCapability(idx)
 	require.Equal(t, idx, cap.GetIndex())
-	require.Equal(t, fmt.Sprintf("Capability{%p, %d}", cap, idx), cap.String())
+	require.Equal(t, fmt.Sprintf("index:%d", idx), strings.TrimSpace(cap.String()))
 }
 
 func TestOwner(t *testing.T) {
 	o := types.NewOwner("bank", "send")
 	require.Equal(t, "bank/send", o.Key())
-	require.Equal(t, "module: bank\nname: send\n", o.String())
+	require.Equal(t, "module:\"bank\" name:\"send\" ", o.String())
 }
 
 func TestCapabilityOwners_Set(t *testing.T) {

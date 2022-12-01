@@ -27,6 +27,8 @@ message MsgUpdateParams {
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // params defines the x/consensus_params parameters to update.
+  // VersionsParams is not included in this Msg because it is tracked
+  // separarately in x/upgrade.
   //
   // NOTE: All parameters must be supplied.
   tendermint.types.BlockParams     block     = 2;

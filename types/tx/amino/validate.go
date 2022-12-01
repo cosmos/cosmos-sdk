@@ -34,7 +34,6 @@ func ValidateAminoAnnotations(fdFiles *protoregistry.Files, aminoCdc *codec.Lega
 
 			gogoMsgType := gogoproto.MessageType(string(md.FullName()))
 			gogoMsg := reflect.New(gogoMsgType.Elem()).Interface()
-			fmt.Printf("gogoMs=%T\n", gogoMsg)
 
 			jsonBz, innerErr := aminoCdc.MarshalJSON(gogoMsg)
 			if innerErr != nil {
@@ -42,20 +41,15 @@ func ValidateAminoAnnotations(fdFiles *protoregistry.Files, aminoCdc *codec.Lega
 				return false
 			}
 
+			// If the Amino JSON output has the "type" field, it means that the
+			// underlying type has been registered in amino's registry.
 			if !strings.HasPrefix(string(jsonBz), fmt.Sprintf(`{"type":"%s",`, aminoName)) {
-				fmt.Println(string(jsonBz))
 				err = fmt.Errorf("proto message %s has incorrectly registered amino name %s", aminoName, md.FullName())
 			}
-
-			fmt.Println("aminoName=", aminoName)
 		}
 
 		return true
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

@@ -12,6 +12,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	_ "cosmossdk.io/api/cosmos/auth/v1beta1"
+	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"

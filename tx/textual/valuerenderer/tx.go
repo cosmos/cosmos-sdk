@@ -74,7 +74,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		p5.Tipper = txAuthInfo.Tip.Tipper
 	}
 	// Find all other tx signers than the current signer.
-	otherSigners := make([]*txv1beta1.SignerInfo, len(txAuthInfo.SignerInfos)-1)
+	otherSigners := make([]*txv1beta1.SignerInfo, 0, len(txAuthInfo.SignerInfos)-1)
 	for _, si := range txAuthInfo.SignerInfos {
 		if bytes.Equal(si.PublicKey.Value, textualData.SignerData.PubKey.Value) {
 			continue

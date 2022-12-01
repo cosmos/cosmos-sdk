@@ -14,6 +14,10 @@ var _ nft.QueryServer = Keeper{}
 
 // Balance return the number of NFTs of a given class owned by the owner, same as balanceOf in ERC721
 func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft.QueryBalanceResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	if len(r.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
@@ -30,6 +34,10 @@ func (k Keeper) Balance(goCtx context.Context, r *nft.QueryBalanceRequest) (*nft
 
 // Owner return the owner of the NFT based on its class and id, same as ownerOf in ERC721
 func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.QueryOwnerResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	if len(r.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
@@ -45,6 +53,10 @@ func (k Keeper) Owner(goCtx context.Context, r *nft.QueryOwnerRequest) (*nft.Que
 
 // Supply return the number of NFTs from the given class, same as totalSupply of ERC721.
 func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.QuerySupplyResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	if len(r.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
@@ -55,6 +67,10 @@ func (k Keeper) Supply(goCtx context.Context, r *nft.QuerySupplyRequest) (*nft.Q
 
 // NFTs queries all NFTs of a given class or owner (at least one must be provided), similar to tokenByIndex in ERC721Enumerable
 func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.QueryNFTsResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	var err error
 	var owner sdk.AccAddress
 
@@ -113,6 +129,10 @@ func (k Keeper) NFTs(goCtx context.Context, r *nft.QueryNFTsRequest) (*nft.Query
 
 // NFT return an NFT based on its class and id.
 func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNFTResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	if len(r.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
@@ -130,6 +150,10 @@ func (k Keeper) NFT(goCtx context.Context, r *nft.QueryNFTRequest) (*nft.QueryNF
 
 // Class return an NFT class based on its id
 func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.QueryClassResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	if len(r.ClassId) == 0 {
 		return nil, nft.ErrEmptyClassID
 	}
@@ -144,6 +168,10 @@ func (k Keeper) Class(goCtx context.Context, r *nft.QueryClassRequest) (*nft.Que
 
 // Classes return all NFT classes
 func (k Keeper) Classes(goCtx context.Context, r *nft.QueryClassesRequest) (*nft.QueryClassesResponse, error) {
+	if r == nil {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("empty request")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := ctx.KVStore(k.storeKey)
 	classStore := prefix.NewStore(store, ClassKey)

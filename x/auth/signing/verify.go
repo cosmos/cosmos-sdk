@@ -15,17 +15,7 @@ import (
 func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData SignerData, sigData signing.SignatureData, handler SignModeHandler, tx sdk.Tx) error {
 	switch data := sigData.(type) {
 	case *signing.SingleSignatureData:
-		var (
-			signBytes []byte
-			err       error
-		)
-		handlerWithContext, ok := handler.(SignModeHandlerWithContext)
-		if ok {
-			signBytes, err = handlerWithContext.GetSignBytesWithContext(ctx, data.SignMode, signerData, tx)
-		} else {
-			signBytes, err = handler.GetSignBytes(data.SignMode, signerData, tx)
-		}
-
+		signBytes, err := GetSignBytesWithContext(handler, ctx, data.SignMode, signerData, tx)
 		if err != nil {
 			return err
 		}
@@ -53,5 +43,18 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 		return nil
 	default:
 		return fmt.Errorf("unexpected SignatureData %T", sigData)
+	}
+}
+
+// GetSignBytesWithContext gets the sign bytes from the sign mode handler. It
+// checks if the sign mode handler supports SignModeHandlerWithContext, in
+// which case it passes the context.Context argument. Otherwise, it fallbacks
+// to GetSignBytes.
+func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
+	hWithContext, ok := h.(SignModeHandlerWithContext)
+	if ok {
+		return hWithContext.GetSignBytesWithContext(ctx, mode, data, tx)
+	} else {
+		return h.GetSignBytes(mode, data, tx)
 	}
 }

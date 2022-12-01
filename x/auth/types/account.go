@@ -151,8 +151,8 @@ func (acc BaseAccount) MarshalYAML() (interface{}, error) {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if acc.PubKey == nil {
+func (acc *BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	if acc == nil || acc.PubKey == nil {
 		return nil
 	}
 	var pubKey cryptotypes.PubKey

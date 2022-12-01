@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	huandu "github.com/huandu/skiplist"
+	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -23,18 +23,18 @@ var (
 // priority to other sender txs and must be partially ordered by both sender-nonce
 // and priority.
 type priorityNonceMempool struct {
-	priorityIndex  *huandu.SkipList
+	priorityIndex  *skiplist.SkipList
 	priorityCounts map[int64]int
-	senderIndices  map[string]*huandu.SkipList
+	senderIndices  map[string]*skiplist.SkipList
 	scores         map[txMeta]txMeta
 	onRead         func(tx sdk.Tx)
 }
 
 type priorityNonceIterator struct {
-	senderCursors map[string]*huandu.Element
+	senderCursors map[string]*skiplist.Element
 	nextPriority  int64
 	sender        string
-	priorityNode  *huandu.Element
+	priorityNode  *skiplist.Element
 	mempool       *priorityNonceMempool
 }
 
@@ -49,7 +49,7 @@ type txMeta struct {
 	// weight is the transaction's weight, used as a tiebreaker for transactions with the same priority
 	weight int64
 	// senderElement is a pointer to the transaction's element in the sender index
-	senderElement *huandu.Element
+	senderElement *skiplist.Element
 }
 
 // txMetaLess is a comparator for txKeys that first compares priority, then weight,
@@ -59,26 +59,26 @@ type txMeta struct {
 func txMetaLess(a, b any) int {
 	keyA := a.(txMeta)
 	keyB := b.(txMeta)
-	res := huandu.Int64.Compare(keyA.priority, keyB.priority)
+	res := skiplist.Int64.Compare(keyA.priority, keyB.priority)
 	if res != 0 {
 		return res
 	}
 
 	// weight is used as a tiebreaker for transactions with the same priority.  weight is calculated in a single
 	// pass in .Select(...) and so will be 0 on .Insert(...)
-	res = huandu.Int64.Compare(keyA.weight, keyB.weight)
+	res = skiplist.Int64.Compare(keyA.weight, keyB.weight)
 	if res != 0 {
 		return res
 	}
 
 	// Because weight will be 0 on .Insert(...), we must also compare sender and nonce to resolve priority collisions.
 	// If we didn't then transactions with the same priority would overwrite each other in the priority index.
-	res = huandu.String.Compare(keyA.sender, keyB.sender)
+	res = skiplist.String.Compare(keyA.sender, keyB.sender)
 	if res != 0 {
 		return res
 	}
 
-	return huandu.Uint64.Compare(keyA.nonce, keyB.nonce)
+	return skiplist.Uint64.Compare(keyA.nonce, keyB.nonce)
 }
 
 type PriorityNonceMempoolOption func(*priorityNonceMempool)
@@ -99,9 +99,9 @@ func DefaultPriorityMempool() Mempool {
 // returns txs in a partial order by 2 dimensions; priority, and sender-nonce.
 func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 	mp := &priorityNonceMempool{
-		priorityIndex:  huandu.New(huandu.LessThanFunc(txMetaLess)),
+		priorityIndex:  skiplist.New(skiplist.LessThanFunc(txMetaLess)),
 		priorityCounts: make(map[int64]int),
-		senderIndices:  make(map[string]*huandu.SkipList),
+		senderIndices:  make(map[string]*skiplist.SkipList),
 		scores:         make(map[txMeta]txMeta),
 	}
 
@@ -138,8 +138,8 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
 
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
-		senderIndex = huandu.New(huandu.LessThanFunc(func(a, b any) int {
-			return huandu.Uint64.Compare(b.(txMeta).nonce, a.(txMeta).nonce)
+		senderIndex = skiplist.New(skiplist.LessThanFunc(func(a, b any) int {
+			return skiplist.Uint64.Compare(b.(txMeta).nonce, a.(txMeta).nonce)
 		}))
 
 		// initialize sender index if not found
@@ -256,7 +256,7 @@ func (mp *priorityNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 
 	iterator := &priorityNonceIterator{
 		mempool:       mp,
-		senderCursors: make(map[string]*huandu.Element),
+		senderCursors: make(map[string]*skiplist.Element),
 	}
 
 	return iterator.iteratePriority()
@@ -292,7 +292,7 @@ func (mp *priorityNonceMempool) reorderPriorityTies() {
 // senderWeight returns the weight of a given tx (t) at senderCursor.  Weight is defined as the first (nonce-wise)
 // same sender tx with a priority not equal to t.  It is used to resolve priority collisions, that is when 2 or more
 // txs from different senders have the same priority.
-func senderWeight(senderCursor *huandu.Element) int64 {
+func senderWeight(senderCursor *skiplist.Element) int64 {
 	if senderCursor == nil {
 		return 0
 	}

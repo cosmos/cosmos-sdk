@@ -22,6 +22,9 @@ var _ types.QueryServer = Keeper{}
 
 // Evidence implements the Query/Evidence gRPC method
 func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
 	if req.Hash == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request; hash is empty")
 	}
@@ -53,6 +56,9 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 
 // AllEvidence implements the Query/AllEvidence gRPC method
 func (k Keeper) AllEvidence(c context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
 	ctx := sdk.UnwrapSDKContext(c)
 
 	k.GetAllEvidence(ctx)

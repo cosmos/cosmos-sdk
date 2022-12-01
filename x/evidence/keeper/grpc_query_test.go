@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -19,23 +20,31 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 		msg       string
 		malleate  func()
 		expPass   bool
+		expErrMsg string
 		posttests func(res *types.QueryEvidenceResponse)
 	}{
-		{
-			"empty request",
-			func() {
-				req = &types.QueryEvidenceRequest{}
-			},
-			false,
-			func(res *types.QueryEvidenceResponse) {},
-		},
 		{
 			"invalid request with empty evidence hash",
 			func() {
 				req = &types.QueryEvidenceRequest{Hash: ""}
 			},
 			false,
+			"invalid request; hash is empty",
 			func(res *types.QueryEvidenceResponse) {},
+		},
+		{
+			"evidence not found",
+			func() {
+				numEvidence := 1
+				evidence = suite.populateEvidence(suite.ctx, numEvidence)
+				evidenceHash := evidence[0].Hash().String()
+				reqHash := strings.Repeat("a", len(evidenceHash))
+				req = types.NewQueryEvidenceRequest(reqHash)
+			},
+			false,
+			"not found",
+			func(res *types.QueryEvidenceResponse) {
+			},
 		},
 		{
 			"success",
@@ -45,6 +54,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 				req = types.NewQueryEvidenceRequest(evidence[0].Hash().String())
 			},
 			true,
+			"",
 			func(res *types.QueryEvidenceResponse) {
 				var evi exported.Evidence
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Evidence, &evi)
@@ -69,6 +79,7 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 				suite.Require().NotNil(res)
 			} else {
 				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
 				suite.Require().Nil(res)
 			}
 

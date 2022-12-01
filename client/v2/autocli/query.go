@@ -163,8 +163,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := cmd.Context()
-		clientConn, err := getClientConn(ctx)
+		clientConn, err := getClientConn(cmd)
 		if err != nil {
 			return err
 		}
@@ -175,6 +174,7 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		}
 
 		output := outputType.New()
+		ctx := cmd.Context()
 		err = clientConn.Invoke(ctx, methodName, input.Interface(), output.Interface())
 		if err != nil {
 			return err
@@ -187,6 +187,10 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 		return err
+	}
+
+	if b.AddQueryConnFlags != nil {
+		b.AddQueryConnFlags(cmd)
 	}
 
 	return cmd, nil

@@ -1,8 +1,7 @@
 package autocli
 
 import (
-	"context"
-
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/client/v2/autocli/flag"
@@ -15,5 +14,7 @@ type Builder struct {
 
 	// GetClientConn specifies how CLI commands will resolve a grpc.ClientConnInterface
 	// from a given context.
-	GetClientConn func(context.Context) (grpc.ClientConnInterface, error)
+	GetClientConn func(*cobra.Command) (grpc.ClientConnInterface, error)
+
+	AddQueryConnFlags func(*cobra.Command)
 }

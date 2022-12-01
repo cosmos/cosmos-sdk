@@ -1,12 +1,11 @@
 package autocli
 
 import (
-	"context"
-	"fmt"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -37,20 +36,12 @@ func RunFromAppConfig(appConfig depinject.Config) error {
 	return Run(appOptions)
 }
 
-type contextKey string
-
-const grpcUrlKey = contextKey("grpc")
-
 func RootCmd(appOptions AppOptions) (*cobra.Command, error) {
 	builder := &Builder{
-		GetClientConn: func(ctx context.Context) (grpc.ClientConnInterface, error) {
-			grpcUrl, ok := ctx.Value(grpcUrlKey).(string)
-			if !ok || grpcUrl == "" {
-				return nil, fmt.Errorf("no gRPC endpoint configured")
-			}
-
-			return grpc.Dial(grpcUrl)
+		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
+			return client.GetClientQueryContext(cmd)
 		},
+		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 	}
 
 	moduleOptions := appOptions.ModuleOptions
@@ -81,12 +72,6 @@ func RootCmd(appOptions AppOptions) (*cobra.Command, error) {
 	}
 
 	rootCmd := &cobra.Command{}
-	var grpcUrl string
-	rootCmd.PersistentFlags().StringVar(&grpcUrl, "grpc-url", "", "the gRPC URL of the node to connect with")
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		cmd.SetContext(context.WithValue(cmd.Context(), grpcUrlKey, grpcUrlKey))
-		return nil
-	}
 	rootCmd.AddCommand(queryCmd)
 	return rootCmd, nil
 }

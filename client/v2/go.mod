@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/api v0.2.5
 	cosmossdk.io/core v0.3.2
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
+	github.com/cosmos/cosmos-sdk v0.47.0-alpha1
 	github.com/iancoleman/strcase v0.2.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5

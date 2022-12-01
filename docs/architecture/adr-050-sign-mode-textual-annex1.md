@@ -4,6 +4,7 @@
 
 * Dec 06, 2021: Initial Draft
 * Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
+* Dec 01, 2022: Remove `Object: ` prefix on Any header screen.
 
 ## Status
 
@@ -179,7 +180,7 @@ See example above with `message Vote{}`.
 * Rendered as:
 
 ```
-Object: <type_url>
+<type_url>
 > <value rendered underlying message>
 ```
 

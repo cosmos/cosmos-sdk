@@ -137,7 +137,7 @@ func (acc BaseAccount) Validate() error {
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (acc *BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	if acc == nil || acc.PubKey == nil {
+	if acc.PubKey == nil {
 		return nil
 	}
 	var pubKey cryptotypes.PubKey

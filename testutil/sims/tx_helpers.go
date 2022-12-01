@@ -1,6 +1,7 @@
 package sims
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -61,7 +62,8 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
-		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
+		// When Textual is wired up, the context argument should be retrieved from the client context.
+		signBytes, err := txConfig.SignModeHandler().GetSignBytes(context.TODO(), signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)
 		}

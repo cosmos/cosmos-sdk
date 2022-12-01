@@ -212,3 +212,12 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 		Denom:  baseDenom,
 	}, nil
 }
+
+func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
+	return vr.Format(ctx, v)
+}
+
+func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen, l protoreflect.List) error {
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/13153
+	panic("implement me, see #13153")
+}

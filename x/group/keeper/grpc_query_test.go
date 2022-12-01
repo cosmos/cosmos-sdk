@@ -36,8 +36,6 @@ func TestQueryGroupsByMember(t *testing.T) {
 
 	ctx := testCtx.Ctx
 
-	sdkCtx := sdk.WrapSDKContext(ctx)
-
 	bApp := baseapp.NewBaseApp(
 		"group",
 		log.NewNopLogger(),
@@ -64,7 +62,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 		{Address: addrs[2].String(), Weight: "1"}, {Address: addrs[3].String(), Weight: "2"},
 	}
 
-	_, err := groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[0].String(),
 		Members: members,
 	})
@@ -73,7 +71,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 	members = []group.MemberRequest{
 		{Address: addrs[3].String(), Weight: "1"}, {Address: addrs[4].String(), Weight: "2"},
 	}
-	_, err = groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err = groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[1].String(),
 		Members: members,
 	})

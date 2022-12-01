@@ -287,10 +287,10 @@ The examples below are stored in a JSON file with the following fields:
 - `cbor`: the sign bytes of the transaction, which is the CBOR encoding of the screens.
 
 The examples are:
-- A minimal MsgSend: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/am/13579-textual-tx/tx/textual/internal/testdata/tx.json#L2-L92).
-- Memo with special or potentially confusing characters: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/am/13579-textual-tx/tx/textual/internal/testdata/tx.json#L93-L185).
-- Long texts that need breaking up into multiple screens on-device: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/am/13579-textual-tx/tx/textual/internal/testdata/tx.json#L186-L281).
-- A transaction with all fields filled in: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/am/13579-textual-tx/tx/textual/internal/testdata/tx.json#L282-L631).
+- A minimal MsgSend: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/7042623c516a06e39c359038bd60b18a69a2c9d3/tx/textual/internal/testdata/tx.json#L2-L92).
+- Memo with special or potentially confusing characters: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/7042623c516a06e39c359038bd60b18a69a2c9d3/tx/textual/internal/testdata/tx.json#L93-L185).
+- Long texts that need breaking up into multiple screens on-device: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/7042623c516a06e39c359038bd60b18a69a2c9d3/tx/textual/internal/testdata/tx.json#L186-L281).
+- A transaction with all fields filled in: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/7042623c516a06e39c359038bd60b18a69a2c9d3/tx/textual/internal/testdata/tx.json#L282-L631).
 
 ## Consequences
 

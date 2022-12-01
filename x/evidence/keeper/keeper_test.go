@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/stretchr/testify/suite"
 )
 
 var (
@@ -81,14 +81,15 @@ type KeeperTestSuite struct {
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
 	queryClient    types.QueryClient
 	encCfg         moduletestutil.TestEncodingConfig
+	msgServer      types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 	key := sdk.NewKVStoreKey(types.StoreKey)
 	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
-	testCtx := testutil.DefaultContext(key, tkey)
-	suite.ctx = testCtx
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
+	suite.ctx = testCtx.Ctx
 
 	ctrl := gomock.NewController(suite.T())
 
@@ -111,7 +112,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
-	suite.ctx = testCtx.WithBlockHeader(tmproto.Header{Height: 1})
+
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 
 	suite.accountKeeper = accountKeeper
@@ -120,6 +122,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, evidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
+
+	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
+		suite.evidenceKeeper.Logger(testCtx.Ctx))
+
+	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

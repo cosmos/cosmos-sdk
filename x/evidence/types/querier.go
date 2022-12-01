@@ -26,6 +26,7 @@ type QueryAllEvidenceParams struct {
 	Limit int `json:"limit" yaml:"limit"`
 }
 
+// NewQueryAllEvidenceParams creates a new instance to query all evidence params.
 func NewQueryAllEvidenceParams(page, limit int) QueryAllEvidenceParams {
 	return QueryAllEvidenceParams{Page: page, Limit: limit}
 }

@@ -9,6 +9,7 @@
 - Sep 07, 2022: Add custom `Msg`-renderers.
 - Sep 18, 2022: Structured format instead of lines of text
 - Nov 23, 2022: Specify CBOR encoding.
+- Dec 01, 2022: Link to examples in separate JSON file.
 
 ## Status
 

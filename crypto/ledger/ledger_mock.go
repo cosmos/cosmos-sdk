@@ -108,11 +108,10 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 	}
 
 	// Need to return DER as the ledger does
-	var r, s *btcec.ModNScalar
+	var r, s btcec.ModNScalar
 	r.SetByteSlice(sig.R.Bytes())
 	s.SetByteSlice(sig.S.Bytes())
-	sig2 := ecdsa.NewSignature(r, s)
-	return sig2.Serialize(), nil
+	return ecdsa.NewSignature(&r, &s).Serialize(), nil
 }
 
 // ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path

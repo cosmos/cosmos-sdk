@@ -11,7 +11,6 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
 	"cosmossdk.io/math"
-	"cosmossdk.io/tx/textual/internal/listpb"
 )
 
 const emptyCoins = "zero"
@@ -95,21 +94,25 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
 }
 
-func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
+func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen, l protoreflect.List) error {
 	if len(screens) != 1 {
-		return nilValue, fmt.Errorf("expected single screen: %v", screens)
+		return fmt.Errorf("expected single screen: %v", screens)
 	}
 
 	if screens[0].Text == emptyCoins {
-		return protoreflect.ValueOf(listpb.NewGenericList([]*basev1beta1.Coin{})), nil
+		return nil
 	}
 
 	parsed, err := vr.parseCoins(ctx, screens[0].Text)
 	if err != nil {
-		return nilValue, err
+		return err
 	}
 
-	return protoreflect.ValueOf(listpb.NewGenericList(parsed)), nil
+	for _, c := range parsed {
+		l.Append(protoreflect.ValueOf(c.ProtoReflect()))
+	}
+
+	return nil
 }
 
 func (vr coinsValueRenderer) parseCoins(ctx context.Context, coinsStr string) ([]*basev1beta1.Coin, error) {

@@ -1,4 +1,4 @@
-package listpb
+package valuerenderer_test
 
 import (
 	"google.golang.org/protobuf/proto"

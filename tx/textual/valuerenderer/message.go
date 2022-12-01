@@ -232,7 +232,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		if fd.IsList() {
 			nf := msg.NewField(fd)
 			if r, ok := vr.(RepeatedValueRenderer); ok {
-				nf, err = r.ParseRepeated(ctx, subscreens)
+				err = r.ParseRepeated(ctx, subscreens, nf.List())
 			} else {
 				err = mr.parseRepeated(ctx, subscreens, nf.List(), vr)
 			}

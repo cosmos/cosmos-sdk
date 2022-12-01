@@ -44,5 +44,5 @@ type RepeatedValueRenderer interface {
 	FormatRepeated(context.Context, protoreflect.Value) ([]Screen, error)
 
 	// ParseRepeated should be the inverse of Format.  The list will be populated with the repeated values.
-	ParseRepeated(context.Context, []Screen) (protoreflect.Value, error)
+	ParseRepeated(context.Context, []Screen, protoreflect.List) error
 }

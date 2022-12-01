@@ -9,7 +9,6 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/tx/textual/internal/listpb"
 	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -39,7 +38,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Display), v)
 				}
 
-				listValue := listpb.NewGenericList(tc.Proto)
+				listValue := NewGenericList(tc.Proto)
 				screens, err := vrr.FormatRepeated(ctx, protoreflect.ValueOf(listValue))
 
 				require.NoError(t, err)
@@ -47,14 +46,15 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				require.Equal(t, tc.Text, screens[0].Text)
 
 				// Round trip.
-				parsedValue, err := vrr.ParseRepeated(ctx, screens)
+				parsedValue := NewGenericList([]*basev1beta1.Coin{})
+				err = vrr.ParseRepeated(ctx, screens, parsedValue)
 				if tc.Error {
 					require.Error(t, err)
 					return
 				}
 
 				require.NoError(t, err)
-				checkCoinsEqual(t, listValue, parsedValue.List())
+				checkCoinsEqual(t, listValue, parsedValue)
 			}
 		})
 	}

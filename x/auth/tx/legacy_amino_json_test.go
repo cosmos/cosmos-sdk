@@ -97,7 +97,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 				AccountNumber: accNum,
 				Sequence:      seqNum,
 			}
-			signBz, err := handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+			signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 			require.NoError(t, err)
 
 			require.Equal(t, tc.expectedSignBz, signBz)
@@ -116,7 +116,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	}
 
 	// expect error with wrong sign mode
-	_, err := handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 
 	// expect error with extension options
@@ -126,7 +126,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.NoError(t, err)
 	bldr.tx.Body.ExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()
-	_, err = handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
 
 	// expect error with non-critical extension options
@@ -134,7 +134,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	buildTx(t, bldr)
 	bldr.tx.Body.NonCriticalExtensionOptions = []*cdctypes.Any{any}
 	tx = bldr.GetTx()
-	_, err = handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.Error(t, err)
 }
 

@@ -22,10 +22,7 @@ func ValidateServiceAnnotations(fileResolver protodesc.Resolver, serviceName str
 
 	sd, err := fileResolver.FindDescriptorByName(protoreflect.FullName(serviceName))
 	if err != nil {
-		// If we don't find the pulsar-generated descriptors, we just skip
-		// validation. This allows chain developers to migrate to pulsar at
-		// their own pace.
-		return nil
+		return err
 	}
 
 	ext := proto.GetExtension(sd.Options(), msg.E_Service)
@@ -52,10 +49,7 @@ func ValidateMsgAnnotations(fileResolver protodesc.Resolver, fqName string) erro
 
 	d, err := fileResolver.FindDescriptorByName(protoreflect.FullName(fqName))
 	if err != nil {
-		// If we don't find the pulsar-generated descriptors, we just skip
-		// validation. This allows chain developers to migrate to pulsar at
-		// their own pace.
-		return nil
+		return err
 	}
 	md := d.(protoreflect.MessageDescriptor)
 

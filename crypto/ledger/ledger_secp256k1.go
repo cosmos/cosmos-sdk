@@ -219,9 +219,12 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 
 	sigStr := sigDER.Serialize()
 	var r, s big.Int
+	// The format of a DER encoded signature is as follows:
+	// 0x30 <total length> 0x02 <length of R> <R> 0x02 <length of S> <S>
 	r.SetBytes(sigStr[4 : 4+sigStr[3]])
 	s.SetBytes(sigStr[4+sigStr[3]+2:])
 	sigBER := tmbtcec.Signature{R: &r, S: &s}
+
 	return sigBER.Serialize(), nil
 }
 

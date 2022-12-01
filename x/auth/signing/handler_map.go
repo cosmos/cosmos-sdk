@@ -1,6 +1,7 @@
 package signing
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -51,10 +52,10 @@ func (h SignModeHandlerMap) Modes() []signing.SignMode {
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (h SignModeHandlerMap) GetSignBytes(mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
+func (h SignModeHandlerMap) GetSignBytes(ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
 	handler, found := h.signModeHandlers[mode]
 	if !found {
 		return nil, fmt.Errorf("can't verify sign mode %s", mode.String())
 	}
-	return handler.GetSignBytes(mode, data, tx)
+	return handler.GetSignBytes(ctx, mode, data, tx)
 }

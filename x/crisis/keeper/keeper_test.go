@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -40,7 +40,8 @@ func TestInvariants(t *testing.T) {
 
 	orgInvRoutes := keeper.Routes()
 	keeper.RegisterRoute("testModule", "testRoute", func(sdk.Context) (string, bool) { return "", false })
-	require.Equal(t, len(keeper.Routes()), len(orgInvRoutes)+1)
+	invar := keeper.Invariants()
+	require.Equal(t, len(invar), len(orgInvRoutes)+1)
 }
 
 func TestAssertInvariants(t *testing.T) {

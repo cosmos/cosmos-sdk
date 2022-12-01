@@ -136,7 +136,7 @@ func (acc BaseAccount) Validate() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (acc *BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if acc.PubKey == nil {
 		return nil
 	}

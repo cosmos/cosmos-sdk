@@ -24,6 +24,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 
 	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 	vr, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("COINS"))
+	vrr := vr.(valuerenderer.RepeatedValueRenderer)
 	require.NoError(t, err)
 
 	for _, tc := range testcases {
@@ -39,21 +40,21 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				}
 
 				listValue := listpb.NewGenericList(tc.Proto)
-				screens, err := vr.(valuerenderer.RepeatedValueRenderer).FormatRepeated(ctx, protoreflect.ValueOf(listValue))
+				screens, err := vrr.FormatRepeated(ctx, protoreflect.ValueOf(listValue))
 
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
 
 				// Round trip.
-				value, err := vr.Parse(ctx, screens)
+				parsedValue, err := vrr.ParseRepeated(ctx, screens)
 				if tc.Error {
 					require.Error(t, err)
 					return
 				}
 
 				require.NoError(t, err)
-				checkCoinsEqual(t, listValue, value.List())
+				checkCoinsEqual(t, listValue, parsedValue.List())
 			}
 		})
 	}

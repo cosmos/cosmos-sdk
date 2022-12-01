@@ -38,7 +38,7 @@ type Textual struct {
 	// - SDK coin and coins
 	// - Protobuf timestamp
 	// - Protobuf duration
-	messages map[protoreflect.FullName]ValueRendererCreator
+	messages map[protoreflect.FullName]ValueRenderer
 }
 
 // NewTextual returns a new Textual which provides
@@ -93,7 +93,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 
 		vr, found := r.messages[fullName]
 		if found {
-			return vr(fd), nil
+			return vr, nil
 		}
 
 		if fd.IsMap() {
@@ -113,8 +113,7 @@ func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (Va
 	fullName := md.FullName()
 	vr, found := r.messages[fullName]
 	if found {
-		var fd protoreflect.FieldDescriptor
-		return vr(fd), nil
+		return vr, nil
 	}
 	return NewMessageValueRenderer(r, md), nil
 }
@@ -126,13 +125,11 @@ func (r *Textual) init() {
 		r.scalars["cosmos.Dec"] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDecValueRenderer() }
 	}
 	if r.messages == nil {
-		r.messages = map[protoreflect.FullName]ValueRendererCreator{}
-		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = func(fd protoreflect.FieldDescriptor) ValueRenderer {
-			return NewCoinsValueRenderer(r.coinMetadataQuerier, fd)
-		}
-		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDurationValueRenderer() }
-		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewTimestampValueRenderer() }
-		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewAnyValueRenderer(r) }
+		r.messages = map[protoreflect.FullName]ValueRenderer{}
+		r.messages[(&basev1beta1.Coin{}).ProtoReflect().Descriptor().FullName()] = NewCoinsValueRenderer(r.coinMetadataQuerier)
+		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
+		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
+		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = NewAnyValueRenderer(r)
 	}
 }
 

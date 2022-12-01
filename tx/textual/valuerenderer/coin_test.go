@@ -49,7 +49,7 @@ func TestMetadataQuerier(t *testing.T) {
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.ErrorIs(t, err, expErr)
-	_, err = vr.Format(context.Background(), protoreflect.ValueOf(listpb.NewGenericList([]*basev1beta1.Coin{{}})))
+	_, err = vr.(valuerenderer.RepeatedValueRenderer).FormatRepeated(context.Background(), protoreflect.ValueOf(listpb.NewGenericList([]*basev1beta1.Coin{{}})))
 	require.ErrorIs(t, err, expErr)
 }
 

@@ -11,16 +11,13 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	corecoins "cosmossdk.io/core/coins"
 	"cosmossdk.io/math"
+	"cosmossdk.io/tx/textual/internal/listpb"
 )
 
 const emptyCoins = "zero"
 
 // NewCoinsValueRenderer returns a ValueRenderer for SDK Coin and Coins.
-func NewCoinsValueRenderer(q CoinMetadataQueryFn, fd protoreflect.FieldDescriptor) ValueRenderer {
-	if q == nil {
-		panic(fmt.Errorf("expected non-nil coin metadata querier"))
-	}
-
+func NewCoinsValueRenderer(q CoinMetadataQueryFn) ValueRenderer {
 	return coinsValueRenderer{q}
 }
 
@@ -35,6 +32,10 @@ type coinsValueRenderer struct {
 var _ ValueRenderer = coinsValueRenderer{}
 
 func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
+	if vr.coinMetadataQuerier == nil {
+		return nil, fmt.Errorf("expected non-nil coin metadata querier")
+	}
+
 	// Since this value renderer has a FormatRepeated method, the Format one
 	// here only handles single coin.
 	coin := v.Interface().(protoreflect.Message).Interface().(*basev1beta1.Coin)
@@ -53,6 +54,10 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 }
 
 func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
+	if vr.coinMetadataQuerier == nil {
+		return nil, fmt.Errorf("expected non-nil coin metadata querier")
+	}
+
 	protoCoins := v.List()
 	coins, metadatas := make([]*basev1beta1.Coin, protoCoins.Len()), make([]*bankv1beta1.Metadata, protoCoins.Len())
 	var err error
@@ -88,6 +93,23 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 	}
 
 	return protoreflect.ValueOfMessage(parsed[0].ProtoReflect()), err
+}
+
+func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
+	if len(screens) != 1 {
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
+	}
+
+	if screens[0].Text == emptyCoins {
+		return protoreflect.ValueOf(listpb.NewGenericList([]*basev1beta1.Coin{})), nil
+	}
+
+	parsed, err := vr.parseCoins(ctx, screens[0].Text)
+	if err != nil {
+		return nilValue, err
+	}
+
+	return protoreflect.ValueOf(listpb.NewGenericList(parsed)), nil
 }
 
 func (vr coinsValueRenderer) parseCoins(ctx context.Context, coinsStr string) ([]*basev1beta1.Coin, error) {
@@ -193,9 +215,4 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 		Amount: amtStr,
 		Denom:  baseDenom,
 	}, nil
-}
-
-func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen, l protoreflect.List) error {
-	// ref: https://github.com/cosmos/cosmos-sdk/issues/13153
-	panic("implement me, see #13153")
 }

@@ -32,10 +32,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Equivocation implements the Evidence interface and defines evidence of double
 // signing misbehavior.
 type Equivocation struct {
-	Height           int64     `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
-	Time             time.Time `protobuf:"bytes,2,opt,name=time,proto3,stdtime" json:"time"`
-	Power            int64     `protobuf:"varint,3,opt,name=power,proto3" json:"power,omitempty"`
-	ConsensusAddress string    `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3" json:"consensus_address,omitempty"`
+	// height is the equivocation height.
+	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	// time is the equivocation time.
+	Time time.Time `protobuf:"bytes,2,opt,name=time,proto3,stdtime" json:"time"`
+	// power is the equivocation validator power.
+	Power int64 `protobuf:"varint,3,opt,name=power,proto3" json:"power,omitempty"`
+	// consensus_address is the equivocation validator consensus address.
+	ConsensusAddress string `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3" json:"consensus_address,omitempty"`
 }
 
 func (m *Equivocation) Reset()      { *m = Equivocation{} }

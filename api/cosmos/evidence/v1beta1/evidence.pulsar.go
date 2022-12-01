@@ -631,10 +631,14 @@ type Equivocation struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Height           int64                  `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
-	Time             *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
-	Power            int64                  `protobuf:"varint,3,opt,name=power,proto3" json:"power,omitempty"`
-	ConsensusAddress string                 `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3" json:"consensus_address,omitempty"`
+	// height is the equivocation height.
+	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	// time is the equivocation time.
+	Time *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
+	// power is the equivocation validator power.
+	Power int64 `protobuf:"varint,3,opt,name=power,proto3" json:"power,omitempty"`
+	// consensus_address is the equivocation validator consensus address.
+	ConsensusAddress string `protobuf:"bytes,4,opt,name=consensus_address,json=consensusAddress,proto3" json:"consensus_address,omitempty"`
 }
 
 func (x *Equivocation) Reset() {

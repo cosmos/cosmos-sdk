@@ -1,74 +1,74 @@
 [
     {
         "proto": {
-            "@type": "Foo"
+            "@type": "/Foo"
         },
         "screens": [
-            {"text": "Object: Foo"},
+            {"text": "Object: /Foo"},
             {"text": "Foo object", "indent": 1}
         ]
     },
     {
         "proto": {
-            "@type": "Foo",
+            "@type": "/Foo",
             "full_name": "testing"
         },
         "screens": [
-            {"text": "Object: Foo"},
+            {"text": "Object: /Foo"},
             {"text": "Foo object", "indent": 1},
             {"text": "Full name: testing", "indent": 2}
         ]
     },
     {
         "proto": {
-            "@type": "google.protobuf.Timestamp",
+            "@type": "/google.protobuf.Timestamp",
             "value": "2006-01-02T15:04:05Z"
         },
         "screens": [
-            {"text": "Object: google.protobuf.Timestamp"},
+            {"text": "Object: /google.protobuf.Timestamp"},
             {"text": "2006-01-02T15:04:05Z", "indent": 1}
         ]
     },
     {
         "proto": {
-            "@type": "google.protobuf.Any",
+            "@type": "/google.protobuf.Any",
             "value": {
-                "@type": "Foo"
+                "@type": "/Foo"
             }
         },
         "screens": [
-            {"text": "Object: google.protobuf.Any"},
-            {"text": "Object: Foo", "indent": 1},
+            {"text": "Object: /google.protobuf.Any"},
+            {"text": "Object: /Foo", "indent": 1},
             {"text": "Foo object", "indent": 2}
         ]
     },
     {
        "proto": {
-            "@type": "google.protobuf.Any",
+            "@type": "/google.protobuf.Any",
             "value": {
-                "@type": "Foo",
+                "@type": "/Foo",
                 "full_name": "testing"
             }
         },
         "screens": [
-            {"text": "Object: google.protobuf.Any"},
-            {"text": "Object: Foo", "indent": 1},
+            {"text": "Object: /google.protobuf.Any"},
+            {"text": "Object: /Foo", "indent": 1},
             {"text": "Foo object", "indent": 2},
             {"text": "Full name: testing", "indent": 3}
         ]
     },
     {
        "proto": {
-            "@type": "A",
+            "@type": "/A",
             "ANY": {
-                "@type": "Foo",
+                "@type": "/Foo",
                 "full_name": "testing"
             }
         },
         "screens": [
-            {"text": "Object: A"},
+            {"text": "Object: /A"},
             {"text": "A object", "indent": 1},
-            {"text": "ANY: Object: Foo", "indent": 2},
+            {"text": "ANY: Object: /Foo", "indent": 2},
             {"text": "Foo object", "indent": 3},
             {"text": "Full name: testing", "indent": 4}
         ]

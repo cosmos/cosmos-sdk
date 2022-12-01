@@ -189,7 +189,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
   * Remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces
   * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
   * Add three new options to file streaming service constructor.
-  * Propogate the errors returned by `ABCIListeners` methods, if implementation don't want to propogate errors, should return `nil` instead.
+  * Modify `ABCIListener` such that any error from any method will always halt the app via `panic`
 
 ### CLI Breaking Changes
 

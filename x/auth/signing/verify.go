@@ -51,9 +51,9 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 // which case it passes the context.Context argument. Otherwise, it fallbacks
 // to GetSignBytes.
 func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
-	hWithContext, ok := h.(SignModeHandlerWithContext)
+	hWithCtx, ok := h.(SignModeHandlerWithContext)
 	if ok {
-		return hWithContext.GetSignBytesWithContext(ctx, mode, data, tx)
+		return hWithCtx.GetSignBytesWithContext(ctx, mode, data, tx)
 	} else {
 		return h.GetSignBytes(mode, data, tx)
 	}

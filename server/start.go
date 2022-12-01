@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -20,8 +19,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"cosmossdk.io/tools/rosetta"
-	crgserver "cosmossdk.io/tools/rosetta/lib/server"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -348,7 +344,9 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	// service if API or gRPC is enabled, and avoid doing so in the general
 	// case, because it spawns a new local tendermint RPC client.
 	if (config.API.Enable || config.GRPC.Enable) && tmNode != nil {
-		clientCtx := clientCtx.WithClient(local.New(tmNode))
+		// re-assign for making the client available below
+		// do not use := to avoid shadowing clientCtx
+		clientCtx = clientCtx.WithClient(local.New(tmNode))
 
 		app.RegisterTxService(clientCtx)
 		app.RegisterTendermintService(clientCtx)
@@ -452,60 +450,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	}
 
 	// At this point it is safe to block the process if we're in gRPC only mode as
-	// we do not need to start Rosetta or handle any Tendermint related processes.
+	// we do not need to handle any Tendermint related processes.
 	if gRPCOnly {
 		// wait for signal capture and gracefully return
 		return WaitForQuitSignals()
-	}
-
-	var rosettaSrv crgserver.Server
-	if config.Rosetta.Enable {
-		offlineMode := config.Rosetta.Offline
-
-		// If GRPC is not enabled rosetta cannot work in online mode, so we throw an error.
-		if !config.GRPC.Enable && !offlineMode {
-			return errors.New("'grpc' must be enable in online mode for Rosetta to work")
-		}
-
-		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)
-		if err != nil {
-			ctx.Logger.Error("failed to parse minimum-gas-prices: ", err)
-			return err
-		}
-
-		conf := &rosetta.Config{
-			Blockchain:          config.Rosetta.Blockchain,
-			Network:             config.Rosetta.Network,
-			TendermintRPC:       ctx.Config.RPC.ListenAddress,
-			GRPCEndpoint:        config.GRPC.Address,
-			Addr:                config.Rosetta.Address,
-			Retries:             config.Rosetta.Retries,
-			Offline:             offlineMode,
-			GasToSuggest:        config.Rosetta.GasToSuggest,
-			EnableFeeSuggestion: config.Rosetta.EnableFeeSuggestion,
-			GasPrices:           minGasPrices.Sort(),
-			Codec:               clientCtx.Codec.(*codec.ProtoCodec),
-			InterfaceRegistry:   clientCtx.InterfaceRegistry,
-		}
-
-		rosettaSrv, err = rosetta.ServerFromConfig(conf)
-		if err != nil {
-			return err
-		}
-
-		errCh := make(chan error)
-		go func() {
-			if err := rosettaSrv.Start(); err != nil {
-				errCh <- err
-			}
-		}()
-
-		select {
-		case err := <-errCh:
-			return err
-
-		case <-time.After(types.ServerStartTime): // assume server started successfully
-		}
 	}
 
 	defer func() {

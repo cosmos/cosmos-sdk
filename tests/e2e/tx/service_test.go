@@ -932,7 +932,7 @@ func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
+func (s E2ETestSuite) TestTxEncodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
@@ -973,7 +973,7 @@ func (s IntegrationTestSuite) TestTxEncodeAmino_GRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxEncodeAmino_GRPCGateway() {
+func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
@@ -1015,7 +1015,7 @@ func (s *IntegrationTestSuite) TestTxEncodeAmino_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestTxDecodeAmino_GRPC() {
+func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 
@@ -1060,7 +1060,7 @@ func (s IntegrationTestSuite) TestTxDecodeAmino_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestTxDecodeAmino_GRPCGateway() {
+func (s E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 

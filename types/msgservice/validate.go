@@ -29,12 +29,12 @@ func ValidateServiceAnnotations(fileResolver protodesc.Resolver, serviceName str
 	}
 
 	ext := proto.GetExtension(sd.Options(), msg.E_Service)
-	hasOption, ok := ext.(bool)
+	isService, ok := ext.(bool)
 	if !ok {
 		return fmt.Errorf("expected bool, got %T", ext)
 	}
 
-	if !hasOption {
+	if !isService {
 		return fmt.Errorf("service %s does not have cosmos.msg.v1.service proto annotation", serviceName)
 	}
 

@@ -286,6 +286,4 @@ func TestAminoAnnotations(t *testing.T) {
 
 	err = amino.ValidateAminoAnnotations(fdFiles, app.legacyAmino)
 	require.NoError(t, err)
-
-	require.False(t, true)
 }

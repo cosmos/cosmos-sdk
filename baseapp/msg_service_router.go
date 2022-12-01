@@ -62,6 +62,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		panic(err)
 	}
 
+	// Make sure all Msg services has the `cosmos.msg.service` proto annotation.
 	err = msgservice.ValidateServiceAnnotations(fdFiles, sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of simply logging.
@@ -87,6 +88,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
 			}
 
+			// Make sure all Msg annotations are correct, like the `cosmos.msg.signer` one.
 			err := msgservice.ValidateMsgAnnotations(fdFiles, proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.

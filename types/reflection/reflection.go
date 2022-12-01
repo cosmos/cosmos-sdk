@@ -41,8 +41,11 @@ func GetFileDescriptorSet() (*descriptorpb.FileDescriptorSet, error) {
 
 		// It seems we're registering twice gogo.proto.
 		// See Frojdi's comments in server/grpc/gogoreflection/fix_registration.go.
+		// Skipping here `gogo.proto` and only including `gogoproto/gogo.proto`.
 		if *fd.Name == "gogo.proto" ||
-			// WHY?? TODO
+			// If we don't skip this one, we have the error:
+			// proto: file "descriptor.proto" has a name conflict over google.protobuf.FileDescriptorSet
+			// Is it because we're importing "google.golang.org/protobuf/types/descriptorpb"?
 			*fd.Name == "descriptor.proto" {
 			continue
 		}

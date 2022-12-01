@@ -2,14 +2,14 @@
 
 ## Changelog
 
-- Dec 06, 2021: Initial Draft.
-- Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
-- May 16, 2022: Change status to Accepted.
-- Aug 11, 2022: Require signing over tx raw bytes.
-- Sep 07, 2022: Add custom `Msg`-renderers.
-- Sep 18, 2022: Structured format instead of lines of text
-- Nov 23, 2022: Specify CBOR encoding.
-- Dec 01, 2022: Link to examples in separate JSON file.
+* Dec 06, 2021: Initial Draft.
+* Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
+* May 16, 2022: Change status to Accepted.
+* Aug 11, 2022: Require signing over tx raw bytes.
+* Sep 07, 2022: Add custom `Msg`-renderers.
+* Sep 18, 2022: Structured format instead of lines of text
+* Nov 23, 2022: Specify CBOR encoding.
+* Dec 01, 2022: Link to examples in separate JSON file.
 
 ## Status
 
@@ -23,8 +23,8 @@ This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targe
 
 Protobuf-based SIGN_MODE_DIRECT was introduced in [ADR-020](./adr-020-protobuf-transaction-encoding.md) and is intended to replace SIGN_MODE_LEGACY_AMINO_JSON in most situations, such as mobile wallets and CLI keyrings. However, the [Ledger](https://www.ledger.com/) hardware wallet is still using SIGN_MODE_LEGACY_AMINO_JSON for displaying the sign bytes to the user. Hardware wallets cannot transition to SIGN_MODE_DIRECT as:
 
-- SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users. Technically, hardware wallets could simply display the sign bytes to the user. But this would be considered as blind signing, and is a security concern.
-- hardware cannot decode the protobuf sign bytes due to memory constraints, as the Protobuf definitions would need to be embedded on the hardware device.
+* SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users. Technically, hardware wallets could simply display the sign bytes to the user. But this would be considered as blind signing, and is a security concern.
+* hardware cannot decode the protobuf sign bytes due to memory constraints, as the Protobuf definitions would need to be embedded on the hardware device.
 
 In an effort to remove Amino from the SDK, a new sign mode needs to be created for hardware devices. [Initial discussions](https://github.com/cosmos/cosmos-sdk/issues/6513) propose a text-based sign mode, which this ADR formally specifies.
 
@@ -265,9 +265,9 @@ Recall that the transaction bytes merklelized on chain are the Protobuf binary s
 ```
 
 where:
-- `++` denotes concatenation,
-- `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
-- and `len()` is encoded as a Big-Endian uint64.
+* `++` denotes concatenation,
+* `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
+* and `len()` is encoded as a Big-Endian uint64.
 
 This is to prevent transaction hash malleability. The point #1 about invertiblity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
 
@@ -300,30 +300,30 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 ### Positive
 
-- Human-friendly way of signing in hardware devices.
-- Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, once the ecosystem has totally migrated, Amino can be totally removed.
+* Human-friendly way of signing in hardware devices.
+* Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, once the ecosystem has totally migrated, Amino can be totally removed.
 
 ### Negative
 
-- Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
-- New ledger app needs to be released, still unclear
+* Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
+* New ledger app needs to be released, still unclear
 
 ### Neutral
 
-- If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
+* If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
 
 ## Further Discussions
 
-- Some details on value renderers need to be polished, see [Annex 1](./adr-050-sign-mode-textual-annex1.md).
-- Are ledger apps able to support both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL at the same time?
-- Open question: should we add a Protobuf field option to allow app developers to overwrite the textual representation of certain Protobuf fields and message? This would be similar to Ethereum's [EIP4430](https://github.com/ethereum/EIPs/pull/4430), where the contract developer decides on the textual representation.
-- Internationalization.
+* Some details on value renderers need to be polished, see [Annex 1](./adr-050-sign-mode-textual-annex1.md).
+* Are ledger apps able to support both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL at the same time?
+* Open question: should we add a Protobuf field option to allow app developers to overwrite the textual representation of certain Protobuf fields and message? This would be similar to Ethereum's [EIP4430](https://github.com/ethereum/EIPs/pull/4430), where the contract developer decides on the textual representation.
+* Internationalization.
 
 ## References
 
-- [Annex 1](./adr-050-sign-mode-textual-annex1.md)
+* [Annex 1](./adr-050-sign-mode-textual-annex1.md)
 
-- Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
-- Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
-- Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw
-- Ethereum's "Described Transactions" https://github.com/ethereum/EIPs/pull/4430
+* Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
+* Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
+* Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw
+* Ethereum's "Described Transactions" https://github.com/ethereum/EIPs/pull/4430

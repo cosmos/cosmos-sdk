@@ -25,6 +25,7 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
+
 	if req.Hash == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request; hash is empty")
 	}

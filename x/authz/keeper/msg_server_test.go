@@ -91,18 +91,6 @@ func (suite *TestSuite) TestGrant() {
 				}
 			},
 		},
-		{
-			name: "valid grant",
-			malleate: func() *authz.MsgGrant {
-				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
-				suite.Require().NoError(err)
-				return &authz.MsgGrant{
-					Granter: granter.String(),
-					Grantee: grantee.String(),
-					Grant:   grant,
-				}
-			},
-		},
 	}
 
 	for _, tc := range testCases {

@@ -302,11 +302,11 @@ func (suite *TestSuite) TestGRPCQueryGranteeGrants() {
 	}
 }
 
-func (suite *TestSuite) createSendAuthorization(a1, a2 sdk.AccAddress) authz.Authorization {
+func (suite *TestSuite) createSendAuthorization(grantee, granter sdk.AccAddress) authz.Authorization {
 	exp := suite.ctx.BlockHeader().Time.Add(time.Hour)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin("steak", 100))
 	authorization := &banktypes.SendAuthorization{SpendLimit: newCoins}
-	err := suite.authzKeeper.SaveGrant(suite.ctx, a1, a2, authorization, &exp)
+	err := suite.authzKeeper.SaveGrant(suite.ctx, grantee, granter, authorization, &exp)
 	suite.Require().NoError(err)
 	return authorization
 }

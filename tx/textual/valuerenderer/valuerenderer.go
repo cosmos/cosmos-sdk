@@ -76,9 +76,6 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		fd.Kind() == protoreflect.Int64Kind:
 		return NewIntValueRenderer(), nil
 
-	case fd.Kind() == protoreflect.StringKind:
-		return stringValueRenderer{}, nil
-
 	case fd.Kind() == protoreflect.EnumKind:
 		return NewEnumValueRenderer(fd), nil
 

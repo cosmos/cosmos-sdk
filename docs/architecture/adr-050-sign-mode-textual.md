@@ -169,28 +169,28 @@ We define "transaction envelope" as all data in a transaction that is not in the
 Chain ID: <string>
 Account number: <uint64>
 Sequence: <uint64>
-*Public Key: <hex_string>
-<TxBody>                                                    // See #8.
-Memo: <string>                                              // Skipped if no memo set
-Fee: <coins>                                                // See value renderers for coins encoding.
-*Fee payer: <string>                                        // Skipped if no fee_payer set
-*Fee granter: <string>                                      // Skipped if no fee_granter set
-Tipper: <string>                                            // If there's a tip
-Tip: <string>
+*Public Key: <Any>
+This transaction has <int> Message
+> Message (<int>/<int>): <Any>                              // See value renderers for Any rendering.
+End of Message
+Memo: <string>                                              // Skipped if no memo set.
+Fee: <coins>                                                // See value renderers for coins rendering.
+*Fee payer: <string>                                        // Skipped if no fee_payer set.
+*Fee granter: <string>                                      // Skipped if no fee_granter set.
+Tip: <coins>                                                // Skippted if no tip.
+Tipper: <string>
 *Gas Limit: <uint64>
-*Timeout Height:  <uint64>                                  // Skipped if no timeout_height set
-*This transaction has <int> body extension:                 // Skipped if no body extension options
-*<repeated Any>
-*This transaction has <int> body non-critical extensions:   // Skipped if no body non-critical extension options
-*<repeated Any>                                             // See value renderers for Any and array encoding.
-*This transaction has <int> body auth info extensions:      // Skipped if no auth info extension options
-*<repeated Any>
-*This transaction has <int> other signers:                  // Skipped if there is only one signer
-*Signer (<int>/<int>):
-*Public Key: <hex_string>
-*Sequence: <uint64>
+*Timeout Height: <uint64>                                   // Skipped if no timeout_height set.
+*Other signer: <int> SignerInfo                             // Skipped if the transaction only has 1 signer.
+*> Other signer (<int>/<int>): <SignerInfo>
 *End of other signers
-*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined in #10, to prevent tx hash malleability.
+*Extension options: <int> Any:                              // Skipped if no body extension options
+*> Extension options (<int>/<int>): <Any>
+*End of extension options
+*Non critical extension options: <int> Any:                 // Skipped if no body non critical extension options
+*> Non critical extension options (<int>/<int>): <Any>
+*End of Non critical extension options
+*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined, to prevent tx hash malleability.
 ```
 
 ### Encoding of the Transaction Body

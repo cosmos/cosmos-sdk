@@ -18,7 +18,7 @@ message Part2 {
 }
 
 message Part3 {
-    repeated google.protobuf.Any messages = 1;
+    repeated google.protobuf.Any message = 1;
     string memo = 2;
     repeated cosmos.base.v1beta1.Coin fees = 3;
 }

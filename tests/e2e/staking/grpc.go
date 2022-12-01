@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {
+func (s *E2ETestSuite) TestGRPCQueryValidatorsHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -64,7 +64,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryValidator() {
+func (s *E2ETestSuite) TestGRPCQueryValidator() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -110,7 +110,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidator() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
+func (s *E2ETestSuite) TestGRPCQueryValidatorDelegations() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -173,7 +173,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
+func (s *E2ETestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -220,7 +220,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryDelegation() {
+func (s *E2ETestSuite) TestGRPCQueryDelegation() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
@@ -296,7 +296,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
+func (s *E2ETestSuite) TestGRPCQueryUnbondingDelegation() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -354,7 +354,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryUnbondingDelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
+func (s *E2ETestSuite) TestGRPCQueryDelegatorDelegations() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -436,7 +436,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
+func (s *E2ETestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -486,7 +486,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryRedelegations() {
+func (s *E2ETestSuite) TestGRPCQueryRedelegations() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 	baseURL := val.APIAddress
@@ -551,7 +551,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryRedelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
+func (s *E2ETestSuite) TestGRPCQueryDelegatorValidators() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -598,7 +598,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorValidators() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
+func (s *E2ETestSuite) TestGRPCQueryDelegatorValidator() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -654,7 +654,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorValidator() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
+func (s *E2ETestSuite) TestGRPCQueryHistoricalInfo() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -700,7 +700,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryHistoricalInfo() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryParams() {
+func (s *E2ETestSuite) TestGRPCQueryParams() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -731,7 +731,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryParams() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGRPCQueryPool() {
+func (s *E2ETestSuite) TestGRPCQueryPool() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

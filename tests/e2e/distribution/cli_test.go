@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
 }
 
 func TestGRPCQueryTestSuite(t *testing.T) {

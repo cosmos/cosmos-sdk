@@ -13,19 +13,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -33,12 +33,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
+func (s *E2ETestSuite) TestNewMsgCreateVestingAccountCmd() {
 	val := s.network.Validators[0]
 
 	testCases := map[string]struct {
@@ -145,7 +145,7 @@ func (s *IntegrationTestSuite) TestNewMsgCreateVestingAccountCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
+func (s *E2ETestSuite) TestNewMsgCreatePermanentLockedAccountCmd() {
 	val := s.network.Validators[0]
 
 	testCases := map[string]struct {

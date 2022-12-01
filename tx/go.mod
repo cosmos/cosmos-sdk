@@ -3,9 +3,9 @@ module cosmossdk.io/tx
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.4
+	cosmossdk.io/api v0.2.5
 	cosmossdk.io/core v0.3.2
-	cosmossdk.io/math v1.0.0-beta.3
+	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/google/go-cmp v0.5.9
 	github.com/stretchr/testify v1.8.1
@@ -26,7 +26,4 @@ require (
 )
 
 // temporary until we tag a new go module
-replace (
-	cosmossdk.io/core => ../core
-	cosmossdk.io/math => ../math
-)
+replace cosmossdk.io/core => ../core

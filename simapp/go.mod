@@ -3,10 +3,10 @@ module cosmossdk.io/simapp
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.4
+	cosmossdk.io/api v0.2.5
 	cosmossdk.io/core v0.3.2
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/math v1.0.0-beta.3
+	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/tools/rosetta v0.1.0
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220909113810-4882f933b1a1
 	github.com/golang/mock v1.6.0
@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
-	github.com/tendermint/tendermint v0.37.0-rc1
+	github.com/tendermint/tendermint v0.37.0-rc2
 	github.com/tendermint/tm-db v0.6.7
 	google.golang.org/protobuf v1.28.1
 )
@@ -43,7 +43,7 @@ require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.8.1 // indirect
-	github.com/confio/ics23/go v0.7.0 // indirect
+	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -161,11 +161,12 @@ require (
 )
 
 replace (
+	// Temporary until we tag a new version
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
 	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
-	// dragonberry fix
-	github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

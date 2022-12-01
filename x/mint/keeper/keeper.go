@@ -72,7 +72,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	return
 }
 
-// GetMinter sets the minter.
+// SetMinter sets the minter.
 func (k Keeper) SetMinter(ctx sdk.Context, minter types.Minter) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&minter)

@@ -54,10 +54,6 @@ func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
 
 func (s *E2ETestSuite) SetupSuite() {
 	s.T().Log("setting up e2e test suite")
-	s.reset()
-}
-
-func (s *E2ETestSuite) reset() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
@@ -245,8 +241,6 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 }
 
 func (s *E2ETestSuite) TestCLISignBatch() {
-	s.reset()
-
 	val := s.network.Validators[0]
 	sendTokens := sdk.NewCoins(
 		sdk.NewCoin(fmt.Sprintf("%stoken", val.Moniker), sdk.NewInt(10)),
@@ -1007,7 +1001,6 @@ func (s *E2ETestSuite) TestCLIMultisignSortSignatures() {
 	s.Require().NoError(err)
 	intialCoins := balRes.Balances
 
-	s.Require().NoError(s.network.WaitForNextBlock())
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(

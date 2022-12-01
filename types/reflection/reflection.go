@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"io"
 
-	"github.com/cosmos/gogoproto/proto"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"golang.org/x/exp/slices"
 	protov2 "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -20,7 +20,7 @@ func GetFileDescriptorSet() (*descriptorpb.FileDescriptorSet, error) {
 	fds := &descriptorpb.FileDescriptorSet{}
 
 	// load gogo proto file descriptors
-	allFds := proto.AllFileDescriptors()
+	allFds := gogoproto.AllFileDescriptors()
 	haveFileDescriptor := map[string]bool{}
 	for _, compressedBz := range allFds {
 		rdr, err := gzip.NewReader(bytes.NewReader(compressedBz))

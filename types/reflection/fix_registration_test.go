@@ -1,4 +1,4 @@
-package gogoreflection
+package reflection
 
 import (
 	"testing"

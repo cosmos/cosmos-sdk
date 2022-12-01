@@ -47,8 +47,6 @@ func TestRegisterMsgService(t *testing.T) {
 			testdata.MsgServerImpl{},
 		)
 	})
-
-	require.False(t, true)
 }
 
 func TestRegisterMsgServiceTwice(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoregistry"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,6 +16,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/types/reflection"
 )
+
+var fdFiles *protoregistry.Files
+
+func init() {
+	fdSet, err := reflection.GetFileDescriptorSet()
+	if err != nil {
+		panic(err)
+	}
+	fdFiles, err = protodesc.NewFiles(fdSet)
+	if err != nil {
+		panic(err)
+	}
+}
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {
@@ -53,17 +67,8 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	fdSet, err := reflection.GetFileDescriptorSet()
-	if err != nil {
-		panic(err)
-	}
-	fdFiles, err := protodesc.NewFiles(fdSet)
-	if err != nil {
-		panic(err)
-	}
-
-	// Make sure all Msg services has the `cosmos.msg.service` proto annotation.
-	err = msgservice.ValidateServiceAnnotations(fdFiles, sd.ServiceName)
+	// Make sure the Msg services has the `cosmos.msg.service` proto annotation.
+	err := msgservice.ValidateServiceAnnotations(fdFiles, sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of simply logging.
 		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)
@@ -88,7 +93,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 				panic(fmt.Errorf("unable to register service method %s: %T does not implement sdk.Msg", fqMethod, i))
 			}
 
-			// Make sure all Msg annotations are correct, like the `cosmos.msg.signer` one.
+			// Make sure Msg annotations are correct, like the `cosmos.msg.signer` one.
 			err := msgservice.ValidateMsgAnnotations(fdFiles, proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.

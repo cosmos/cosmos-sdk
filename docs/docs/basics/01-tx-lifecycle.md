@@ -9,6 +9,7 @@ This document describes the lifecycle of a transaction from creation to committe
 :::
 
 :::note
+
 ### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)

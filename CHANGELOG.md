@@ -188,7 +188,8 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
   * Move `ListeningEnabled` and  `AddListener` methods to `CommitMultiStore`
   * Remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces
   * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
-  * Add three new options to file streaming service constructor
+  * Add three new options to file streaming service constructor.
+  * Propogate the errors returned by `ABCIListeners` methods, if implementation don't want to propogate errors, should return `nil` instead.
 
 ### CLI Breaking Changes
 

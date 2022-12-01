@@ -3,7 +3,11 @@
 ## Changelog
 
 * 11/23/2020: Initial draft
-* 10/14/2022: Add `ListenCommit`, flatten the state writes in a block to a single batch, remove listeners from cache stores, should only listen to `rootmulti.Store`.
+* 10/14/2022:
+  * Add `ListenCommit`, flatten the state writes in a block to a single batch.
+  * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
+  * Remove `HaltAppOnDeliveryError()`, the errors are propogated by default, the implementations should return nil if don't want to propogate errors.
+
 
 ## Status
 

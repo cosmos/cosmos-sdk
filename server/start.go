@@ -33,7 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 const (
@@ -79,6 +80,9 @@ const (
 	flagGRPCAddress    = "grpc.address"
 	flagGRPCWebEnable  = "grpc-web.enable"
 	flagGRPCWebAddress = "grpc-web.address"
+
+	// mempool flags
+	FlagMempoolMaxTxs = "mempool.max-txs"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -189,6 +193,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+
+	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app side mempool")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)
@@ -471,7 +477,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return errors.New("'grpc' must be enable in online mode for Rosetta to work")
 		}
 
-		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)
+		minGasPrices, err := sdk.ParseDecCoins(config.MinGasPrices)
 		if err != nil {
 			ctx.Logger.Error("failed to parse minimum-gas-prices: ", err)
 			return err

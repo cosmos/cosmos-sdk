@@ -22,6 +22,9 @@ import (
 // metadata. It is meant to be passed as an argument into `NewTextual`.
 type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
 
+// ValueRendererCreator is a function returning a ValueRenderer.
+type ValueRendererCreator func(protoreflect.FieldDescriptor) ValueRenderer
+
 // Textual holds the configuration for dispatching
 // to specific value renderers for SIGN_MODE_TEXTUAL.
 type Textual struct {
@@ -31,9 +34,9 @@ type Textual struct {
 	// server-side code) or a gRPC query client (for client-side code).
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
-	scalars map[string]ValueRenderer
-	// messages defines a registry for custom message renderers, as defined in
-	// point #9 in the spec. Note that we also use this same registry for the
+	scalars map[string]ValueRendererCreator
+	// messages defines a registry for custom message renderers.
+	// Note that we also use this same registry for the
 	// following messages, as they can be thought of custom message rendering:
 	// - SDK coin and coins
 	// - Protobuf timestamp
@@ -62,7 +65,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 
 			vr := r.scalars[scalar]
 			if vr != nil {
-				return vr, nil
+				return vr(fd), nil
 			}
 		}
 
@@ -76,7 +79,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		fd.Kind() == protoreflect.Uint64Kind ||
 		fd.Kind() == protoreflect.Int32Kind ||
 		fd.Kind() == protoreflect.Int64Kind:
-		return NewIntValueRenderer(), nil
+		return NewIntValueRenderer(fd), nil
 
 	case fd.Kind() == protoreflect.EnumKind:
 		return NewEnumValueRenderer(fd), nil
@@ -89,6 +92,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		if found {
 			return vr, nil
 		}
+
 		if fd.IsMap() {
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
 		}
@@ -113,9 +117,9 @@ func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (Va
 
 func (r *Textual) init() {
 	if r.scalars == nil {
-		r.scalars = map[string]ValueRenderer{}
-		r.scalars["cosmos.Int"] = NewIntValueRenderer()
-		r.scalars["cosmos.Dec"] = NewDecValueRenderer()
+		r.scalars = map[string]ValueRendererCreator{}
+		r.scalars["cosmos.Int"] = func(fd protoreflect.FieldDescriptor) ValueRenderer { return NewIntValueRenderer(fd) }
+		r.scalars["cosmos.Dec"] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDecValueRenderer() }
 	}
 	if r.messages == nil {
 		r.messages = map[protoreflect.FullName]ValueRenderer{}
@@ -128,7 +132,7 @@ func (r *Textual) init() {
 }
 
 // DefineScalar adds a value renderer to the given Cosmos scalar.
-func (r *Textual) DefineScalar(scalar string, vr ValueRenderer) {
+func (r *Textual) DefineScalar(scalar string, vr ValueRendererCreator) {
 	r.init()
 	r.scalars[scalar] = vr
 }

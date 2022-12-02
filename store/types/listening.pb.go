@@ -5,12 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-<<<<<<< HEAD
 	proto "github.com/gogo/protobuf/proto"
-=======
-	proto "github.com/cosmos/gogoproto/proto"
 	types "github.com/tendermint/tendermint/abci/types"
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 	io "io"
 	math "math"
 	math_bits "math/bits"

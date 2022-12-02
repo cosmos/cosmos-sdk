@@ -20,7 +20,13 @@ import (
 
 type fakeOptions struct{}
 
-func (f *fakeOptions) Get(string) interface{} { return nil }
+func (f *fakeOptions) Get(key string) interface{} {
+	if key == "streamers.file.write_dir" {
+		return "data/file_streamer"
+
+	}
+	return nil
+}
 
 var (
 	mockOptions       = new(fakeOptions)
@@ -38,7 +44,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 	var expectedType streaming.ServiceConstructor
 	require.IsType(t, expectedType, constructor)
 
-	serv, err := constructor(mockOptions, mockKeys, testMarshaller)
+	serv, err := constructor(mockOptions, mockKeys, testMarshaller, log.NewNopLogger())
 	require.Nil(t, err)
 	require.IsType(t, &file.StreamingService{}, serv)
 	listeners := serv.Listeners()
@@ -76,7 +82,7 @@ func TestLoadStreamingServices(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, keys)
+			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, log.NewNopLogger(), keys)
 			require.NoError(t, err)
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})
@@ -93,6 +99,8 @@ func (ao streamingAppOptions) Get(o string) interface{} {
 		return []string{"file"}
 	case "streamers.file.keys":
 		return ao.keys
+	case "streamers.file.write_dir":
+		return "data/file_streamer"
 	default:
 		return nil
 	}

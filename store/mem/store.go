@@ -8,7 +8,11 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
+=======
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+>>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -45,11 +49,6 @@ func (s Store) CacheWrap() types.CacheWrap {
 // CacheWrapWithTrace implements KVStore.
 func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
-}
-
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (s Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(s, storeKey, listeners))
 }
 
 // Commit performs a no-op as entries are persistent between commitments.

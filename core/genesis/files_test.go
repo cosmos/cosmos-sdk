@@ -1,7 +1,6 @@
 package genesis
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -88,12 +87,11 @@ func TestFileGenesisSourceOpenReaderWithModule(t *testing.T) {
 	require.NoError(t, err)
 	defer reader.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(reader)
+	got, err := io.ReadAll(reader)
 	require.NoError(t, err)
 
 	expected := json.RawMessage(`"value"`)
-	require.Equal(t, expected, json.RawMessage(buf.String()))
+	require.Equal(t, expected, json.RawMessage(got))
 
 	// verify the fileGenesisSource cached the moduleRawJSON
 	fgs := gs.(*FileGenesisSource)

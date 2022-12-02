@@ -33,11 +33,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-<<<<<<< HEAD
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-=======
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
->>>>>>> 754ca3169 (feat: add tx limit to mempool  (#14014))
 )
 
 const (
@@ -480,7 +477,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return errors.New("'grpc' must be enable in online mode for Rosetta to work")
 		}
 
-		minGasPrices, err := sdktypes.ParseDecCoins(config.MinGasPrices)
+		minGasPrices, err := sdk.ParseDecCoins(config.MinGasPrices)
 		if err != nil {
 			ctx.Logger.Error("failed to parse minimum-gas-prices: ", err)
 			return err

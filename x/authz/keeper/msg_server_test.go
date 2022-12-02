@@ -8,6 +8,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/golang/mock/gomock"
 )
 
@@ -22,7 +23,10 @@ func (suite *TestSuite) TestGrant() {
 	ctx := suite.ctx.WithBlockTime(time.Now())
 	addrs := suite.createAccounts(2)
 	curBlockTime := ctx.BlockTime()
+
+	oneHour := curBlockTime.Add(time.Hour)
 	oneYear := curBlockTime.AddDate(1, 0, 0)
+
 	coins := sdk.NewCoins(sdk.NewCoin("steak", sdk.NewInt(10)))
 
 	grantee, granter := addrs[0], addrs[1]
@@ -83,6 +87,27 @@ func (suite *TestSuite) TestGrant() {
 			name: "valid grant",
 			malleate: func() *authz.MsgGrant {
 				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneYear)
+				suite.Require().NoError(err)
+				return &authz.MsgGrant{
+					Granter: granter.String(),
+					Grantee: grantee.String(),
+					Grant:   grant,
+				}
+			},
+		},
+		{
+			name: "valid grant, same grantee, granter pair but different msgType",
+			malleate: func() *authz.MsgGrant {
+				g, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, nil), &oneHour)
+				suite.Require().NoError(err)
+				_, err = suite.msgSrvr.Grant(suite.ctx, &authz.MsgGrant{
+					Granter: granter.String(),
+					Grantee: grantee.String(),
+					Grant:   g,
+				})
+				suite.Require().NoError(err)
+
+				grant, err := authz.NewGrant(curBlockTime, authz.NewGenericAuthorization("/cosmos.bank.v1beta1.MsgUpdateParams"), &oneHour)
 				suite.Require().NoError(err)
 				return &authz.MsgGrant{
 					Granter: granter.String(),

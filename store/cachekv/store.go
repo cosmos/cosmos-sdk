@@ -6,6 +6,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/tendermint/tendermint/libs/math"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
@@ -14,14 +15,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-// If value is nil but deleted is false, it means the parent doesn't have the
-// key.  (No need to delete upon Write())
+// cValue represents a cached value.
+// If dirty is true, it indicates the cached value is different from the underlying value.
 type cValue struct {
 	value []byte
 	dirty bool
 }
 
 // Store wraps an in-memory cache around an underlying types.KVStore.
+// If a cached value is nil but deleted is defined for the corresponding key,
+// it means the parent doesn't have the key. (No need to delete upon Write())
 type Store struct {
 	mtx           sync.Mutex
 	cache         map[string]*cValue
@@ -97,6 +100,11 @@ func (store *Store) Delete(key []byte) {
 func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
+
+	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
+		store.sortedCache = dbm.NewMemDB()
+		return
+	}
 
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
@@ -265,10 +273,12 @@ const (
 	stateAlreadySorted
 )
 
+const minSortSize = 1024
+
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
-	if startStr > endStr {
+	if end != nil && startStr > endStr {
 		// Nothing to do here.
 		return
 	}
@@ -281,8 +291,9 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
 	// than just not having the cache.
-	if n < 1024 {
+	if n < minSortSize {
 		for key := range store.unsortedCache {
+			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
 				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
@@ -303,13 +314,29 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// Now find the values within the domain
 	//  [start, end)
 	startIndex := findStartIndex(strL, startStr)
-	endIndex := findEndIndex(strL, endStr)
+	if startIndex < 0 {
+		startIndex = 0
+	}
 
+	var endIndex int
+	if end == nil {
+		endIndex = len(strL) - 1
+	} else {
+		endIndex = findEndIndex(strL, endStr)
+	}
 	if endIndex < 0 {
 		endIndex = len(strL) - 1
 	}
-	if startIndex < 0 {
-		startIndex = 0
+
+	// Since we spent cycles to sort the values, we should process and remove a reasonable amount
+	// ensure start to end is at least minSortSize in size
+	// if below minSortSize, expand it to cover additional values
+	// this amortizes the cost of processing elements across multiple calls
+	if endIndex-startIndex < minSortSize {
+		endIndex = math.MinInt(startIndex+minSortSize, len(strL)-1)
+		if endIndex-startIndex < minSortSize {
+			startIndex = math.MaxInt(endIndex-minSortSize, 0)
+		}
 	}
 
 	kvL := make([]*kv.Pair, 0)
@@ -345,11 +372,14 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 		if item.Value == nil {
 			// deleted element, tracked by store.deleted
 			// setting arbitrary value
-			store.sortedCache.Set(item.Key, []byte{})
+			if err := store.sortedCache.Set(item.Key, []byte{}); err != nil {
+				panic(err)
+			}
+
 			continue
 		}
-		err := store.sortedCache.Set(item.Key, item.Value)
-		if err != nil {
+
+		if err := store.sortedCache.Set(item.Key, item.Value); err != nil {
 			panic(err)
 		}
 	}

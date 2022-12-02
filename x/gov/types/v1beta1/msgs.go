@@ -2,14 +2,14 @@ package v1beta1
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
-	"github.com/gogo/protobuf/proto"
-	"sigs.k8s.io/yaml"
+	"cosmossdk.io/math"
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/gov/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -27,6 +27,7 @@ var (
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
+//
 //nolint:interfacer
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
@@ -110,7 +111,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&m)
+	bz := codec.ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -120,12 +121,6 @@ func (m MsgSubmitProposal) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{proposer}
 }
 
-// String implements the Stringer interface
-func (m MsgSubmitProposal) String() string {
-	out, _ := yaml.Marshal(m)
-	return string(out)
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content
@@ -133,6 +128,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
+//
 //nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
@@ -159,15 +155,9 @@ func (msg MsgDeposit) ValidateBasic() error {
 	return nil
 }
 
-// String implements the Stringer interface
-func (msg MsgDeposit) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSignBytes implements Msg
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -178,6 +168,7 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
+//
 //nolint:interfacer
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option}
@@ -201,15 +192,9 @@ func (msg MsgVote) ValidateBasic() error {
 	return nil
 }
 
-// String implements the Stringer interface
-func (msg MsgVote) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSignBytes implements Msg
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -220,6 +205,7 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
+//
 //nolint:interfacer
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options}
@@ -240,7 +226,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
 	}
 
-	totalWeight := sdk.NewDec(0)
+	totalWeight := math.LegacyNewDec(0)
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
 		if !ValidWeightedVoteOption(option) {
@@ -253,26 +239,20 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		usedOptions[option.Option] = true
 	}
 
-	if totalWeight.GT(sdk.NewDec(1)) {
+	if totalWeight.GT(math.LegacyNewDec(1)) {
 		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
-	if totalWeight.LT(sdk.NewDec(1)) {
+	if totalWeight.LT(math.LegacyNewDec(1)) {
 		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
 	}
 
 	return nil
 }
 
-// String implements the Stringer interface
-func (msg MsgVoteWeighted) String() string {
-	out, _ := yaml.Marshal(msg)
-	return string(out)
-}
-
 // GetSignBytes implements Msg
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 

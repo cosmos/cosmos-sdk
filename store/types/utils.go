@@ -6,12 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
-// Iterator over all the keys with a certain prefix in ascending order
+// KVStorePrefixIterator iterates over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.Iterator(prefix, PrefixEndBytes(prefix))
 }
 
-// Iterator over all the keys with a certain prefix in descending order.
+// KVStoreReversePrefixIterator iterates over all the keys with a certain prefix in descending order.
 func KVStoreReversePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.ReverseIterator(prefix, PrefixEndBytes(prefix))
 }
@@ -41,21 +41,31 @@ func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []k
 
 		if iterB.Valid() {
 			kvB = kv.Pair{Key: iterB.Key(), Value: iterB.Value()}
-
-			iterB.Next()
 		}
 
 		compareValue := true
 
 		for _, prefix := range prefixesToSkip {
 			// Skip value comparison if we matched a prefix
-			if bytes.HasPrefix(kvA.Key, prefix) || bytes.HasPrefix(kvB.Key, prefix) {
+			if bytes.HasPrefix(kvA.Key, prefix) {
 				compareValue = false
 				break
 			}
 		}
 
-		if compareValue && (!bytes.Equal(kvA.Key, kvB.Key) || !bytes.Equal(kvA.Value, kvB.Value)) {
+		if !compareValue {
+			// We're skipping this key due to an exclusion prefix.  If it's present in B, iterate past it.  If it's
+			// absent don't iterate.
+			if bytes.Equal(kvA.Key, kvB.Key) {
+				iterB.Next()
+			}
+			continue
+		}
+
+		// always iterate B when comparing
+		iterB.Next()
+
+		if !bytes.Equal(kvA.Key, kvB.Key) || !bytes.Equal(kvA.Value, kvB.Value) {
 			kvAs = append(kvAs, kvA)
 			kvBs = append(kvBs, kvB)
 		}

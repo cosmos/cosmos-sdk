@@ -3,7 +3,7 @@ package feegrant
 import (
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +16,10 @@ const (
 	gasCostPerIteration = uint64(10)
 )
 
-var _ FeeAllowanceI = (*AllowedMsgAllowance)(nil)
-var _ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+var (
+	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
+	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {

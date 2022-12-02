@@ -7,16 +7,18 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -55,11 +57,19 @@ func TestDefaultTxEncoder(t *testing.T) {
 
 func TestReadTxFromFile(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	var (
+		txCfg             client.TxConfig
+		interfaceRegistry codectypes.InterfaceRegistry
+	)
+	err := depinject.Inject(
+		authtestutil.AppConfig,
+		&interfaceRegistry,
+		&txCfg,
+	)
+	require.NoError(t, err)
 
-	txCfg := encodingConfig.TxConfig
 	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	clientCtx = clientCtx.WithInterfaceRegistry(interfaceRegistry)
 	clientCtx = clientCtx.WithTxConfig(txCfg)
 
 	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
@@ -89,9 +99,13 @@ func TestReadTxFromFile(t *testing.T) {
 
 func TestBatchScanner_Scan(t *testing.T) {
 	t.Parallel()
-	encodingConfig := simapp.MakeTestEncodingConfig()
+	var txGen client.TxConfig
+	err := depinject.Inject(
+		authtestutil.AppConfig,
+		&txGen,
+	)
+	require.NoError(t, err)
 
-	txGen := encodingConfig.TxConfig
 	clientCtx := client.Context{}
 	clientCtx = clientCtx.WithTxConfig(txGen)
 
@@ -149,7 +163,7 @@ func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder)
 }
 
 func makeCodec() *codec.LegacyAmino {
-	var cdc = codec.NewLegacyAmino()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	authtypes.RegisterLegacyAminoCodec(cdc)

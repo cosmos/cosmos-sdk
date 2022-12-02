@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto"
+	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/gogo/protobuf/jsonpb"
-	gogoproto "github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/jsonpb"
+	gogoproto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
@@ -29,8 +29,10 @@ type ProtoCodec struct {
 	interfaceRegistry types.InterfaceRegistry
 }
 
-var _ Codec = &ProtoCodec{}
-var _ ProtoCodecMarshaler = &ProtoCodec{}
+var (
+	_ Codec               = &ProtoCodec{}
+	_ ProtoCodecMarshaler = &ProtoCodec{}
+)
 
 // NewProtoCodec returns a reference to a new ProtoCodec
 func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
@@ -41,6 +43,11 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
+	// Size() check can catch the typed nil value.
+	if o == nil || o.Size() == 0 {
+		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
+		return []byte{}, nil
+	}
 	return o.Marshal()
 }
 
@@ -192,6 +199,10 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = pc.interfaceRegistry.EnsureRegistered(i)
+	if err != nil {
+		return nil, err
+	}
 
 	return pc.Marshal(any)
 }
@@ -202,8 +213,9 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 // NOTE: to unmarshal a concrete type, you should use Unmarshal instead
 //
 // Example:
-//    var x MyInterface
-//    err := cdc.UnmarshalInterface(bz, &x)
+//
+//	var x MyInterface
+//	err := cdc.UnmarshalInterface(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
 	any := &types.Any{}
 	err := pc.Unmarshal(bz, any)
@@ -231,8 +243,9 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) 
 // NOTE: to unmarshal a concrete type, you should use UnmarshalJSON instead
 //
 // Example:
-//    var x MyInterface  // must implement proto.Message
-//    err := cdc.UnmarshalInterfaceJSON(&x, bz)
+//
+//	var x MyInterface  // must implement proto.Message
+//	err := cdc.UnmarshalInterfaceJSON(&x, bz)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error {
 	any := &types.Any{}
 	err := pc.UnmarshalJSON(bz, any)

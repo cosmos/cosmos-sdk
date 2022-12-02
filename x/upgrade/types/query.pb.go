@@ -6,8 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -582,6 +582,8 @@ type QueryClient interface {
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(ctx context.Context, in *QueryModuleVersionsRequest, opts ...grpc.CallOption) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
+	//
+	// Since: cosmos-sdk 0.46
 	Authority(ctx context.Context, in *QueryAuthorityRequest, opts ...grpc.CallOption) (*QueryAuthorityResponse, error)
 }
 
@@ -657,6 +659,8 @@ type QueryServer interface {
 	// Since: cosmos-sdk 0.43
 	ModuleVersions(context.Context, *QueryModuleVersionsRequest) (*QueryModuleVersionsResponse, error)
 	// Returns the account with authority to conduct upgrades
+	//
+	// Since: cosmos-sdk 0.46
 	Authority(context.Context, *QueryAuthorityRequest) (*QueryAuthorityResponse, error)
 }
 

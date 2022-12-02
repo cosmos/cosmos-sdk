@@ -87,7 +87,6 @@ func TestInitCmd(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestInitRecover(t *testing.T) {
@@ -121,7 +120,7 @@ func TestInitRecover(t *testing.T) {
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
 
-func TestInitStakingBondDenom(t *testing.T) {
+func TestInitDefaultBondDenom(t *testing.T) {
 	home := t.TempDir()
 	logger := log.NewNopLogger()
 	cfg, err := genutiltest.CreateDefaultTendermintConfig(home)
@@ -144,7 +143,7 @@ func TestInitStakingBondDenom(t *testing.T) {
 	cmd.SetArgs([]string{
 		"appnode-test",
 		fmt.Sprintf("--%s=%s", cli.HomeFlag, home),
-		fmt.Sprintf("--%s=testtoken", genutilcli.FlagStakingBondDenom),
+		fmt.Sprintf("--%s=testtoken", genutilcli.FlagDefaultBondDenom),
 	})
 	require.NoError(t, cmd.ExecuteContext(ctx))
 }
@@ -286,7 +285,7 @@ func TestInitConfig(t *testing.T) {
 
 // custom tx codec
 func makeCodec() *codec.LegacyAmino {
-	var cdc = codec.NewLegacyAmino()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	return cdc

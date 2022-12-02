@@ -43,14 +43,14 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 		Short: "Submit a software upgrade proposal",
 		Long: "Submit a software upgrade along with an initial deposit.\n" +
 			"Please specify a unique name and height for the upgrade to take effect.\n" +
-			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/master/cosmovisor",
+			"You may include info to reference a binary download link, in a format compatible with: https://github.com/cosmos/cosmos-sdk/tree/main/cosmovisor",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 			name := args[0]
-			content, err := parseArgsToContent(cmd, name)
+			content, err := parseArgsToContent(cmd.Flags(), name)
 			if err != nil {
 				return err
 			}
@@ -59,7 +59,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 				return err
 			}
 			if !noValidate {
-				prop := content.(*types.SoftwareUpgradeProposal)
+				prop := content.(*types.SoftwareUpgradeProposal) //nolint:staticcheck // we are intentionally using a deprecated proposal type.
 				var daemonName string
 				if daemonName, err = cmd.Flags().GetString(FlagDaemonName); err != nil {
 					return err
@@ -93,8 +93,8 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // we are intentionally using a deprecated flag here.
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck // we are intentionally using a deprecated flag here.
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
@@ -129,12 +129,12 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
+			title, err := cmd.Flags().GetString(cli.FlagTitle) //nolint:staticcheck // we are intentionally using a deprecated flag here.
 			if err != nil {
 				return err
 			}
 
-			description, err := cmd.Flags().GetString(cli.FlagDescription)
+			description, err := cmd.Flags().GetString(cli.FlagDescription) //nolint:staticcheck // we are intentionally using a deprecated flag here.
 			if err != nil {
 				return err
 			}
@@ -150,11 +150,11 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
-	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // we are intentionally using a deprecated flag here.
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck // we are intentionally using a deprecated flag here.
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.MarkFlagRequired(cli.FlagTitle)
-	cmd.MarkFlagRequired(cli.FlagDescription)
+	cmd.MarkFlagRequired(cli.FlagTitle)       //nolint:staticcheck // we are intentionally using a deprecated flag here.
+	cmd.MarkFlagRequired(cli.FlagDescription) //nolint:staticcheck // we are intentionally using a deprecated flag here.
 
 	return cmd
 }
@@ -163,7 +163,7 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 // If a DAEMON_NAME env var is set, that is used.
 // Otherwise, the last part of the currently running executable is used.
 func getDefaultDaemonName() string {
-	// DAEMON_NAME is specifically used here to correspond with the Comsovisor setup env vars.
+	// DAEMON_NAME is specifically used here to correspond with the Cosmovisor setup env vars.
 	name := os.Getenv("DAEMON_NAME")
 	if len(name) == 0 {
 		_, name = filepath.Split(os.Args[0])

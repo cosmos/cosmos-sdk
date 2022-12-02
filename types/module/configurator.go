@@ -3,7 +3,7 @@ package module
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
+	"github.com/cosmos/gogoproto/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -89,8 +89,8 @@ func (c configurator) RegisterMigration(moduleName string, fromVersion uint64, h
 // runModuleMigrations runs all in-place store migrations for one given module from a
 // version to another version.
 func (c configurator) runModuleMigrations(ctx sdk.Context, moduleName string, fromVersion, toVersion uint64) error {
-	// No-op if toVersion is the initial version.
-	if toVersion <= 1 {
+	// No-op if toVersion is the initial version or if the version is unchanged.
+	if toVersion <= 1 || fromVersion == toVersion {
 		return nil
 	}
 

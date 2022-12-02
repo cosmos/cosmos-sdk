@@ -129,10 +129,8 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 		return sdkerrors.Wrap(errors.ErrORMInvalidArgument, "empty index key")
 	}
 
-	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
-	defer it.Close()
-	if it.Valid() {
-		return errors.ErrORMUniqueConstraint
+	if err := checkUniqueIndexKey(store, secondaryIndexKeyBytes); err != nil {
+		return err
 	}
 
 	indexKey, err := buildKeyFromParts([]interface{}{secondaryIndexKey, []byte(rowID)})
@@ -141,6 +139,16 @@ func uniqueKeysAddFunc(store sdk.KVStore, secondaryIndexKey interface{}, rowID R
 	}
 
 	store.Set(indexKey, []byte{})
+	return nil
+}
+
+// checkUniqueIndexKey checks that the given secondary index key is unique
+func checkUniqueIndexKey(store sdk.KVStore, secondaryIndexKeyBytes []byte) error {
+	it := store.Iterator(PrefixRange(secondaryIndexKeyBytes))
+	defer it.Close()
+	if it.Valid() {
+		return errors.ErrORMUniqueConstraint
+	}
 	return nil
 }
 

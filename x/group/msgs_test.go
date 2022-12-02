@@ -1,13 +1,17 @@
 package group_test
 
 import (
+	fmt "fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group/module"
 )
 
 var (
@@ -38,7 +42,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"invalid member address",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address: "invalid address",
 					},
@@ -51,7 +55,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"negitive member's weight not allowed",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address: member1.String(),
 						Weight:  "-1",
@@ -65,7 +69,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"zero member's weight not allowed",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address: member1.String(),
 						Weight:  "0",
@@ -79,7 +83,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"duplicate member not allowed",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -99,7 +103,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"valid test case with single member",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -114,7 +118,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"minimum fields",
 			&group.MsgCreateGroup{
 				Admin:   admin.String(),
-				Members: []group.Member{},
+				Members: []group.MemberRequest{},
 			},
 			false,
 			"",
@@ -123,7 +127,7 @@ func TestMsgCreateGroup(t *testing.T) {
 			"valid test case with multiple members",
 			&group.MsgCreateGroup{
 				Admin: admin.String(),
-				Members: []group.Member{
+				Members: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -303,7 +307,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			&group.MsgUpdateGroupMembers{
 				GroupId:       1,
 				Admin:         admin.String(),
-				MemberUpdates: []group.Member{},
+				MemberUpdates: []group.MemberRequest{},
 			},
 			true,
 			"member updates: value is empty",
@@ -313,7 +317,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			&group.MsgUpdateGroupMembers{
 				GroupId: 1,
 				Admin:   admin.String(),
-				MemberUpdates: []group.Member{
+				MemberUpdates: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -329,7 +333,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 			&group.MsgUpdateGroupMembers{
 				GroupId: 1,
 				Admin:   admin.String(),
-				MemberUpdates: []group.Member{
+				MemberUpdates: []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "0",
@@ -368,7 +372,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			func() *group.MsgCreateGroupWithPolicy {
 				admin := "admin"
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -386,7 +390,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"invalid member address",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  "invalid_address",
 						Weight:   "1",
@@ -404,7 +408,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"negative member's weight not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "-1",
@@ -422,7 +426,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"zero member's weight not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "0",
@@ -440,7 +444,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"duplicate member not allowed",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -463,7 +467,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"invalid threshold policy",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("-1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -481,7 +485,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"valid test case with single member",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -499,7 +503,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 			"valid test case with multiple members",
 			func() *group.MsgCreateGroupWithPolicy {
 				policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
-				members := []group.Member{
+				members := []group.MemberRequest{
 					{
 						Address:  member1.String(),
 						Weight:   "1",
@@ -962,6 +966,32 @@ func TestMsgSubmitProposal(t *testing.T) {
 	}
 }
 
+func TestMsgSubmitProposalGetSignBytes(t *testing.T) {
+	testcases := []struct {
+		name      string
+		proposal  []sdk.Msg
+		expSignBz string
+	}{
+		{
+			"MsgSend",
+			[]sdk.Msg{banktypes.NewMsgSend(member1, member1, sdk.NewCoins())},
+			fmt.Sprintf(`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposers":[""]}}`, member1, member1),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg, err := group.NewMsgSubmitProposal(sdk.AccAddress{}.String(), []string{sdk.AccAddress{}.String()}, tc.proposal, "", group.Exec_EXEC_UNSPECIFIED)
+			require.NoError(t, err)
+			var bz []byte
+			require.NotPanics(t, func() {
+				bz = msg.GetSignBytes()
+			})
+			require.Equal(t, tc.expSignBz, string(bz))
+		})
+	}
+}
+
 func TestMsgVote(t *testing.T) {
 	testCases := []struct {
 		name   string
@@ -1164,4 +1194,15 @@ func TestMsgLeaveGroup(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAmino(t *testing.T) {
+	cdc := testutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+
+	out, err := cdc.Amino.MarshalJSON(group.MsgSubmitProposal{Proposers: []string{member1.String()}})
+	require.NoError(t, err)
+	require.Equal(t,
+		`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"proposers":["cosmos1d4jk6cn9wgcsj540xq"]}}`,
+		string(out),
+	)
 }

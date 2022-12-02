@@ -5,9 +5,10 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/gogo/gateway"
+	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -19,9 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
-
-	// unnamed import of statik for swagger UI support
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
 // Server defines the server's API interface.
@@ -30,8 +28,13 @@ type Server struct {
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
 
-	logger   log.Logger
-	metrics  *telemetry.Metrics
+	logger  log.Logger
+	metrics *telemetry.Metrics
+	// Start() is blocking and generally called from a separate goroutine.
+	// Close() can be called asynchronously and access shared memory
+	// via the listener. Therefore, we sync access to Start and Close with
+	// this mutex to avoid data races.
+	mtx      sync.Mutex
 	listener net.Listener
 }
 
@@ -83,15 +86,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 // and are delegated to the Tendermint JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
-	if cfg.Telemetry.Enabled {
-		m, err := telemetry.New(cfg.Telemetry)
-		if err != nil {
-			return err
-		}
-
-		s.metrics = m
-		s.registerMetrics()
-	}
+	s.mtx.Lock()
 
 	tmCfg := tmrpcserver.DefaultConfig()
 	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
@@ -99,15 +94,17 @@ func (s *Server) Start(cfg config.Config) error {
 	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg.MaxOpenConnections)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
 	if err != nil {
+		s.mtx.Unlock()
 		return err
 	}
 
 	s.registerGRPCGatewayRoutes()
-
 	s.listener = listener
 	var h http.Handler = s.Router
+
+	s.mtx.Unlock()
 
 	if cfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
@@ -120,11 +117,20 @@ func (s *Server) Start(cfg config.Config) error {
 
 // Close closes the API server.
 func (s *Server) Close() error {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
 	return s.listener.Close()
 }
 
 func (s *Server) registerGRPCGatewayRoutes() {
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
+}
+
+func (s *Server) SetTelemetry(m *telemetry.Metrics) {
+	s.mtx.Lock()
+	s.metrics = m
+	s.registerMetrics()
+	s.mtx.Unlock()
 }
 
 func (s *Server) registerMetrics() {

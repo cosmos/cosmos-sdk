@@ -6,7 +6,6 @@ import (
 
 // Import cosmos-sdk/types/store.go for convenience.
 type (
-	PruningOptions   = types.PruningOptions
 	Store            = types.Store
 	Committer        = types.Committer
 	CommitStore      = types.CommitStore

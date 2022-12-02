@@ -10,9 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/proto"
-	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/gogoproto/protoc-gen-gogo/descriptor"
 	"google.golang.org/protobuf/encoding/protowire"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -111,7 +111,7 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 			case descriptor.FieldDescriptorProto_TYPE_STRING, descriptor.FieldDescriptorProto_TYPE_BYTES:
 				// At this point only TYPE_STRING is expected to be unregistered, since FieldDescriptorProto.IsScalar() returns false for
 				// TYPE_BYTES and TYPE_STRING as per
-				// https://github.com/gogo/protobuf/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
+				// https://github.com/cosmos/gogoproto/blob/5628607bb4c51c3157aacc3a50f0ab707582b805/protoc-gen-gogo/descriptor/descriptor.go#L95-L118
 			default:
 				return hasUnknownNonCriticals, fmt.Errorf("failed to get typename for message of type %v, can only be TYPE_STRING or TYPE_BYTES", typ)
 			}
@@ -162,8 +162,10 @@ func RejectUnknownFields(bz []byte, msg proto.Message, allowUnknownNonCriticals 
 	return hasUnknownNonCriticals, nil
 }
 
-var protoMessageForTypeNameMu sync.RWMutex
-var protoMessageForTypeNameCache = make(map[string]proto.Message)
+var (
+	protoMessageForTypeNameMu    sync.RWMutex
+	protoMessageForTypeNameCache = make(map[string]proto.Message)
+)
 
 // protoMessageForTypeName takes in a fully qualified name e.g. testdata.TestVersionFD1
 // and returns a corresponding empty protobuf message that serves the prototype for typechecking.
@@ -382,8 +384,10 @@ type descriptorMatch struct {
 	desc  *descriptor.DescriptorProto
 }
 
-var descprotoCacheMu sync.RWMutex
-var descprotoCache = make(map[reflect.Type]*descriptorMatch)
+var (
+	descprotoCacheMu sync.RWMutex
+	descprotoCache   = make(map[reflect.Type]*descriptorMatch)
+)
 
 // getDescriptorInfo retrieves the mapping of field numbers to their respective field descriptors.
 func getDescriptorInfo(desc descriptorIface, msg proto.Message) (map[int32]*descriptor.FieldDescriptorProto, *descriptor.DescriptorProto, error) {

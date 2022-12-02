@@ -18,92 +18,92 @@ import (
 // TestFieldSpec defines a test field against the testpb.ExampleTable message.
 type TestFieldSpec struct {
 	FieldName protoreflect.Name
-	Gen       *rapid.Generator
+	Gen       *rapid.Generator[any]
 }
 
 var TestFieldSpecs = []TestFieldSpec{
 	{
 		"u32",
-		rapid.Uint32(),
+		rapid.Uint32().AsAny(),
 	},
 	{
 		"u64",
-		rapid.Uint64(),
+		rapid.Uint64().AsAny(),
 	},
 	{
 		"str",
 		rapid.String().Filter(func(x string) bool {
 			// filter out null terminators
 			return strings.IndexByte(x, 0) < 0
-		}),
+		}).AsAny(),
 	},
 	{
 		"bz",
-		rapid.SliceOfN(rapid.Byte(), 0, math.MaxUint32),
+		rapid.SliceOfN(rapid.Byte(), 0, math.MaxUint32).AsAny(),
 	},
 	{
 		"i32",
-		rapid.Int32(),
+		rapid.Int32().AsAny(),
 	},
 	{
 		"f32",
-		rapid.Uint32(),
+		rapid.Uint32().AsAny(),
 	},
 	{
 		"s32",
-		rapid.Int32(),
+		rapid.Int32().AsAny(),
 	},
 	{
 		"sf32",
-		rapid.Int32(),
+		rapid.Int32().AsAny(),
 	},
 	{
 		"i64",
-		rapid.Int64(),
+		rapid.Int64().AsAny(),
 	},
 	{
 		"f64",
-		rapid.Uint64(),
+		rapid.Uint64().AsAny(),
 	},
 	{
 		"s64",
-		rapid.Int64(),
+		rapid.Int64().AsAny(),
 	},
 	{
 		"sf64",
-		rapid.Int64(),
+		rapid.Int64().AsAny(),
 	},
 	{
 		"b",
-		rapid.Bool(),
+		rapid.Bool().AsAny(),
 	},
 	{
 		"ts",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
-			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds").(int64)
-			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos").(int32)
+			seconds := rapid.Int64Range(-9999999999, 9999999999).Draw(t, "seconds")
+			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 			return (&timestamppb.Timestamp{
 				Seconds: seconds,
 				Nanos:   nanos,
 			}).ProtoReflect()
-		}),
+		}).AsAny(),
 	},
 	{
 		"dur",
 		rapid.Custom(func(t *rapid.T) protoreflect.Message {
-			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds").(int64)
-			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos").(int32)
+			seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds")
+			nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 			return (&durationpb.Duration{
 				Seconds: seconds,
 				Nanos:   nanos,
 			}).ProtoReflect()
-		}),
+		}).AsAny(),
 	},
 	{
 		"e",
-		rapid.Int32().Map(func(x int32) protoreflect.EnumNumber {
+		rapid.Transform(rapid.Int32(), func(x int32) protoreflect.EnumNumber {
 			return protoreflect.EnumNumber(x)
-		}),
+		}).AsAny(),
 	},
 }
 
@@ -125,10 +125,10 @@ type TestKeyCodec struct {
 	Codec    *ormkv.KeyCodec
 }
 
-func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator {
+func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator[[]TestFieldSpec] {
 	return rapid.Custom(func(t *rapid.T) []TestFieldSpec {
 		xs := rapid.SliceOfNDistinct(rapid.IntRange(0, len(TestFieldSpecs)-1), minLen, maxLen, func(i int) int { return i }).
-			Draw(t, "fieldSpecIndexes").([]int)
+			Draw(t, "fieldSpecIndexes")
 
 		var specs []TestFieldSpec
 
@@ -141,16 +141,16 @@ func TestFieldSpecsGen(minLen, maxLen int) *rapid.Generator {
 	})
 }
 
-func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator {
+func TestKeyCodecGen(minLen, maxLen int) *rapid.Generator[TestKeyCodec] {
 	return rapid.Custom(func(t *rapid.T) TestKeyCodec {
-		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs").([]TestFieldSpec)
+		specs := TestFieldSpecsGen(minLen, maxLen).Draw(t, "fieldSpecs")
 
 		var fields []protoreflect.Name
 		for _, spec := range specs {
 			fields = append(fields, spec.FieldName)
 		}
 
-		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix")
 
 		msgType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		cdc, err := ormkv.NewKeyCodec(prefix, msgType, fields)

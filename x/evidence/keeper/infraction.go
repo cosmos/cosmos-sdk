@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandleEquivocationEvidence implements an equivocation evidence handler. Assuming the
@@ -70,6 +71,21 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		return
 	}
 
+	if !validator.GetOperator().Empty() {
+		if _, err := k.slashingKeeper.GetPubkey(ctx, consAddr.Bytes()); err != nil {
+			// Ignore evidence that cannot be handled.
+			//
+			// NOTE: We used to panic with:
+			// `panic(fmt.Sprintf("Validator consensus-address %v not found", consAddr))`,
+			// but this couples the expectations of the app to both Tendermint and
+			// the simulator.  Both are expected to provide the full range of
+			// allowable but none of the disallowed evidence types.  Instead of
+			// getting this coordination right, it is easier to relax the
+			// constraints and ignore evidence that cannot be handled.
+			return
+		}
+	}
+
 	if ok := k.slashingKeeper.HasValidatorSigningInfo(ctx, consAddr); !ok {
 		panic(fmt.Sprintf("expected signing info for validator %s but not found", consAddr))
 	}
@@ -109,6 +125,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 		consAddr,
 		k.slashingKeeper.SlashFractionDoubleSign(ctx),
 		evidence.GetValidatorPower(), distributionHeight,
+		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 
 	// Jail the validator if not already jailed. This will begin unbonding the

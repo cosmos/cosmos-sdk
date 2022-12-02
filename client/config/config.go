@@ -62,6 +62,10 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 			return ctx, fmt.Errorf("couldn't make client config: %v", err)
 		}
 
+		if ctx.ChainID != "" {
+			conf.ChainID = ctx.ChainID // chain-id will be written to the client.toml while initiating the chain.
+		}
+
 		if err := writeConfigToFile(configFilePath, conf); err != nil {
 			return ctx, fmt.Errorf("could not write client config to the file: %v", err)
 		}

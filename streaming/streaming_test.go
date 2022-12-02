@@ -2,8 +2,6 @@ package streaming
 
 import (
 	"fmt"
-	store "github.com/cosmos/cosmos-sdk/store/types"
-	types "github.com/cosmos/cosmos-sdk/store/v2alpha1"
 	"os"
 	"testing"
 	"time"
@@ -13,6 +11,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/assert"
@@ -55,9 +54,9 @@ func (s *PluginTestSuite) SetupTest() {
 	// test abci message types
 	s.beginBlockReq = abci.RequestBeginBlock{
 		Header:              tmproto.Header{Height: 1, Time: time.Now()},
-		ByzantineValidators: []abci.Evidence{},
+		ByzantineValidators: []abci.Misbehavior{},
 		Hash:                []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
-		LastCommitInfo:      abci.LastCommitInfo{Round: 1, Votes: []abci.VoteInfo{}},
+		LastCommitInfo:      abci.CommitInfo{Round: 1, Votes: []abci.VoteInfo{}},
 	}
 	s.beginBlockRes = abci.ResponseBeginBlock{
 		Events: []abci.Event{{Type: "testEventType1"}},
@@ -84,19 +83,13 @@ func (s *PluginTestSuite) SetupTest() {
 	s.commitRes = abci.ResponseCommit{}
 
 	// test store kv pair types
-	s.changeSet = []*types.StoreKVPair{
-		{
+	for range [2000]int{} {
+		s.changeSet = append(s.changeSet, &store.StoreKVPair{
 			StoreKey: "mockStore",
 			Delete:   false,
 			Key:      []byte{1, 2, 3},
 			Value:    []byte{3, 2, 1},
-		},
-		{
-			StoreKey: "mockStore",
-			Delete:   false,
-			Key:      []byte{3, 4, 5},
-			Value:    []byte{5, 4, 3},
-		},
+		})
 	}
 }
 
@@ -107,10 +100,11 @@ func TestPluginTestSuite(t *testing.T) {
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 		pluginVersion := "abci_v1"
-		pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
+		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
 		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/file", s.workDir)
 		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/file.py", s.workDir)
 		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/kafka.py", s.workDir)
+		pluginPath := fmt.Sprintf("java -jar /Users/ergelsgaxhaj/workspace/provenance-abci-listener-kotlin/build/libs/provenance-abci-listener-kotlin-0.1.0-SNAPSHOT.jar")
 		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 			t.Fail()
 		}
@@ -121,19 +115,28 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		abciListener, ok := raw.(baseapp.ABCIListener)
 		require.True(t, ok, "should pass type check")
 
-		err = abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
-		assert.NoError(t, err, "ListenBeginBlock")
+		for i := range [100]int{} {
+			s.updateHeight(int64(i))
 
-		err = abciListener.ListenEndBlock(s.loggerCtx, s.endBlockReq, s.endBlockRes)
-		assert.NoError(t, err, "ListenEndBlock")
+			err = abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
+			assert.NoError(t, err, "ListenBeginBlock")
 
-		err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
-		assert.NoError(t, err, "ListenDeliverTx")
-		err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
-		assert.NoError(t, err, "ListenDeliverTx")
+			err = abciListener.ListenEndBlock(s.loggerCtx, s.endBlockReq, s.endBlockRes)
+			assert.NoError(t, err, "ListenEndBlock")
 
-		// streaming services can choose not to implement store listening
-		err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
-		assert.NoError(t, err, "ListenCommit")
+			for range [50]int{} {
+				err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
+				assert.NoError(t, err, "ListenDeliverTx")
+			}
+
+			err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
+			assert.NoError(t, err, "ListenCommit")
+		}
 	})
+}
+
+func (s *PluginTestSuite) updateHeight(n int64) {
+	s.beginBlockReq.Header.Height = n
+	s.endBlockReq.Height = n
+	s.loggerCtx = s.loggerCtx.WithBlockHeight(n)
 }

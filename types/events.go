@@ -7,8 +7,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
-	proto "github.com/gogo/protobuf/proto"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
+	"github.com/cosmos/gogoproto/jsonpb"
+	proto "github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -87,8 +90,13 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		return Event{}, err
 	}
 
+	// sort the keys to ensure the order is always the same
+	keys := maps.Keys(attrMap)
+	slices.Sort(keys)
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for k, v := range attrMap {
+	for _, k := range keys {
+		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   k,
 			Value: string(v),
@@ -211,12 +219,13 @@ func (e Events) ToABCIEvents() []abci.Event {
 }
 
 // Common event types and attribute keys
-var (
+const (
 	EventTypeTx = "tx"
 
 	AttributeKeyAccountSequence = "acc_seq"
 	AttributeKeySignature       = "signature"
 	AttributeKeyFee             = "fee"
+	AttributeKeyFeePayer        = "fee_payer"
 
 	EventTypeMessage = "message"
 
@@ -235,10 +244,10 @@ func (se StringEvents) String() string {
 	var sb strings.Builder
 
 	for _, e := range se {
-		sb.WriteString(fmt.Sprintf("\t\t- %s\n", e.Type))
+		fmt.Fprintf(&sb, "\t\t- %s\n", e.Type)
 
 		for _, attr := range e.Attributes {
-			sb.WriteString(fmt.Sprintf("\t\t\t- %s\n", attr.String()))
+			fmt.Fprintf(&sb, "\t\t\t- %s\n", attr)
 		}
 	}
 

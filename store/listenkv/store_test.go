@@ -120,7 +120,6 @@ func TestListenKVStoreSet(t *testing.T) {
 	store := newEmptyListenKVStore(listener)
 	require.Panics(t, func() { store.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")
 	require.Panics(t, func() { store.Set(nil, []byte("value")) }, "setting a nil key should panic")
-
 }
 
 func TestListenKVStoreDelete(t *testing.T) {

@@ -10,7 +10,7 @@ Accepted
 
 ## Abstract
 
-This ADR defines a modification to the the governance module that would allow a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
+This ADR defines a modification to the governance module that would allow a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
 ## Context
 
@@ -72,19 +72,19 @@ tally() {
 
 The CLI command for creating a multi-option vote would be as such:
 
-```sh
+```shell
 simd tx gov vote 1 "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05" --from mykey
 ```
 
 To create a single-option vote a user can do either
 
-```sh
+```shell
 simd tx gov vote 1 "yes=1" --from mykey
 ```
 
 or
 
-```sh
+```shell
 simd tx gov vote 1 yes --from mykey
 ```
 

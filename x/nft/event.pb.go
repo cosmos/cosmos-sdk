@@ -5,7 +5,7 @@ package nft
 
 import (
 	fmt "fmt"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -24,9 +24,13 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // EventSend is emitted on Msg/Send
 type EventSend struct {
-	ClassId  string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	Id       string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Sender   string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+	// class_id associated with the nft
+	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
+	// id is a unique identifier of the nft
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	// sender is the address of the owner of nft
+	Sender string `protobuf:"bytes,3,opt,name=sender,proto3" json:"sender,omitempty"`
+	// receiver is the receiver address of nft
 	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 }
 
@@ -93,9 +97,12 @@ func (m *EventSend) GetReceiver() string {
 
 // EventMint is emitted on Mint
 type EventMint struct {
+	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Owner   string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	// id is a unique identifier of the nft
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	// owner is the owner address of the nft
+	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
 func (m *EventMint) Reset()         { *m = EventMint{} }
@@ -154,9 +161,12 @@ func (m *EventMint) GetOwner() string {
 
 // EventBurn is emitted on Burn
 type EventBurn struct {
+	// class_id associated with the nft
 	ClassId string `protobuf:"bytes,1,opt,name=class_id,json=classId,proto3" json:"class_id,omitempty"`
-	Id      string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
-	Owner   string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
+	// id is a unique identifier of the nft
+	Id string `protobuf:"bytes,2,opt,name=id,proto3" json:"id,omitempty"`
+	// owner is the owner address of the nft
+	Owner string `protobuf:"bytes,3,opt,name=owner,proto3" json:"owner,omitempty"`
 }
 
 func (m *EventBurn) Reset()         { *m = EventBurn{} }

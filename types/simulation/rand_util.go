@@ -7,6 +7,7 @@ import (
 	"time"
 	"unsafe"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,21 +40,21 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// RandPositiveInt get a rand positive sdk.Int
-func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdk.Int, error) {
-	if !max.GTE(sdk.OneInt()) {
-		return sdk.Int{}, errors.New("max too small")
+// RandPositiveInt get a rand positive math.Int
+func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
+	if !max.GTE(math.OneInt()) {
+		return math.Int{}, errors.New("max too small")
 	}
 
-	max = max.Sub(sdk.OneInt())
+	max = max.Sub(math.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdk.OneInt()), nil
+	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(math.OneInt()), nil
 }
 
 // RandomAmount generates a random amount
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
-	var randInt = big.NewInt(0)
+func RandomAmount(r *rand.Rand, max math.Int) math.Int {
+	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:
@@ -69,8 +70,8 @@ func RandomAmount(r *rand.Rand, max sdk.Int) sdk.Int {
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
-	var randInt = big.NewInt(0)
+func RandomDecAmount(r *rand.Rand, max sdk.Dec) math.LegacyDec {
+	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:

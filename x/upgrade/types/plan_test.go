@@ -33,13 +33,13 @@ func TestPlanString(t *testing.T) {
 				Info:   "https://foo.bar/baz",
 				Height: 7890,
 			},
-			expect: "Upgrade Plan\n  Name: by height\n  height: 7890\n  Info: https://foo.bar/baz.",
+			expect: "name:\"by height\" time:<seconds:-62135596800 > height:7890 info:\"https://foo.bar/baz\" ",
 		},
 		"neither": {
 			p: types.Plan{
 				Name: "almost-empty",
 			},
-			expect: "Upgrade Plan\n  Name: almost-empty\n  height: 0\n  Info: .",
+			expect: "name:\"almost-empty\" time:<seconds:-62135596800 > ",
 		},
 	}
 
@@ -105,7 +105,6 @@ func TestPlanValid(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestShouldExecute(t *testing.T) {
@@ -115,7 +114,6 @@ func TestShouldExecute(t *testing.T) {
 		ctxHeight int64
 		expected  bool
 	}{
-
 		"past height": {
 			p: types.Plan{
 				Name:   "do-good",

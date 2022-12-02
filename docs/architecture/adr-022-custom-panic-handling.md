@@ -215,4 +215,4 @@ This method would prepend handlers to an existing chain.
 ## References
 
 * [PR-6053 with proposed solution](https://github.com/cosmos/cosmos-sdk/pull/6053)
-* [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/docs/architecture/adr-010-modular-antehandler.md)
+* [Similar solution. ADR-010 Modular AnteHandler](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-010-modular-antehandler.md)

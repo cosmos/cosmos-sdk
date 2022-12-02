@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -54,7 +55,10 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
 			cacheCtx, _ := ctx.CacheContext()
 			if _, err := handler(cacheCtx, msg); err != nil {
-				return v1.Proposal{}, sdkerrors.Wrap(types.ErrNoProposalHandlerExists, err.Error())
+				if errors.Is(types.ErrNoProposalHandlerExists, err) {
+					return v1.Proposal{}, err
+				}
+				return v1.Proposal{}, sdkerrors.Wrap(types.ErrInvalidProposalContent, err.Error())
 			}
 		}
 
@@ -66,7 +70,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	}
 
 	submitTime := ctx.BlockHeader().Time
-	depositPeriod := keeper.GetDepositParams(ctx).MaxDepositPeriod
+	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
 	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
 	if err != nil {
@@ -78,7 +82,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	keeper.SetProposalID(ctx, proposalID+1)
 
 	// called right after a proposal is submitted
-	keeper.AfterProposalSubmission(ctx, proposalID)
+	keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -118,6 +122,13 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	}
 
 	store := ctx.KVStore(keeper.storeKey)
+
+	if proposal.Status == v1.StatusVotingPeriod {
+		store.Set(types.VotingPeriodProposalKey(proposal.Id), []byte{1})
+	} else {
+		store.Delete(types.VotingPeriodProposalKey(proposal.Id))
+	}
+
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
@@ -237,7 +248,7 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {
 	startTime := ctx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
-	votingPeriod := keeper.GetVotingParams(ctx).VotingPeriod
+	votingPeriod := keeper.GetParams(ctx).VotingPeriod
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod

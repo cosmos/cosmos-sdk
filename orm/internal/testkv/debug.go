@@ -14,7 +14,6 @@ import (
 
 // Debugger is an interface that handles debug info from the debug store wrapper.
 type Debugger interface {
-
 	// Log logs a single log message.
 	Log(string)
 

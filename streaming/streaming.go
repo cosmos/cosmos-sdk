@@ -2,13 +2,14 @@ package streaming
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci/v1"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
+
+	"github.com/cosmos/cosmos-sdk/streaming/plugins/abci/v1"
 )
 
 const pluginEnvKeyPrefix = "COSMOS_SDK"

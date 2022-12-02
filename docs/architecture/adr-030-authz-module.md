@@ -6,6 +6,7 @@
 * 2020-10-12: Updated Draft
 * 2020-11-13: Accepted
 * 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
+* 2022-04-20: Updated the `SendAuthorization` proto docs to clarify the `SpendLimit` is a required field. (Generic authorization can be used with bank msg type url to create limit less bank authorization)
 
 ## Status
 
@@ -24,7 +25,7 @@ The concrete use cases which motivated this module include:
 delegated stake
 * "sub-keys" functionality, as originally proposed in [\#4480](https://github.com/cosmos/cosmos-sdk/issues/4480) which
 is a term used to describe the functionality provided by this module together with
-the `fee_grant` module from [ADR 029](./adr-029-fee-grant-module.md) and the [group module](https://github.com/regen-network/cosmos-modules/tree/master/incubator/group).
+the `fee_grant` module from [ADR 029](./adr-029-fee-grant-module.md) and the [group module](https://github.com/cosmos/cosmos-sdk/tree/main/x/group).
 
 The "sub-keys" functionality roughly refers to the ability for one account to grant some subset of its capabilities to
 other accounts with possibly less robust, but easier to use security measures. For instance, a master account representing
@@ -32,8 +33,7 @@ an organization could grant the ability to spend small amounts of the organizati
 Or an individual (or group) with a multisig wallet could grant the ability to vote on proposals to any one of the member
 keys.
 
-The current
-implementation is based on work done by the [Gaian's team at Hackatom Berlin 2019](https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation).
+The current implementation is based on work done by the [Gaian's team at Hackatom Berlin 2019](https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation).
 
 ## Decision
 
@@ -87,8 +87,8 @@ a `SpendLimit` and updates it down to zero:
 ```go
 type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
-	// by this authorization and will be updated as tokens are spent. If it is
-	// empty, there is no spend limit and any amount of coins can be spent.
+	// by this authorization and will be updated as tokens are spent. This field is required. (Generic authorization 
+	// can be used with bank msg type url to create limit less bank authorization).
 	SpendLimit sdk.Coins
 }
 
@@ -119,16 +119,16 @@ using the `Authorization` interface with no need to change the underlying
 
 ##### Small notes on `AcceptResponse`
 
-- The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
+* The `AcceptResponse.Accept` field will be set to `true` if the authorization is accepted.
 However, if it is rejected, the function `Accept` will raise an error (without setting `AcceptResponse.Accept` to `false`).
 
-- The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
+* The `AcceptResponse.Updated` field will be set to a non-nil value only if there is a real change to the authorization.
 If authorization remains the same (as is, for instance, always the case for a [`GenericAuthorization`](#genericauthorization)),
 the field will be `nil`.
 
 ### `Msg` Service
 
-```proto
+```protobuf
 service Msg {
   // Grant grants the provided authorization to the grantee on the granter's
   // account with the provided expiration time.
@@ -216,7 +216,7 @@ This CLI command will send a `MsgRevoke` transaction.
 
 #### `SendAuthorization`
 
-```proto
+```protobuf
 // SendAuthorization allows the grantee to spend up to spend_limit coins from
 // the granter's account.
 message SendAuthorization {
@@ -226,7 +226,7 @@ message SendAuthorization {
 
 #### `GenericAuthorization`
 
-```proto
+```protobuf
 // GenericAuthorization gives the grantee unrestricted permissions to execute
 // the provided method on behalf of the granter's account.
 message GenericAuthorization {

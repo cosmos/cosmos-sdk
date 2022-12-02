@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	ormv1alpha1 "github.com/cosmos/cosmos-sdk/api/cosmos/orm/v1alpha1"
+	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 
@@ -51,7 +51,6 @@ type moduleDB struct {
 
 // ModuleDBOptions are options for constructing a ModuleDB.
 type ModuleDBOptions struct {
-
 	// TypeResolver is an optional type resolver to be used when unmarshaling
 	// protobuf messages. If it is nil, protoregistry.GlobalTypes will be used.
 	TypeResolver ormtable.TypeResolver

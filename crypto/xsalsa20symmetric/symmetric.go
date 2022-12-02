@@ -10,8 +10,10 @@ import (
 
 // TODO, make this into a struct that implements crypto.Symmetric.
 
-const nonceLen = 24
-const secretLen = 32
+const (
+	nonceLen  = 24
+	secretLen = 32
+)
 
 // secret must be 32 bytes long. Use something like Sha256(Bcrypt(passphrase))
 // The ciphertext is (secretbox.Overhead + 24) bytes longer than the plaintext.

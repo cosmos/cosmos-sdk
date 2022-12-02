@@ -1,13 +1,16 @@
 package v1_test
 
 import (
+	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 var (
@@ -101,18 +104,18 @@ func TestMsgVoteWeighted(t *testing.T) {
 		{0, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNoWithVeto), "", true},
 		{0, addrs[0], v1.NewNonSplitVoteOption(v1.OptionAbstain), "", true},
 		{0, addrs[0], v1.WeightedVoteOptions{ // weight sum > 1
-			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDec(1)),
-			v1.NewWeightedVoteOption(v1.OptionAbstain, sdk.NewDec(1)),
+			v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(1)),
+			v1.NewWeightedVoteOption(v1.OptionAbstain, math.LegacyNewDec(1)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{ // duplicate option
 			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
 			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDecWithPrec(5, 1)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{ // zero weight
-			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDec(0)),
+			v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(0)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{ // negative weight
-			v1.NewWeightedVoteOption(v1.OptionYes, sdk.NewDec(-1)),
+			v1.NewWeightedVoteOption(v1.OptionYes, math.LegacyNewDec(-1)),
 		}, "", false},
 		{0, addrs[0], v1.WeightedVoteOptions{}, "", false},
 		{0, addrs[0], v1.NewNonSplitVoteOption(v1.VoteOption(0x13)), "", false},
@@ -169,13 +172,32 @@ func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 
 // this tests that Amino JSON MsgSubmitProposal.GetSignBytes() still works with Content as Any using the ModuleCdc
 func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
-	proposal := []sdk.Msg{v1.NewMsgVote(addrs[0], 1, v1.OptionYes, "")}
-	msg, err := v1.NewMsgSubmitProposal(proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "")
-	require.NoError(t, err)
-	var bz []byte
-	require.NotPanics(t, func() {
-		bz = msg.GetSignBytes()
-	})
-	require.Equal(t, "{\"type\":\"cosmos-sdk/v1/MsgSubmitProposal\",\"value\":{\"initial_deposit\":[],\"messages\":[{\"type\":\"cosmos-sdk/v1/MsgVote\",\"value\":{\"option\":1,\"proposal_id\":\"1\",\"voter\":\"cosmos1w3jhxap3gempvr\"}}]}}",
-		string(bz))
+	testcases := []struct {
+		name      string
+		proposal  []sdk.Msg
+		expSignBz string
+	}{
+		{
+			"MsgVote",
+			[]sdk.Msg{v1.NewMsgVote(addrs[0], 1, v1.OptionYes, "")},
+			`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/v1/MsgVote","value":{"option":1,"proposal_id":"1","voter":"cosmos1w3jhxap3gempvr"}}]}}`,
+		},
+		{
+			"MsgSend",
+			[]sdk.Msg{banktypes.NewMsgSend(addrs[0], addrs[0], sdk.NewCoins())},
+			fmt.Sprintf(`{"type":"cosmos-sdk/v1/MsgSubmitProposal","value":{"initial_deposit":[],"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}]}}`, addrs[0], addrs[0]),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "")
+			require.NoError(t, err)
+			var bz []byte
+			require.NotPanics(t, func() {
+				bz = msg.GetSignBytes()
+			})
+			require.Equal(t, tc.expSignBz, string(bz))
+		})
+	}
 }

@@ -14,14 +14,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 	tmcfg "github.com/tendermint/tendermint/config"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -31,8 +31,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
-
-// DONTCOVER
 
 // ServerContextKey defines the context key used to retrieve a server.Context from
 // a command's Context.
@@ -58,7 +56,7 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		tmcfg.DefaultConfig(),
-		ZeroLogWrapper{log.Logger},
+		tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)),
 	)
 }
 
@@ -96,7 +94,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 		}
 	})
 
-	return
+	return err
 }
 
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
@@ -144,21 +142,19 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
 		return err
 	}
-
-	var logWriter io.Writer
-	if strings.ToLower(serverCtx.Viper.GetString(flags.FlagLogFormat)) == tmlog.LogFormatPlain {
-		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
-	} else {
-		logWriter = os.Stderr
-	}
-
-	logLvlStr := serverCtx.Viper.GetString(flags.FlagLogLevel)
-	logLvl, err := zerolog.ParseLevel(logLvlStr)
+	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
 	if err != nil {
-		return fmt.Errorf("failed to parse log level (%s): %w", logLvlStr, err)
+		return err
 	}
 
-	serverCtx.Logger = ZeroLogWrapper{zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}
+	// Check if the tendermint flag for trace logging is set
+	// if it is then setup a tracing logger in this app as well
+	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
+		logger = tmlog.NewTracingLogger(logger)
+	}
+
+	serverCtx.Logger = logger.With("module", "main")
 
 	return SetCmdServerContext(cmd, serverCtx)
 }
@@ -211,9 +207,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
-		if err := tmcfg.WriteConfigFile(rootDir, conf); err != nil {
-			return nil, fmt.Errorf("error writing config file: %w", err)
-		}
+		tmcfg.WriteConfigFile(tmCfgFile, conf)
 
 	case err != nil:
 		return nil, err
@@ -282,7 +276,6 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		VersionCmd(),
 		tmcmd.ResetAllCmd,
 		tmcmd.ResetStateCmd,
-		tmcmd.InspectCmd,
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -293,7 +286,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		tendermintCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
-		NewRollbackCmd(defaultNodeHome),
+		NewRollbackCmd(appCreator, defaultNodeHome),
 	)
 }
 
@@ -364,9 +357,7 @@ func WaitForQuitSignals() ErrorCode {
 // GetAppDBBackend gets the backend type to use for the application DBs.
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
-	if len(rv) == 0 {
-		rv = sdk.DBBackend
-	}
+
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
@@ -405,13 +396,13 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	return dbm.NewDB("application", backendType, dataDir)
 }
 
-func openTraceWriter(traceWriterFile string) (w io.Writer, err error) {
+func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
 		return
 	}
 	return os.OpenFile(
 		traceWriterFile,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-		0666,
+		0o666,
 	)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -28,12 +28,12 @@ func (s *handlerTestSuite) TestChainAnteDecorators() {
 
 	ctx, tx := sdk.Context{}, sdk.Tx(nil)
 	mockCtrl := gomock.NewController(s.T())
-	mockAnteDecorator1 := mocks.NewMockAnteDecorator(mockCtrl)
+	mockAnteDecorator1 := mock.NewMockAnteDecorator(mockCtrl)
 	mockAnteDecorator1.EXPECT().AnteHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Any()).Times(1)
 	_, err := sdk.ChainAnteDecorators(mockAnteDecorator1)(ctx, tx, true)
 	s.Require().NoError(err)
 
-	mockAnteDecorator2 := mocks.NewMockAnteDecorator(mockCtrl)
+	mockAnteDecorator2 := mock.NewMockAnteDecorator(mockCtrl)
 	// NOTE: we can't check that mockAnteDecorator2 is passed as the last argument because
 	// ChainAnteDecorators wraps the decorators into closures, so each decorator is
 	// receiving a closure.

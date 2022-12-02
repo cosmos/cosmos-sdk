@@ -13,7 +13,6 @@ import (
 
 // Codec defines an interface for decoding and encoding values in ORM index keys.
 type Codec interface {
-
 	// Decode decodes a value in a key.
 	Decode(r Reader) (protoreflect.Value, error)
 

@@ -1,7 +1,5 @@
 ---
-order: false
-parent:
-  order: false
+sidebar_position: 1
 ---
 
 # Architecture Decision Records (ADR)
@@ -56,6 +54,10 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 029: Fee Grant Module](./adr-029-fee-grant-module.md)
 * [ADR 030: Message Authorization Module](./adr-030-authz-module.md)
 * [ADR 031: Protobuf Msg Services](./adr-031-msg-service.md)
+* [ADR 055: ORM](./adr-055-orm.md)
+* [ADR 058: Auto-Generated CLI](./adr-058-auto-generated-cli.md)
+* [ADR 060: ABCI 1.0 (Phase I)](adr-060-abci-1.0.md)
+* [ADR 061: Liquid Staking](./adr-061-liquid-staking.md)
 
 ### Proposed
 
@@ -78,8 +80,11 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 039: Epoched Staking](./adr-039-epoched-staking.md)
 * [ADR 040: Storage and SMT State Commitments](./adr-040-storage-and-smt-state-commitments.md)
 * [ADR 046: Module Params](./adr-046-module-params.md)
+* [ADR 057: App Wiring](./adr-057-app-wiring.md)
+* [ADR 059: Test Scopes](./adr-059-test-scopes.md)
 
 ### Draft
 
-- [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
-- [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)
+* [ADR 044: Guidelines for Updating Protobuf Definitions](./adr-044-protobuf-updates-guidelines.md)
+* [ADR 047: Extend Upgrade Plan](./adr-047-extend-upgrade-plan.md)
+* [ADR 053: Go Module Refactoring](./adr-053-go-module-refactoring.md)

@@ -5,27 +5,29 @@ import (
 	"testing"
 	"time"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// nolint:deadcode,unused,varcheck
+// nolint:deadcode,varcheck
 var (
 	delPk1    = ed25519.GenPrivKey().PubKey()
 	delAddr1  = sdk.AccAddress(delPk1.Address())
-	valAddr1  = sdk.ValAddress(delPk1.Address())
 	consAddr1 = sdk.ConsAddress(delPk1.Address().Bytes())
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	var cdc codec.Codec
+	depinject.Inject(testutil.AppConfig, &cdc)
 	dec := simulation.NewDecodeStore(cdc)
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)

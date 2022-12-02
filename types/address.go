@@ -85,6 +85,11 @@ var (
 	valAddrCache  *simplelru.LRU
 )
 
+// sentinel errors
+var (
+	ErrEmptyHexAddress = errors.New("decoding address from hex string failed: empty address")
+)
+
 func init() {
 	var err error
 	// in total the cache size is 61k entries. Key is 32 bytes and value is around 50-70 bytes.
@@ -112,9 +117,11 @@ type Address interface {
 }
 
 // Ensure that different address types implement the interface
-var _ Address = AccAddress{}
-var _ Address = ValAddress{}
-var _ Address = ConsAddress{}
+var (
+	_ Address = AccAddress{}
+	_ Address = ValAddress{}
+	_ Address = ConsAddress{}
+)
 
 // ----------------------------------------------------------------------------
 // account
@@ -124,8 +131,12 @@ var _ Address = ConsAddress{}
 // When marshaled to a string or JSON, it uses Bech32.
 type AccAddress []byte
 
-// AccAddressFromHex creates an AccAddress from a hex string.
-func AccAddressFromHex(address string) (addr AccAddress, err error) {
+// AccAddressFromHexUnsafe creates an AccAddress from a HEX-encoded string.
+//
+// Note, this function is considered unsafe as it may produce an AccAddress from
+// otherwise invalid input, such as a transaction hash. Please use
+// AccAddressFromBech32.
+func AccAddressFromHexUnsafe(address string) (addr AccAddress, err error) {
 	bz, err := addressBytesFromHexString(address)
 	return AccAddress(bz), err
 }
@@ -150,6 +161,16 @@ func VerifyAddressFormat(bz []byte) error {
 	}
 
 	return nil
+}
+
+// MustAccAddressFromBech32 calls AccAddressFromBech32 and panics on error.
+func MustAccAddressFromBech32(address string) AccAddress {
+	addr, err := AccAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+
+	return addr
 }
 
 // AccAddressFromBech32 creates an AccAddress from a Bech32 string.
@@ -184,7 +205,7 @@ func (aa AccAddress) Equals(aa2 Address) bool {
 
 // Returns boolean for whether an AccAddress is empty
 func (aa AccAddress) Empty() bool {
-	return aa == nil || len(aa) == 0
+	return len(aa) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -214,7 +235,6 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
-
 	if err != nil {
 		return err
 	}
@@ -264,7 +284,7 @@ func (aa AccAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(aa)
+	key := conv.UnsafeBytesToStr(aa)
 	accAddrMu.Lock()
 	defer accAddrMu.Unlock()
 	addr, ok := accAddrCache.Get(key)
@@ -275,7 +295,7 @@ func (aa AccAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (aa AccAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -333,7 +353,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 
 // Returns boolean for whether an AccAddress is empty
 func (va ValAddress) Empty() bool {
-	return va == nil || len(va) == 0
+	return len(va) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -414,7 +434,7 @@ func (va ValAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(va)
+	key := conv.UnsafeBytesToStr(va)
 	valAddrMu.Lock()
 	defer valAddrMu.Unlock()
 	addr, ok := valAddrCache.Get(key)
@@ -425,7 +445,7 @@ func (va ValAddress) String() string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (va ValAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -488,7 +508,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 
 // Returns boolean for whether an ConsAddress is empty
 func (ca ConsAddress) Empty() bool {
-	return ca == nil || len(ca) == 0
+	return len(ca) == 0
 }
 
 // Marshal returns the raw address bytes. It is needed for protobuf
@@ -569,7 +589,7 @@ func (ca ConsAddress) String() string {
 		return ""
 	}
 
-	var key = conv.UnsafeBytesToStr(ca)
+	key := conv.UnsafeBytesToStr(ca)
 	consAddrMu.Lock()
 	defer consAddrMu.Unlock()
 	addr, ok := consAddrCache.Get(key)
@@ -604,7 +624,7 @@ func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 }
 
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
+
 func (ca ConsAddress) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -642,7 +662,7 @@ func GetFromBech32(bech32str, prefix string) ([]byte, error) {
 
 func addressBytesFromHexString(address string) ([]byte, error) {
 	if len(address) == 0 {
-		return nil, errors.New("decoding Bech32 address failed: must provide an address")
+		return nil, ErrEmptyHexAddress
 	}
 
 	return hex.DecodeString(address)

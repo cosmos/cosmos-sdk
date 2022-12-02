@@ -51,7 +51,6 @@ func (p PrimaryKeyCodec) DecodeIndexKey(k, _ []byte) (indexFields, primaryKey []
 		primaryKey = indexFields
 	}
 	return indexFields, primaryKey, nil
-
 }
 
 func (p PrimaryKeyCodec) DecodeEntry(k, v []byte) (Entry, error) {

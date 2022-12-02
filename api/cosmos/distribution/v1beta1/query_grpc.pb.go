@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Params queries params of the distribution module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
+	ValidatorDistributionInfo(ctx context.Context, in *QueryValidatorDistributionInfoRequest, opts ...grpc.CallOption) (*QueryValidatorDistributionInfoResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(ctx context.Context, in *QueryValidatorOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.
@@ -54,6 +56,15 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
 	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ValidatorDistributionInfo(ctx context.Context, in *QueryValidatorDistributionInfoRequest, opts ...grpc.CallOption) (*QueryValidatorDistributionInfoResponse, error) {
+	out := new(QueryValidatorDistributionInfoResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Query/ValidatorDistributionInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +149,8 @@ func (c *queryClient) CommunityPool(ctx context.Context, in *QueryCommunityPoolR
 type QueryServer interface {
 	// Params queries params of the distribution module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// ValidatorDistributionInfo queries validator commission and self-delegation rewards for validator
+	ValidatorDistributionInfo(context.Context, *QueryValidatorDistributionInfoRequest) (*QueryValidatorDistributionInfoResponse, error)
 	// ValidatorOutstandingRewards queries rewards of a validator address.
 	ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error)
 	// ValidatorCommission queries accumulated commission for a validator.
@@ -164,6 +177,9 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) ValidatorDistributionInfo(context.Context, *QueryValidatorDistributionInfoRequest) (*QueryValidatorDistributionInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorDistributionInfo not implemented")
 }
 func (UnimplementedQueryServer) ValidatorOutstandingRewards(context.Context, *QueryValidatorOutstandingRewardsRequest) (*QueryValidatorOutstandingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorOutstandingRewards not implemented")
@@ -216,6 +232,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ValidatorDistributionInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidatorDistributionInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidatorDistributionInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Query/ValidatorDistributionInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidatorDistributionInfo(ctx, req.(*QueryValidatorDistributionInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -374,6 +408,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "ValidatorDistributionInfo",
+			Handler:    _Query_ValidatorDistributionInfo_Handler,
 		},
 		{
 			MethodName: "ValidatorOutstandingRewards",

@@ -50,7 +50,6 @@ type Backend interface {
 // If the index store is not defined, the commitment store will be
 // used for all operations.
 type ReadBackendOptions struct {
-
 	// CommitmentStoreReader is a reader for the commitment store.
 	CommitmentStoreReader kv.ReadonlyStore
 
@@ -135,7 +134,6 @@ func (c backend) IndexStore() kv.Store {
 // If the index store is not defined, the commitment store will be
 // used for all operations.
 type BackendOptions struct {
-
 	// CommitmentStore is the commitment store.
 	CommitmentStore kv.Store
 

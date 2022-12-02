@@ -5,10 +5,10 @@ import (
 	"io"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmstrings "github.com/tendermint/tendermint/libs/strings"
 	dbm "github.com/tendermint/tm-db"
 
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
@@ -22,8 +22,8 @@ type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
 
-	SetPruning(PruningOptions)
-	GetPruning() PruningOptions
+	SetPruning(pruningtypes.PruningOptions)
+	GetPruning() pruningtypes.PruningOptions
 }
 
 // Stores of MultiStore must implement CommitStore.
@@ -58,12 +58,17 @@ type StoreRename struct {
 	NewKey string `json:"new_key"`
 }
 
-// IsDeleted returns true if the given key should be added
+// IsAdded returns true if the given key should be added
 func (s *StoreUpgrades) IsAdded(key string) bool {
 	if s == nil {
 		return false
 	}
-	return tmstrings.StringInSlice(key, s.Added)
+	for _, added := range s.Added {
+		if key == added {
+			return true
+		}
+	}
+	return false
 }
 
 // IsDeleted returns true if the given key should be deleted
@@ -91,7 +96,6 @@ func (s *StoreUpgrades) RenamedFrom(key string) string {
 		}
 	}
 	return ""
-
 }
 
 type MultiStore interface {
@@ -123,6 +127,9 @@ type MultiStore interface {
 	// implied that the caller should update the context when necessary between
 	// tracing operations. The modified MultiStore is returned.
 	SetTracingContext(TraceContext) MultiStore
+
+	// LatestVersion returns the latest version in the store
+	LatestVersion() int64
 }
 
 // From MultiStore.CacheMultiStore()....
@@ -177,6 +184,12 @@ type CommitMultiStore interface {
 
 	// SetIAVLCacheSize sets the cache size of the IAVL tree.
 	SetIAVLCacheSize(size int)
+
+	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
+	SetIAVLDisableFastNode(disable bool)
+
+	// RollbackToVersion rollback the db to specific version(height).
+	RollbackToVersion(version int64) error
 
 	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
 	ListeningEnabled(key StoreKey) bool
@@ -333,7 +346,7 @@ type StoreKey interface {
 }
 
 // CapabilityKey represent the Cosmos SDK keys for object-capability
-// generation in the IBC protocol as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#data-structures
+// generation in the IBC protocol as defined in https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#data-structures
 type CapabilityKey StoreKey
 
 // KVStoreKey is used for accessing substores.

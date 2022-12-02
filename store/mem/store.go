@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -26,7 +27,7 @@ func NewStore() *Store {
 	return NewStoreWithDB(dbm.NewMemDB())
 }
 
-func NewStoreWithDB(db *dbm.MemDB) *Store { // nolint: interfacer
+func NewStoreWithDB(db *dbm.MemDB) *Store { //nolint: interfacer
 	return &Store{Store: dbadapter.Store{DB: db}}
 }
 
@@ -48,10 +49,12 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 // Commit performs a no-op as entries are persistent between commitments.
 func (s *Store) Commit() (id types.CommitID) { return }
 
-func (s *Store) SetPruning(pruning types.PruningOptions) {}
+func (s *Store) SetPruning(pruning pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.
 // They must be set on the root commit multi-store.
-func (s *Store) GetPruning() types.PruningOptions { return types.PruningOptions{} }
+func (s *Store) GetPruning() pruningtypes.PruningOptions {
+	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
+}
 
 func (s Store) LastCommitID() (id types.CommitID) { return }

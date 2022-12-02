@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -24,6 +23,7 @@ var _ sdk.Msg = &MsgCreatePermanentLockedAccount{}
 var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
@@ -68,7 +68,7 @@ func (msg MsgCreateVestingAccount) ValidateBasic() error {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreateVestingAccount.
 func (msg MsgCreateVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreateVestingAccount.
@@ -78,6 +78,7 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{
@@ -116,7 +117,7 @@ func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreatePermanentLockedAccount.
 func (msg MsgCreatePermanentLockedAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners returns the expected signers for a MsgCreatePermanentLockedAccount.
@@ -126,6 +127,7 @@ func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{
@@ -154,7 +156,7 @@ func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {
 // GetSignBytes returns the bytes all expected signers must sign over for a
 // MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(&msg))
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // ValidateBasic Implements Msg.

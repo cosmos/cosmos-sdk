@@ -13,13 +13,16 @@ import (
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
+	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	_ "github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -71,8 +74,11 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 
 func TestArmorUnarmorPubKey(t *testing.T) {
 	// Select the encryption and storage for your cryptostore
-	encCfg := simapp.MakeTestEncodingConfig()
-	cstore := keyring.NewInMemory(encCfg.Codec)
+	var cdc codec.Codec
+	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
+	require.NoError(t, err)
+
+	cstore := keyring.NewInMemory(cdc)
 
 	// Add keys and see they return in alphabetical order
 	k, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)

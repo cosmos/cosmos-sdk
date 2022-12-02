@@ -6,11 +6,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	tx2 "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
 	typestx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -58,16 +59,22 @@ func buildTestTx(t *testing.T, builder client.TxBuilder) {
 
 type TestSuite struct {
 	suite.Suite
-	encCfg   params.EncodingConfig
+	codec    codec.Codec
+	amino    *codec.LegacyAmino
 	protoCfg client.TxConfig
 	aminoCfg client.TxConfig
 }
 
 func (s *TestSuite) SetupSuite() {
-	encCfg := simapp.MakeTestEncodingConfig()
-	s.encCfg = encCfg
-	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(encCfg.InterfaceRegistry), tx.DefaultSignModes)
-	s.aminoCfg = legacytx.StdTxConfig{Cdc: encCfg.Amino}
+	var (
+		reg   codectypes.InterfaceRegistry
+		amino *codec.LegacyAmino
+	)
+	err := depinject.Inject(clienttestutil.TestConfig, &reg, &amino)
+	require.NoError(s.T(), err)
+
+	s.protoCfg = tx.NewTxConfig(codec.NewProtoCodec(reg), tx.DefaultSignModes)
+	s.aminoCfg = legacytx.StdTxConfig{Cdc: amino}
 }
 
 func (s *TestSuite) TestCopyTx() {
@@ -114,7 +121,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	// proto tx
 	protoBuilder := s.protoCfg.NewTxBuilder()
 	buildTestTx(s.T(), protoBuilder)
-	stdTx, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, protoBuilder.GetTx())
+	stdTx, err := tx2.ConvertTxToStdTx(s.amino, protoBuilder.GetTx())
 	s.Require().NoError(err)
 	s.Require().Equal(memo, stdTx.Memo)
 	s.Require().Equal(gas, stdTx.Fee.Gas)
@@ -134,7 +141,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 		},
 	})
 	s.Require().NoError(err)
-	stdTx, err = tx2.ConvertTxToStdTx(s.encCfg.Amino, protoBuilder.GetTx())
+	stdTx, err = tx2.ConvertTxToStdTx(s.amino, protoBuilder.GetTx())
 	s.Require().NoError(err)
 	s.Require().Equal(memo, stdTx.Memo)
 	s.Require().Equal(gas, stdTx.Fee.Gas)
@@ -148,7 +155,7 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 	aminoBuilder := s.aminoCfg.NewTxBuilder()
 	buildTestTx(s.T(), aminoBuilder)
 	stdTx = aminoBuilder.GetTx().(legacytx.StdTx)
-	stdTx2, err := tx2.ConvertTxToStdTx(s.encCfg.Amino, stdTx)
+	stdTx2, err := tx2.ConvertTxToStdTx(s.amino, stdTx)
 	s.Require().NoError(err)
 	s.Require().Equal(stdTx, stdTx2)
 }

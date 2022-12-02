@@ -1,7 +1,7 @@
 # Server
 
 The `server` package is responsible for providing the mechanisms necessary to
-start an ABCI Tendermint application and provides the CLI framework (based on [cobra](github.com/spf13/cobra))
+start an ABCI Tendermint application and provides the CLI framework (based on [cobra](https://github.com/spf13/cobra))
 necessary to fully bootstrap an application. The package exposes two core functions: `StartCmd`
 and `ExportCmd` which creates commands to start the application and export state respectively.
 
@@ -81,20 +81,13 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts server.A
 		cache = store.NewCommitKVStoreCacheManager()
 	}
 
-	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-		skipUpgradeHeights[int64(h)] = true
-	}
-
 	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
 	if err != nil {
 		panic(err)
 	}
 
 	return simapp.NewSimApp(
-		logger, db, traceStore, true, skipUpgradeHeights,
-		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
+		logger, db, traceStore, true,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),

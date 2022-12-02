@@ -9,7 +9,6 @@ import (
 // ValidateHooks defines an interface for a table hooks which can intercept
 // insert, update and delete operations and possibly return an error.
 type ValidateHooks interface {
-
 	// ValidateInsert is called before the message is inserted.
 	// If error is not nil the insertion will fail.
 	ValidateInsert(context.Context, proto.Message) error
@@ -30,7 +29,6 @@ type ValidateHooks interface {
 // may be called but the enclosing transaction may still fail. The context
 // is provided in each method to help coordinate this.
 type WriteHooks interface {
-
 	// OnInsert is called after an message is inserted into the store.
 	OnInsert(context.Context, proto.Message)
 

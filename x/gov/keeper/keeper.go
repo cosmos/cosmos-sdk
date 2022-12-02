@@ -6,10 +6,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/middleware"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -18,9 +18,6 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
-	// The reference to the Paramstore to get and set gov specific params
-	paramSpace types.ParamSubspace
-
 	authKeeper types.AccountKeeper
 	bankKeeper types.BankKeeper
 
@@ -40,9 +37,18 @@ type Keeper struct {
 	legacyRouter v1beta1.Router
 
 	// Msg server router
-	router *middleware.MsgServiceRouter
+	router *baseapp.MsgServiceRouter
 
 	config types.Config
+
+	// the address capable of executing a MsgUpdateParams message. Typically, this
+	// should be the x/gov module account.
+	authority string
+}
+
+// GetAuthority returns the x/distribution module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -53,38 +59,44 @@ type Keeper struct {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace types.ParamSubspace,
-	authKeeper types.AccountKeeper, bankKeeper types.BankKeeper, sk types.StakingKeeper,
-	legacyRouter v1beta1.Router, router *middleware.MsgServiceRouter,
-	config types.Config,
-) Keeper {
-
+	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	router *baseapp.MsgServiceRouter, config types.Config, authority string,
+) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	// It is vital to seal the governance proposal router here as to not allow
-	// further handlers to be registered after the keeper is created since this
-	// could create invalid or non-deterministic behavior.
-	legacyRouter.Seal()
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
+	}
 
 	// If MaxMetadataLen not set by app developer, set to default value.
 	if config.MaxMetadataLen == 0 {
 		config.MaxMetadataLen = types.DefaultConfig().MaxMetadataLen
 	}
 
-	return Keeper{
-		storeKey:     key,
-		paramSpace:   paramSpace,
-		authKeeper:   authKeeper,
-		bankKeeper:   bankKeeper,
-		sk:           sk,
-		cdc:          cdc,
-		legacyRouter: legacyRouter,
-		router:       router,
-		config:       config,
+	return &Keeper{
+		storeKey:   key,
+		authKeeper: authKeeper,
+		bankKeeper: bankKeeper,
+		sk:         sk,
+		cdc:        cdc,
+		router:     router,
+		config:     config,
+		authority:  authority,
 	}
+}
+
+// Hooks gets the hooks for governance *Keeper {
+func (keeper *Keeper) Hooks() types.GovHooks {
+	if keeper.hooks == nil {
+		// return a no-op implementation if no hooks are set
+		return types.MultiGovHooks{}
+	}
+
+	return keeper.hooks
 }
 
 // SetHooks sets the hooks for governance
@@ -98,13 +110,21 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	return keeper
 }
 
+func (keeper *Keeper) SetLegacyRouter(router v1beta1.Router) {
+	// It is vital to seal the governance proposal router here as to not allow
+	// further handlers to be registered after the keeper is created since this
+	// could create invalid or non-deterministic behavior.
+	router.Seal()
+	keeper.legacyRouter = router
+}
+
 // Logger returns a module-specific logger.
 func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // Router returns the gov keeper's router
-func (keeper Keeper) Router() *middleware.MsgServiceRouter {
+func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
 	return keeper.router
 }
 
@@ -200,8 +220,8 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 
 // assertMetadataLength returns an error if given metadata length
 // is greater than a pre-defined maxMetadataLen.
-func (k Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
+func (keeper Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil

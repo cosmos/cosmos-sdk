@@ -6,15 +6,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/server"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,15 +27,12 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 }
 
 func defaultLogger() log.Logger {
-	writer := zerolog.ConsoleWriter{Out: os.Stderr}
-	return server.ZeroLogWrapper{
-		Logger: zerolog.New(writer).Level(zerolog.InfoLevel).With().Timestamp().Logger(),
-	}
+	return tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(storetypes.PruneNothing)
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -51,8 +48,8 @@ func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
 }
 
 func checkStore(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
-	rs := rootmulti.NewStore(db)
-	rs.SetPruning(storetypes.PruneNothing)
+	rs := rootmulti.NewStore(db, log.NewNopLogger())
+	rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	key := sdk.NewKVStoreKey(storeKey)
 	rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 	err := rs.LoadLatestVersion()
@@ -81,7 +78,7 @@ func TestSetLoader(t *testing.T) {
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
 
-	err = os.WriteFile(upgradeInfoFilePath, data, 0644)
+	err = os.WriteFile(upgradeInfoFilePath, data, 0o644)
 	require.NoError(t, err)
 
 	// make sure it exists before running everything
@@ -122,9 +119,9 @@ func TestSetLoader(t *testing.T) {
 			initStore(t, db, tc.origStoreKey, k, v)
 
 			// load the app with the existing db
-			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(storetypes.PruneNothing)}
+			opts := []func(*baseapp.BaseApp){baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))}
 
-			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
+			origapp := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			origapp.MountStores(sdk.NewKVStoreKey(tc.origStoreKey))
 			err := origapp.LoadLatestVersion()
 			require.Nil(t, err)
@@ -140,7 +137,7 @@ func TestSetLoader(t *testing.T) {
 			}
 
 			// load the new app with the original app db
-			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, opts...)
+			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
 			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
 			err = app.LoadLatestVersion()
 			require.Nil(t, err)

@@ -112,7 +112,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 
 	// iterate over all of them
 	itr := st.Iterator(nil, nil)
-	var i = 0
+	i := 0
 	for ; itr.Valid(); itr.Next() {
 		k, v := itr.Key(), itr.Value()
 		require.Equal(t, keyFmt(i), k)
@@ -150,6 +150,59 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 4, i)
+}
+
+func TestCacheKVReverseIteratorBounds(t *testing.T) {
+	st := newCacheKVStore()
+
+	// set some items
+	nItems := 5
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	// iterate over all of them
+	itr := st.ReverseIterator(nil, nil)
+	i := 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(nItems-1-i), k)
+		require.Equal(t, valFmt(nItems-1-i), v)
+		i++
+	}
+	require.Equal(t, nItems, i)
+
+	// iterate over none
+	itr = st.ReverseIterator(bz("money"), nil)
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+	}
+	require.Equal(t, 0, i)
+
+	// iterate over lower
+	end := 3
+	itr = st.ReverseIterator(keyFmt(0), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 3, i)
+
+	// iterate over upper
+	end = 4
+	itr = st.ReverseIterator(keyFmt(2), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 2, i)
 }
 
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
@@ -291,6 +344,21 @@ func TestCacheKVMergeIteratorChunks(t *testing.T) {
 	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 35}, {38, 40}, {45, 80}})
 }
 
+func TestCacheKVMergeIteratorDomain(t *testing.T) {
+	st := newCacheKVStore()
+
+	start, end := st.Iterator(nil, nil).Domain()
+	require.Equal(t, start, end)
+
+	start, end = st.Iterator(keyFmt(40), keyFmt(60)).Domain()
+	require.Equal(t, keyFmt(40), start)
+	require.Equal(t, keyFmt(60), end)
+
+	start, end = st.ReverseIterator(keyFmt(0), keyFmt(80)).Domain()
+	require.Equal(t, keyFmt(0), start)
+	require.Equal(t, keyFmt(80), end)
+}
+
 func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()
@@ -303,6 +371,50 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	for i := 0; i < 2000; i++ {
 		doRandomOp(t, st, truth, max)
 		assertIterateDomainCompare(t, st, truth)
+	}
+}
+
+func TestNilEndIterator(t *testing.T) {
+	const SIZE = 3000
+
+	tests := []struct {
+		name       string
+		write      bool
+		startIndex int
+		end        []byte
+	}{
+		{name: "write=false, end=nil", write: false, end: nil, startIndex: 1000},
+		{name: "write=false, end=nil; full key scan", write: false, end: nil, startIndex: 2000},
+		{name: "write=true, end=nil", write: true, end: nil, startIndex: 1000},
+		{name: "write=false, end=non-nil", write: false, end: keyFmt(3000), startIndex: 1000},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			st := newCacheKVStore()
+
+			for i := 0; i < SIZE; i++ {
+				kstr := keyFmt(i)
+				st.Set(kstr, valFmt(i))
+			}
+
+			if tt.write {
+				st.Write()
+			}
+
+			itr := st.Iterator(keyFmt(tt.startIndex), tt.end)
+			i := tt.startIndex
+			j := 0
+			for itr.Valid() {
+				require.Equal(t, keyFmt(i), itr.Key())
+				require.Equal(t, valFmt(i), itr.Value())
+				itr.Next()
+				i++
+				j++
+			}
+
+			require.Equal(t, SIZE-tt.startIndex, j)
+		})
 	}
 }
 
@@ -380,7 +492,7 @@ func doRandomOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, maxKey int) {
 // iterate over whole domain
 func assertIterateDomain(t *testing.T, st types.KVStore, expectedN int) {
 	itr := st.Iterator(nil, nil)
-	var i = 0
+	i := 0
 	for ; itr.Valid(); itr.Next() {
 		k, v := itr.Key(), itr.Value()
 		require.Equal(t, keyFmt(i), k)

@@ -4,10 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+	grpc "google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// iterCount defines the number of iterations to run on each query to test
+// determinism.
+var iterCount = 1000
 
 type QueryImpl struct{}
 
@@ -50,4 +57,34 @@ var _ types.UnpackInterfacesMessage = &TestAnyResponse{}
 
 func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return m.HasAnimal.UnpackInterfaces(unpacker)
+}
+
+// DeterministicIterations is a function to handle deterministic query requests. It tests 2 things:
+// 1. That the response is always the same when calling the
+// grpc query `iterCount` times (defaults to 1000).
+// 2. That the gas consumption of the query is the same. When
+// `gasOverwrite` is set to true, we also check that this consumed
+// gas value is equal to the hardcoded `gasConsumed`.
+func DeterministicIterations[request proto.Message, response proto.Message](
+	ctx sdk.Context,
+	require *require.Assertions,
+	req request,
+	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
+	gasConsumed uint64,
+	gasOverwrite bool,
+) {
+	before := ctx.GasMeter().GasConsumed()
+	prevRes, err := grpcFn(ctx, req)
+	require.NoError(err)
+	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
+		gasConsumed = ctx.GasMeter().GasConsumed() - before
+	}
+
+	for i := 0; i < iterCount; i++ {
+		before := ctx.GasMeter().GasConsumed()
+		res, err := grpcFn(ctx, req)
+		require.Equal(ctx.GasMeter().GasConsumed()-before, gasConsumed)
+		require.NoError(err)
+		require.Equal(res, prevRes)
+	}
 }

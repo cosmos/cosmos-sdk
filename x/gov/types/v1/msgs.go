@@ -3,21 +3,23 @@ package v1
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/gov/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
-	_, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}
-	_, _          codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}
+	_, _             codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
+//
 //nolint:interfacer
 func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
@@ -83,7 +85,7 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (m MsgSubmitProposal) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&m)
+	bz := codec.ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -99,6 +101,7 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // NewMsgDeposit creates a new MsgDeposit instance
+//
 //nolint:interfacer
 func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins) *MsgDeposit {
 	return &MsgDeposit{proposalID, depositor.String(), amount}
@@ -128,7 +131,7 @@ func (msg MsgDeposit) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgDeposit) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -139,6 +142,7 @@ func (msg MsgDeposit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVote creates a message to cast a vote on an active proposal
+//
 //nolint:interfacer
 func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption, metadata string) *MsgVote {
 	return &MsgVote{proposalID, voter.String(), option, metadata}
@@ -164,7 +168,7 @@ func (msg MsgVote) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgVote) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -175,6 +179,7 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgVoteWeighted creates a message to cast a vote on an active proposal
+//
 //nolint:interfacer
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions, metadata string) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options, metadata}
@@ -195,7 +200,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, WeightedVoteOptions(msg.Options).String())
 	}
 
-	totalWeight := sdk.NewDec(0)
+	totalWeight := math.LegacyNewDec(0)
 	usedOptions := make(map[VoteOption]bool)
 	for _, option := range msg.Options {
 		if !option.IsValid() {
@@ -212,11 +217,11 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 		usedOptions[option.Option] = true
 	}
 
-	if totalWeight.GT(sdk.NewDec(1)) {
+	if totalWeight.GT(math.LegacyNewDec(1)) {
 		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight overflow 1.00")
 	}
 
-	if totalWeight.LT(sdk.NewDec(1)) {
+	if totalWeight.LT(math.LegacyNewDec(1)) {
 		return sdkerrors.Wrap(types.ErrInvalidVote, "Total weight lower than 1.00")
 	}
 
@@ -225,7 +230,7 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 
 // GetSignBytes implements Msg
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
-	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
@@ -257,7 +262,34 @@ func (c MsgExecLegacyContent) ValidateBasic() error {
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (m MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (c MsgExecLegacyContent) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content v1beta1.Content
-	return unpacker.UnpackAny(m.Content, &content)
+	return unpacker.UnpackAny(c.Content, &content)
+}
+
+// Route implements Msg
+func (msg MsgUpdateParams) Route() string { return types.RouterKey }
+
+// Type implements Msg
+func (msg MsgUpdateParams) Type() string { return sdk.MsgTypeURL(&msg) }
+
+// ValidateBasic implements Msg
+func (msg MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+	}
+
+	return msg.Params.ValidateBasic()
+}
+
+// GetSignBytes implements Msg
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// GetSigners implements Msg
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }

@@ -3,16 +3,13 @@ package baseapp
 import (
 	"fmt"
 
-	"google.golang.org/grpc/encoding"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-
-	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -82,7 +79,7 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 		qrt.routes[fqName] = func(ctx sdk.Context, req abci.RequestQuery) (abci.ResponseQuery, error) {
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
-			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
+			res, err := methodHandler(handler, ctx, func(i interface{}) error {
 				return qrt.cdc.Unmarshal(req.Data, i)
 			}, nil)
 			if err != nil {
@@ -117,8 +114,5 @@ func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.In
 	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
-	reflection.RegisterReflectionServiceServer(
-		qrt,
-		reflection.NewReflectionServiceServer(interfaceRegistry),
-	)
+	reflection.RegisterReflectionServiceServer(qrt, reflection.NewReflectionServiceServer(interfaceRegistry))
 }

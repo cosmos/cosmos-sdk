@@ -5,8 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
-	"sigs.k8s.io/yaml"
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,12 +38,6 @@ func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Tim
 	}
 
 	return p, nil
-}
-
-// String implements stringer interface
-func (p Proposal) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }
 
 // GetContent returns the proposal Content
@@ -137,19 +130,7 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 	return ProposalStatus(num), nil
 }
 
-// Marshal needed for protobuf compatibility
-func (status ProposalStatus) Marshal() ([]byte, error) {
-	return []byte{byte(status)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility
-func (status *ProposalStatus) Unmarshal(data []byte) error {
-	*status = ProposalStatus(data[0])
-	return nil
-}
-
 // Format implements the fmt.Formatter interface.
-// nolint: errcheck
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
@@ -191,12 +172,6 @@ func (tp *TextProposal) ProposalType() string { return ProposalTypeText }
 
 // ValidateBasic validates the content's title and description of the proposal
 func (tp *TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
-
-// String implements Stringer interface
-func (tp TextProposal) String() string {
-	out, _ := yaml.Marshal(tp)
-	return string(out)
-}
 
 func ValidProposalStatus(status ProposalStatus) bool {
 	if status == StatusDepositPeriod ||
@@ -246,14 +221,12 @@ func RegisterProposalType(ty string) {
 }
 
 // ContentFromProposalType returns a Content object based on the proposal type.
-func ContentFromProposalType(title, desc, ty string) Content {
-	switch ty {
-	case ProposalTypeText:
-		return NewTextProposal(title, desc)
-
-	default:
-		return nil
+func ContentFromProposalType(title, desc, ty string) (Content, bool) {
+	if strings.EqualFold(ty, ProposalTypeText) {
+		return NewTextProposal(title, desc), true
 	}
+
+	return nil, false
 }
 
 // IsValidProposalType returns a boolean determining if the proposal type is

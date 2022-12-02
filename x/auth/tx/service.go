@@ -3,21 +3,23 @@ package tx
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"regexp"
 	"strings"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
-	"github.com/golang/protobuf/proto" // nolint: staticcheck
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pagination "github.com/cosmos/cosmos-sdk/types/query"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -39,21 +41,33 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var _ txtypes.ServiceServer = txServer{}
+var (
+	_ txtypes.ServiceServer = txServer{}
+
+	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
+	EventRegex = regexp.MustCompile(`^[a-zA-Z_]+\.[a-zA-Z_]+=\S+$`)
+)
 
 const (
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
-// TxsByEvents implements the ServiceServer.TxsByEvents RPC method.
+// GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	page, limit, err := pagination.ParsePagination(req.Pagination)
-	if err != nil {
-		return nil, err
+	page := int(req.Page)
+	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
+	// so we default to 1 if not provided in the request.
+	if page == 0 {
+		page = 1
+	}
+
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = query.DefaultLimit
 	}
 	orderBy := parseOrderBy(req.OrderBy)
 
@@ -62,7 +76,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	for _, event := range req.Events {
-		if !strings.Contains(event, "=") || strings.Count(event, "=") > 1 {
+		if !EventRegex.Match([]byte(event)) {
 			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
 		}
 	}
@@ -87,9 +101,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	return &txtypes.GetTxsEventResponse{
 		Txs:         txsList,
 		TxResponses: result.Txs,
-		Pagination: &pagination.PageResponse{
-			Total: result.TotalCount,
-		},
+		Total:       result.TotalCount,
 	}, nil
 }
 
@@ -118,7 +130,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Unknown, "%v With gas wanted: '%d' and gas used: '%d' ", err, gasInfo.GasWanted, gasInfo.GasUsed)
 	}
 
 	return &txtypes.SimulateResponse{
@@ -180,7 +192,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	blockId, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	blockID, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -191,13 +203,13 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = req.Pagination.Limit
 	} else {
 		offset = 0
-		limit = pagination.DefaultLimit
+		limit = query.DefaultLimit
 	}
 
 	blockTxs := block.Data.Txs
 	blockTxsLn := uint64(len(blockTxs))
 	txs := make([]*txtypes.Tx, 0, limit)
-	if offset >= blockTxsLn {
+	if offset >= blockTxsLn && blockTxsLn != 0 {
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("out of range: cannot paginate %d txs with offset %d and limit %d", blockTxsLn, offset, limit)
 	}
 	decodeTxAt := func(i uint64) error {
@@ -229,17 +241,100 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 
 	return &txtypes.GetBlockWithTxsResponse{
 		Txs:     txs,
-		BlockId: &blockId,
+		BlockId: &blockID,
 		Block:   block,
-		Pagination: &pagination.PageResponse{
+		Pagination: &query.PageResponse{
 			Total: blockTxsLn,
 		},
 	}, nil
-
 }
 
+// BroadcastTx implements the ServiceServer.BroadcastTx RPC method.
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
+}
+
+// TxEncode implements the ServiceServer.TxEncode RPC method.
+func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+	if req.Tx == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+
+	txBuilder := &wrapper{tx: req.Tx}
+
+	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeResponse{
+		TxBytes: encodedBytes,
+	}, nil
+}
+
+// TxEncodeAmino implements the ServiceServer.TxEncodeAmino RPC method.
+func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
+	if req.AminoJson == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
+	}
+
+	var stdTx legacytx.StdTx
+	err := s.clientCtx.LegacyAmino.UnmarshalJSON([]byte(req.AminoJson), &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	encodedBytes, err := s.clientCtx.LegacyAmino.Marshal(stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeAminoResponse{
+		AminoBinary: encodedBytes,
+	}, nil
+}
+
+// TxDecode implements the ServiceServer.TxDecode RPC method.
+func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req.TxBytes == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txWrapper, ok := txb.(*wrapper)
+	if ok {
+		return &txtypes.TxDecodeResponse{
+			Tx: txWrapper.tx,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
+}
+
+// TxDecodeAmino implements the ServiceServer.TxDecodeAmino RPC method.
+func (s txServer) TxDecodeAmino(ctx context.Context, req *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
+	if req.AminoBinary == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	var stdTx legacytx.StdTx
+	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.clientCtx.LegacyAmino.MarshalJSON(stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxDecodeAminoResponse{
+		AminoJson: string(res),
+	}, nil
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

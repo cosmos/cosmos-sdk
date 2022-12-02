@@ -215,7 +215,7 @@ func NewExampleTableTable(db ormtable.Schema) (ExampleTableTable, error) {
 
 type ExampleAutoIncrementTableTable interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
-	InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
+	InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
 	Update(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Save(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	Delete(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
@@ -298,8 +298,8 @@ func (this exampleAutoIncrementTableTable) Delete(ctx context.Context, exampleAu
 	return this.table.Delete(ctx, exampleAutoIncrementTable)
 }
 
-func (this exampleAutoIncrementTableTable) InsertReturningID(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
-	return this.table.InsertReturningID(ctx, exampleAutoIncrementTable)
+func (this exampleAutoIncrementTableTable) InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error) {
+	return this.table.InsertReturningPKey(ctx, exampleAutoIncrementTable)
 }
 
 func (this exampleAutoIncrementTableTable) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -400,7 +400,7 @@ func NewExampleSingletonTable(db ormtable.Schema) (ExampleSingletonTable, error)
 
 type ExampleTimestampTable interface {
 	Insert(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
-	InsertReturningID(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error)
+	InsertReturningId(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error)
 	Update(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
 	Save(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
 	Delete(ctx context.Context, exampleTimestamp *ExampleTimestamp) error
@@ -480,8 +480,8 @@ func (this exampleTimestampTable) Delete(ctx context.Context, exampleTimestamp *
 	return this.table.Delete(ctx, exampleTimestamp)
 }
 
-func (this exampleTimestampTable) InsertReturningID(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error) {
-	return this.table.InsertReturningID(ctx, exampleTimestamp)
+func (this exampleTimestampTable) InsertReturningId(ctx context.Context, exampleTimestamp *ExampleTimestamp) (uint64, error) {
+	return this.table.InsertReturningPKey(ctx, exampleTimestamp)
 }
 
 func (this exampleTimestampTable) Has(ctx context.Context, id uint64) (found bool, err error) {
@@ -680,12 +680,132 @@ func NewSimpleExampleTable(db ormtable.Schema) (SimpleExampleTable, error) {
 	return simpleExampleTable{table}, nil
 }
 
+type ExampleAutoIncFieldNameTable interface {
+	Insert(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
+	InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error)
+	Update(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
+	Save(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
+	Delete(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
+	Has(ctx context.Context, foo uint64) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+	Get(ctx context.Context, foo uint64) (*ExampleAutoIncFieldName, error)
+	List(ctx context.Context, prefixKey ExampleAutoIncFieldNameIndexKey, opts ...ormlist.Option) (ExampleAutoIncFieldNameIterator, error)
+	ListRange(ctx context.Context, from, to ExampleAutoIncFieldNameIndexKey, opts ...ormlist.Option) (ExampleAutoIncFieldNameIterator, error)
+	DeleteBy(ctx context.Context, prefixKey ExampleAutoIncFieldNameIndexKey) error
+	DeleteRange(ctx context.Context, from, to ExampleAutoIncFieldNameIndexKey) error
+
+	doNotImplement()
+}
+
+type ExampleAutoIncFieldNameIterator struct {
+	ormtable.Iterator
+}
+
+func (i ExampleAutoIncFieldNameIterator) Value() (*ExampleAutoIncFieldName, error) {
+	var exampleAutoIncFieldName ExampleAutoIncFieldName
+	err := i.UnmarshalMessage(&exampleAutoIncFieldName)
+	return &exampleAutoIncFieldName, err
+}
+
+type ExampleAutoIncFieldNameIndexKey interface {
+	id() uint32
+	values() []interface{}
+	exampleAutoIncFieldNameIndexKey()
+}
+
+// primary key starting index..
+type ExampleAutoIncFieldNamePrimaryKey = ExampleAutoIncFieldNameFooIndexKey
+
+type ExampleAutoIncFieldNameFooIndexKey struct {
+	vs []interface{}
+}
+
+func (x ExampleAutoIncFieldNameFooIndexKey) id() uint32                       { return 0 }
+func (x ExampleAutoIncFieldNameFooIndexKey) values() []interface{}            { return x.vs }
+func (x ExampleAutoIncFieldNameFooIndexKey) exampleAutoIncFieldNameIndexKey() {}
+
+func (this ExampleAutoIncFieldNameFooIndexKey) WithFoo(foo uint64) ExampleAutoIncFieldNameFooIndexKey {
+	this.vs = []interface{}{foo}
+	return this
+}
+
+type exampleAutoIncFieldNameTable struct {
+	table ormtable.AutoIncrementTable
+}
+
+func (this exampleAutoIncFieldNameTable) Insert(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error {
+	return this.table.Insert(ctx, exampleAutoIncFieldName)
+}
+
+func (this exampleAutoIncFieldNameTable) Update(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error {
+	return this.table.Update(ctx, exampleAutoIncFieldName)
+}
+
+func (this exampleAutoIncFieldNameTable) Save(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error {
+	return this.table.Save(ctx, exampleAutoIncFieldName)
+}
+
+func (this exampleAutoIncFieldNameTable) Delete(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error {
+	return this.table.Delete(ctx, exampleAutoIncFieldName)
+}
+
+func (this exampleAutoIncFieldNameTable) InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error) {
+	return this.table.InsertReturningPKey(ctx, exampleAutoIncFieldName)
+}
+
+func (this exampleAutoIncFieldNameTable) Has(ctx context.Context, foo uint64) (found bool, err error) {
+	return this.table.PrimaryKey().Has(ctx, foo)
+}
+
+func (this exampleAutoIncFieldNameTable) Get(ctx context.Context, foo uint64) (*ExampleAutoIncFieldName, error) {
+	var exampleAutoIncFieldName ExampleAutoIncFieldName
+	found, err := this.table.PrimaryKey().Get(ctx, &exampleAutoIncFieldName, foo)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, ormerrors.NotFound
+	}
+	return &exampleAutoIncFieldName, nil
+}
+
+func (this exampleAutoIncFieldNameTable) List(ctx context.Context, prefixKey ExampleAutoIncFieldNameIndexKey, opts ...ormlist.Option) (ExampleAutoIncFieldNameIterator, error) {
+	it, err := this.table.GetIndexByID(prefixKey.id()).List(ctx, prefixKey.values(), opts...)
+	return ExampleAutoIncFieldNameIterator{it}, err
+}
+
+func (this exampleAutoIncFieldNameTable) ListRange(ctx context.Context, from, to ExampleAutoIncFieldNameIndexKey, opts ...ormlist.Option) (ExampleAutoIncFieldNameIterator, error) {
+	it, err := this.table.GetIndexByID(from.id()).ListRange(ctx, from.values(), to.values(), opts...)
+	return ExampleAutoIncFieldNameIterator{it}, err
+}
+
+func (this exampleAutoIncFieldNameTable) DeleteBy(ctx context.Context, prefixKey ExampleAutoIncFieldNameIndexKey) error {
+	return this.table.GetIndexByID(prefixKey.id()).DeleteBy(ctx, prefixKey.values()...)
+}
+
+func (this exampleAutoIncFieldNameTable) DeleteRange(ctx context.Context, from, to ExampleAutoIncFieldNameIndexKey) error {
+	return this.table.GetIndexByID(from.id()).DeleteRange(ctx, from.values(), to.values())
+}
+
+func (this exampleAutoIncFieldNameTable) doNotImplement() {}
+
+var _ ExampleAutoIncFieldNameTable = exampleAutoIncFieldNameTable{}
+
+func NewExampleAutoIncFieldNameTable(db ormtable.Schema) (ExampleAutoIncFieldNameTable, error) {
+	table := db.GetTable(&ExampleAutoIncFieldName{})
+	if table == nil {
+		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncFieldName{}).ProtoReflect().Descriptor().FullName()))
+	}
+	return exampleAutoIncFieldNameTable{table.(ormtable.AutoIncrementTable)}, nil
+}
+
 type TestSchemaStore interface {
 	ExampleTableTable() ExampleTableTable
 	ExampleAutoIncrementTableTable() ExampleAutoIncrementTableTable
 	ExampleSingletonTable() ExampleSingletonTable
 	ExampleTimestampTable() ExampleTimestampTable
 	SimpleExampleTable() SimpleExampleTable
+	ExampleAutoIncFieldNameTable() ExampleAutoIncFieldNameTable
 
 	doNotImplement()
 }
@@ -696,6 +816,7 @@ type testSchemaStore struct {
 	exampleSingleton          ExampleSingletonTable
 	exampleTimestamp          ExampleTimestampTable
 	simpleExample             SimpleExampleTable
+	exampleAutoIncFieldName   ExampleAutoIncFieldNameTable
 }
 
 func (x testSchemaStore) ExampleTableTable() ExampleTableTable {
@@ -716,6 +837,10 @@ func (x testSchemaStore) ExampleTimestampTable() ExampleTimestampTable {
 
 func (x testSchemaStore) SimpleExampleTable() SimpleExampleTable {
 	return x.simpleExample
+}
+
+func (x testSchemaStore) ExampleAutoIncFieldNameTable() ExampleAutoIncFieldNameTable {
+	return x.exampleAutoIncFieldName
 }
 
 func (testSchemaStore) doNotImplement() {}
@@ -748,11 +873,17 @@ func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
 		return nil, err
 	}
 
+	exampleAutoIncFieldNameTable, err := NewExampleAutoIncFieldNameTable(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return testSchemaStore{
 		exampleTableTable,
 		exampleAutoIncrementTableTable,
 		exampleSingletonTable,
 		exampleTimestampTable,
 		simpleExampleTable,
+		exampleAutoIncFieldNameTable,
 	}, nil
 }

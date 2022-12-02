@@ -2,18 +2,15 @@ package client
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/viper"
-
-	"sigs.k8s.io/yaml"
-
 	"google.golang.org/grpc"
-
-	"github.com/gogo/protobuf/proto"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -21,11 +18,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PreprocessTxFn defines a hook by which chains can preprocess transactions before broadcasting
+type PreprocessTxFn func(chainID string, key keyring.KeyType, tx TxBuilder) error
+
 // Context implements a typical context created in SDK modules for transaction
 // handling and queries.
 type Context struct {
 	FromAddress       sdk.AccAddress
-	Client            rpcclient.Client
+	Client            TendermintRPC
 	GRPCClient        *grpc.ClientConn
 	ChainID           string
 	Codec             codec.Codec
@@ -53,6 +53,8 @@ type Context struct {
 	FeePayer          sdk.AccAddress
 	FeeGranter        sdk.AccAddress
 	Viper             *viper.Viper
+	LedgerHasProtobuf bool
+	PreprocessTxHook  PreprocessTxFn
 
 	// IsAux is true when the signer is an auxiliary signer (e.g. the tipper).
 	IsAux bool
@@ -127,7 +129,7 @@ func (ctx Context) WithHeight(height int64) Context {
 
 // WithClient returns a copy of the context with an updated RPC client
 // instance.
-func (ctx Context) WithClient(client rpcclient.Client) Context {
+func (ctx Context) WithClient(client TendermintRPC) Context {
 	ctx.Client = client
 	return ctx
 }
@@ -265,6 +267,20 @@ func (ctx Context) WithAux(isAux bool) Context {
 	return ctx
 }
 
+// WithLedgerHasProto returns the context with the provided boolean value, indicating
+// whether the target Ledger application can support Protobuf payloads.
+func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
+	ctx.LedgerHasProtobuf = val
+	return ctx
+}
+
+// WithPreprocessTxHook returns the context with the provided preprocessing hook, which
+// enables chains to preprocess the transaction using the builder.
+func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
+	ctx.PreprocessTxHook = preprocessFn
+	return ctx
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))
@@ -303,6 +319,12 @@ func (ctx Context) PrintObjectLegacy(toPrint interface{}) error {
 		return err
 	}
 	return ctx.printOutput(out)
+}
+
+// PrintRaw is a variant of PrintProto that doesn't require a proto.Message type
+// and uses a raw JSON message. No marshaling is performed.
+func (ctx Context) PrintRaw(toPrint json.RawMessage) error {
+	return ctx.printOutput(toPrint)
 }
 
 func (ctx Context) printOutput(out []byte) error {

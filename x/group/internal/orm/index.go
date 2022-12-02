@@ -123,27 +123,21 @@ func (i MultiKeyIndex) GetPaginated(store sdk.KVStore, searchKey interface{}, pa
 // WARNING: The use of a PrefixScan can be very expensive in terms of Gas. Please make sure you do not expose
 // this as an endpoint to the public without further limits.
 // Example:
-//			it, err := idx.PrefixScan(ctx, start, end)
-//			if err !=nil {
-//				return err
-//			}
-//			const defaultLimit = 20
-//			it = LimitIterator(it, defaultLimit)
+//
+//	it, err := idx.PrefixScan(ctx, start, end)
+//	if err !=nil {
+//		return err
+//	}
+//	const defaultLimit = 20
+//	it = LimitIterator(it, defaultLimit)
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (i MultiKeyIndex) PrefixScan(store sdk.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
-	start, err := getPrefixScanKeyBytes(startI)
-	if err != nil {
-		return nil, err
-	}
-	end, err := getPrefixScanKeyBytes(endI)
+	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
 	}
 
-	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
-	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.Iterator(start, end)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
@@ -159,21 +153,33 @@ func (i MultiKeyIndex) PrefixScan(store sdk.KVStore, startI interface{}, endI in
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 func (i MultiKeyIndex) ReversePrefixScan(store sdk.KVStore, startI interface{}, endI interface{}) (Iterator, error) {
-	start, err := getPrefixScanKeyBytes(startI)
-	if err != nil {
-		return nil, err
-	}
-	end, err := getPrefixScanKeyBytes(endI)
+	start, end, err := getStartEndBz(startI, endI)
 	if err != nil {
 		return nil, err
 	}
 
-	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
-		return NewInvalidIterator(), sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
-	}
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	it := pStore.ReverseIterator(start, end)
 	return indexIterator{store: store, it: it, rowGetter: i.rowGetter, indexKey: i.indexKey}, nil
+}
+
+// getStartEndBz gets the start and end bytes to be passed into the SDK store
+// iterator.
+func getStartEndBz(startI interface{}, endI interface{}) ([]byte, []byte, error) {
+	start, err := getPrefixScanKeyBytes(startI)
+	if err != nil {
+		return nil, nil, err
+	}
+	end, err := getPrefixScanKeyBytes(endI)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if start != nil && end != nil && bytes.Compare(start, end) >= 0 {
+		return nil, nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "start must be less than end")
+	}
+
+	return start, end, nil
 }
 
 func getPrefixScanKeyBytes(keyI interface{}) ([]byte, error) {
@@ -250,18 +256,18 @@ func (i indexIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
 
 // Close releases the iterator and should be called at the end of iteration
 func (i indexIterator) Close() error {
-	i.it.Close()
-	return nil
+	return i.it.Close()
 }
 
 // PrefixRange turns a prefix into a (start, end) range. The start is the given prefix value and
 // the end is calculated by adding 1 bit to the start value. Nil is not allowed as prefix.
-// 		Example: []byte{1, 3, 4} becomes []byte{1, 3, 5}
-// 				 []byte{15, 42, 255, 255} becomes []byte{15, 43, 0, 0}
+//
+//	Example: []byte{1, 3, 4} becomes []byte{1, 3, 5}
+//			 []byte{15, 42, 255, 255} becomes []byte{15, 43, 0, 0}
 //
 // In case of an overflow the end is set to nil.
-//		Example: []byte{255, 255, 255, 255} becomes nil
 //
+//	Example: []byte{255, 255, 255, 255} becomes nil
 func PrefixRange(prefix []byte) ([]byte, []byte) {
 	if prefix == nil {
 		panic("nil key not allowed")

@@ -4,13 +4,15 @@ import (
 	gocontext "context"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	proto "github.com/gogo/protobuf/proto"
-	"google.golang.org/grpc/encoding"
 	"reflect"
 	"strconv"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	"google.golang.org/grpc/encoding"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -155,7 +157,7 @@ func (f failingInterfaceRegistry) UnpackAny(any *types.Any, iface interface{}) e
 	return errCodecNotSet
 }
 
-func (f failingInterfaceRegistry) Resolve(typeUrl string) (proto.Message, error) {
+func (f failingInterfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
 	return nil, errCodecNotSet
 }
 
@@ -172,5 +174,9 @@ func (f failingInterfaceRegistry) ListAllInterfaces() []string {
 }
 
 func (f failingInterfaceRegistry) ListImplementations(ifaceTypeURL string) []string {
+	panic("cannot be called")
+}
+
+func (f failingInterfaceRegistry) EnsureRegistered(iface interface{}) error {
 	panic("cannot be called")
 }

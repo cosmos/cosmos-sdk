@@ -54,7 +54,7 @@ func runAutoIncrementScenario(t *testing.T, table ormtable.AutoIncrementTable, c
 	assert.Equal(t, uint64(1), ex1.Id)
 
 	ex2 := &testpb.ExampleAutoIncrementTable{X: "bar", Y: 10}
-	newId, err := table.InsertReturningID(ctx, ex2)
+	newId, err := table.InsertReturningPKey(ctx, ex2)
 	assert.NilError(t, err)
 	assert.Equal(t, uint64(2), ex2.Id)
 	assert.Equal(t, newId, ex2.Id)
@@ -89,9 +89,9 @@ func TestBadJSON(t *testing.T) {
 	store := ormtable.WrapContextDefault(testkv.NewSplitMemBackend())
 	f, err := os.Open("testdata/bad_auto_inc.json")
 	assert.NilError(t, err)
-	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid ID")
+	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid auto increment primary key")
 
 	f, err = os.Open("testdata/bad_auto_inc2.json")
 	assert.NilError(t, err)
-	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid ID")
+	assert.ErrorContains(t, table.ImportJSON(store, f), "invalid auto increment primary key")
 }

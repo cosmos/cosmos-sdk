@@ -47,7 +47,6 @@ func (s *invariantTestSuite) SetupSuite() {
 	s.ctx = sdkCtx
 	s.cdc = cdc
 	s.key = key
-
 }
 
 func (s *invariantTestSuite) TestGroupTotalWeightInvariant() {

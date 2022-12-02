@@ -75,7 +75,6 @@ func flushBuf(store kv.Store, writes []*batchWriterEntry) error {
 				return err
 			}
 		}
-
 	}
 	return nil
 }

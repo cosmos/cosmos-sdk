@@ -1,8 +1,6 @@
 package types
 
 import (
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-
 	query "github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -13,8 +11,8 @@ const (
 )
 
 // NewQueryEvidenceRequest creates a new instance of QueryEvidenceRequest.
-func NewQueryEvidenceRequest(hash tmbytes.HexBytes) *QueryEvidenceRequest {
-	return &QueryEvidenceRequest{EvidenceHash: hash}
+func NewQueryEvidenceRequest(hash string) *QueryEvidenceRequest {
+	return &QueryEvidenceRequest{Hash: hash}
 }
 
 // NewQueryAllEvidenceRequest creates a new instance of QueryAllEvidenceRequest.
@@ -28,6 +26,7 @@ type QueryAllEvidenceParams struct {
 	Limit int `json:"limit" yaml:"limit"`
 }
 
+// NewQueryAllEvidenceParams creates a new instance to query all evidence params.
 func NewQueryAllEvidenceParams(page, limit int) QueryAllEvidenceParams {
 	return QueryAllEvidenceParams{Page: page, Limit: limit}
 }

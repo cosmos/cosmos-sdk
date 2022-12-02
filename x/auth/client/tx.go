@@ -3,12 +3,14 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
+	"github.com/cosmos/gogoproto/jsonpb"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -59,7 +61,8 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		}
 	}
 
-	return tx.Sign(txFactory, name, txBuilder, overwriteSig)
+	// When Textual is wired up, the context argument should be retrieved from the client context.
+	return tx.Sign(context.TODO(), txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
@@ -68,7 +71,8 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 // This function should only be used when signing with a multisig. For
 // normal keys, please use SignTx directly.
 func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
-	name string, txBuilder client.TxBuilder, offline, overwrite bool) (err error) {
+	name string, txBuilder client.TxBuilder, offline, overwrite bool,
+) (err error) {
 	// Multisigs only support LEGACY_AMINO_JSON signing.
 	if txFactory.SignMode() == signing.SignMode_SIGN_MODE_UNSPECIFIED {
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
@@ -86,10 +90,11 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(txFactory, name, txBuilder, overwrite)
+	// When Textual is wired up, the context argument should be retrieved from the client context.
+	return tx.Sign(context.TODO(), txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename.  Can pass "-" to read from stdin.
+// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
@@ -104,6 +109,33 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
+}
+
+// ReadTxsFromInput reads multiples txs from the given filename(s). Can pass "-" to read from stdin.
+// Unlike ReadTxFromFile, this function does not decode the txs.
+func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *BatchScanner, err error) {
+	if len(filenames) == 0 {
+		return nil, fmt.Errorf("no file name provided")
+	}
+
+	var infile io.Reader = os.Stdin
+	if filenames[0] != "-" {
+		buf := new(bytes.Buffer)
+		for _, f := range filenames {
+			bytes, err := os.ReadFile(filepath.Clean(f))
+			if err != nil {
+				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
+			}
+
+			if _, err := buf.WriteString(string(bytes)); err != nil {
+				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
+			}
+		}
+
+		infile = buf
+	}
+
+	return NewBatchScanner(txCfg, infile), nil
 }
 
 // NewBatchScanner returns a new BatchScanner to read newline-delimited StdTx transactions from r.
@@ -145,7 +177,6 @@ func (bs *BatchScanner) Scan() bool {
 func populateAccountFromState(
 	txBldr tx.Factory, clientCtx client.Context, addr sdk.AccAddress,
 ) (tx.Factory, error) {
-
 	num, seq, err := clientCtx.AccountRetriever.GetAccountNumberSequence(clientCtx, addr)
 	if err != nil {
 		return txBldr, err

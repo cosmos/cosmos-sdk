@@ -3,11 +3,12 @@ package ormtable_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
-	"testing"
 
 	"github.com/regen-network/gocuke"
 	"gotest.tools/v3/assert"

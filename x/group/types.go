@@ -31,10 +31,14 @@ type DecisionPolicy interface {
 	// GetVotingPeriod returns the duration after proposal submission where
 	// votes are accepted.
 	GetVotingPeriod() time.Duration
+	// GetMinExecutionPeriod returns the minimum duration after submission
+	// where we can execution a proposal. It can be set to 0 or to a value
+	// lesser than VotingPeriod to allow TRY_EXEC.
+	GetMinExecutionPeriod() time.Duration
 	// Allow defines policy-specific logic to allow a proposal to pass or not,
 	// based on its tally result, the group's total power and the time since
 	// the proposal was submitted.
-	Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error)
+	Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error)
 
 	ValidateBasic() error
 	Validate(g GroupInfo, config Config) error
@@ -52,6 +56,10 @@ func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+func (p ThresholdDecisionPolicy) GetMinExecutionPeriod() time.Duration {
+	return p.Windows.MinExecutionPeriod
+}
+
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
 		return sdkerrors.Wrap(err, "threshold")
@@ -65,11 +73,7 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the threshold before the timeout.
-func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.Windows.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
-	}
-
+func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower string) (DecisionPolicyResult, error) {
 	threshold, err := math.NewPositiveDecFromString(p.Threshold)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "threshold")
@@ -154,6 +158,10 @@ func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+func (p PercentageDecisionPolicy) GetMinExecutionPeriod() time.Duration {
+	return p.Windows.MinExecutionPeriod
+}
+
 func (p PercentageDecisionPolicy) ValidateBasic() error {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
@@ -178,11 +186,7 @@ func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 }
 
 // Allow allows a proposal to pass when the tally of yes votes equals or exceeds the percentage threshold before the timeout.
-func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string, sinceSubmission time.Duration) (DecisionPolicyResult, error) {
-	if sinceSubmission < p.Windows.MinExecutionPeriod {
-		return DecisionPolicyResult{}, errors.ErrUnauthorized.Wrapf("must wait %s after submission before execution, currently at %s", p.Windows.MinExecutionPeriod, sinceSubmission)
-	}
-
+func (p PercentageDecisionPolicy) Allow(tally TallyResult, totalPower string) (DecisionPolicyResult, error) {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
 		return DecisionPolicyResult{}, sdkerrors.Wrap(err, "percentage")
@@ -231,7 +235,8 @@ var _ orm.Validateable = GroupPolicyInfo{}
 
 // NewGroupPolicyInfo creates a new GroupPolicyInfo instance
 func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddress, metadata string,
-	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time) (GroupPolicyInfo, error) {
+	version uint64, decisionPolicy DecisionPolicy, createdAt time.Time,
+) (GroupPolicyInfo, error) {
 	p := GroupPolicyInfo{
 		Address:   address.String(),
 		GroupId:   group,
@@ -297,10 +302,8 @@ func (g GroupInfo) ValidateBasic() error {
 }
 
 func (g GroupPolicyInfo) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(g.Address)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(g.Address)
+
 	return []interface{}{addr.Bytes()}
 }
 
@@ -336,10 +339,8 @@ func (g GroupPolicyInfo) ValidateBasic() error {
 }
 
 func (g GroupMember) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(g.Member.Address)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(g.Member.Address)
+
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
@@ -348,41 +349,52 @@ func (g GroupMember) ValidateBasic() error {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
 	}
 
-	err := g.Member.ValidateBasic()
+	err := MemberToMemberRequest(g.Member).ValidateBasic()
 	if err != nil {
 		return sdkerrors.Wrap(err, "group member")
 	}
 	return nil
 }
 
-func (p Proposal) ValidateBasic() error {
+// MemberToMemberRequest converts a `Member` (used for storage)
+// to a `MemberRequest` (used in requests). The only difference
+// between the two is that `MemberRequest` doesn't have any `AddedAt` field
+// since it cannot be set as part of requests.
+func MemberToMemberRequest(m *Member) MemberRequest {
+	return MemberRequest{
+		Address:  m.Address,
+		Weight:   m.Weight,
+		Metadata: m.Metadata,
+	}
+}
 
-	if p.Id == 0 {
+func (g Proposal) ValidateBasic() error {
+	if g.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
 	}
-	_, err := sdk.AccAddressFromBech32(p.GroupPolicyAddress)
+	_, err := sdk.AccAddressFromBech32(g.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal group policy address")
 	}
-	if p.GroupVersion == 0 {
+	if g.GroupVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group version")
 	}
-	if p.GroupPolicyVersion == 0 {
+	if g.GroupPolicyVersion == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal group policy version")
 	}
-	_, err = p.FinalTallyResult.GetYesCount()
+	_, err = g.FinalTallyResult.GetYesCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult yes count")
 	}
-	_, err = p.FinalTallyResult.GetNoCount()
+	_, err = g.FinalTallyResult.GetNoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult no count")
 	}
-	_, err = p.FinalTallyResult.GetAbstainCount()
+	_, err = g.FinalTallyResult.GetAbstainCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult abstain count")
 	}
-	_, err = p.FinalTallyResult.GetNoWithVetoCount()
+	_, err = g.FinalTallyResult.GetNoWithVetoCount()
 	if err != nil {
 		return sdkerrors.Wrap(err, "proposal FinalTallyResult veto count")
 	}
@@ -390,17 +402,14 @@ func (p Proposal) ValidateBasic() error {
 }
 
 func (v Vote) PrimaryKeyFields() []interface{} {
-	addr, err := sdk.AccAddressFromBech32(v.Voter)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(v.Voter)
+
 	return []interface{}{v.ProposalId, addr.Bytes()}
 }
 
 var _ orm.Validateable = Vote{}
 
 func (v Vote) ValidateBasic() error {
-
 	_, err := sdk.AccAddressFromBech32(v.Voter)
 	if err != nil {
 		return sdkerrors.Wrap(err, "voter")

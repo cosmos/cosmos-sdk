@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,6 +27,7 @@ type ViewKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 
 	IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddress, cb func(coin sdk.Coin) (stop bool))
 	IterateAllBalances(ctx sdk.Context, cb func(address sdk.AccAddress, coin sdk.Coin) (stop bool))
@@ -98,17 +100,13 @@ func (k BaseViewKeeper) GetAccountsBalances(ctx sdk.Context) []types.Balance {
 // by address.
 func (k BaseViewKeeper) GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 	accountStore := k.getAccountStore(ctx, addr)
-	amount := sdk.ZeroInt()
 	bz := accountStore.Get([]byte(denom))
-	if bz == nil {
-		return sdk.NewCoin(denom, amount)
-	}
-
-	if err := amount.Unmarshal(bz); err != nil {
+	balance, err := UnmarshalBalanceCompat(k.cdc, bz, denom)
+	if err != nil {
 		panic(err)
 	}
 
-	return sdk.NewCoin(denom, amount)
+	return balance
 }
 
 // IterateAccountBalances iterates over the balances of a single account and
@@ -118,15 +116,16 @@ func (k BaseViewKeeper) IterateAccountBalances(ctx sdk.Context, addr sdk.AccAddr
 	accountStore := k.getAccountStore(ctx, addr)
 
 	iterator := accountStore.Iterator(nil, nil)
-	defer iterator.Close()
+	defer sdk.LogDeferred(ctx.Logger(), func() error { return iterator.Close() })
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
-		if err := amount.Unmarshal(iterator.Value()); err != nil {
+		denom := string(iterator.Key())
+		balance, err := UnmarshalBalanceCompat(k.cdc, iterator.Value(), denom)
+		if err != nil {
 			panic(err)
 		}
 
-		if cb(sdk.NewCoin(string(iterator.Key()), amount)) {
+		if cb(balance) {
 			break
 		}
 	}
@@ -151,12 +150,12 @@ func (k BaseViewKeeper) IterateAllBalances(ctx sdk.Context, cb func(sdk.AccAddre
 			panic(err)
 		}
 
-		var amount sdk.Int
-		if err := amount.Unmarshal(iterator.Value()); err != nil {
+		balance, err := UnmarshalBalanceCompat(k.cdc, iterator.Value(), denom)
+		if err != nil {
 			panic(err)
 		}
 
-		if cb(address, sdk.NewCoin(denom, amount)) {
+		if cb(address, balance) {
 			break
 		}
 	}
@@ -186,13 +185,22 @@ func (k BaseViewKeeper) SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk
 	return spendable
 }
 
+// SpendableCoin returns the balance of specific denomination of spendable coins
+// for an account by address. If the account has no spendable coin, a zero Coin
+// is returned.
+func (k BaseViewKeeper) SpendableCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	balance := k.GetBalance(ctx, addr, denom)
+	locked := k.LockedCoins(ctx, addr)
+	return balance.SubAmount(locked.AmountOf(denom))
+}
+
 // spendableCoins returns the coins the given address can spend alongside the total amount of coins it holds.
 // It exists for gas efficiency, in order to avoid to have to get balance multiple times.
 func (k BaseViewKeeper) spendableCoins(ctx sdk.Context, addr sdk.AccAddress) (spendable, total sdk.Coins) {
 	total = k.GetAllBalances(ctx, addr)
 	locked := k.LockedCoins(ctx, addr)
 
-	spendable, hasNeg := total.SafeSub(locked)
+	spendable, hasNeg := total.SafeSub(locked...)
 	if hasNeg {
 		spendable = sdk.NewCoins()
 		return
@@ -240,4 +248,24 @@ func (k BaseViewKeeper) getAccountStore(ctx sdk.Context, addr sdk.AccAddress) pr
 // between a denomination and account balance for that denomination.
 func (k BaseViewKeeper) getDenomAddressPrefixStore(ctx sdk.Context, denom string) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.CreateDenomAddressPrefix(denom))
+}
+
+// UnmarshalBalanceCompat unmarshal balance amount from storage, it's backward-compatible with the legacy format.
+func UnmarshalBalanceCompat(cdc codec.BinaryCodec, bz []byte, denom string) (sdk.Coin, error) {
+	amount := math.ZeroInt()
+	if bz == nil {
+		return sdk.NewCoin(denom, amount), nil
+	}
+
+	if err := amount.Unmarshal(bz); err != nil {
+		// try to unmarshal with the legacy format.
+		var balance sdk.Coin
+		if cdc.Unmarshal(bz, &balance) != nil {
+			// return with the original error
+			return sdk.Coin{}, err
+		}
+		return balance, nil
+	}
+
+	return sdk.NewCoin(denom, amount), nil
 }

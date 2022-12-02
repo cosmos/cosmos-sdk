@@ -9,7 +9,7 @@ import (
 )
 
 func TestSequence(t *testing.T) {
-	rapid.Check(t, rapid.Run(&sequenceMachine{}))
+	rapid.Check(t, rapid.Run[*sequenceMachine]())
 }
 
 // sequenceMachine is a state machine model of Sequence. It simply uses a uint64
@@ -32,7 +32,7 @@ func (m *sequenceMachine) Init(t *rapid.T) {
 	m.seq = &seq
 
 	// Choose initial sequence value
-	initSeqVal := rapid.Uint64().Draw(t, "initSeqVal").(uint64)
+	initSeqVal := rapid.Uint64().Draw(t, "initSeqVal")
 	err := m.seq.InitVal(m.store, initSeqVal)
 	require.NoError(t, err)
 
@@ -56,7 +56,7 @@ func (m *sequenceMachine) NextVal(t *rapid.T) {
 // CurVal is one of the model commands. It checks that the current value of the
 // sequence matches the model.
 func (m *sequenceMachine) CurVal(t *rapid.T) {
-	// Check the the current value matches the model
+	// Check the current value matches the model
 	require.Equal(t, m.state, m.seq.CurVal(m.store))
 }
 

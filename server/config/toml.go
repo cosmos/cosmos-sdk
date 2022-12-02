@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"text/template"
 
@@ -24,8 +23,8 @@ minimum-gas-prices = "{{ .BaseConfig.MinGasPrices }}"
 
 # default: the last 362880 states are kept, pruning at 10 block intervals
 # nothing: all historic states will be saved, nothing will be deleted (i.e. archiving node)
-# everything: all saved states will be deleted, storing only the current and previous state; pruning at 10 block intervals
-# custom: allow pruning options to be manually specified through 'pruning-keep-recent' and 'pruning-interval'
+# everything: 2 latest states will be kept; pruning at 10 block intervals.
+# custom: allow pruning options to be manually specified through 'pruning-keep-recent', and 'pruning-interval'
 pruning = "{{ .BaseConfig.Pruning }}"
 
 # These are applied if and only if the pruning strategy is custom.
@@ -74,6 +73,10 @@ index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 # IavlCacheSize set the size of the iavl tree cache. 
 # Default cache size is 50mb.
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
+
+# IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
+# Default is false.
+iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
@@ -147,30 +150,6 @@ rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 enabled-unsafe-cors = {{ .API.EnableUnsafeCORS }}
 
 ###############################################################################
-###                           Rosetta Configuration                         ###
-###############################################################################
-
-[rosetta]
-
-# Enable defines if the Rosetta API server should be enabled.
-enable = {{ .Rosetta.Enable }}
-
-# Address defines the Rosetta API server to listen on.
-address = "{{ .Rosetta.Address }}"
-
-# Network defines the name of the blockchain that will be returned by Rosetta.
-blockchain = "{{ .Rosetta.Blockchain }}"
-
-# Network defines the name of the network that will be returned by Rosetta.
-network = "{{ .Rosetta.Network }}"
-
-# Retries defines the number of retries when connecting to the node before failing.
-retries = {{ .Rosetta.Retries }}
-
-# Offline defines if Rosetta server should run in offline mode.
-offline = {{ .Rosetta.Offline }}
-
-###############################################################################
 ###                           gRPC Configuration                            ###
 ###############################################################################
 
@@ -181,6 +160,14 @@ enable = {{ .GRPC.Enable }}
 
 # Address defines the gRPC server address to bind to.
 address = "{{ .GRPC.Address }}"
+
+# MaxRecvMsgSize defines the max message size in bytes the server can receive.
+# The default value is 10MB.
+max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
+
+# MaxSendMsgSize defines the max message size in bytes the server can send.
+# The default value is math.MaxInt32.
+max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
@@ -212,6 +199,37 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
+
+###############################################################################
+###                         Store / State Streaming                         ###
+###############################################################################
+
+[store]
+streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
+
+[streamers]
+[streamers.file]
+keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
+write_dir = "{{ .Streamers.File.WriteDir }}"
+prefix = "{{ .Streamers.File.Prefix }}"
+# output-metadata specifies if output the metadata file which includes the abci request/responses 
+# during processing the block.
+output-metadata = "{{ .Streamers.File.OutputMetadata }}"
+# stop-node-on-error specifies if propagate the file streamer errors to consensus state machine.
+stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
+# fsync specifies if call fsync after writing the files.
+fsync = "{{ .Streamers.File.Fsync }}"
+
+###############################################################################
+###                         Mempool                                         ###
+###############################################################################
+
+[mempool]
+# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
+# Setting max_txs to a positive number  (> 0) will limit the number of transactions in the mempool, by the specified amount.
+max-txs = "{{ .Mempool.MaxTxs }}"
+
 `
 
 var configTemplate *template.Template
@@ -256,11 +274,11 @@ func WriteConfigFile(configFilePath string, config interface{}) {
 		panic(err)
 	}
 
-	mustWriteFile(configFilePath, buffer.Bytes(), 0644)
+	mustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 }
 
 func mustWriteFile(filePath string, contents []byte, mode os.FileMode) {
-	if err := ioutil.WriteFile(filePath, contents, mode); err != nil {
+	if err := os.WriteFile(filePath, contents, mode); err != nil {
 		fmt.Printf(fmt.Sprintf("failed to write file: %v", err) + "\n")
 		os.Exit(1)
 	}

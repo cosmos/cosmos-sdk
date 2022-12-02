@@ -26,10 +26,7 @@ func (keeper Keeper) GetDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 func (keeper Keeper) SetDeposit(ctx sdk.Context, deposit v1.Deposit) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := keeper.cdc.MustMarshal(&deposit)
-	depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
-	if err != nil {
-		panic(err)
-	}
+	depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
 	store.Set(types.DepositKey(deposit.ProposalId, depositor), bz)
 }
@@ -64,10 +61,8 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 			panic(err)
 		}
 
-		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
-		if err != nil {
-			panic(err)
-		}
+		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
+
 		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
@@ -136,7 +131,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
 
-	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
+	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(keeper.GetParams(ctx).MinDeposit) {
 		keeper.ActivateVotingPeriod(ctx, proposal)
 
 		activatedVotingPeriod = true
@@ -152,7 +147,7 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	}
 
 	// called when deposit has been added to a proposal, however the proposal may not be active
-	keeper.AfterProposalDeposit(ctx, proposalID, depositorAddr)
+	keeper.Hooks().AfterProposalDeposit(ctx, proposalID, depositorAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -172,12 +167,9 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 	store := ctx.KVStore(keeper.storeKey)
 
 	keeper.IterateDeposits(ctx, proposalID, func(deposit v1.Deposit) bool {
-		depositor, err := sdk.AccAddressFromBech32(deposit.Depositor)
-		if err != nil {
-			panic(err)
-		}
+		depositor := sdk.MustAccAddressFromBech32(deposit.Depositor)
 
-		err = keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
+		err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, depositor, deposit.Amount)
 		if err != nil {
 			panic(err)
 		}
@@ -185,4 +177,26 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 		store.Delete(types.DepositKey(proposalID, depositor))
 		return false
 	})
+}
+
+// validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
+// required at the time of proposal submission. This threshold amount is determined by
+// the deposit parameters. Returns nil on success, error otherwise.
+func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins) error {
+	params := keeper.GetParams(ctx)
+	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
+	if err != nil {
+		return err
+	}
+	if minInitialDepositRatio.IsZero() {
+		return nil
+	}
+	minDepositCoins := params.MinDeposit
+	for i := range minDepositCoins {
+		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
+	}
+	if !initialDeposit.IsAllGTE(minDepositCoins) {
+		return sdkerrors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
+	}
+	return nil
 }

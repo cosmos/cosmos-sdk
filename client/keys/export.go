@@ -2,6 +2,7 @@ package keys
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 const (
@@ -75,7 +77,7 @@ func exportUnsafeUnarmored(cmd *cobra.Command, uid string, buf *bufio.Reader, kr
 		return nil
 	}
 
-	hexPrivKey, err := keyring.NewUnsafe(kr).UnsafeExportPrivKeyHex(uid)
+	hexPrivKey, err := unsafeExportPrivKeyHex(kr.(unsafeExporter), uid)
 	if err != nil {
 		return err
 	}
@@ -83,4 +85,21 @@ func exportUnsafeUnarmored(cmd *cobra.Command, uid string, buf *bufio.Reader, kr
 	cmd.Println(hexPrivKey)
 
 	return nil
+}
+
+// unsafeExporter is implemented by key stores that support unsafe export
+// of private keys' material.
+type unsafeExporter interface {
+	// ExportPrivateKeyObject returns a private key in unarmored format.
+	ExportPrivateKeyObject(uid string) (types.PrivKey, error)
+}
+
+// unsafeExportPrivKeyHex exports private keys in unarmored hexadecimal format.
+func unsafeExportPrivKeyHex(ks unsafeExporter, uid string) (privkey string, err error) {
+	priv, err := ks.ExportPrivateKeyObject(uid)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(priv.Bytes()), nil
 }

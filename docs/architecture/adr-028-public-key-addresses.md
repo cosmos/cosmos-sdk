@@ -150,7 +150,7 @@ For new multisig public keys, we define the `typ` parameter not based on any enc
 
 Example:
 
-```proto
+```protobuf
 package cosmos.crypto.multisig;
 
 message PubKey {
@@ -197,13 +197,13 @@ func Module(moduleName string, key []byte) []byte{
 **Example**  A lending BTC pool address would be:
 
 ```go
-btcPool := address.Module("lending", btc.Addrress()})
+btcPool := address.Module("lending", btc.Address()})
 ```
 
 If we want to create an address for a module account depending on more than one key, we can concatenate them:
 
 ```go
-btcAtomAMM := address.Module("amm", btc.Addrress() + atom.Address()})
+btcAtomAMM := address.Module("amm", btc.Address() + atom.Address()})
 ```
 
 #### Derived Addresses
@@ -231,7 +231,7 @@ Since all Cosmos SDK account types are serialized in the state, we propose to us
 
 Example: all public key types have a unique protobuf message type similar to:
 
-```proto
+```protobuf
 package cosmos.crypto.sr25519;
 
 message PubKey {

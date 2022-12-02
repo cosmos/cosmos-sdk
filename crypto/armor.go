@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/tendermint/crypto/bcrypt"
 	"github.com/tendermint/tendermint/crypto"
-	"golang.org/x/crypto/openpgp/armor" // nolint: staticcheck
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -148,7 +148,6 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-
 	if err != nil {
 		panic(sdkerrors.Wrap(err, "error generating bcrypt key from passphrase"))
 	}
@@ -236,7 +235,7 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	if err != nil {
 		return "", nil, nil, err
 	}
-	data, err = ioutil.ReadAll(block.Body)
+	data, err = io.ReadAll(block.Body)
 	if err != nil {
 		return "", nil, nil, err
 	}

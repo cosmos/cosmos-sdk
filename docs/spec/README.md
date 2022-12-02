@@ -1,6 +1,5 @@
 ---
-parent:
-  order: false
+sidebar_position: 1
 ---
 
 # Specifications
@@ -18,7 +17,7 @@ block.
 
 ## Modules specifications
 
-Go the [module directory](../../x/README.md)
+Go the [module directory](https://github.com/cosmos/cosmos-sdk/blob/main/x/README.md)
 
 ## Tendermint
 

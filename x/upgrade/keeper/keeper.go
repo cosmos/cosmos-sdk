@@ -3,19 +3,17 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 
 	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -55,6 +53,15 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		versionSetter:      vs,
 		authority:          authority,
 	}
+}
+
+// SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
+func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
+	k.versionSetter = vs
+}
+
+func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
+	return k.versionSetter
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
@@ -239,28 +246,43 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
 	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
+
 	if iter.Valid() {
-		return parseDoneKey(iter.Key()), int64(binary.BigEndian.Uint64(iter.Value()))
+		return parseDoneKey(iter.Key())
 	}
 
 	return "", 0
 }
 
-// parseDoneKey - split upgrade name from the done key
-func parseDoneKey(key []byte) string {
-	kv.AssertKeyAtLeastLength(key, 2)
-	return string(key[1:])
+// parseDoneKey - split upgrade name and height from the done key
+func parseDoneKey(key []byte) (string, int64) {
+	// 1 byte for the DoneByte + 8 bytes height + at least 1 byte for the name
+	kv.AssertKeyAtLeastLength(key, 10)
+	height := binary.BigEndian.Uint64(key[1:9])
+	return string(key[9:]), int64(height)
+}
+
+// encodeDoneKey - concatenate DoneByte, height and upgrade name to form the done key
+func encodeDoneKey(name string, height int64) []byte {
+	key := make([]byte, 9+len(name)) // 9 = donebyte + uint64 len
+	key[0] = types.DoneByte
+	binary.BigEndian.PutUint64(key[1:9], uint64(height))
+	copy(key[9:], name)
+	return key
 }
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	bz := store.Get(conv.UnsafeStrToBytes(name))
-	if len(bz) == 0 {
-		return 0
-	}
+	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	defer iter.Close()
 
-	return int64(binary.BigEndian.Uint64(bz))
+	for ; iter.Valid(); iter.Next() {
+		upgradeName, height := parseDoneKey(iter.Key())
+		if upgradeName == name {
+			return height
+		}
+	}
+	return 0
 }
 
 // ClearIBCState clears any planned IBC state
@@ -303,10 +325,8 @@ func (k Keeper) GetUpgradePlan(ctx sdk.Context) (plan types.Plan, havePlan bool)
 
 // setDone marks this upgrade name as being done so the name can't be reused accidentally
 func (k Keeper) setDone(ctx sdk.Context, name string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, uint64(ctx.BlockHeight()))
-	store.Set([]byte(name), bz)
+	store := ctx.KVStore(k.storeKey)
+	store.Set(encodeDoneKey(name, ctx.BlockHeight()), []byte{1})
 }
 
 // HasHandler returns true iff there is a handler registered for this name
@@ -372,9 +392,8 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
 	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
-	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
-	if err != nil {
-		return "", err
+	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}
 
 	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil

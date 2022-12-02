@@ -22,7 +22,7 @@ type autoIncrementTable struct {
 	seqCodec     *ormkv.SeqCodec
 }
 
-func (t autoIncrementTable) InsertReturningID(ctx context.Context, message proto.Message) (newId uint64, err error) {
+func (t autoIncrementTable) InsertReturningPKey(ctx context.Context, message proto.Message) (newPK uint64, err error) {
 	backend, err := t.getWriteBackend(ctx)
 	if err != nil {
 		return 0, err
@@ -61,7 +61,7 @@ func (t autoIncrementTable) Update(ctx context.Context, message proto.Message) e
 	return err
 }
 
-func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newId uint64, err error) {
+func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message proto.Message, mode saveMode) (newPK uint64, err error) {
 	messageRef := message.ProtoReflect()
 	val := messageRef.Get(t.autoIncField).Uint()
 	writer := newBatchIndexCommitmentWriter(backend)
@@ -73,12 +73,12 @@ func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message 
 		}
 
 		mode = saveModeInsert
-		newId, err = t.nextSeqValue(writer.IndexStore())
+		newPK, err = t.nextSeqValue(writer.IndexStore())
 		if err != nil {
 			return 0, err
 		}
 
-		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(newId))
+		messageRef.Set(t.autoIncField, protoreflect.ValueOfUint64(newPK))
 	} else {
 		if mode == saveModeInsert {
 			return 0, ormerrors.AutoIncrementKeyAlreadySet
@@ -87,7 +87,7 @@ func (t *autoIncrementTable) save(ctx context.Context, backend Backend, message 
 		mode = saveModeUpdate
 	}
 
-	return newId, t.tableImpl.doSave(ctx, writer, message, mode)
+	return newPK, t.tableImpl.doSave(ctx, writer, message, mode)
 }
 
 func (t *autoIncrementTable) curSeqValue(kv kv.ReadonlyStore) (uint64, error) {
@@ -121,11 +121,12 @@ func (t autoIncrementTable) EncodeEntry(entry ormkv.Entry) (k, v []byte, err err
 }
 
 func (t autoIncrementTable) ValidateJSON(reader io.Reader) error {
-	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxID uint64) error {
+	return t.decodeAutoIncJson(nil, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
-		id := messageRef.Get(t.autoIncField).Uint()
-		if id > maxID {
-			return fmt.Errorf("invalid ID %d, expected a value <= %d, the highest sequence number", id, maxID)
+		pkey := messageRef.Get(t.autoIncField).Uint()
+		if pkey > maxSeq {
+			return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+				"sequence number", pkey, maxSeq)
 		}
 
 		if t.customJSONValidator != nil {
@@ -142,22 +143,23 @@ func (t autoIncrementTable) ImportJSON(ctx context.Context, reader io.Reader) er
 		return err
 	}
 
-	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxID uint64) error {
+	return t.decodeAutoIncJson(backend, reader, func(message proto.Message, maxSeq uint64) error {
 		messageRef := message.ProtoReflect()
-		id := messageRef.Get(t.autoIncField).Uint()
-		if id == 0 {
-			// we don't have an ID in the JSON, so we call Save to insert and
+		pkey := messageRef.Get(t.autoIncField).Uint()
+		if pkey == 0 {
+			// we don't have a primary key in the JSON, so we call Save to insert and
 			// generate one
 			_, err = t.save(ctx, backend, message, saveModeInsert)
 			return err
 		} else {
-			if id > maxID {
-				return fmt.Errorf("invalid ID %d, expected a value <= %d, the highest sequence number", id, maxID)
+			if pkey > maxSeq {
+				return fmt.Errorf("invalid auto increment primary key %d, expected a value <= %d, the highest "+
+					"sequence number", pkey, maxSeq)
 			}
-			// we do have an ID and calling Save will fail because it expects
-			// either no ID or SAVE_MODE_UPDATE. So instead we drop one level
+			// we do have a primary key and calling Save will fail because it expects
+			// either no primary key or SAVE_MODE_UPDATE. So instead we drop one level
 			// down and insert using tableImpl which doesn't know about
-			// auto-incrementing IDs
+			// auto-incrementing primary keys.
 			return t.tableImpl.save(ctx, backend, message, saveModeInsert)
 		}
 	})

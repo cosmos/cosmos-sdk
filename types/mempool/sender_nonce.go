@@ -17,6 +17,8 @@ var (
 	_ Iterator = (*senderNonceMepoolIterator)(nil)
 )
 
+var DefaultMaxTx = 0
+
 // senderNonceMempool is a mempool that prioritizes transactions within a sender by nonce, the lowest first,
 // but selects a random sender on each iteration.  The mempool is iterated by:
 //
@@ -26,15 +28,27 @@ var (
 //
 // Note that PrepareProposal could choose to stop iteration before reaching the end if maxBytes is reached.
 type senderNonceMempool struct {
-	senders map[string]*skiplist.SkipList
-	rnd     *rand.Rand
+	senders    map[string]*skiplist.SkipList
+	rnd        *rand.Rand
+	maxTx      int
+	existingTx map[txKey]bool
+}
+
+type SenderNonceOptions func(mp *senderNonceMempool)
+
+type txKey struct {
+	address string
+	nonce   uint64
 }
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by nonce, the lowest first.
-func NewSenderNonceMempool() Mempool {
+func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 	senderMap := make(map[string]*skiplist.SkipList)
+	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{
-		senders: senderMap,
+		senders:    senderMap,
+		maxTx:      DefaultMaxTx,
+		existingTx: existingTx,
 	}
 
 	var seed int64
@@ -44,17 +58,30 @@ func NewSenderNonceMempool() Mempool {
 	}
 	snp.setSeed(seed)
 
+	for _, opt := range opts {
+		opt(snp)
+	}
+
 	return snp
 }
 
-// NewSenderNonceMempoolWithSeed creates a new mempool that prioritizes transactions by nonce, the lowest first and sets the random seed.
-func NewSenderNonceMempoolWithSeed(seed int64) Mempool {
-	senderMap := make(map[string]*skiplist.SkipList)
-	snp := &senderNonceMempool{
-		senders: senderMap,
+// SenderNonceSeedOpt Option To add a Seed for random type when calling the constructor NewSenderNonceMempool
+// Example:
+// > random_seed := int64(1000)
+// > NewSenderNonceMempool(SenderNonceSeedTxOpt(random_seed))
+func SenderNonceSeedOpt(seed int64) SenderNonceOptions {
+	return func(snp *senderNonceMempool) {
+		snp.setSeed(seed)
 	}
-	snp.setSeed(seed)
-	return snp
+}
+
+// SenderNonceMaxTxOpt Option To set limit of max tx when calling the constructor NewSenderNonceMempool
+// Example:
+// > NewSenderNonceMempool(SenderNonceMaxTxOpt(100))
+func SenderNonceMaxTxOpt(maxTx int) SenderNonceOptions {
+	return func(snp *senderNonceMempool) {
+		snp.maxTx = maxTx
+	}
 }
 
 func (snm *senderNonceMempool) setSeed(seed int64) {
@@ -65,6 +92,12 @@ func (snm *senderNonceMempool) setSeed(seed int64) {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have at least one signer.
 // priority is ignored.
 func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
+	if snm.maxTx > 0 && snm.CountTx() >= snm.maxTx {
+		return ErrMempoolTxMaxCapacity
+	}
+	if snm.maxTx < 0 {
+		return nil
+	}
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -82,7 +115,8 @@ func (snm *senderNonceMempool) Insert(_ sdk.Context, tx sdk.Tx) error {
 		snm.senders[sender] = senderTxs
 	}
 	senderTxs.Set(nonce, tx)
-
+	key := txKey{nonce: nonce, address: sender}
+	snm.existingTx[key] = true
 	return nil
 }
 
@@ -117,14 +151,7 @@ func (snm *senderNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
 
 // CountTx returns the total count of txs in the mempool.
 func (snm *senderNonceMempool) CountTx() int {
-	count := 0
-
-	// Disable gosec here since we need neither strong randomness nor deterministic iteration.
-	// #nosec
-	for _, value := range snm.senders {
-		count += value.Len()
-	}
-	return count
+	return len(snm.existingTx)
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not have at least one signer or the tx
@@ -154,6 +181,10 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	if senderTxs.Len() == 0 {
 		delete(snm.senders, sender)
 	}
+
+	key := txKey{nonce: nonce, address: sender}
+	delete(snm.existingTx, key)
+
 	return nil
 }
 

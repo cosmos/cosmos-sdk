@@ -219,8 +219,8 @@ prefix = "{{ .Streamers.File.Prefix }}"
 
 [mempool]
 # Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
-# Setting max_txs to negative (-) will disable transaction from be inserted into the mempool.
-# Setting max_txs to positive (>) will limit the number of transactions in the mempool.
+# Setting max_txs to negative 1 (-1) will disable transaction from be inserted into the mempool.
+# Setting max_txs to a positive number  (> 0) will limit the number of transactions in the mempool, by the specified amount.
 max-txs = "{{ .Mempool.MaxTxs }}"
 
 `

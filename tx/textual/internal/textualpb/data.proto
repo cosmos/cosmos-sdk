@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+
+// TextualData represents all the information needed to generate
+// the textual SignDoc (which is a []Screen). It is meant to be
+// used as an internal type in Textual's implementations.
+message TextualData {
+  // body_bytes is a protobuf serialization of a TxBody that matches the
+  // representation in SignDoc.
+  bytes body_bytes = 1;
+
+  // auth_info_bytes is a protobuf serialization of an AuthInfo that matches the
+  // representation in SignDoc.
+  bytes auth_info_bytes = 2;
+
+  // signer_data represents all data in Textual's SignDoc that are not
+  // inside the Tx body and auth_info.
+  SignerData signer_data = 3;
+}
+
+// SignerData is the specific information needed to sign a transaction that generally
+// isn't included in the transaction body itself.
+message SignerData {
+  // address is the address of the signer.
+	//
+	// In case of multisigs, this should be the multisig's address.
+  string address = 1 [(cosmos_proto.scalar) = "AddressString"];
+
+  // chain_id is the chain that this transaction is targeted.
+  string chain_id = 2;
+
+  // account_number is the account number of the signer.
+	//
+	// In case of multisigs, this should be the multisig account number.
+  uint64 account_number = 3;
+
+  // sequence is the account sequence number of the signer that is used
+	// for replay protection. This field is only useful for Legacy Amino signing,
+	// since in SIGN_MODE_DIRECT the account sequence is already in the signer
+	// info.
+	//
+	// In case of multisigs, this should be the multisig sequence.
+  uint64 sequence = 4;
+
+  // pub_key is the public key of the signer.
+	//
+	// In case of multisigs, this should be the pubkey of the member of the
+	// multisig that is signing the current sign doc.
+  google.protobuf.Any pub_key = 5;
+}

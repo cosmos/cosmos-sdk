@@ -105,34 +105,3 @@ message SignatureDescriptor {
     }
   }
 }
-
-// SignerData is the specific information needed to sign a transaction that generally
-// isn't included in the transaction body itself.
-message SignerData {
-  // address is the address of the signer.
-	//
-	// In case of multisigs, this should be the multisig's address.
-  string address = 1 [(cosmos_proto.scalar) = "AddressString"];
-
-  // chain_id is the chain that this transaction is targeted.
-  string chain_id = 2;
-
-  // account_number is the account number of the signer.
-	//
-	// In case of multisigs, this should be the multisig account number.
-  uint64 account_number = 3;
-
-  // sequence is the account sequence number of the signer that is used
-	// for replay protection. This field is only useful for Legacy Amino signing,
-	// since in SIGN_MODE_DIRECT the account sequence is already in the signer
-	// info.
-	//
-	// In case of multisigs, this should be the multisig sequence.
-  uint64 sequence = 4;
-
-  // pub_key is the public key of the signer.
-	//
-	// In case of multisigs, this should be the pubkey of the member of the
-	// multisig that is signing the current sign doc.
-  google.protobuf.Any pub_key = 5;
-}

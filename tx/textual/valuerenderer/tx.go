@@ -11,9 +11,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/tx/textual/internal/enveloppe"
+	"cosmossdk.io/tx/textual/internal/textualpb"
 )
 
 type txValueRenderer struct {
@@ -35,7 +34,7 @@ func NewTxValueRenderer(tr *Textual) ValueRenderer {
 func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Tx
 	msg := v.Message().Interface()
-	textualData, ok := msg.(*textualv1.TextualData)
+	textualData, ok := msg.(*textualpb.TextualData)
 	if !ok {
 		return nil, fmt.Errorf("expected Tx, got %T", msg)
 	}
@@ -51,24 +50,24 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		return nil, err
 	}
 
-	p1 := &enveloppe.Part1{
+	p1 := &textualpb.Part1{
 		ChainId:       textualData.SignerData.ChainId,
 		AccountNumber: textualData.SignerData.AccountNumber,
 		Sequence:      textualData.SignerData.Sequence,
 	}
-	p2 := &enveloppe.Part2{
+	p2 := &textualpb.Part2{
 		PublicKey: textualData.SignerData.PubKey,
 	}
-	p3 := &enveloppe.Part3{
+	p3 := &textualpb.Part3{
 		Message: txBody.Messages,
 		Memo:    txBody.Memo,
 		Fees:    txAuthInfo.Fee.Amount,
 	}
-	p4 := &enveloppe.Part4{
+	p4 := &textualpb.Part4{
 		FeePayer:   txAuthInfo.Fee.Payer,
 		FeeGranter: txAuthInfo.Fee.Granter,
 	}
-	p5 := &enveloppe.Part5{}
+	p5 := &textualpb.Part5{}
 	if txAuthInfo.Tip != nil {
 		p5.Tip = txAuthInfo.Tip.Amount
 		p5.Tipper = txAuthInfo.Tip.Tipper
@@ -82,7 +81,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 
 		otherSigners = append(otherSigners, si)
 	}
-	p6 := &enveloppe.Part6{
+	p6 := &textualpb.Part6{
 		GasLimit:                    txAuthInfo.Fee.GasLimit,
 		TimeoutHeight:               txBody.TimeoutHeight,
 		OtherSigner:                 otherSigners,
@@ -167,9 +166,9 @@ func getHash(bodyBz, authInfoBz []byte) string {
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
-	res := &textualv1.TextualData{}
+	res := &textualpb.TextualData{}
 
-	_, _, err := vr.parsePart(ctx, screens, &enveloppe.Part1{})
+	_, _, err := vr.parsePart(ctx, screens, &textualpb.Part1{})
 	if err != nil {
 		return nilValue, err
 	}

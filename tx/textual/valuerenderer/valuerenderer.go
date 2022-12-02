@@ -13,7 +13,8 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
+	"cosmossdk.io/tx/signing"
+	"cosmossdk.io/tx/textual/internal/textualpb"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
@@ -124,7 +125,7 @@ func (r *Textual) init() {
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
 		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = NewAnyValueRenderer(r)
-		r.messages[(&textualv1.TextualData{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
+		r.messages[(&textualpb.TextualData{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
 	}
 }
 
@@ -135,7 +136,19 @@ func (r *Textual) DefineScalar(scalar string, vr ValueRenderer) {
 }
 
 // GetSignBytes returns the transaction sign bytes.
-func (r *Textual) GetSignBytes(ctx context.Context, data *textualv1.TextualData) ([]byte, error) {
+func (r *Textual) GetSignBytes(ctx context.Context, bodyBz, authInfoBz []byte, signerData signing.SignerData) ([]byte, error) {
+	data := &textualpb.TextualData{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		SignerData: &textualpb.SignerData{
+			Address:       signerData.Address,
+			ChainId:       signerData.ChainId,
+			AccountNumber: signerData.AccountNumber,
+			Sequence:      signerData.Sequence,
+			PubKey:        signerData.PubKey,
+		},
+	}
+
 	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err

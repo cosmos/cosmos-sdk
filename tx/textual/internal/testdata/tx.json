@@ -27,16 +27,16 @@
 					"amount": [{ "denom": "uatom", "amount": "2000" }],
 					"gas_limit": 100000
 				}
-			},
-			"signer_data": {
-				"accountNumber": 1,
-				"chainId": "my-chain",
-				"pubKey": {
-					"@type": "/cosmos.crypto.secp256k1.PubKey",
-					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-				},
-				"sequence": 2
 			}
+		},
+		"signer_data": {
+			"account_number": 1,
+			"chain_id": "my-chain",
+			"pub_key": {
+				"@type": "/cosmos.crypto.secp256k1.PubKey",
+				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+			},
+			"sequence": 2
 		},
 		"metadata": {
 			"display": "ATOM",
@@ -94,16 +94,16 @@
 					"amount": [{ "denom": "uatom", "amount": "2000" }],
 					"gas_limit": 100000
 				}
-			},
-			"signer_data": {
-				"accountNumber": 1,
-				"chainId": "my-chain",
-				"pubKey": {
-					"@type": "/cosmos.crypto.secp256k1.PubKey",
-					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-				},
-				"sequence": 2
 			}
+		},
+		"signer_data": {
+			"account_number": 1,
+			"chain_id": "my-chain",
+			"pub_key": {
+				"@type": "/cosmos.crypto.secp256k1.PubKey",
+				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+			},
+			"sequence": 2
 		},
 		"metadata": {
 			"display": "ATOM",
@@ -162,16 +162,16 @@
 					"amount": [{ "denom": "uatom", "amount": "2000" }],
 					"gas_limit": 100000
 				}
-			},
-			"signer_data": {
-				"accountNumber": 1,
-				"chainId": "my-chain",
-				"pubKey": {
-					"@type": "/cosmos.crypto.secp256k1.PubKey",
-					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-				},
-				"sequence": 2
 			}
+		},
+		"signer_data": {
+			"account_number": 1,
+			"chain_id": "my-chain",
+			"pub_key": {
+				"@type": "/cosmos.crypto.secp256k1.PubKey",
+				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+			},
+			"sequence": 2
 		},
 		"metadata": {
 			"display": "ATOM",
@@ -303,16 +303,16 @@
 					],
 					"tipper": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
 				}
-			},
-			"signer_data": {
-				"accountNumber": 1,
-				"chainId": "my-chain",
-				"pubKey": {
-					"@type": "/cosmos.crypto.secp256k1.PubKey",
-					"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
-				},
-				"sequence": 2
 			}
+		},
+		"signer_data": {
+			"account_number": 1,
+			"chain_id": "my-chain",
+			"pub_key": {
+				"@type": "/cosmos.crypto.secp256k1.PubKey",
+				"key": "Auvdf+T963bciiBe9l15DNMOijdaXCUo6zqSOvH7TXlN"
+			},
+			"sequence": 2
 		},
 		"metadata": {
 			"display": "ATOM",

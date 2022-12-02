@@ -1,8 +1,9 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestUint64Key(t *testing.T) {

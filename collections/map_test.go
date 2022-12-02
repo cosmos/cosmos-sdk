@@ -1,13 +1,14 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestMap(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewNamespace("hi"), Uint64Key, Uint64Value)
+	m := NewMap(sk, NewPrefix("hi"), Uint64Key, Uint64Value)
 
 	// test not has
 	require.False(t, m.Has(ctx, 1))
@@ -28,4 +29,6 @@ func TestMap(t *testing.T) {
 	// test remove
 	m.Remove(ctx, 1)
 	require.False(t, m.Has(ctx, 1))
+
+	// test get or
 }

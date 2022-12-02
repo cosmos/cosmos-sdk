@@ -7,15 +7,11 @@ import (
 	"strconv"
 )
 
-var (
-	// Uint64Key can be used to encode uint64 keys.
-	// Encoding is big endian to retain ordering.
-	Uint64Key KeyEncoder[uint64] = uint64Key{}
-)
+// Uint64Key can be used to encode uint64 keys.
+// Encoding is big endian to retain ordering.
+var Uint64Key KeyEncoder[uint64] = uint64Key{}
 
-var (
-	errDecodeKeySize = errors.New("collections: decode error, wrong byte key size")
-)
+var errDecodeKeySize = errors.New("collections: decode error, wrong byte key size")
 
 type uint64Key struct{}
 

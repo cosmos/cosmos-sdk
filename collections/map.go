@@ -1,20 +1,19 @@
 package collections
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// NewMap returns a Map given a StoreKey,
-// a Namespace and the relative value and key encoders.
+// NewMap returns a Map given a StoreKey, a Prefix and the relative value and key encoders.
 func NewMap[K, V any](
-	sk storetypes.StoreKey, namespace Namespace,
-	keyEncoder KeyEncoder[K], valueEncoder ValueEncoder[V]) Map[K, V] {
+	sk storetypes.StoreKey, prefix Prefix,
+	keyEncoder KeyEncoder[K], valueEncoder ValueEncoder[V],
+) Map[K, V] {
 	return Map[K, V]{
 		kc:     keyEncoder,
 		vc:     valueEncoder,
 		sk:     sk,
-		prefix: namespace.Prefix(),
+		prefix: prefix.Bytes(),
 	}
 }
 
@@ -86,7 +85,7 @@ func (m Map[K, V]) Remove(ctx StorageProvider, key K) {
 }
 
 func (m Map[K, V]) getStore(provider StorageProvider) storetypes.KVStore {
-	return prefix.NewStore(provider.KVStore(m.sk), m.prefix)
+	return provider.KVStore(m.sk)
 }
 
 func (m Map[K, V]) encodeKey(key K) []byte {
@@ -94,5 +93,5 @@ func (m Map[K, V]) encodeKey(key K) []byte {
 	if err != nil {
 		panic(err)
 	}
-	return bytes
+	return append(m.prefix, bytes...)
 }

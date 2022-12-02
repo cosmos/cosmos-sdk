@@ -3,6 +3,8 @@ package collections
 import (
 	"bytes"
 	"fmt"
+	"math"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -40,34 +42,32 @@ func (e ErrNotFound) Is(err error) bool {
 		self.ValueType == e.ValueType
 }
 
-// Namespace provide a storage byte prefix namespace
-// which must be unique across storage objects belonging
-// to a module.
-// Besides this, once a namespace is defined: other module's
-// namespaces cannot start with the same returned prefix to
-// avoid namespace collisions, example:
-// Namespace1=> "bank"
-// Namespace2=> "bank2" <- namespace collision: Namespace1 starts with Namespace2
-type Namespace struct {
-	prefix []byte // TODO(testinginprod): maybe add a humanized prefix?
+// Prefix defines a segregation namespace
+// for specific collections objects.
+type Prefix struct {
+	raw []byte // TODO(testinginprod): maybe add a humanized prefix?
 }
 
-// Prefix returns the raw prefix bytes.
-func (n Namespace) Prefix() []byte { return n.prefix }
+// Bytes returns the raw Prefix bytes.
+func (n Prefix) Bytes() []byte { return n.raw }
 
-// NewNamespace returns a Namespacer given the provided namespace identifier.
-func NewNamespace[T interface{ uint8 | string | []byte }](identifier T) Namespace {
+// NewPrefix returns a Prefix given the provided namespace identifier.
+// Prefixes of the same module must not start
+func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 	i := any(identifier)
 	var prefix []byte
 	switch c := i.(type) {
-	case uint8:
-		prefix = []byte{c}
+	case int:
+		if c > math.MaxUint8 || c < 0 {
+			panic("invalid integer prefix value: must be between 0 and 255")
+		}
+		prefix = []byte{uint8(c)}
 	case string:
 		prefix = []byte(c)
 	case []byte:
 		prefix = c // maybe copy?
 	}
-	return Namespace{prefix: prefix}
+	return Prefix{raw: prefix}
 }
 
 // KeyEncoder defines a generic interface which is implemented

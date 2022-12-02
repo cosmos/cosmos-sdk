@@ -1,10 +1,11 @@
 package collections
 
 import (
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/store/mem"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var _ StorageProvider = (*mockStorageProvider)(nil)

@@ -66,16 +66,16 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 		Sequence:      seqNum,
 		PubKey:        priv1.PubKey(),
 	}
-	signBz, err := handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz, err := aminoJSONHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	expectedSignBz, err := aminoJSONHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = aminoJSONHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = aminoJSONHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 }
 

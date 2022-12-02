@@ -1,7 +1,6 @@
 package legacytx
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,7 +32,7 @@ func (stdTxSignModeHandler) Modes() []signingtypes.SignMode {
 }
 
 // DefaultMode implements SignModeHandler.GetSignBytes
-func (stdTxSignModeHandler) GetSignBytes(_ context.Context, mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+func (stdTxSignModeHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, mode)
 	}

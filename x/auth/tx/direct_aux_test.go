@@ -80,11 +80,11 @@ func TestDirectAuxHandler(t *testing.T) {
 	modeHandler := signModeDirectAuxHandler{}
 
 	t.Log("verify fee payer cannot use SIGN_MODE_DIRECT_AUX")
-	_, err = modeHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, feePayerSigningData, txBuilder.GetTx())
+	_, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, feePayerSigningData, txBuilder.GetTx())
 	require.EqualError(t, err, fmt.Sprintf("fee payer %s cannot sign with %s: unauthorized", feePayerAddr.String(), signingtypes.SignMode_SIGN_MODE_DIRECT_AUX))
 
 	t.Log("verify GetSignBytes with generating sign bytes by marshaling signDocDirectAux")
-	signBytes, err := modeHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
+	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
 
@@ -121,7 +121,7 @@ func TestDirectAuxHandler(t *testing.T) {
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
-	signBytes, err = modeHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
+	signBytes, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.Equal(t, expectedSignBytes, signBytes)
 
@@ -148,7 +148,7 @@ func TestDirectAuxModeHandler_nonDIRECT_MODE(t *testing.T) {
 		t.Run(invalidMode.String(), func(t *testing.T) {
 			var dh signModeDirectAuxHandler
 			var signingData signing.SignerData
-			_, err := dh.GetSignBytes(nil, invalidMode, signingData, nil)
+			_, err := dh.GetSignBytes(invalidMode, signingData, nil)
 			require.Error(t, err)
 			wantErr := fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, invalidMode)
 			require.Equal(t, err, wantErr)
@@ -160,7 +160,7 @@ func TestDirectAuxModeHandler_nonProtoTx(t *testing.T) {
 	var dh signModeDirectAuxHandler
 	var signingData signing.SignerData
 	tx := new(nonProtoTx)
-	_, err := dh.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, tx)
+	_, err := dh.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT_AUX, signingData, tx)
 	require.Error(t, err)
 	wantErr := fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	require.Equal(t, err, wantErr)

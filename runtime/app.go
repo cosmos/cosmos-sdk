@@ -59,12 +59,12 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		if _, ok := a.ModuleManager.Modules[name]; ok {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
-		a.ModuleManager.Modules[name] = appModule
 
 		if _, ok := a.basicManager[name]; ok {
 			return fmt.Errorf("AppModuleBasic named %q already exists", name)
 		}
 
+		a.ModuleManager.Modules[name] = appModule
 		a.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)

@@ -33,4 +33,7 @@ type Iterator interface {
 	Tx() sdk.Tx
 }
 
-var ErrTxNotFound = errors.New("tx not found in mempool")
+var (
+	ErrTxNotFound           = errors.New("tx not found in mempool")
+	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
+)

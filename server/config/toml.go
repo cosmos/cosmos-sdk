@@ -248,6 +248,14 @@ streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
 keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
 write_dir = "{{ .Streamers.File.WriteDir }}"
 prefix = "{{ .Streamers.File.Prefix }}"
+
+###############################################################################
+###                         Mempool                                         ###
+###############################################################################
+
+[mempool]
+max-txs = "{{ .Mempool.MaxTxs }}"
+
 `
 
 var configTemplate *template.Template

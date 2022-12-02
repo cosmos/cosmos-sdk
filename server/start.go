@@ -33,7 +33,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+<<<<<<< HEAD
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+=======
+	"github.com/cosmos/cosmos-sdk/types/mempool"
+>>>>>>> 754ca3169 (feat: add tx limit to mempool  (#14014))
 )
 
 const (
@@ -79,6 +83,9 @@ const (
 	flagGRPCAddress    = "grpc.address"
 	flagGRPCWebEnable  = "grpc-web.enable"
 	flagGRPCWebAddress = "grpc-web.address"
+
+	// mempool flags
+	FlagMempoolMaxTxs = "mempool.max-txs"
 )
 
 // StartCmd runs the service passed in, either stand-alone or in-process with
@@ -189,6 +196,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
+
+	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app side mempool")
 
 	// add support for all Tendermint-specific command line options
 	tcmd.AddNodeFlags(cmd)

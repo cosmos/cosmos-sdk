@@ -220,6 +220,12 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
 * (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Fix propagation of message errors when executing a proposal.
+<<<<<<< HEAD
+=======
+* (baseapp)[#14049](https://github.com/cosmos/cosmos-sdk/pull/14049) Fix state sync when interval is zero.
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Fix state listener that was observing writes at wrong time.
+* (baseapp) [#13983](https://github.com/cosmos/cosmos-sdk/pull/13983) Don't emit duplicate ante-handler events when a post-handler is defined.
+>>>>>>> 25449b581 (fix: remove duplicate ante events (#13983))
 
 ### Deprecated
 

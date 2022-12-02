@@ -3,6 +3,11 @@
 ## Changelog
 
 * 11/23/2020: Initial draft
+* 10/14/2022:
+  * Add `ListenCommit`, flatten the state writes in a block to a single batch.
+  * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
+  * Remove `HaltAppOnDeliveryError()`, the errors are propogated by default, the implementations should return nil if don't want to propogate errors.
+
 
 ## Status
 
@@ -20,7 +25,7 @@ In addition to these request/response queries, it would be beneficial to have a 
 
 ## Decision
 
-We will modify the `MultiStore` interface and its concrete (`rootmulti` and `cachemulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores.
+We will modify the `CommitMultiStore` interface and its concrete (`rootmulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores. We don't need to listen to cache stores, because we can't be sure that the writes will be committed eventually, and the writes are duplicated in `rootmulti.Store` eventually, so we should only listen to `rootmulti.Store`.
 We will introduce a plugin system for configuring and running streaming services that write these state changes and their surrounding ABCI message context to different destinations.
 
 ### Listening interface
@@ -39,8 +44,8 @@ type WriteListener interface {
 
 ### Listener type
 
-We will create a concrete implementation of the `WriteListener` interface in `store/types/listening.go`, that writes out protobuf
-encoded KV pairs to an underlying `io.Writer`.
+We will create two concrete implementations of the `WriteListener` interface in `store/types/listening.go`, that writes out protobuf
+encoded KV pairs to an underlying `io.Writer`, and simply accumulate them in memory.
 
 This will include defining a simple protobuf type for the KV pairs. In addition to the key and value fields this message
 will include the StoreKey for the originating KVStore so that we can write out from separate KVStores to the same stream/file
@@ -86,6 +91,42 @@ func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, key []byte,
         return err
     }
     return nil
+}
+```
+
+```golang
+// MemoryListener listens to the state writes and accumulate the records in memory.
+type MemoryListener struct {
+	key        StoreKey
+	stateCache []StoreKVPair
+}
+
+// NewMemoryListener creates a listener that accumulate the state writes in memory.
+func NewMemoryListener(key StoreKey) *MemoryListener {
+	return &MemoryListener{key: key}
+}
+
+// OnWrite implements WriteListener interface
+func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
+	fl.stateCache = append(fl.stateCache, StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Delete:   delete,
+		Key:      key,
+		Value:    value,
+	})
+	return nil
+}
+
+// PopStateCache returns the current state caches and set to nil
+func (fl *MemoryListener) PopStateCache() []StoreKVPair {
+	res := fl.stateCache
+	fl.stateCache = nil
+	return res
+}
+
+// StoreKey returns the storeKey it listens to
+func (fl *MemoryListener) StoreKey() StoreKey {
+	return fl.key
 }
 ```
 
@@ -137,11 +178,10 @@ func (s *Store) onWrite(delete bool, key, value []byte) {
 
 ### MultiStore interface updates
 
-We will update the `MultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
-Additionally, we will update the `CacheWrap` and `CacheWrapper` interfaces to enable listening in the caching layer.
+We will update the `CommitMultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
 
 ```go
-type MultiStore interface {
+type CommitMultiStore interface {
     ...
 
     // ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
@@ -153,25 +193,9 @@ type MultiStore interface {
 }
 ```
 
-```go
-type CacheWrap interface {
-    ...
-
-    // CacheWrapWithListeners recursively wraps again with listening enabled
-    CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
-}
-
-type CacheWrapper interface {
-    ...
-
-    // CacheWrapWithListeners recursively wraps again with listening enabled
-    CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
-}
-```
-
 ### MultiStore implementation updates
 
-We will modify all of the `Store` and `MultiStore` implementations to satisfy these new interfaces, and adjust the `rootmulti` `GetKVStore` method
+We will modify all of the `CommitMultiStore` implementations to satisfy these new interfaces, and adjust the `rootmulti` `GetKVStore` method
 to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on for that `Store`.
 
 ```go
@@ -189,16 +213,21 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 }
 ```
 
-We will also adjust the `cachemulti` constructor methods and the `rootmulti` `CacheMultiStore` method to forward the listeners
-to and enable listening in the cache layer.
+We will also adjust the `rootmulti` `CacheMultiStore` method to wrap the stores with `listenkv.Store` to enable listening when the cache layer writes.
 
 ```go
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
-    stores := make(map[types.StoreKey]types.CacheWrapper)
-    for k, v := range rs.stores {
-        stores[k] = v
-    }
-    return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
+	stores := make(map[types.StoreKey]types.CacheWrapper)
+	for k, v := range rs.stores {
+		store := v.(types.KVStore)
+		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+		// set same listeners on cache store will observe duplicated writes.
+		if rs.ListeningEnabled(k) {
+			store = listenkv.NewStore(store, k, rs.listeners[k])
+		}
+		stores[k] = store
+	}
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
 }
 ```
 
@@ -208,10 +237,9 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 
 We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
 In addition to streaming state changes as `StoreKVPair`s, the interface satisfies an `ABCIListener` interface that plugs
-into the BaseApp and relays ABCI requests and responses so that the service can group the state changes with the ABCI
-requests that affected them and the ABCI responses they affected. The `ABCIListener` interface also exposes a
-`ListenSuccess` method which is (optionally) used by the `BaseApp` to await positive acknowledgement of message
-receipt from the `StreamingService`.
+into the BaseApp and relays ABCI requests and responses so that the service can observe those block metadatas as well.
+
+The `WriteListener`s of `StreamingService` listens to the `rootmulti.Store`, which is only written into at commit event by the cache store of `deliverState`.
 
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
@@ -222,13 +250,9 @@ type ABCIListener interface {
     ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
     // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
     ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-    // HaltAppOnDeliveryError whether or not to halt the application when delivery of massages fails
-    // in ListenBeginBlock, ListenEndBlock, ListenDeliverTx. When `false, the app will operate in fire-and-forget mode.
-    // When `true`, the app will gracefully halt and stop the running node. Uncommitted blocks will
-    // be replayed to all listeners when the node restarts and all successful listeners that received data
-    // prior to the halt will receive duplicate data. Whether or not a listener operates in a fire-and-forget mode
-    // is determined by the listener's configuration property `halt_app_on_delivery_error = true|false`.
-    HaltAppOnDeliveryError() bool
+    // ListenCommit updates the steaming service with the latest Commit message,
+    // All the state writes of current block should have notified before this message.
+    ListenCommit(ctx types.Context, res abci.ResponseCommit) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
@@ -269,32 +293,14 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	...
 
-	// call the hooks with the BeginBlock messages
-	wg := new(sync.WaitGroup)
-	for _, streamingListener := range app.abciListeners {
-		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-		if streamingListener.HaltAppOnDeliveryError() {
-			// increment the wait group counter
-			wg.Add(1)
-			go func() {
-				// decrement the counter when the go routine completes
-				defer wg.Done()
-				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-					app.halt()
-				}
-			}()
-		} else {
-			// fire and forget semantics
-			go func() {
-				if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
-				}
-			}()
+	defer func() {
+		// call the hooks with the BeginBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "BeginBlock listening hook failed, height: %d", req.Header.Height))
+			}
 		}
-	}
-	// wait for all the listener calls to finish
-	wg.Wait()
+	}()
 
 	return res
 }
@@ -305,74 +311,82 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	...
 
-	// Call the streaming service hooks with the EndBlock messages
-	wg := new(sync.WaitGroup)
-	for _, streamingListener := range app.abciListeners {
-		streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-		if streamingListener.HaltAppOnDeliveryError() {
-			// increment the wait group counter
-			wg.Add(1)
-			go func() {
-				// decrement the counter when the go routine completes
-				defer wg.Done()
-				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-					app.halt()
-				}
-			}()
-		} else {
-			// fire and forget semantics
-			go func() {
-				if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-					app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
-				}
-			}()
+  defer func() {
+		// Call the streaming service hooks with the EndBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "EndBlock listening hook failed, height: %d", req.Height))
+			}
 		}
-	}
-	// wait for all the listener calls to finish
-	wg.Wait()
+  }()
 
 	return res
 }
 ```
 
 ```go
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-	
-	var abciRes abci.ResponseDeliverTx
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+
 	defer func() {
-		// call the hooks with the BeginBlock messages
-		wg := new(sync.WaitGroup)
+		// call the hooks with the DeliverTx messages
 		for _, streamingListener := range app.abciListeners {
-			streamingListener := streamingListener // https://go.dev/doc/faq#closures_and_goroutines
-			if streamingListener.HaltAppOnDeliveryError() {
-				// increment the wait group counter
-				wg.Add(1)
-				go func() {
-					// decrement the counter when the go routine completes
-					defer wg.Done()
-					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-						app.logger.Error("DeliverTx listening hook failed", "err", err)
-						app.halt()
-					}
-				}()
-			} else {
-				// fire and forget semantics
-				go func() {
-					if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, abciRes); err != nil {
-						app.logger.Error("DeliverTx listening hook failed", "err", err)
-					}
-				}()
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
 			}
 		}
-		// wait for all the listener calls to finish
-		wg.Wait()
 	}()
-	
+
 	...
 
 	return res
 }
+```
+
+```golang
+func (app *BaseApp) Commit() abci.ResponseCommit {
+	header := app.deliverState.ctx.BlockHeader()
+	retainHeight := app.GetBlockRetentionHeight(header.Height)
+
+	// Write the DeliverTx state into branched storage and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	app.deliverState.ms.Write()
+	commitID := app.cms.Commit()
+
+	res := abci.ResponseCommit{
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
+	}
+
+	// call the hooks with the Commit message
+	for _, streamingListener := range app.abciListeners {
+		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
+			panic(sdkerrors.Wrapf(err, "Commit listening hook failed, height: %d", header.Height))
+		}
+	}
+
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
+  ...
+}
+```
+
+#### Error Handling And Async Consumers
+
+`ABCIListener`s are called synchronously inside the consensus state machine, the returned error causes panic which in turn halt the consensus state machine. The implementer should be careful not to break consensus unexpectedly or slow down it too much.
+
+For some async use cases, one can spawn a go-routine internanlly to avoid slow down consensus state machine, and handle the errors internally and always returns `nil` to avoid halting consensus state machine on error.
+
+Furthermore, for most of the cases, we only need to use the builtin file streamer to listen to state changes directly inside cosmos-sdk, the other consumers should subscribe to the file streamer output externally.
+
+#### File Streamer
+
+We provide a minimal filesystem based implementation inside cosmos-sdk, and provides options to write output files reliably, the output files can be further consumed by external consumers, so most of the state listeners actually don't need to live inside the sdk and node, which improves the node robustness and simplify sdk internals.
+
+The file streamer can be wired in app like this:
+```golang
+exposeStoreKeys := ... // decide the key list to listen
+service, err := file.NewStreamingService(streamingDir, "", exposeStoreKeys, appCodec, logger)
+bApp.SetStreamingService(service)
 ```
 
 #### Plugin system
@@ -539,7 +553,7 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Backwards Compatibility
 
-* This ADR changes the `MultiStore`, `CacheWrap`, and `CacheWrapper` interfaces, implementations supporting the previous version of these interfaces will not support the new ones
+* This ADR changes the `CommitMultiStore` interface, implementations supporting the previous version of these interfaces will not support the new ones
 
 ### Positive
 
@@ -547,7 +561,7 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Negative
 
-* Changes `MultiStore`, `CacheWrap`, and `CacheWrapper` interfaces
+* Changes `CommitMultiStore`interface
 
 ### Neutral
 

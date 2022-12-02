@@ -27,9 +27,32 @@ const (
 	draftMetadataFileName = "draft_metadata.json"
 )
 
+var suggestedProposalTypes = []proposalType{
+	{
+		Name:    proposalText,
+		MsgType: "", // no message for text proposal
+	},
+	{
+		Name:    "community-pool-spend",
+		MsgType: "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
+	},
+	{
+		Name:    "software-upgrade",
+		MsgType: "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+	},
+	{
+		Name:    "cancel-software-upgrade",
+		MsgType: "/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
+	},
+	{
+		Name:    proposalOther,
+		MsgType: "", // user will input the message type
+	},
+}
+
 // Prompt prompts the user for all values of the given type.
 // data is the struct to be filled
-// namePrefix is the name to be display as "Enter <namePrefix> <field>"
+// namePrefix is the name to be displayed as "Enter <namePrefix> <field>"
 func Prompt[T any](data T, namePrefix string) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {
@@ -48,7 +71,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 
 		// create prompts
 		prompt := promptui.Prompt{
-			Label:    fmt.Sprintf("Enter %s %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
+			Label:    fmt.Sprintf("Enter %s's %s", namePrefix, strings.ToLower(client.CamelCaseToString(v.Type().Field(i).Name))),
 			Validate: client.ValidatePromptNotEmpty,
 		}
 
@@ -150,29 +173,7 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadat
 	return proposal, metadata, nil
 }
 
-var suggestedProposalTypes = []proposalType{
-	{
-		Name:    proposalText,
-		MsgType: "", // no message for text proposal
-	},
-	{
-		Name:    "community-pool-spend",
-		MsgType: "/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
-	},
-	{
-		Name:    "software-upgrade",
-		MsgType: "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-	},
-	{
-		Name:    "cancel-software-upgrade",
-		MsgType: "/cosmos.upgrade.v1beta1.MsgCancelUpgrade",
-	},
-	{
-		Name:    proposalOther,
-		MsgType: "", // user will input the message type
-	},
-}
-
+// getProposalSuggestions suggests a list of proposal types
 func getProposalSuggestions() []string {
 	types := make([]string, len(suggestedProposalTypes))
 	for i, p := range suggestedProposalTypes {
@@ -264,6 +265,7 @@ func NewCmdDraftProposal() *cobra.Command {
 	return cmd
 }
 
+// writeFile writes the input to the file
 func writeFile(fileName string, input any) error {
 	raw, err := json.MarshalIndent(input, "", " ")
 	if err != nil {

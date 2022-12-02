@@ -75,7 +75,7 @@ func TestDirectModeHandler(t *testing.T) {
 		PubKey:        pubkey,
 	}
 
-	signBytes, err := modeHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
 
 	require.NoError(t, err)
 	require.NotNil(t, signBytes)
@@ -120,7 +120,7 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sig)
 	require.NoError(t, err)
-	signBytes, err = modeHandler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
+	signBytes, err = modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
 	require.NoError(t, err)
 	require.Equal(t, expectedSignBytes, signBytes)
 
@@ -141,7 +141,7 @@ func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 		t.Run(invalidMode.String(), func(t *testing.T) {
 			var dh signModeDirectHandler
 			var signingData signing.SignerData
-			_, err := dh.GetSignBytes(nil, invalidMode, signingData, nil)
+			_, err := dh.GetSignBytes(invalidMode, signingData, nil)
 			require.Error(t, err)
 			wantErr := fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, invalidMode)
 			require.Equal(t, err, wantErr)
@@ -160,7 +160,7 @@ func TestDirectModeHandler_nonProtoTx(t *testing.T) {
 	var dh signModeDirectHandler
 	var signingData signing.SignerData
 	tx := new(nonProtoTx)
-	_, err := dh.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err := dh.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 	wantErr := fmt.Errorf("can only handle a protobuf Tx, got %T", tx)
 	require.Equal(t, err, wantErr)

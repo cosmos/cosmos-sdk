@@ -219,6 +219,14 @@ output-metadata = "{{ .Streamers.File.OutputMetadata }}"
 stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
 # fsync specifies if call fsync after writing the files.
 fsync = "{{ .Streamers.File.Fsync }}"
+
+###############################################################################
+###                         Mempool                                         ###
+###############################################################################
+
+[mempool]
+max-txs = "{{ .Mempool.MaxTxs }}"
+
 `
 
 var configTemplate *template.Template

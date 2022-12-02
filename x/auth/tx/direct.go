@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"context"
 	"fmt"
 
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -27,7 +26,7 @@ func (signModeDirectHandler) Modes() []signingtypes.SignMode {
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (signModeDirectHandler) GetSignBytes(_ context.Context, mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+func (signModeDirectHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_DIRECT {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_DIRECT, mode)
 	}

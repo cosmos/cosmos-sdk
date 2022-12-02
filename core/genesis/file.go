@@ -59,6 +59,10 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 			return fp, nil
 		}
 
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("unexpected error: %w", err)
+		}
+
 		// if cannot find it, try reading from <sourceDir>/<module>.json
 		// or <sourceDir>/genesis.json
 		rawBz, err = f.ReadRawJSON()
@@ -135,6 +139,10 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 
 	fp, err := os.Open(filepath.Clean(fPath))
 	if err != nil {
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to open %q: %w", fPath, err)
+		}
+
 		// try reading from <sourceDir>/genesis.json if it's not able to read from
 		// <sourceDir>/<moduleName>.json
 		fPath = filepath.Join(f.sourceDir, "genesis.json")

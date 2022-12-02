@@ -17,3 +17,5 @@ jobs:
         uses: actions/dependency-review-action@v3
       - name: "Dependency audit"
         run: ./scripts/dep-assert.sh
+      - name: "Go vulnerability check"
+        run: make vulncheck

@@ -25,6 +25,7 @@ import (
 )
 
 const initialAppVersion = 0
+const StoreInfoPath = "info"
 
 type AppVersionError struct {
 	Actual  uint64
@@ -826,7 +827,30 @@ func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.R
 	resp := queryable.Query(req)
 	resp.Height = req.Height
 
+	if path[1] == StoreInfoPath {
+		commitInfo, err := app.cms.GetCommitInfoFromDB(resp.Height)
+		if err != nil {
+			return sdkerrors.QueryResult(err)
+		}
+
+		// sort the commitInfo, otherwise it returns in a different order every height
+		sort.Slice(commitInfo.StoreInfos, func(i, j int) bool {
+			return commitInfo.StoreInfos[i].Name < commitInfo.StoreInfos[j].Name
+		})
+
+		bz, err := codec.ProtoMarshalJSON(commitInfo, app.interfaceRegistry)
+		if err != nil {
+			return sdkerrors.QueryResult(sdkerrors.Wrap(err, "failed to JSON encode simulation response"))
+		}
+
+		return abci.ResponseQuery{
+			Codespace: sdkerrors.RootCodespace,
+			Height:    req.Height,
+			Value:     bz,
+		}
+	}
 	return resp
+
 }
 
 func handleQueryP2P(app *BaseApp, path []string) abci.ResponseQuery {

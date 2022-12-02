@@ -131,7 +131,7 @@ func (f *FileGenesisSource) ReadMessage(msg proto.Message) error {
 // it will try to read raw JSON data from <sourceDir>/genesis.json
 func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	if len(f.moduleName) == 0 {
-		return nil, fmt.Errorf("failed to read RawJSON: empty module name")
+		return nil, errors.New("failed to read RawJSON: empty module name")
 	}
 
 	fName := fmt.Sprintf("%s.json", f.moduleName)
@@ -169,19 +169,16 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 		return nil, rerr
 	}
 
-	var buf bytes.Buffer
-	n, err := buf.ReadFrom(fp)
+	buf, err := io.ReadAll(fp)
 	if err != nil {
 		rerr = fmt.Errorf("failed to read file %s: %w", fp.Name(), err)
 		return nil, rerr
 	}
-
-	if n != fi.Size() {
-		rerr = fmt.Errorf("couldn't read entire file: %s, read: %d, file size: %d", fp.Name(), n, fi.Size())
+	if int64(len(buf)) != fi.Size() {
+		rerr = fmt.Errorf("couldn't read entire file: %s, read: %d, file size: %d", fp.Name(), len(buf), fi.Size())
 		return nil, rerr
 	}
-
-	return buf.Bytes(), nil
+	return buf, nil
 }
 
 type FileGenesisTarget struct {
@@ -227,11 +224,7 @@ func (f *FileGenesisTarget) OpenWriter(field string) (io.WriteCloser, error) {
 		}
 
 		fileName := fmt.Sprintf("%s.json", field)
-		fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, f.moduleName, fileName)), fileOpenflag, flieOpenMode)
-		if err != nil {
-			return nil, fmt.Errorf("failed to open writer, %s: %w", fileName, err)
-		}
-		return fp, nil
+		return os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, f.moduleName, fileName)), fileOpenflag, flieOpenMode)
 	}
 
 	if err := os.MkdirAll(f.targetDir, dirCreateMode); err != nil {

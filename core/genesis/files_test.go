@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,8 +28,8 @@ func TestFileGenesisSourceOpenReaderWithField(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := "genesis read test!"
-	_, err = f.WriteString(str)
+	in := []byte("genesis read test!")
+	_, err = f.Write(in)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
@@ -36,11 +37,9 @@ func TestFileGenesisSourceOpenReaderWithField(t *testing.T) {
 	require.NoError(t, err)
 	defer reader.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(reader)
+	got, err := io.ReadAll(reader)
 	require.NoError(t, err)
-
-	require.Equal(t, str, buf.String())
+	require.Equal(t, in, got)
 }
 
 func TestFileGenesisSourceOpenReaderWithCachedmoduleJson(t *testing.T) {
@@ -56,8 +55,8 @@ func TestFileGenesisSourceOpenReaderWithCachedmoduleJson(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := "genesis read test!"
-	_, err = f.WriteString(str)
+	in := []byte("genesis read test!")
+	_, err = f.Write(in)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
@@ -65,11 +64,9 @@ func TestFileGenesisSourceOpenReaderWithCachedmoduleJson(t *testing.T) {
 	require.NoError(t, err)
 	defer reader.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(reader)
+	got, err := io.ReadAll(reader)
 	require.NoError(t, err)
-
-	require.Equal(t, str, buf.String())
+	require.Equal(t, in, got)
 }
 
 func TestFileGenesisSourceOpenReaderWithModule(t *testing.T) {
@@ -131,12 +128,11 @@ func TestFileGenesisSourceOpenReaderWithGenesis(t *testing.T) {
 	require.NoError(t, err)
 	defer reader.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(reader)
+	got, err := io.ReadAll(reader)
 	require.NoError(t, err)
 
 	expected := json.RawMessage(`"value"`)
-	require.Equal(t, expected, json.RawMessage(buf.String()))
+	require.Equal(t, expected, json.RawMessage(got))
 }
 
 func TestFileGenesisSourceOpenReaderWithInvalidFile(t *testing.T) {
@@ -149,8 +145,8 @@ func TestFileGenesisSourceOpenReaderWithInvalidFile(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := "genesis read test!"
-	_, err = f.WriteString(str)
+	in := []byte("genesis read test!")
+	_, err = f.Write(in)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
@@ -168,17 +164,15 @@ func TestFileGenesisSourceReadRawJSON(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := `{"genesis": "read test"}`
-
-	_, err = f.WriteString(str)
+	in := []byte(`{"genesis": "read test"}`)
+	_, err = f.Write(in)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
 
 	rj, err := gs.ReadRawJSON()
 	require.NoError(t, err)
-
-	require.Equal(t, str, (string)(rj))
+	require.Equal(t, in, []byte(rj))
 }
 
 func TestFileGenesisSourceReadRawJSONDefault(t *testing.T) {
@@ -191,17 +185,15 @@ func TestFileGenesisSourceReadRawJSONDefault(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := `{"genesis": "read test"}`
-
-	_, err = f.WriteString(str)
+	in := []byte(`{"genesis": "read test"}`)
+	_, err = f.Write(in)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
 
 	rj, err := gs.ReadRawJSON()
 	require.NoError(t, err)
-
-	require.Equal(t, str, (string)(rj))
+	require.Equal(t, in, []byte(rj))
 }
 
 func TestFileGenesisSourceReadRawJSONWithEmptyModuleName(t *testing.T) {
@@ -214,9 +206,8 @@ func TestFileGenesisSourceReadRawJSONWithEmptyModuleName(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	str := `{"genesis": "read test"}`
-
-	_, err = f.WriteString(str)
+	in := []byte(`{"genesis": "read test"}`)
+	_, err = f.Write(in)
 	require.NoError(t, err)
 
 	gs := NewFileGenesisSource(tmpdir, moduleName)
@@ -273,19 +264,17 @@ func TestFileGenesisTargetWithField(t *testing.T) {
 	require.NoError(t, err)
 	defer w.Close()
 
-	msg := "test message"
-	_, err = w.Write([]byte(msg))
+	msg := []byte("test message")
+	_, err = w.Write(msg)
 	require.NoError(t, err)
 
 	fp, err := os.Open(filepath.Join(tmp, moduleName, fmt.Sprintf("%s.json", field)))
 	require.NoError(t, err)
 	defer fp.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(fp)
+	got, err := io.ReadAll(fp)
 	require.NoError(t, err)
-
-	require.Equal(t, msg, buf.String())
+	require.Equal(t, msg, got)
 }
 
 func TestFileGenesisTargetWithModule(t *testing.T) {
@@ -299,19 +288,17 @@ func TestFileGenesisTargetWithModule(t *testing.T) {
 	require.NoError(t, err)
 	defer w.Close()
 
-	msg := "test message"
-	_, err = w.Write([]byte(msg))
+	msg := []byte("test message")
+	_, err = w.Write(msg)
 	require.NoError(t, err)
 
 	fp, err := os.Open(filepath.Join(tmp, fmt.Sprintf("%s.json", moduleName)))
 	require.NoError(t, err)
 	defer fp.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(fp)
+	got, err := io.ReadAll(fp)
 	require.NoError(t, err)
-
-	require.Equal(t, msg, buf.String())
+	require.Equal(t, msg, got)
 }
 
 func TestFileGenesisTargetWithoutModuleAndField(t *testing.T) {
@@ -325,19 +312,17 @@ func TestFileGenesisTargetWithoutModuleAndField(t *testing.T) {
 	require.NoError(t, err)
 	defer w.Close()
 
-	msg := "test message"
-	_, err = w.Write([]byte(msg))
+	msg := []byte("test message")
+	_, err = w.Write(msg)
 	require.NoError(t, err)
 
 	fp, err := os.Open(filepath.Join(tmp, "genesis.json"))
 	require.NoError(t, err)
 	defer fp.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(fp)
+	got, err := io.ReadAll(fp)
 	require.NoError(t, err)
-
-	require.Equal(t, msg, buf.String())
+	require.Equal(t, msg, got)
 }
 
 func TestFileGenesisTargetWriteMessageNoOp(t *testing.T) {
@@ -353,8 +338,8 @@ func TestFileGenesisTargetWriteRawJSONEmptyModuleName(t *testing.T) {
 
 	gt := NewFileGenesisTarget(tmpdir, moduleName)
 
-	str := `{"genesis": "write test"}`
-	err := gt.WriteRawJSON([]byte(str))
+	str := []byte(`{"genesis": "write test"}`)
+	err := gt.WriteRawJSON(str)
 	require.ErrorContains(t, err, "failed to write RawJSON: empty module name")
 }
 
@@ -364,8 +349,8 @@ func TestFileGenesisTargetWriteRawJSON(t *testing.T) {
 
 	gt := NewFileGenesisTarget(tmpdir, moduleName)
 
-	str := `{"genesis": "write test"}`
-	err := gt.WriteRawJSON([]byte(str))
+	in := []byte(`{"genesis": "write test"}`)
+	err := gt.WriteRawJSON(in)
 	require.NoError(t, err)
 
 	fp := filepath.Join(filepath.Clean(tmpdir), fmt.Sprintf("%s.json", moduleName))
@@ -374,11 +359,9 @@ func TestFileGenesisTargetWriteRawJSON(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(f)
+	got, err := io.ReadAll(f)
 	require.NoError(t, err)
-
-	require.Equal(t, str, buf.String())
+	require.Equal(t, in, got)
 }
 
 func TestFileGenesisTargetWriteRawJSONWithIndent(t *testing.T) {
@@ -387,8 +370,8 @@ func TestFileGenesisTargetWriteRawJSONWithIndent(t *testing.T) {
 
 	gt := NewFileGenesisTargetWithIndent(tmpdir, moduleName)
 
-	str := `{"genesis": "write test"}`
-	err := gt.WriteRawJSON([]byte(str))
+	in := []byte(`{"genesis": "write test"}`)
+	err := gt.WriteRawJSON(in)
 	require.NoError(t, err)
 
 	fp := filepath.Join(filepath.Clean(tmpdir), fmt.Sprintf("%s.json", moduleName))
@@ -397,12 +380,10 @@ func TestFileGenesisTargetWriteRawJSONWithIndent(t *testing.T) {
 	require.NoError(t, err)
 	defer f.Close()
 
-	buf := &bytes.Buffer{}
-	_, err = buf.ReadFrom(f)
+	got, err := io.ReadAll(f)
 	require.NoError(t, err)
 
-	fstr, err := json.MarshalIndent(json.RawMessage(str), "", "  ")
+	fstr, err := json.MarshalIndent(json.RawMessage(in), "", "  ")
 	require.NoError(t, err)
-
-	require.Equal(t, string(fstr), buf.String())
+	require.Equal(t, fstr, got)
 }

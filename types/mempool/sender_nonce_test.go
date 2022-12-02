@@ -114,7 +114,7 @@ func (s *MempoolTestSuite) TestTxOrder() {
 	}
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			pool := mempool.NewSenderNonceMempoolWithSeed(tt.seed)
+			pool := mempool.NewSenderNonceMempool(mempool.SenderNonceSeedOpt(tt.seed))
 			// create test txs and insert into mempool
 			for i, ts := range tt.txs {
 				tx := testTx{id: i, priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a}
@@ -136,4 +136,61 @@ func (s *MempoolTestSuite) TestTxOrder() {
 			require.Equal(t, 0, pool.CountTx())
 		})
 	}
+}
+
+func (s *MempoolTestSuite) TestMaxTx() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(1))
+
+	tx := testTx{
+		nonce:    0,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+	tx2 := testTx{
+		nonce:    1,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+
+	// empty mempool behavior
+	require.Equal(t, 0, s.mempool.CountTx())
+	itr := mp.Select(ctx, nil)
+	require.Nil(t, itr)
+
+	ctx = ctx.WithPriority(tx.priority)
+	err := mp.Insert(ctx, tx)
+	require.NoError(t, err)
+	ctx = ctx.WithPriority(tx.priority)
+	err = mp.Insert(ctx, tx2)
+	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
+
+}
+
+func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	mp := mempool.NewSenderNonceMempool()
+
+	txSender := testTx{
+		nonce:    0,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+
+	tx := testTx{
+		nonce:    1,
+		address:  accounts[0].Address,
+		priority: rand.Int63(),
+	}
+
+	ctx = ctx.WithPriority(tx.priority)
+	err := mp.Insert(ctx, txSender)
+	require.NoError(t, err)
+	err = mp.Remove(tx)
+	require.Equal(t, mempool.ErrTxNotFound, err)
+
 }

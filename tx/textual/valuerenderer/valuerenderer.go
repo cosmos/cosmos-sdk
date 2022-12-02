@@ -44,9 +44,7 @@ type Textual struct {
 // NewTextual returns a new Textual which provides
 // value renderers.
 func NewTextual(q CoinMetadataQueryFn) Textual {
-	t := Textual{
-		coinMetadataQuerier: q,
-	}
+	t := Textual{coinMetadataQuerier: q}
 	t.init()
 	return t
 }

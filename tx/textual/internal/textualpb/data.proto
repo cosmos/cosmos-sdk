@@ -4,7 +4,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
 
 // TextualData represents all the information needed to generate
-// the textual SignDoc (which is a []Screen). It is meant to be
+// the textual SignDoc (which is []Screen encoded to XBOR). It is meant to be
 // used as an internal type in Textual's implementations.
 message TextualData {
   // body_bytes is a protobuf serialization of a TxBody that matches the

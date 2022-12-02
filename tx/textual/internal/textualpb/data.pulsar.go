@@ -1254,7 +1254,7 @@ const (
 )
 
 // TextualData represents all the information needed to generate
-// the textual SignDoc (which is a []Screen). It is meant to be
+// the textual SignDoc (which is []Screen encoded to XBOR). It is meant to be
 // used as an internal type in Textual's implementations.
 type TextualData struct {
 	state         protoimpl.MessageState

@@ -163,6 +163,49 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
+<<<<<<< HEAD
+=======
+// MempoolConfig defines the configurations for the appside mempool
+type MempoolConfig struct {
+	// MaxTxs defines the behavior of the mempool. A negative value indicates
+	// the mempool is disabled entirely, zero indicates that the mempool is
+	// unbounded in how many txs it may contain, and a positive value indicates
+	// the maximum amount of txs it may contain.
+	MaxTxs int
+}
+
+type (
+	// StoreConfig defines application configuration for state streaming and other
+	// storage related operations.
+	StoreConfig struct {
+		Streamers []string `mapstructure:"streamers"`
+	}
+
+	// StreamersConfig defines concrete state streaming configuration options. These
+	// fields are required to be set when state streaming is enabled via a non-empty
+	// list defined by 'StoreConfig.Streamers'.
+	StreamersConfig struct {
+		File FileStreamerConfig `mapstructure:"file"`
+	}
+
+	// FileStreamerConfig defines the file streaming configuration options.
+	FileStreamerConfig struct {
+		Keys     []string `mapstructure:"keys"`
+		WriteDir string   `mapstructure:"write_dir"`
+		Prefix   string   `mapstructure:"prefix"`
+		// OutputMetadata specifies if output the block metadata file which includes
+		// the abci requests/responses, otherwise only the data file is outputted.
+		OutputMetadata bool `mapstructure:"output-metadata"`
+		// StopNodeOnError specifies if propagate the streamer errors to the consensus
+		// state machine, it's nesserary for data integrity of output.
+		StopNodeOnError bool `mapstructure:"stop-node-on-error"`
+		// Fsync specifies if calling fsync after writing the files, it slows down
+		// the commit, but don't lose data in face of system crash.
+		Fsync bool `mapstructure:"fsync"`
+	}
+)
+
+>>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -250,6 +293,26 @@ func DefaultConfig() *Config {
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,
 		},
+<<<<<<< HEAD
+=======
+		Store: StoreConfig{
+			Streamers: []string{},
+		},
+		Streamers: StreamersConfig{
+			File: FileStreamerConfig{
+				Keys:            []string{"*"},
+				WriteDir:        "data/file_streamer",
+				OutputMetadata:  true,
+				StopNodeOnError: true,
+				// NOTICE: the default config don't protect the streamer data integrity
+				// in face of system crash.
+				Fsync: false,
+			},
+		},
+		Mempool: MempoolConfig{
+			MaxTxs: 0,
+		},
+>>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 	}
 }
 

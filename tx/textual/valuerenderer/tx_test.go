@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -98,9 +97,9 @@ func TestTxJsonTestcases(t *testing.T) {
 			require.Equal(t, tc.Cbor, hex.EncodeToString(bz))
 
 			// Round trip.
-			// parsedVal, err := rend.Parse(context.Background(), screens)
-			// require.NoError(t, err)
-			// require.Equal(t, val.Interface(), parsedVal.Interface())
+			parsedVal, err := rend.Parse(context.Background(), screens)
+			require.NoError(t, err)
+			require.Equal(t, val.Interface(), parsedVal.Interface())
 		})
 	}
 }
@@ -119,7 +118,6 @@ func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonS
 
 	// Unmarshal the pubkey
 	anyPubKey := &anypb.Any{}
-	fmt.Println("jsonSignerData.PubKey=", string(jsonSignerData.PubKey))
 	err = protojson.Unmarshal(jsonSignerData.PubKey, anyPubKey)
 	require.NoError(t, err)
 

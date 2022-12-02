@@ -166,17 +166,47 @@ func getHash(bodyBz, authInfoBz []byte) string {
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
-	res := &textualpb.TextualData{}
-
-	_, _, err := vr.parsePart(ctx, screens, &textualpb.Part1{})
+	_, part1, err := parsePart(ctx, vr, screens, (&textualpb.Part1{}))
 	if err != nil {
 		return nilValue, err
+	}
+	_, part2, err := parsePart(ctx, vr, screens, (&textualpb.Part2{}))
+	if err != nil {
+		return nilValue, err
+	}
+
+	body := &txv1beta1.TxBody{}
+	authInfo := &txv1beta1.AuthInfo{}
+	signerData := &textualpb.SignerData{
+		ChainId:       part1.ChainId,
+		AccountNumber: part1.AccountNumber,
+	}
+
+	fmt.Println(part1)
+	fmt.Println(part2)
+
+	// Note that we might not always get back the exact bodyBz and authInfoBz
+	// that was passed into, because protobuf is not deterministic.
+	// In tests, we don't check bytes equality, but protobuf object equality.
+	bodyBz, err := proto.Marshal(body)
+	if err != nil {
+		return nilValue, err
+	}
+	authInfoBz, err := proto.Marshal(authInfo)
+	if err != nil {
+		return nilValue, err
+	}
+
+	res := textualpb.TextualData{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		SignerData:    signerData,
 	}
 
 	return protoreflect.ValueOfMessage(res.ProtoReflect()), nil
 }
 
-func (vr txValueRenderer) parsePart(ctx context.Context, screens []Screen, m proto.Message) ([]Screen, proto.Message, error) {
+func parsePart[T proto.Message](ctx context.Context, vr txValueRenderer, screens []Screen, m T) ([]Screen, T, error) {
 	messageVR := NewMessageValueRenderer(vr.tr, m.ProtoReflect().Descriptor())
 
 	// Manually add the "<message_name> object" header screen, and indent correctly
@@ -187,8 +217,8 @@ func (vr txValueRenderer) parsePart(ctx context.Context, screens []Screen, m pro
 
 	v, err := messageVR.Parse(ctx, screens)
 	if err != nil {
-		return nil, nil, err
+		return nil, *new(T), err
 	}
 
-	return screens, v.Message().Interface(), err
+	return screens, v.Message().Interface().(T), err
 }

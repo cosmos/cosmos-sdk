@@ -1,7 +1,6 @@
 package mempool_test
 
 import (
-	"math/rand"
 	"sort"
 
 	"pgregory.net/rapid"
@@ -9,7 +8,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	mempool "github.com/cosmos/cosmos-sdk/types/mempool"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -27,18 +25,20 @@ var (
 // same elements input on the mempool should be in the output except for sender nonce duplicates, which are overwritten by the later duplicate entries.
 // for every sender transaction tx_n, tx_0.nonce < tx_1.nonce ... < tx_n.nonce
 
-var genAddress = rapid.Custom(func(t *rapid.T) simtypes.Account {
-	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(rapid.Int64().Draw(t, "seed for account"))), 1)
-	return accounts[0]
-})
+func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {
+	return rapid.Custom(func(t *rapid.T) sdk.AccAddress {
+		pkBz := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "hex")
+		return sdk.AccAddress(pkBz)
+	})
+}
 
 func testMempoolProperties(t *rapid.T) {
 
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	mp := mempool.NewSenderNonceMempool()
 
-	genMultipleAddress := rapid.SliceOfNDistinct(genAddress, 1, 10, func(acc simtypes.Account) string {
-		return acc.Address.String()
+	genMultipleAddress := rapid.SliceOfNDistinct(AddressGenerator(t), 1, 10, func(acc sdk.AccAddress) string {
+		return acc.String()
 	})
 
 	accounts := genMultipleAddress.Draw(t, "address")
@@ -46,10 +46,10 @@ func testMempoolProperties(t *rapid.T) {
 		return testTx{
 			priority: rapid.Int64Range(0, 1000).Draw(t, "priority"),
 			nonce:    rapid.Uint64().Draw(t, "nonce"),
-			address:  rapid.SampledFrom(accounts).Draw(t, "acc").Address,
+			address:  rapid.SampledFrom(accounts).Draw(t, "acc"),
 		}
 	})
-	genMultipleTX := rapid.SliceOfN(genTx, 1, 500)
+	genMultipleTX := rapid.SliceOfN(genTx, 1, 5000)
 
 	txs := genMultipleTX.Draw(t, "txs")
 	senderTxRaw := getSenderTxMap(txs)
@@ -61,6 +61,7 @@ func testMempoolProperties(t *rapid.T) {
 
 	iter := mp.Select(ctx, nil)
 	orderTx := fetchAllTxs(iter)
+	require.Equal(t, len(orderTx), mp.CountTx())
 	senderTxOrdered := getSenderTxMap(orderTx)
 	for key := range senderTxOrdered {
 		ordered, found := senderTxOrdered[key]

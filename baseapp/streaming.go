@@ -62,7 +62,7 @@ func registerABCIListenerPlugin(
 	exposeKeysStr := cast.ToStringSlice(appOpts.Get(keysKey))
 	exposedKeys := exposeStoreKeysSorted(exposeKeysStr, keys)
 	bApp.cms.AddListeners(exposedKeys)
-	bApp.abciListeners = append(bApp.abciListeners, abciListener)
+	bApp.SetStreamingService(abciListener)
 	bApp.stopNodeOnABCIListenerErr = stopNodeOnErr
 	bApp.abciListenersAsync = async
 }

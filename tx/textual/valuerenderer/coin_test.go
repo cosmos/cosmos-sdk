@@ -48,7 +48,7 @@ func TestMetadataQuerier(t *testing.T) {
 	require.NoError(t, err)
 	_, err = vr.Format(context.Background(), protoreflect.ValueOf((&basev1beta1.Coin{}).ProtoReflect()))
 	require.ErrorIs(t, err, expErr)
-	_, err = vr.Format(context.Background(), protoreflect.ValueOf(NewGenericList([]*basev1beta1.Coin{{}})))
+	_, err = vr.(valuerenderer.RepeatedValueRenderer).FormatRepeated(context.Background(), protoreflect.ValueOf(NewGenericList([]*basev1beta1.Coin{{}})))
 	require.ErrorIs(t, err, expErr)
 }
 
@@ -67,6 +67,10 @@ func TestCoinJsonTestcases(t *testing.T) {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
 				ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.Proto.Denom), tc.Metadata)
+				if tc.Metadata != nil {
+					ctx = context.WithValue(ctx, mockCoinMetadataKey(tc.Metadata.Display), tc.Metadata)
+				}
+
 				screens, err := vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 
 				if tc.Error {
@@ -77,10 +81,20 @@ func TestCoinJsonTestcases(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
 				require.Equal(t, tc.Text, screens[0].Text)
-			}
 
-			// TODO Add parsing tests
-			// https://github.com/cosmos/cosmos-sdk/issues/13153
+				// Round trip.
+				value, err := vr.Parse(ctx, screens)
+				if tc.Error {
+					require.Error(t, err)
+					return
+				}
+
+				require.NoError(t, err)
+				coin, ok := value.Message().Interface().(*basev1beta1.Coin)
+				require.True(t, ok)
+
+				checkCoinEqual(t, coin, tc.Proto)
+			}
 		})
 	}
 }

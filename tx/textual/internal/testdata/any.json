@@ -1,74 +1,74 @@
 [
     {
         "proto": {
-            "@type": "type.googleapis.com/Foo"
+            "@type": "/Foo"
         },
         "screens": [
-            {"text": "Object: type.googleapis.com/Foo"},
+            {"text": "Object: /Foo"},
             {"text": "Foo object", "indent": 1}
         ]
     },
     {
         "proto": {
-            "@type": "type.googleapis.com/Foo",
+            "@type": "/Foo",
             "full_name": "testing"
         },
         "screens": [
-            {"text": "Object: type.googleapis.com/Foo"},
+            {"text": "Object: /Foo"},
             {"text": "Foo object", "indent": 1},
             {"text": "Full name: testing", "indent": 2}
         ]
     },
     {
         "proto": {
-            "@type": "type.googleapis.com/google.protobuf.Timestamp",
+            "@type": "/google.protobuf.Timestamp",
             "value": "2006-01-02T15:04:05Z"
         },
         "screens": [
-            {"text": "Object: type.googleapis.com/google.protobuf.Timestamp"},
+            {"text": "Object: /google.protobuf.Timestamp"},
             {"text": "2006-01-02T15:04:05Z", "indent": 1}
         ]
     },
     {
         "proto": {
-            "@type": "type.googleapis.com/google.protobuf.Any",
+            "@type": "/google.protobuf.Any",
             "value": {
-                "@type": "type.googleapis.com/Foo"
+                "@type": "/Foo"
             }
         },
         "screens": [
-            {"text": "Object: type.googleapis.com/google.protobuf.Any"},
-            {"text": "Object: type.googleapis.com/Foo", "indent": 1},
+            {"text": "Object: /google.protobuf.Any"},
+            {"text": "Object: /Foo", "indent": 1},
             {"text": "Foo object", "indent": 2}
         ]
     },
     {
        "proto": {
-            "@type": "type.googleapis.com/google.protobuf.Any",
+            "@type": "/google.protobuf.Any",
             "value": {
-                "@type": "type.googleapis.com/Foo",
+                "@type": "/Foo",
                 "full_name": "testing"
             }
         },
         "screens": [
-            {"text": "Object: type.googleapis.com/google.protobuf.Any"},
-            {"text": "Object: type.googleapis.com/Foo", "indent": 1},
+            {"text": "Object: /google.protobuf.Any"},
+            {"text": "Object: /Foo", "indent": 1},
             {"text": "Foo object", "indent": 2},
             {"text": "Full name: testing", "indent": 3}
         ]
     },
     {
        "proto": {
-            "@type": "type.googleapis.com/A",
+            "@type": "/A",
             "ANY": {
-                "@type": "type.googleapis.com/Foo",
+                "@type": "/Foo",
                 "full_name": "testing"
             }
         },
         "screens": [
-            {"text": "Object: type.googleapis.com/A"},
+            {"text": "Object: /A"},
             {"text": "A object", "indent": 1},
-            {"text": "ANY: Object: type.googleapis.com/Foo", "indent": 2},
+            {"text": "ANY: Object: /Foo", "indent": 2},
             {"text": "Foo object", "indent": 3},
             {"text": "Full name: testing", "indent": 4}
         ]

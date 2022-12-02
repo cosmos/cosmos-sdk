@@ -10,10 +10,12 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19.2
+          go-version: 1.19.3
       - name: "Checkout Repository"
         uses: actions/checkout@v3
       - name: "Dependency Review"
         uses: actions/dependency-review-action@v3
       - name: "Dependency audit"
         run: ./scripts/dep-assert.sh
+      - name: "Go vulnerability check"
+        run: make vulncheck

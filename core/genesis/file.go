@@ -234,20 +234,11 @@ func (f *FileGenesisTarget) OpenWriter(field string) (io.WriteCloser, error) {
 	// if there is empty field, try to open/create a file to <targetDir>/<module>.json
 	if len(f.moduleName) > 0 {
 		fName := fmt.Sprintf("%s.json", f.moduleName)
-		fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, fName)), fileOpenflag, flieOpenMode)
-		if err != nil {
-			return nil, fmt.Errorf("failed to open writer, %s: %v", fName, err)
-		}
-		return fp, nil
+		return os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, fName)), fileOpenflag, flieOpenMode)
 	}
 
 	// else if there is empty module and field name try to open/create a file to <targetDir>/genesis.json
-	fp, err := os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, "genesis.json")), fileOpenflag, flieOpenMode)
-	if err != nil {
-		return nil, err
-	}
-
-	return fp, nil
+	return os.OpenFile(filepath.Clean(filepath.Join(f.targetDir, "genesis.json")), fileOpenflag, flieOpenMode)
 }
 
 // WriteRawJSON wtites the encoded JSON data to desinated target directory and the

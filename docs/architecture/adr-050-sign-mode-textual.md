@@ -281,10 +281,10 @@ See [annex 2](./adr-050-sign-mode-textual-annex2.md).
 
 ## Examples
 
-1. A minimal MsgSend: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/32a0608d9bfc423e943a08e2537ad3b24e1b38bc/tx/textual/internal/testdata/tx.json#L2-L92).
-2. Memo with special or potentially confusing characters: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/32a0608d9bfc423e943a08e2537ad3b24e1b38bc/tx/textual/internal/testdata/tx.json#L93-L185).
-3. Long texts that need breaking up into multiple screens on-device: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/32a0608d9bfc423e943a08e2537ad3b24e1b38bc/tx/textual/internal/testdata/tx.json#L186-L281).
-4. A transaction with all fields filled in: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/32a0608d9bfc423e943a08e2537ad3b24e1b38bc/tx/textual/internal/testdata/tx.json#L282-L631).
+1. A minimal MsgSend: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/01cfb3c0ca0d45e5b1e848b39cc7e062f8a582e6/tx/textual/internal/testdata/tx.json#L2-L67).
+2. Memo with special or potentially confusing characters: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/01cfb3c0ca0d45e5b1e848b39cc7e062f8a582e6/tx/textual/internal/testdata/tx.json#L68-L135).
+3. Long texts that need breaking up into multiple screens on-device: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/01cfb3c0ca0d45e5b1e848b39cc7e062f8a582e6/tx/textual/internal/testdata/tx.json#L136-L203).
+4. A transaction with all fields filled in: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/01cfb3c0ca0d45e5b1e848b39cc7e062f8a582e6/tx/textual/internal/testdata/tx.json#L204-L397).
 
 The examples below are stored in a JSON file with the following fields:
 - `proto`: the representation of the transaction in ProtoJSON,

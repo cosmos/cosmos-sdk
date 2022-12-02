@@ -10,6 +10,8 @@ import (
 	"cosmossdk.io/math"
 )
 
+const emptyCoins = "zero"
+
 // formatCoin formats a sdk.Coin into a value-rendered string, using the
 // given metadata about the denom. It returns the formatted coin string, the
 // display denom, and an optional error.
@@ -76,6 +78,10 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 		if err != nil {
 			return "", err
 		}
+	}
+
+	if len(coins) == 0 {
+		return emptyCoins, nil
 	}
 
 	// Sort the formatted coins by display denom.

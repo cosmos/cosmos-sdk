@@ -128,7 +128,7 @@ func TestUnknownFields(t *testing.T) {
 				decoder := DefaultTxDecoder(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 				theTx, err := decoder(txBz)
 				require.NoError(t, err)
-				_, err = handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignerData{}, theTx)
+				_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signing.SignerData{}, theTx)
 				require.EqualError(t, err, tt.shouldAminoErr)
 			}
 		})

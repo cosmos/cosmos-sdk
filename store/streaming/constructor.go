@@ -2,21 +2,25 @@ package streaming
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"strings"
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/spf13/cast"
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec) (baseapp.StreamingService, error)
+type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -28,9 +32,13 @@ const (
 
 // Streaming option keys
 const (
-	OptStreamersFilePrefix   = "streamers.file.prefix"
-	OptStreamersFileWriteDir = "streamers.file.write_dir"
-	OptStoreStreamers        = "store.streamers"
+	OptStreamersFilePrefix          = "streamers.file.prefix"
+	OptStreamersFileWriteDir        = "streamers.file.write_dir"
+	OptStreamersFileOutputMetadata  = "streamers.file.output-metadata"
+	OptStreamersFileStopNodeOnError = "streamers.file.stop-node-on-error"
+	OptStreamersFileFsync           = "streamers.file.fsync"
+
+	OptStoreStreamers = "store.streamers"
 )
 
 // ServiceTypeFromString returns the streaming.ServiceType corresponding to the
@@ -83,11 +91,28 @@ func NewFileStreamingService(
 	opts serverTypes.AppOptions,
 	keys []types.StoreKey,
 	marshaller codec.BinaryCodec,
+	logger log.Logger,
 ) (baseapp.StreamingService, error) {
+	homePath := cast.ToString(opts.Get(flags.FlagHome))
 	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
 	fileDir := cast.ToString(opts.Get(OptStreamersFileWriteDir))
+	outputMetadata := cast.ToBool(opts.Get(OptStreamersFileOutputMetadata))
+	stopNodeOnErr := cast.ToBool(opts.Get(OptStreamersFileStopNodeOnError))
+	fsync := cast.ToBool(opts.Get(OptStreamersFileFsync))
 
-	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
+	// relative path is based on node home directory.
+	if !path.IsAbs(fileDir) {
+		fileDir = path.Join(homePath, fileDir)
+	}
+
+	// try to create output directory if not exists.
+	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
+		if err = os.MkdirAll(fileDir, os.ModePerm); err != nil {
+			return nil, err
+		}
+	}
+
+	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, logger, outputMetadata, stopNodeOnErr, fsync)
 }
 
 // LoadStreamingServices is a function for loading StreamingServices onto the
@@ -98,6 +123,7 @@ func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
 	appOpts serverTypes.AppOptions,
 	appCodec codec.BinaryCodec,
+	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
@@ -145,7 +171,7 @@ func LoadStreamingServices(
 
 		// Generate the streaming service using the constructor, appOptions, and the
 		// StoreKeys we want to expose.
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
+		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger)
 		if err != nil {
 			// Close any services we may have already spun up before hitting the error
 			// on this one.

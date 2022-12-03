@@ -248,8 +248,6 @@ streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
 keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
 write_dir = "{{ .Streamers.File.WriteDir }}"
 prefix = "{{ .Streamers.File.Prefix }}"
-<<<<<<< HEAD
-=======
 # output-metadata specifies if output the metadata file which includes the abci request/responses 
 # during processing the block.
 output-metadata = "{{ .Streamers.File.OutputMetadata }}"
@@ -257,15 +255,6 @@ output-metadata = "{{ .Streamers.File.OutputMetadata }}"
 stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
 # fsync specifies if call fsync after writing the files.
 fsync = "{{ .Streamers.File.Fsync }}"
-
-###############################################################################
-###                         Mempool                                         ###
-###############################################################################
-
-[mempool]
-max-txs = "{{ .Mempool.MaxTxs }}"
-
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 `
 
 var configTemplate *template.Template

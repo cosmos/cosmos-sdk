@@ -9,22 +9,15 @@ import (
 	"sync"
 	"testing"
 
-<<<<<<< HEAD
-=======
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (

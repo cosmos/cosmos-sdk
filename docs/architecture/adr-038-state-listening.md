@@ -181,13 +181,8 @@ func (s *Store) onWrite(delete bool, key, value []byte) {
 We will update the `CommitMultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
 
 ```go
-<<<<<<< HEAD
-type MultiStore interface {
-	...
-=======
 type CommitMultiStore interface {
     ...
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 
 	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
 	ListeningEnabled(key StoreKey) bool
@@ -198,25 +193,6 @@ type CommitMultiStore interface {
 }
 ```
 
-<<<<<<< HEAD
-```go
-type CacheWrap interface {
-	...
-
-	// CacheWrapWithListeners recursively wraps again with listening enabled
-	CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
-}
-
-type CacheWrapper interface {
-	...
-
-	// CacheWrapWithListeners recursively wraps again with listening enabled
-	CacheWrapWithListeners(storeKey types.StoreKey, listeners []WriteListener) CacheWrap
-}
-```
-
-=======
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 ### MultiStore implementation updates
 
 We will modify all of the `CommitMultiStore` implementations to satisfy these new interfaces, and adjust the `rootmulti` `GetKVStore` method
@@ -243,11 +219,6 @@ We will also adjust the `rootmulti` `CacheMultiStore` method to wrap the stores 
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
-<<<<<<< HEAD
-		stores[k] = v
-	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.traceContext, rs.listeners)
-=======
 		store := v.(types.KVStore)
 		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
 		// set same listeners on cache store will observe duplicated writes.
@@ -257,7 +228,6 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 		stores[k] = store
 	}
 	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 }
 ```
 
@@ -274,17 +244,6 @@ The `WriteListener`s of `StreamingService` listens to the `rootmulti.Store`, whi
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-<<<<<<< HEAD
-	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
-	// ListenEndBlock updates the steaming service with the latest EndBlock messages
-	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
-	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
-	// ListenSuccess returns a chan that is used to acknowledge successful receipt of messages by the external service
-	// after some configurable delay, `false` is sent to this channel from the service to signify failure of receipt
-	ListenSuccess() <-chan bool
-=======
     // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
     ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
     // ListenEndBlock updates the steaming service with the latest EndBlock messages
@@ -294,7 +253,6 @@ type ABCIListener interface {
     // ListenCommit updates the steaming service with the latest Commit message,
     // All the state writes of current block should have notified before this message.
     ListenCommit(ctx types.Context, res abci.ResponseCommit) error
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
@@ -344,12 +302,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	...
 
-<<<<<<< HEAD
-	// Call the streaming service hooks with the BeginBlock messages
-	for _, listener := range app.abciListeners {
-		listener.ListenBeginBlock(app.deliverState.ctx, req, res)
-	}
-=======
 	defer func() {
 		// call the hooks with the BeginBlock messages
 		for _, streamingListener := range app.abciListeners {
@@ -358,7 +310,6 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			}
 		}
 	}()
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 
 	return res
 }
@@ -369,12 +320,6 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	...
 
-<<<<<<< HEAD
-	// Call the streaming service hooks with the EndBlock messages
-	for _, listener := range app.abciListeners {
-		listener.ListenEndBlock(app.deliverState.ctx, req, res)
-	}
-=======
   defer func() {
 		// Call the streaming service hooks with the EndBlock messages
 		for _, streamingListener := range app.abciListeners {
@@ -383,77 +328,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 			}
 		}
   }()
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 
 	return res
 }
 ```
 
 ```go
-<<<<<<< HEAD
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
-
-	...
-
-	gInfo, result, err := app.runTx(runTxModeDeliver, req.Tx)
-	if err != nil {
-		resultStr = "failed"
-		res := sdkerrors.ResponseDeliverTx(err, gInfo.GasWanted, gInfo.GasUsed, app.trace)
-		// If we throw an error, be sure to still call the streaming service's hook
-		for _, listener := range app.abciListeners {
-			listener.ListenDeliverTx(app.deliverState.ctx, req, res)
-		}
-		return res
-	}
-
-	res := abci.ResponseDeliverTx{
-		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
-		Log:       result.Log,
-		Data:      result.Data,
-		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
-	}
-
-	// Call the streaming service hooks with the DeliverTx messages
-	for _, listener := range app.abciListeners {
-		listener.ListenDeliverTx(app.deliverState.ctx, req, res)
-	}
-
-	return res
-}
-```
-
-We will also modify the `Commit` method to process `success/failure` signals from the integrated `StreamingService`s using
-the `ABCIListener.ListenSuccess()` method. Each `StreamingService` has an internal wait threshold after which it sends
-`false` to the `ListenSuccess()` channel, and the BaseApp also imposes a configurable global wait limit.
-If the `StreamingService` is operating in a "fire-and-forget" mode, `ListenSuccess()` should immediately return `true`
-off the channel despite the success status of the service.
-
-```go
-func (app *BaseApp) Commit() (res abci.ResponseCommit) {
-	
-	...
-
-	var halt bool
-
-	switch {
-	case app.haltHeight > 0 && uint64(header.Height) >= app.haltHeight:
-		halt = true
-
-	case app.haltTime > 0 && header.Time.Unix() >= int64(app.haltTime):
-		halt = true
-	}
-
-	// each listener has an internal wait threshold after which it sends `false` to the ListenSuccess() channel
-	// but the BaseApp also imposes a global wait limit
-	maxWait := time.NewTicker(app.globalWaitLimit)
-	for _, lis := range app.abciListeners {
-		select {
-		case success := <- lis.ListenSuccess():
-			if success == false {
-				halt = true
-				break
-=======
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 
 	defer func() {
@@ -461,25 +341,12 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		for _, streamingListener := range app.abciListeners {
 			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
 				panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 			}
 		case <- maxWait.C:
 			halt = true
 			break
 		}
-<<<<<<< HEAD
-	}
-
-	if halt {
-		// Halt the binary and allow Tendermint to receive the ResponseCommit
-		// response with the commit ID hash. This will allow the node to successfully
-		// restart and process blocks assuming the halt configuration has been
-		// reset or moved to a more distant value.
-		app.halt()
-	}
-=======
 	}()
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 
 	...
 

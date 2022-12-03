@@ -1,13 +1,19 @@
-package streaming
+package streaming_test
 
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/stretchr/testify/require"
 )
@@ -30,12 +36,12 @@ var (
 )
 
 func TestStreamingServiceConstructor(t *testing.T) {
-	_, err := NewServiceConstructor("unexpectedName")
+	_, err := streaming.NewServiceConstructor("unexpectedName")
 	require.NotNil(t, err)
 
-	constructor, err := NewServiceConstructor("file")
+	constructor, err := streaming.NewServiceConstructor("file")
 	require.Nil(t, err)
-	var expectedType ServiceConstructor
+	var expectedType streaming.ServiceConstructor
 	require.IsType(t, expectedType, constructor)
 
 	serv, err := constructor(mockOptions, mockKeys, testMarshaller, log.NewNopLogger())
@@ -47,12 +53,10 @@ func TestStreamingServiceConstructor(t *testing.T) {
 		require.True(t, ok)
 	}
 }
-<<<<<<< HEAD
-=======
 
 func TestLoadStreamingServices(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCdc := testutil.MakeTestEncodingConfig()
+	encCdc := simapp.MakeTestEncodingConfig()
 	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
 	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
 
@@ -61,7 +65,7 @@ func TestLoadStreamingServices(t *testing.T) {
 		activeStreamersLen int
 	}{
 		"empty app options": {
-			appOpts: simtestutil.EmptyAppOptions{},
+			appOpts: simapp.EmptyAppOptions{},
 		},
 		"all StoreKeys exposed": {
 			appOpts:            streamingAppOptions{keys: []string{"*"}},
@@ -101,4 +105,3 @@ func (ao streamingAppOptions) Get(o string) interface{} {
 		return nil
 	}
 }
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))

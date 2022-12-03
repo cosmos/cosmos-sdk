@@ -1,4 +1,5 @@
 # File Streaming Service
+
 This pkg contains an implementation of the [StreamingService](../../../baseapp/streaming.go) that writes
 the data stream out to files on the local filesystem. This process is performed synchronously with the message processing
 of the state machine.
@@ -23,14 +24,9 @@ The `file.StreamingService` is configured from within an App using the `AppOptio
 We turn the service on by adding its name, "file", to `store.streamers`- the list of streaming services for this App to employ.
 
 In `streamers.file` we include three configuration parameters for the file streaming service:
-<<<<<<< HEAD
-1. `streamers.x.keys` contains the list of `StoreKey` names for the KVStores to expose using this service. 
-In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the service off.
-=======
 
 1. `streamers.file.keys` contains the list of `StoreKey` names for the KVStores to expose using this service.
     In order to expose *all* KVStores, we can include `*` in this list. An empty list is equivalent to turning the service off.
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 2. `streamers.file.write_dir` contains the path to the directory to write the files to.
 3. `streamers.file.prefix` contains an optional prefix to prepend to the output files to prevent potential collisions
     with other App `StreamingService` output files.
@@ -38,7 +34,7 @@ In order to expose *all* KVStores, we can include `*` in this list. An empty lis
 5. `streamers.file.stop-node-on-error` specifies if propagate the error to consensus state machine, it's nesserary for data integrity when node restarts.
 6. `streamers.file.fsync` specifies if call fsync after writing the files, it's nesserary for data integrity when system crash, but slows down the commit time.
 
-##### Encoding
+### Encoding
 
 For each block, two files are created and names `block-{N}-meta` and `block-{N}-data`, where `N` is the block number.
 
@@ -65,7 +61,7 @@ Both meta and data files are prefixed with the length of the data content for co
 
 The files are written at abci commit event, by default the error happens will be propagated to interuppted consensus state machine, but fsync is not called, it'll have good performance but have the risk of lossing data in face of rare event of system crash.
 
-##### Decoding
+### Decoding
 
 The pseudo-code for decoding is like this:
 

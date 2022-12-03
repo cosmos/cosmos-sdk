@@ -9,22 +9,15 @@ import (
 	"sync"
 	"testing"
 
-<<<<<<< HEAD
-=======
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -327,7 +320,7 @@ func readInFile(name string) ([]byte, error) {
 	return bz[8:], nil
 }
 
-// Returns all of the protobuf messages contained in the byte array as an array of byte arrays
+// segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays
 // The messages have their length prefix removed
 func segmentBytes(bz []byte) ([][]byte, error) {
 	var err error
@@ -343,7 +336,7 @@ func segmentBytes(bz []byte) ([][]byte, error) {
 	return segments, nil
 }
 
-// Returns the bytes for the leading protobuf object in the byte array (removing the length prefix) and returns the remainder of the byte array
+// getHeadSegment returns the bytes for the leading protobuf object in the byte array (removing the length prefix) and returns the remainder of the byte array
 func getHeadSegment(bz []byte) ([]byte, []byte, error) {
 	size, prefixSize := binary.Uvarint(bz)
 	if prefixSize < 0 {

@@ -209,8 +209,6 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 
 # snapshot-keep-recent specifies the number of recent snapshots to keep and serve (0 to keep all).
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
-<<<<<<< HEAD
-=======
 
 ###############################################################################
 ###                         Store / State Streaming                         ###
@@ -231,15 +229,6 @@ output-metadata = "{{ .Streamers.File.OutputMetadata }}"
 stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
 # fsync specifies if call fsync after writing the files.
 fsync = "{{ .Streamers.File.Fsync }}"
-
-###############################################################################
-###                         Mempool                                         ###
-###############################################################################
-
-[mempool]
-max-txs = "{{ .Mempool.MaxTxs }}"
-
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 `
 
 var configTemplate *template.Template

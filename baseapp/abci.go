@@ -182,7 +182,8 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// call the hooks with the BeginBlock messages
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
+		if err := streamingListener.ListenBeginBlock(goCtx, req, res); err != nil {
 			panic(fmt.Errorf("BeginBlock listening hook failed, height: %d, err: %w", req.Header.Height, err))
 		}
 	}
@@ -209,7 +210,8 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 
 	// call the streaming service hooks with the EndBlock messages
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
+		if err := streamingListener.ListenEndBlock(goCtx, req, res); err != nil {
 			panic(fmt.Errorf("EndBlock listening hook failed, height: %d, err: %w", req.Height, err))
 		}
 	}
@@ -263,7 +265,8 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 
 	defer func() {
 		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+			goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
+			if err := streamingListener.ListenDeliverTx(goCtx, req, res); err != nil {
 				panic(fmt.Errorf("DeliverTx listening hook failed: %w", err))
 			}
 		}
@@ -301,13 +304,9 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // defined in config, Commit will execute a deferred function call to check
 // against that height and gracefully halt if it matches the latest committed
 // height.
-<<<<<<< HEAD
-func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+func (app *BaseApp) Commit() abci.ResponseCommit {
 	defer telemetry.MeasureSince(time.Now(), "abci", "commit")
 
-=======
-func (app *BaseApp) Commit() abci.ResponseCommit {
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -324,7 +323,8 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// call the hooks with the Commit message
 	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
+		goCtx := sdk.WrapSDKContext(app.deliverState.ctx)
+		if err := streamingListener.ListenCommit(goCtx, res); err != nil {
 			panic(fmt.Errorf("Commit listening hook failed, height: %d, err: %w", header.Height, err))
 		}
 	}

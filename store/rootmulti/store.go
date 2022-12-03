@@ -241,14 +241,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
-<<<<<<< HEAD
 			deleteKVStore(store.(types.KVStore))
-=======
-			if err := deleteKVStore(types.KVStore(store)); err != nil {
-				return errors.Wrapf(err, "failed to delete store %s", key.Name())
-			}
-			rs.removalMap[key] = true
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 		} else if oldName := upgrades.RenamedFrom(key.Name()); oldName != "" {
 			// handle renames specially
 			// make an unregistered key to satify loadCommitStore params
@@ -263,18 +256,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			}
 
 			// move all data
-<<<<<<< HEAD
 			moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore))
-=======
-			if err := moveKVStoreData(types.KVStore(oldStore), types.KVStore(store)); err != nil {
-				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
-			}
-
-			// add the old key so its deletion is committed
-			newStores[oldKey] = oldStore
-			// this will ensure it's not perpetually stored in commitInfo
-			rs.removalMap[oldKey] = true
->>>>>>> 1f91ee2ee (fix: state listener observe writes at wrong time (#13516))
 		}
 	}
 

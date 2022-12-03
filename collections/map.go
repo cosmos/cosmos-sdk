@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"fmt"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -48,11 +49,7 @@ func (m Map[K, V]) Get(ctx StorageProvider, key K) (V, error) {
 	valueBytes := m.getStore(ctx).Get(keyBytes)
 	if valueBytes == nil {
 		var v V
-		return v, ErrNotFound{
-			HumanizedKey: m.kc.Stringify(key),
-			RawKey:       keyBytes,
-			ValueType:    m.vc.ValueType(),
-		}
+		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
 	}
 
 	v, err := m.vc.Decode(valueBytes)

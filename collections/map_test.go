@@ -14,11 +14,7 @@ func TestMap(t *testing.T) {
 	require.False(t, m.Has(ctx, 1))
 	// test get error
 	_, err := m.Get(ctx, 1)
-	require.ErrorIs(t, err, ErrNotFound{
-		HumanizedKey: "1",
-		RawKey:       m.encodeKey(1),
-		ValueType:    m.vc.ValueType(),
-	})
+	require.ErrorIs(t, err, ErrNotFound)
 
 	// test set/get
 	m.Set(ctx, 1, 100)

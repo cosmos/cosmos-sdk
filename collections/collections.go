@@ -1,45 +1,20 @@
 package collections
 
 import (
-	"bytes"
-	"fmt"
+	"errors"
 	"math"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
+
+// ErrNotFound is returned when the provided key is not present in the StorageProvider.
+var ErrNotFound = errors.New("collections: not found")
 
 // StorageProvider represents sdk.Context
 // it is used to avoid to reduce dependencies.
 type StorageProvider interface {
 	// KVStore returns a KVStore given its StoreKey.
 	KVStore(key storetypes.StoreKey) storetypes.KVStore
-}
-
-// ErrNotFound defines an error returned when
-// a key was not found.
-type ErrNotFound struct {
-	// HumanizedKey represents the human-readable key.
-	HumanizedKey string
-	// RawKey represents the raw key in byte format.
-	RawKey []byte
-	// ValueType represents the type which was not found.
-	ValueType string
-}
-
-// Error implements the error interface.
-func (e ErrNotFound) Error() string {
-	return fmt.Sprintf("collections: key not found for %s '%s'", e.ValueType, e.HumanizedKey)
-}
-
-// Is implements error.Is interface
-func (e ErrNotFound) Is(err error) bool {
-	self, ok := err.(ErrNotFound)
-	if !ok {
-		return false
-	}
-	return bytes.Equal(self.RawKey, e.RawKey) &&
-		self.HumanizedKey == e.HumanizedKey &&
-		self.ValueType == e.ValueType
 }
 
 // Prefix defines a segregation namespace

@@ -48,12 +48,6 @@ func KVStoreReversePrefixIteratorPaginated(kvs KVStore, prefix []byte, page, lim
 	return types.KVStoreReversePrefixIteratorPaginated(kvs, prefix, page, limit)
 }
 
-// DiffKVStores compares two KVstores and returns all the key/value pairs
-// that differ from one another. It also skips value comparison for a set of provided prefixes
-func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {
-	return types.DiffKVStores(a, b, prefixesToSkip)
-}
-
 // assertNoCommonPrefix will panic if there are two keys: k1 and k2 in keys, such that
 // k1 is a prefix of k2
 func assertNoPrefix(keys []string) {

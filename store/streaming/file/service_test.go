@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/store/internal/kv"
 )
 
 // KVStorePrefixIterator iterates over all the keys with a certain prefix in ascending order

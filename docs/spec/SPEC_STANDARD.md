@@ -72,9 +72,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 Pseudocode in specifications should be language-agnostic and formatted in a simple imperative standard, with line numbers, variables, simple conditional blocks, for loops, and
 English fragments where necessary to explain further functionality such as scheduling timeouts. LaTeX images should be avoided because they are difficult to review in diff form.
 
-Pseudocode for structs should be written in simple Typescript, as interfaces.
+Pseudocode for structs can be written in a simple langauge like Typescript or golang, as interfaces.
 
-Example pseudocode struct:
+Example Typescript pseudocode struct:
 
 ```typescript
 interface CacheKVStore {

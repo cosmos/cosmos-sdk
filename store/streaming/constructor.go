@@ -19,7 +19,7 @@ import (
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, types.Marshaler, log.Logger) (baseapp.StreamingService, error)
+type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, types.Codec, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -89,7 +89,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 func NewFileStreamingService(
 	opts serverTypes.AppOptions,
 	keys []types.StoreKey,
-	marshaller types.Marshaler,
+	marshaller types.Codec,
 	logger log.Logger,
 ) (baseapp.StreamingService, error) {
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
@@ -121,7 +121,7 @@ func NewFileStreamingService(
 func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
 	appOpts serverTypes.AppOptions,
-	appCodec types.Marshaler,
+	appCodec types.Codec,
 	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {

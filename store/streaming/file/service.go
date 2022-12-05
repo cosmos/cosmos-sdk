@@ -26,7 +26,7 @@ type StreamingService struct {
 	storeListeners []*types.MemoryListener // a series of KVStore listeners for each KVStore
 	filePrefix     string                  // optional prefix for each of the generated files
 	writeDir       string                  // directory to write files into
-	codec          types.Marshaler         // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	codec          types.Codec             // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	logger         log.Logger
 
 	currentBlockNumber int64
@@ -41,7 +41,7 @@ type StreamingService struct {
 }
 
 // NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c types.Marshaler, logger log.Logger, outputMetadata bool, stopNodeOnErr bool, fsync bool) (*StreamingService, error) {
+func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c types.Codec, logger log.Logger, outputMetadata bool, stopNodeOnErr bool, fsync bool) (*StreamingService, error) {
 	// sort storeKeys for deterministic output
 	sort.SliceStable(storeKeys, func(i, j int) bool {
 		return storeKeys[i].Name() < storeKeys[j].Name()

@@ -109,8 +109,8 @@ func InclusiveEndBytes(inclusiveBytes []byte) []byte {
 	return append(inclusiveBytes, byte(0x00))
 }
 
-// Marshaler defines a interface needed for the store package to marshal data
-type Marshaler interface {
+// Codec defines a interface needed for the store package to marshal data
+type Codec interface {
 	// Marshal returns binary encoding of v.
 	Marshal(proto.Message) ([]byte, error)
 
@@ -127,9 +127,9 @@ type Marshaler interface {
 // encoding.
 type TestCodec struct{}
 
-var _ Marshaler = &TestCodec{}
+var _ Codec = &TestCodec{}
 
-func NewTestCodec() Marshaler {
+func NewTestCodec() Codec {
 	return &TestCodec{}
 }
 

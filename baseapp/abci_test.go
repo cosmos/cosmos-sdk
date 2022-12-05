@@ -1079,3 +1079,118 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 		}
 	}
 }
+
+func TestABCI_GasConsumptionBadTx(t *testing.T) {
+	gasWanted := uint64(5)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
+
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
+						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			counter, failOnAnte := parseTxMemo(t, tx)
+			newCtx.GasMeter().ConsumeGas(uint64(counter), "counter-ante")
+			if failOnAnte {
+				return newCtx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			}
+
+			return
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
+				MaxGas: 9,
+			},
+		},
+	})
+
+	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	tx := newTxCounter(t, suite.txConfig, 5, 0)
+	tx = setFailOnAnte(t, suite.txConfig, tx, true)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	// require next tx to fail due to black gas limit
+	tx = newTxCounter(t, suite.txConfig, 5, 0)
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+}
+
+func TestABCI_Query(t *testing.T) {
+	key, value := []byte("hello"), []byte("goodbye")
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			store := ctx.KVStore(capKey1)
+			store.Set(key, value)
+			return
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	// NOTE: "/store/key1" tells us KVStore
+	// and the final "/key" says to use the data as the
+	// key in the given KVStore ...
+	query := abci.RequestQuery{
+		Path: "/store/key1/key",
+		Data: key,
+	}
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+
+	// query is empty before we do anything
+	res := suite.baseApp.Query(query)
+	require.Equal(t, 0, len(res.Value))
+
+	// query is still empty after a CheckTx
+	_, resTx, err := suite.baseApp.SimCheck(suite.txConfig.TxEncoder(), tx)
+	require.NoError(t, err)
+	require.NotNil(t, resTx)
+
+	res = suite.baseApp.Query(query)
+	require.Equal(t, 0, len(res.Value))
+
+	// query is still empty after a DeliverTx before we commit
+	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	_, resTx, err = suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+	require.NoError(t, err)
+	require.NotNil(t, resTx)
+
+	res = suite.baseApp.Query(query)
+	require.Equal(t, 0, len(res.Value))
+
+	// query returns correct value after Commit
+	suite.baseApp.Commit()
+
+	res = suite.baseApp.Query(query)
+	require.Equal(t, value, res.Value)
+}

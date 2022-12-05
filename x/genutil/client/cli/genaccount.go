@@ -1,10 +1,8 @@
-package cmd
+package cli
 
 import (
 	"bufio"
 	"fmt"
-
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -12,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/helpers"
+
+	"github.com/spf13/cobra"
 )
 
 const (

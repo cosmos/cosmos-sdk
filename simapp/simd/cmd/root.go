@@ -39,9 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -172,17 +170,9 @@ lru_size = 0`
 func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
-	gentxModule := simapp.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(simapp.ModuleBasics, simapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome,
-			gentxModule.GenTxValidator),
-		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig,
-			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
-		AddGenesisAccountCmd(simapp.DefaultNodeHome),
 		NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
@@ -191,9 +181,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
 
-	// add keybase, auxiliary RPC, query, and tx child commands
+	// add keybase, auxiliary RPC, query, genesis, and tx child commands
 	rootCmd.AddCommand(
 		rpc.StatusCommand(),
+		genutilcli.GenesisRootCmd(encodingConfig),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(simapp.DefaultNodeHome),

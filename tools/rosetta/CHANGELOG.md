@@ -36,9 +36,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## v0.2.0 2022-12-05
+
 ### Improvements
 
-* [#14118](https://github.com/cosmos/cosmos-sdk/pull/14118) Let Rosetta be install as a standalone application.
+* [#14118](https://github.com/cosmos/cosmos-sdk/pull/14118) Allow rosetta to be installed as a standalone application.
 * [#14061](https://github.com/cosmos/cosmos-sdk/pull/14061) Adds openapi specification.
 * [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Correctly populates rosetta's `/network/status` endpoint response. Rosetta's data api is divided into its own go files (account, block, mempool, network).
 

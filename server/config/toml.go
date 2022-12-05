@@ -207,13 +207,13 @@ snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 [streaming]
 
 [streaming.abci]
+
 # List of kv store keys to stream out via gRPC
 # Set to ["*"] to expose all keys.
 keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
 
 # The plugin name used for streaming via gRPC
 plugin = "{{ .Streaming.ABCI.Plugin }}"
-
 
 # async specifies whether ABCI listener service(s) will run asynchronously.
 async = {{ .Streaming.ABCI.Async }}

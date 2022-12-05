@@ -4,11 +4,11 @@
 package ledger
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/pkg/errors"
-
+	btcec "github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cosmos/go-bip39"
 	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
@@ -73,7 +73,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(pk[:], btcec.S256())
+	cmp, err := btcec.ParsePubKey(pk[:])
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -108,8 +108,10 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 	}
 
 	// Need to return DER as the ledger does
-	sig2 := btcec.Signature{R: sig.R, S: sig.S}
-	return sig2.Serialize(), nil
+	var r, s btcec.ModNScalar
+	r.SetByteSlice(sig.R.Bytes())
+	s.SetByteSlice(sig.S.Bytes())
+	return ecdsa.NewSignature(&r, &s).Serialize(), nil
 }
 
 // ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path

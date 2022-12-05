@@ -14,15 +14,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	interfaceRegistry            = codecTypes.NewInterfaceRegistry()
-	testMarshaller               = codec.NewProtoCodec(interfaceRegistry)
+	testMarshaller               = types.NewTestCodec()
 	testStreamingService         *StreamingService
 	testListener1, testListener2 types.WriteListener
 	emptyContext                 = sdk.Context{}

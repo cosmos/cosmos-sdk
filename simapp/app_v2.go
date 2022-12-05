@@ -168,12 +168,16 @@ type SimApp struct {
 	sm *module.SimulationManager
 }
 
+// init initializes the default node home directory.
 func init() {
+	// Get the user's home directory.
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
+		// Panic if we cannot get the user's home directory.
 		panic(err)
 	}
 
+	// Set the default node home directory to be in the user's home directory.
 	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
@@ -333,16 +337,20 @@ func NewSimApp(
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
-// InitChainer application update at chain initialization
+// InitChainer initializes the chain with the provided request at the chain's initialization.
+// It sets the module version map in the UpgradeKeeper using the version map from the ModuleManager.
+// It then calls the InitChainer method on the underlying App instance.
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	return app.App.InitChainer(ctx, req)
 }
 
-// LoadHeight loads a particular height
+
+// LoadHeight loads the application state at a given height.
 func (app *SimApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
+
 
 // LegacyAmino returns SimApp's amino codec.
 //

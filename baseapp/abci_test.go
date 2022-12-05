@@ -622,7 +622,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.Nil(t, storedBytes)
 }
 
-func TestDeliverTx(t *testing.T) {
+func TestABCI_DeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -660,4 +660,74 @@ func TestDeliverTx(t *testing.T) {
 		suite.baseApp.EndBlock(abci.RequestEndBlock{})
 		suite.baseApp.Commit()
 	}
+}
+
+func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	deliverKey2 := []byte("deliver-key2")
+	baseapptestutil.RegisterCounter2Server(suite.baseApp.MsgServiceRouter(), Counter2ServerImpl{t, capKey1, deliverKey2})
+
+	// run a multi-msg tx
+	// with all msgs the same route
+	header := tmproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0, 1, 2)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	store := getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+
+	// tx counter only incremented once
+	txCounter := getIntFromStore(t, store, anteKey)
+	require.Equal(t, int64(1), txCounter)
+
+	// msg counter incremented three times
+	msgCounter := getIntFromStore(t, store, deliverKey)
+	require.Equal(t, int64(3), msgCounter)
+
+	// replace the second message with a Counter2
+	tx = newTxCounter(t, suite.txConfig, 1, 3)
+
+	builder := suite.txConfig.NewTxBuilder()
+	msgs := tx.GetMsgs()
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 0})
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{Counter: 1})
+
+	builder.SetMsgs(msgs...)
+	builder.SetMemo(tx.GetMemo())
+	setTxSignature(t, builder, 0)
+
+	txBytes, err = suite.txConfig.TxEncoder()(builder.GetTx())
+	require.NoError(t, err)
+
+	res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	store = getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+
+	// tx counter only incremented once
+	txCounter = getIntFromStore(t, store, anteKey)
+	require.Equal(t, int64(2), txCounter)
+
+	// original counter increments by one
+	// new counter increments by two
+	msgCounter = getIntFromStore(t, store, deliverKey)
+	require.Equal(t, int64(4), msgCounter)
+
+	msgCounter2 := getIntFromStore(t, store, deliverKey2)
+	require.Equal(t, int64(2), msgCounter2)
 }

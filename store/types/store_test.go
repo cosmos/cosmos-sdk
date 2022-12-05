@@ -99,14 +99,6 @@ func TestTransientStoreKey(t *testing.T) {
 	require.Equal(t, fmt.Sprintf("TransientStoreKey{%p, test}", key), key.String())
 }
 
-func TestMemoryStoreKey(t *testing.T) {
-	t.Parallel()
-	key := NewMemoryStoreKey("test")
-	require.Equal(t, "test", key.name)
-	require.Equal(t, key.name, key.Name())
-	require.Equal(t, fmt.Sprintf("MemoryStoreKey{%p, test}", key), key.String())
-}
-
 func TestTraceContext_Clone(t *testing.T) {
 	tests := []struct {
 		name string
@@ -222,18 +214,4 @@ func TestTraceContext_Merge(t *testing.T) {
 			require.Equal(t, tt.want, tt.tc.Merge(tt.other))
 		})
 	}
-}
-
-func TestNewTransientStoreKeys(t *testing.T) {
-	assert.DeepEqual(t, map[string]*TransientStoreKey{}, NewTransientStoreKeys())
-	assert.DeepEqual(t, 1, len(NewTransientStoreKeys("one")))
-}
-
-func TestNewInfiniteGasMeter(t *testing.T) {
-	gm := NewInfiniteGasMeter()
-	require.NotNil(t, gm)
-}
-
-func TestStoreTypes(t *testing.T) {
-	assert.DeepEqual(t, InclusiveEndBytes([]byte("endbytes")), InclusiveEndBytes([]byte("endbytes")))
 }

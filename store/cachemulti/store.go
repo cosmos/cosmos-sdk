@@ -55,7 +55,11 @@ func NewFromKVStore(
 
 	for key, store := range stores {
 		if cms.TracingEnabled() {
-			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, cms.traceContext)
+			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
+				storeNameCtxKey: key.Name(),
+			})
+
+			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
 		}
 		if cms.ListeningEnabled(key) {
 			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])

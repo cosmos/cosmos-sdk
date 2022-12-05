@@ -37,7 +37,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/btcsuite/btcd v0.22.3 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -166,8 +165,6 @@ replace (
 	// Temporary until we tag a new version
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
-	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

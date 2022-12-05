@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	fmt "fmt"
+	"fmt"
 	"sort"
 	"strings"
 

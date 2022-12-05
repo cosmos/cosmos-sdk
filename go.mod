@@ -12,12 +12,7 @@ require (
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.0
-<<<<<<< HEAD
-	github.com/btcsuite/btcd v0.22.3
-	github.com/btcsuite/btcd/btcec/v2 v2.3.1
-=======
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
->>>>>>> 417ce2511 (refactor: update crypto/ledger to btcec/v2 (#14123))
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/confio/ics23/go v0.9.0

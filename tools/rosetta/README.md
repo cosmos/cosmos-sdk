@@ -65,10 +65,6 @@ To use Rosetta standalone, without having to add it in your application, install
 go install cosmossdk.io/tools/rosetta/cmd/rosetta
 ```
 
-:::warning
-This command will fail until https://github.com/coinbase/rosetta-sdk-go/issues/449 is resolved.
-:::
-
 Alternatively, for building from source, simply run `make rosetta`. The binary will be located in `tools/rosetta`.
 
 ## Extensions

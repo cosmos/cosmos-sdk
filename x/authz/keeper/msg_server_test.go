@@ -66,7 +66,7 @@ func (suite *TestSuite) TestGrant() {
 			errMsg: "invalid bech32 string",
 		},
 		{
-			name: "grantee account not exists on chain: valid grant",
+			name: "grantee account does not exist on chain: valid grant",
 			malleate: func() *authz.MsgGrant {
 				newAcc := sdk.AccAddress("valid")
 				suite.accountKeeper.EXPECT().GetAccount(gomock.Any(), newAcc).Return(nil).AnyTimes()

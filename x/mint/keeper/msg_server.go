@@ -11,6 +11,7 @@ import (
 
 var _ types.MsgServer = msgServer{}
 
+// msgServer is a wrapper of Keeper.
 type msgServer struct {
 	Keeper
 }
@@ -22,6 +23,7 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 	}
 }
 
+// UpdateParams updates the params.
 func (ms msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if ms.authority != req.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, req.Authority)

@@ -9,16 +9,13 @@ import "amino/amino.proto";
 // Capability defines an implementation of an object capability. The index
 // provided to a Capability must be globally unique.
 message Capability {
-  option (gogoproto.goproto_stringer) = false;
-
   uint64 index = 1;
 }
 
 // Owner defines a single capability owner. An owner is defined by the name of
 // capability and the module name.
 message Owner {
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_getters) = false;
 
   string module = 1;
   string name   = 2;

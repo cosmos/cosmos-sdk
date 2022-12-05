@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	log "github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
@@ -140,4 +141,16 @@ func LogDeferred(logger log.Logger, f func() error) {
 	if err := f(); err != nil {
 		logger.Error(err.Error())
 	}
+}
+
+// SliceContains implements a generic function for checking if a slice contains
+// a certain value.
+func SliceContains[T comparable](elements []T, v T) bool {
+	for _, s := range elements {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
 }

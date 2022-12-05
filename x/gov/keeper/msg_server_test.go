@@ -1071,7 +1071,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			suite.Require().NoError(err)
 
 			// System under test
-			_, err = suite.msgSrvr.SubmitProposal(sdk.WrapSDKContext(ctx), msg)
+			_, err = suite.msgSrvr.SubmitProposal(ctx, msg)
 
 			// Assertions
 			if tc.expectError {

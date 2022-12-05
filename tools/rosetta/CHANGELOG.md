@@ -38,7 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Correctly populates rosetta's `/network/status` endpoint response. Roseta data api is divided into its own go files (account, block, mempool, network).
+* [#14061](https://github.com/cosmos/cosmos-sdk/pull/14061) Adds openapi specification.
+* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Correctly populates rosetta's `/network/status` endpoint response. Rosetta's data api is divided into its own go files (account, block, mempool, network).
 
 ### Bug Fixes
 

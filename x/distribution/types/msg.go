@@ -253,7 +253,7 @@ func (msg MsgDepositValidatorRewardsPool) GetSignBytes() []byte {
 // ValidateBasic performs basic MsgCommunityPoolSpend message validation.
 func (msg MsgDepositValidatorRewardsPool) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %w", err)
 	}
 
 	return msg.Amount.Validate()

@@ -20,10 +20,13 @@ const (
 
 // GenTx generates a signed mock transaction.
 func GenTx(gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
-	sigs := make([]signing.SignatureV2, len(priv))
-
-	// create a random length memo
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return GenSignedMockTx(r, gen, msgs, feeAmt, gas, chainID, accNums, accSeqs, priv...)
+}
+
+// GenSignedMockTx generates a signed mock transaction.
+func GenSignedMockTx(r *rand.Rand, gen client.TxConfig, msgs []sdk.Msg, feeAmt sdk.Coins, gas uint64, chainID string, accNums, accSeqs []uint64, priv ...cryptotypes.PrivKey) (sdk.Tx, error) {
+	sigs := make([]signing.SignatureV2, len(priv))
 
 	memo := simulation.RandStringOfLength(r, simulation.RandIntBetween(r, 0, 100))
 

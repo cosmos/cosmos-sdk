@@ -39,6 +39,7 @@ func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 	env := os.Getenv(GetPluginEnvKey(name))
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: HandshakeMap[name],
+		Managed:         true,
 		Plugins:         PluginMap,
 		Cmd:             exec.Command("sh", "-c", env),
 		Logger:          logger,

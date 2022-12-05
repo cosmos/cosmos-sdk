@@ -4,6 +4,11 @@
 
 * 11/23/2020: Initial draft
 * 10/06/2022: Introduce plugin system based on hashicorp/go-plugin
+* 10/14/2022:
+  * Add `ListenCommit`, flatten the state writes in a block to a single batch.
+  * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
+  * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
+
 
 ## Status
 
@@ -21,7 +26,7 @@ In addition to these request/response queries, it would be beneficial to have a 
 
 ## Decision
 
-We will modify the store layer to allow listening to state changes in underlying KVStores.
+We will modify the `CommitMultiStore` interface and its concrete (`rootmulti`) implementations and introduce a new `listenkv.Store` to allow listening to state changes in underlying KVStores. We don't need to listen to cache stores, because we can't be sure that the writes will be committed eventually, and the writes are duplicated in `rootmulti.Store` eventually, so we should only listen to `rootmulti.Store`.
 We will introduce a plugin system for configuring and running streaming services that write these state changes and their surrounding ABCI message context to different destinations.
 
 ### Listening
@@ -221,11 +226,11 @@ type ABCIListener interface {
     // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
     ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
     // ListenEndBlock updates the steaming service with the latest EndBlock messages
-    ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+    ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
     // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
     ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
     // ListenCommit updates the steaming service with the latest Commit messages and state changes
-    ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error
+    ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error
 }
 ```
 
@@ -453,17 +458,25 @@ message ListenBeginBlockRequest {
   RequestBeginBlock  req = 1;
   ResponseBeginBlock res = 2;
 }
-message ListenBeginBlockRequest {...}
-message ListenDeliverTxRequest {...}
+message ListenEndBlockRequest {
+  RequestEndBlock  req = 1;
+  ResponseEndBlock res = 2;
+}
+message ListenDeliverTxRequest {
+  int64             block_height = 1;
+  RequestDeliverTx  req          = 2;
+  ResponseDeliverTx res          = 3;
+}
 message ListenCommitRequest {
-  ResponseCommit       res       = 1;
-  repeated StoreKVPair changeSet = 2;
+  int64                block_height = 1;
+  ResponseCommit       res          = 2;
+  repeated StoreKVPair changeSet    = 3;
 }
 
 // plugin that listens to state changes
 service ABCIListenerService {
   rpc ListenBeginBlock(ListenBeginBlockRequest) returns (Empty);
-  rpc ListenEndBlock(ListenBeginBlockRequest) returns (Empty);
+  rpc ListenEndBlock(ListenEndBlockRequest) returns (Empty);
   rpc ListenDeliverTx(ListenDeliverTxRequest) returns (Empty);
   rpc ListenCommit(ListenCommitRequest) returns (Empty);
 }
@@ -474,8 +487,9 @@ service ABCIListenerService {
 // plugin that doesn't listen to state changes
 service ABCIListenerService {
   rpc ListenBeginBlock(ListenBeginBlockRequest) returns (Empty);
-  rpc ListenEndBlock(ListenBeginBlockRequest) returns (Empty);
+  rpc ListenEndBlock(ListenEndBlockRequest) returns (Empty);
   rpc ListenDeliverTx(ListenDeliverTxRequest) returns (Empty);
+  rpc ListenCommit(ListenCommitRequest) returns (Empty);
 }
 ```
 
@@ -492,23 +506,25 @@ type GRPCClient struct {
     client ABCIListenerServiceClient
 }
 
-func (m *GRPCClient) ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (m *GRPCClient) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
     _, err := m.client.ListenBeginBlock(ctx, &ListenBeginBlockRequest{Req: req, Res: res})
     return err
 }
 
-func (m *GRPCClient) ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (m *GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
     _, err := m.client.ListenEndBlock(ctx, &ListenEndBlockRequest{Req: req, Res: res})
     return err
 }
 
-func (m *GRPCClient) ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
-    _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{Req: req, Res: res})
+func (m *GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+    ctx := sdk.UnwrapSDKContext(goCtx)
+    _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: req, Res: res})
     return err
 }
 
-func (m *GRPCClient) ListenCommit(ctx types.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
-    _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{Res: res, ChangeSet: changeSet})
+func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
+    ctx := sdk.UnwrapSDKContext(goCtx)
+    _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: res, ChangeSet: changeSet})
     return err
 }
 

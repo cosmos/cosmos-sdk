@@ -45,7 +45,7 @@ type AppModuleBasic struct {
 	evidenceHandlers []eviclient.EvidenceHandler // eviclient evidence submission handlers
 }
 
-// NewAppModuleBasic crates a AppModuleBasic without the codec.
+// NewAppModuleBasic creates a AppModuleBasic without the codec.
 func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
@@ -100,6 +100,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
+// RegisterInterfaces registers the evidence module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
@@ -115,6 +116,7 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object.
 func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},

@@ -2,6 +2,7 @@ package nft
 
 import (
 	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -35,7 +36,7 @@ func (m MsgSend) ValidateBasic() error {
 	return nil
 }
 
-// GetSigners implements Msg
+// GetSigners returns the expected signers for MsgSend.
 func (m MsgSend) GetSigners() []sdk.AccAddress {
 	signer, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{signer}

@@ -50,6 +50,23 @@ func (m MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyVal
 	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
 }
 
+type CounterServerImplGasMeterOnly struct {
+	gas uint64
+}
+
+func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	gas := m.gas
+
+	// if no gas is provided, use the counter as gas. This is useful for testing
+	if gas == 0 {
+		gas = uint64(msg.Counter)
+	}
+
+	sdkCtx.GasMeter().ConsumeGas(gas, "test")
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
 type CounterServerImpl struct {
 	t          *testing.T
 	capKey     storetypes.StoreKey
@@ -267,4 +284,36 @@ func getIntFromStore(t *testing.T, store sdk.KVStore, key []byte) int64 {
 	require.NoError(t, err)
 
 	return i
+}
+
+func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
+	builder := cfg.NewTxBuilder()
+	builder.SetMsgs(tx.GetMsgs()...)
+
+	memo := tx.GetMemo()
+	vals, err := url.ParseQuery(memo)
+	require.NoError(t, err)
+
+	vals.Set("failOnAnte", strconv.FormatBool(failOnAnte))
+	memo = vals.Encode()
+	builder.SetMemo(memo)
+	setTxSignature(t, builder, 1)
+
+	return builder.GetTx()
+}
+
+func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx {
+	builder := cfg.NewTxBuilder()
+	builder.SetMemo(tx.GetMemo())
+
+	msgs := tx.GetMsgs()
+	for i, msg := range msgs {
+		msgs[i] = &baseapptestutil.MsgCounter{
+			Counter:       msg.(*baseapptestutil.MsgCounter).Counter,
+			FailOnHandler: fail,
+		}
+	}
+
+	builder.SetMsgs(msgs...)
+	return builder.GetTx()
 }

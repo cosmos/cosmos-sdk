@@ -24,6 +24,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -419,4 +420,116 @@ func TestTxDecoder(t *testing.T) {
 	counter, _ := parseTxMemo(t, tx)
 	dTxCounter, _ := parseTxMemo(t, dTx)
 	require.Equal(t, counter, dTxCounter)
+}
+
+func TestCustomRunTxPanicHandler(t *testing.T) {
+	customPanicMsg := "test panic"
+	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			panic(sdkerrors.Wrap(anteErr, "anteHandler"))
+		})
+	}
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	header := tmproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
+		err, ok := recoveryObj.(error)
+		if !ok {
+			return nil
+		}
+
+		if anteErr.Is(err) {
+			panic(customPanicMsg)
+		} else {
+			return nil
+		}
+	})
+
+	// transaction should panic with custom handler above
+	{
+		tx := newTxCounter(t, suite.txConfig, 0, 0)
+
+		require.PanicsWithValue(t, customPanicMsg, func() {
+			suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+		})
+	}
+}
+
+func TestBaseAppAnteHandler(t *testing.T) {
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	// execute a tx that will fail ante handler execution
+	//
+	// NOTE: State should not be mutated here. This will be implicitly checked by
+	// the next txs ante handler execution (anteHandlerTxTest).
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	tx = setFailOnAnte(t, suite.txConfig, tx, true)
+
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Empty(t, res.Events)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx := getDeliverStateCtx(suite.baseApp)
+	store := ctx.KVStore(capKey1)
+	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
+
+	// execute at tx that will pass the ante handler (the checkTx state should
+	// mutate) but will fail the message handler
+	tx = newTxCounter(t, suite.txConfig, 0, 0)
+	tx = setFailOnHandler(suite.txConfig, tx, true)
+
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.NotEmpty(t, res.Events)
+	require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = getDeliverStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
+
+	// Execute a successful ante handler and message execution where state is
+	// implicitly checked by previous tx executions.
+	tx = newTxCounter(t, suite.txConfig, 1, 0)
+
+	txBytes, err = suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.NotEmpty(t, res.Events)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	ctx = getDeliverStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
+	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
+	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
+
+	suite.baseApp.EndBlock(abci.RequestEndBlock{})
+	suite.baseApp.Commit()
 }

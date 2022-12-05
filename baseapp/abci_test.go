@@ -1,9 +1,12 @@
 package baseapp_test
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -15,6 +18,8 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 func TestABCI_Info(t *testing.T) {
@@ -730,4 +735,347 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 
 	msgCounter2 := getIntFromStore(t, store, deliverKey2)
 	require.Equal(t, int64(2), msgCounter2)
+}
+
+func TestABCI_Query_SimulateTx(t *testing.T) {
+	gasConsumed := uint64(5)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
+			return
+		})
+	}
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{gasConsumed})
+
+	nBlocks := 3
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		count := int64(blockN + 1)
+		header := tmproto.Header{Height: count}
+		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		tx := newTxCounter(t, suite.txConfig, count, count)
+
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.Nil(t, err)
+
+		// simulate a message, check gas reported
+		gInfo, result, err := suite.baseApp.Simulate(txBytes)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		require.Equal(t, gasConsumed, gInfo.GasUsed)
+
+		// simulate again, same result
+		gInfo, result, err = suite.baseApp.Simulate(txBytes)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		require.Equal(t, gasConsumed, gInfo.GasUsed)
+
+		// simulate by calling Query with encoded tx
+		query := abci.RequestQuery{
+			Path: "/app/simulate",
+			Data: txBytes,
+		}
+		queryResult := suite.baseApp.Query(query)
+		require.True(t, queryResult.IsOK(), queryResult.Log)
+
+		var simRes sdk.SimulationResponse
+		require.NoError(t, jsonpb.Unmarshal(strings.NewReader(string(queryResult.Value)), &simRes))
+
+		require.Equal(t, gInfo, simRes.GasInfo)
+		require.Equal(t, result.Log, simRes.Result.Log)
+		require.Equal(t, result.Events, simRes.Result.Events)
+		require.True(t, bytes.Equal(result.Data, simRes.Result.Data))
+
+		suite.baseApp.EndBlock(abci.RequestEndBlock{})
+		suite.baseApp.Commit()
+	}
+}
+
+func TestABCI_InvalidTransaction(t *testing.T) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			return
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	header := tmproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	// transaction with no messages
+	{
+		emptyTx := suite.txConfig.NewTxBuilder().GetTx()
+		_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), emptyTx)
+		require.Error(t, err)
+		require.Nil(t, result)
+
+		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		require.EqualValues(t, sdkerrors.ErrInvalidRequest.Codespace(), space, err)
+		require.EqualValues(t, sdkerrors.ErrInvalidRequest.ABCICode(), code, err)
+	}
+
+	// transaction where ValidateBasic fails
+	{
+		testCases := []struct {
+			tx   signing.Tx
+			fail bool
+		}{
+			{newTxCounter(t, suite.txConfig, 0, 0), false},
+			{newTxCounter(t, suite.txConfig, -1, 0), false},
+			{newTxCounter(t, suite.txConfig, 100, 100), false},
+			{newTxCounter(t, suite.txConfig, 100, 5, 4, 3, 2, 1), false},
+
+			{newTxCounter(t, suite.txConfig, 0, -1), true},
+			{newTxCounter(t, suite.txConfig, 0, 1, -2), true},
+			{newTxCounter(t, suite.txConfig, 0, 1, 2, -10, 5), true},
+		}
+
+		for _, testCase := range testCases {
+			tx := testCase.tx
+			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+
+			if testCase.fail {
+				require.Error(t, err)
+
+				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
+				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
+			} else {
+				require.NotNil(t, result)
+			}
+		}
+	}
+
+	// transaction with no known route
+	{
+		txBuilder := suite.txConfig.NewTxBuilder()
+		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{})
+		setTxSignature(t, txBuilder, 0)
+		unknownRouteTx := txBuilder.GetTx()
+
+		_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), unknownRouteTx)
+		require.Error(t, err)
+		require.Nil(t, result)
+
+		space, code, _ := sdkerrors.ABCIInfo(err, false)
+		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
+		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
+
+		txBuilder = suite.txConfig.NewTxBuilder()
+		txBuilder.SetMsgs(&baseapptestutil.MsgCounter{}, &baseapptestutil.MsgCounter2{})
+		setTxSignature(t, txBuilder, 0)
+		unknownRouteTx = txBuilder.GetTx()
+
+		_, result, err = suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), unknownRouteTx)
+		require.Error(t, err)
+		require.Nil(t, result)
+
+		space, code, _ = sdkerrors.ABCIInfo(err, false)
+		require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), space, err)
+		require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), code, err)
+	}
+
+	// Transaction with an unregistered message
+	{
+		txBuilder := suite.txConfig.NewTxBuilder()
+		txBuilder.SetMsgs(&testdata.MsgCreateDog{})
+		tx := txBuilder.GetTx()
+
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+		require.EqualValues(t, sdkerrors.ErrTxDecode.ABCICode(), res.Code)
+		require.EqualValues(t, sdkerrors.ErrTxDecode.Codespace(), res.Codespace)
+	}
+}
+
+func TestABCI_TxGasLimits(t *testing.T) {
+	gasGranted := uint64(10)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+
+			// AnteHandlers must have their own defer/recover in order for the BaseApp
+			// to know how much gas was used! This is because the GasMeter is created in
+			// the AnteHandler, but if it panics the context won't be set properly in
+			// runTx's recover call.
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			count, _ := parseTxMemo(t, tx)
+			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+
+			return newCtx, nil
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	header := tmproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	testCases := []struct {
+		tx      signing.Tx
+		gasUsed uint64
+		fail    bool
+	}{
+		{newTxCounter(t, suite.txConfig, 0, 0), 0, false},
+		{newTxCounter(t, suite.txConfig, 1, 1), 2, false},
+		{newTxCounter(t, suite.txConfig, 9, 1), 10, false},
+		{newTxCounter(t, suite.txConfig, 1, 9), 10, false},
+		{newTxCounter(t, suite.txConfig, 10, 0), 10, false},
+		{newTxCounter(t, suite.txConfig, 0, 10), 10, false},
+		{newTxCounter(t, suite.txConfig, 0, 8, 2), 10, false},
+		{newTxCounter(t, suite.txConfig, 0, 5, 1, 1, 1, 1, 1), 10, false},
+		{newTxCounter(t, suite.txConfig, 0, 5, 1, 1, 1, 1), 9, false},
+
+		{newTxCounter(t, suite.txConfig, 9, 2), 11, true},
+		{newTxCounter(t, suite.txConfig, 2, 9), 11, true},
+		{newTxCounter(t, suite.txConfig, 9, 1, 1), 11, true},
+		{newTxCounter(t, suite.txConfig, 1, 8, 1, 1), 11, true},
+		{newTxCounter(t, suite.txConfig, 11, 0), 11, true},
+		{newTxCounter(t, suite.txConfig, 0, 11), 11, true},
+		{newTxCounter(t, suite.txConfig, 0, 5, 11), 16, true},
+	}
+
+	for i, tc := range testCases {
+		tx := tc.tx
+		gInfo, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+
+		// check gas used and wanted
+		require.Equal(t, tc.gasUsed, gInfo.GasUsed, fmt.Sprintf("tc #%d; gas: %v, result: %v, err: %s", i, gInfo, result, err))
+
+		// check for out of gas
+		if !tc.fail {
+			require.NotNil(t, result, fmt.Sprintf("%d: %v, %v", i, tc, err))
+		} else {
+			require.Error(t, err)
+			require.Nil(t, result)
+
+			space, code, _ := sdkerrors.ABCIInfo(err, false)
+			require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
+			require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
+		}
+	}
+}
+
+func TestABCI_MaxBlockGasLimits(t *testing.T) {
+	gasGranted := uint64(10)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+
+			defer func() {
+				if r := recover(); r != nil {
+					switch rType := r.(type) {
+					case sdk.ErrorOutOfGas:
+						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
+					default:
+						panic(r)
+					}
+				}
+			}()
+
+			count, _ := parseTxMemo(t, tx)
+			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
+
+			return
+		})
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt)
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
+				MaxGas: 100,
+			},
+		},
+	})
+
+	header := tmproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+	testCases := []struct {
+		tx                signing.Tx
+		numDelivers       int
+		gasUsedPerDeliver uint64
+		fail              bool
+		failAfterDeliver  int
+	}{
+		{newTxCounter(t, suite.txConfig, 0, 0), 0, 0, false, 0},
+		{newTxCounter(t, suite.txConfig, 9, 1), 2, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, 10, 0), 3, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0},
+		{newTxCounter(t, suite.txConfig, 2, 7), 11, 9, false, 0},
+		{newTxCounter(t, suite.txConfig, 10, 0), 10, 10, false, 0}, // hit the limit but pass
+
+		{newTxCounter(t, suite.txConfig, 10, 0), 11, 10, true, 10},
+		{newTxCounter(t, suite.txConfig, 10, 0), 15, 10, true, 10},
+		{newTxCounter(t, suite.txConfig, 9, 0), 12, 9, true, 11}, // fly past the limit
+	}
+
+	for i, tc := range testCases {
+		tx := tc.tx
+
+		// reset the block gas
+		header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		// execute the transaction multiple times
+		for j := 0; j < tc.numDelivers; j++ {
+			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
+
+			ctx := getDeliverStateCtx(suite.baseApp)
+
+			// check for failed transactions
+			if tc.fail && (j+1) > tc.failAfterDeliver {
+				require.Error(t, err, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
+				require.Nil(t, result, fmt.Sprintf("tc #%d; result: %v, err: %s", i, result, err))
+
+				space, code, _ := sdkerrors.ABCIInfo(err, false)
+				require.EqualValues(t, sdkerrors.ErrOutOfGas.Codespace(), space, err)
+				require.EqualValues(t, sdkerrors.ErrOutOfGas.ABCICode(), code, err)
+				require.True(t, ctx.BlockGasMeter().IsOutOfGas())
+			} else {
+				// check gas used and wanted
+				blockGasUsed := ctx.BlockGasMeter().GasConsumed()
+				expBlockGasUsed := tc.gasUsedPerDeliver * uint64(j+1)
+				require.Equal(
+					t, expBlockGasUsed, blockGasUsed,
+					fmt.Sprintf("%d,%d: %v, %v, %v, %v", i, j, tc, expBlockGasUsed, blockGasUsed, result),
+				)
+
+				require.NotNil(t, result, fmt.Sprintf("tc #%d; currDeliver: %d, result: %v, err: %s", i, j, result, err))
+				require.False(t, ctx.BlockGasMeter().IsPastLimit())
+			}
+		}
+	}
 }

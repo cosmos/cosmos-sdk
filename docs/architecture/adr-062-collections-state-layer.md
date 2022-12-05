@@ -1,4 +1,4 @@
-# ADR 070: Collections, a simplified storage layer for cosmos-sdk modules.
+# ADR 062: Collections, a simplified storage layer for cosmos-sdk modules.
 
 ## Changelog
 

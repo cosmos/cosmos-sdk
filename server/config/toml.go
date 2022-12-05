@@ -204,8 +204,10 @@ snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 ###                              State Streaming                            ###
 ###############################################################################
 
+# Streaming allows nodes to stream state to external systems
 [streaming]
 
+# streaming.abci specifies the configuration for the ABCI Listener streaming service
 [streaming.abci]
 
 # List of kv store keys to stream out via gRPC

@@ -401,3 +401,22 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		suite.baseApp.SetFauxMerkleMode()
 	})
 }
+
+func TestTxDecoder(t *testing.T) {
+	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+	// patch in TxConfig instead of using an output from x/auth/tx
+	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+
+	tx := newTxCounter(t, txConfig, 1, 0)
+	txBytes, err := txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	dTx, err := txConfig.TxDecoder()(txBytes)
+	require.NoError(t, err)
+
+	counter, _ := parseTxMemo(t, tx)
+	dTxCounter, _ := parseTxMemo(t, dTx)
+	require.Equal(t, counter, dTxCounter)
+}

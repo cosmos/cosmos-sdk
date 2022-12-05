@@ -1,11 +1,16 @@
 package baseapp_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/url"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 	"unsafe"
 
@@ -20,7 +25,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
 var (
@@ -41,6 +48,109 @@ func (m MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyVal
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.KVStore(capKey2).Set(msg.Key, msg.Value)
 	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
+}
+
+type CounterServerImpl struct {
+	t          *testing.T
+	capKey     storetypes.StoreKey
+	deliverKey []byte
+}
+
+func (m CounterServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
+}
+
+type Counter2ServerImpl struct {
+	t          *testing.T
+	capKey     storetypes.StoreKey
+	deliverKey []byte
+}
+
+func (m Counter2ServerImpl) IncrementCounter(ctx context.Context, msg *baseapptestutil.MsgCounter2) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	return incrementCounter(ctx, m.t, m.capKey, m.deliverKey, msg)
+}
+
+func incrementCounter(ctx context.Context,
+	t *testing.T,
+	capKey storetypes.StoreKey,
+	deliverKey []byte,
+	msg sdk.Msg,
+) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	store := sdkCtx.KVStore(capKey)
+
+	sdkCtx.GasMeter().ConsumeGas(5, "test")
+
+	var msgCount int64
+
+	switch m := msg.(type) {
+	case *baseapptestutil.MsgCounter:
+		if m.FailOnHandler {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+		}
+		msgCount = m.Counter
+	case *baseapptestutil.MsgCounter2:
+		if m.FailOnHandler {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+		}
+		msgCount = m.Counter
+	}
+
+	sdkCtx.EventManager().EmitEvents(
+		counterEvent(sdk.EventTypeMessage, msgCount),
+	)
+
+	_, err := incrementingCounter(t, store, deliverKey, msgCount)
+	if err != nil {
+		return nil, err
+	}
+
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
+func counterEvent(evType string, msgCount int64) sdk.Events {
+	return sdk.Events{
+		sdk.NewEvent(
+			evType,
+			sdk.NewAttribute("update_counter", fmt.Sprintf("%d", msgCount)),
+		),
+	}
+}
+
+func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+		store := ctx.KVStore(capKey)
+		counter, failOnAnte := parseTxMemo(t, tx)
+
+		if failOnAnte {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+		}
+
+		_, err := incrementingCounter(t, store, storeKey, counter)
+		if err != nil {
+			return ctx, err
+		}
+
+		ctx.EventManager().EmitEvents(
+			counterEvent("ante_handler", counter),
+		)
+
+		ctx = ctx.WithPriority(testTxPriority)
+		return ctx, nil
+	}
+}
+
+func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+	storedCounter := getIntFromStore(t, store, counterKey)
+	require.Equal(t, storedCounter, counter)
+	setIntOnStore(store, counterKey, counter+1)
+	return &sdk.Result{}, nil
+}
+
+func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+	bz := make([]byte, 8)
+	n := binary.PutVarint(bz, i)
+	store.Set(key, bz[:n])
 }
 
 type paramStore struct {
@@ -115,4 +225,46 @@ func getDeliverStateCtx(app *baseapp.BaseApp) sdk.Context {
 	f := v.FieldByName("deliverState")
 	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
 	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+}
+
+func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
+	txWithMemo, ok := tx.(sdk.TxWithMemo)
+	require.True(t, ok)
+
+	memo := txWithMemo.GetMemo()
+	vals, err := url.ParseQuery(memo)
+	require.NoError(t, err)
+
+	counter, err = strconv.ParseInt(vals.Get("counter"), 10, 64)
+	require.NoError(t, err)
+
+	failOnAnte = vals.Get("failOnAnte") == "true"
+	return counter, failOnAnte
+}
+
+func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+	msgs := make([]sdk.Msg, 0, len(msgCounters))
+	for _, c := range msgCounters {
+		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false}
+		msgs = append(msgs, msg)
+	}
+
+	builder := cfg.NewTxBuilder()
+	builder.SetMsgs(msgs...)
+	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
+	setTxSignature(t, builder, uint64(counter))
+
+	return builder.GetTx()
+}
+
+func getIntFromStore(t *testing.T, store sdk.KVStore, key []byte) int64 {
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		return 0
+	}
+
+	i, err := binary.ReadVarint(bytes.NewBuffer(bz))
+	require.NoError(t, err)
+
+	return i
 }

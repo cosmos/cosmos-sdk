@@ -10,6 +10,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -474,4 +475,189 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 		Metadata: metadata,
 	}})
 	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}, resp)
+}
+
+func TestABCI_ApplySnapshotChunk(t *testing.T) {
+	srcCfg := SnapshotsConfig{
+		blocks:             4,
+		blockTxs:           10,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+	srcSuite := NewBaseAppSuiteWithSnapshots(t, srcCfg)
+
+	targetCfg := SnapshotsConfig{
+		blocks:             0,
+		blockTxs:           0,
+		snapshotInterval:   2,
+		snapshotKeepRecent: 2,
+		pruningOpts:        pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+	}
+	targetSuite := NewBaseAppSuiteWithSnapshots(t, targetCfg)
+
+	// fetch latest snapshot to restore
+	respList := srcSuite.baseApp.ListSnapshots(abci.RequestListSnapshots{})
+	require.NotEmpty(t, respList.Snapshots)
+	snapshot := respList.Snapshots[0]
+
+	// make sure the snapshot has at least 3 chunks
+	require.GreaterOrEqual(t, snapshot.Chunks, uint32(3), "Not enough snapshot chunks")
+
+	// begin a snapshot restoration in the target
+	respOffer := targetSuite.baseApp.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: snapshot})
+	require.Equal(t, abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ACCEPT}, respOffer)
+
+	// We should be able to pass an invalid chunk and get a verify failure, before
+	// reapplying it.
+	respApply := targetSuite.baseApp.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+		Index:  0,
+		Chunk:  []byte{9},
+		Sender: "sender",
+	})
+	require.Equal(t, abci.ResponseApplySnapshotChunk{
+		Result:        abci.ResponseApplySnapshotChunk_RETRY,
+		RefetchChunks: []uint32{0},
+		RejectSenders: []string{"sender"},
+	}, respApply)
+
+	// fetch each chunk from the source and apply it to the target
+	for index := uint32(0); index < snapshot.Chunks; index++ {
+		respChunk := srcSuite.baseApp.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
+			Height: snapshot.Height,
+			Format: snapshot.Format,
+			Chunk:  index,
+		})
+		require.NotNil(t, respChunk.Chunk)
+
+		respApply := targetSuite.baseApp.ApplySnapshotChunk(abci.RequestApplySnapshotChunk{
+			Index: index,
+			Chunk: respChunk.Chunk,
+		})
+		require.Equal(t, abci.ResponseApplySnapshotChunk{
+			Result: abci.ResponseApplySnapshotChunk_ACCEPT,
+		}, respApply)
+	}
+
+	// the target should now have the same hash as the source
+	require.Equal(t, srcSuite.baseApp.LastCommitID(), targetSuite.baseApp.LastCommitID())
+}
+
+func TestABCI_EndBlock(t *testing.T) {
+	db := dbm.NewMemDB()
+	name := t.Name()
+	logger := defaultLogger()
+
+	cp := &tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
+			MaxGas: 5000000,
+		},
+	}
+
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	app.InitChain(abci.RequestInitChain{
+		ConsensusParams: cp,
+	})
+
+	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+		return abci.ResponseEndBlock{
+			ValidatorUpdates: []abci.ValidatorUpdate{
+				{Power: 100},
+			},
+		}
+	})
+	app.Seal()
+
+	res := app.EndBlock(abci.RequestEndBlock{})
+	require.Len(t, res.GetValidatorUpdates(), 1)
+	require.Equal(t, int64(100), res.GetValidatorUpdates()[0].Power)
+	require.Equal(t, cp.Block.MaxGas, res.ConsensusParamUpdates.Block.MaxGas)
+}
+
+func TestABCI_CheckTx(t *testing.T) {
+	// This ante handler reads the key and checks that the value matches the
+	// current counter. This ensures changes to the KVStore persist across
+	// successive CheckTx runs.
+	counterKey := []byte("counter-key")
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
+
+	nTxs := int64(5)
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	for i := int64(0); i < nTxs; i++ {
+		tx := newTxCounter(t, suite.txConfig, i, 0) // no messages
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		r := suite.baseApp.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+		require.Equal(t, testTxPriority, r.Priority)
+		require.Empty(t, r.GetEvents())
+	}
+
+	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	storedCounter := getIntFromStore(t, checkStateStore, counterKey)
+
+	// ensure AnteHandler ran
+	require.Equal(t, nTxs, storedCounter)
+
+	// if a block is committed, CheckTx state should be reset
+	header := tmproto.Header{Height: 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header, Hash: []byte("hash")})
+
+	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderHash())
+
+	suite.baseApp.EndBlock(abci.RequestEndBlock{})
+	suite.baseApp.Commit()
+
+	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	storedBytes := checkStateStore.Get(counterKey)
+	require.Nil(t, storedBytes)
+}
+
+func TestDeliverTx(t *testing.T) {
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	suite := NewBaseAppSuite(t, anteOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	deliverKey := []byte("deliver-key")
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+	nBlocks := 3
+	txPerHeight := 5
+
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		header := tmproto.Header{Height: int64(blockN) + 1}
+		suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+		for i := 0; i < txPerHeight; i++ {
+			counter := int64(blockN*txPerHeight + i)
+			tx := newTxCounter(t, suite.txConfig, counter, counter)
+
+			txBytes, err := suite.txConfig.TxEncoder()(tx)
+			require.NoError(t, err)
+
+			res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+			events := res.GetEvents()
+			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
+		}
+
+		suite.baseApp.EndBlock(abci.RequestEndBlock{})
+		suite.baseApp.Commit()
+	}
 }

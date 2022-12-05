@@ -13,6 +13,10 @@ A SDK standard consists of:
 
 All top-level sections are required. References should be included inline as links, or tabulated at the bottom of the section if necessary.  Included sub-sections should be listed in the order specified below. 
 
+ ### Table Of Contents 
+ 
+ > Provide a table of contents at the top of the file to assist readers.
+
 ### Synopsis
 
 The document should include a brief (~200 word) synopsis providing a high-level description of and rationale for the specification.

@@ -51,11 +51,16 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 // KeyEncoder defines a generic interface which is implemented
 // by types that are capable of encoding and decoding collections keys.
 type KeyEncoder[T any] interface {
-	// Encode encodes the type T into bytes.
-	Encode(key T) ([]byte, error)
-	// Decode decodes the given bytes back into T.
-	// And it also must return the bytes of the buffer which were read.
-	Decode(b []byte) (int, T, error)
+	// PutKey writes the key bytes into the buffer. Returns the number of
+	// bytes written.
+	// The bytes written must match the value returned by the Size method.
+	PutKey(buffer []byte, key T) (int, error)
+	// ReadKey reads from the provided bytes buffer to decode
+	// the key T. Returns the number of bytes read, the type T
+	// or an error in case of decoding failure.
+	ReadKey(buffer []byte) (int, T, error)
+	// Size returns the size of the key T in binary format.
+	Size(key T) int
 	// Stringify returns a string representation of T.
 	Stringify(key T) string
 	// KeyType returns an identifier for the key.

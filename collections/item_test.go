@@ -10,14 +10,20 @@ func TestItem(t *testing.T) {
 	sk, ctx := deps()
 	item := NewItem(sk, NewPrefix("item"), Uint64Value)
 	// set
-	item.Set(ctx, 1000)
+	err := item.Set(ctx, 1000)
+	require.NoError(t, err)
 	// get
 	i, err := item.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, uint64(1000), i)
 	// has
-	require.True(t, item.Has(ctx))
+	has, err := item.Has(ctx)
+	require.NoError(t, err)
+	require.True(t, has)
 	// remove
-	item.Remove(ctx)
-	require.False(t, item.Has(ctx))
+	err = item.Remove(ctx)
+	require.NoError(t, err)
+	has, err = item.Has(ctx)
+	require.NoError(t, err)
+	require.False(t, has)
 }

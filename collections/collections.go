@@ -10,6 +10,9 @@ import (
 // ErrNotFound is returned when the provided key is not present in the StorageProvider.
 var ErrNotFound = errors.New("collections: not found")
 
+// ErrEncoding is returned when something fails during key or value encoding/decoding.
+var ErrEncoding = errors.New("collections: encoding error")
+
 // StorageProvider represents sdk.Context
 // it is used to avoid to reduce dependencies.
 type StorageProvider interface {

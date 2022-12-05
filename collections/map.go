@@ -2,6 +2,7 @@ package collections
 
 import (
 	"fmt"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -30,21 +31,31 @@ type Map[K, V any] struct {
 }
 
 // Set maps the provided value to the provided key in the store.
-func (m Map[K, V]) Set(ctx StorageProvider, key K, value V) {
-	keyBytes := m.encodeKey(key)
+// Errors with ErrEncoding if key or value encoding fails.
+func (m Map[K, V]) Set(ctx StorageProvider, key K, value V) error {
+	keyBytes, err := m.encodeKey(key)
+	if err != nil {
+		return err
+	}
 
 	valueBytes, err := m.vc.Encode(value)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("%w: value encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 
 	m.getStore(ctx).Set(keyBytes, valueBytes)
+	return nil
 }
 
 // Get returns the value associated with the provided key,
-// or a ErrNotFound error in case the key is not present.
+// errors with ErrNotFound if the key does not exist, or
+// with ErrEncoding if the key or value decoding fails.
 func (m Map[K, V]) Get(ctx StorageProvider, key K) (V, error) {
-	keyBytes := m.encodeKey(key)
+	keyBytes, err := m.encodeKey(key)
+	if err != nil {
+		var v V
+		return v, err
+	}
 
 	valueBytes := m.getStore(ctx).Get(keyBytes)
 	if valueBytes == nil {
@@ -54,41 +65,42 @@ func (m Map[K, V]) Get(ctx StorageProvider, key K) (V, error) {
 
 	v, err := m.vc.Decode(valueBytes)
 	if err != nil {
-		panic(err)
+		var v V
+		return v, fmt.Errorf("%w: value decode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 	return v, nil
 }
 
-// GetOr returns the value associated with the provided key.
-// If the key is not present in store, then we return the provided
-// default value.
-func (m Map[K, V]) GetOr(ctx StorageProvider, key K, defaultValue V) V {
-	v, err := m.Get(ctx, key)
-	if err != nil {
-		return defaultValue
-	}
-	return v
-}
-
 // Has reports whether the key is present in storage or not.
-func (m Map[K, V]) Has(ctx StorageProvider, key K) bool {
-	return m.getStore(ctx).Has(m.encodeKey(key))
+// Errors with ErrEncoding if key encoding fails.
+func (m Map[K, V]) Has(ctx StorageProvider, key K) (bool, error) {
+	bytesKey, err := m.encodeKey(key)
+	if err != nil {
+		return false, err
+	}
+	return m.getStore(ctx).Has(bytesKey), nil
 }
 
 // Remove removes the key from the storage.
+// Errors with ErrEncoding if key encoding fails.
 // If the key does not exist then this is a no-op.
-func (m Map[K, V]) Remove(ctx StorageProvider, key K) {
-	m.getStore(ctx).Delete(m.encodeKey(key))
+func (m Map[K, V]) Remove(ctx StorageProvider, key K) error {
+	bytesKey, err := m.encodeKey(key)
+	if err != nil {
+		return err
+	}
+	m.getStore(ctx).Delete(bytesKey)
+	return nil
 }
 
 func (m Map[K, V]) getStore(provider StorageProvider) storetypes.KVStore {
 	return provider.KVStore(m.sk)
 }
 
-func (m Map[K, V]) encodeKey(key K) []byte {
+func (m Map[K, V]) encodeKey(key K) ([]byte, error) {
 	bytes, err := m.kc.Encode(key)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("%w: key encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
-	return append(m.prefix, bytes...)
+	return append(m.prefix, bytes...), nil
 }

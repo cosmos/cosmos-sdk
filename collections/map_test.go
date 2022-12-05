@@ -11,20 +11,24 @@ func TestMap(t *testing.T) {
 	m := NewMap(sk, NewPrefix("hi"), Uint64Key, Uint64Value)
 
 	// test not has
-	require.False(t, m.Has(ctx, 1))
+	has, err := m.Has(ctx, 1)
+	require.NoError(t, err)
+	require.False(t, has)
 	// test get error
-	_, err := m.Get(ctx, 1)
+	_, err = m.Get(ctx, 1)
 	require.ErrorIs(t, err, ErrNotFound)
 
 	// test set/get
-	m.Set(ctx, 1, 100)
+	err = m.Set(ctx, 1, 100)
+	require.NoError(t, err)
 	v, err := m.Get(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, uint64(100), v)
 
 	// test remove
-	m.Remove(ctx, 1)
-	require.False(t, m.Has(ctx, 1))
-
-	// test get or
+	err = m.Remove(ctx, 1)
+	require.NoError(t, err)
+	has, err = m.Has(ctx, 1)
+	require.NoError(t, err)
+	require.False(t, has)
 }

@@ -11,7 +11,7 @@ import (
 // Encoding is big endian to retain ordering.
 var Uint64Key KeyEncoder[uint64] = uint64Key{}
 
-var errDecodeKeySize = errors.New("collections: decode error, wrong byte key size")
+var errDecodeKeySize = errors.New("decode error, wrong byte key size")
 
 type uint64Key struct{}
 

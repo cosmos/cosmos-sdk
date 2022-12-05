@@ -119,7 +119,7 @@ type Codec interface {
 
 	// Unmarshal parses the data encoded with Marshal method and stores the result
 	// in the value pointed to by v.
-	Unmarshal(bz []byte, ptr proto.message) error
+	Unmarshal(bz []byte, ptr proto.Message) error
 
 	// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
 	// the result in the value pointed to by v.

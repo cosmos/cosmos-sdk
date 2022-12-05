@@ -141,12 +141,6 @@ func (s *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cach
 	panic("cannot CacheWrapWithTrace a ListenKVStore")
 }
 
-// CacheWrapWithListeners implements the KVStore interface. It panics as a
-// Store cannot be cache wrapped.
-func (s *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
-	panic("cannot CacheWrapWithListeners a ListenKVStore")
-}
-
 // onWrite writes a KVStore operation to all of the WriteListeners
 func (s *Store) onWrite(delete bool, key, value []byte) {
 	for _, l := range s.listeners {

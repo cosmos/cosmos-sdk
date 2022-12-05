@@ -166,8 +166,6 @@ replace (
 	// Temporary until we tag a new version
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
-	github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

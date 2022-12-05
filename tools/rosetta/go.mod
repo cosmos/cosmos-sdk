@@ -5,7 +5,6 @@ go 1.19
 require (
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
-	github.com/coinbase/rosetta-sdk-go v0.8.1
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20221201152010-fb4d964f7ecc
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
@@ -117,6 +116,3 @@ require (
 	pgregory.net/rapid v0.5.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Update to rosetta-sdk-go temporarly to have `check:spec` passing. See https://github.com/coinbase/rosetta-sdk-go/issues/449
-replace github.com/coinbase/rosetta-sdk-go => github.com/coinbase/rosetta-sdk-go v0.8.2-0.20221007214527-e03849ba430a

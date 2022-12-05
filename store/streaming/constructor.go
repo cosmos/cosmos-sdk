@@ -85,7 +85,6 @@ func NewFileStreamingService(
 	opts serverTypes.AppOptions,
 	keys []types.StoreKey,
 	marshaller codec.BinaryCodec,
-	logger log.Logger,
 ) (baseapp.StreamingService, error) {
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
 	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
@@ -106,7 +105,7 @@ func NewFileStreamingService(
 		}
 	}
 
-	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, logger, outputMetadata, stopNodeOnErr, fsync)
+	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, outputMetadata, stopNodeOnErr, fsync)
 }
 
 // LoadStreamingServices is a function for loading StreamingServices onto the
@@ -117,7 +116,6 @@ func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
 	appOpts serverTypes.AppOptions,
 	appCodec codec.BinaryCodec,
-	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
@@ -157,7 +155,7 @@ func LoadStreamingServices(
 
 		// Generate the streaming service using the constructor, appOptions, and the
 		// StoreKeys we want to expose.
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger)
+		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
 		if err != nil {
 			// close any services we may have already spun up before hitting the error on this one
 			for _, activeStreamer := range activeStreamers {

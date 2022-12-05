@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -28,7 +27,6 @@ type StreamingService struct {
 	filePrefix     string                  // optional prefix for each of the generated files
 	writeDir       string                  // directory to write files into
 	codec          codec.BinaryCodec       // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	logger         log.Logger
 
 	currentBlockNumber int64
 	blockMetadata      types.BlockMetadata
@@ -42,7 +40,7 @@ type StreamingService struct {
 }
 
 // NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec, logger log.Logger, outputMetadata bool, stopNodeOnErr bool, fsync bool) (*StreamingService, error) {
+func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec, outputMetadata bool, stopNodeOnErr bool, fsync bool) (*StreamingService, error) {
 	// sort storeKeys for deterministic output
 	sort.SliceStable(storeKeys, func(i, j int) bool {
 		return storeKeys[i].Name() < storeKeys[j].Name()
@@ -63,7 +61,6 @@ func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey
 		filePrefix:     filePrefix,
 		writeDir:       writeDir,
 		codec:          c,
-		logger:         logger,
 		outputMetadata: outputMetadata,
 		stopNodeOnErr:  stopNodeOnErr,
 		fsync:          fsync,
@@ -115,7 +112,6 @@ func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.Reques
 func (fss *StreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit) error {
 	err := fss.doListenCommit(ctx, res)
 	if err != nil {
-		fss.logger.Error("Commit listening hook failed", "height", fss.currentBlockNumber, "err", err)
 		if fss.stopNodeOnErr {
 			return err
 		}

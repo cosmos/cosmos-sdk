@@ -1,4 +1,4 @@
-## What is a SDK standard?
+## What is an SDK standard?
 
 A SDK standard is a design document describing a particular protocol, standard, or feature expected to be used by the Cosmos SDK. A SDK standard should list the desired properties of the standard, explain the design rationale, and provide a concise but comprehensive technical specification. The primary author is responsible for pushing the proposal through the standardization process, soliciting input and support from the community, and communicating with relevant stakeholders to ensure (social) consensus.
 

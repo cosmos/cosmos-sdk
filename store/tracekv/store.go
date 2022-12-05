@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"io"
 
+	"cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -171,11 +171,6 @@ func (tkv *Store) CacheWrap() types.CacheWrap {
 // Store cannot be branched.
 func (tkv *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	panic("cannot CacheWrapWithTrace a TraceKVStore")
-}
-
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (tkv *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
-	panic("cannot CacheWrapWithListeners a TraceKVStore")
 }
 
 // writeOperation writes a KVStore operation to the underlying io.Writer as

@@ -69,6 +69,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	app.MountStores(capKey1, capKey2)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	app.SetTxDecoder(txConfig.TxDecoder())
+	app.SetTxEncoder(txConfig.TxEncoder())
 
 	// mount stores and seal
 	require.Nil(t, app.LoadLatestVersion())

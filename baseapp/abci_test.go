@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
@@ -1346,4 +1347,150 @@ func TestBaseAppCreateQueryContext(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestABCI_Proposal_HappyPath(t *testing.T) {
+	anteKey := []byte("ante-key")
+	pool := mempool.NewSenderNonceMempool()
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	})
+
+	tx := newTxCounter(t, suite.txConfig, 0, 1)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	reqCheckTx := abci.RequestCheckTx{
+		Tx:   txBytes,
+		Type: abci.CheckTxType_New,
+	}
+	suite.baseApp.CheckTx(reqCheckTx)
+
+	tx2 := newTxCounter(t, suite.txConfig, 1, 1)
+
+	tx2Bytes, err := suite.txConfig.TxEncoder()(tx2)
+	require.NoError(t, err)
+
+	err = pool.Insert(sdk.Context{}, tx2)
+	require.NoError(t, err)
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, 2, len(resPrepareProposal.Txs))
+
+	reqProposalTxBytes := [2][]byte{
+		txBytes,
+		tx2Bytes,
+	}
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs: reqProposalTxBytes[:],
+	}
+
+	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+
+	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+	require.Equal(t, 1, pool.CountTx())
+
+	require.NotEmpty(t, res.Events)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+}
+
+func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
+	anteKey := []byte("ante-key")
+	pool := mempool.NewSenderNonceMempool()
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	for i := 0; i < 100; i++ {
+		tx2 := newTxCounter(t, suite.txConfig, int64(i), int64(i))
+		err := pool.Insert(sdk.Context{}, tx2)
+		require.NoError(t, err)
+	}
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1500,
+	}
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, 10, len(resPrepareProposal.Txs))
+}
+
+func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
+	anteKey := []byte("ante-key")
+	pool := mempool.NewSenderNonceMempool()
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	err := pool.Insert(sdk.Context{}, tx)
+	require.NoError(t, err)
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, 1, len(resPrepareProposal.Txs))
+}
+
+func TestABCI_PrepareProposal_Failures(t *testing.T) {
+	anteKey := []byte("ante-key")
+	pool := mempool.NewSenderNonceMempool()
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+	}
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	reqCheckTx := abci.RequestCheckTx{
+		Tx:   txBytes,
+		Type: abci.CheckTxType_New,
+	}
+	checkTxRes := suite.baseApp.CheckTx(reqCheckTx)
+	require.True(t, checkTxRes.IsOK())
+
+	failTx := newTxCounter(t, suite.txConfig, 1, 1)
+	failTx = setFailOnAnte(t, suite.txConfig, failTx, true)
+
+	err = pool.Insert(sdk.Context{}, failTx)
+	require.NoError(t, err)
+	require.Equal(t, 2, pool.CountTx())
+
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+	res := suite.baseApp.PrepareProposal(req)
+	require.Equal(t, 1, len(res.Txs))
 }

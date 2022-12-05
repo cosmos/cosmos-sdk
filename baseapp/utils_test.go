@@ -67,6 +67,15 @@ func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
+type NoopCounterServerImpl struct{}
+
+func (m NoopCounterServerImpl) IncrementCounter(
+	_ context.Context,
+	_ *baseapptestutil.MsgCounter,
+) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	return &baseapptestutil.MsgCreateCounterResponse{}, nil
+}
+
 type CounterServerImpl struct {
 	t          *testing.T
 	capKey     storetypes.StoreKey

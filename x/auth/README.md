@@ -138,7 +138,7 @@ message BaseAccount {
 
 ### Vesting Account
 
-See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
+See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
 ## AnteHandlers
 
@@ -217,7 +217,7 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	GetNextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) uint64
 }
 ```
 
@@ -239,7 +239,7 @@ The auth module contains the following parameters:
 
 A user can query and interact with the `auth` module using the CLI.
 
-#### Query
+### Query
 
 The `query` commands allow users to query `auth` state.
 
@@ -247,7 +247,7 @@ The `query` commands allow users to query `auth` state.
 simd query auth --help
 ```
 
-##### account
+#### account
 
 The `account` command allow users to query for an account by it's address.
 
@@ -273,7 +273,7 @@ pub_key:
 sequence: "1"
 ```
 
-##### accounts
+#### accounts
 
 The `accounts` command allow users to query all the available accounts.
 
@@ -372,7 +372,7 @@ pagination:
   total: "0"
 ```
 
-##### params
+#### params
 
 The `params` command allow users to query the current auth parameters.
 
@@ -396,7 +396,7 @@ tx_sig_limit: "7"
 tx_size_cost_per_byte: "10"
 ```
 
-#### Transactions
+### Transactions
 
 The `auth` module supports transactions commands to help you with signing and more. Compared to other modules you can access directly the `auth` module transactions commands using the only `tx` command.
 
@@ -406,7 +406,7 @@ Use directly the `--help` flag to get more information about the `tx` command.
 simd tx --help
 ```
 
-##### `sign`
+#### `sign`
 
 The `sign` command allows users to sign transactions that was generated offline.
 
@@ -418,7 +418,7 @@ The result is a signed transaction that can be broadcasted to the network thanks
 
 More information about the `sign` command can be found running `simd tx sign --help`.
 
-##### `sign-batch`
+#### `sign-batch`
 
 The `sign-batch` command allows users to sign multiples offline generated transactions.
 The transactions can be in one file, with one tx per line, or in multiple files.
@@ -437,7 +437,7 @@ The result is multiples signed transactions. For combining the signed transactio
 
 More information about the `sign-batch` command can be found running `simd tx sign-batch --help`.
 
-##### `multi-sign`
+#### `multi-sign`
 
 The `multi-sign` command allows users to sign transactions that was generated offline by a multisig account.
 
@@ -449,14 +449,14 @@ Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of
 
 More information about the `multi-sign` command can be found running `simd tx multi-sign --help`.
 
-##### `multisign-batch`
+#### `multisign-batch`
 
 The `multisign-batch` works the same way as `sign-batch`, but for multisig accounts.
 With the difference that the `multisign-batch` command requires all transactions to be in one file, and the `--append` flag does not exist.
 
 More information about the `multisign-batch` command can be found running `simd tx multisign-batch --help`.
 
-##### `validate-signatures`
+#### `validate-signatures`
 
 The `validate-signatures` command allows users to validate the signatures of a signed transaction.
 
@@ -471,7 +471,7 @@ Signatures:
 
 More information about the `validate-signatures` command can be found running `simd tx validate-signatures --help`.
 
-##### `broadcast`
+#### `broadcast`
 
 The `broadcast` command allows users to broadcast a signed transaction to the network.
 
@@ -481,31 +481,7 @@ simd tx broadcast tx.signed.json
 
 More information about the `broadcast` command can be found running `simd tx broadcast --help`.
 
-##### `encode`
-
-The `encode` command encodes a transaction created with the `--generate-only` flag or signed with the sign command.
-The transaction is seralized it to Protobuf and returned as base64.
-
-```bash
-$ simd tx encode tx.json
-Co8BCowBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmwKLWNvc21vczFsNnZzcWhoN3Jud3N5cjJreXozampnM3FkdWF6OGd3Z3lsODI3NRItY29zbW9zMTU4c2FsZHlnOHBteHU3Znd2dDBkNng3amVzd3A0Z3d5a2xrNnkzGgwKBXN0YWtlEgMxMDASBhIEEMCaDA==
-$ simd tx encode tx.signed.json
-```
-
-More information about the `encode` command can be found running `simd tx encode --help`.
-
-##### `decode`
-
-The `decode` commands decodes a transaction encoded with the `encode` command.
-
-
-```bash
-simd tx decode Co8BCowBChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEmwKLWNvc21vczFsNnZzcWhoN3Jud3N5cjJreXozampnM3FkdWF6OGd3Z3lsODI3NRItY29zbW9zMTU4c2FsZHlnOHBteHU3Znd2dDBkNng3amVzd3A0Z3d5a2xrNnkzGgwKBXN0YWtlEgMxMDASBhIEEMCaDA==
-```
-
-More information about the `decode` command can be found running `simd tx decode --help`.
-
-##### `aux-to-fee`
+#### `aux-to-fee`
 
 The `aux-to-fee` comamnds includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster.
 [Learn more about tip transaction](https://docs.cosmos.network/main/core/tips).

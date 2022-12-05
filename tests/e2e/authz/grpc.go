@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -108,7 +109,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 			false,
 			"",
 			func() {
-				_, err := CreateGrant(val, []string{
+				_, err := authzclitestutil.CreateGrant(val.ClientCtx, []string{
 					grantee.String(),
 					"generic",
 					fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -210,7 +211,6 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 				var authorizations authz.QueryGranterGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
-				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 		})
@@ -262,7 +262,6 @@ func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
 				var authorizations authz.QueryGranteeGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
 				require.NoError(err)
-				// FIXME: https://github.com/cosmos/cosmos-sdk/issues/10965
 				require.Len(authorizations.Grants, tc.numItems)
 			}
 		})

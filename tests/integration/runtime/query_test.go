@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
@@ -127,8 +127,21 @@ func TestQueryAutoCLIAppOptions(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, res != nil && res.ModuleOptions != nil)
 
-	// make sure we at least have x/auth autocli options
+	// make sure we have x/auth autocli options which were configured manually
 	authOpts := res.ModuleOptions["auth"]
 	assert.Assert(t, authOpts != nil)
-	assert.Assert(t, authOpts.Query != nil && authOpts.Query.Service != "")
+	assert.Assert(t, authOpts.Query != nil)
+	assert.Equal(t, "cosmos.auth.v1beta1.Query", authOpts.Query.Service)
+	// make sure we have some custom options
+	assert.Assert(t, len(authOpts.Query.RpcCommandOptions) != 0)
+
+	// make sure we have x/staking autocli options which should have been auto-discovered
+	stakingOpts := res.ModuleOptions["staking"]
+	assert.Assert(t, stakingOpts != nil)
+	assert.Assert(t, stakingOpts.Query != nil && stakingOpts.Tx != nil)
+	assert.Equal(t, "cosmos.staking.v1beta1.Query", stakingOpts.Query.Service)
+	assert.Equal(t, "cosmos.staking.v1beta1.Msg", stakingOpts.Tx.Service)
+
+	// make sure tx module has no autocli options because it has no services
+	assert.Assert(t, res.ModuleOptions["tx"] == nil)
 }

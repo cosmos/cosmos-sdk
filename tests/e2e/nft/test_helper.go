@@ -3,8 +3,7 @@ package nft
 import (
 	"fmt"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -20,14 +19,14 @@ func ExecQueryClass(val *network.Validator, classID string) (testutil.BufferWrit
 	cmd := cli.GetCmdQueryClass()
 	var args []string
 	args = append(args, classID)
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
 func ExecQueryClasses(val *network.Validator) (testutil.BufferWriter, error) {
 	cmd := cli.GetCmdQueryClasses()
 	var args []string
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
@@ -36,7 +35,7 @@ func ExecQueryNFT(val *network.Validator, classID, nftID string) (testutil.Buffe
 	var args []string
 	args = append(args, classID)
 	args = append(args, nftID)
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
@@ -45,7 +44,7 @@ func ExecQueryNFTs(val *network.Validator, classID, owner string) (testutil.Buff
 	var args []string
 	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, classID))
 	args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, owner))
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
@@ -54,7 +53,7 @@ func ExecQueryOwner(val *network.Validator, classID, nftID string) (testutil.Buf
 	var args []string
 	args = append(args, classID)
 	args = append(args, nftID)
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
@@ -63,7 +62,7 @@ func ExecQueryBalance(val *network.Validator, classID, owner string) (testutil.B
 	var args []string
 	args = append(args, owner)
 	args = append(args, classID)
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }
 
@@ -71,6 +70,6 @@ func ExecQuerySupply(val *network.Validator, classID string) (testutil.BufferWri
 	cmd := cli.GetCmdQuerySupply()
 	var args []string
 	args = append(args, classID)
-	args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+	args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 	return clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 }

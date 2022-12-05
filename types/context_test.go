@@ -11,6 +11,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -92,6 +93,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	blockGasMeter := types.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
 	headerHash := []byte("headerHash")
+	zeroGasCfg := storetypes.GasConfig{}
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	s.Require().Equal(header, ctx.BlockHeader())
@@ -104,7 +106,10 @@ func (s *contextTestSuite) TestContextWithCustom() {
 		WithGasMeter(meter).
 		WithMinGasPrices(minGasPrices).
 		WithBlockGasMeter(blockGasMeter).
-		WithHeaderHash(headerHash)
+		WithHeaderHash(headerHash).
+		WithKVGasConfig(zeroGasCfg).
+		WithTransientKVGasConfig(zeroGasCfg)
+
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(chainid, ctx.ChainID())
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
@@ -116,6 +121,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
 	s.Require().Equal(headerHash, ctx.HeaderHash().Bytes())
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
+	s.Require().Equal(zeroGasCfg, ctx.KVGasConfig())
+	s.Require().Equal(zeroGasCfg, ctx.TransientKVGasConfig())
 
 	// test IsReCheckTx
 	s.Require().False(ctx.IsReCheckTx())

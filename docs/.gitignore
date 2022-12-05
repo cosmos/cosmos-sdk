@@ -7,6 +7,15 @@
 # Generated files
 .docusaurus
 .cache-loader
+versioned_docs
+versioned_sidebars
+docs/node_modules
+docs/docs/modules
+docs/docs/spec
+docs/docs/architecture
+docs/docs/tooling/01-cosmovisor.md
+docs/docs/tooling/02-depinject.md
+docs/run-node/04-rosetta.md
 
 # Misc
 .DS_Store

@@ -354,10 +354,7 @@ func TestDisplay(t *testing.T) {
 	pubKeys := generatePubKeys(3)
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 
-	// LegacyAminoPubKey wraps PubKeys into Amino (for serialization) and Any String method doesn't work.
-	require.PanicsWithValue("reflect.Value.Interface: cannot return value obtained from unexported field or method",
-		func() { require.Empty(msig.String()) },
-	)
+	require.NotEmpty(msig.String())
 	var cdc codec.Codec
 	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
 	require.NoError(err)

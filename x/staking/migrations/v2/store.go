@@ -5,8 +5,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
-	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v043"
+	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
+	v2distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -22,9 +22,9 @@ func migratePrefixAddressAddressAddress(store sdk.KVStore, prefixBz []byte) {
 	defer oldStoreIter.Close()
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
-		addr1 := oldStoreIter.Key()[:v042auth.AddrLen]
-		addr2 := oldStoreIter.Key()[v042auth.AddrLen : 2*v042auth.AddrLen]
-		addr3 := oldStoreIter.Key()[2*v042auth.AddrLen:]
+		addr1 := oldStoreIter.Key()[:v1auth.AddrLen]
+		addr2 := oldStoreIter.Key()[v1auth.AddrLen : 2*v1auth.AddrLen]
+		addr3 := oldStoreIter.Key()[2*v1auth.AddrLen:]
 		newStoreKey := append(append(append(
 			prefixBz,
 			address.MustLengthPrefix(addr1)...), address.MustLengthPrefix(addr2)...), address.MustLengthPrefix(addr3)...,
@@ -62,15 +62,15 @@ func migrateValidatorsByPowerIndexKey(store sdk.KVStore) {
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey) error {
 	store := ctx.KVStore(storeKey)
 
-	v043distribution.MigratePrefixAddress(store, v1.LastValidatorPowerKey)
+	v2distribution.MigratePrefixAddress(store, v1.LastValidatorPowerKey)
 
-	v043distribution.MigratePrefixAddress(store, v1.ValidatorsKey)
-	v043distribution.MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)
+	v2distribution.MigratePrefixAddress(store, v1.ValidatorsKey)
+	v2distribution.MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)
 	migrateValidatorsByPowerIndexKey(store)
 
-	v043distribution.MigratePrefixAddressAddress(store, v1.DelegationKey)
-	v043distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationKey)
-	v043distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationByValIndexKey)
+	v2distribution.MigratePrefixAddressAddress(store, v1.DelegationKey)
+	v2distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationKey)
+	v2distribution.MigratePrefixAddressAddress(store, v1.UnbondingDelegationByValIndexKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationByValSrcIndexKey)
 	migratePrefixAddressAddressAddress(store, v1.RedelegationByValDstIndexKey)

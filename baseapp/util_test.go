@@ -15,17 +15,19 @@ import (
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -141,21 +143,24 @@ func makeTestConfig() depinject.Config {
 			},
 			{
 				Name:   "tx",
-				Config: appconfig.WrapAny(&txmodulev1.Module{}),
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 		},
 	})
 }
 
 func makeMinimalConfig() depinject.Config {
-	return appconfig.Compose(&appv1alpha1.Config{
-		Modules: []*appv1alpha1.ModuleConfig{
-			{
-				Name: "runtime",
-				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-					AppName: "BaseAppApp",
-				}),
+	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+	return depinject.Configs(
+		depinject.Supply(mempoolOpt),
+		appconfig.Compose(&appv1alpha1.Config{
+			Modules: []*appv1alpha1.ModuleConfig{
+				{
+					Name: "runtime",
+					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+						AppName: "BaseAppApp",
+					}),
+				},
 			},
-		},
-	})
+		}))
 }

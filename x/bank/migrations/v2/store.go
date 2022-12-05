@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
+	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	v1 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -63,7 +63,7 @@ func migrateBalanceKeys(store sdk.KVStore, logger log.Logger) {
 
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v1.AddressFromBalancesStore(oldStoreIter.Key())
-		denom := oldStoreIter.Key()[v042auth.AddrLen:]
+		denom := oldStoreIter.Key()[v1auth.AddrLen:]
 		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.

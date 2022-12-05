@@ -17,8 +17,9 @@ import (
 	"time"
 	"unsafe"
 
-	"cosmossdk.io/depinject"
-	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -26,16 +27,20 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/gogoproto/jsonpb"
+
+	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
+	"github.com/cosmos/cosmos-sdk/store/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -70,6 +75,7 @@ func defaultLogger() log.Logger {
 func setupBaseApp(t *testing.T, options ...func(*baseapp.BaseApp)) *baseapp.BaseApp {
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 
 	logger := defaultLogger()
@@ -129,6 +135,7 @@ func setupBaseAppWithSnapshots(t *testing.T, config *setupConfig) (*baseapp.Base
 
 			builder := txConfig.NewTxBuilder()
 			builder.SetMsgs(msgs...)
+			setTxSignature(builder, 0)
 
 			txBytes, err := txConfig.TxEncoder()(builder.GetTx())
 			require.NoError(t, err)
@@ -1061,9 +1068,9 @@ func TestCheckTx(t *testing.T) {
 
 		require.NoError(t, err)
 		r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 		require.Equal(t, testTxPriority, r.Priority)
 		require.Empty(t, r.GetEvents())
-		require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
 	}
 
 	checkStateStore := getCheckStateCtx(app.BaseApp).KVStore(capKey1)
@@ -1208,6 +1215,7 @@ func TestMultiMsgDeliverTx(t *testing.T) {
 
 	builder.SetMsgs(msgs...)
 	builder.SetMemo(tx.GetMemo())
+	setTxSignature(builder, 0)
 
 	txBytes, err = txConfig.TxEncoder()(builder.GetTx())
 	require.NoError(t, err)
@@ -1389,6 +1397,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 	{
 		txBuilder := txConfig.NewTxBuilder()
 		txBuilder.SetMsgs(&baseapptestutil.MsgCounter2{})
+		setTxSignature(txBuilder, 0)
 		unknownRouteTx := txBuilder.GetTx()
 
 		_, result, err := app.SimDeliver(txConfig.TxEncoder(), unknownRouteTx)
@@ -1401,6 +1410,7 @@ func TestRunInvalidTransaction(t *testing.T) {
 
 		txBuilder = txConfig.NewTxBuilder()
 		txBuilder.SetMsgs(&baseapptestutil.MsgCounter{}, &baseapptestutil.MsgCounter2{})
+		setTxSignature(txBuilder, 0)
 		unknownRouteTx = txBuilder.GetTx()
 		_, result, err = app.SimDeliver(txConfig.TxEncoder(), unknownRouteTx)
 		require.Error(t, err)
@@ -1989,6 +1999,7 @@ func newTxCounter(cfg client.TxConfig, counter int64, msgCounters ...int64) sign
 	builder := cfg.NewTxBuilder()
 	builder.SetMsgs(msgs...)
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
+	setTxSignature(builder, uint64(counter))
 
 	return builder.GetTx()
 }
@@ -2006,6 +2017,7 @@ func setFailOnAnte(cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.
 	vals.Set("failOnAnte", strconv.FormatBool(failOnAnte))
 	memo = vals.Encode()
 	builder.SetMemo(memo)
+	setTxSignature(builder, 1)
 
 	return builder.GetTx()
 }
@@ -2200,4 +2212,16 @@ func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 	}
 
 	return &params, nil
+}
+
+func setTxSignature(builder client.TxBuilder, nonce uint64) {
+	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
+	pubKey := privKey.PubKey()
+	err := builder.SetSignatures(
+		signingtypes.SignatureV2{
+			PubKey: pubKey, Sequence: nonce, Data: &signingtypes.SingleSignatureData{},
+		})
+	if err != nil {
+		panic(err)
+	}
 }

@@ -233,17 +233,24 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 	for _, coin := range amt {
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		locked := sdk.NewCoin(coin.Denom, lockedCoins.AmountOf(coin.Denom))
-		spendable := balance.Sub(locked)
 
-		_, hasNeg := sdk.Coins{spendable}.SafeSub(coin)
+		spendable, hasNeg := sdk.Coins{balance}.SafeSub(locked)
 		if hasNeg {
-			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "%s is smaller than %s", spendable, coin)
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds,
+				"locked amount exceeds account balance funds: %s > %s", locked, balance)
+		}
+
+		if _, hasNeg := spendable.SafeSub(coin); hasNeg {
+			return sdkerrors.Wrapf(
+				sdkerrors.ErrInsufficientFunds,
+				"spendable balance %s is smaller than %s",
+				spendable, coin,
+			)
 		}
 
 		newBalance := balance.Sub(coin)
 
-		err := k.setBalance(ctx, addr, newBalance)
-		if err != nil {
+		if err := k.setBalance(ctx, addr, newBalance); err != nil {
 			return err
 		}
 	}

@@ -24,7 +24,7 @@ securely. Typically, an operating system's credential sub-system handles passwor
 private keys storage, and user sessions according to the user's password policies. Here
 is a list of the most popular operating systems and their respective passwords manager:
 
-* macOS (since Mac OS 8.6): [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
+* macOS: [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
 * Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
 * GNU/Linux:
     * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
@@ -116,10 +116,6 @@ Applications developed using the Cosmos SDK come with the `keys` subcommand. For
 
 You can use `simd keys` for help about the keys command and `simd keys [command] --help` for more information about a particular subcommand.
 
-:::tip
-You can also enable auto-completion with the `simd completion` command. For example, at the start of a bash session, run `. <(simd completion)`, and all `simd` subcommands will be auto-completed.
-:::
-
 To create a new key in the keyring, run the `add` subcommand with a `<key_name>` argument. For the purpose of this tutorial, we will solely use the `test` backend, and call our new key `my_validator`. This key will be used in the next section.
 
 ```bash
@@ -131,4 +127,4 @@ MY_VALIDATOR_ADDRESS=$(simd keys show my_validator -a --keyring-backend test)
 
 This command generates a new 24-word mnemonic phrase, persists it to the relevant backend, and outputs information about the keypair. If this keypair will be used to hold value-bearing tokens, be sure to write down the mnemonic phrase somewhere safe!
 
-By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module (in particular its [middlewares](../core/00-baseapp.md#middleware)) supports natively these two public key algorithms.
+By default, the keyring generates a `secp256k1` keypair. The keyring also supports `ed25519` keys, which may be created by passing the `--algo ed25519` flag. A keyring can of course hold both types of keys simultaneously, and the Cosmos SDK's `x/auth` module supports natively these two public key algorithms.

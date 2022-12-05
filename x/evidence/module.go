@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -46,7 +45,7 @@ type AppModuleBasic struct {
 	evidenceHandlers []eviclient.EvidenceHandler // eviclient evidence submission handlers
 }
 
-// NewAppModuleBasic crates a AppModuleBasic without the codec.
+// NewAppModuleBasic creates a AppModuleBasic without the codec.
 func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
@@ -101,6 +100,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
+// RegisterInterfaces registers the evidence module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
@@ -116,12 +116,21 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object.
 func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 	}
 }
+
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
 
 // Name returns the evidence module's name.
 func (am AppModule) Name() string {
@@ -192,12 +201,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 type EvidenceInputs struct {
@@ -214,12 +219,12 @@ type EvidenceOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
-	Module         runtime.AppModuleWrapper
+	Module         appmodule.AppModule
 }
 
 func ProvideModule(in EvidenceInputs) EvidenceOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
 	m := NewAppModule(*k)
 
-	return EvidenceOutputs{EvidenceKeeper: *k, Module: runtime.WrapAppModule(m)}
+	return EvidenceOutputs{EvidenceKeeper: *k, Module: m}
 }

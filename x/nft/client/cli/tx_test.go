@@ -9,11 +9,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -69,30 +65,6 @@ var (
 	}
 )
 
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
-}
-
-func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
-	return mockTendermintRPC{responseQuery: respQuery}
-}
-
-func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{Code: 0}, nil
-}
-
-func (m mockTendermintRPC) ABCIQueryWithOptions(
-	_ context.Context,
-	_ string, _ tmbytes.HexBytes,
-	_ rpcclient.ABCIQueryOptions,
-) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
-}
-
 type CLITestSuite struct {
 	suite.Suite
 
@@ -116,7 +88,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -125,7 +97,7 @@ func (s *CLITestSuite) SetupSuite() {
 	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := newMockTendermintRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -154,7 +126,7 @@ func (s *CLITestSuite) SetupSuite() {
 func (s *CLITestSuite) TestCLITxSend() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
-	args := []string{
+	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -166,7 +138,41 @@ func (s *CLITestSuite) TestCLITxSend() {
 		args         []string
 		expectedCode uint32
 		expectErr    bool
+		expErrMsg    string
 	}{
+		{
+			"class id is empty",
+			[]string{
+				"",
+				testID,
+				accounts[0].Address.String(),
+			},
+			0,
+			true,
+			"empty class id",
+		},
+		{
+			"nft id is empty",
+			[]string{
+				testClassID,
+				"",
+				accounts[0].Address.String(),
+			},
+			0,
+			true,
+			"empty nft id",
+		},
+		{
+			"invalid receiver address",
+			[]string{
+				testClassID,
+				testID,
+				"invalid receiver",
+			},
+			0,
+			true,
+			"Invalid receiver address",
+		},
 		{
 			"valid transaction",
 			[]string{
@@ -176,13 +182,14 @@ func (s *CLITestSuite) TestCLITxSend() {
 			},
 			0,
 			false,
+			"",
 		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			args = append(args, tc.args...)
+			args := append(tc.args, extraArgs...)
 			cmd := cli.NewCmdSend()
 			cmd.SetContext(s.ctx)
 			cmd.SetArgs(args)
@@ -192,6 +199,7 @@ func (s *CLITestSuite) TestCLITxSend() {
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				var txResp sdk.TxResponse
 				s.Require().NoError(err)

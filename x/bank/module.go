@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -108,6 +107,14 @@ type AppModule struct {
 	legacySubspace exported.Subspace
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
@@ -196,13 +203,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule))
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
+		appmodule.Provide(ProvideModule),
+	)
 }
 
 type BankInputs struct {
@@ -222,7 +224,7 @@ type BankOutputs struct {
 	depinject.Out
 
 	BankKeeper keeper.BaseKeeper
-	Module     runtime.AppModuleWrapper
+	Module     appmodule.AppModule
 }
 
 func ProvideModule(in BankInputs) BankOutputs {
@@ -257,5 +259,5 @@ func ProvideModule(in BankInputs) BankOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
-	return BankOutputs{BankKeeper: bankKeeper, Module: runtime.WrapAppModule(m)}
+	return BankOutputs{BankKeeper: bankKeeper, Module: m}
 }

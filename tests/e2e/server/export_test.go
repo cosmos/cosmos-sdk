@@ -122,6 +122,47 @@ func TestExportCmd_Height(t *testing.T) {
 	}
 }
 
+func TestExportCmd_Output(t *testing.T) {
+	testCases := []struct {
+		name           string
+		flags          []string
+		outputDocument string
+	}{
+		{
+			"should export state to the specified file",
+			[]string{
+				fmt.Sprintf("--%s=%s", server.FlagOutputDocument, "foobar.json"),
+			},
+			"foobar.json",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			_, ctx, _, cmd := setupApp(t, tempDir)
+
+			output := &bytes.Buffer{}
+			cmd.SetOut(output)
+			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.ExecuteContext(ctx))
+
+			var exportedGenDoc tmtypes.GenesisDoc
+			f, err := os.ReadFile(tc.outputDocument)
+			if err != nil {
+				t.Fatalf("error reading exported genesis doc: %s", err)
+			}
+			require.NoError(t, tmjson.Unmarshal(f, &exportedGenDoc))
+
+			// Cleanup
+			if err = os.Remove(tc.outputDocument); err != nil {
+				t.Fatalf("error removing exported genesis doc: %s", err)
+			}
+		})
+	}
+}
+
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
 	t.Helper()
 

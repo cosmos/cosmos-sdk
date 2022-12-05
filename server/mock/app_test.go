@@ -1,6 +1,10 @@
 package mock
 
 import (
+	"math/rand"
+	"time"
+
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,7 +57,11 @@ func TestDeliverTx(t *testing.T) {
 
 	key := "my-special-key"
 	value := "top-secret-data!!"
-	tx := NewTx(key, value)
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomAccounts := simtypes.RandomAccounts(r, 1)
+
+	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
 	header := tmproto.Header{

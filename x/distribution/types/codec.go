@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
@@ -38,6 +39,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCommunityPoolSpend{},
 		&MsgDepositValidatorRewardsPool{},
 	)
+
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&CommunityPoolSpendProposal{})
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/viper"
 
-	clientflags "github.com/cosmos/cosmos-sdk/client/flags"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,13 +17,13 @@ const (
 	defaultMinGasPrices = ""
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
-	DefaultAPIAddress = "tcp://0.0.0.0:1317"
+	DefaultAPIAddress = "tcp://localhost:1317"
 
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
-	DefaultGRPCAddress = "0.0.0.0:9090"
+	DefaultGRPCAddress = "localhost:9090"
 
 	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "0.0.0.0:9091"
+	DefaultGRPCWebAddress = "localhost:9091"
 
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.
@@ -33,6 +32,9 @@ const (
 	// DefaultGRPCMaxSendMsgSize defines the default gRPC max message size in
 	// bytes the server can send.
 	DefaultGRPCMaxSendMsgSize = math.MaxInt32
+
+	// FileStreamer defines the store streaming type for file streaming.
+	FileStreamer = "file"
 )
 
 // BaseConfig defines the server's basic configuration
@@ -124,38 +126,6 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
-// RosettaConfig defines the Rosetta API listener configuration.
-type RosettaConfig struct {
-	// Address defines the API server to listen on
-	Address string `mapstructure:"address"`
-
-	// Blockchain defines the blockchain name
-	// defaults to DefaultBlockchain
-	Blockchain string `mapstructure:"blockchain"`
-
-	// Network defines the network name
-	Network string `mapstructure:"network"`
-
-	// Retries defines the maximum number of retries
-	// rosetta will do before quitting
-	Retries int `mapstructure:"retries"`
-
-	// Enable defines if the API server should be enabled.
-	Enable bool `mapstructure:"enable"`
-
-	// Offline defines if the server must be run in offline mode
-	Offline bool `mapstructure:"offline"`
-
-	// EnableFeeSuggestion defines if the server should suggest fee by default
-	EnableFeeSuggestion bool `mapstructure:"enable-fee-suggestion"`
-
-	// GasToSuggest defines gas limit when calculating the fee
-	GasToSuggest int `mapstructure:"gas-to-suggest"`
-
-	// DenomToSuggest defines the defult denom for fee suggestion
-	DenomToSuggest string `mapstructure:"denom-to-suggest"`
-}
-
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
@@ -196,6 +166,46 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
+// MempoolConfig defines the configurations for the appside mempool
+type MempoolConfig struct {
+	// MaxTxs defines the behavior of the mempool. A negative value indicates
+	// the mempool is disabled entirely, zero indicates that the mempool is
+	// unbounded in how many txs it may contain, and a positive value indicates
+	// the maximum amount of txs it may contain.
+	MaxTxs int
+}
+
+type (
+	// StoreConfig defines application configuration for state streaming and other
+	// storage related operations.
+	StoreConfig struct {
+		Streamers []string `mapstructure:"streamers"`
+	}
+
+	// StreamersConfig defines concrete state streaming configuration options. These
+	// fields are required to be set when state streaming is enabled via a non-empty
+	// list defined by 'StoreConfig.Streamers'.
+	StreamersConfig struct {
+		File FileStreamerConfig `mapstructure:"file"`
+	}
+
+	// FileStreamerConfig defines the file streaming configuration options.
+	FileStreamerConfig struct {
+		Keys     []string `mapstructure:"keys"`
+		WriteDir string   `mapstructure:"write_dir"`
+		Prefix   string   `mapstructure:"prefix"`
+		// OutputMetadata specifies if output the block metadata file which includes
+		// the abci requests/responses, otherwise only the data file is outputted.
+		OutputMetadata bool `mapstructure:"output-metadata"`
+		// StopNodeOnError specifies if propagate the streamer errors to the consensus
+		// state machine, it's nesserary for data integrity of output.
+		StopNodeOnError bool `mapstructure:"stop-node-on-error"`
+		// Fsync specifies if calling fsync after writing the files, it slows down
+		// the commit, but don't lose data in face of system crash.
+		Fsync bool `mapstructure:"fsync"`
+	}
+)
+
 // Config defines the server's top level configuration
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
@@ -204,9 +214,11 @@ type Config struct {
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
-	Rosetta   RosettaConfig    `mapstructure:"rosetta"`
 	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
+	Store     StoreConfig      `mapstructure:"store"`
+	Streamers StreamersConfig  `mapstructure:"streamers"`
+	Mempool   MempoolConfig    `mapstructure:"mempool"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -269,17 +281,6 @@ func DefaultConfig() *Config {
 			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
 			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
-		Rosetta: RosettaConfig{
-			Enable:              false,
-			Address:             ":8080",
-			Blockchain:          "app",
-			Network:             "network",
-			Retries:             3,
-			Offline:             false,
-			EnableFeeSuggestion: false,
-			GasToSuggest:        clientflags.DefaultGasLimit,
-			DenomToSuggest:      "uatom",
-		},
 		GRPCWeb: GRPCWebConfig{
 			Enable:  true,
 			Address: DefaultGRPCWebAddress,
@@ -287,6 +288,23 @@ func DefaultConfig() *Config {
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
 			SnapshotKeepRecent: 2,
+		},
+		Store: StoreConfig{
+			Streamers: []string{},
+		},
+		Streamers: StreamersConfig{
+			File: FileStreamerConfig{
+				Keys:            []string{"*"},
+				WriteDir:        "data/file_streamer",
+				OutputMetadata:  true,
+				StopNodeOnError: true,
+				// NOTICE: the default config don't protect the streamer data integrity
+				// in face of system crash.
+				Fsync: false,
+			},
+		},
+		Mempool: MempoolConfig{
+			MaxTxs: 5_000,
 		},
 	}
 }

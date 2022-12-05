@@ -576,3 +576,81 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 		})
 	}
 }
+
+func TestSetMinGasPrices(t *testing.T) {
+	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
+	suite := NewBaseAppSuite(t, baseapp.SetMinGasPrices(minGasPrices.String()))
+
+	ctx := getCheckStateCtx(suite.baseApp)
+	require.Equal(t, minGasPrices, ctx.MinGasPrices())
+}
+
+func TestGetMaximumBlockGas(t *testing.T) {
+	suite := NewBaseAppSuite(t)
+	suite.baseApp.InitChain(abci.RequestInitChain{})
+	ctx := suite.baseApp.NewContext(true, tmproto.Header{})
+
+	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 0}})
+	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
+
+	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -1}})
+	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
+
+	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: 5000000}})
+	require.Equal(t, uint64(5000000), suite.baseApp.GetMaximumBlockGas(ctx))
+
+	suite.baseApp.StoreConsensusParams(ctx, &tmproto.ConsensusParams{Block: &tmproto.BlockParams{MaxGas: -5000000}})
+	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
+}
+
+func TestLoadVersionPruning(t *testing.T) {
+	logger := log.NewNopLogger()
+	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
+	pruningOpt := baseapp.SetPruning(pruningOptions)
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+
+	// make a cap key and mount the store
+	capKey := sdk.NewKVStoreKey("key1")
+	app.MountStores(capKey)
+
+	err := app.LoadLatestVersion() // needed to make stores non-nil
+	require.Nil(t, err)
+
+	emptyCommitID := storetypes.CommitID{}
+
+	// fresh store has zero/empty last commit
+	lastHeight := app.LastBlockHeight()
+	lastID := app.LastCommitID()
+	require.Equal(t, int64(0), lastHeight)
+	require.Equal(t, emptyCommitID, lastID)
+
+	var lastCommitID storetypes.CommitID
+
+	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
+	// (keep recent) and 3 (keep every).
+	for i := int64(1); i <= 7; i++ {
+		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
+		res := app.Commit()
+		lastCommitID = storetypes.CommitID{Version: i, Hash: res.Data}
+	}
+
+	for _, v := range []int64{1, 2, 4} {
+		_, err = app.CommitMultiStore().CacheMultiStoreWithVersion(v)
+		require.NoError(t, err)
+	}
+
+	for _, v := range []int64{3, 5, 6, 7} {
+		_, err = app.CommitMultiStore().CacheMultiStoreWithVersion(v)
+		require.NoError(t, err)
+	}
+
+	// reload with LoadLatestVersion, check it loads last version
+	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
+	app.MountStores(capKey)
+
+	err = app.LoadLatestVersion()
+	require.Nil(t, err)
+	testLoadVersionHelper(t, app, int64(7), lastCommitID)
+}

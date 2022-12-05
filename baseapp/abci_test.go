@@ -164,7 +164,7 @@ func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 	require.Equal(t, int64(3), app.LastBlockHeight())
 }
 
-func TestGRPCQuery(t *testing.T) {
+func TestABCI_GRPCQuery(t *testing.T) {
 	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),

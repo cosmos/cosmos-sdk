@@ -54,6 +54,28 @@ prefix = ""`
 	require.Contains(t, buffer.String(), expectedContents, "config file contents")
 }
 
+func TestParseStreaming(t *testing.T) {
+	expectedKeys := `keys = ["*", ]` + "\n"
+	expectedPlugin := `plugin = "abci_v1"` + "\n"
+	expectedAsync := `async = false` + "\n"
+	expectedStopNodeOnErr := `stop-node-on-err = true` + "\n"
+
+	cfg := DefaultConfig()
+	cfg.Streaming.ABCI.Keys = []string{"*"}
+	cfg.Streaming.ABCI.Plugin = "abci_v1"
+	cfg.Streaming.ABCI.Async = false
+	cfg.Streaming.ABCI.StopNodeOnErr = true
+
+	var buffer bytes.Buffer
+	err := configTemplate.Execute(&buffer, cfg)
+	require.NoError(t, err, "executing template")
+	actual := buffer.String()
+	require.Contains(t, actual, expectedKeys, "config file contents")
+	require.Contains(t, actual, expectedPlugin, "config file contents")
+	require.Contains(t, actual, expectedAsync, "config file contents")
+	require.Contains(t, actual, expectedStopNodeOnErr, "config file contents")
+}
+
 func TestReadConfig(t *testing.T) {
 	cfg := DefaultConfig()
 	tmpFile := filepath.Join(t.TempDir(), "config")

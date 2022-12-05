@@ -201,9 +201,29 @@ snapshot-interval = {{ .StateSync.SnapshotInterval }}
 snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 
 ###############################################################################
-###                         Store / State Streaming                         ###
+###                              State Streaming                            ###
 ###############################################################################
 
+[streaming]
+
+[streaming.abci]
+# List of kv store keys to stream out via gRPC
+# Set to ["*"] to expose all keys.
+keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
+
+# The plugin name used for streaming via gRPC
+plugin = "{{ .Streaming.ABCI.Plugin }}"
+
+
+# async specifies whether ABCI listener service(s) will run asynchronously.
+async = {{ .Streaming.ABCI.Async }}
+
+# stop-node-on-err specifies whether to stop the node when the 
+# ABCI listener service receives an error when message deliver acknowledgment fails.
+# stop-node-on-err=true MUST be paired with async=false, otherwise it will be ignored.
+stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
+
+# Legacy streaming support
 [store]
 streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
 

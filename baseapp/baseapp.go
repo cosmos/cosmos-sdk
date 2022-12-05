@@ -144,12 +144,10 @@ type BaseApp struct { //nolint: maligned
 	abciListeners []ABCIListener
 
 	// abciListenersAsync for determining if abciListeners will run asynchronously.
-	// When abciListenersAsync=false and stopNodeOnABCIListenerErr=false listeners will run synchronized but will not stop the node.
-	// When abciListenersAsync=true stopNodeOnABCIListenerErr will be ignored.
 	abciListenersAsync bool
 
 	// stopNodeOnABCIListenerErr halts the node when ABCI streaming service listening results in an error.
-	// stopNodeOnABCIListenerErr=true must be paired with abciListenersAsync=false.
+	// stopNodeOnABCIListenerErr=true MUST be paired with abciListenersAsync=false, otherwise it will be ignored.
 	stopNodeOnABCIListenerErr bool
 }
 

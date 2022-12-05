@@ -1,6 +1,7 @@
 package client
 
 import (
+	"crypto/tls"
 	"fmt"
 	"strings"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -144,6 +148,28 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 			}
 
 			clientCtx = clientCtx.WithClient(client)
+		}
+	}
+
+	if clientCtx.GRPCClient == nil || flagSet.Changed(flags.FlagGRPC) {
+		grpcURI, _ := flagSet.GetString(flags.FlagGRPC)
+		if grpcURI != "" {
+			var dialOpts []grpc.DialOption
+
+			useInsecure, _ := flagSet.GetBool(flags.FlagGRPCInsecure)
+			if useInsecure {
+				dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			} else {
+				dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+					MinVersion: tls.VersionTLS12,
+				})))
+			}
+
+			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
+			if err != nil {
+				return Context{}, err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
 		}
 	}
 

@@ -35,7 +35,7 @@ var _ cryptotypes.PubKey = &ModuleCredential{}
 // At least one derivation key must be provided. Panics otherwise.
 func NewModuleCredential(moduleName string, derivationKeys [][]byte) *ModuleCredential {
 	if len(derivationKeys) == 0 {
-		panic("can't create ModuleCredential withouth derivation key")
+		panic("can't create ModuleCredential without derivation key")
 	}
 	return &ModuleCredential{
 		ModuleName:     moduleName,

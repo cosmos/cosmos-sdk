@@ -19,7 +19,7 @@ type Addressable interface {
 }
 
 // Hash creates a new address from address type and key.
-// The functions should only be used by new types defining thier own address function
+// The functions should only be used by new types defining their own address function
 // (eg public keys).
 func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()

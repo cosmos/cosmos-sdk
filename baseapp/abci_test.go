@@ -15,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -1193,4 +1195,155 @@ func TestABCI_Query(t *testing.T) {
 
 	res = suite.baseApp.Query(query)
 	require.Equal(t, value, res.Value)
+}
+
+func TestABCI_GetBlockRetentionHeight(t *testing.T) {
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+
+	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
+	require.NoError(t, err)
+
+	testCases := map[string]struct {
+		bapp         *baseapp.BaseApp
+		maxAgeBlocks int64
+		commitHeight int64
+		expected     int64
+	}{
+		"defaults": {
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil),
+			maxAgeBlocks: 0,
+			commitHeight: 499000,
+			expected:     0,
+		},
+		"pruning unbonding time only": {
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(1)),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     136120,
+		},
+		"pruning iavl snapshot only": {
+			bapp: baseapp.NewBaseApp(
+				name, logger, db, nil,
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				baseapp.SetMinRetainBlocks(1),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
+			),
+			maxAgeBlocks: 0,
+			commitHeight: 499000,
+			expected:     489000,
+		},
+		"pruning state sync snapshot only": {
+			bapp: baseapp.NewBaseApp(
+				name, logger, db, nil,
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				baseapp.SetMinRetainBlocks(1),
+			),
+			maxAgeBlocks: 0,
+			commitHeight: 499000,
+			expected:     349000,
+		},
+		"pruning min retention only": {
+			bapp: baseapp.NewBaseApp(
+				name, logger, db, nil,
+				baseapp.SetMinRetainBlocks(400000),
+			),
+			maxAgeBlocks: 0,
+			commitHeight: 499000,
+			expected:     99000,
+		},
+		"pruning all conditions": {
+			bapp: baseapp.NewBaseApp(
+				name, logger, db, nil,
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				baseapp.SetMinRetainBlocks(400000),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+			),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     99000,
+		},
+		"no pruning due to no persisted state": {
+			bapp: baseapp.NewBaseApp(
+				name, logger, db, nil,
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				baseapp.SetMinRetainBlocks(400000),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+			),
+			maxAgeBlocks: 362880,
+			commitHeight: 10000,
+			expected:     0,
+		},
+		"disable pruning": {
+			bapp: baseapp.NewBaseApp(
+				name, logger, db, nil,
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				baseapp.SetMinRetainBlocks(0),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+			),
+			maxAgeBlocks: 362880,
+			commitHeight: 499000,
+			expected:     0,
+		},
+	}
+
+	for name, tc := range testCases {
+		tc := tc
+
+		tc.bapp.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+		tc.bapp.InitChain(abci.RequestInitChain{
+			ConsensusParams: &tmproto.ConsensusParams{
+				Evidence: &tmproto.EvidenceParams{
+					MaxAgeNumBlocks: tc.maxAgeBlocks,
+				},
+			},
+		})
+
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
+		})
+	}
+}
+
+// Test and ensure that invalid block heights always cause errors.
+// See issues:
+// - https://github.com/cosmos/cosmos-sdk/issues/11220
+// - https://github.com/cosmos/cosmos-sdk/issues/7662
+func TestBaseAppCreateQueryContext(t *testing.T) {
+	t.Parallel()
+
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 2}})
+	app.Commit()
+
+	testCases := []struct {
+		name   string
+		height int64
+		prove  bool
+		expErr bool
+	}{
+		{"valid height", 2, true, false},
+		{"future height", 10, true, true},
+		{"negative height, prove=true", -1, true, true},
+		{"negative height, prove=false", -1, false, true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := app.CreateQueryContext(tc.height, tc.prove)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

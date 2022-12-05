@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -20,7 +19,7 @@ import (
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
+type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, types.Marshaler, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -90,7 +89,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 func NewFileStreamingService(
 	opts serverTypes.AppOptions,
 	keys []types.StoreKey,
-	marshaller codec.BinaryCodec,
+	marshaller types.Marshaler,
 	logger log.Logger,
 ) (baseapp.StreamingService, error) {
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
@@ -122,7 +121,7 @@ func NewFileStreamingService(
 func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
 	appOpts serverTypes.AppOptions,
-	appCodec codec.BinaryCodec,
+	appCodec types.Marshaler,
 	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {

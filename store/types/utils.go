@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // KVStorePrefixIterator iterates over all the keys with a certain prefix in ascending order
@@ -104,4 +105,13 @@ func PrefixEndBytes(prefix []byte) []byte {
 // range query such that the input would be included
 func InclusiveEndBytes(inclusiveBytes []byte) []byte {
 	return append(inclusiveBytes, byte(0x00))
+}
+
+// Marshaler defines a interface needed for the store package to marshal data
+type Marshaler interface {
+	// Marshal returns binary encoding of v.
+	Marshal(proto.Message) ([]byte, error)
+
+	// MarshalLengthPrefixed returns binary encoding of v with bytes length prefix.
+	MarshalLengthPrefixed(proto.Message) ([]byte, error)
 }

@@ -117,6 +117,10 @@ type Codec interface {
 	// MarshalLengthPrefixed returns binary encoding of v with bytes length prefix.
 	MarshalLengthPrefixed(proto.Message) ([]byte, error)
 
+	// Unmarshal parses the data encoded with Marshal method and stores the result
+	// in the value pointed to by v.
+	Unmarshal(bz []byte, ptr proto.message) error
+
 	// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
 	// the result in the value pointed to by v.
 	UnmarshalLengthPrefixed(bz []byte, ptr proto.Message) error
@@ -155,6 +159,18 @@ func (pc *TestCodec) MarshalLengthPrefixed(o proto.Message) ([]byte, error) {
 	var sizeBuf [binary.MaxVarintLen64]byte
 	n := binary.PutUvarint(sizeBuf[:], uint64(proto.Size(o)))
 	return append(sizeBuf[:n], bz...), nil
+}
+
+// Unmarshal implements BinaryMarshaler.Unmarshal method.
+// NOTE: this function must be used with a concrete type which
+// implements proto.Message. For interface please use the codec.UnmarshalInterface
+func (pc *TestCodec) Unmarshal(bz []byte, ptr proto.Message) error {
+	err := proto.Unmarshal(bz, ptr)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UnmarshalLengthPrefixed implements BinaryMarshaler.UnmarshalLengthPrefixed method.

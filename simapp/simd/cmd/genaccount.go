@@ -1,6 +1,4 @@
-// This file is deprecated. Use x/genutil/client/cli/genaccount.go
-
-package cli
+package cmd
 
 import (
 	"bufio"

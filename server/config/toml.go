@@ -215,6 +215,7 @@ snapshot-keep-recent = {{ .StateSync.SnapshotKeepRecent }}
 keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
 
 # The plugin name used for streaming via gRPC
+# Supported plugins: abci_v1
 plugin = "{{ .Streaming.ABCI.Plugin }}"
 
 # async specifies whether ABCI listener service(s) will run asynchronously.

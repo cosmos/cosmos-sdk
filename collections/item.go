@@ -17,7 +17,9 @@ type Item[V any] Map[noKey, V]
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
-func (i Item[V]) Get(ctx StorageProvider) (V, error) { return (Map[noKey, V])(i).Get(ctx, noKey{}) }
+func (i Item[V]) Get(ctx StorageProvider) (V, error) {
+	return (Map[noKey, V])(i).Get(ctx, noKey{})
+}
 
 // Set sets the item in the store. If Value encoding fails then an ErrEncoding is returned.
 func (i Item[V]) Set(ctx StorageProvider, value V) error {
@@ -26,10 +28,14 @@ func (i Item[V]) Set(ctx StorageProvider, value V) error {
 
 // Has reports whether the item exists in the store or not.
 // Returns an error in case
-func (i Item[V]) Has(ctx StorageProvider) (bool, error) { return (Map[noKey, V])(i).Has(ctx, noKey{}) }
+func (i Item[V]) Has(ctx StorageProvider) (bool, error) {
+	return (Map[noKey, V])(i).Has(ctx, noKey{})
+}
 
 // Remove removes the item in the store.
-func (i Item[V]) Remove(ctx StorageProvider) error { return (Map[noKey, V])(i).Remove(ctx, noKey{}) }
+func (i Item[V]) Remove(ctx StorageProvider) error {
+	return (Map[noKey, V])(i).Remove(ctx, noKey{})
+}
 
 // noKey defines a KeyCodec which decodes nothing.
 type noKey struct{}

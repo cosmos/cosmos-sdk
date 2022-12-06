@@ -7,10 +7,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	_ "cosmossdk.io/api/cosmos/auth/v1beta1"
@@ -63,11 +65,14 @@ func TestTxJsonTestcases(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.Name, func(t *testing.T) {
-			bodyBz, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
+			expBody, expAuthInfo, bodyBz, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
 			tr := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 			rend := valuerenderer.NewTxValueRenderer(&tr)
-			ctx := context.WithValue(context.Background(), mockCoinMetadataKey("uatom"), tc.Metadata)
+			ctx := context.Background()
+			for _, m := range tc.Metadata.DenomUnits {
+				ctx = context.WithValue(ctx, mockCoinMetadataKey(m.Denom), tc.Metadata)
+			}
 
 			data := &textualpb.TextualData{
 				BodyBytes:     bodyBz,
@@ -97,23 +102,39 @@ func TestTxJsonTestcases(t *testing.T) {
 			require.Equal(t, tc.Cbor, hex.EncodeToString(bz))
 
 			// Round trip.
-			parsedVal, err := rend.Parse(context.Background(), screens)
+			parsedVal, err := rend.Parse(ctx, screens)
 			require.NoError(t, err)
-			require.Equal(t, val.Interface(), parsedVal.Interface())
+
+			// We don't check that bodyBz and authInfoBz are equal, because
+			// they don't need to be. Instead, we check that the semantic
+			// proto objects are equal.
+			parsedTextualData := parsedVal.Message().Interface().(*textualpb.TextualData)
+
+			parsedBody := &txv1beta1.TxBody{}
+			err = proto.Unmarshal(parsedTextualData.BodyBytes, parsedBody)
+			require.NoError(t, err)
+			diff := cmp.Diff(expBody, parsedBody, protocmp.Transform())
+			require.Empty(t, diff)
+
+			parsedAuthInfo := &txv1beta1.AuthInfo{}
+			err = proto.Unmarshal(parsedTextualData.AuthInfoBytes, parsedAuthInfo)
+			require.NoError(t, err)
+			diff = cmp.Diff(expAuthInfo, parsedAuthInfo, protocmp.Transform())
+			require.Empty(t, diff)
 		})
 	}
 }
 
 // createTextualData creates a Textual data give then JSON
 // test case.
-func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonSignerData) ([]byte, []byte, signing.SignerData) {
+func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonSignerData) (*txv1beta1.TxBody, *txv1beta1.AuthInfo, []byte, []byte, signing.SignerData) {
 	txBody := &txv1beta1.TxBody{}
-	txAuthInfo := &txv1beta1.AuthInfo{}
+	authInfo := &txv1beta1.AuthInfo{}
 
 	// We unmarshal from protojson to the protobuf types.
 	err := protojson.Unmarshal(jsonTx.Body, txBody)
 	require.NoError(t, err)
-	err = protojson.Unmarshal(jsonTx.AuthInfo, txAuthInfo)
+	err = protojson.Unmarshal(jsonTx.AuthInfo, authInfo)
 	require.NoError(t, err)
 
 	// Unmarshal the pubkey
@@ -132,8 +153,8 @@ func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonS
 	// We marshal body and auth_info
 	bodyBz, err := proto.Marshal(txBody)
 	require.NoError(t, err)
-	authInfoBz, err := proto.Marshal(txAuthInfo)
+	authInfoBz, err := proto.Marshal(authInfo)
 	require.NoError(t, err)
 
-	return bodyBz, authInfoBz, signerData
+	return txBody, authInfo, bodyBz, authInfoBz, signerData
 }

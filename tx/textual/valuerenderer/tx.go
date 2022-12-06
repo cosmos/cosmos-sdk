@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/tx/textual/internal/textualpb"
 )
@@ -222,17 +223,27 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		NonCriticalExtensionOptions: enveloppe.NonCriticalExtensionOptions,
 	}
 	authInfo := &txv1beta1.AuthInfo{
-		SignerInfos: enveloppe.OtherSigner, // TODO
+		SignerInfos: append(enveloppe.OtherSigner, &txv1beta1.SignerInfo{
+			PublicKey: enveloppe.PublicKey,
+			ModeInfo: &txv1beta1.ModeInfo{
+				Sum: &txv1beta1.ModeInfo_Single_{
+					Single: &txv1beta1.ModeInfo_Single{Mode: signingv1beta1.SignMode_SIGN_MODE_TEXTUAL},
+				},
+			},
+			Sequence: enveloppe.Sequence,
+		}),
 		Fee: &txv1beta1.Fee{
 			Amount:   enveloppe.Fees,
 			GasLimit: enveloppe.GasLimit,
 			Payer:    enveloppe.FeePayer,
 			Granter:  enveloppe.FeeGranter,
 		},
-		Tip: &txv1beta1.Tip{
+	}
+	if enveloppe.Tip != nil {
+		authInfo.Tip = &txv1beta1.Tip{
 			Amount: enveloppe.Tip,
 			Tipper: enveloppe.Tipper,
-		},
+		}
 	}
 
 	// Note that we might not always get back the exact bodyBz and authInfoBz

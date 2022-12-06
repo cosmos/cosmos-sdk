@@ -40,6 +40,7 @@
 		},
 		"metadata": {
 			"display": "ATOM",
+			"base": "uatom",
 			"denom_units": [
 				{ "denom": "ATOM", "exponent": 6 },
 				{ "denom": "uatom", "exponent": 0 }
@@ -107,6 +108,7 @@
 		},
 		"metadata": {
 			"display": "ATOM",
+			"base": "uatom",
 			"denom_units": [
 				{ "denom": "ATOM", "exponent": 6 },
 				{ "denom": "uatom", "exponent": 0 }
@@ -175,6 +177,7 @@
 		},
 		"metadata": {
 			"display": "ATOM",
+			"base": "uatom",
 			"denom_units": [
 				{ "denom": "ATOM", "exponent": 6 },
 				{ "denom": "uatom", "exponent": 0 }
@@ -316,6 +319,7 @@
 		},
 		"metadata": {
 			"display": "ATOM",
+			"base": "uatom",
 			"denom_units": [
 				{ "denom": "ATOM", "exponent": 6 },
 				{ "denom": "uatom", "exponent": 0 }

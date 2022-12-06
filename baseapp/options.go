@@ -243,18 +243,13 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 	app.abciListeners = append(app.abciListeners, s)
 }
-<<<<<<< HEAD
-=======
-
-// SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
-func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
-	app.txDecoder = txDecoder
-}
 
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
 func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
+	if app.sealed {
+		panic("SetQueryMultiStore() on sealed BaseApp")
+	}
 	app.qms = ms
 }
->>>>>>> 15accd76f (feat: support alternative query multistore (#13529))

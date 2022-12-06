@@ -10,7 +10,7 @@ import (
 
 var _ authz.MsgServer = Keeper{}
 
-// GrantAuthorization implements the MsgServer.Grant method to create a new grant.
+// Grant implements the MsgServer.Grant method to create a new grant.
 func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -48,7 +48,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	return &authz.MsgGrantResponse{}, nil
 }
 
-// RevokeAuthorization implements the MsgServer.Revoke method.
+// Revoke implements the MsgServer.Revoke method.
 func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)

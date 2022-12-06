@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-// bank message types
 const (
 	TypeMsgUpdateParams = "update_params"
 )

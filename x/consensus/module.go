@@ -113,13 +113,13 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (AppModule) Name() string { return types.ModuleName }
 
 // InitGenesis is handled by for init genesis of consensus_param
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(sdk.Context, codec.JSONCodec, json.RawMessage) []abci.ValidatorUpdate {
 	// nil is returned since initgenesis of consensus params is handled by tendermint
 	return nil
 }
 
 // ExportGenesis is handled by tendermint export of genesis
-func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(sdk.Context, codec.JSONCodec) json.RawMessage {
 	// nil is returned since ExportGenesis of consensus params is handled by tendermint and baseapp
 	return nil
 }
@@ -128,7 +128,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // RegisterInvariants does nothing, there are no invariants to enforce
-func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(sdk.InvariantRegistry) {}
 
 func init() {
 	appmodule.Register(
@@ -137,7 +137,7 @@ func init() {
 	)
 }
 
-type ConsensusParamInputs struct {
+type ConsensusInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -145,7 +145,7 @@ type ConsensusParamInputs struct {
 	Key    *store.KVStoreKey
 }
 
-type ConsensusParamOutputs struct {
+type ConsensusOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
@@ -153,7 +153,7 @@ type ConsensusParamOutputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
+func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -166,7 +166,7 @@ func ProvideModule(in ConsensusParamInputs) ConsensusParamOutputs {
 		app.SetParamStore(&k)
 	}
 
-	return ConsensusParamOutputs{
+	return ConsensusOutputs{
 		Keeper:        k,
 		Module:        m,
 		BaseAppOption: baseappOpt,

@@ -1,6 +1,7 @@
 package file
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -25,7 +26,7 @@ var (
 	testMarshaller               = codec.NewProtoCodec(interfaceRegistry)
 	testStreamingService         *StreamingService
 	testListener1, testListener2 types.WriteListener
-	emptyContext                 = sdk.Context{}
+	emptyContext                 = context.TODO()
 
 	// test abci message types
 	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
@@ -94,8 +95,8 @@ var (
 	}
 
 	// mock store keys
-	mockStoreKey1 = sdk.NewKVStoreKey("mockStore1")
-	mockStoreKey2 = sdk.NewKVStoreKey("mockStore2")
+	mockStoreKey1 = types.NewKVStoreKey("mockStore1")
+	mockStoreKey2 = types.NewKVStoreKey("mockStore2")
 
 	// file stuff
 	testPrefix = "testPrefix"

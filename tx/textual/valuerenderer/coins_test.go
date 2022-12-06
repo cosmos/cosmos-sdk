@@ -32,10 +32,8 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				// Create a context.Context containing all coins metadata, to simulate
 				// that they are in state.
 				ctx := context.Background()
-
 				for _, v := range tc.Metadata {
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Base), v)
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Display), v)
+					ctx = addMetadataToContext(ctx, v)
 				}
 
 				listValue := NewGenericList(tc.Proto)

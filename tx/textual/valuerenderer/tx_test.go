@@ -65,14 +65,11 @@ func TestTxJsonTestcases(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.Name, func(t *testing.T) {
-			expBody, expAuthInfo, bodyBz, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
+			expBody, bodyBz, expAuthInfo, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
 			tr := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 			rend := valuerenderer.NewTxValueRenderer(&tr)
-			ctx := context.Background()
-			for _, m := range tc.Metadata.DenomUnits {
-				ctx = context.WithValue(ctx, mockCoinMetadataKey(m.Denom), tc.Metadata)
-			}
+			ctx := addMetadataToContext(context.Background(), tc.Metadata)
 
 			data := &textualpb.TextualData{
 				BodyBytes:     bodyBz,
@@ -111,28 +108,37 @@ func TestTxJsonTestcases(t *testing.T) {
 			parsedTextualData := parsedVal.Message().Interface().(*textualpb.TextualData)
 
 			parsedBody := &txv1beta1.TxBody{}
+			err = proto.Unmarshal(bodyBz, expBody)
+			require.NoError(t, err)
 			err = proto.Unmarshal(parsedTextualData.BodyBytes, parsedBody)
 			require.NoError(t, err)
 			diff := cmp.Diff(expBody, parsedBody, protocmp.Transform())
 			require.Empty(t, diff)
 
 			parsedAuthInfo := &txv1beta1.AuthInfo{}
+			err = proto.Unmarshal(authInfoBz, expAuthInfo)
+			require.NoError(t, err)
 			err = proto.Unmarshal(parsedTextualData.AuthInfoBytes, parsedAuthInfo)
 			require.NoError(t, err)
 			diff = cmp.Diff(expAuthInfo, parsedAuthInfo, protocmp.Transform())
 			require.Empty(t, diff)
+
+			require.Equal(t, signerData.AccountNumber, parsedTextualData.SignerData.AccountNumber)
+			require.Equal(t, signerData.Sequence, parsedTextualData.SignerData.Sequence)
+			require.Equal(t, signerData.ChainId, parsedTextualData.SignerData.ChainId)
+			require.Equal(t, signerData.PubKey, parsedTextualData.SignerData.PubKey)
 		})
 	}
 }
 
 // createTextualData creates a Textual data give then JSON
 // test case.
-func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonSignerData) (*txv1beta1.TxBody, *txv1beta1.AuthInfo, []byte, []byte, signing.SignerData) {
-	txBody := &txv1beta1.TxBody{}
+func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonSignerData) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
+	body := &txv1beta1.TxBody{}
 	authInfo := &txv1beta1.AuthInfo{}
 
 	// We unmarshal from protojson to the protobuf types.
-	err := protojson.Unmarshal(jsonTx.Body, txBody)
+	err := protojson.Unmarshal(jsonTx.Body, body)
 	require.NoError(t, err)
 	err = protojson.Unmarshal(jsonTx.AuthInfo, authInfo)
 	require.NoError(t, err)
@@ -151,10 +157,10 @@ func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonS
 	}
 
 	// We marshal body and auth_info
-	bodyBz, err := proto.Marshal(txBody)
+	bodyBz, err := proto.Marshal(body)
 	require.NoError(t, err)
 	authInfoBz, err := proto.Marshal(authInfo)
 	require.NoError(t, err)
 
-	return txBody, authInfo, bodyBz, authInfoBz, signerData
+	return body, bodyBz, authInfo, authInfoBz, signerData
 }

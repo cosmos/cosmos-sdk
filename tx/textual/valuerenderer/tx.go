@@ -81,8 +81,10 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		enveloppe.Tip = txAuthInfo.Tip.Amount
 		enveloppe.Tipper = txAuthInfo.Tip.Tipper
 	}
-	// Find all other tx signers than the current signer.
-	otherSigners := make([]*txv1beta1.SignerInfo, 0, len(txAuthInfo.SignerInfos)-1)
+	// Find all other tx signers than the current signer. In the case where our
+	// Textual signer is one key of a multisig, then otherSigners will include
+	// the multisig pubkey.
+	otherSigners := []*txv1beta1.SignerInfo{}
 	for _, si := range txAuthInfo.SignerInfos {
 		if bytes.Equal(si.PublicKey.Value, textualData.SignerData.PubKey.Value) {
 			continue
@@ -223,6 +225,8 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		NonCriticalExtensionOptions: enveloppe.NonCriticalExtensionOptions,
 	}
 	authInfo := &txv1beta1.AuthInfo{
+		// TODO it should not be append, but we should find the correct signer index.
+		// TODO handle multisigs too.
 		SignerInfos: append(enveloppe.OtherSigner, &txv1beta1.SignerInfo{
 			PublicKey: enveloppe.PublicKey,
 			ModeInfo: &txv1beta1.ModeInfo{
@@ -262,8 +266,9 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		BodyBytes:     bodyBz,
 		AuthInfoBytes: authInfoBz,
 		SignerData: &textualpb.SignerData{
+			// Address is skipped. We could retrieve it by deriving it from
+			// the PublicKey, but it's not needed here.
 			AccountNumber: enveloppe.AccountNumber,
-			Address:       "TODO",
 			ChainId:       enveloppe.ChainId,
 			Sequence:      enveloppe.Sequence,
 			PubKey:        enveloppe.PublicKey,

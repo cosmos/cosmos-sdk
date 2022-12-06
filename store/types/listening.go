@@ -64,7 +64,7 @@ func NewMemoryListener(key StoreKey) *MemoryListener {
 	return &MemoryListener{key: key}
 }
 
-// OnWrite implements WriteListener interface.
+// OnWrite implements WriteListener interface
 func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
 	fl.stateCache = append(fl.stateCache, StoreKVPair{
 		StoreKey: storeKey.Name(),
@@ -72,19 +72,17 @@ func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, d
 		Key:      key,
 		Value:    value,
 	})
-
 	return nil
 }
 
-// PopStateCache returns the current state caches and set to nil.
+// PopStateCache returns the current state caches and set to nil
 func (fl *MemoryListener) PopStateCache() []StoreKVPair {
 	res := fl.stateCache
 	fl.stateCache = nil
-
 	return res
 }
 
-// StoreKey returns the storeKey it listens to.
+// StoreKey returns the storeKey it listens to
 func (fl *MemoryListener) StoreKey() StoreKey {
 	return fl.key
 }

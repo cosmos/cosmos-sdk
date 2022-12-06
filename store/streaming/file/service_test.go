@@ -119,17 +119,14 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	var err error
 	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)
 	require.Equal(t, testDir, testStreamingService.writeDir)
 	require.Equal(t, testMarshaller, testStreamingService.codec)
-
 	testListener1 = testStreamingService.storeListeners[0]
 	testListener2 = testStreamingService.storeListeners[1]
-
 	wg := new(sync.WaitGroup)
 
 	testStreamingService.Stream(wg)
@@ -139,10 +136,7 @@ func TestFileStreamingService(t *testing.T) {
 }
 
 func testListenBlock(t *testing.T) {
-	var (
-		expectKVPairsStore1 [][]byte
-		expectKVPairsStore2 [][]byte
-	)
+	var expectKVPairsStore1, expectKVPairsStore2 [][]byte
 
 	// write state changes
 	testListener1.OnWrite(mockStoreKey1, mockKey1, mockValue1, false)
@@ -173,12 +167,11 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1, expectedKVPair3)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenBeginBlock(emptyContextWrap, testBeginBlockReq, testBeginBlockRes)
+	err = testStreamingService.ListenBeginBlock(emptyContext, testBeginBlockReq, testBeginBlockRes)
 	require.Nil(t, err)
 
 	// write state changes
@@ -194,7 +187,6 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
@@ -202,7 +194,6 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -210,12 +201,11 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2, expectedKVPair3)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenDeliverTx(emptyContextWrap, testDeliverTxReq1, testDeliverTxRes1)
+	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq1, testDeliverTxRes1)
 	require.Nil(t, err)
 
 	// write state changes
@@ -231,7 +221,6 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
@@ -239,7 +228,6 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -247,12 +235,11 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair2)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair1, expectedKVPair3)
 
 	// send the ABCI messages
-	err = testStreamingService.ListenDeliverTx(emptyContextWrap, testDeliverTxReq2, testDeliverTxRes2)
+	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq2, testDeliverTxRes2)
 	require.Nil(t, err)
 
 	// write state changes
@@ -268,7 +255,6 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
@@ -276,7 +262,6 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
-
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -293,6 +278,9 @@ func testListenBlock(t *testing.T) {
 	require.Nil(t, err)
 
 	err = testStreamingService.ListenCommit(emptyContextWrap, testCommitRes)
+	require.Nil(t, err)
+
+	err = testStreamingService.ListenCommit(emptyContext, testCommitRes)
 	require.Nil(t, err)
 
 	// load the file, checking that it was created with the expected name
@@ -327,7 +315,15 @@ func testListenBlock(t *testing.T) {
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	return os.ReadFile(path)
+	bz, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	size := sdk.BigEndianToUint64(bz[:8])
+	if len(bz) != int(size)+8 {
+		return nil, errors.New("incomplete file ")
+	}
+	return bz[8:], nil
 }
 
 // segmentBytes returns all of the protobuf messages contained in the byte array

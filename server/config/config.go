@@ -174,6 +174,15 @@ type (
 		Keys     []string `mapstructure:"keys"`
 		WriteDir string   `mapstructure:"write_dir"`
 		Prefix   string   `mapstructure:"prefix"`
+		// OutputMetadata specifies if output the block metadata file which includes
+		// the abci requests/responses, otherwise only the data file is outputted.
+		OutputMetadata bool `mapstructure:"output-metadata"`
+		// StopNodeOnError specifies if propagate the streamer errors to the consensus
+		// state machine, it's nesserary for data integrity of output.
+		StopNodeOnError bool `mapstructure:"stop-node-on-error"`
+		// Fsync specifies if calling fsync after writing the files, it slows down
+		// the commit, but don't lose data in face of system crash.
+		Fsync bool `mapstructure:"fsync"`
 	}
 )
 
@@ -251,7 +260,13 @@ func DefaultConfig() *Config {
 		},
 		Streamers: StreamersConfig{
 			File: FileStreamerConfig{
-				Keys: []string{"*"},
+				Keys:            []string{"*"},
+				WriteDir:        "data/file_streamer",
+				OutputMetadata:  true,
+				StopNodeOnError: true,
+				// NOTICE: the default config don't protect the streamer data integrity
+				// in face of system crash.
+				Fsync: false,
 			},
 		},
 	}

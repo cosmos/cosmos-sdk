@@ -41,9 +41,6 @@ func NewFromKVStore(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	if listeners == nil {
-		listeners = make(map[types.StoreKey][]types.WriteListener)
-	}
 	cms := Store{
 		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
@@ -81,8 +78,7 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	// don't pass listeners to nested cache store.
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, nil)
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -111,23 +107,6 @@ func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 // TracingEnabled returns if tracing is enabled for the MultiStore.
 func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
-}
-
-// AddListeners adds listeners for a specific KVStore
-func (cms Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
-	if ls, ok := cms.listeners[key]; ok {
-		cms.listeners[key] = append(ls, listeners...)
-	} else {
-		cms.listeners[key] = listeners
-	}
-}
-
-// ListeningEnabled returns if listening is enabled for a specific KVStore
-func (cms Store) ListeningEnabled(key types.StoreKey) bool {
-	if ls, ok := cms.listeners[key]; ok {
-		return len(ls) != 0
-	}
-	return false
 }
 
 // LatestVersion returns the branch version of the store

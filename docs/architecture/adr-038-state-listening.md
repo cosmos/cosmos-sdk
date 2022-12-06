@@ -47,15 +47,8 @@ func NewMemoryListener() *MemoryListener {
 	return &MemoryListener{}
 }
 
-// OnWrite writes state change events to the internal cache
-func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) {
-	fl.stateCache = append(fl.stateCache, StoreKVPair{
-		StoreKey: storeKey.Name(),
-		Delete:   delete,
-		Key:      key,
-		Value:    value,
-	})
-}
+We will create two concrete implementations of the `WriteListener` interface in `store/types/listening.go`, that writes out protobuf
+encoded KV pairs to an underlying `io.Writer`, and simply accumulate them in memory.
 
 We will create two concrete implementations of the `WriteListener` interface in `store/types/listening.go`, that writes out protobuf
 encoded KV pairs to an underlying `io.Writer`, and simply accumulate them in memory.
@@ -301,14 +294,8 @@ func (app *BaseApp) SetStreamingService(s StreamingService) {
 }
 ```
 
-Implementing the service above:
-
-```go
-// streaming/plugins/abci/{plugin_version}/grpc.go
-
-var (
-    _ baseapp.ABCIListener = (*GRPCClient)(nil)
-)
+We will also modify the `BeginBlock`, `EndBlock`, and `DeliverTx` methods to pass ABCI requests and responses to any streaming service hooks registered
+with the `BaseApp`.
 
 	defer func() {
 		// call the hooks with the BeginBlock messages
@@ -325,11 +312,14 @@ func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.Request
     return err
 }
 
-func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
-    ctx := sdk.UnwrapSDKContext(goCtx)
-    _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: res, ChangeSet: changeSet})
-    return err
-}
+	defer func() {
+		// call the hooks with the BeginBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "BeginBlock listening hook failed, height: %d", req.Header.Height))
+			}
+		}
+	}()
 
 // GRPCServer is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
@@ -362,11 +352,36 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		}
 	}()
 
-And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are written in Go*):
+  defer func() {
+		// Call the streaming service hooks with the EndBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "EndBlock listening hook failed, height: %d", req.Height))
+			}
+		}
+  }()
 
 	return res
 }
 ```
+
+```go
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+
+	defer func() {
+		// call the hooks with the DeliverTx messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
+			}
+		}
+	}()
+
+	...
+
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
+  ...
+}
 
 ```golang
 func (app *BaseApp) Commit() abci.ResponseCommit {
@@ -394,6 +409,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
   ...
 }
+```
 
 #### Error Handling And Async Consumers
 
@@ -477,33 +493,7 @@ func NewSimApp(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 
-    ...
-
-    keys := sdk.NewKVStoreKeys(
-       authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-       minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-       govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-       evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-    )
-
-    ...
-
-    // register streaming services
-    streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
-    for service := range streamingCfg {
-        pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingPluginTomlKey)
-        pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-        if len(pluginName) > 0 {
-            logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-            plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-            if err != nil {
-                tmos.Exit(err.Error())
-            }
-            if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-                tmos.Exit(err.Error())
-            }
-        }
-    }
+	...
 
 	keys := sdk.NewKVStoreKeys(
 	authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,

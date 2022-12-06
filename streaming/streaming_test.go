@@ -64,7 +64,7 @@ func (s *PluginTestSuite) SetupTest() {
 	s.endBlockReq = abci.RequestEndBlock{Height: 1}
 	s.endBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &tmproto.ConsensusParams{},
+		ConsensusParamUpdates: &abci.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
 	s.deliverTxReq = abci.RequestDeliverTx{

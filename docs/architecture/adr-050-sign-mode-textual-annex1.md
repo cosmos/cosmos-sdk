@@ -187,7 +187,7 @@ See example above with `message Vote{}`.
 #### Examples
 
 ```
-Object: type.googleapis.com/cosmos.gov.v1.Vote
+type.googleapis.com/cosmos.gov.v1.Vote
 > Vote object
 >> Proposal id: 4
 >> Vote: cosmos1abc...def

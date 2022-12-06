@@ -54,18 +54,21 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 type KeyCodec[T any] interface {
 	// EncodeKey writes the key bytes into the buffer. Returns the number of
 	// bytes written. The implementer must expect the buffer to be at least
-	// of length equal to Size(key). The implementer must also return
-	// the bytes written, and they must be less than or equal to Size(key).
+	// of length equal to Size(K) for all encodings.
+	// It must also return the number of written bytes which must be
+	// equal to Size(K) for all encodings not involving varints.
+	// In case of encodings involving varints then the returned
+	// number of written bytes is allowed to be smaller than Size(K).
 	EncodeKey(buffer []byte, key T) (int, error)
 	// DecodeKey reads from the provided bytes buffer to decode
 	// the key T. Returns the number of bytes read, the type T
 	// or an error in case of decoding failure.
 	DecodeKey(buffer []byte) (int, T, error)
 	// Size returns the buffer size need to encode key T in binary format.
-	// Implementations should choose the most performant path to compute this
-	// at the risk of over-estimating. In the case of variable-length integers, the max
-	// varint length should usually be returned rather than trying to pre-compute the
-	// exact length.
+	// The returned value must match what is computed by EncodeKey for all
+	// encodings except the ones involving varints. Varints are expected
+	// to return the maximum varint bytes buffer length, at the risk of
+	// over-estimating in order to pick the most performant path.
 	Size(key T) int
 	// Stringify returns a string representation of T.
 	Stringify(key T) string

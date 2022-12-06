@@ -55,7 +55,7 @@ type KeyEncoder[T any] interface {
 	// PutKey writes the key bytes into the buffer. Returns the number of
 	// bytes written. The implementer must expect the buffer to be at least
 	// of length equal to Size(key). The implementer must also return
-	// the bytes written, and they must be equal to Size(key).
+	// the bytes written, and they must be less than or equal to Size(key).
 	PutKey(buffer []byte, key T) (int, error)
 	// ReadKey reads from the provided bytes buffer to decode
 	// the key T. Returns the number of bytes read, the type T

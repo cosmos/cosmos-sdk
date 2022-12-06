@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -119,7 +118,7 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, log.NewNopLogger(), true, false, false)
+	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)

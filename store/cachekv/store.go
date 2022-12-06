@@ -11,7 +11,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -162,11 +161,6 @@ func (store *Store) CacheWrap() types.CacheWrap {
 // CacheWrapWithTrace implements the CacheWrapper interface.
 func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
 	return NewStore(tracekv.NewStore(store, w, tc))
-}
-
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (store *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return NewStore(listenkv.NewStore(store, storeKey, listeners))
 }
 
 //----------------------------------------

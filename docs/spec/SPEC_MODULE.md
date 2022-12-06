@@ -1,4 +1,4 @@
-# Specification of Specifications
+# Specification of Modules
 
 This file intends to outline the common structure for specifications within
 this directory.

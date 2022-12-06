@@ -2,10 +2,10 @@ package mock
 
 import (
 	"math/rand"
+	"testing"
 	"time"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

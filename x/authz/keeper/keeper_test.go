@@ -10,7 +10,6 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,15 +32,15 @@ var (
 type TestSuite struct {
 	suite.Suite
 
-	ctx               sdk.Context
-	addrs             []sdk.AccAddress
-	authzKeeper       authzkeeper.Keeper
-	accountKeeper     *authztestutil.MockAccountKeeper
-	bankKeeper        *authztestutil.MockBankKeeper
-	interfaceRegistry codectypes.InterfaceRegistry
-	baseApp           *baseapp.BaseApp
-	encCfg            moduletestutil.TestEncodingConfig
-	queryClient       authz.QueryClient
+	ctx           sdk.Context
+	addrs         []sdk.AccAddress
+	authzKeeper   authzkeeper.Keeper
+	accountKeeper *authztestutil.MockAccountKeeper
+	bankKeeper    *authztestutil.MockBankKeeper
+	baseApp       *baseapp.BaseApp
+	encCfg        moduletestutil.TestEncodingConfig
+	queryClient   authz.QueryClient
+	msgSrvr       authz.MsgServer
 }
 
 func (s *TestSuite) SetupTest() {
@@ -75,7 +74,7 @@ func (s *TestSuite) SetupTest() {
 	queryClient := authz.NewQueryClient(queryHelper)
 	s.queryClient = queryClient
 
-	s.queryClient = queryClient
+	s.msgSrvr = s.authzKeeper
 }
 
 func (s *TestSuite) TestKeeper() {

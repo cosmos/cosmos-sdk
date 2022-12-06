@@ -328,7 +328,7 @@
 			{ "text": "Public key: Object: /cosmos.crypto.secp256k1.PubKey", "expert": true },
 			{ "text": "PubKey object", "indent": 1, "expert": true },
 			{ "text": "Key: 02EBDD7FE4FDEB76DC8A205EF65D790CD30E8A375A5C2528EB3A923AF1FB4D794D", "indent": 2, "expert": true },
-			{ "text": "This transaction has 2 Message" },
+			{ "text": "This transaction has 2 Messages" },
 			{ "text": "Message (1/2): Object: /cosmos.authz.v1beta1.MsgExec", "indent": 1 },
 			{ "text": "MsgExec object", "indent": 2 },
 			{ "text": "Grantee: cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "indent": 3 },

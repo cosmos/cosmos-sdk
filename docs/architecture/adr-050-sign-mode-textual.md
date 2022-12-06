@@ -170,7 +170,7 @@ Chain ID: <string>
 Account number: <uint64>
 Sequence: <uint64>
 *Public Key: <Any>
-This transaction has <int> Message
+This transaction has <int> Message(s)                       // Pluralize "Message" only when int>1
 > Message (<int>/<int>): <Any>                              // See value renderers for Any rendering.
 End of Message
 Memo: <string>                                              // Skipped if no memo set.

@@ -55,9 +55,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
     * Add three new options to file streaming service constructor.
     * Modify `ABCIListener` such that any error from any method will always halt the app via `panic`
+* (store) [#13529](https://github.com/cosmos/cosmos-sdk/pull/13529) Add method `LatestVersion` to `MultiStore` interface, add method `SetQueryMultiStore` to baesapp to support alternative `MultiStore` implementation for query service.
 
 ### Bug Fixes
 
+* (baseapp) [#13983](https://github.com/cosmos/cosmos-sdk/pull/13983) Don't emit duplicate ante-handler events when a post-handler is defined.
 * (baseapp) [#14049](https://github.com/cosmos/cosmos-sdk/pull/14049) Fix state sync when interval is zero.
 * (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Fix state listener that was observing writes at wrong time.
 

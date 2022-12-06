@@ -127,6 +127,9 @@ type MultiStore interface {
 	// implied that the caller should update the context when necessary between
 	// tracing operations. The modified MultiStore is returned.
 	SetTracingContext(TraceContext) MultiStore
+
+	// LatestVersion returns the latest version in the store
+	LatestVersion() int64
 }
 
 // From MultiStore.CacheMultiStore()....

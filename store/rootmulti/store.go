@@ -395,6 +395,11 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	return false
 }
 
+// LatestVersion returns the latest version in the store
+func (rs *Store) LatestVersion() int64 {
+	return rs.LastCommitID().Version
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {

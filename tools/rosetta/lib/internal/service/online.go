@@ -25,7 +25,7 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, 
 	var genesisHeight int64 = 1 // to get genesis block height
 	genesisBlock, err := client.BlockByHeight(ctx, &genesisHeight)
 	if err != nil {
-		logger.Err(err).Msg("Could not get genesis block height.")
+		logger.Err(err).Msg("failed to get genesis block height")
 	}
 
 	return OnlineNetwork{

@@ -24,7 +24,8 @@ func deps() (types.StoreKey, StorageProvider) {
 	return key, mockStorageProvider{store: kv}
 }
 
-func assertKey[T any](t *testing.T, encoder KeyCodec[T], key T) {
+// checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
+func checkKeyCodec[T any](t *testing.T, encoder KeyCodec[T], key T) {
 	buffer := make([]byte, encoder.Size(key))
 	written, err := encoder.EncodeKey(buffer, key)
 	require.NoError(t, err)
@@ -35,7 +36,8 @@ func assertKey[T any](t *testing.T, encoder KeyCodec[T], key T) {
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")
 }
 
-func assertValue[T any](t *testing.T, encoder ValueCodec[T], value T) {
+// checkValueCodec asserts the correct behaviour of a ValueCodec over the type T.
+func checkValueCodec[T any](t *testing.T, encoder ValueCodec[T], value T) {
 	encodedValue, err := encoder.Encode(value)
 	require.NoError(t, err)
 	decodedValue, err := encoder.Decode(encodedValue)

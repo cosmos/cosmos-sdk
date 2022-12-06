@@ -8,7 +8,7 @@ import (
 
 func TestUint64Value(t *testing.T) {
 	t.Run("bijective", func(t *testing.T) {
-		assertValue(t, Uint64Value, 555)
+		checkValueCodec(t, Uint64Value, 555)
 	})
 
 	t.Run("invalid size", func(t *testing.T) {

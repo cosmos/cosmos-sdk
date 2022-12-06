@@ -53,8 +53,9 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 // by types that are capable of encoding and decoding collections keys.
 type KeyEncoder[T any] interface {
 	// PutKey writes the key bytes into the buffer. Returns the number of
-	// bytes written.
-	// The bytes written must match the value returned by the Size method.
+	// bytes written. The implementer must expect the buffer to be at least
+	// of length equal to Size(key). The implementer must also return
+	// the bytes written, and they must be equal to Size(key).
 	PutKey(buffer []byte, key T) (int, error)
 	// ReadKey reads from the provided bytes buffer to decode
 	// the key T. Returns the number of bytes read, the type T

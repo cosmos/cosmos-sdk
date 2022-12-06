@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"math"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/mem"
@@ -43,4 +44,29 @@ func checkValueCodec[T any](t *testing.T, encoder ValueCodec[T], value T) {
 	decodedValue, err := encoder.Decode(encodedValue)
 	require.NoError(t, err)
 	require.Equal(t, value, decodedValue, "encoding and decoding produces different values")
+}
+
+func TestPrefix(t *testing.T) {
+	t.Run("panics on invalid int", func(t *testing.T) {
+		require.Panics(t, func() {
+			NewPrefix(math.MaxUint8 + 1)
+		})
+	})
+
+	t.Run("string", func(t *testing.T) {
+		require.Equal(t, []byte("prefix"), NewPrefix("prefix").Bytes())
+	})
+
+	t.Run("int", func(t *testing.T) {
+		require.Equal(t, []byte{0x1}, NewPrefix(1).Bytes())
+	})
+
+	t.Run("[]byte", func(t *testing.T) {
+		bytes := []byte("prefix")
+		prefix := NewPrefix(bytes)
+		require.Equal(t, bytes, prefix.Bytes())
+		// assert if modification happen they do not propagate to prefix
+		bytes[0] = 0x0
+		require.Equal(t, []byte("prefix"), prefix.Bytes())
+	})
 }

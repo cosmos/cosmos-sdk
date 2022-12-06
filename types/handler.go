@@ -31,13 +31,19 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 		return nil
 	}
 
-	// handle non-terminated decorators chain
-	if (chain[len(chain)-1] != Terminator{}) {
-		chain = append(chain, Terminator{})
-	}
+	t := func(ctx Context, _ Tx, _ bool) (Context, error) { return ctx, nil }
 
 	return func(ctx Context, tx Tx, simulate bool) (Context, error) {
-		return chain[0].AnteHandle(ctx, tx, simulate, ChainAnteDecorators(chain[1:]...))
+		var err error
+
+		for _, d := range chain {
+			ctx, err = d.AnteHandle(ctx, tx, simulate, t)
+			if err != nil {
+				return ctx, err
+			}
+		}
+
+		return ctx, nil
 	}
 }
 

@@ -12,7 +12,9 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 
+	msg "cosmossdk.io/api/cosmos/msg/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/tx/textual/internal/textualpb"
@@ -65,6 +67,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		ChainId:                     textualData.SignerData.ChainId,
 		AccountNumber:               textualData.SignerData.AccountNumber,
 		Sequence:                    textualData.SignerData.Sequence,
+		Address:                     textualData.SignerData.Address,
 		PublicKey:                   textualData.SignerData.PubKey,
 		Message:                     txBody.Messages,
 		Memo:                        txBody.Memo,
@@ -225,17 +228,6 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		NonCriticalExtensionOptions: enveloppe.NonCriticalExtensionOptions,
 	}
 	authInfo := &txv1beta1.AuthInfo{
-		// TODO it should not be append, but we should find the correct signer index.
-		// TODO handle multisigs too.
-		SignerInfos: append(enveloppe.OtherSigner, &txv1beta1.SignerInfo{
-			PublicKey: enveloppe.PublicKey,
-			ModeInfo: &txv1beta1.ModeInfo{
-				Sum: &txv1beta1.ModeInfo_Single_{
-					Single: &txv1beta1.ModeInfo_Single{Mode: signingv1beta1.SignMode_SIGN_MODE_TEXTUAL},
-				},
-			},
-			Sequence: enveloppe.Sequence,
-		}),
 		Fee: &txv1beta1.Fee{
 			Amount:   enveloppe.Fees,
 			GasLimit: enveloppe.GasLimit,
@@ -249,6 +241,34 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 			Tipper: enveloppe.Tipper,
 		}
 	}
+
+	// Figure out the signers in the correct order.
+	signers, err := getSigners(txBody, authInfo)
+	if err != nil {
+		return nilValue, err
+	}
+
+	signerInfos := make([]*txv1beta1.SignerInfo, len(signers))
+	for i, s := range signers {
+		if s == enveloppe.Address {
+			signerInfos[i] = &txv1beta1.SignerInfo{
+				PublicKey: enveloppe.PublicKey,
+				ModeInfo: &txv1beta1.ModeInfo{
+					Sum: &txv1beta1.ModeInfo_Single_{
+						Single: &txv1beta1.ModeInfo_Single{
+							Mode: signingv1beta1.SignMode_SIGN_MODE_TEXTUAL,
+						},
+					},
+				},
+				Sequence: enveloppe.Sequence,
+			}
+		} else {
+			// We know that signerInfos is well ordered, so just pop from it.
+			signerInfos[i] = enveloppe.OtherSigner[0]
+			enveloppe.OtherSigner = enveloppe.OtherSigner[1:]
+		}
+	}
+	authInfo.SignerInfos = signerInfos
 
 	// Note that we might not always get back the exact bodyBz and authInfoBz
 	// that was passed into, because protobuf is not deterministic.
@@ -266,8 +286,7 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		BodyBytes:     bodyBz,
 		AuthInfoBytes: authInfoBz,
 		SignerData: &textualpb.SignerData{
-			// Address is skipped. We could retrieve it by deriving it from
-			// the PublicKey, but it's not needed here.
+			Address:       enveloppe.Address,
 			AccountNumber: enveloppe.AccountNumber,
 			ChainId:       enveloppe.ChainId,
 			Sequence:      enveloppe.Sequence,
@@ -276,4 +295,43 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 	}
 
 	return protoreflect.ValueOf(tx.ProtoReflect()), nil
+}
+
+// getSigners gets the ordered signers of a transaction. It's mostly a
+// copy-paste of `types/tx/types.go` GetSigners method, but uses the proto
+// annotation `cosmos.msg.v1.signer`, instead of the sdk.Msg#GetSigners method.
+func getSigners(body *txv1beta1.TxBody, authInfo *txv1beta1.AuthInfo) ([]string, error) {
+	var signers []string
+	seen := map[string]bool{}
+
+	for _, msgAny := range body.Messages {
+		m, err := anypb.UnmarshalNew(msgAny, proto.UnmarshalOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		ext := proto.GetExtension(m.ProtoReflect().Descriptor().Options(), msg.E_Signer)
+		signerFields, ok := ext.([]string)
+		if !ok {
+			return nil, fmt.Errorf("expected []string, got %T", ext)
+		}
+
+		for _, fieldName := range signerFields {
+			fd := m.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name(fieldName))
+			addr := m.ProtoReflect().Get(fd).String()
+			if !seen[addr] {
+				signers = append(signers, addr)
+				seen[addr] = true
+			}
+		}
+	}
+
+	// ensure any specified fee payer is included in the required signers (at the end)
+	feePayer := authInfo.Fee.Payer
+	if feePayer != "" && !seen[feePayer] {
+		signers = append(signers, feePayer)
+		seen[feePayer] = true
+	}
+
+	return signers, nil
 }

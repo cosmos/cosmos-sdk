@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	_ "cosmossdk.io/api/cosmos/auth/v1beta1"
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
@@ -37,18 +36,10 @@ type txJsonTestTx struct {
 	AuthInfo json.RawMessage `json:"auth_info"`
 }
 
-type txJsonSignerData struct {
-	Address       string
-	AccountNumber uint64          `json:"account_number"`
-	ChainID       string          `json:"chain_id"`
-	PubKey        json.RawMessage `json:"pub_key"`
-	Sequence      uint64
-}
-
 type txJsonTest struct {
 	Name       string
 	Proto      txJsonTestTx
-	SignerData txJsonSignerData `json:"signer_data"`
+	SignerData json.RawMessage `json:"signer_data"`
 	Metadata   *bankv1beta1.Metadata
 	Error      bool
 	Screens    []valuerenderer.Screen
@@ -123,38 +114,30 @@ func TestTxJsonTestcases(t *testing.T) {
 			diff = cmp.Diff(expAuthInfo, parsedAuthInfo, protocmp.Transform())
 			require.Empty(t, diff)
 
-			require.Equal(t, signerData.AccountNumber, parsedTextualData.SignerData.AccountNumber)
-			require.Equal(t, signerData.Sequence, parsedTextualData.SignerData.Sequence)
-			require.Equal(t, signerData.ChainId, parsedTextualData.SignerData.ChainId)
-			require.Equal(t, signerData.PubKey, parsedTextualData.SignerData.PubKey)
+			diff = cmp.Diff(
+				signerData,
+				signerDataFromProto(parsedTextualData.SignerData),
+				protocmp.Transform(),
+			)
+			require.Empty(t, diff)
 		})
 	}
 }
 
 // createTextualData creates a Textual data give then JSON
 // test case.
-func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonSignerData) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
+func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData json.RawMessage) (*txv1beta1.TxBody, []byte, *txv1beta1.AuthInfo, []byte, signing.SignerData) {
 	body := &txv1beta1.TxBody{}
 	authInfo := &txv1beta1.AuthInfo{}
+	protoSignerData := &textualpb.SignerData{}
 
 	// We unmarshal from protojson to the protobuf types.
 	err := protojson.Unmarshal(jsonTx.Body, body)
 	require.NoError(t, err)
 	err = protojson.Unmarshal(jsonTx.AuthInfo, authInfo)
 	require.NoError(t, err)
-
-	// Unmarshal the pubkey
-	anyPubKey := &anypb.Any{}
-	err = protojson.Unmarshal(jsonSignerData.PubKey, anyPubKey)
+	err = protojson.Unmarshal(jsonSignerData, protoSignerData)
 	require.NoError(t, err)
-
-	signerData := signing.SignerData{
-		Address:       jsonSignerData.Address,
-		ChainId:       jsonSignerData.ChainID,
-		AccountNumber: jsonSignerData.AccountNumber,
-		Sequence:      jsonSignerData.Sequence,
-		PubKey:        anyPubKey,
-	}
 
 	// We marshal body and auth_info
 	bodyBz, err := proto.Marshal(body)
@@ -162,5 +145,17 @@ func createTextualData(t *testing.T, jsonTx txJsonTestTx, jsonSignerData txJsonS
 	authInfoBz, err := proto.Marshal(authInfo)
 	require.NoError(t, err)
 
-	return body, bodyBz, authInfo, authInfoBz, signerData
+	return body, bodyBz, authInfo, authInfoBz, signerDataFromProto(protoSignerData)
+}
+
+// signerDataFromProto converts a protobuf SignerData (internal) to a
+// signing.SignerData (external).
+func signerDataFromProto(d *textualpb.SignerData) signing.SignerData {
+	return signing.SignerData{
+		Address:       d.Address,
+		ChainId:       d.ChainId,
+		AccountNumber: d.AccountNumber,
+		Sequence:      d.Sequence,
+		PubKey:        d.PubKey,
+	}
 }

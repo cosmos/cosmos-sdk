@@ -413,7 +413,7 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 }
 
 // DefaultBaseappOptions returns the default baseapp options provided by the Cosmos SDK
-func DeafultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
+func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {

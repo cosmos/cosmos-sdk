@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // copied from iavl/store_test.go
@@ -248,7 +247,7 @@ func mockStoreWithStuff() types.KVStore {
 	store.Set(bz("key2"), bz("value2"))
 	store.Set(bz("key3"), bz("value3"))
 	store.Set(bz("something"), bz("else"))
-	store.Set(bz("k"), bz(sdk.PrefixValidator))
+	store.Set(bz("k"), bz("val"))
 	store.Set(bz("ke"), bz("valu"))
 	store.Set(bz("kee"), bz("valuu"))
 	return store

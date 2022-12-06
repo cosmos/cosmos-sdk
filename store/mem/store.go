@@ -3,13 +3,12 @@ package mem
 import (
 	"io"
 
-	corestore "cosmossdk.io/core/store"
-	coretesting "cosmossdk.io/core/testing"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var (

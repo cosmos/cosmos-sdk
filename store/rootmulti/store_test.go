@@ -687,9 +687,6 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
 	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
-
-	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
-	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
 }
 
 func TestTraceConcurrency(t *testing.T) {

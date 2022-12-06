@@ -140,3 +140,10 @@ func (s *Store) CacheWrap() types.CacheWrap {
 func (s *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	panic("cannot CacheWrapWithTrace a ListenKVStore")
 }
+
+// onWrite writes a KVStore operation to all of the WriteListeners
+func (s *Store) onWrite(delete bool, key, value []byte) {
+	for _, l := range s.listeners {
+		l.OnWrite(s.parentStoreKey, key, value, delete)
+	}
+}

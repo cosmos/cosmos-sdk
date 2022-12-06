@@ -1,23 +1,27 @@
 package baseapp
 
 import (
+	"context"
 	"io"
 	"sync"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
 )
 
-// ABCIListener interface used to hook into the ABCI message processing of the BaseApp
+// ABCIListener interface used to hook into the ABCI message processing of the BaseApp.
+// the error results are propagated to consensus state machine,
+// if you don't want to affect consensus, handle the errors internally and always return `nil` in these APIs.
 type ABCIListener interface {
 	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages
-	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
+	ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
 	// ListenEndBlock updates the steaming service with the latest EndBlock messages
-	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+	ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
 	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages
-	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+	ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+	// ListenCommit updates the steaming service with the latest Commit event
+	ListenCommit(ctx context.Context, res abci.ResponseCommit) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks

@@ -3,12 +3,11 @@
 ## Changelog
 
 * 11/23/2020: Initial draft
-* 10/06/2022: Introduce plugin system based on hashicorp/go-plugin
 * 10/14/2022:
-    * Add `ListenCommit`, flatten the state writes in a block to a single batch.
-    * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
-    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propagate errors.
-* 26/05/2023: Update with ABCI 2.0
+  * Add `ListenCommit`, flatten the state writes in a block to a single batch.
+  * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
+  * Remove `HaltAppOnDeliveryError()`, the errors are propogated by default, the implementations should return nil if don't want to propogate errors.
+
 
 ## Status
 
@@ -38,9 +37,9 @@ The `MemoryListener` will be used internally by the concrete `rootmulti` impleme
 // WriteListener interface for streaming data out from a listenkv.Store
 type WriteListener interface {
 	// if value is nil then it was deleted
-	// storeKey indicates the source KVStore, to facilitate using the the same WriteListener across separate KVStores
+	// storeKey indicates the source KVStore, to facilitate using the same WriteListener across separate KVStores
 	// delete bool indicates if it was a delete; true: delete, false: set
-    OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
+	OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 
 // NewMemoryListener creates a listener that accumulate the state writes in memory.
@@ -58,13 +57,8 @@ func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, d
 	})
 }
 
-// PopStateCache returns the current state caches and set to nil
-func (fl *MemoryListener) PopStateCache() []StoreKVPair {
-	res := fl.stateCache
-	fl.stateCache = nil
-	return res
-}
-```
+We will create two concrete implementations of the `WriteListener` interface in `store/types/listening.go`, that writes out protobuf
+encoded KV pairs to an underlying `io.Writer`, and simply accumulate them in memory.
 
 We will also define a protobuf type for the KV pairs. In addition to the key and value fields this message
 will include the StoreKey for the originating KVStore so that we can collect information from separate KVStores and determine the source of each KV pair.
@@ -75,6 +69,76 @@ message StoreKVPair {
   required bool set = 2; // true indicates a set operation, false indicates a delete operation
   required bytes key = 3;
   required bytes value = 4;
+}
+```
+
+```go
+// StoreKVPairWriteListener is used to configure listening to a KVStore by writing out length-prefixed
+// protobuf encoded StoreKVPairs to an underlying io.Writer
+type StoreKVPairWriteListener struct {
+	writer io.Writer
+	marshaller codec.BinaryCodec
+}
+
+// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryCodec
+func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
+	return &StoreKVPairWriteListener{
+		writer: w,
+		marshaller: m,
+	}
+}
+
+// OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
+func (wl *StoreKVPairWriteListener) OnWrite(storeKey types.StoreKey, key []byte, value []byte, delete bool) error error {
+    kvPair := new(types.StoreKVPair)
+    kvPair.StoreKey = storeKey.Name()
+    kvPair.Delete = Delete
+    kvPair.Key = key
+    kvPair.Value = value
+    by, err := wl.marshaller.MarshalBinaryLengthPrefixed(kvPair)
+    if err != nil {
+        return err
+    }
+    if _, err := wl.writer.Write(by); err != nil {
+        return err
+    }
+    return nil
+}
+```
+
+```golang
+// MemoryListener listens to the state writes and accumulate the records in memory.
+type MemoryListener struct {
+	key        StoreKey
+	stateCache []StoreKVPair
+}
+
+// NewMemoryListener creates a listener that accumulate the state writes in memory.
+func NewMemoryListener(key StoreKey) *MemoryListener {
+	return &MemoryListener{key: key}
+}
+
+// OnWrite implements WriteListener interface
+func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
+	fl.stateCache = append(fl.stateCache, StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Delete:   delete,
+		Key:      key,
+		Value:    value,
+	})
+	return nil
+}
+
+// PopStateCache returns the current state caches and set to nil
+func (fl *MemoryListener) PopStateCache() []StoreKVPair {
+	res := fl.stateCache
+	fl.stateCache = nil
+	return res
+}
+
+// StoreKey returns the storeKey it listens to
+func (fl *MemoryListener) StoreKey() StoreKey {
+	return fl.key
 }
 ```
 
@@ -89,14 +153,14 @@ We will configure the `Store` with a `MemoryListener` which will collect state c
 // underlying listeners with the proper key and operation permissions
 type Store struct {
     parent    types.KVStore
-    listener  *types.MemoryListener
+    listeners []types.WriteListener
     parentStoreKey types.StoreKey
 }
 
 // NewStore returns a reference to a new traceKVStore given a parent
 // KVStore implementation and a buffered writer.
-func NewStore(parent types.KVStore, psk types.StoreKey, listener *types.MemoryListener) *Store {
-    return &Store{parent: parent, listener: listener, parentStoreKey: psk}
+func NewStore(parent types.KVStore, psk types.StoreKey, listeners []types.WriteListener) *Store {
+    return &Store{parent: parent, listeners: listeners, parentStoreKey: psk}
 }
 
 // Set implements the KVStore interface. It traces a write operation and
@@ -104,38 +168,47 @@ func NewStore(parent types.KVStore, psk types.StoreKey, listener *types.MemoryLi
 func (s *Store) Set(key []byte, value []byte) {
     types.AssertValidKey(key)
     s.parent.Set(key, value)
-    s.listener.OnWrite(s.parentStoreKey, key, value, false)
+    s.onWrite(false, key, value)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
     s.parent.Delete(key)
-    s.listener.OnWrite(s.parentStoreKey, key, nil, true)
+    s.onWrite(true, key, nil)
+}
+
+// onWrite writes a KVStore operation to all the WriteListeners
+func (s *Store) onWrite(delete bool, key, value []byte) {
+    for _, l := range s.listeners {
+        if err := l.OnWrite(s.parentStoreKey, key, value, delete); err != nil {
+            // log error
+        }
+    }
 }
 ```
 
 ### MultiStore interface updates
 
-We will update the `CommitMultiStore` interface to allow us to wrap a `Memorylistener` to a specific `KVStore`.
-Note that the `MemoryListener` will be attached internally by the concrete `rootmulti` implementation.
+We will update the `CommitMultiStore` interface to allow us to wrap a set of listeners around a specific `KVStore`.
 
 ```go
 type CommitMultiStore interface {
     ...
 
-    // AddListeners adds a listener for the KVStore belonging to the provided StoreKey
-    AddListeners(keys []StoreKey)
+    // ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
+    ListeningEnabled(key StoreKey) bool
 
-    // PopStateCache returns the accumulated state change messages from MemoryListener
-    PopStateCache() []StoreKVPair
+    // AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
+    // It appends the listeners to a current set, if one already exists
+    AddListeners(key StoreKey, listeners []WriteListener)
 }
 ```
 
-
 ### MultiStore implementation updates
 
-We will adjust the `rootmulti` `GetKVStore` method to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on for that `Store`.
+We will modify all of the `CommitMultiStore` implementations to satisfy these new interfaces, and adjust the `rootmulti` `GetKVStore` method
+to wrap the returned `KVStore` with a `listenkv.Store` if listening is turned on for that `Store`.
 
 ```go
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
@@ -145,294 +218,68 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
         store = tracekv.NewStore(store, rs.traceWriter, rs.traceContext)
     }
     if rs.ListeningEnabled(key) {
-        store = listenkv.NewStore(store, key, rs.listeners[key])
+        store = listenkv.NewStore(key, store, rs.listeners[key])
     }
 
     return store
 }
 ```
 
-We will implement `AddListeners` to manage KVStore listeners internally and implement `PopStateCache`
-for a means of retrieving the current state.
-
-```go
-// AddListeners adds state change listener for a specific KVStore
-func (rs *Store) AddListeners(keys []types.StoreKey) {
-	listener := types.NewMemoryListener()
-	for i := range keys {
-		rs.listeners[keys[i]] = listener
-	}
-}
-```
-
-```go
-func (rs *Store) PopStateCache() []types.StoreKVPair {
-	var cache []types.StoreKVPair
-	for _, ls := range rs.listeners {
-		cache = append(cache, ls.PopStateCache()...)
-	}
-	sort.SliceStable(cache, func(i, j int) bool {
-		return cache[i].StoreKey < cache[j].StoreKey
-	})
-	return cache
-}
-```
-
-We will also adjust the `rootmulti` `CacheMultiStore` and `CacheMultiStoreWithVersion` methods to enable listening in
-the cache layer.
+We will also adjust the `rootmulti` `CacheMultiStore` method to wrap the stores with `listenkv.Store` to enable listening when the cache layer writes.
 
 ```go
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
-    stores := make(map[types.StoreKey]types.CacheWrapper)
-    for k, v := range rs.stores {
-        store := v.(types.KVStore)
-        // Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
-        // set same listeners on cache store will observe duplicated writes.
-        if rs.ListeningEnabled(k) {
-            store = listenkv.NewStore(store, k, rs.listeners[k])
-        }
-        stores[k] = store
-    }
-    return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
-}
-```
-
-```go
-func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
- // ...
-
-        // Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
-        // set same listeners on cache store will observe duplicated writes.
-        if rs.ListeningEnabled(key) {
-            cacheStore = listenkv.NewStore(cacheStore, key, rs.listeners[key])
-        }
-
-        cachedStores[key] = cacheStore
-    }
-
-    return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext()), nil
+	stores := make(map[types.StoreKey]types.CacheWrapper)
+	for k, v := range rs.stores {
+		store := v.(types.KVStore)
+		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+		// set same listeners on cache store will observe duplicated writes.
+		if rs.ListeningEnabled(k) {
+			store = listenkv.NewStore(store, k, rs.listeners[k])
+		}
+		stores[k] = store
+	}
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
 }
 ```
 
 ### Exposing the data
 
+#### Streaming service
+
 We will introduce a new `StreamingService` interface for exposing `WriteListener` data streams to external consumers.
-In addition to streaming state changes as `StoreKVPair`s, the interface satisfies an `ABCIListener` interface that plugs into the BaseApp
-and relays ABCI requests and responses so that the service can group the state changes with the ABCI requests that affected them and the ABCI responses they affected.
+In addition to streaming state changes as `StoreKVPair`s, the interface satisfies an `ABCIListener` interface that plugs
+into the BaseApp and relays ABCI requests and responses so that the service can observe those block metadatas as well.
+
+The `WriteListener`s of `StreamingService` listens to the `rootmulti.Store`, which is only written into at commit event by the cache store of `deliverState`.
 
 ```go
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp
 type ABCIListener interface {
-	// ListenBeginBlock updates the streaming service with the latest BeginBlock messages 
-	ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error 
-	// ListenEndBlock updates the steaming service with the latest EndBlock messages 
-	ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error 
-	// ListenDeliverTx updates the steaming service with the latest DeliverTx messages 
-	ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+    // ListenBeginBlock updates the streaming service with the latest BeginBlock messages
+    ListenBeginBlock(ctx types.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error
+    // ListenEndBlock updates the steaming service with the latest EndBlock messages
+    ListenEndBlock(ctx types.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error
+    // ListenDeliverTx updates the steaming service with the latest DeliverTx messages
+    ListenDeliverTx(ctx types.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error
+    // ListenCommit updates the steaming service with the latest Commit message,
+    // All the state writes of current block should have notified before this message.
+    ListenCommit(ctx types.Context, res abci.ResponseCommit) error
 }
 
 // StreamingService interface for registering WriteListeners with the BaseApp and updating the service with the ABCI messages using the hooks
 type StreamingService interface {
-	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file 
-	Stream(wg *sync.WaitGroup) error
-	// Listeners returns the streaming service's listeners for the BaseApp to register 
-	Listeners() map[types.StoreKey][]store.WriteListener 
-	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp 
-	ABCIListener 
-	// Closer interface 
-	io.Closer
-}
-```
-
-#### BaseApp Registration
-
-We will add a new method to the `BaseApp` to enable the registration of `StreamingService`s:
-
-Writing to a file is the simplest approach for streaming the data out to consumers.
-This approach also provides the advantages of being persistent and durable, and the files can be read directly,
-or an auxiliary streaming services can read from the files and serve the data over a remote interface.
-
-##### Encoding
-
-For each pair of `BeginBlock` requests and responses, a file is created and named `block-{N}-begin`, where N is the block number.
-At the head of this file the length-prefixed protobuf encoded `BeginBlock` request is written.
-At the tail of this file the length-prefixed protobuf encoded `BeginBlock` response is written.
-In between these two encoded messages, the state changes that occurred due to the `BeginBlock` request are written chronologically as
-a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
-is configured to listen to.
-
-For each pair of `DeliverTx` requests and responses, a file is created and named `block-{N}-tx-{M}` where N is the block number and M
-is the tx number in the block (i.e. 0, 1, 2...).
-At the head of this file the length-prefixed protobuf encoded `DeliverTx` request is written.
-At the tail of this file the length-prefixed protobuf encoded `DeliverTx` response is written.
-In between these two encoded messages, the state changes that occurred due to the `DeliverTx` request are written chronologically as
-a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
-is configured to listen to.
-
-For each pair of `EndBlock` requests and responses, a file is created and named `block-{N}-end`, where N is the block number.
-At the head of this file the length-prefixed protobuf encoded `EndBlock` request is written.
-At the tail of this file the length-prefixed protobuf encoded `EndBlock` response is written.
-In between these two encoded messages, the state changes that occurred due to the `EndBlock` request are written chronologically as
-a series of length-prefixed protobuf encoded `StoreKVPair`s representing `Set` and `Delete` operations within the KVStores the service
-is configured to listen to.
-
-##### Decoding
-
-To decode the files written in the above format we read all the bytes from a given file into memory and segment them into proto
-messages based on the length-prefixing of each message. Once segmented, it is known that the first message is the ABCI request,
-the last message is the ABCI response, and that every message in between is a `StoreKVPair`. This enables us to decode each segment into
-the appropriate message type.
-
-The type of ABCI req/res, the block height, and the transaction index (where relevant) is known
-from the file name, and the KVStore each `StoreKVPair` originates from is known since the `StoreKey` is included as a field in the proto message.
-
-##### Implementation example
-
-```go
-type BaseApp struct {
-
-    ...
-
-    // abciListenersAsync for determining if abciListeners will run asynchronously.
-    // When abciListenersAsync=false and stopNodeOnABCIListenerErr=false listeners will run synchronized but will not stop the node.
-    // When abciListenersAsync=true stopNodeOnABCIListenerErr will be ignored.
-    abciListenersAsync bool
-
-    // stopNodeOnABCIListenerErr halts the node when ABCI streaming service listening results in an error.
-    // stopNodeOnABCIListenerErr=true must be paired with abciListenersAsync=false.
-    stopNodeOnABCIListenerErr bool
-}
-```
-
-#### ABCI Event Hooks
-
-We will modify the `FinalizeBlock` and `Commit` methods to pass ABCI requests and responses
-to any streaming service hooks registered with the `BaseApp`.
-
-```go
-func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
-
-    var abciRes abci.ResponseFinalizeBlock
-    defer func() {
-        // call the streaming service hook with the FinalizeBlock messages
-        for _, abciListener := range app.abciListeners {
-            ctx := app.finalizeState.ctx
-            blockHeight := ctx.BlockHeight()
-            if app.abciListenersAsync {
-                go func(req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) {
-                    if err := app.abciListener.FinalizeBlock(blockHeight, req, res); err != nil {
-                        app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
-                    }
-                }(req, abciRes)
-            } else {
-                if err := app.abciListener.ListenFinalizeBlock(blockHeight, req, res); err != nil {
-                    app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
-                    if app.stopNodeOnABCIListenerErr {
-                        os.Exit(1)
-                    }
-                }
-            }
-        }
-    }()
-
-    ...
-
-    return abciRes
-}
-```
-
-```go
-func (app *BaseApp) Commit() abci.ResponseCommit {
-
-    ...
-
-    res := abci.ResponseCommit{
-        Data:         commitID.Hash,
-        RetainHeight: retainHeight,
-    }
-
-    // call the streaming service hook with the Commit messages
-    for _, abciListener := range app.abciListeners {
-        ctx := app.deliverState.ctx
-        blockHeight := ctx.BlockHeight()
-        changeSet := app.cms.PopStateCache()
-        if app.abciListenersAsync {
-            go func(res abci.ResponseCommit, changeSet []store.StoreKVPair) {
-                if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
-                    app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
-                }
-            }(res, changeSet)
-        } else {
-            if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
-                app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
-                if app.stopNodeOnABCIListenerErr {
-                    os.Exit(1)
-                }
-            }
-        }
-    }
-
-    ...
-
-    return res
-}
-```
-
-#### Go Plugin System
-
-We propose a plugin architecture to load and run `Streaming` plugins and other types of implementations. We will introduce a plugin
-system over gRPC that is used to load and run Cosmos-SDK plugins. The plugin system uses [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin).
-Each plugin must have a struct that implements the `plugin.Plugin` interface and an `Impl` interface for processing messages over gRPC.
-Each plugin must also have a message protocol defined for the gRPC service:
-
-```go
-// streaming/plugins/abci/{plugin_version}/interface.go
-
-// Handshake is a common handshake that is shared by streaming and host.
-// This prevents users from executing bad plugins or executing a plugin
-// directory. It is a UX feature, not a security feature.
-var Handshake = plugin.HandshakeConfig{
-    ProtocolVersion:  1,
-    MagicCookieKey:   "ABCI_LISTENER_PLUGIN",
-    MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
+    // Stream is the streaming service loop, awaits kv pairs and writes them to a destination stream or file
+    Stream(wg *sync.WaitGroup) error
+    // Listeners returns the streaming service's listeners for the BaseApp to register
+    Listeners() map[types.StoreKey][]store.WriteListener
+    // ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
+    ABCIListener
+    // Closer interface
+    io.Closer
 }
 
-// ListenerPlugin is the base struct for all kinds of go-plugin implementations
-// It will be included in interfaces of different Plugins
-type ABCIListenerPlugin struct {
-    // GRPCPlugin must still implement the Plugin interface
-    plugin.Plugin
-    // Concrete implementation, written in Go. This is only used for plugins
-    // that are written in Go.
-    Impl baseapp.ABCIListener
-}
-
-#### Auxiliary streaming service
-
-The `plugin.Plugin` interface has two methods `Client` and `Server`. For our GRPC service these are `GRPCClient` and `GRPCServer`
-The `Impl` field holds the concrete implementation of our `baseapp.ABCIListener` interface written in Go.
-Note: this is only used for plugin implementations written in Go.
-
-The advantage of having such a plugin system is that within each plugin authors can define the message protocol in a way that fits their use case.
-For example, when state change listening is desired, the `ABCIListener` message protocol can be defined as below (*for illustrative purposes only*).
-When state change listening is not desired than `ListenCommit` can be omitted from the protocol.
-
-```protobuf
-syntax = "proto3";
-
-...
-
-message Empty {}
-
-message ListenFinalizeBlockRequest {
-  RequestFinalizeBlock  req = 1;
-  ResponseFinalizeBlock res = 2;
-}
-message ListenCommitRequest {
-  int64                block_height = 1;
-  ResponseCommit       res          = 2;
-  repeated StoreKVPair changeSet    = 3;
-}
+#### BaseApp registration
 
 // plugin that listens to state changes
 service ABCIListenerService {
@@ -442,15 +289,15 @@ service ABCIListenerService {
 ```
 
 ```go
-// SetStreamingService is used to register a streaming service with the BaseApp
+// SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
 func (app *BaseApp) SetStreamingService(s StreamingService) {
-	// set the listeners for each StoreKey
+	// add the listeners for each StoreKey
 	for key, lis := range s.Listeners() {
 		app.cms.AddListeners(key, lis)
 	}
-	// register the streaming service hooks within the BaseApp
-	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context using these hooks
-	app.hooks = append(app.hooks, s)
+	// register the StreamingService within the BaseApp
+	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
+	app.abciListeners = append(app.abciListeners, s)
 }
 ```
 
@@ -463,10 +310,14 @@ var (
     _ baseapp.ABCIListener = (*GRPCClient)(nil)
 )
 
-// GRPCClient is an implementation of the ABCIListener and ABCIListenerPlugin interfaces that talks over RPC.
-type GRPCClient struct {
-    client ABCIListenerServiceClient
-}
+	defer func() {
+		// call the hooks with the BeginBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "BeginBlock listening hook failed, height: %d", req.Header.Height))
+			}
+		}
+	}()
 
 func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
@@ -486,130 +337,144 @@ type GRPCServer struct {
     Impl baseapp.ABCIListener
 }
 
-func (m *GRPCServer) ListenFinalizeBlock(ctx context.Context, req *ListenFinalizeBlockRequest) (*Empty, error) {
-    return &Empty{}, m.Impl.ListenFinalizeBlock(ctx, req.Req, req.Res)
-}
+  defer func() {
+		// Call the streaming service hooks with the EndBlock messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrapf(err, "EndBlock listening hook failed, height: %d", req.Height))
+			}
+		}
+  }()
 
 func (m *GRPCServer) ListenCommit(ctx context.Context, req *ListenCommitRequest) (*Empty, error) {
     return &Empty{}, m.Impl.ListenCommit(ctx, req.Res, req.ChangeSet)
 }
 
-```
+```go
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+
+	defer func() {
+		// call the hooks with the DeliverTx messages
+		for _, streamingListener := range app.abciListeners {
+			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
+				panic(sdkerrors.Wrap(err, "DeliverTx listening hook failed"))
+			}
+		}
+	}()
 
 And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are written in Go*):
 
-```go
-// streaming/plugins/abci/{plugin_version}/impl/plugin.go
-
-// Plugins are pre-compiled and loaded by the plugin system
-
-// ABCIListener is the implementation of the baseapp.ABCIListener interface
-type ABCIListener struct{}
-
-func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
-    // send data to external system
-}
-
-func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
-    // send data to external system
-}
-
-func main() {
-    plugin.Serve(&plugin.ServeConfig{
-        HandshakeConfig: grpc_abci_v1.Handshake,
-        Plugins: map[string]plugin.Plugin{
-           "grpc_plugin_v1": &grpc_abci_v1.ABCIListenerGRPCPlugin{Impl: &ABCIListenerPlugin{}},
-        },
-
-```toml
-[store]
-    streamers = [ # if len(streamers) > 0 we are streaming
-        "file",
-    ]
-
-[streamers]
-    [streamers.file]
-        keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
-        write_dir = "path to the write directory"
-        prefix = "optional prefix to prepend to the generated file names"
-```
-
-We will introduce a plugin loading system that will return `(interface{}, error)`.
-This provides the advantage of using versioned plugins where the plugin interface and gRPC protocol change over time.
-In addition, it allows for building independent plugin that can expose different parts of the system over gRPC.
-
-Each configured streamer will receive the
-
-```go
-// ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error)
-
-// ServiceType enum for specifying the type of StreamingService
-type ServiceType int
-
-const (
-  Unknown ServiceType = iota
-  File
-  // add more in the future
-)
-
-// NewStreamingServiceType returns the streaming.ServiceType corresponding to the provided name
-func NewStreamingServiceType(name string) ServiceType {
-  switch strings.ToLower(name) {
-  case "file", "f":
-    return File
-  default:
-    return Unknown
-  }
-}
-
-// String returns the string name of a streaming.ServiceType
-func (sst ServiceType) String() string {
-  switch sst {
-  case File:
-    return "file"
-  default:
-    return ""
-  }
-}
-
-// ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to streaming.ServiceConstructors
-var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
-  File: NewFileStreamingService,
-}
-
-// ServiceTypeFromString returns the streaming.ServiceConstructor corresponding to the provided name
-func ServiceTypeFromString(name string) (ServiceConstructor, error) {
-  ssType := NewStreamingServiceType(name)
-  if ssType == Unknown {
-    return nil, fmt.Errorf("unrecognized streaming service name %s", name)
-  }
-  if constructor, ok := ServiceConstructorLookupTable[ssType]; ok {
-    return constructor, nil
-  }
-  return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
-}
-
-// NewFileStreamingService is the streaming.ServiceConstructor function for creating a FileStreamingService
-func NewFileStreamingService(opts serverTypes.AppOptions, keys []sdk.StoreKey, marshaller codec.BinaryMarshaler) (sdk.StreamingService, error) {
-  filePrefix := cast.ToString(opts.Get("streamers.file.prefix"))
-  fileDir := cast.ToString(opts.Get("streamers.file.write_dir"))
-  return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
+	return res
 }
 ```
 
-The `NewStreamingPlugin` and `RegisterStreamingPlugin` functions are used to register a plugin with the App's BaseApp.
+```golang
+func (app *BaseApp) Commit() abci.ResponseCommit {
+	header := app.deliverState.ctx.BlockHeader()
+	retainHeight := app.GetBlockRetentionHeight(header.Height)
+
+	// Write the DeliverTx state into branched storage and commit the MultiStore.
+	// The write to the DeliverTx state writes all state transitions to the root
+	// MultiStore (app.cms) so when Commit() is called is persists those values.
+	app.deliverState.ms.Write()
+	commitID := app.cms.Commit()
+
+	res := abci.ResponseCommit{
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
+	}
+
+	// call the hooks with the Commit message
+	for _, streamingListener := range app.abciListeners {
+		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
+			panic(sdkerrors.Wrapf(err, "Commit listening hook failed, height: %d", header.Height))
+		}
+	}
+
+	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
+  ...
+}
+
+#### Error Handling And Async Consumers
+
+`ABCIListener`s are called synchronously inside the consensus state machine, the returned error causes panic which in turn halt the consensus state machine. The implementer should be careful not to break consensus unexpectedly or slow down it too much.
+
+For some async use cases, one can spawn a go-routine internanlly to avoid slow down consensus state machine, and handle the errors internally and always returns `nil` to avoid halting consensus state machine on error.
+
+Furthermore, for most of the cases, we only need to use the builtin file streamer to listen to state changes directly inside cosmos-sdk, the other consumers should subscribe to the file streamer output externally.
+
+#### File Streamer
+
+We provide a minimal filesystem based implementation inside cosmos-sdk, and provides options to write output files reliably, the output files can be further consumed by external consumers, so most of the state listeners actually don't need to live inside the sdk and node, which improves the node robustness and simplify sdk internals.
+
+The file streamer can be wired in app like this:
+```golang
+exposeStoreKeys := ... // decide the key list to listen
+service, err := file.NewStreamingService(streamingDir, "", exposeStoreKeys, appCodec, logger)
+bApp.SetStreamingService(service)
+```
+
+#### Plugin system
+
+We propose a plugin architecture to load and run `StreamingService` implementations. We will introduce a plugin
+loading/preloading system that is used to load, initialize, inject, run, and stop Cosmos-SDK plugins. Each plugin
+must implement the following interface:
+
+```go
+// Plugin is the base interface for all kinds of cosmos-sdk plugins
+// It will be included in interfaces of different Plugins
+type Plugin interface {
+	// Name should return unique name of the plugin
+	Name() string
+
+	// Version returns current version of the plugin
+	Version() string
+
+	// Init is called once when the Plugin is being loaded
+	// The plugin is passed the AppOptions for configuration
+	// A plugin will not necessarily have a functional Init
+	Init(env serverTypes.AppOptions) error
+
+	// Closer interface for shutting down the plugin process
+	io.Closer
+}
+```
+
+The `Name` method returns a plugin's name.
+The `Version` method returns a plugin's version.
+The `Init` method initializes a plugin with the provided `AppOptions`.
+The io.Closer is used to shut down the plugin service.
+
+For the purposes of this ADR we introduce a single kind of plugin- a state streaming plugin.
+We will define a `StateStreamingPlugin` interface which extends the above `Plugin` interface to support a state streaming service.
+
+```go
+// StateStreamingPlugin interface for plugins that load a baseapp.StreamingService onto a baseapp.BaseApp
+type StateStreamingPlugin interface {
+	// Register configures and registers the plugin streaming service with the BaseApp
+	Register(bApp *baseapp.BaseApp, marshaller codec.BinaryCodec, keys map[string]*types.KVStoreKey) error
+
+	// Start starts the background streaming process of the plugin streaming service
+	Start(wg *sync.WaitGroup) error
+
+	// Plugin is the base Plugin interface
+	Plugin
+}
+```
+
+The `Register` method is used during App construction to register the plugin's streaming service with an App's BaseApp using the BaseApp's `SetStreamingService` method.
+The `Start` method is used during App construction to start the registered plugin streaming services and maintain synchronization with them.
 
 e.g. in `NewSimApp`:
 
 ```go
 func NewSimApp(
-    logger log.Logger,
-    db corestore.KVStoreWithBatch,
-    traceStore io.Writer,
-    loadLatest bool,
-    appOpts servertypes.AppOptions,
-    baseAppOptions ...func(*baseapp.BaseApp),
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 
     ...
@@ -640,48 +505,36 @@ func NewSimApp(
         }
     }
 
-    return app
-```
+	keys := sdk.NewKVStoreKeys(
+	authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+	minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
+	govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
+	evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+	)
 
-	// configure state listening capabilities using AppOptions
-	listeners := cast.ToStringSlice(appOpts.Get("store.streamers"))
-	for _, listenerName := range listeners {
-		// get the store keys allowed to be exposed for this streaming service 
-		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
-		var exposeStoreKeys []sdk.StoreKey
-		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys 
-			exposeStoreKeys = make([]sdk.StoreKey, 0, len(keys))
-			for _, storeKey := range keys {
-				exposeStoreKeys = append(exposeStoreKeys, storeKey)
-			}
-		} else {
-			exposeStoreKeys = make([]sdk.StoreKey, 0, len(exposeKeyStrs))
-			for _, keyStr := range exposeKeyStrs {
-				if storeKey, ok := keys[keyStr]; ok {
-					exposeStoreKeys = append(exposeStoreKeys, storeKey)
-				}
-			}
-		}
-		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything 
-			continue
-		}
-		// get the constructor for this listener name
-		constructor, err := baseapp.NewStreamingServiceConstructor(listenerName)
+	pluginsOnKey := fmt.Sprintf("%s.%s", plugin.PLUGINS_TOML_KEY, plugin.PLUGINS_ON_TOML_KEY)
+	if cast.ToBool(appOpts.Get(pluginsOnKey)) {
+		// this loads the preloaded and any plugins found in `plugins.dir`
+		pluginLoader, err := loader.NewPluginLoader(appOpts, logger)
 		if err != nil {
-			tmos.Exit(err.Error()) // or continue?
+			// handle error
 		}
-		// generate the streaming service using the constructor, appOptions, and the StoreKeys we want to expose
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
-		if err != nil {
-			tmos.Exit(err.Error())
+
+		// initialize the loaded plugins
+		if err := pluginLoader.Initialize(); err != nil {
+			// handle error
 		}
-		// register the streaming service with the BaseApp
-		bApp.RegisterStreamingService(streamingService)
-		// waitgroup and quit channel for optional shutdown coordination of the streaming service
+
+		// register the plugin(s) with the BaseApp
+		if err := pluginLoader.Inject(bApp, appCodec, keys); err != nil {
+			// handle error
+		}
+
+		// start the plugin services, optionally use wg to synchronize shutdown using io.Closer
 		wg := new(sync.WaitGroup)
-		quitChan := make(chan struct{}))
-		// kick off the background streaming service loop
-		streamingService.Stream(wg, quitChan) // maybe this should be done from inside BaseApp instead?
+		if err := pluginLoader.Start(wg); err != nil {
+			// handler error
+		}
 	}
 
 The plugin system will be configured within an App's TOML configuration files.
@@ -709,16 +562,52 @@ async = false
 stop-node-on-err = true
 ```
 
-There will be four parameters for configuring `ABCIListener` plugin: `streaming.abci.plugin`, `streaming.abci.keys`, `streaming.abci.async` and `streaming.abci.stop-node-on-err`.
-`streaming.abci.plugin` is the name of the plugin we want to use for streaming, `streaming.abci.keys` is a set of store keys for stores it listens to,
-`streaming.abci.async` is bool enabling asynchronous listening and `streaming.abci.stop-node-on-err` is a bool that stops the node when true and when operating
-on synchronized mode `streaming.abci.async=false`. Note that `streaming.abci.stop-node-on-err=true` will be ignored if `streaming.abci.async=true`.
 
-The configuration above support additional streaming plugins by adding the plugin to the `[streaming]` configuration section
-and registering the plugin with `RegisterStreamingPlugin` helper function.
+#### Configuration
 
-Note the that each plugin must include `streaming.{service}.plugin` property as it is a requirement for doing the lookup and registration of the plugin
-with the App. All other properties are unique to the individual services.
+The plugin system will be configured within an app's app.toml file.
+
+```toml
+[plugins]
+    on = false # turn the plugin system, as a whole, on or off
+    enabled = ["list", "of", "plugin", "names", "to", "enable"]
+    dir = "the directory to load non-preloaded plugins from; defaults to cosmos-sdk/plugin/plugins"
+```
+
+There will be three parameters for configuring the plugin system: `plugins.on`, `plugins.enabled` and `plugins.dir`.
+`plugins.on` is a bool that turns on or off the plugin system at large, `plugins.dir` directs the system to a directory
+to load plugins from, and `plugins.enabled` provides `opt-in` semantics to plugin names to enable (including preloaded plugins).
+
+Configuration of a given plugin is ultimately specific to the plugin, but we will introduce some standards here:
+
+Plugin TOML configuration should be split into separate sub-tables for each kind of plugin (e.g. `plugins.streaming`).
+
+Within these sub-tables, the parameters for a specific plugin of that kind are included in another sub-table (e.g. `plugins.streaming.file`).
+It is generally expected, but not required, that a streaming service plugin can be configured with a set of store keys
+(e.g. `plugins.streaming.file.keys`) for the stores it listens to and a flag (e.g. `plugins.streaming.file.halt_app_on_delivery_error`)
+that signifies whether the service operates in a fire-and-forget capacity, or stop the BaseApp when an error occurs in
+any of `ListenBeginBlock`, `ListenEndBlock` and `ListenDeliverTx`.
+
+e.g.
+
+```toml
+[plugins]
+    on = false # turn the plugin system, as a whole, on or off
+    enabled = ["list", "of", "plugin", "names", "to", "enable"]
+    dir = "the directory to load non-preloaded plugins from; defaults to "
+    [plugins.streaming] # a mapping of plugin-specific streaming service parameters, mapped to their plugin name
+        [plugins.streaming.file] # the specific parameters for the file streaming service plugin
+            keys = ["list", "of", "store", "keys", "we", "want", "to", "expose", "for", "this", "streaming", "service"]
+            write_dir = "path to the write directory"
+            prefix = "optional prefix to prepend to the generated file names"
+            halt_app_on_delivery_error = "false" # false == fire-and-forget; true == stop the application
+        [plugins.streaming.kafka]
+            keys = []
+            topic_prefix = "block" # Optional prefix for topic names where data will be stored.
+            flush_timeout_ms = 5000 # Flush and wait for outstanding messages and requests to complete delivery when calling `StreamingService.Close(). (milliseconds)
+            halt_app_on_delivery_error = true # Whether or not to halt the application when plugin fails to deliver message(s).
+        ...
+```
 
 #### Encoding and decoding streams
 
@@ -734,7 +623,7 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Backwards Compatibility
 
-* This ADR changes the `CommitMultiStore` interface, implementations supporting the previous version of this interface will not support the new one
+* This ADR changes the `CommitMultiStore` interface, implementations supporting the previous version of these interfaces will not support the new ones
 
 ### Positive
 
@@ -742,7 +631,7 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Negative
 
-* Changes `CommitMultiStore` interface and its implementations
+* Changes `CommitMultiStore`interface
 
 ### Neutral
 

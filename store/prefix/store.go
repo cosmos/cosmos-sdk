@@ -5,9 +5,9 @@ import (
 	"errors"
 	"io"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var _ types.KVStore = Store{}
@@ -57,7 +57,7 @@ func (s Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.Cach
 	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-// Get implements KVStore
+// Implements KVStore
 func (s Store) Get(key []byte) []byte {
 	res := s.parent.Get(s.key(key))
 	return res

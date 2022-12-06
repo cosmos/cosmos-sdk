@@ -556,7 +556,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 		}
 		stores[k] = store
 	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -579,34 +579,9 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			// version does not exist or is pruned, an error should be returned.
 			var err error
 			cacheStore, err = store.(*iavl.Store).GetImmutable(version)
-			// if we got error from loading a module store
-			// we fetch commit info of this version
-			// we use commit info to check if the store existed at this version or not
 			if err != nil {
-				if commitInfo == nil {
-					var errCommitInfo error
-					commitInfo, errCommitInfo = rs.GetCommitInfo(version)
-
-					if errCommitInfo != nil {
-						return nil, errCommitInfo
-					}
-
-					for _, storeInfo := range commitInfo.StoreInfos {
-						storeInfos[storeInfo.Name] = true
-					}
-				}
-
-				// If the store existed at this version, it means there's actually an error
-				// getting the root store at this version.
-				if storeInfos[key.Name()] {
-					return nil, err
-				}
-
-				// If the store donesn't exist at this version, create a dummy one to prevent
-				// nil pointer panic in newer query APIs.
-				cacheStore = dbadapter.Store{DB: coretesting.NewMemDB()}
+				return nil, err
 			}
-
 		default:
 			cacheStore = store
 		}
@@ -620,7 +595,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		cachedStores[key] = cacheStore
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext()), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does

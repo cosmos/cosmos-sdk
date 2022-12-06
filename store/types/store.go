@@ -159,9 +159,6 @@ type MultiStore interface {
 	// implied that the caller should update the context when necessary between
 	// tracing operations. The modified MultiStore is returned.
 	SetTracingContext(TraceContext) MultiStore
-
-	// LatestVersion returns the latest version in the store
-	LatestVersion() int64
 }
 
 // CacheMultiStore is from MultiStore.CacheMultiStore()....
@@ -222,6 +219,13 @@ type CommitMultiStore interface {
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
+
+	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
+	ListeningEnabled(key StoreKey) bool
+
+	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
+	// It appends the listeners to a current set, if one already exists
+	AddListeners(key StoreKey, listeners []WriteListener)
 }
 
 //---------subsp-------------------------------

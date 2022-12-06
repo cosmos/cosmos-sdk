@@ -26,3 +26,37 @@ func (fl *MemoryListener) PopStateCache() []*StoreKVPair {
 	fl.stateCache = nil
 	return res
 }
+
+// MemoryListener listens to the state writes and accumulate the records in memory.
+type MemoryListener struct {
+	key        StoreKey
+	stateCache []StoreKVPair
+}
+
+// NewMemoryListener creates a listener that accumulate the state writes in memory.
+func NewMemoryListener(key StoreKey) *MemoryListener {
+	return &MemoryListener{key: key}
+}
+
+// OnWrite implements WriteListener interface
+func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
+	fl.stateCache = append(fl.stateCache, StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Delete:   delete,
+		Key:      key,
+		Value:    value,
+	})
+	return nil
+}
+
+// PopStateCache returns the current state caches and set to nil
+func (fl *MemoryListener) PopStateCache() []StoreKVPair {
+	res := fl.stateCache
+	fl.stateCache = nil
+	return res
+}
+
+// StoreKey returns the storeKey it listens to
+func (fl *MemoryListener) StoreKey() StoreKey {
+	return fl.key
+}

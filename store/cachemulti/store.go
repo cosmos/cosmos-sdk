@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -42,9 +41,6 @@ func NewFromKVStore(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	if listeners == nil {
-		listeners = make(map[types.StoreKey][]types.WriteListener)
-	}
 	cms := Store{
 		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
@@ -61,9 +57,6 @@ func NewFromKVStore(
 
 			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
 		}
-		if cms.ListeningEnabled(key) {
-			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])
-		}
 		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}
 
@@ -73,10 +66,10 @@ func NewFromKVStore(
 // NewStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
-	db corestore.KVStoreWithBatch, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
+	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
 	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext, listeners)
+	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
 }
 
 func newCacheMultiStoreFromCMS(cms Store) Store {
@@ -85,8 +78,7 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	// don't pass listeners to nested cache store.
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, nil)
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -115,11 +107,6 @@ func (cms Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 // TracingEnabled returns if tracing is enabled for the MultiStore.
 func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
-}
-
-// LatestVersion returns the branch version of the store
-func (cms Store) LatestVersion() int64 {
-	panic("cannot get latest version from branch cached multi-store")
 }
 
 // GetStoreType returns the type of the store.

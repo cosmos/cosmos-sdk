@@ -10,15 +10,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
-
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type FileGenesisSource struct {
-	sourceDir           string
-	moduleName          string
-	moduleRootJson      json.RawMessage // the RawMessage from the genesis.json app_state.<module> that got passed into InitCHain
+	sourceDir  string
+	moduleName string
+
+	// the RawMessage from the genesis.json app_state.<module> that got passed into InitChain
+	moduleRootJson json.RawMessage
 }
 
 const (
@@ -29,9 +30,14 @@ const (
 
 // NewFileGenesisSource returns a new GenesisSource for the provided
 // source directory and the provided module name where it is assumed
-// that it contains encoded JSON data in the file.
-func NewFileGenesisSource(sourceDir, moduleName string, moduleRootJson json.RawMessage) GenesisSource {
-	return &FileGenesisSource{sourceDir: filepath.Clean(sourceDir), moduleName: moduleName}
+// that it contains encoded JSON data in the file or in the moduleState
+// of the appState be passed from RequestInitChain.
+func NewFileGenesisSource(sourceDir, moduleName string, rawModuleState json.RawMessage) GenesisSource {
+	return &FileGenesisSource{
+		sourceDir:      filepath.Clean(sourceDir),
+		moduleName:     moduleName,
+		moduleRootJson: rawModuleState,
+	}
 }
 
 // OpenReader opens the source field reading from the given parameters,
@@ -39,65 +45,36 @@ func NewFileGenesisSource(sourceDir, moduleName string, moduleRootJson json.RawM
 // It will try to open the field in order following by:
 // <sourceDir>/<module>/<field>.json
 // <field> key inside <sourceDir>/<module>.json
-// app_state.<module>.<field> key in <sourceDir>/genesis.json
+// app_state.<module>.<field> key from moduleRootJson
 func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
-	var rawBz json.RawMessage
+	// try reading genesis data from <sourceDir>/<module>/<field>.json
+	fName := fmt.Sprintf("%s.json", field)
+	fPath := filepath.Join(f.sourceDir, f.moduleName)
 
-	// if moduleRootJson is not nil, we can skip reading data from file
-	if f.moduleRootJson != nil {
-		rawBz = f.moduleRootJson
+	fp, err := os.Open(filepath.Clean(filepath.Join(fPath, fName)))
+	if err == nil {
+		return fp, nil
 	}
 
-	if rawBz == nil {
-		// try reading genesis data from <sourceDir>/<module>/<field>.json
-		fName := fmt.Sprintf("%s.json", field)
-		fPath := filepath.Join(f.sourceDir, f.moduleName)
-
-		fp, err := os.Open(filepath.Clean(filepath.Join(fPath, fName)))
-		if err == nil {
-			return fp, nil
-		}
-
-		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("unexpected error: %w", err)
-		}
-
-		// if cannot find it, try reading from <sourceDir>/<module>.json
-		// or <sourceDir>/genesis.json
-		rawBz, err = f.ReadRawJSON()
-		if err != nil {
-			return nil, err
-		}
+	if !os.IsNotExist(err) {
+		return nil, fmt.Errorf("unexpected error: %w", err)
 	}
 
-	if !f.readFromRootGenesis {
-		// rawBz has been loaded from the <module>.json
+	// if cannot find it, try reading from <sourceDir>/<module>.json
+	rawBz, err := f.ReadRawJSON()
+	if err == nil {
 		f.moduleRootJson = rawBz
 		return f.unmarshalRawModuleWithField(rawBz, field)
 	}
 
-	// Otherwise let's try to read the the root genesis.
-
-	// unmarshal module rawJSON from genesis.AppState
-	doc := tmtypes.GenesisDoc{}
-	err := json.Unmarshal(rawBz, &doc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal rawJSON to GenesisDoc: %w", err)
+	if !os.IsNotExist(err) {
+		return nil, err
 	}
 
-	appState := make(map[string]json.RawMessage)
-	err = json.Unmarshal(doc.AppState, &appState)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal app state from GenesisDoc: %w", err)
+	if f.moduleRootJson == nil {
+		return nil, fmt.Errorf("failed to retrieve the state of %s from moduleRootJson", f.moduleName)
 	}
-
-	moduleState := appState[f.moduleName]
-	if moduleState == nil {
-		return nil, fmt.Errorf("failed to retrieve module state %s from genesis.json", f.moduleName)
-	}
-	f.moduleRootJson = moduleState
-
-	return f.unmarshalRawModuleWithField(moduleState, field)
+	return f.unmarshalRawModuleWithField(f.moduleRootJson, field)
 }
 
 func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field string) (io.ReadCloser, error) {
@@ -116,40 +93,30 @@ func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field stri
 	return io.NopCloser(bytes.NewReader(fieldRawData)), nil
 }
 
-// ReadMessage reads rawJSON data from source file and unmarshal it into proto.Message
+// ReadMessage reads rawJSON data from source file or moduleRawData,
+// and then unmarshal it into proto.Message
 func (f *FileGenesisSource) ReadMessage(msg proto.Message) error {
 	bz, err := f.ReadRawJSON()
 	if err != nil {
-		return err
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("unexpected error: %w", err)
+		}
+
+		// read the data from moduleRootJson if the source file doesn't exist
+		bz = f.moduleRootJson
 	}
-	return proto.Unmarshal(bz, msg)
+	return protojson.Unmarshal(bz, msg)
 }
 
 // ReadRawJSON returns a json.RawMessage read from the source file given by the
-// source directory and the module name. If it cannot open <sourceDir>/<module>.json,
-// it will try to read raw JSON data from <sourceDir>/genesis.json
+// source directory and the module name.
 func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
-	if len(f.moduleName) == 0 {
-		return nil, errors.New("failed to read RawJSON: empty module name")
-	}
-
 	fName := fmt.Sprintf("%s.json", f.moduleName)
 	fPath := filepath.Join(f.sourceDir, fName)
 
 	fp, err := os.Open(filepath.Clean(fPath))
 	if err != nil {
-		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("failed to open %q: %w", fPath, err)
-		}
-
-		// try reading from <sourceDir>/genesis.json if it's not able to read from
-		// <sourceDir>/<moduleName>.json
-		fPath = filepath.Join(f.sourceDir, "genesis.json")
-		fp, err = os.Open(filepath.Clean(fPath))
-		if err != nil {
-			return nil, fmt.Errorf("failed to open file from %s: %w", fPath, err)
-		}
-		f.readFromRootGenesis = true
+		return nil, err
 	}
 
 	defer func() {

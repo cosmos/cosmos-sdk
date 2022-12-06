@@ -50,27 +50,22 @@ class ABCIListenerServiceServicer(abci_v1_grpc.ABCIListenerServiceServicer):
 
     def ListenBeginBlock(self, request, context):
         block_height = request.req.header.height
-        self.producer.produce("raw_begin_block_req", key=str(block_height), value=str(request.req), callback=self.acked)
-        self.producer.produce("raw_begin_block_res", key=str(block_height), value=str(request.res), callback=self.acked)
+        self.producer.produce("raw_begin_block", key=str(block_height), value=str(request), callback=self.acked)
         return abci_v1.Empty()
 
     def ListenEndBlock(self, request, context):
         block_height = request.req.height
-        self.producer.produce("raw-end-block-req", key=str(block_height), value=str(request.req), callback=self.acked)
-        self.producer.produce("raw-end-block-res", key=str(block_height), value=str(request.res), callback=self.acked)
+        self.producer.produce("raw-end-block", key=str(block_height), value=str(request), callback=self.acked)
         return abci_v1.Empty()
 
     def ListenDeliverTx(self, request, context):
         block_height = request.block_height
-        self.producer.produce("raw-deliver-tx-req", key=str(block_height), value=str(request.req), callback=self.acked)
-        self.producer.produce("raw-deliver-tx-res", key=str(block_height), value=str(request.res), callback=self.acked)
+        self.producer.produce("raw-deliver-tx", key=str(block_height), value=str(request), callback=self.acked)
         return abci_v1.Empty()
 
     def ListenCommit(self, request, context):
         block_height = request.block_height
-        self.producer.produce("raw-commit-res", key=str(block_height), value=str(request.res), callback=self.acked)
-        self.producer.produce("raw-state-change", key=str(block_height), value=str(request.change_set),
-                              callback=self.acked)
+        self.producer.produce("raw-commit", key=str(block_height), value=str(request), callback=self.acked)
         return abci_v1.Empty()
 
 

@@ -200,10 +200,22 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 }
 
-func genesisCommand(encodingConfig params.EncodingConfig) *cobra.Command {
+// genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
+func genesisCommand(encodingConfig params.EncodingConfig, cmds ...*cobra.Command) *cobra.Command {
+	cmd := genesisCoreCommand(encodingConfig)
+
+	for _, sub_cmd := range cmds {
+		cmd.AddCommand(sub_cmd)
+	}
+	return cmd
+}
+
+// genesisCoreCommand adds core sdk's sub-commands into genesis command:
+// -> gentx, migrate, collect-gentxs, validate-genesis, add-genesis-account
+func genesisCoreCommand(encodingConfig params.EncodingConfig) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
-		Short:                      "Genesis subcommands",
+		Short:                      "Application's genesis-related subcommands",
 		DisableFlagParsing:         false,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -222,7 +234,6 @@ func genesisCommand(encodingConfig params.EncodingConfig) *cobra.Command {
 
 	return cmd
 }
-
 func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",

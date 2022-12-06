@@ -36,8 +36,9 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 	return func(ctx Context, tx Tx, simulate bool) (Context, error) {
 		var err error
 
-		// We call each AnteDecorator in the chain in sequential iterative order,
-		// where the next AnteHandler call is a no-op decorator.
+		// We call each AnteHandler in the chain in sequential iterative order,
+		// where the next AnteHandler call is a no-op decorator. We pass the resulting
+		// Context of each call to the next AnteHandler.
 		//
 		// If a recursive approach is used instead, then the next AnteHandler must
 		// be a valid decorator except for the last which should be a Terminator.

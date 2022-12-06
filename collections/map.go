@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"context"
 	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -32,7 +33,7 @@ type Map[K, V any] struct {
 
 // Set maps the provided value to the provided key in the store.
 // Errors with ErrEncoding if key or value encoding fails.
-func (m Map[K, V]) Set(ctx StorageProvider, key K, value V) error {
+func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 	keyBytes, err := m.encodeKey(key)
 	if err != nil {
 		return err
@@ -50,7 +51,7 @@ func (m Map[K, V]) Set(ctx StorageProvider, key K, value V) error {
 // Get returns the value associated with the provided key,
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
-func (m Map[K, V]) Get(ctx StorageProvider, key K) (V, error) {
+func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 	keyBytes, err := m.encodeKey(key)
 	if err != nil {
 		var v V
@@ -73,7 +74,7 @@ func (m Map[K, V]) Get(ctx StorageProvider, key K) (V, error) {
 
 // Has reports whether the key is present in storage or not.
 // Errors with ErrEncoding if key encoding fails.
-func (m Map[K, V]) Has(ctx StorageProvider, key K) (bool, error) {
+func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 	bytesKey, err := m.encodeKey(key)
 	if err != nil {
 		return false, err
@@ -84,7 +85,7 @@ func (m Map[K, V]) Has(ctx StorageProvider, key K) (bool, error) {
 // Remove removes the key from the storage.
 // Errors with ErrEncoding if key encoding fails.
 // If the key does not exist then this is a no-op.
-func (m Map[K, V]) Remove(ctx StorageProvider, key K) error {
+func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 	bytesKey, err := m.encodeKey(key)
 	if err != nil {
 		return err
@@ -93,8 +94,8 @@ func (m Map[K, V]) Remove(ctx StorageProvider, key K) error {
 	return nil
 }
 
-func (m Map[K, V]) getStore(provider StorageProvider) storetypes.KVStore {
-	return provider.KVStore(m.sk)
+func (m Map[K, V]) getStore(ctx context.Context) storetypes.KVStore {
+	return ctx.(StorageProvider).KVStore(m.sk)
 }
 
 func (m Map[K, V]) encodeKey(key K) ([]byte, error) {

@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"context"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -15,23 +16,23 @@ type Item[V any] Map[noKey, V]
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
-func (i Item[V]) Get(ctx StorageProvider) (V, error) {
+func (i Item[V]) Get(ctx context.Context) (V, error) {
 	return (Map[noKey, V])(i).Get(ctx, noKey{})
 }
 
 // Set sets the item in the store. If Value encoding fails then an ErrEncoding is returned.
-func (i Item[V]) Set(ctx StorageProvider, value V) error {
+func (i Item[V]) Set(ctx context.Context, value V) error {
 	return (Map[noKey, V])(i).Set(ctx, noKey{}, value)
 }
 
 // Has reports whether the item exists in the store or not.
 // Returns an error in case
-func (i Item[V]) Has(ctx StorageProvider) (bool, error) {
+func (i Item[V]) Has(ctx context.Context) (bool, error) {
 	return (Map[noKey, V])(i).Has(ctx, noKey{})
 }
 
 // Remove removes the item in the store.
-func (i Item[V]) Remove(ctx StorageProvider) error {
+func (i Item[V]) Remove(ctx context.Context) error {
 	return (Map[noKey, V])(i).Remove(ctx, noKey{})
 }
 

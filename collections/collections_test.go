@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"context"
 	"math"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 var _ StorageProvider = (*mockStorageProvider)(nil)
 
 type mockStorageProvider struct {
+	context.Context
 	store types.KVStore
 }
 
@@ -19,7 +21,7 @@ func (m mockStorageProvider) KVStore(key types.StoreKey) types.KVStore {
 	return m.store
 }
 
-func deps() (types.StoreKey, StorageProvider) {
+func deps() (types.StoreKey, context.Context) {
 	kv := mem.NewStore()
 	key := types.NewKVStoreKey("test")
 	return key, mockStorageProvider{store: kv}

@@ -84,6 +84,94 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestGRPCQueryTallyResult() {
+	suite.reset()
+	ctx, queryClient := suite.ctx, suite.queryClient
+
+	var (
+		req      *v1.QueryTallyResultRequest
+		expTally *v1.QueryTallyResultResponse
+		// proposal v1.Proposal
+	)
+
+	testCases := []struct {
+		msg      string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"empty request",
+			func() {
+				req = &v1.QueryTallyResultRequest{}
+			},
+			false,
+		},
+		{
+			"non existing proposal request",
+			func() {
+				req = &v1.QueryTallyResultRequest{ProposalId: 2}
+			},
+			false,
+		},
+		{
+			"zero proposal id request",
+			func() {
+				req = &v1.QueryTallyResultRequest{ProposalId: 0}
+			},
+			false,
+		},
+		{
+			"valid request",
+			func() {
+				// req = &v1.QueryTallyResultRequest{ProposalId: 1}
+				// proposal, err := suite.govKeeper.SubmitProposal(ctx, TestProposal)
+				// suite.Require().NoError(err)
+				// suite.Require().NotNil(proposal)
+				govAddress := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+				testProposal := []sdk.Msg{
+					v1.NewMsgVote(govAddress, 1, v1.OptionYes, ""),
+				}
+				proposal, err := suite.govKeeper.SubmitProposal(ctx, testProposal, "")
+				suite.Require().NotEmpty(proposal)
+				suite.Require().NoError(err)
+
+				proposal.Status = v1.StatusVotingPeriod
+				suite.govKeeper.SetProposal(ctx, proposal)
+				// suite.Require().NoError(suite.govKeeper.AddVote(ctx, proposal.Id, govAddress, v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				proposal.Status = v1.StatusPassed
+				fmt.Println("proposal.Status : ", proposal.Status)
+
+				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				expTally = &v1.QueryTallyResultResponse{Tally: &v1.TallyResult{
+					YesCount:        "1",
+					AbstainCount:    "0",
+					NoCount:         "0",
+					NoWithVetoCount: "0",
+				}}
+			},
+			true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+			testCase.malleate()
+
+			tallyRes, err := queryClient.TallyResult(gocontext.Background(), req)
+
+			if testCase.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotEmpty(tallyRes.Tally.String())
+				suite.Require().Equal(expTally.String(), tallyRes.Tally.String())
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(tallyRes)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 	suite.reset()
 	ctx, queryClient := suite.ctx, suite.legacyQueryClient

@@ -27,18 +27,13 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	corectx "cosmossdk.io/core/context"
-	corestore "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -477,7 +472,7 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 
 // DefaultBaseappOptions returns the default baseapp options provided by the Cosmos SDK
 func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
-	var cache storetypes.MultiStorePersistentCache
+	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -488,23 +483,12 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		panic(err)
 	}
 
-	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
-	if chainID == "" {
-		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
-		if err != nil {
-			panic(err)
-		}
-		defer reader.Close()
-
-		chainID, err = genutiltypes.ParseChainIDFromGenesis(reader)
-		if err != nil {
-			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
-		}
+	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	if err != nil {
+		panic(err)
 	}
-
-	snapshotStore, err := GetSnapshotStore(appOpts)
+	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
 	if err != nil {
 		panic(err)
 	}
@@ -513,15 +497,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
 	)
-
-	defaultMempool := baseapp.SetMempool(mempool.NoOpMempool{})
-	if maxTxs := cast.ToInt(appOpts.Get(FlagMempoolMaxTxs)); maxTxs >= 0 {
-		defaultMempool = baseapp.SetMempool(
-			mempool.NewSenderNonceMempool(
-				mempool.SenderNonceMaxTxOpt(maxTxs),
-			),
-		)
-	}
 
 	return []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
@@ -535,27 +510,5 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
-		defaultMempool,
-		baseapp.SetChainID(chainID),
-		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
-}
-
-func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
-	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-	snapshotDir := filepath.Join(homeDir, "data", "snapshots")
-	if err := os.MkdirAll(snapshotDir, 0o744); err != nil {
-		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
-	}
-
-	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
-	if err != nil {
-		return nil, err
-	}
-	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
-	if err != nil {
-		return nil, err
-	}
-
-	return snapshotStore, nil
 }

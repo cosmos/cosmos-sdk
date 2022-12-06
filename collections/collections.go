@@ -55,17 +55,21 @@ type KeyCodec[T any] interface {
 	// PutKey writes the key bytes into the buffer. Returns the number of
 	// bytes written. The implementer must expect the buffer to be at least
 	// of length equal to Size(key). The implementer must also return
-	// the bytes written, and they must be equal to Size(key).
+	// the bytes written, and they must be less than or equal to Size(key).
 	PutKey(buffer []byte, key T) (int, error)
 	// ReadKey reads from the provided bytes buffer to decode
 	// the key T. Returns the number of bytes read, the type T
 	// or an error in case of decoding failure.
 	ReadKey(buffer []byte) (int, T, error)
-	// Size returns the size of the key T in binary format.
+	// Size returns the buffer size need to encode key T in binary format.
+        // Implementations should choose the most performant path to compute this
+        // at the risk of over-estimating. In the case of variable-length integers, the max
+        // varint length should usually be returned rather than trying to pre-compute the
+        // exact length.
 	Size(key T) int
 	// Stringify returns a string representation of T.
 	Stringify(key T) string
-	// KeyType returns an identifier for the key.
+	// KeyType returns a string identifier for the type of the key.
 	KeyType() string
 }
 

@@ -19,7 +19,6 @@ type FileGenesisSource struct {
 	sourceDir           string
 	moduleName          string
 	moduleRootJson      json.RawMessage // the RawMessage from the genesis.json app_state.<module> that got passed into InitCHain
-	readFromRootGenesis bool
 }
 
 const (

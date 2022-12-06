@@ -116,3 +116,5 @@ require (
 	pgregory.net/rapid v0.5.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/coinbase/rosetta-sdk-go => github.com/julienrbrt/rosetta-sdk-go v0.0.0-20221206115007-99407ac741f0

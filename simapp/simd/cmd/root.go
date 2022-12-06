@@ -5,25 +5,14 @@ import (
 	"io"
 	"os"
 
-<<<<<<< HEAD
 	"github.com/spf13/cast"
-=======
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 	"github.com/spf13/cobra"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/baseapp"
-=======
-	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/params"
-
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -34,15 +23,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-<<<<<<< HEAD
+
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
-=======
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -256,25 +240,19 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-<<<<<<< HEAD
 type appCreator struct {
 	encCfg params.EncodingConfig
 }
 
 // newApp is an appCreator
 func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-	var cache sdk.MultiStorePersistentCache
-=======
-// newApp creates the application
-func newApp(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	appOpts servertypes.AppOptions,
-) servertypes.Application {
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
+
+	skipUpgradeHeights := make(map[int64]bool)
+	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
+		skipUpgradeHeights[int64(h)] = true
+	}
 
 	return simapp.NewSimApp(
 		logger, db, traceStore, true, skipUpgradeHeights,
@@ -282,21 +260,7 @@ func newApp(
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
 		appOpts,
-<<<<<<< HEAD
-		baseapp.SetPruning(pruningOpts),
-		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
-		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
-		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
-		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
-		baseapp.SetInterBlockCache(cache),
-		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
-		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
-		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
-		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-=======
 		baseappOptions...,
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 	)
 }
 

@@ -1,15 +1,7 @@
 package mock
 
 import (
-<<<<<<< HEAD
 	"testing"
-=======
-	"math/rand"
-	"testing"
-	"time"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

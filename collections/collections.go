@@ -69,7 +69,7 @@ type KeyEncoder[T any] interface {
 	Size(key T) int
 	// Stringify returns a string representation of T.
 	Stringify(key T) string
-	// KeyType returns an identifier for the key.
+	// KeyType returns a string identifier for the type of the key.
 	KeyType() string
 }
 

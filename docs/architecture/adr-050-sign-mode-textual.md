@@ -10,6 +10,7 @@
 * Sep 18, 2022: Structured format instead of lines of text
 * Nov 23, 2022: Specify CBOR encoding.
 * Dec 01, 2022: Link to examples in separate JSON file.
+* Dec 06, 2022: Add screen with signer address.
 
 ## Status
 
@@ -169,6 +170,7 @@ We define "transaction envelope" as all data in a transaction that is not in the
 Chain ID: <string>
 Account number: <uint64>
 Sequence: <uint64>
+Address: <string>
 *Public Key: <Any>
 This transaction has <int> Message(s)                       // Pluralize "Message" only when int>1
 > Message (<int>/<int>): <Any>                              // See value renderers for Any rendering.

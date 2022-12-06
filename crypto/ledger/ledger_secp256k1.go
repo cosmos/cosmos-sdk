@@ -1,11 +1,13 @@
 package ledger
 
 import (
+	"errors"
 	"fmt"
+	"math/big"
 	"os"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/pkg/errors"
+	btcec "github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 
 	tmbtcec "github.com/tendermint/btcd/btcec"
 
@@ -210,11 +212,19 @@ func warnIfErrors(f func() error) {
 }
 
 func convertDERtoBER(signatureDER []byte) ([]byte, error) {
-	sigDER, err := btcec.ParseDERSignature(signatureDER, btcec.S256())
+	sigDER, err := ecdsa.ParseDERSignature(signatureDER)
 	if err != nil {
 		return nil, err
 	}
-	sigBER := tmbtcec.Signature{R: sigDER.R, S: sigDER.S}
+
+	sigStr := sigDER.Serialize()
+	var r, s big.Int
+	// The format of a DER encoded signature is as follows:
+	// 0x30 <total length> 0x02 <length of R> <R> 0x02 <length of S> <S>
+	r.SetBytes(sigStr[4 : 4+sigStr[3]])
+	s.SetBytes(sigStr[4+sigStr[3]+2:])
+	sigBER := tmbtcec.Signature{R: &r, S: &s}
+
 	return sigBER.Serialize(), nil
 }
 
@@ -225,7 +235,7 @@ func getDevice() (SECP256K1, error) {
 
 	device, err := options.discoverLedger()
 	if err != nil {
-		return nil, errors.Wrap(err, "ledger nano S")
+		return nil, fmt.Errorf("ledger nano S: %w", err)
 	}
 
 	return device, nil
@@ -283,7 +293,7 @@ func getPubKeyUnsafe(device SECP256K1, path hd.BIP44Params) (types.PubKey, error
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(publicKey, btcec.S256())
+	cmp, err := btcec.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -307,7 +317,7 @@ func getPubKeyAddrSafe(device SECP256K1, path hd.BIP44Params, hrp string) (types
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(publicKey, btcec.S256())
+	cmp, err := btcec.ParsePubKey(publicKey)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}

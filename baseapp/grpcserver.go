@@ -47,7 +47,7 @@ func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 
 		// Create the sdk.Context. Passing false as 2nd arg, as we can't
 		// actually support proofs with gRPC right now.
-		sdkCtx, err := app.createQueryContext(height, false)
+		sdkCtx, err := app.CreateQueryContext(height, false)
 		if err != nil {
 			return nil, err
 		}

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/coinbase/rosetta-sdk-go v0.8.2
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20221205141544-417ce2511cb5
+	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5

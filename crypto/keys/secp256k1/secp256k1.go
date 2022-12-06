@@ -8,6 +8,7 @@ import (
 	"io"
 	"math/big"
 
+	_ "github.com/btcsuite/btcd"
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/tendermint/tendermint/crypto"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck

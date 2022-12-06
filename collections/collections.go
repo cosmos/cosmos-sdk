@@ -62,10 +62,10 @@ type KeyCodec[T any] interface {
 	// or an error in case of decoding failure.
 	ReadKey(buffer []byte) (int, T, error)
 	// Size returns the buffer size need to encode key T in binary format.
-        // Implementations should choose the most performant path to compute this
-        // at the risk of over-estimating. In the case of variable-length integers, the max
-        // varint length should usually be returned rather than trying to pre-compute the
-        // exact length.
+	// Implementations should choose the most performant path to compute this
+	// at the risk of over-estimating. In the case of variable-length integers, the max
+	// varint length should usually be returned rather than trying to pre-compute the
+	// exact length.
 	Size(key T) int
 	// Stringify returns a string representation of T.
 	Stringify(key T) string
@@ -76,9 +76,9 @@ type KeyCodec[T any] interface {
 // ValueCodec defines a generic interface which is implemented
 // by types that are capable of encoding and decoding collection values.
 type ValueCodec[T any] interface {
-	// Encode encodes the value T into bytes.
+	// Encode encodes the value T into binary format.
 	Encode(value T) ([]byte, error)
-	// Decode returns the type T given its byte representation.
+	// Decode returns the type T given its binary representation.
 	Decode(b []byte) (T, error)
 	// Stringify returns a string representation of T.
 	Stringify(value T) string

@@ -16,30 +16,364 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_Enveloppe_5_list)(nil)
+
+type _Enveloppe_5_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_Enveloppe_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Enveloppe_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Enveloppe_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Enveloppe_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Enveloppe_5_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Enveloppe_5_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_5_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Enveloppe_7_list)(nil)
+
+type _Enveloppe_7_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_Enveloppe_7_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Enveloppe_7_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Enveloppe_7_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Enveloppe_7_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Enveloppe_7_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_7_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Enveloppe_7_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_7_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Enveloppe_10_list)(nil)
+
+type _Enveloppe_10_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_Enveloppe_10_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Enveloppe_10_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Enveloppe_10_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Enveloppe_10_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Enveloppe_10_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_10_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Enveloppe_10_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_10_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Enveloppe_14_list)(nil)
+
+type _Enveloppe_14_list struct {
+	list *[]*v1beta11.SignerInfo
+}
+
+func (x *_Enveloppe_14_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Enveloppe_14_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Enveloppe_14_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta11.SignerInfo)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Enveloppe_14_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta11.SignerInfo)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Enveloppe_14_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta11.SignerInfo)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_14_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Enveloppe_14_list) NewElement() protoreflect.Value {
+	v := new(v1beta11.SignerInfo)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_14_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Enveloppe_15_list)(nil)
+
+type _Enveloppe_15_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_Enveloppe_15_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Enveloppe_15_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Enveloppe_15_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Enveloppe_15_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Enveloppe_15_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_15_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Enveloppe_15_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_15_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_Enveloppe_16_list)(nil)
+
+type _Enveloppe_16_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_Enveloppe_16_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Enveloppe_16_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Enveloppe_16_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Enveloppe_16_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Enveloppe_16_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_16_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Enveloppe_16_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Enveloppe_16_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_Part1                protoreflect.MessageDescriptor
-	fd_Part1_chain_id       protoreflect.FieldDescriptor
-	fd_Part1_account_number protoreflect.FieldDescriptor
-	fd_Part1_sequence       protoreflect.FieldDescriptor
+	md_Enveloppe                                protoreflect.MessageDescriptor
+	fd_Enveloppe_chain_id                       protoreflect.FieldDescriptor
+	fd_Enveloppe_account_number                 protoreflect.FieldDescriptor
+	fd_Enveloppe_sequence                       protoreflect.FieldDescriptor
+	fd_Enveloppe_public_key                     protoreflect.FieldDescriptor
+	fd_Enveloppe_message                        protoreflect.FieldDescriptor
+	fd_Enveloppe_memo                           protoreflect.FieldDescriptor
+	fd_Enveloppe_fees                           protoreflect.FieldDescriptor
+	fd_Enveloppe_fee_payer                      protoreflect.FieldDescriptor
+	fd_Enveloppe_fee_granter                    protoreflect.FieldDescriptor
+	fd_Enveloppe_tip                            protoreflect.FieldDescriptor
+	fd_Enveloppe_tipper                         protoreflect.FieldDescriptor
+	fd_Enveloppe_gas_limit                      protoreflect.FieldDescriptor
+	fd_Enveloppe_timeout_height                 protoreflect.FieldDescriptor
+	fd_Enveloppe_other_signer                   protoreflect.FieldDescriptor
+	fd_Enveloppe_extension_options              protoreflect.FieldDescriptor
+	fd_Enveloppe_non_critical_extension_options protoreflect.FieldDescriptor
+	fd_Enveloppe_hash_of_raw_bytes              protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_enveloppe_proto_init()
-	md_Part1 = File_enveloppe_proto.Messages().ByName("Part1")
-	fd_Part1_chain_id = md_Part1.Fields().ByName("chain_id")
-	fd_Part1_account_number = md_Part1.Fields().ByName("account_number")
-	fd_Part1_sequence = md_Part1.Fields().ByName("sequence")
+	md_Enveloppe = File_enveloppe_proto.Messages().ByName("Enveloppe")
+	fd_Enveloppe_chain_id = md_Enveloppe.Fields().ByName("chain_id")
+	fd_Enveloppe_account_number = md_Enveloppe.Fields().ByName("account_number")
+	fd_Enveloppe_sequence = md_Enveloppe.Fields().ByName("sequence")
+	fd_Enveloppe_public_key = md_Enveloppe.Fields().ByName("public_key")
+	fd_Enveloppe_message = md_Enveloppe.Fields().ByName("message")
+	fd_Enveloppe_memo = md_Enveloppe.Fields().ByName("memo")
+	fd_Enveloppe_fees = md_Enveloppe.Fields().ByName("fees")
+	fd_Enveloppe_fee_payer = md_Enveloppe.Fields().ByName("fee_payer")
+	fd_Enveloppe_fee_granter = md_Enveloppe.Fields().ByName("fee_granter")
+	fd_Enveloppe_tip = md_Enveloppe.Fields().ByName("tip")
+	fd_Enveloppe_tipper = md_Enveloppe.Fields().ByName("tipper")
+	fd_Enveloppe_gas_limit = md_Enveloppe.Fields().ByName("gas_limit")
+	fd_Enveloppe_timeout_height = md_Enveloppe.Fields().ByName("timeout_height")
+	fd_Enveloppe_other_signer = md_Enveloppe.Fields().ByName("other_signer")
+	fd_Enveloppe_extension_options = md_Enveloppe.Fields().ByName("extension_options")
+	fd_Enveloppe_non_critical_extension_options = md_Enveloppe.Fields().ByName("non_critical_extension_options")
+	fd_Enveloppe_hash_of_raw_bytes = md_Enveloppe.Fields().ByName("hash_of_raw_bytes")
 }
 
-var _ protoreflect.Message = (*fastReflection_Part1)(nil)
+var _ protoreflect.Message = (*fastReflection_Enveloppe)(nil)
 
-type fastReflection_Part1 Part1
+type fastReflection_Enveloppe Enveloppe
 
-func (x *Part1) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Part1)(x)
+func (x *Enveloppe) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_Enveloppe)(x)
 }
 
-func (x *Part1) slowProtoReflect() protoreflect.Message {
+func (x *Enveloppe) slowProtoReflect() protoreflect.Message {
 	mi := &file_enveloppe_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -51,43 +385,43 @@ func (x *Part1) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_Part1_messageType fastReflection_Part1_messageType
-var _ protoreflect.MessageType = fastReflection_Part1_messageType{}
+var _fastReflection_Enveloppe_messageType fastReflection_Enveloppe_messageType
+var _ protoreflect.MessageType = fastReflection_Enveloppe_messageType{}
 
-type fastReflection_Part1_messageType struct{}
+type fastReflection_Enveloppe_messageType struct{}
 
-func (x fastReflection_Part1_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Part1)(nil)
+func (x fastReflection_Enveloppe_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_Enveloppe)(nil)
 }
-func (x fastReflection_Part1_messageType) New() protoreflect.Message {
-	return new(fastReflection_Part1)
+func (x fastReflection_Enveloppe_messageType) New() protoreflect.Message {
+	return new(fastReflection_Enveloppe)
 }
-func (x fastReflection_Part1_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part1
+func (x fastReflection_Enveloppe_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_Enveloppe
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_Part1) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part1
+func (x *fastReflection_Enveloppe) Descriptor() protoreflect.MessageDescriptor {
+	return md_Enveloppe
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Part1) Type() protoreflect.MessageType {
-	return _fastReflection_Part1_messageType
+func (x *fastReflection_Enveloppe) Type() protoreflect.MessageType {
+	return _fastReflection_Enveloppe_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Part1) New() protoreflect.Message {
-	return new(fastReflection_Part1)
+func (x *fastReflection_Enveloppe) New() protoreflect.Message {
+	return new(fastReflection_Enveloppe)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_Part1) Interface() protoreflect.ProtoMessage {
-	return (*Part1)(x)
+func (x *fastReflection_Enveloppe) Interface() protoreflect.ProtoMessage {
+	return (*Enveloppe)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -95,22 +429,106 @@ func (x *fastReflection_Part1) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_Part1) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_Enveloppe) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ChainId != "" {
 		value := protoreflect.ValueOfString(x.ChainId)
-		if !f(fd_Part1_chain_id, value) {
+		if !f(fd_Enveloppe_chain_id, value) {
 			return
 		}
 	}
 	if x.AccountNumber != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.AccountNumber)
-		if !f(fd_Part1_account_number, value) {
+		if !f(fd_Enveloppe_account_number, value) {
 			return
 		}
 	}
 	if x.Sequence != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.Sequence)
-		if !f(fd_Part1_sequence, value) {
+		if !f(fd_Enveloppe_sequence, value) {
+			return
+		}
+	}
+	if x.PublicKey != nil {
+		value := protoreflect.ValueOfMessage(x.PublicKey.ProtoReflect())
+		if !f(fd_Enveloppe_public_key, value) {
+			return
+		}
+	}
+	if len(x.Message) != 0 {
+		value := protoreflect.ValueOfList(&_Enveloppe_5_list{list: &x.Message})
+		if !f(fd_Enveloppe_message, value) {
+			return
+		}
+	}
+	if x.Memo != "" {
+		value := protoreflect.ValueOfString(x.Memo)
+		if !f(fd_Enveloppe_memo, value) {
+			return
+		}
+	}
+	if len(x.Fees) != 0 {
+		value := protoreflect.ValueOfList(&_Enveloppe_7_list{list: &x.Fees})
+		if !f(fd_Enveloppe_fees, value) {
+			return
+		}
+	}
+	if x.FeePayer != "" {
+		value := protoreflect.ValueOfString(x.FeePayer)
+		if !f(fd_Enveloppe_fee_payer, value) {
+			return
+		}
+	}
+	if x.FeeGranter != "" {
+		value := protoreflect.ValueOfString(x.FeeGranter)
+		if !f(fd_Enveloppe_fee_granter, value) {
+			return
+		}
+	}
+	if len(x.Tip) != 0 {
+		value := protoreflect.ValueOfList(&_Enveloppe_10_list{list: &x.Tip})
+		if !f(fd_Enveloppe_tip, value) {
+			return
+		}
+	}
+	if x.Tipper != "" {
+		value := protoreflect.ValueOfString(x.Tipper)
+		if !f(fd_Enveloppe_tipper, value) {
+			return
+		}
+	}
+	if x.GasLimit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.GasLimit)
+		if !f(fd_Enveloppe_gas_limit, value) {
+			return
+		}
+	}
+	if x.TimeoutHeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.TimeoutHeight)
+		if !f(fd_Enveloppe_timeout_height, value) {
+			return
+		}
+	}
+	if len(x.OtherSigner) != 0 {
+		value := protoreflect.ValueOfList(&_Enveloppe_14_list{list: &x.OtherSigner})
+		if !f(fd_Enveloppe_other_signer, value) {
+			return
+		}
+	}
+	if len(x.ExtensionOptions) != 0 {
+		value := protoreflect.ValueOfList(&_Enveloppe_15_list{list: &x.ExtensionOptions})
+		if !f(fd_Enveloppe_extension_options, value) {
+			return
+		}
+	}
+	if len(x.NonCriticalExtensionOptions) != 0 {
+		value := protoreflect.ValueOfList(&_Enveloppe_16_list{list: &x.NonCriticalExtensionOptions})
+		if !f(fd_Enveloppe_non_critical_extension_options, value) {
+			return
+		}
+	}
+	if x.HashOfRawBytes != "" {
+		value := protoreflect.ValueOfString(x.HashOfRawBytes)
+		if !f(fd_Enveloppe_hash_of_raw_bytes, value) {
 			return
 		}
 	}
@@ -127,19 +545,47 @@ func (x *fastReflection_Part1) Range(f func(protoreflect.FieldDescriptor, protor
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_Part1) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_Enveloppe) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "Part1.chain_id":
+	case "Enveloppe.chain_id":
 		return x.ChainId != ""
-	case "Part1.account_number":
+	case "Enveloppe.account_number":
 		return x.AccountNumber != uint64(0)
-	case "Part1.sequence":
+	case "Enveloppe.sequence":
 		return x.Sequence != uint64(0)
+	case "Enveloppe.public_key":
+		return x.PublicKey != nil
+	case "Enveloppe.message":
+		return len(x.Message) != 0
+	case "Enveloppe.memo":
+		return x.Memo != ""
+	case "Enveloppe.fees":
+		return len(x.Fees) != 0
+	case "Enveloppe.fee_payer":
+		return x.FeePayer != ""
+	case "Enveloppe.fee_granter":
+		return x.FeeGranter != ""
+	case "Enveloppe.tip":
+		return len(x.Tip) != 0
+	case "Enveloppe.tipper":
+		return x.Tipper != ""
+	case "Enveloppe.gas_limit":
+		return x.GasLimit != uint64(0)
+	case "Enveloppe.timeout_height":
+		return x.TimeoutHeight != uint64(0)
+	case "Enveloppe.other_signer":
+		return len(x.OtherSigner) != 0
+	case "Enveloppe.extension_options":
+		return len(x.ExtensionOptions) != 0
+	case "Enveloppe.non_critical_extension_options":
+		return len(x.NonCriticalExtensionOptions) != 0
+	case "Enveloppe.hash_of_raw_bytes":
+		return x.HashOfRawBytes != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part1"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Enveloppe"))
 		}
-		panic(fmt.Errorf("message Part1 does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message Enveloppe does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -149,19 +595,47 @@ func (x *fastReflection_Part1) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part1) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_Enveloppe) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "Part1.chain_id":
+	case "Enveloppe.chain_id":
 		x.ChainId = ""
-	case "Part1.account_number":
+	case "Enveloppe.account_number":
 		x.AccountNumber = uint64(0)
-	case "Part1.sequence":
+	case "Enveloppe.sequence":
 		x.Sequence = uint64(0)
+	case "Enveloppe.public_key":
+		x.PublicKey = nil
+	case "Enveloppe.message":
+		x.Message = nil
+	case "Enveloppe.memo":
+		x.Memo = ""
+	case "Enveloppe.fees":
+		x.Fees = nil
+	case "Enveloppe.fee_payer":
+		x.FeePayer = ""
+	case "Enveloppe.fee_granter":
+		x.FeeGranter = ""
+	case "Enveloppe.tip":
+		x.Tip = nil
+	case "Enveloppe.tipper":
+		x.Tipper = ""
+	case "Enveloppe.gas_limit":
+		x.GasLimit = uint64(0)
+	case "Enveloppe.timeout_height":
+		x.TimeoutHeight = uint64(0)
+	case "Enveloppe.other_signer":
+		x.OtherSigner = nil
+	case "Enveloppe.extension_options":
+		x.ExtensionOptions = nil
+	case "Enveloppe.non_critical_extension_options":
+		x.NonCriticalExtensionOptions = nil
+	case "Enveloppe.hash_of_raw_bytes":
+		x.HashOfRawBytes = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part1"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Enveloppe"))
 		}
-		panic(fmt.Errorf("message Part1 does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message Enveloppe does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -171,22 +645,82 @@ func (x *fastReflection_Part1) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Part1) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Enveloppe) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "Part1.chain_id":
+	case "Enveloppe.chain_id":
 		value := x.ChainId
 		return protoreflect.ValueOfString(value)
-	case "Part1.account_number":
+	case "Enveloppe.account_number":
 		value := x.AccountNumber
 		return protoreflect.ValueOfUint64(value)
-	case "Part1.sequence":
+	case "Enveloppe.sequence":
 		value := x.Sequence
 		return protoreflect.ValueOfUint64(value)
+	case "Enveloppe.public_key":
+		value := x.PublicKey
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "Enveloppe.message":
+		if len(x.Message) == 0 {
+			return protoreflect.ValueOfList(&_Enveloppe_5_list{})
+		}
+		listValue := &_Enveloppe_5_list{list: &x.Message}
+		return protoreflect.ValueOfList(listValue)
+	case "Enveloppe.memo":
+		value := x.Memo
+		return protoreflect.ValueOfString(value)
+	case "Enveloppe.fees":
+		if len(x.Fees) == 0 {
+			return protoreflect.ValueOfList(&_Enveloppe_7_list{})
+		}
+		listValue := &_Enveloppe_7_list{list: &x.Fees}
+		return protoreflect.ValueOfList(listValue)
+	case "Enveloppe.fee_payer":
+		value := x.FeePayer
+		return protoreflect.ValueOfString(value)
+	case "Enveloppe.fee_granter":
+		value := x.FeeGranter
+		return protoreflect.ValueOfString(value)
+	case "Enveloppe.tip":
+		if len(x.Tip) == 0 {
+			return protoreflect.ValueOfList(&_Enveloppe_10_list{})
+		}
+		listValue := &_Enveloppe_10_list{list: &x.Tip}
+		return protoreflect.ValueOfList(listValue)
+	case "Enveloppe.tipper":
+		value := x.Tipper
+		return protoreflect.ValueOfString(value)
+	case "Enveloppe.gas_limit":
+		value := x.GasLimit
+		return protoreflect.ValueOfUint64(value)
+	case "Enveloppe.timeout_height":
+		value := x.TimeoutHeight
+		return protoreflect.ValueOfUint64(value)
+	case "Enveloppe.other_signer":
+		if len(x.OtherSigner) == 0 {
+			return protoreflect.ValueOfList(&_Enveloppe_14_list{})
+		}
+		listValue := &_Enveloppe_14_list{list: &x.OtherSigner}
+		return protoreflect.ValueOfList(listValue)
+	case "Enveloppe.extension_options":
+		if len(x.ExtensionOptions) == 0 {
+			return protoreflect.ValueOfList(&_Enveloppe_15_list{})
+		}
+		listValue := &_Enveloppe_15_list{list: &x.ExtensionOptions}
+		return protoreflect.ValueOfList(listValue)
+	case "Enveloppe.non_critical_extension_options":
+		if len(x.NonCriticalExtensionOptions) == 0 {
+			return protoreflect.ValueOfList(&_Enveloppe_16_list{})
+		}
+		listValue := &_Enveloppe_16_list{list: &x.NonCriticalExtensionOptions}
+		return protoreflect.ValueOfList(listValue)
+	case "Enveloppe.hash_of_raw_bytes":
+		value := x.HashOfRawBytes
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part1"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Enveloppe"))
 		}
-		panic(fmt.Errorf("message Part1 does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message Enveloppe does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -200,19 +734,59 @@ func (x *fastReflection_Part1) Get(descriptor protoreflect.FieldDescriptor) prot
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part1) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_Enveloppe) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "Part1.chain_id":
+	case "Enveloppe.chain_id":
 		x.ChainId = value.Interface().(string)
-	case "Part1.account_number":
+	case "Enveloppe.account_number":
 		x.AccountNumber = value.Uint()
-	case "Part1.sequence":
+	case "Enveloppe.sequence":
 		x.Sequence = value.Uint()
+	case "Enveloppe.public_key":
+		x.PublicKey = value.Message().Interface().(*anypb.Any)
+	case "Enveloppe.message":
+		lv := value.List()
+		clv := lv.(*_Enveloppe_5_list)
+		x.Message = *clv.list
+	case "Enveloppe.memo":
+		x.Memo = value.Interface().(string)
+	case "Enveloppe.fees":
+		lv := value.List()
+		clv := lv.(*_Enveloppe_7_list)
+		x.Fees = *clv.list
+	case "Enveloppe.fee_payer":
+		x.FeePayer = value.Interface().(string)
+	case "Enveloppe.fee_granter":
+		x.FeeGranter = value.Interface().(string)
+	case "Enveloppe.tip":
+		lv := value.List()
+		clv := lv.(*_Enveloppe_10_list)
+		x.Tip = *clv.list
+	case "Enveloppe.tipper":
+		x.Tipper = value.Interface().(string)
+	case "Enveloppe.gas_limit":
+		x.GasLimit = value.Uint()
+	case "Enveloppe.timeout_height":
+		x.TimeoutHeight = value.Uint()
+	case "Enveloppe.other_signer":
+		lv := value.List()
+		clv := lv.(*_Enveloppe_14_list)
+		x.OtherSigner = *clv.list
+	case "Enveloppe.extension_options":
+		lv := value.List()
+		clv := lv.(*_Enveloppe_15_list)
+		x.ExtensionOptions = *clv.list
+	case "Enveloppe.non_critical_extension_options":
+		lv := value.List()
+		clv := lv.(*_Enveloppe_16_list)
+		x.NonCriticalExtensionOptions = *clv.list
+	case "Enveloppe.hash_of_raw_bytes":
+		x.HashOfRawBytes = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part1"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Enveloppe"))
 		}
-		panic(fmt.Errorf("message Part1 does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message Enveloppe does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -226,48 +800,138 @@ func (x *fastReflection_Part1) Set(fd protoreflect.FieldDescriptor, value protor
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part1) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Enveloppe) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "Part1.chain_id":
-		panic(fmt.Errorf("field chain_id of message Part1 is not mutable"))
-	case "Part1.account_number":
-		panic(fmt.Errorf("field account_number of message Part1 is not mutable"))
-	case "Part1.sequence":
-		panic(fmt.Errorf("field sequence of message Part1 is not mutable"))
+	case "Enveloppe.public_key":
+		if x.PublicKey == nil {
+			x.PublicKey = new(anypb.Any)
+		}
+		return protoreflect.ValueOfMessage(x.PublicKey.ProtoReflect())
+	case "Enveloppe.message":
+		if x.Message == nil {
+			x.Message = []*anypb.Any{}
+		}
+		value := &_Enveloppe_5_list{list: &x.Message}
+		return protoreflect.ValueOfList(value)
+	case "Enveloppe.fees":
+		if x.Fees == nil {
+			x.Fees = []*v1beta1.Coin{}
+		}
+		value := &_Enveloppe_7_list{list: &x.Fees}
+		return protoreflect.ValueOfList(value)
+	case "Enveloppe.tip":
+		if x.Tip == nil {
+			x.Tip = []*v1beta1.Coin{}
+		}
+		value := &_Enveloppe_10_list{list: &x.Tip}
+		return protoreflect.ValueOfList(value)
+	case "Enveloppe.other_signer":
+		if x.OtherSigner == nil {
+			x.OtherSigner = []*v1beta11.SignerInfo{}
+		}
+		value := &_Enveloppe_14_list{list: &x.OtherSigner}
+		return protoreflect.ValueOfList(value)
+	case "Enveloppe.extension_options":
+		if x.ExtensionOptions == nil {
+			x.ExtensionOptions = []*anypb.Any{}
+		}
+		value := &_Enveloppe_15_list{list: &x.ExtensionOptions}
+		return protoreflect.ValueOfList(value)
+	case "Enveloppe.non_critical_extension_options":
+		if x.NonCriticalExtensionOptions == nil {
+			x.NonCriticalExtensionOptions = []*anypb.Any{}
+		}
+		value := &_Enveloppe_16_list{list: &x.NonCriticalExtensionOptions}
+		return protoreflect.ValueOfList(value)
+	case "Enveloppe.chain_id":
+		panic(fmt.Errorf("field chain_id of message Enveloppe is not mutable"))
+	case "Enveloppe.account_number":
+		panic(fmt.Errorf("field account_number of message Enveloppe is not mutable"))
+	case "Enveloppe.sequence":
+		panic(fmt.Errorf("field sequence of message Enveloppe is not mutable"))
+	case "Enveloppe.memo":
+		panic(fmt.Errorf("field memo of message Enveloppe is not mutable"))
+	case "Enveloppe.fee_payer":
+		panic(fmt.Errorf("field fee_payer of message Enveloppe is not mutable"))
+	case "Enveloppe.fee_granter":
+		panic(fmt.Errorf("field fee_granter of message Enveloppe is not mutable"))
+	case "Enveloppe.tipper":
+		panic(fmt.Errorf("field tipper of message Enveloppe is not mutable"))
+	case "Enveloppe.gas_limit":
+		panic(fmt.Errorf("field gas_limit of message Enveloppe is not mutable"))
+	case "Enveloppe.timeout_height":
+		panic(fmt.Errorf("field timeout_height of message Enveloppe is not mutable"))
+	case "Enveloppe.hash_of_raw_bytes":
+		panic(fmt.Errorf("field hash_of_raw_bytes of message Enveloppe is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part1"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Enveloppe"))
 		}
-		panic(fmt.Errorf("message Part1 does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message Enveloppe does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Part1) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Enveloppe) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "Part1.chain_id":
+	case "Enveloppe.chain_id":
 		return protoreflect.ValueOfString("")
-	case "Part1.account_number":
+	case "Enveloppe.account_number":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "Part1.sequence":
+	case "Enveloppe.sequence":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "Enveloppe.public_key":
+		m := new(anypb.Any)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "Enveloppe.message":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_Enveloppe_5_list{list: &list})
+	case "Enveloppe.memo":
+		return protoreflect.ValueOfString("")
+	case "Enveloppe.fees":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_Enveloppe_7_list{list: &list})
+	case "Enveloppe.fee_payer":
+		return protoreflect.ValueOfString("")
+	case "Enveloppe.fee_granter":
+		return protoreflect.ValueOfString("")
+	case "Enveloppe.tip":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_Enveloppe_10_list{list: &list})
+	case "Enveloppe.tipper":
+		return protoreflect.ValueOfString("")
+	case "Enveloppe.gas_limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "Enveloppe.timeout_height":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "Enveloppe.other_signer":
+		list := []*v1beta11.SignerInfo{}
+		return protoreflect.ValueOfList(&_Enveloppe_14_list{list: &list})
+	case "Enveloppe.extension_options":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_Enveloppe_15_list{list: &list})
+	case "Enveloppe.non_critical_extension_options":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_Enveloppe_16_list{list: &list})
+	case "Enveloppe.hash_of_raw_bytes":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part1"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: Enveloppe"))
 		}
-		panic(fmt.Errorf("message Part1 does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message Enveloppe does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Part1) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_Enveloppe) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in Part1", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in Enveloppe", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -275,7 +939,7 @@ func (x *fastReflection_Part1) WhichOneof(d protoreflect.OneofDescriptor) protor
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Part1) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_Enveloppe) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -286,7 +950,7 @@ func (x *fastReflection_Part1) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part1) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_Enveloppe) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -298,7 +962,7 @@ func (x *fastReflection_Part1) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_Part1) IsValid() bool {
+func (x *fastReflection_Enveloppe) IsValid() bool {
 	return x != nil
 }
 
@@ -308,9 +972,9 @@ func (x *fastReflection_Part1) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_Enveloppe) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Part1)
+		x := input.Message.Interface().(*Enveloppe)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -332,6 +996,72 @@ func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
 		if x.Sequence != 0 {
 			n += 1 + runtime.Sov(uint64(x.Sequence))
 		}
+		if x.PublicKey != nil {
+			l = options.Size(x.PublicKey)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Message) > 0 {
+			for _, e := range x.Message {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.Memo)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Fees) > 0 {
+			for _, e := range x.Fees {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.FeePayer)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.FeeGranter)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Tip) > 0 {
+			for _, e := range x.Tip {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.Tipper)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.GasLimit != 0 {
+			n += 1 + runtime.Sov(uint64(x.GasLimit))
+		}
+		if x.TimeoutHeight != 0 {
+			n += 1 + runtime.Sov(uint64(x.TimeoutHeight))
+		}
+		if len(x.OtherSigner) > 0 {
+			for _, e := range x.OtherSigner {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ExtensionOptions) > 0 {
+			for _, e := range x.ExtensionOptions {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.NonCriticalExtensionOptions) > 0 {
+			for _, e := range x.NonCriticalExtensionOptions {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.HashOfRawBytes)
+		if l > 0 {
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -342,7 +1072,7 @@ func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Part1)
+		x := input.Message.Interface().(*Enveloppe)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -360,6 +1090,165 @@ func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.HashOfRawBytes) > 0 {
+			i -= len(x.HashOfRawBytes)
+			copy(dAtA[i:], x.HashOfRawBytes)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.HashOfRawBytes)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x8a
+		}
+		if len(x.NonCriticalExtensionOptions) > 0 {
+			for iNdEx := len(x.NonCriticalExtensionOptions) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.NonCriticalExtensionOptions[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0x82
+			}
+		}
+		if len(x.ExtensionOptions) > 0 {
+			for iNdEx := len(x.ExtensionOptions) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ExtensionOptions[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x7a
+			}
+		}
+		if len(x.OtherSigner) > 0 {
+			for iNdEx := len(x.OtherSigner) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.OtherSigner[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x72
+			}
+		}
+		if x.TimeoutHeight != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.TimeoutHeight))
+			i--
+			dAtA[i] = 0x68
+		}
+		if x.GasLimit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.GasLimit))
+			i--
+			dAtA[i] = 0x60
+		}
+		if len(x.Tipper) > 0 {
+			i -= len(x.Tipper)
+			copy(dAtA[i:], x.Tipper)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Tipper)))
+			i--
+			dAtA[i] = 0x5a
+		}
+		if len(x.Tip) > 0 {
+			for iNdEx := len(x.Tip) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Tip[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x52
+			}
+		}
+		if len(x.FeeGranter) > 0 {
+			i -= len(x.FeeGranter)
+			copy(dAtA[i:], x.FeeGranter)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FeeGranter)))
+			i--
+			dAtA[i] = 0x4a
+		}
+		if len(x.FeePayer) > 0 {
+			i -= len(x.FeePayer)
+			copy(dAtA[i:], x.FeePayer)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FeePayer)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.Fees) > 0 {
+			for iNdEx := len(x.Fees) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Fees[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x3a
+			}
+		}
+		if len(x.Memo) > 0 {
+			i -= len(x.Memo)
+			copy(dAtA[i:], x.Memo)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Memo)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Message) > 0 {
+			for iNdEx := len(x.Message) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Message[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if x.PublicKey != nil {
+			encoded, err := options.Marshal(x.PublicKey)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x22
 		}
 		if x.Sequence != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Sequence))
@@ -389,7 +1278,7 @@ func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Part1)
+		x := input.Message.Interface().(*Enveloppe)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -421,10 +1310,10 @@ func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part1: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Enveloppe: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part1: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Enveloppe: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -497,406 +1386,7 @@ func (x *fastReflection_Part1) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_Part2            protoreflect.MessageDescriptor
-	fd_Part2_public_key protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_enveloppe_proto_init()
-	md_Part2 = File_enveloppe_proto.Messages().ByName("Part2")
-	fd_Part2_public_key = md_Part2.Fields().ByName("public_key")
-}
-
-var _ protoreflect.Message = (*fastReflection_Part2)(nil)
-
-type fastReflection_Part2 Part2
-
-func (x *Part2) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Part2)(x)
-}
-
-func (x *Part2) slowProtoReflect() protoreflect.Message {
-	mi := &file_enveloppe_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Part2_messageType fastReflection_Part2_messageType
-var _ protoreflect.MessageType = fastReflection_Part2_messageType{}
-
-type fastReflection_Part2_messageType struct{}
-
-func (x fastReflection_Part2_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Part2)(nil)
-}
-func (x fastReflection_Part2_messageType) New() protoreflect.Message {
-	return new(fastReflection_Part2)
-}
-func (x fastReflection_Part2_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part2
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Part2) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part2
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Part2) Type() protoreflect.MessageType {
-	return _fastReflection_Part2_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Part2) New() protoreflect.Message {
-	return new(fastReflection_Part2)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Part2) Interface() protoreflect.ProtoMessage {
-	return (*Part2)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Part2) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.PublicKey != nil {
-		value := protoreflect.ValueOfMessage(x.PublicKey.ProtoReflect())
-		if !f(fd_Part2_public_key, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Part2) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "Part2.public_key":
-		return x.PublicKey != nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part2"))
-		}
-		panic(fmt.Errorf("message Part2 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part2) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "Part2.public_key":
-		x.PublicKey = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part2"))
-		}
-		panic(fmt.Errorf("message Part2 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Part2) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "Part2.public_key":
-		value := x.PublicKey
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part2"))
-		}
-		panic(fmt.Errorf("message Part2 does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part2) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "Part2.public_key":
-		x.PublicKey = value.Message().Interface().(*anypb.Any)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part2"))
-		}
-		panic(fmt.Errorf("message Part2 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part2) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part2.public_key":
-		if x.PublicKey == nil {
-			x.PublicKey = new(anypb.Any)
-		}
-		return protoreflect.ValueOfMessage(x.PublicKey.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part2"))
-		}
-		panic(fmt.Errorf("message Part2 does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Part2) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part2.public_key":
-		m := new(anypb.Any)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part2"))
-		}
-		panic(fmt.Errorf("message Part2 does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Part2) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in Part2", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Part2) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part2) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Part2) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Part2) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Part2)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.PublicKey != nil {
-			l = options.Size(x.PublicKey)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Part2)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.PublicKey != nil {
-			encoded, err := options.Marshal(x.PublicKey)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Part2)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part2: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part2: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PublicKey", wireType)
 				}
@@ -932,603 +1422,7 @@ func (x *fastReflection_Part2) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var _ protoreflect.List = (*_Part3_1_list)(nil)
-
-type _Part3_1_list struct {
-	list *[]*anypb.Any
-}
-
-func (x *_Part3_1_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Part3_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Part3_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Part3_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Part3_1_list) AppendMutable() protoreflect.Value {
-	v := new(anypb.Any)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part3_1_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Part3_1_list) NewElement() protoreflect.Value {
-	v := new(anypb.Any)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part3_1_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_Part3_3_list)(nil)
-
-type _Part3_3_list struct {
-	list *[]*v1beta1.Coin
-}
-
-func (x *_Part3_3_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Part3_3_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Part3_3_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Part3_3_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Part3_3_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part3_3_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Part3_3_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part3_3_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_Part3         protoreflect.MessageDescriptor
-	fd_Part3_message protoreflect.FieldDescriptor
-	fd_Part3_memo    protoreflect.FieldDescriptor
-	fd_Part3_fees    protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_enveloppe_proto_init()
-	md_Part3 = File_enveloppe_proto.Messages().ByName("Part3")
-	fd_Part3_message = md_Part3.Fields().ByName("message")
-	fd_Part3_memo = md_Part3.Fields().ByName("memo")
-	fd_Part3_fees = md_Part3.Fields().ByName("fees")
-}
-
-var _ protoreflect.Message = (*fastReflection_Part3)(nil)
-
-type fastReflection_Part3 Part3
-
-func (x *Part3) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Part3)(x)
-}
-
-func (x *Part3) slowProtoReflect() protoreflect.Message {
-	mi := &file_enveloppe_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Part3_messageType fastReflection_Part3_messageType
-var _ protoreflect.MessageType = fastReflection_Part3_messageType{}
-
-type fastReflection_Part3_messageType struct{}
-
-func (x fastReflection_Part3_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Part3)(nil)
-}
-func (x fastReflection_Part3_messageType) New() protoreflect.Message {
-	return new(fastReflection_Part3)
-}
-func (x fastReflection_Part3_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part3
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Part3) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part3
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Part3) Type() protoreflect.MessageType {
-	return _fastReflection_Part3_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Part3) New() protoreflect.Message {
-	return new(fastReflection_Part3)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Part3) Interface() protoreflect.ProtoMessage {
-	return (*Part3)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Part3) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Message) != 0 {
-		value := protoreflect.ValueOfList(&_Part3_1_list{list: &x.Message})
-		if !f(fd_Part3_message, value) {
-			return
-		}
-	}
-	if x.Memo != "" {
-		value := protoreflect.ValueOfString(x.Memo)
-		if !f(fd_Part3_memo, value) {
-			return
-		}
-	}
-	if len(x.Fees) != 0 {
-		value := protoreflect.ValueOfList(&_Part3_3_list{list: &x.Fees})
-		if !f(fd_Part3_fees, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Part3) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "Part3.message":
-		return len(x.Message) != 0
-	case "Part3.memo":
-		return x.Memo != ""
-	case "Part3.fees":
-		return len(x.Fees) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
-		}
-		panic(fmt.Errorf("message Part3 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part3) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "Part3.message":
-		x.Message = nil
-	case "Part3.memo":
-		x.Memo = ""
-	case "Part3.fees":
-		x.Fees = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
-		}
-		panic(fmt.Errorf("message Part3 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Part3) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "Part3.message":
-		if len(x.Message) == 0 {
-			return protoreflect.ValueOfList(&_Part3_1_list{})
-		}
-		listValue := &_Part3_1_list{list: &x.Message}
-		return protoreflect.ValueOfList(listValue)
-	case "Part3.memo":
-		value := x.Memo
-		return protoreflect.ValueOfString(value)
-	case "Part3.fees":
-		if len(x.Fees) == 0 {
-			return protoreflect.ValueOfList(&_Part3_3_list{})
-		}
-		listValue := &_Part3_3_list{list: &x.Fees}
-		return protoreflect.ValueOfList(listValue)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
-		}
-		panic(fmt.Errorf("message Part3 does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part3) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "Part3.message":
-		lv := value.List()
-		clv := lv.(*_Part3_1_list)
-		x.Message = *clv.list
-	case "Part3.memo":
-		x.Memo = value.Interface().(string)
-	case "Part3.fees":
-		lv := value.List()
-		clv := lv.(*_Part3_3_list)
-		x.Fees = *clv.list
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
-		}
-		panic(fmt.Errorf("message Part3 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part3) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part3.message":
-		if x.Message == nil {
-			x.Message = []*anypb.Any{}
-		}
-		value := &_Part3_1_list{list: &x.Message}
-		return protoreflect.ValueOfList(value)
-	case "Part3.fees":
-		if x.Fees == nil {
-			x.Fees = []*v1beta1.Coin{}
-		}
-		value := &_Part3_3_list{list: &x.Fees}
-		return protoreflect.ValueOfList(value)
-	case "Part3.memo":
-		panic(fmt.Errorf("field memo of message Part3 is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
-		}
-		panic(fmt.Errorf("message Part3 does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Part3) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part3.message":
-		list := []*anypb.Any{}
-		return protoreflect.ValueOfList(&_Part3_1_list{list: &list})
-	case "Part3.memo":
-		return protoreflect.ValueOfString("")
-	case "Part3.fees":
-		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_Part3_3_list{list: &list})
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part3"))
-		}
-		panic(fmt.Errorf("message Part3 does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Part3) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in Part3", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Part3) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part3) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Part3) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Part3)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if len(x.Message) > 0 {
-			for _, e := range x.Message {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		l = len(x.Memo)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if len(x.Fees) > 0 {
-			for _, e := range x.Fees {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Part3)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Fees) > 0 {
-			for iNdEx := len(x.Fees) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Fees[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x1a
-			}
-		}
-		if len(x.Memo) > 0 {
-			i -= len(x.Memo)
-			copy(dAtA[i:], x.Memo)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Memo)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.Message) > 0 {
-			for iNdEx := len(x.Message) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Message[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0xa
-			}
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Part3)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part3: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part3: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
+			case 5:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
 				}
@@ -1562,7 +1456,7 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 2:
+			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Memo", wireType)
 				}
@@ -1594,7 +1488,7 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 				}
 				x.Memo = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 3:
+			case 7:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Fees", wireType)
 				}
@@ -1628,427 +1522,7 @@ func (x *fastReflection_Part3) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_Part4             protoreflect.MessageDescriptor
-	fd_Part4_fee_payer   protoreflect.FieldDescriptor
-	fd_Part4_fee_granter protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_enveloppe_proto_init()
-	md_Part4 = File_enveloppe_proto.Messages().ByName("Part4")
-	fd_Part4_fee_payer = md_Part4.Fields().ByName("fee_payer")
-	fd_Part4_fee_granter = md_Part4.Fields().ByName("fee_granter")
-}
-
-var _ protoreflect.Message = (*fastReflection_Part4)(nil)
-
-type fastReflection_Part4 Part4
-
-func (x *Part4) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Part4)(x)
-}
-
-func (x *Part4) slowProtoReflect() protoreflect.Message {
-	mi := &file_enveloppe_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Part4_messageType fastReflection_Part4_messageType
-var _ protoreflect.MessageType = fastReflection_Part4_messageType{}
-
-type fastReflection_Part4_messageType struct{}
-
-func (x fastReflection_Part4_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Part4)(nil)
-}
-func (x fastReflection_Part4_messageType) New() protoreflect.Message {
-	return new(fastReflection_Part4)
-}
-func (x fastReflection_Part4_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part4
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Part4) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part4
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Part4) Type() protoreflect.MessageType {
-	return _fastReflection_Part4_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Part4) New() protoreflect.Message {
-	return new(fastReflection_Part4)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Part4) Interface() protoreflect.ProtoMessage {
-	return (*Part4)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Part4) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.FeePayer != "" {
-		value := protoreflect.ValueOfString(x.FeePayer)
-		if !f(fd_Part4_fee_payer, value) {
-			return
-		}
-	}
-	if x.FeeGranter != "" {
-		value := protoreflect.ValueOfString(x.FeeGranter)
-		if !f(fd_Part4_fee_granter, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Part4) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "Part4.fee_payer":
-		return x.FeePayer != ""
-	case "Part4.fee_granter":
-		return x.FeeGranter != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part4"))
-		}
-		panic(fmt.Errorf("message Part4 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part4) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "Part4.fee_payer":
-		x.FeePayer = ""
-	case "Part4.fee_granter":
-		x.FeeGranter = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part4"))
-		}
-		panic(fmt.Errorf("message Part4 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Part4) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "Part4.fee_payer":
-		value := x.FeePayer
-		return protoreflect.ValueOfString(value)
-	case "Part4.fee_granter":
-		value := x.FeeGranter
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part4"))
-		}
-		panic(fmt.Errorf("message Part4 does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part4) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "Part4.fee_payer":
-		x.FeePayer = value.Interface().(string)
-	case "Part4.fee_granter":
-		x.FeeGranter = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part4"))
-		}
-		panic(fmt.Errorf("message Part4 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part4) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part4.fee_payer":
-		panic(fmt.Errorf("field fee_payer of message Part4 is not mutable"))
-	case "Part4.fee_granter":
-		panic(fmt.Errorf("field fee_granter of message Part4 is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part4"))
-		}
-		panic(fmt.Errorf("message Part4 does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Part4) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part4.fee_payer":
-		return protoreflect.ValueOfString("")
-	case "Part4.fee_granter":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part4"))
-		}
-		panic(fmt.Errorf("message Part4 does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Part4) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in Part4", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Part4) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part4) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Part4) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Part4) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Part4)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.FeePayer)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.FeeGranter)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Part4)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.FeeGranter) > 0 {
-			i -= len(x.FeeGranter)
-			copy(dAtA[i:], x.FeeGranter)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FeeGranter)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.FeePayer) > 0 {
-			i -= len(x.FeePayer)
-			copy(dAtA[i:], x.FeePayer)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FeePayer)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Part4)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part4: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part4: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 2:
+			case 8:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FeePayer", wireType)
 				}
@@ -2080,7 +1554,7 @@ func (x *fastReflection_Part4) ProtoMethods() *protoiface.Methods {
 				}
 				x.FeePayer = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 3:
+			case 9:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FeeGranter", wireType)
 				}
@@ -2112,499 +1586,7 @@ func (x *fastReflection_Part4) ProtoMethods() *protoiface.Methods {
 				}
 				x.FeeGranter = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var _ protoreflect.List = (*_Part5_4_list)(nil)
-
-type _Part5_4_list struct {
-	list *[]*v1beta1.Coin
-}
-
-func (x *_Part5_4_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Part5_4_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Part5_4_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Part5_4_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Part5_4_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part5_4_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Part5_4_list) NewElement() protoreflect.Value {
-	v := new(v1beta1.Coin)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part5_4_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_Part5        protoreflect.MessageDescriptor
-	fd_Part5_tip    protoreflect.FieldDescriptor
-	fd_Part5_tipper protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_enveloppe_proto_init()
-	md_Part5 = File_enveloppe_proto.Messages().ByName("Part5")
-	fd_Part5_tip = md_Part5.Fields().ByName("tip")
-	fd_Part5_tipper = md_Part5.Fields().ByName("tipper")
-}
-
-var _ protoreflect.Message = (*fastReflection_Part5)(nil)
-
-type fastReflection_Part5 Part5
-
-func (x *Part5) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Part5)(x)
-}
-
-func (x *Part5) slowProtoReflect() protoreflect.Message {
-	mi := &file_enveloppe_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Part5_messageType fastReflection_Part5_messageType
-var _ protoreflect.MessageType = fastReflection_Part5_messageType{}
-
-type fastReflection_Part5_messageType struct{}
-
-func (x fastReflection_Part5_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Part5)(nil)
-}
-func (x fastReflection_Part5_messageType) New() protoreflect.Message {
-	return new(fastReflection_Part5)
-}
-func (x fastReflection_Part5_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part5
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Part5) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part5
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Part5) Type() protoreflect.MessageType {
-	return _fastReflection_Part5_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Part5) New() protoreflect.Message {
-	return new(fastReflection_Part5)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Part5) Interface() protoreflect.ProtoMessage {
-	return (*Part5)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Part5) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Tip) != 0 {
-		value := protoreflect.ValueOfList(&_Part5_4_list{list: &x.Tip})
-		if !f(fd_Part5_tip, value) {
-			return
-		}
-	}
-	if x.Tipper != "" {
-		value := protoreflect.ValueOfString(x.Tipper)
-		if !f(fd_Part5_tipper, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Part5) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "Part5.tip":
-		return len(x.Tip) != 0
-	case "Part5.tipper":
-		return x.Tipper != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part5"))
-		}
-		panic(fmt.Errorf("message Part5 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part5) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "Part5.tip":
-		x.Tip = nil
-	case "Part5.tipper":
-		x.Tipper = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part5"))
-		}
-		panic(fmt.Errorf("message Part5 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Part5) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "Part5.tip":
-		if len(x.Tip) == 0 {
-			return protoreflect.ValueOfList(&_Part5_4_list{})
-		}
-		listValue := &_Part5_4_list{list: &x.Tip}
-		return protoreflect.ValueOfList(listValue)
-	case "Part5.tipper":
-		value := x.Tipper
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part5"))
-		}
-		panic(fmt.Errorf("message Part5 does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part5) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "Part5.tip":
-		lv := value.List()
-		clv := lv.(*_Part5_4_list)
-		x.Tip = *clv.list
-	case "Part5.tipper":
-		x.Tipper = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part5"))
-		}
-		panic(fmt.Errorf("message Part5 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part5) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part5.tip":
-		if x.Tip == nil {
-			x.Tip = []*v1beta1.Coin{}
-		}
-		value := &_Part5_4_list{list: &x.Tip}
-		return protoreflect.ValueOfList(value)
-	case "Part5.tipper":
-		panic(fmt.Errorf("field tipper of message Part5 is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part5"))
-		}
-		panic(fmt.Errorf("message Part5 does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Part5) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part5.tip":
-		list := []*v1beta1.Coin{}
-		return protoreflect.ValueOfList(&_Part5_4_list{list: &list})
-	case "Part5.tipper":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part5"))
-		}
-		panic(fmt.Errorf("message Part5 does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Part5) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in Part5", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Part5) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part5) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Part5) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Part5) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Part5)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if len(x.Tip) > 0 {
-			for _, e := range x.Tip {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		l = len(x.Tipper)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Part5)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Tipper) > 0 {
-			i -= len(x.Tipper)
-			copy(dAtA[i:], x.Tipper)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Tipper)))
-			i--
-			dAtA[i] = 0x2a
-		}
-		if len(x.Tip) > 0 {
-			for iNdEx := len(x.Tip) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Tip[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x22
-			}
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Part5)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part5: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part5: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 4:
+			case 10:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Tip", wireType)
 				}
@@ -2638,7 +1620,7 @@ func (x *fastReflection_Part5) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 5:
+			case 11:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Tipper", wireType)
 				}
@@ -2670,767 +1652,7 @@ func (x *fastReflection_Part5) ProtoMethods() *protoiface.Methods {
 				}
 				x.Tipper = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var _ protoreflect.List = (*_Part6_3_list)(nil)
-
-type _Part6_3_list struct {
-	list *[]*v1beta11.SignerInfo
-}
-
-func (x *_Part6_3_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Part6_3_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Part6_3_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta11.SignerInfo)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Part6_3_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v1beta11.SignerInfo)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Part6_3_list) AppendMutable() protoreflect.Value {
-	v := new(v1beta11.SignerInfo)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part6_3_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Part6_3_list) NewElement() protoreflect.Value {
-	v := new(v1beta11.SignerInfo)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part6_3_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_Part6_4_list)(nil)
-
-type _Part6_4_list struct {
-	list *[]*anypb.Any
-}
-
-func (x *_Part6_4_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Part6_4_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Part6_4_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Part6_4_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Part6_4_list) AppendMutable() protoreflect.Value {
-	v := new(anypb.Any)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part6_4_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Part6_4_list) NewElement() protoreflect.Value {
-	v := new(anypb.Any)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part6_4_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_Part6_5_list)(nil)
-
-type _Part6_5_list struct {
-	list *[]*anypb.Any
-}
-
-func (x *_Part6_5_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Part6_5_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_Part6_5_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Part6_5_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Part6_5_list) AppendMutable() protoreflect.Value {
-	v := new(anypb.Any)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part6_5_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Part6_5_list) NewElement() protoreflect.Value {
-	v := new(anypb.Any)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_Part6_5_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_Part6                                protoreflect.MessageDescriptor
-	fd_Part6_gas_limit                      protoreflect.FieldDescriptor
-	fd_Part6_timeout_height                 protoreflect.FieldDescriptor
-	fd_Part6_other_signer                   protoreflect.FieldDescriptor
-	fd_Part6_extension_options              protoreflect.FieldDescriptor
-	fd_Part6_non_critical_extension_options protoreflect.FieldDescriptor
-	fd_Part6_hash_of_raw_bytes              protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_enveloppe_proto_init()
-	md_Part6 = File_enveloppe_proto.Messages().ByName("Part6")
-	fd_Part6_gas_limit = md_Part6.Fields().ByName("gas_limit")
-	fd_Part6_timeout_height = md_Part6.Fields().ByName("timeout_height")
-	fd_Part6_other_signer = md_Part6.Fields().ByName("other_signer")
-	fd_Part6_extension_options = md_Part6.Fields().ByName("extension_options")
-	fd_Part6_non_critical_extension_options = md_Part6.Fields().ByName("non_critical_extension_options")
-	fd_Part6_hash_of_raw_bytes = md_Part6.Fields().ByName("hash_of_raw_bytes")
-}
-
-var _ protoreflect.Message = (*fastReflection_Part6)(nil)
-
-type fastReflection_Part6 Part6
-
-func (x *Part6) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Part6)(x)
-}
-
-func (x *Part6) slowProtoReflect() protoreflect.Message {
-	mi := &file_enveloppe_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_Part6_messageType fastReflection_Part6_messageType
-var _ protoreflect.MessageType = fastReflection_Part6_messageType{}
-
-type fastReflection_Part6_messageType struct{}
-
-func (x fastReflection_Part6_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Part6)(nil)
-}
-func (x fastReflection_Part6_messageType) New() protoreflect.Message {
-	return new(fastReflection_Part6)
-}
-func (x fastReflection_Part6_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part6
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_Part6) Descriptor() protoreflect.MessageDescriptor {
-	return md_Part6
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Part6) Type() protoreflect.MessageType {
-	return _fastReflection_Part6_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Part6) New() protoreflect.Message {
-	return new(fastReflection_Part6)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_Part6) Interface() protoreflect.ProtoMessage {
-	return (*Part6)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_Part6) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.GasLimit != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.GasLimit)
-		if !f(fd_Part6_gas_limit, value) {
-			return
-		}
-	}
-	if x.TimeoutHeight != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.TimeoutHeight)
-		if !f(fd_Part6_timeout_height, value) {
-			return
-		}
-	}
-	if len(x.OtherSigner) != 0 {
-		value := protoreflect.ValueOfList(&_Part6_3_list{list: &x.OtherSigner})
-		if !f(fd_Part6_other_signer, value) {
-			return
-		}
-	}
-	if len(x.ExtensionOptions) != 0 {
-		value := protoreflect.ValueOfList(&_Part6_4_list{list: &x.ExtensionOptions})
-		if !f(fd_Part6_extension_options, value) {
-			return
-		}
-	}
-	if len(x.NonCriticalExtensionOptions) != 0 {
-		value := protoreflect.ValueOfList(&_Part6_5_list{list: &x.NonCriticalExtensionOptions})
-		if !f(fd_Part6_non_critical_extension_options, value) {
-			return
-		}
-	}
-	if x.HashOfRawBytes != "" {
-		value := protoreflect.ValueOfString(x.HashOfRawBytes)
-		if !f(fd_Part6_hash_of_raw_bytes, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_Part6) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "Part6.gas_limit":
-		return x.GasLimit != uint64(0)
-	case "Part6.timeout_height":
-		return x.TimeoutHeight != uint64(0)
-	case "Part6.other_signer":
-		return len(x.OtherSigner) != 0
-	case "Part6.extension_options":
-		return len(x.ExtensionOptions) != 0
-	case "Part6.non_critical_extension_options":
-		return len(x.NonCriticalExtensionOptions) != 0
-	case "Part6.hash_of_raw_bytes":
-		return x.HashOfRawBytes != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part6"))
-		}
-		panic(fmt.Errorf("message Part6 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part6) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "Part6.gas_limit":
-		x.GasLimit = uint64(0)
-	case "Part6.timeout_height":
-		x.TimeoutHeight = uint64(0)
-	case "Part6.other_signer":
-		x.OtherSigner = nil
-	case "Part6.extension_options":
-		x.ExtensionOptions = nil
-	case "Part6.non_critical_extension_options":
-		x.NonCriticalExtensionOptions = nil
-	case "Part6.hash_of_raw_bytes":
-		x.HashOfRawBytes = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part6"))
-		}
-		panic(fmt.Errorf("message Part6 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Part6) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "Part6.gas_limit":
-		value := x.GasLimit
-		return protoreflect.ValueOfUint64(value)
-	case "Part6.timeout_height":
-		value := x.TimeoutHeight
-		return protoreflect.ValueOfUint64(value)
-	case "Part6.other_signer":
-		if len(x.OtherSigner) == 0 {
-			return protoreflect.ValueOfList(&_Part6_3_list{})
-		}
-		listValue := &_Part6_3_list{list: &x.OtherSigner}
-		return protoreflect.ValueOfList(listValue)
-	case "Part6.extension_options":
-		if len(x.ExtensionOptions) == 0 {
-			return protoreflect.ValueOfList(&_Part6_4_list{})
-		}
-		listValue := &_Part6_4_list{list: &x.ExtensionOptions}
-		return protoreflect.ValueOfList(listValue)
-	case "Part6.non_critical_extension_options":
-		if len(x.NonCriticalExtensionOptions) == 0 {
-			return protoreflect.ValueOfList(&_Part6_5_list{})
-		}
-		listValue := &_Part6_5_list{list: &x.NonCriticalExtensionOptions}
-		return protoreflect.ValueOfList(listValue)
-	case "Part6.hash_of_raw_bytes":
-		value := x.HashOfRawBytes
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part6"))
-		}
-		panic(fmt.Errorf("message Part6 does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part6) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "Part6.gas_limit":
-		x.GasLimit = value.Uint()
-	case "Part6.timeout_height":
-		x.TimeoutHeight = value.Uint()
-	case "Part6.other_signer":
-		lv := value.List()
-		clv := lv.(*_Part6_3_list)
-		x.OtherSigner = *clv.list
-	case "Part6.extension_options":
-		lv := value.List()
-		clv := lv.(*_Part6_4_list)
-		x.ExtensionOptions = *clv.list
-	case "Part6.non_critical_extension_options":
-		lv := value.List()
-		clv := lv.(*_Part6_5_list)
-		x.NonCriticalExtensionOptions = *clv.list
-	case "Part6.hash_of_raw_bytes":
-		x.HashOfRawBytes = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part6"))
-		}
-		panic(fmt.Errorf("message Part6 does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part6) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part6.other_signer":
-		if x.OtherSigner == nil {
-			x.OtherSigner = []*v1beta11.SignerInfo{}
-		}
-		value := &_Part6_3_list{list: &x.OtherSigner}
-		return protoreflect.ValueOfList(value)
-	case "Part6.extension_options":
-		if x.ExtensionOptions == nil {
-			x.ExtensionOptions = []*anypb.Any{}
-		}
-		value := &_Part6_4_list{list: &x.ExtensionOptions}
-		return protoreflect.ValueOfList(value)
-	case "Part6.non_critical_extension_options":
-		if x.NonCriticalExtensionOptions == nil {
-			x.NonCriticalExtensionOptions = []*anypb.Any{}
-		}
-		value := &_Part6_5_list{list: &x.NonCriticalExtensionOptions}
-		return protoreflect.ValueOfList(value)
-	case "Part6.gas_limit":
-		panic(fmt.Errorf("field gas_limit of message Part6 is not mutable"))
-	case "Part6.timeout_height":
-		panic(fmt.Errorf("field timeout_height of message Part6 is not mutable"))
-	case "Part6.hash_of_raw_bytes":
-		panic(fmt.Errorf("field hash_of_raw_bytes of message Part6 is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part6"))
-		}
-		panic(fmt.Errorf("message Part6 does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Part6) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "Part6.gas_limit":
-		return protoreflect.ValueOfUint64(uint64(0))
-	case "Part6.timeout_height":
-		return protoreflect.ValueOfUint64(uint64(0))
-	case "Part6.other_signer":
-		list := []*v1beta11.SignerInfo{}
-		return protoreflect.ValueOfList(&_Part6_3_list{list: &list})
-	case "Part6.extension_options":
-		list := []*anypb.Any{}
-		return protoreflect.ValueOfList(&_Part6_4_list{list: &list})
-	case "Part6.non_critical_extension_options":
-		list := []*anypb.Any{}
-		return protoreflect.ValueOfList(&_Part6_5_list{list: &list})
-	case "Part6.hash_of_raw_bytes":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: Part6"))
-		}
-		panic(fmt.Errorf("message Part6 does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Part6) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in Part6", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Part6) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Part6) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_Part6) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Part6)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.GasLimit != 0 {
-			n += 1 + runtime.Sov(uint64(x.GasLimit))
-		}
-		if x.TimeoutHeight != 0 {
-			n += 1 + runtime.Sov(uint64(x.TimeoutHeight))
-		}
-		if len(x.OtherSigner) > 0 {
-			for _, e := range x.OtherSigner {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if len(x.ExtensionOptions) > 0 {
-			for _, e := range x.ExtensionOptions {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if len(x.NonCriticalExtensionOptions) > 0 {
-			for _, e := range x.NonCriticalExtensionOptions {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		l = len(x.HashOfRawBytes)
-		if l > 0 {
-			n += 2 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Part6)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.HashOfRawBytes) > 0 {
-			i -= len(x.HashOfRawBytes)
-			copy(dAtA[i:], x.HashOfRawBytes)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.HashOfRawBytes)))
-			i--
-			dAtA[i] = 0x6
-			i--
-			dAtA[i] = 0xa2
-		}
-		if len(x.NonCriticalExtensionOptions) > 0 {
-			for iNdEx := len(x.NonCriticalExtensionOptions) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.NonCriticalExtensionOptions[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x2a
-			}
-		}
-		if len(x.ExtensionOptions) > 0 {
-			for iNdEx := len(x.ExtensionOptions) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.ExtensionOptions[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x22
-			}
-		}
-		if len(x.OtherSigner) > 0 {
-			for iNdEx := len(x.OtherSigner) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.OtherSigner[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x1a
-			}
-		}
-		if x.TimeoutHeight != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.TimeoutHeight))
-			i--
-			dAtA[i] = 0x10
-		}
-		if x.GasLimit != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.GasLimit))
-			i--
-			dAtA[i] = 0x8
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Part6)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part6: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Part6: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
+			case 12:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field GasLimit", wireType)
 				}
@@ -3449,7 +1671,7 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 2:
+			case 13:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TimeoutHeight", wireType)
 				}
@@ -3468,7 +1690,7 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 3:
+			case 14:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OtherSigner", wireType)
 				}
@@ -3502,7 +1724,7 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 4:
+			case 15:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExtensionOptions", wireType)
 				}
@@ -3536,7 +1758,7 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 5:
+			case 16:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NonCriticalExtensionOptions", wireType)
 				}
@@ -3570,7 +1792,7 @@ func (x *fastReflection_Part6) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 100:
+			case 17:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field HashOfRawBytes", wireType)
 				}
@@ -3650,18 +1872,32 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Part1 struct {
+type Enveloppe struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ChainId       string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	AccountNumber uint64 `protobuf:"varint,2,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
-	Sequence      uint64 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	ChainId                     string                 `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	AccountNumber               uint64                 `protobuf:"varint,2,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
+	Sequence                    uint64                 `protobuf:"varint,3,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	PublicKey                   *anypb.Any             `protobuf:"bytes,4,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
+	Message                     []*anypb.Any           `protobuf:"bytes,5,rep,name=message,proto3" json:"message,omitempty"`
+	Memo                        string                 `protobuf:"bytes,6,opt,name=memo,proto3" json:"memo,omitempty"`
+	Fees                        []*v1beta1.Coin        `protobuf:"bytes,7,rep,name=fees,proto3" json:"fees,omitempty"`
+	FeePayer                    string                 `protobuf:"bytes,8,opt,name=fee_payer,json=feePayer,proto3" json:"fee_payer,omitempty"`
+	FeeGranter                  string                 `protobuf:"bytes,9,opt,name=fee_granter,json=feeGranter,proto3" json:"fee_granter,omitempty"`
+	Tip                         []*v1beta1.Coin        `protobuf:"bytes,10,rep,name=tip,proto3" json:"tip,omitempty"`
+	Tipper                      string                 `protobuf:"bytes,11,opt,name=tipper,proto3" json:"tipper,omitempty"`
+	GasLimit                    uint64                 `protobuf:"varint,12,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
+	TimeoutHeight               uint64                 `protobuf:"varint,13,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
+	OtherSigner                 []*v1beta11.SignerInfo `protobuf:"bytes,14,rep,name=other_signer,json=otherSigner,proto3" json:"other_signer,omitempty"`
+	ExtensionOptions            []*anypb.Any           `protobuf:"bytes,15,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
+	NonCriticalExtensionOptions []*anypb.Any           `protobuf:"bytes,16,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
+	HashOfRawBytes              string                 `protobuf:"bytes,17,opt,name=hash_of_raw_bytes,json=hashOfRawBytes,proto3" json:"hash_of_raw_bytes,omitempty"`
 }
 
-func (x *Part1) Reset() {
-	*x = Part1{}
+func (x *Enveloppe) Reset() {
+	*x = Enveloppe{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_enveloppe_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3669,279 +1905,130 @@ func (x *Part1) Reset() {
 	}
 }
 
-func (x *Part1) String() string {
+func (x *Enveloppe) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Part1) ProtoMessage() {}
+func (*Enveloppe) ProtoMessage() {}
 
-// Deprecated: Use Part1.ProtoReflect.Descriptor instead.
-func (*Part1) Descriptor() ([]byte, []int) {
+// Deprecated: Use Enveloppe.ProtoReflect.Descriptor instead.
+func (*Enveloppe) Descriptor() ([]byte, []int) {
 	return file_enveloppe_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Part1) GetChainId() string {
+func (x *Enveloppe) GetChainId() string {
 	if x != nil {
 		return x.ChainId
 	}
 	return ""
 }
 
-func (x *Part1) GetAccountNumber() uint64 {
+func (x *Enveloppe) GetAccountNumber() uint64 {
 	if x != nil {
 		return x.AccountNumber
 	}
 	return 0
 }
 
-func (x *Part1) GetSequence() uint64 {
+func (x *Enveloppe) GetSequence() uint64 {
 	if x != nil {
 		return x.Sequence
 	}
 	return 0
 }
 
-type Part2 struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	PublicKey *anypb.Any `protobuf:"bytes,1,opt,name=public_key,json=publicKey,proto3" json:"public_key,omitempty"`
-}
-
-func (x *Part2) Reset() {
-	*x = Part2{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enveloppe_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Part2) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Part2) ProtoMessage() {}
-
-// Deprecated: Use Part2.ProtoReflect.Descriptor instead.
-func (*Part2) Descriptor() ([]byte, []int) {
-	return file_enveloppe_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *Part2) GetPublicKey() *anypb.Any {
+func (x *Enveloppe) GetPublicKey() *anypb.Any {
 	if x != nil {
 		return x.PublicKey
 	}
 	return nil
 }
 
-type Part3 struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Message []*anypb.Any    `protobuf:"bytes,1,rep,name=message,proto3" json:"message,omitempty"`
-	Memo    string          `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
-	Fees    []*v1beta1.Coin `protobuf:"bytes,3,rep,name=fees,proto3" json:"fees,omitempty"`
-}
-
-func (x *Part3) Reset() {
-	*x = Part3{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enveloppe_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Part3) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Part3) ProtoMessage() {}
-
-// Deprecated: Use Part3.ProtoReflect.Descriptor instead.
-func (*Part3) Descriptor() ([]byte, []int) {
-	return file_enveloppe_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *Part3) GetMessage() []*anypb.Any {
+func (x *Enveloppe) GetMessage() []*anypb.Any {
 	if x != nil {
 		return x.Message
 	}
 	return nil
 }
 
-func (x *Part3) GetMemo() string {
+func (x *Enveloppe) GetMemo() string {
 	if x != nil {
 		return x.Memo
 	}
 	return ""
 }
 
-func (x *Part3) GetFees() []*v1beta1.Coin {
+func (x *Enveloppe) GetFees() []*v1beta1.Coin {
 	if x != nil {
 		return x.Fees
 	}
 	return nil
 }
 
-type Part4 struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	FeePayer   string `protobuf:"bytes,2,opt,name=fee_payer,json=feePayer,proto3" json:"fee_payer,omitempty"`
-	FeeGranter string `protobuf:"bytes,3,opt,name=fee_granter,json=feeGranter,proto3" json:"fee_granter,omitempty"`
-}
-
-func (x *Part4) Reset() {
-	*x = Part4{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enveloppe_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Part4) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Part4) ProtoMessage() {}
-
-// Deprecated: Use Part4.ProtoReflect.Descriptor instead.
-func (*Part4) Descriptor() ([]byte, []int) {
-	return file_enveloppe_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *Part4) GetFeePayer() string {
+func (x *Enveloppe) GetFeePayer() string {
 	if x != nil {
 		return x.FeePayer
 	}
 	return ""
 }
 
-func (x *Part4) GetFeeGranter() string {
+func (x *Enveloppe) GetFeeGranter() string {
 	if x != nil {
 		return x.FeeGranter
 	}
 	return ""
 }
 
-type Part5 struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Tip    []*v1beta1.Coin `protobuf:"bytes,4,rep,name=tip,proto3" json:"tip,omitempty"`
-	Tipper string          `protobuf:"bytes,5,opt,name=tipper,proto3" json:"tipper,omitempty"`
-}
-
-func (x *Part5) Reset() {
-	*x = Part5{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enveloppe_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Part5) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Part5) ProtoMessage() {}
-
-// Deprecated: Use Part5.ProtoReflect.Descriptor instead.
-func (*Part5) Descriptor() ([]byte, []int) {
-	return file_enveloppe_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *Part5) GetTip() []*v1beta1.Coin {
+func (x *Enveloppe) GetTip() []*v1beta1.Coin {
 	if x != nil {
 		return x.Tip
 	}
 	return nil
 }
 
-func (x *Part5) GetTipper() string {
+func (x *Enveloppe) GetTipper() string {
 	if x != nil {
 		return x.Tipper
 	}
 	return ""
 }
 
-type Part6 struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	GasLimit                    uint64                 `protobuf:"varint,1,opt,name=gas_limit,json=gasLimit,proto3" json:"gas_limit,omitempty"`
-	TimeoutHeight               uint64                 `protobuf:"varint,2,opt,name=timeout_height,json=timeoutHeight,proto3" json:"timeout_height,omitempty"`
-	OtherSigner                 []*v1beta11.SignerInfo `protobuf:"bytes,3,rep,name=other_signer,json=otherSigner,proto3" json:"other_signer,omitempty"`
-	ExtensionOptions            []*anypb.Any           `protobuf:"bytes,4,rep,name=extension_options,json=extensionOptions,proto3" json:"extension_options,omitempty"`
-	NonCriticalExtensionOptions []*anypb.Any           `protobuf:"bytes,5,rep,name=non_critical_extension_options,json=nonCriticalExtensionOptions,proto3" json:"non_critical_extension_options,omitempty"`
-	HashOfRawBytes              string                 `protobuf:"bytes,100,opt,name=hash_of_raw_bytes,json=hashOfRawBytes,proto3" json:"hash_of_raw_bytes,omitempty"`
-}
-
-func (x *Part6) Reset() {
-	*x = Part6{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enveloppe_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Part6) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Part6) ProtoMessage() {}
-
-// Deprecated: Use Part6.ProtoReflect.Descriptor instead.
-func (*Part6) Descriptor() ([]byte, []int) {
-	return file_enveloppe_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *Part6) GetGasLimit() uint64 {
+func (x *Enveloppe) GetGasLimit() uint64 {
 	if x != nil {
 		return x.GasLimit
 	}
 	return 0
 }
 
-func (x *Part6) GetTimeoutHeight() uint64 {
+func (x *Enveloppe) GetTimeoutHeight() uint64 {
 	if x != nil {
 		return x.TimeoutHeight
 	}
 	return 0
 }
 
-func (x *Part6) GetOtherSigner() []*v1beta11.SignerInfo {
+func (x *Enveloppe) GetOtherSigner() []*v1beta11.SignerInfo {
 	if x != nil {
 		return x.OtherSigner
 	}
 	return nil
 }
 
-func (x *Part6) GetExtensionOptions() []*anypb.Any {
+func (x *Enveloppe) GetExtensionOptions() []*anypb.Any {
 	if x != nil {
 		return x.ExtensionOptions
 	}
 	return nil
 }
 
-func (x *Part6) GetNonCriticalExtensionOptions() []*anypb.Any {
+func (x *Enveloppe) GetNonCriticalExtensionOptions() []*anypb.Any {
 	if x != nil {
 		return x.NonCriticalExtensionOptions
 	}
 	return nil
 }
 
-func (x *Part6) GetHashOfRawBytes() string {
+func (x *Enveloppe) GetHashOfRawBytes() string {
 	if x != nil {
 		return x.HashOfRawBytes
 	}
@@ -3959,60 +2046,58 @@ var file_enveloppe_proto_rawDesc = []byte{
 	0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69,
 	0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x74, 0x78, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x74, 0x78, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x65, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x31, 0x12, 0x19, 0x0a, 0x08,
-	0x63, 0x68, 0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x0d, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x1a,
-	0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x3c, 0x0a, 0x05, 0x50, 0x61,
-	0x72, 0x74, 0x32, 0x12, 0x33, 0x0a, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x5f, 0x6b, 0x65,
-	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x09, 0x70,
-	0x75, 0x62, 0x6c, 0x69, 0x63, 0x4b, 0x65, 0x79, 0x22, 0x7a, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74,
-	0x33, 0x12, 0x2e, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
-	0x65, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x66, 0x65, 0x65, 0x73, 0x18, 0x03, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x04,
-	0x66, 0x65, 0x65, 0x73, 0x22, 0x45, 0x0a, 0x05, 0x50, 0x61, 0x72, 0x74, 0x34, 0x12, 0x1b, 0x0a,
-	0x09, 0x66, 0x65, 0x65, 0x5f, 0x70, 0x61, 0x79, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72, 0x12, 0x1f, 0x0a, 0x0b, 0x66, 0x65,
-	0x65, 0x5f, 0x67, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0a, 0x66, 0x65, 0x65, 0x47, 0x72, 0x61, 0x6e, 0x74, 0x65, 0x72, 0x22, 0x4c, 0x0a, 0x05, 0x50,
-	0x61, 0x72, 0x74, 0x35, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x69, 0x70, 0x18, 0x04, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x03, 0x74, 0x69,
-	0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x22, 0xd6, 0x02, 0x0a, 0x05, 0x50, 0x61,
-	0x72, 0x74, 0x36, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61, 0x73, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x67, 0x61, 0x73, 0x4c, 0x69, 0x6d, 0x69, 0x74,
-	0x12, 0x25, 0x0a, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x68, 0x65, 0x69, 0x67,
-	0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75,
-	0x74, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x40, 0x0a, 0x0c, 0x6f, 0x74, 0x68, 0x65, 0x72,
-	0x5f, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0b, 0x6f, 0x74,
-	0x68, 0x65, 0x72, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x41, 0x0a, 0x11, 0x65, 0x78, 0x74,
-	0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x04,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x10, 0x65, 0x78, 0x74, 0x65,
-	0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x59, 0x0a, 0x1e,
-	0x6e, 0x6f, 0x6e, 0x5f, 0x63, 0x72, 0x69, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x65, 0x78, 0x74,
-	0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x05,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x1b, 0x6e, 0x6f, 0x6e, 0x43,
-	0x72, 0x69, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e,
-	0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x29, 0x0a, 0x11, 0x68, 0x61, 0x73, 0x68, 0x5f,
-	0x6f, 0x66, 0x5f, 0x72, 0x61, 0x77, 0x5f, 0x62, 0x79, 0x74, 0x65, 0x73, 0x18, 0x64, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x4f, 0x66, 0x52, 0x61, 0x77, 0x42, 0x79, 0x74,
-	0x65, 0x73, 0x42, 0x3e, 0x42, 0x0e, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x70, 0x65, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
-	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f,
-	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c,
-	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x74, 0x6f, 0x22, 0xe3, 0x05, 0x0a, 0x09, 0x45, 0x6e, 0x76, 0x65, 0x6c, 0x6f, 0x70, 0x70,
+	0x65, 0x12, 0x19, 0x0a, 0x08, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x0e,
+	0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x75, 0x6d,
+	0x62, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x12,
+	0x33, 0x0a, 0x0a, 0x70, 0x75, 0x62, 0x6c, 0x69, 0x63, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x09, 0x70, 0x75, 0x62, 0x6c, 0x69,
+	0x63, 0x4b, 0x65, 0x79, 0x12, 0x2e, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18,
+	0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e, 0x79, 0x52, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x18, 0x06, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x6d, 0x65, 0x6d, 0x6f, 0x12, 0x2d, 0x0a, 0x04, 0x66, 0x65, 0x65, 0x73,
+	0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x52, 0x04, 0x66, 0x65, 0x65, 0x73, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x5f, 0x70,
+	0x61, 0x79, 0x65, 0x72, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x65, 0x65, 0x50,
+	0x61, 0x79, 0x65, 0x72, 0x12, 0x1f, 0x0a, 0x0b, 0x66, 0x65, 0x65, 0x5f, 0x67, 0x72, 0x61, 0x6e,
+	0x74, 0x65, 0x72, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x66, 0x65, 0x65, 0x47, 0x72,
+	0x61, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x2b, 0x0a, 0x03, 0x74, 0x69, 0x70, 0x18, 0x0a, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x52, 0x03, 0x74,
+	0x69, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x18, 0x0b, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61,
+	0x73, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x67,
+	0x61, 0x73, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x74, 0x69, 0x6d, 0x65, 0x6f,
+	0x75, 0x74, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0d, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x40,
+	0x0a, 0x0c, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x5f, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x0e,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x49,
+	0x6e, 0x66, 0x6f, 0x52, 0x0b, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72,
+	0x12, 0x41, 0x0a, 0x11, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x0f, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
+	0x79, 0x52, 0x10, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69,
+	0x6f, 0x6e, 0x73, 0x12, 0x59, 0x0a, 0x1e, 0x6e, 0x6f, 0x6e, 0x5f, 0x63, 0x72, 0x69, 0x74, 0x69,
+	0x63, 0x61, 0x6c, 0x5f, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x6f, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x10, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x41, 0x6e,
+	0x79, 0x52, 0x1b, 0x6e, 0x6f, 0x6e, 0x43, 0x72, 0x69, 0x74, 0x69, 0x63, 0x61, 0x6c, 0x45, 0x78,
+	0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x29,
+	0x0a, 0x11, 0x68, 0x61, 0x73, 0x68, 0x5f, 0x6f, 0x66, 0x5f, 0x72, 0x61, 0x77, 0x5f, 0x62, 0x79,
+	0x74, 0x65, 0x73, 0x18, 0x11, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x68, 0x61, 0x73, 0x68, 0x4f,
+	0x66, 0x52, 0x61, 0x77, 0x42, 0x79, 0x74, 0x65, 0x73, 0x42, 0x3e, 0x42, 0x0e, 0x45, 0x6e, 0x76,
+	0x65, 0x6c, 0x6f, 0x70, 0x70, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2a, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x74, 0x78, 0x2f, 0x74,
+	0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f,
+	0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -4027,26 +2112,21 @@ func file_enveloppe_proto_rawDescGZIP() []byte {
 	return file_enveloppe_proto_rawDescData
 }
 
-var file_enveloppe_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_enveloppe_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_enveloppe_proto_goTypes = []interface{}{
-	(*Part1)(nil),               // 0: Part1
-	(*Part2)(nil),               // 1: Part2
-	(*Part3)(nil),               // 2: Part3
-	(*Part4)(nil),               // 3: Part4
-	(*Part5)(nil),               // 4: Part5
-	(*Part6)(nil),               // 5: Part6
-	(*anypb.Any)(nil),           // 6: google.protobuf.Any
-	(*v1beta1.Coin)(nil),        // 7: cosmos.base.v1beta1.Coin
-	(*v1beta11.SignerInfo)(nil), // 8: cosmos.tx.v1beta1.SignerInfo
+	(*Enveloppe)(nil),           // 0: Enveloppe
+	(*anypb.Any)(nil),           // 1: google.protobuf.Any
+	(*v1beta1.Coin)(nil),        // 2: cosmos.base.v1beta1.Coin
+	(*v1beta11.SignerInfo)(nil), // 3: cosmos.tx.v1beta1.SignerInfo
 }
 var file_enveloppe_proto_depIdxs = []int32{
-	6, // 0: Part2.public_key:type_name -> google.protobuf.Any
-	6, // 1: Part3.message:type_name -> google.protobuf.Any
-	7, // 2: Part3.fees:type_name -> cosmos.base.v1beta1.Coin
-	7, // 3: Part5.tip:type_name -> cosmos.base.v1beta1.Coin
-	8, // 4: Part6.other_signer:type_name -> cosmos.tx.v1beta1.SignerInfo
-	6, // 5: Part6.extension_options:type_name -> google.protobuf.Any
-	6, // 6: Part6.non_critical_extension_options:type_name -> google.protobuf.Any
+	1, // 0: Enveloppe.public_key:type_name -> google.protobuf.Any
+	1, // 1: Enveloppe.message:type_name -> google.protobuf.Any
+	2, // 2: Enveloppe.fees:type_name -> cosmos.base.v1beta1.Coin
+	2, // 3: Enveloppe.tip:type_name -> cosmos.base.v1beta1.Coin
+	3, // 4: Enveloppe.other_signer:type_name -> cosmos.tx.v1beta1.SignerInfo
+	1, // 5: Enveloppe.extension_options:type_name -> google.protobuf.Any
+	1, // 6: Enveloppe.non_critical_extension_options:type_name -> google.protobuf.Any
 	7, // [7:7] is the sub-list for method output_type
 	7, // [7:7] is the sub-list for method input_type
 	7, // [7:7] is the sub-list for extension type_name
@@ -4061,67 +2141,7 @@ func file_enveloppe_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_enveloppe_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Part1); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enveloppe_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Part2); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enveloppe_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Part3); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enveloppe_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Part4); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enveloppe_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Part5); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enveloppe_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Part6); i {
+			switch v := v.(*Enveloppe); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4139,7 +2159,7 @@ func file_enveloppe_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_enveloppe_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

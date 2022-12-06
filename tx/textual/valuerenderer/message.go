@@ -252,10 +252,6 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		}
 	}
 
-	if idx > len(screens) {
-		return nilValue, errors.New("leftover screens")
-	}
-
 	return protoreflect.ValueOfMessage(msg), nil
 }
 

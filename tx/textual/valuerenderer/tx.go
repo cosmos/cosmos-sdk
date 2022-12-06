@@ -7,12 +7,22 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/tx/textual/internal/textualpb"
+)
+
+var (
+	// msgRe is a regex matching the beginning of the TxBody msgs in the enveloppe.
+	msgRe = regexp.MustCompile("Message: ([0-9]+) Any")
+	// inverseMsgRe is a regex matching the textual output of the TxBody msgs
+	// header.
+	inverseMsgRe = regexp.MustCompile("This transaction has ([0-9]+) Messages?")
 )
 
 type txValueRenderer struct {
@@ -50,27 +60,25 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		return nil, err
 	}
 
-	p1 := &textualpb.Part1{
-		ChainId:       textualData.SignerData.ChainId,
-		AccountNumber: textualData.SignerData.AccountNumber,
-		Sequence:      textualData.SignerData.Sequence,
+	enveloppe := &textualpb.Enveloppe{
+		ChainId:                     textualData.SignerData.ChainId,
+		AccountNumber:               textualData.SignerData.AccountNumber,
+		Sequence:                    textualData.SignerData.Sequence,
+		PublicKey:                   textualData.SignerData.PubKey,
+		Message:                     txBody.Messages,
+		Memo:                        txBody.Memo,
+		Fees:                        txAuthInfo.Fee.Amount,
+		FeePayer:                    txAuthInfo.Fee.Payer,
+		FeeGranter:                  txAuthInfo.Fee.Granter,
+		GasLimit:                    txAuthInfo.Fee.GasLimit,
+		TimeoutHeight:               txBody.TimeoutHeight,
+		ExtensionOptions:            txBody.ExtensionOptions,
+		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
+		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
 	}
-	p2 := &textualpb.Part2{
-		PublicKey: textualData.SignerData.PubKey,
-	}
-	p3 := &textualpb.Part3{
-		Message: txBody.Messages,
-		Memo:    txBody.Memo,
-		Fees:    txAuthInfo.Fee.Amount,
-	}
-	p4 := &textualpb.Part4{
-		FeePayer:   txAuthInfo.Fee.Payer,
-		FeeGranter: txAuthInfo.Fee.Granter,
-	}
-	p5 := &textualpb.Part5{}
 	if txAuthInfo.Tip != nil {
-		p5.Tip = txAuthInfo.Tip.Amount
-		p5.Tipper = txAuthInfo.Tip.Tipper
+		enveloppe.Tip = txAuthInfo.Tip.Amount
+		enveloppe.Tipper = txAuthInfo.Tip.Tipper
 	}
 	// Find all other tx signers than the current signer.
 	otherSigners := make([]*txv1beta1.SignerInfo, 0, len(txAuthInfo.SignerInfos)-1)
@@ -81,69 +89,80 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 
 		otherSigners = append(otherSigners, si)
 	}
-	p6 := &textualpb.Part6{
-		GasLimit:                    txAuthInfo.Fee.GasLimit,
-		TimeoutHeight:               txBody.TimeoutHeight,
-		OtherSigner:                 otherSigners,
-		ExtensionOptions:            txBody.ExtensionOptions,
-		NonCriticalExtensionOptions: txBody.NonCriticalExtensionOptions,
-		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
-	}
+	enveloppe.OtherSigner = otherSigners
 
-	screens1, err := vr.formatPart(ctx, p1, false)
-	if err != nil {
-		return nil, err
-	}
-	screens2, err := vr.formatPart(ctx, p2, true)
-	if err != nil {
-		return nil, err
-	}
-	screens3, err := vr.formatPart(ctx, p3, false)
-	if err != nil {
-		return nil, err
-	}
-	// Replace:
-	// "Messages: <N> Any"
-	// with:
-	// "This transaction has <N> Message"
-	screens3[0].Text = fmt.Sprintf("This transaction has %d Message", len(txBody.Messages))
-	screens4, err := vr.formatPart(ctx, p4, true)
-	if err != nil {
-		return nil, err
-	}
-	screens5, err := vr.formatPart(ctx, p5, false)
-	if err != nil {
-		return nil, err
-	}
-	screens6, err := vr.formatPart(ctx, p6, true)
+	mvr, err := vr.tr.GetMessageValueRenderer(enveloppe.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err
 	}
 
-	screens := append(screens1, append(screens2, append(screens3, append(screens4, append(screens5, screens6...)...)...)...)...)
-
-	return screens, nil
-}
-
-func (vr txValueRenderer) formatPart(ctx context.Context, m proto.Message, expert bool) ([]Screen, error) {
-	messageVR := NewMessageValueRenderer(vr.tr, m.ProtoReflect().Descriptor())
-	screens, err := messageVR.Format(ctx, protoreflect.ValueOf(m.ProtoReflect()))
+	screens, err := mvr.Format(ctx, protoreflect.ValueOf(enveloppe.ProtoReflect()))
 	if err != nil {
 		return nil, err
 	}
 
-	// Remove 1st screen which is the message name
+	// Since we're value-rendering the (internal) Enveloppe message, we do some
+	// postprocessing. First, we remove first enveloppe header screen, and
+	// unindent 1 level.
+
+	// Remove 1st screen
 	screens = screens[1:]
-
-	// Remove indentations on all subscreens
 	for i := range screens {
 		screens[i].Indent--
-		if expert {
-			screens[i].Expert = true
+	}
+
+	// Expert fields.
+	expert := map[string]struct{}{
+		"Public key":                     {},
+		"Fee payer":                      {},
+		"Fee granter":                    {},
+		"Gas limit":                      {},
+		"Timeout height":                 {},
+		"Other signer":                   {},
+		"Extension options":              {},
+		"Non critical extension options": {},
+		"Hash of raw bytes":              {},
+	}
+
+	for i := range screens {
+		if screens[i].Indent == 0 {
+			// Do expert fields.
+			screenKV := strings.Split(screens[i].Text, ": ")
+			_, ok := expert[screenKV[0]]
+			if ok {
+				expertify(screens, i, screenKV[0])
+			}
+
+			// Replace:
+			// "Message: <N> Any"
+			// with:
+			// "This transaction has <N> Message"
+			matches := msgRe.FindStringSubmatch(screens[i].Text)
+			if len(matches) > 0 {
+				screens[i].Text = fmt.Sprintf("This transaction has %s Message", matches[1])
+				if matches[1] != "1" {
+					screens[i].Text += "s"
+				}
+			}
 		}
 	}
 
 	return screens, nil
+}
+
+// expertify marks all screens starting from `fromIdx` as expert, and stops
+// just before it finds the next screen with Indent==0 (unless it's a "End of"
+// termination screen). It modifies screens in-place.
+func expertify(screens []Screen, fromIdx int, fieldName string) {
+	for i := fromIdx; i < len(screens); i++ {
+		if i > fromIdx &&
+			screens[i].Indent == 0 &&
+			screens[i].Text != fmt.Sprintf("End of %s", fieldName) {
+			break
+		}
+
+		screens[i].Expert = true
+	}
 }
 
 // getHash gets the hash of raw bytes to be signed over:
@@ -166,29 +185,60 @@ func getHash(bodyBz, authInfoBz []byte) string {
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
-	_, part1, err := parsePart(ctx, vr, screens, (&textualpb.Part1{}))
-	if err != nil {
-		return nilValue, err
+	// Process the screens to be parsable by a Enveloppe message value renderer
+	parsable := make([]Screen, len(screens)+1)
+	parsable[0] = Screen{Text: "Enveloppe object"}
+	for i := range screens {
+		parsable[i+1].Indent = screens[i].Indent + 1
+
+		// Take same text, except that we weplace:
+		// "This transaction has <N> Message"
+		// with:
+		// "Message: <N> Any"
+		matches := inverseMsgRe.FindStringSubmatch(screens[i].Text)
+		if len(matches) > 0 {
+			parsable[i+1].Text = fmt.Sprintf("Message: %s Any", matches[1])
+		} else {
+			parsable[i+1].Text = screens[i].Text
+		}
 	}
-	_, part2, err := parsePart(ctx, vr, screens, (&textualpb.Part2{}))
+
+	mvr, err := vr.tr.GetMessageValueRenderer((&textualpb.Enveloppe{}).ProtoReflect().Descriptor())
 	if err != nil {
 		return nilValue, err
 	}
 
-	body := &txv1beta1.TxBody{}
-	authInfo := &txv1beta1.AuthInfo{}
-	signerData := &textualpb.SignerData{
-		ChainId:       part1.ChainId,
-		AccountNumber: part1.AccountNumber,
+	enveloppeV, err := mvr.Parse(ctx, parsable)
+	if err != nil {
+		return nilValue, err
 	}
+	enveloppe := enveloppeV.Message().Interface().(*textualpb.Enveloppe)
 
-	fmt.Println(part1)
-	fmt.Println(part2)
+	txBody := &txv1beta1.TxBody{
+		Messages:                    enveloppe.Message,
+		Memo:                        enveloppe.Memo,
+		TimeoutHeight:               enveloppe.TimeoutHeight,
+		ExtensionOptions:            enveloppe.ExtensionOptions,
+		NonCriticalExtensionOptions: enveloppe.NonCriticalExtensionOptions,
+	}
+	authInfo := &txv1beta1.AuthInfo{
+		SignerInfos: enveloppe.OtherSigner, // TODO
+		Fee: &txv1beta1.Fee{
+			Amount:   enveloppe.Fees,
+			GasLimit: enveloppe.GasLimit,
+			Payer:    enveloppe.FeePayer,
+			Granter:  enveloppe.FeeGranter,
+		},
+		Tip: &txv1beta1.Tip{
+			Amount: enveloppe.Tip,
+			Tipper: enveloppe.Tipper,
+		},
+	}
 
 	// Note that we might not always get back the exact bodyBz and authInfoBz
 	// that was passed into, because protobuf is not deterministic.
 	// In tests, we don't check bytes equality, but protobuf object equality.
-	bodyBz, err := proto.Marshal(body)
+	bodyBz, err := proto.Marshal(txBody)
 	if err != nil {
 		return nilValue, err
 	}
@@ -197,28 +247,17 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		return nilValue, err
 	}
 
-	res := textualpb.TextualData{
+	tx := &textualpb.TextualData{
 		BodyBytes:     bodyBz,
 		AuthInfoBytes: authInfoBz,
-		SignerData:    signerData,
+		SignerData: &textualpb.SignerData{
+			AccountNumber: enveloppe.AccountNumber,
+			Address:       "TODO",
+			ChainId:       enveloppe.ChainId,
+			Sequence:      enveloppe.Sequence,
+			PubKey:        enveloppe.PublicKey,
+		},
 	}
 
-	return protoreflect.ValueOfMessage(res.ProtoReflect()), nil
-}
-
-func parsePart[T proto.Message](ctx context.Context, vr txValueRenderer, screens []Screen, m T) ([]Screen, T, error) {
-	messageVR := NewMessageValueRenderer(vr.tr, m.ProtoReflect().Descriptor())
-
-	// Manually add the "<message_name> object" header screen, and indent correctly
-	for i := range screens {
-		screens[i].Indent++
-	}
-	screens = append([]Screen{{Text: "Part1 object"}}, screens...)
-
-	v, err := messageVR.Parse(ctx, screens)
-	if err != nil {
-		return nil, *new(T), err
-	}
-
-	return screens, v.Message().Interface().(T), err
+	return protoreflect.ValueOf(tx.ProtoReflect()), nil
 }

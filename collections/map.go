@@ -98,10 +98,17 @@ func (m Map[K, V]) getStore(provider StorageProvider) storetypes.KVStore {
 }
 
 func (m Map[K, V]) encodeKey(key K) ([]byte, error) {
-	keyBytes := make([]byte, m.kc.Size(key))
-	_, err := m.kc.PutKey(keyBytes, key)
+	prefixLen := len(m.prefix)
+	// preallocate buffer
+	keyBytes := make([]byte, prefixLen+m.kc.Size(key))
+	// put prefix
+	for i, c := range m.prefix {
+		keyBytes[i] = c
+	}
+	// put key
+	_, err := m.kc.PutKey(keyBytes[prefixLen:], key)
 	if err != nil {
 		return nil, fmt.Errorf("%w: key encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
-	return append(m.prefix, keyBytes...), nil
+	return keyBytes, nil
 }

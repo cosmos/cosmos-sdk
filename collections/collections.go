@@ -57,10 +57,10 @@ type KeyCodec[T any] interface {
 	// of length equal to Size(key). The implementer must also return
 	// the bytes written, and they must be less than or equal to Size(key).
 	EncodeKey(buffer []byte, key T) (int, error)
-	// ReadKey reads from the provided bytes buffer to decode
+	// DecodeKey reads from the provided bytes buffer to decode
 	// the key T. Returns the number of bytes read, the type T
 	// or an error in case of decoding failure.
-	ReadKey(buffer []byte) (int, T, error)
+	DecodeKey(buffer []byte) (int, T, error)
 	// Size returns the buffer size need to encode key T in binary format.
 	// Implementations should choose the most performant path to compute this
 	// at the risk of over-estimating. In the case of variable-length integers, the max

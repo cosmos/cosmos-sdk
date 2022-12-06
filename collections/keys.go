@@ -20,7 +20,7 @@ func (u uint64Key) EncodeKey(buffer []byte, key uint64) (int, error) {
 	return 8, nil
 }
 
-func (u uint64Key) ReadKey(buffer []byte) (int, uint64, error) {
+func (u uint64Key) DecodeKey(buffer []byte) (int, uint64, error) {
 	if size := len(buffer); size < 8 {
 		return 0, 0, fmt.Errorf("%w: wanted at least 8, got: %d", errDecodeKeySize, size)
 	}

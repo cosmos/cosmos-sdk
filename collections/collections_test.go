@@ -29,7 +29,7 @@ func assertKey[T any](t *testing.T, encoder KeyCodec[T], key T) {
 	written, err := encoder.EncodeKey(buffer, key)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), written)
-	read, decodedKey, err := encoder.ReadKey(buffer)
+	read, decodedKey, err := encoder.DecodeKey(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")

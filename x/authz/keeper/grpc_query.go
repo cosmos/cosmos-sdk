@@ -173,7 +173,6 @@ func (k Keeper) GranteeGrants(c context.Context, req *authz.QueryGranteeGrantsRe
 	}, func() *authz.Grant {
 		return &authz.Grant{}
 	})
-
 	if err != nil {
 		return nil, err
 	}

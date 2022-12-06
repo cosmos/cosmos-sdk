@@ -134,6 +134,9 @@ type MultiStore interface {
 	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
 	// It appends the listeners to a current set, if one already exists
 	AddListeners(key StoreKey, listeners []WriteListener)
+
+	// LatestVersion returns the latest version in the store
+	LatestVersion() int64
 }
 
 // From MultiStore.CacheMultiStore()....

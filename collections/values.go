@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var Uint64Value ValueEncoder[uint64] = uint64Value{}
+var Uint64Value ValueCodec[uint64] = uint64Value{}
 
 type uint64Value struct{}
 

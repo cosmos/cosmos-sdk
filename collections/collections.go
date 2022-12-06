@@ -49,9 +49,9 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 	return Prefix{raw: prefix}
 }
 
-// KeyEncoder defines a generic interface which is implemented
+// KeyCodec defines a generic interface which is implemented
 // by types that are capable of encoding and decoding collections keys.
-type KeyEncoder[T any] interface {
+type KeyCodec[T any] interface {
 	// PutKey writes the key bytes into the buffer. Returns the number of
 	// bytes written. The implementer must expect the buffer to be at least
 	// of length equal to Size(key). The implementer must also return
@@ -69,12 +69,12 @@ type KeyEncoder[T any] interface {
 	KeyType() string
 }
 
-// ValueEncoder defines a generic interface which is implemented
+// ValueCodec defines a generic interface which is implemented
 // by types that are capable of encoding and decoding collection values.
-type ValueEncoder[T any] interface {
+type ValueCodec[T any] interface {
 	// Encode encodes the value T into bytes.
 	Encode(value T) ([]byte, error)
-	// Decode returns the type T given its bytes representation.
+	// Decode returns the type T given its byte representation.
 	Decode(b []byte) (T, error)
 	// Stringify returns a string representation of T.
 	Stringify(value T) string

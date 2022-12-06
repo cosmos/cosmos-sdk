@@ -7,7 +7,7 @@ import (
 )
 
 // NewItem instantiates a new Item instance, given the value encoder of the item V.
-func NewItem[V any](sk storetypes.StoreKey, prefix Prefix, valueEncoder ValueEncoder[V]) Item[V] {
+func NewItem[V any](sk storetypes.StoreKey, prefix Prefix, valueEncoder ValueCodec[V]) Item[V] {
 	return (Item[V])(NewMap[noKey, V](sk, prefix, noKey{}, valueEncoder))
 }
 
@@ -31,7 +31,7 @@ func (i Item[V]) Has(ctx StorageProvider) (bool, error) { return (Map[noKey, V])
 // Remove removes the item in the store.
 func (i Item[V]) Remove(ctx StorageProvider) error { return (Map[noKey, V])(i).Remove(ctx, noKey{}) }
 
-// noKey defines a KeyEncoder which decodes nothing.
+// noKey defines a KeyCodec which decodes nothing.
 type noKey struct{}
 
 func (noKey) Stringify(_ noKey) string              { return "no_key" }

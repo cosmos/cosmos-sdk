@@ -9,7 +9,7 @@ import (
 
 // Uint64Key can be used to encode uint64 keys.
 // Encoding is big endian to retain ordering.
-var Uint64Key KeyEncoder[uint64] = uint64Key{}
+var Uint64Key KeyCodec[uint64] = uint64Key{}
 
 var errDecodeKeySize = errors.New("decode error, wrong byte key size")
 

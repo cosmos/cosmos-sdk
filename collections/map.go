@@ -9,7 +9,7 @@ import (
 // NewMap returns a Map given a StoreKey, a Prefix and the relative value and key encoders.
 func NewMap[K, V any](
 	sk storetypes.StoreKey, prefix Prefix,
-	keyEncoder KeyEncoder[K], valueEncoder ValueEncoder[V],
+	keyEncoder KeyCodec[K], valueEncoder ValueCodec[V],
 ) Map[K, V] {
 	return Map[K, V]{
 		kc:     keyEncoder,
@@ -23,8 +23,8 @@ func NewMap[K, V any](
 // It is used to map arbitrary keys to arbitrary
 // objects.
 type Map[K, V any] struct {
-	kc KeyEncoder[K]
-	vc ValueEncoder[V]
+	kc KeyCodec[K]
+	vc ValueCodec[V]
 
 	sk     storetypes.StoreKey
 	prefix []byte

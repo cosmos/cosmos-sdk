@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/rosetta-sdk-go/types"
 	"github.com/spf13/pflag"
 
 	crg "cosmossdk.io/tools/rosetta/lib/server"

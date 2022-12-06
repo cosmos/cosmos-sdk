@@ -86,7 +86,7 @@ package custom_client
 import (
 
 "context"
-"github.com/coinbase/rosetta-sdk-go/types"
+"github.com/cosmos/rosetta-sdk-go/types"
 "cosmossdk.io/tools/rosetta/lib"
 )
 

@@ -1,17 +1,12 @@
 package cmd
 
 import (
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"errors"
 	"io"
 	"os"
 
-<<<<<<< HEAD
-	"github.com/spf13/cast"
-=======
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -31,12 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
-=======
->>>>>>> 1b6192fec (refactor: provide a helper for baseapp options (#14175))
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"

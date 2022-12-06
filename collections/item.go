@@ -42,6 +42,6 @@ func (noKey) Stringify(_ noKey) string                 { return "no_key" }
 func (noKey) KeyType() string                          { return "no_key" }
 func (noKey) Size(_ noKey) int                         { return 0 }
 func (noKey) EncodeKey(_ []byte, _ noKey) (int, error) { return 0, nil }
-func (n noKey) DecodeKey(_ []byte) (int, noKey, error) {
+func (noKey) DecodeKey(_ []byte) (int, noKey, error) {
 	return 0, noKey{}, nil
 }

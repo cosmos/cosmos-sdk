@@ -368,7 +368,7 @@ func NewKVStoreKey(name string) *KVStoreKey {
 // The function will panic if there is a potential conflict in names (see `assertNoPrefix`
 // function for more details).
 func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
-	assertNoPrefix(names)
+	assertNoCommonPrefix(names)
 	keys := make(map[string]*KVStoreKey, len(names))
 	for _, n := range names {
 		keys[n] = NewKVStoreKey(n)

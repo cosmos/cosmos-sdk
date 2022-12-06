@@ -111,7 +111,7 @@ func InclusiveEndBytes(inclusiveBytes []byte) []byte {
 
 // assertNoCommonPrefix will panic if there are two keys: k1 and k2 in keys, such that
 // k1 is a prefix of k2
-func assertNoPrefix(keys []string) {
+func assertNoCommonPrefix(keys []string) {
 	sorted := make([]string, len(keys))
 	copy(sorted, keys)
 	sort.Strings(sorted)

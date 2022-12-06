@@ -14,8 +14,10 @@ var (
 	ErrEncoding = errors.New("collections: encoding error")
 )
 
-// StorageProvider represents sdk.Context
-// it is used to avoid to reduce dependencies.
+// StorageProvider is implemented by types
+// which provide a KVStore given a StoreKey.
+// It represents sdk.Context, it exists to
+// reduce dependencies.
 type StorageProvider interface {
 	// KVStore returns a KVStore given its StoreKey.
 	KVStore(key storetypes.StoreKey) storetypes.KVStore
@@ -24,7 +26,7 @@ type StorageProvider interface {
 // Prefix defines a segregation namespace
 // for specific collections objects.
 type Prefix struct {
-	raw []byte // TODO(testinginprod): maybe add a humanized prefix?
+	raw []byte // TODO(testinginprod): maybe add a humanized prefix field?
 }
 
 // Bytes returns the raw Prefix bytes.

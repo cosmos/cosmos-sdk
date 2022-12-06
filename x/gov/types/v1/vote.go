@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,6 +47,7 @@ func (v Votes) Equal(other Votes) bool {
 	return true
 }
 
+// String implements stringer interface
 func (v Votes) String() string {
 	if len(v) == 0 {
 		return "[]"

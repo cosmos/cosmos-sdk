@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -267,19 +266,14 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 
 	var tallyResult v1.TallyResult
 
-	fmt.Println("ssssss")
-	fmt.Println("status:", proposal.Status, v1.StatusPassed)
 	switch {
 	case proposal.Status == v1.StatusDepositPeriod:
-		fmt.Println("uf")
 		tallyResult = v1.EmptyTallyResult()
 
 	case proposal.Status == v1.StatusPassed || proposal.Status == v1.StatusRejected:
-		fmt.Println("case he")
 		tallyResult = *proposal.FinalTallyResult
 
 	default:
-		fmt.Println("sdfsdfsf")
 		// proposal is in voting period
 		_, _, tallyResult = q.Tally(ctx, proposal)
 	}

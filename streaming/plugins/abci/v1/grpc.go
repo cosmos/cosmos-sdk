@@ -13,7 +13,7 @@ var (
 	_ baseapp.ABCIListener = (*GRPCClient)(nil)
 )
 
-// GRPCClient is an implementation of the ABCIListener and ABCIListenerPlugin interfaces that talks over RPC.
+// GRPCClient is an implementation of the ABCIListener interface that talks over RPC.
 type GRPCClient struct {
 	client ABCIListenerServiceClient
 }

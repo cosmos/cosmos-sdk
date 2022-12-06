@@ -1,11 +1,227 @@
 # ABCI and State Streaming Plugin (gRPC)
 
-The `BaseApp` package contains the interface for a `ABCIListener` used to write state changes out from individual KVStores to external systems, as described in [ADR-038](../docs/architecture/adr-038-state-listening.md).
+The `BaseApp` package contains the interface for a [ABCIListener](../../../../baseapp/streaming.go)
+service used to write state changes out from individual KVStores to external systems,
+as described in [ADR-038](../../../../docs/architecture/adr-038-state-listening.md).
 
-Specific `ABCIListener` implementations are written and loaded as plugins by extending the above interface with a `plugin.GRPCPlugin` interface that adds the `Client` and `Server` methods required by the `go-plugin` system to load the plugin and communicate over gRPC. 
+Specific `ABCIListener` service implementations are written and loaded as [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin).
 
+## Implementation
+
+In this section we describe the implementation of the `ABCIListener` interface as a gRPC service.
+
+### Service Protocol
+
+The companion service protocol for the `ABCIListener` interface is described below.
+See [streaming/plugins/abci/v1/grpc.proto](../../proto/abci/v1/grpc.proto) for full details.
+
+```protobuf
+syntax = "proto3";
+
+option go_package           = "github.com/cosmos/cosmos-sdk/streaming/plugins/abci/v1";
+option java_multiple_files  = true;
+option java_outer_classname = "AbciListenerProto";
+option java_package         = "network.cosmos.sdk.streaming.abci.v1";
+
+// Empty is the response message for incoming requests
+message Empty {}
+
+// ListenBeginBlockRequest sends BeginBlock requests and responses to server
+message ListenBeginBlockRequest {
+  tendermint.abci.RequestBeginBlock  req = 1;
+  tendermint.abci.ResponseBeginBlock res = 2;
+}
+
+// ListenEndBlockRequest sends EndBlock requests and responses to server
+message ListenEndBlockRequest {
+  tendermint.abci.RequestEndBlock  req = 1;
+  tendermint.abci.ResponseEndBlock res = 2;
+}
+
+// ListenDeliverTxRequest sends DeliverTx requests and responses to server
+message ListenDeliverTxRequest {
+  // explicitly pass in block height as neither RequestDeliverTx or ResponseDeliverTx contain it
+  int64                             block_height = 1;
+  tendermint.abci.RequestDeliverTx  req          = 2;
+  tendermint.abci.ResponseDeliverTx res          = 3;
+}
+
+// ListenCommitRequest sends Commit responses and state changes to server
+message ListenCommitRequest {
+  // explicitly pass in block height as ResponseCommit does not contain this info
+  int64                                          block_height = 1;
+  tendermint.abci.ResponseCommit                 res          = 2;
+  repeated cosmos.base.store.v1beta1.StoreKVPair change_set   = 3;
+}
+
+service ABCIListenerService {
+  rpc ListenBeginBlock(ListenBeginBlockRequest) returns (Empty);
+  rpc ListenEndBlock(ListenEndBlockRequest) returns (Empty);
+  rpc ListenDeliverTx(ListenDeliverTxRequest) returns (Empty);
+  rpc ListenCommit(ListenCommitRequest) returns (Empty);
+}
+```
+
+### Generating the Code
+
+To generate the stubs the local client implementation can call, run the following command:
+
+Download required proto files:
+
+```shell
+buf export buf.build/cosmos/cosmos-sdk:${commit} --output streaming/plugins/proto
+```
+where `${commit}` is the commit of the buf commit of version of the Cosmos SDK you are using.
+That commit can be found [here](https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md).
+
+For Go:
+
+```shell
+protoc -I streaming/plugins/proto --go_out=plugins=grpc:. streaming/plugins/proto/abci/v1/grpc.proto \
+  && cp -r github.com/cosmos/cosmos-sdk/streaming/* streaming \
+  && rm -rf github.com 
+```
+
+For Python:
+
+```shell
+python3 -m grpc_tools.protoc -I ./streaming/plugins/proto \
+--python_out=./streaming/plugins/abci/v1/examples/plugin-python \
+--grpc_python_out=./streaming/plugins/abci/v1/examples/plugin-python \
+./streaming/plugins/proto/abci/v1/grpc.proto
+```
+
+For other languages you'll need to [download](../../../../third_party/proto/README.md) the CosmosSDK protos and
+the [streaming/plugins/proto/abci/v1/grpc.proto](../../proto/abci/v1/grpc.proto) into your project and compile. For language specific compilation
+instructions visit [https://github.com/grpc](https://github.com/grpc) and look in the `examples` folder of your
+language of choice `https://github.com/grpc/grpc-{language}/tree/master/examples`
+
+### gRPC Client and Server
+
+Implementing the ABCIListener gRPC client and server is a simple and straight forward process.
+
+To create the client and server we create a `ListenerGRPCPlugin` struct that implements the
+`plugin.GRPCPlugin` interface and a `Impl` property that will contain a concrete implementation
+of the `ABCIListener` plugin written in Go.
+
+#### The Interface
+
+The `BaseApp` `ABCIListener` interface will be what will define the plugins capabilities.
+
+Boilerplate RPC implementation of the `ABCIListener` interface. ([streaming/plugins/abci/v1/grpc.go](grpc.go))
 ```go
-// ListenerGRPCPlugin is the implementation of plugin.GRPCPlugin, so we can serve/consume this.
+...
+
+var (
+	_ baseapp.ABCIListener = (*GRPCClient)(nil)
+)
+
+// GRPCClient is an implementation of the ABCIListener interface that talks over gRPC.
+type GRPCClient struct {
+	client ABCIListenerServiceClient
+}
+
+func (m GRPCClient) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+	_, err := m.client.ListenBeginBlock(ctx, &ListenBeginBlockRequest{
+		Req: &req,
+		Res: &res,
+	})
+	return err
+}
+
+func (m GRPCClient) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+	_, err := m.client.ListenEndBlock(ctx, &ListenEndBlockRequest{
+		Req: &req,
+		Res: &res,
+	})
+	return err
+}
+
+func (m GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{
+		BlockHeight: ctx.BlockHeight(),
+		Req:         &req,
+		Res:         &res,
+	})
+	return err
+}
+
+func (m GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := m.client.ListenCommit(ctx, &ListenCommitRequest{
+		BlockHeight: ctx.BlockHeight(),
+		Res:         &res,
+		ChangeSet:   changeSet,
+	})
+	return err
+}
+
+// GRPCServer is the gRPC server that GRPCClient talks to.
+type GRPCServer struct {
+	// This is the real implementation
+	Impl baseapp.ABCIListener
+}
+
+func (m GRPCServer) ListenBeginBlock(ctx context.Context, request *ListenBeginBlockRequest) (*Empty, error) {
+	if err := m.Impl.ListenBeginBlock(ctx, *request.Req, *request.Res); err != nil {
+		return nil, err
+	}
+	return &Empty{}, nil
+}
+
+func (m GRPCServer) ListenEndBlock(ctx context.Context, request *ListenEndBlockRequest) (*Empty, error) {
+	if err := m.Impl.ListenEndBlock(ctx, *request.Req, *request.Res); err != nil {
+		return nil, err
+	}
+	return &Empty{}, nil
+}
+
+func (m GRPCServer) ListenDeliverTx(ctx context.Context, request *ListenDeliverTxRequest) (*Empty, error) {
+	if err := m.Impl.ListenDeliverTx(ctx, *request.Req, *request.Res); err != nil {
+		return nil, err
+	}
+	return &Empty{}, nil
+}
+
+func (m GRPCServer) ListenCommit(ctx context.Context, request *ListenCommitRequest) (*Empty, error) {
+	if err := m.Impl.ListenCommit(ctx, *request.Res, request.ChangeSet); err != nil {
+		return nil, err
+	}
+	return &Empty{}, nil
+}
+```
+
+Our `ABCIlistener` service plugin. ([streaming/plugins/abci/v1/interface.go](interface.go))
+```go
+...
+
+// Handshake is a common handshake that is shared by streaming and host.
+// This prevents users from executing bad plugins or executing a plugin
+// directory. It is a UX feature, not a security feature.
+var Handshake = plugin.HandshakeConfig{
+    // This isn't required when using VersionedPlugins
+    ProtocolVersion:  1,
+    MagicCookieKey:   "ABCI_LISTENER_PLUGIN",
+    MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
+}
+
+var (
+    _ plugin.GRPCPlugin = (*ABCIListenerGRPCPlugin)(nil)
+)
+
+// ListenerGRPCPlugin is the implementation of plugin.Plugin so we can serve/consume this
+//
+// This has two methods: Server must return an RPC server for this plugin
+// type. We construct a GreeterRPCServer for this.
+//
+// Client must return an implementation of our interface that communicates
+// over an RPC client. We return GreeterRPC for this.
+//
+// Ignore MuxBroker. That is used to create more multiplexed streams on our
+// plugin connection and is a more advanced use case.
+//
+// description: copied from hashicorp plugin documentation.
 type ListenerGRPCPlugin struct {
 	// GRPCPlugin must still implement the Plugin interface
 	plugin.Plugin
@@ -28,77 +244,183 @@ func (p *ListenerGRPCPlugin) GRPCClient(
 }
 ```
 
+#### Plugin Implementation
 
-The `ABCIListener` gRCP protocol is defined below. See [grpc.go](./grpc_abci_v1/grpc.go) and [interface.go](./grpc_abci_v1/interface.go) for how the `ABCIListener` and `plugin.GRPCPlugin` implementations come together.
+Plugin implementations can be in a completely separate package but will need access
+to the `ABCIListener` interface. One thing to note here is that plugin implementations
+defined in the `ListenerGRPCPlugin.Impl` property are **only** required when building
+plugins in Go. They are pre compiled into Go modules. The `GRPCServer.Impl` calls methods
+on this out-of-process plugin.
 
-```protobuf
-syntax = "proto3";
+For Go plugins this is all that is required to process data that is sent over gRPC.
+This provides the advantage of writing quick plugins that process data to different
+external systems (i.e: DB, File, DB, Kafka, etc.) without the need for implementing
+the gRPC server endpoints.
 
-package cosmos.sdk.grpc.abci.v1;
-
-option go_package           = "github.com/cosmos/cosmos-sdk/streaming/plugins/abci/grpc_abci_v1";
-option java_multiple_files  = true;
-option java_outer_classname = "AbciListenerProto";
-option java_package         = "network.cosmos.sdk.grpc.abci.v1";
-
-// PutRequest is used for storing ABCI request and response
-// and Store KV data for streaming to external grpc service.
-message PutRequest {
-  int64 block_height      = 1;
-  bytes req               = 2;
-  bytes res               = 3;
-  bytes store_kv_pair     = 4;
-  int64 store_kv_pair_idx = 5;
-  int64 tx_idx            = 6;
+```go
+// MyPlugin is the implementation of the baseapp.ABCIListener interface
+// For Go plugins this is all that is required to process data sent over gRPC.
+type MyPlugin struct {
+	...
 }
 
-message Empty {}
+func (a FilePlugin) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+	// process data
+	return nil
+}
 
-service ABCIListenerService {
-  rpc ListenBeginBlock(PutRequest) returns (Empty);
-  rpc ListenEndBlock(PutRequest) returns (Empty);
-  rpc ListenDeliverTx(PutRequest) returns (Empty);
-  rpc ListenStoreKVPair(PutRequest) returns (Empty);
+func (a FilePlugin) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+    // process data
+    return nil
+}
+
+func (a FilePlugin) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+    // process data
+    return nil
+}
+
+func (a FilePlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*store.StoreKVPair) error {
+    // process data
+    return nil
+}
+
+func main() {
+	plugin.Serve(&plugin.ServeConfig{
+		HandshakeConfig: v1.Handshake,
+		Plugins: map[string]plugin.Plugin{
+			"abci_v1": &v1.ABCIListenerGRPCPlugin{Impl: &MyPlugin{}},
+		},
+
+		// A non-nil value here enables gRPC serving for this streaming...
+		GRPCServer: plugin.DefaultGRPCServer,
+	})
 }
 ```
 
-## Testing
+## Plugin Loading System
 
-### Build example plugins
+A general purpose plugin loading system has been provided by the SDK to be able to load not just
+the `ABCIListener` service plugin but other protocol services as well. You can take a look
+at how plugins are loaded by the SDK in [streaming/streaming.go](../../../streaming.go)
 
-#### Go
+You'll need to add this in your `app.go`
+```go
+// app.go
+
+func NewApp(...) *App {
+
+    ...
+
+    // register streaming services
+    streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
+    for service := range streamingCfg {
+        pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
+        pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
+        if len(pluginName) > 0 {
+            logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
+            plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
+            if err != nil {
+                tmos.Exit(err.Error())
+            }
+            if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
+                tmos.Exit(err.Error())
+            }
+        }
+    }
+
+    ...
+}
+```
+
+## Configuration
+
+Update the streaming section in `app.toml`
+```toml
+# Streaming allows nodes to stream state to external systems
+[streaming]
+
+# streaming.abci specifies the configuration for the ABCI Listener streaming service
+[streaming.abci]
+
+# List of kv store keys to stream out via gRPC
+# Set to ["*"] to expose all keys.
+keys = ["*"]
+
+# The plugin name used for streaming via gRPC
+# Supported plugins: abci_v1
+plugin = "abci_v1"
+
+# async specifies whether ABCI listener service(s) will run asynchronously.
+async = false
+
+# stop-node-on-err specifies whether to stop the node when the 
+# ABCI listener service receives an error when message deliver acknowledgment fails.
+# stop-node-on-err=true MUST be paired with async=false, otherwise it will be ignored.
+stop-node-on-err = true
+```
+
+## Updating the protocol
+
+If you update the protocol buffers file, you can regenerate the file using the following command
+from the project root directory. You do not need to run this if you're just trying the Go or Python
+examples.
+
+For Go:
 
 ```shell
 git clone https://github.com/cosmos/cosmos-sdk && cd cosmos-sdk
 ```
+
 ```shell
-go build -o streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout \
-streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout.go
+# stdout plugin
+go build -o streaming/plugins/abci/v1/examples/plugin-go/stdout \
+streaming/plugins/abci/v1/examples/plugin-go/stdout.go
 ```
 
 ```shell
-export COSMOS_SDK_ABCI_GRPC_V1=".../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-go/stdout"
+# file plugin (writes to ~/)
+go build -o streaming/plugins/abci/v1/examples/plugin-go/file \
+streaming/plugins/abci/v1/examples/plugin-go/file.go
 ```
 
-#### Python
+For Python:
 
 ```shell
 python3 -m pip install grpcio-health-checking confluent_kafka
 ```
 
-```shell
-# file example
-# output => ~/{abci_begin_block, abci_end_block, abci_deliver_tx, abci_store_kv_pair}.txt
-export COSMOS_SDK_GRPC_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-python/file.py"
-```
+### Testing
+
+Export a plugin from one of the Go or Python examples.
+
+For Go:
 
 ```shell
-# kafka example 
-# requires kafka running on localhost:9092
-export COSMOS_SDK_GRPC_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/grpc_abci_v1/examples/plugin-python/kafka.py"
+# for writing to stdout
+export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-go/stdout"
+```
+```shell
+# for writing to files
+export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-go/file"
 ```
 
-### Run test
+For Python:
+
 ```shell
+# for writing to kafka (localhost:9092)
+export COSMOS_SDK_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-python/kafka.py"
+```
+```shell
+# for writing to files
+export COSMOS_SDK_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-python/file.py"
+```
+
+Test:
+```shell
+# looks for the exported "abci_v1" plugin
 make test-sim-nondeterminism-streaming
 ```
+
+The plugin system will look for the plugin binary in the `env` variable `COSMOS_SDK_{PLUGIN_NAME}` above
+and if it does not find it, it will error out. The plugin UPPERCASE name is that of the
+`streaming.abci.plugin` TOML configuration setting.

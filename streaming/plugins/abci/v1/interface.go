@@ -19,6 +19,10 @@ var Handshake = plugin.HandshakeConfig{
 	MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
+var (
+	_ plugin.GRPCPlugin = (*ABCIListenerGRPCPlugin)(nil)
+)
+
 // ABCIListenerGRPCPlugin is the implementation of plugin.GRPCPlugin, so we can serve/consume this.
 type ABCIListenerGRPCPlugin struct {
 	// GRPCPlugin must still implement the Plugin interface

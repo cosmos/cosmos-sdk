@@ -13,13 +13,12 @@ import (
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/spf13/cast"
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
+type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int

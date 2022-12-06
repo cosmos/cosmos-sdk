@@ -2,6 +2,9 @@ package types
 
 import (
 	"bytes"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
@@ -104,4 +107,17 @@ func PrefixEndBytes(prefix []byte) []byte {
 // range query such that the input would be included
 func InclusiveEndBytes(inclusiveBytes []byte) []byte {
 	return append(inclusiveBytes, byte(0x00))
+}
+
+// assertNoCommonPrefix will panic if there are two keys: k1 and k2 in keys, such that
+// k1 is a prefix of k2
+func assertNoCommonPrefix(keys []string) {
+	sorted := make([]string, len(keys))
+	copy(sorted, keys)
+	sort.Strings(sorted)
+	for i := 1; i < len(sorted); i++ {
+		if strings.HasPrefix(sorted[i], sorted[i-1]) {
+			panic(fmt.Sprint("Potential key collision between KVStores:", sorted[i], " - ", sorted[i-1]))
+		}
+	}
 }

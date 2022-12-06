@@ -52,11 +52,11 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 // KeyCodec defines a generic interface which is implemented
 // by types that are capable of encoding and decoding collections keys.
 type KeyCodec[T any] interface {
-	// PutKey writes the key bytes into the buffer. Returns the number of
+	// EncodeKey writes the key bytes into the buffer. Returns the number of
 	// bytes written. The implementer must expect the buffer to be at least
 	// of length equal to Size(key). The implementer must also return
 	// the bytes written, and they must be less than or equal to Size(key).
-	PutKey(buffer []byte, key T) (int, error)
+	EncodeKey(buffer []byte, key T) (int, error)
 	// ReadKey reads from the provided bytes buffer to decode
 	// the key T. Returns the number of bytes read, the type T
 	// or an error in case of decoding failure.

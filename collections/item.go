@@ -1,8 +1,6 @@
 package collections
 
 import (
-	"fmt"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -40,13 +38,10 @@ func (i Item[V]) Remove(ctx StorageProvider) error {
 // noKey defines a KeyCodec which decodes nothing.
 type noKey struct{}
 
-func (noKey) Stringify(_ noKey) string              { return "no_key" }
-func (noKey) KeyType() string                       { return "no_key" }
-func (noKey) Size(_ noKey) int                      { return 0 }
-func (noKey) PutKey(_ []byte, _ noKey) (int, error) { return 0, nil }
-func (n noKey) ReadKey(buffer []byte) (int, noKey, error) {
-	if len(buffer) != 0 {
-		return 0, noKey{}, fmt.Errorf("%w: must be empty for %s", errDecodeKeySize, n.KeyType())
-	}
+func (noKey) Stringify(_ noKey) string                 { return "no_key" }
+func (noKey) KeyType() string                          { return "no_key" }
+func (noKey) Size(_ noKey) int                         { return 0 }
+func (noKey) EncodeKey(_ []byte, _ noKey) (int, error) { return 0, nil }
+func (n noKey) ReadKey(_ []byte) (int, noKey, error) {
 	return 0, noKey{}, nil
 }

@@ -26,7 +26,7 @@ func deps() (types.StoreKey, StorageProvider) {
 
 func assertKey[T any](t *testing.T, encoder KeyCodec[T], key T) {
 	buffer := make([]byte, encoder.Size(key))
-	written, err := encoder.PutKey(buffer, key)
+	written, err := encoder.EncodeKey(buffer, key)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), written)
 	read, decodedKey, err := encoder.ReadKey(buffer)

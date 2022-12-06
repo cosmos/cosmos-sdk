@@ -82,7 +82,7 @@ func TestLoadStreamingServices(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, keys)
+			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Marshaler, keys)
 			require.NoError(t, err)
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})

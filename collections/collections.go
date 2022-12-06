@@ -46,7 +46,9 @@ func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 	case string:
 		prefix = []byte(c)
 	case []byte:
-		prefix = c // maybe copy?
+		identifierCopy := make([]byte, len(c))
+		copy(identifierCopy, c)
+		prefix = identifierCopy
 	}
 	return Prefix{raw: prefix}
 }

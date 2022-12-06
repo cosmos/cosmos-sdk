@@ -1,26 +1,26 @@
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/tx/v1beta1/tx.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
 
 message Enveloppe {
-    string chain_id = 1;
-    uint64 account_number = 2;
-    uint64 sequence = 3;
-    google.protobuf.Any public_key = 4;
-    repeated google.protobuf.Any message = 5;
-    string memo = 6;
-    repeated cosmos.base.v1beta1.Coin fees = 7;
-    string fee_payer = 8;
-    string fee_granter = 9;
-    repeated cosmos.base.v1beta1.Coin tip = 10;
-    string tipper = 11;
-    uint64 gas_limit = 12;
-    uint64 timeout_height = 13;
-    repeated cosmos.tx.v1beta1.SignerInfo other_signer = 14;
-    repeated google.protobuf.Any extension_options = 15;
-    repeated google.protobuf.Any non_critical_extension_options = 16;
-    string hash_of_raw_bytes = 17;
+  string chain_id = 1;
+  uint64 account_number = 2;
+  uint64 sequence = 3;
+  google.protobuf.Any public_key = 4;
+  repeated google.protobuf.Any message = 5;
+  string memo = 6;
+  repeated cosmos.base.v1beta1.Coin fees = 7;
+  string fee_payer = 8;
+  string fee_granter = 9;
+  repeated cosmos.base.v1beta1.Coin tip = 10;
+  string tipper = 11;
+  uint64 gas_limit = 12;
+  uint64 timeout_height = 13;
+  repeated cosmos.tx.v1beta1.SignerInfo other_signer = 14;
+  repeated google.protobuf.Any extension_options = 15;
+  repeated google.protobuf.Any non_critical_extension_options = 16;
+  string hash_of_raw_bytes = 17;
 }

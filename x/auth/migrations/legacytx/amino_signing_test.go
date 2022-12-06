@@ -52,7 +52,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		Sequence:      seqNum,
 		PubKey:        priv1.PubKey(),
 	}
-	signBz, err := handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
+	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
 	expectedSignBz := StdSignBytes(chainId, accNum, seqNum, timeoutHeight, fee, msgs, memo, nil)
@@ -60,7 +60,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	require.Equal(t, expectedSignBz, signBz)
 
 	// expect error with wrong sign mode
-	_, err = handler.GetSignBytes(nil, signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
+	_, err = handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, tx)
 	require.Error(t, err)
 }
 

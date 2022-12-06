@@ -386,24 +386,6 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	return false
 }
 
-// PopStateCache returns the accumulated state change messages from the CommitMultiStore
-// Calling PopStateCache destroys only the currently accumulated state in each listener
-// not the state in the store itself. This is a mutating and destructive operation.
-// This method has been synchronized.
-func (rs *Store) PopStateCache() []*types.StoreKVPair {
-	var cache []*types.StoreKVPair
-	for key := range rs.listeners {
-		ls := rs.listeners[key]
-		if ls != nil {
-			cache = append(cache, ls.PopStateCache()...)
-		}
-	}
-	sort.SliceStable(cache, func(i, j int) bool {
-		return cache[i].StoreKey < cache[j].StoreKey
-	})
-	return cache
-}
-
 // LatestVersion returns the latest version in the store
 func (rs *Store) LatestVersion() int64 {
 	return rs.LastCommitID().Version

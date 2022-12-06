@@ -113,6 +113,28 @@ func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
 }
 
+// AddListeners adds listeners for a specific KVStore
+func (cms Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
+	if ls, ok := cms.listeners[key]; ok {
+		cms.listeners[key] = append(ls, listeners...)
+	} else {
+		cms.listeners[key] = listeners
+	}
+}
+
+// ListeningEnabled returns if listening is enabled for a specific KVStore
+func (cms Store) ListeningEnabled(key types.StoreKey) bool {
+	if ls, ok := cms.listeners[key]; ok {
+		return len(ls) != 0
+	}
+	return false
+}
+
+// LatestVersion returns the branch version of the store
+func (cms Store) LatestVersion() int64 {
+	panic("cannot get latest version from branch cached multi-store")
+}
+
 // GetStoreType returns the type of the store.
 func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti

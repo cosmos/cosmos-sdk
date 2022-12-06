@@ -921,7 +921,13 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 		return nil, errors.New("application ExtendVote handler not set")
 	}
 
-	lastBlockHeight := app.LastBlockHeight()
+	// use custom query multistore if provided
+	qms := app.qms
+	if qms == nil {
+		qms = sdk.MultiStore(app.cms)
+	}
+
+	lastBlockHeight := qms.LatestVersion()
 	if height > lastBlockHeight {
 		return sdk.Context{},
 			sdkerrors.Wrap(
@@ -961,7 +967,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.ExtendVoteRequest) (
 		}
 	}()
 
-	resp, err = app.extendVote(ctx, req)
+	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(

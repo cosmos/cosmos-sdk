@@ -485,10 +485,10 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 	}
 }
 
-// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
+// GetMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
-func (app *BaseApp) getMaximumBlockGas(ctx sdk.Context) uint64 {
+func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	cp := app.GetConsensusParams(ctx)
 	if cp == nil || cp.Block == nil {
 		return 0

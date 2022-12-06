@@ -247,18 +247,16 @@ func (coins Coins) Validate() error {
 		}
 
 		lowDenom := coins[0].Denom
-		seenDenoms := make(map[string]bool)
-		seenDenoms[lowDenom] = true
 
 		for _, coin := range coins[1:] {
-			if seenDenoms[coin.Denom] {
-				return fmt.Errorf("duplicate denomination %s", coin.Denom)
-			}
 			if err := ValidateDenom(coin.Denom); err != nil {
 				return err
 			}
-			if coin.Denom <= lowDenom {
+			if coin.Denom < lowDenom {
 				return fmt.Errorf("denomination %s is not sorted", coin.Denom)
+			}
+			if coin.Denom == lowDenom {
+				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
 			if !coin.IsPositive() {
 				return fmt.Errorf("coin %s amount is not positive", coin.Denom)
@@ -266,7 +264,6 @@ func (coins Coins) Validate() error {
 
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
-			seenDenoms[coin.Denom] = true
 		}
 
 		return nil

@@ -15,12 +15,12 @@ var errDecodeKeySize = errors.New("decode error, wrong byte key size")
 
 type uint64Key struct{}
 
-func (u uint64Key) EncodeKey(buffer []byte, key uint64) (int, error) {
+func (u uint64Key) Encode(buffer []byte, key uint64) (int, error) {
 	binary.BigEndian.PutUint64(buffer, key)
 	return 8, nil
 }
 
-func (u uint64Key) DecodeKey(buffer []byte) (int, uint64, error) {
+func (u uint64Key) Decode(buffer []byte) (int, uint64, error) {
 	if size := len(buffer); size < 8 {
 		return 0, 0, fmt.Errorf("%w: wanted at least 8, got: %d", errDecodeKeySize, size)
 	}

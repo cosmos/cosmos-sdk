@@ -30,10 +30,10 @@ func deps() (types.StoreKey, context.Context) {
 // checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
 func checkKeyCodec[T any](t *testing.T, encoder KeyCodec[T], key T) {
 	buffer := make([]byte, encoder.Size(key))
-	written, err := encoder.EncodeKey(buffer, key)
+	written, err := encoder.Encode(buffer, key)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), written)
-	read, decodedKey, err := encoder.DecodeKey(buffer)
+	read, decodedKey, err := encoder.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")

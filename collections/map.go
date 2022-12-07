@@ -126,7 +126,7 @@ func (m Map[K, V]) encodeKey(key K) ([]byte, error) {
 	// put prefix
 	copy(keyBytes, m.prefix)
 	// put key
-	_, err := m.kc.EncodeKey(keyBytes[prefixLen:], key)
+	_, err := m.kc.Encode(keyBytes[prefixLen:], key)
 	if err != nil {
 		return nil, fmt.Errorf("%w: key encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}

@@ -55,7 +55,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -86,7 +86,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -116,7 +116,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -142,7 +142,7 @@ jobs:
     needs: [tests, test-integration, test-e2e]
     steps:
       - uses: actions/checkout@v3
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -193,7 +193,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -222,7 +222,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -254,7 +254,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: client/v2/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -284,7 +284,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: core/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -314,7 +314,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: depinject/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -342,7 +342,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: errors/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -372,7 +372,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: math/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -402,7 +402,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: simapp/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -437,7 +437,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: tx/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -468,7 +468,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: tools/rosetta/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
@@ -501,7 +501,7 @@ jobs:
           go-version: 1.19.4
           cache: true
           cache-dependency-path: tools/cosmovisor/go.sum
-      - uses: technote-space/get-diff-action@v6.1.1
+      - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |

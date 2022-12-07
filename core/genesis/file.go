@@ -20,6 +20,8 @@ type FileGenesisSource struct {
 
 	// the RawMessage from the genesis.json app_state.<module> that got passed into InitChain
 	moduleRootJson json.RawMessage
+	// flag for loading merged module states
+	mergedStates bool
 }
 
 const (
@@ -60,13 +62,16 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 		return nil, fmt.Errorf("unexpected error: %w", err)
 	}
 
-	// if cannot find it, try reading from <sourceDir>/<module>.json
+	if f.mergedStates {
+		return f.unmarshalRawModuleWithField(f.moduleRootJson, field)
+	}
+
+	// try reading from <sourceDir>/<module>.json
 	rawBz, err := f.ReadRawJSON()
 	if err != nil {
 		return nil, err
 	}
 
-	f.moduleRootJson = rawBz
 	return f.unmarshalRawModuleWithField(rawBz, field)
 }
 
@@ -137,7 +142,30 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 		rerr = fmt.Errorf("couldn't read entire file: %s, read: %d, file size: %d", fp.Name(), len(buf), fi.Size())
 		return nil, rerr
 	}
-	return buf, nil
+
+	// combine data with moduleRootJson
+	moduleStates := make(map[string]interface{})
+	if err := json.Unmarshal(f.moduleRootJson, &moduleStates); err != nil {
+		rerr = fmt.Errorf("failed to unmarshal moduleRootJson: %w", err)
+		return nil, rerr
+	}
+
+	if err := json.Unmarshal(buf, &moduleStates); err != nil {
+		rerr = fmt.Errorf("failed to unmarshal the source module file: %w", err)
+		return nil, rerr
+	}
+
+	bz, err := json.Marshal(moduleStates)
+	if err != nil {
+		rerr = fmt.Errorf("failed to marshal the combined module states: %w", err)
+		return nil, rerr
+	}
+
+	// overwrite moduleRootJson with updated moduleStates
+	f.moduleRootJson = bz
+	f.mergedStates = true
+
+	return f.moduleRootJson, nil
 }
 
 type FileGenesisTarget struct {

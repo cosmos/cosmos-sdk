@@ -67,6 +67,18 @@ func TestFileGenesisSourceOpenReaderWithModule(t *testing.T) {
 
 	expected := json.RawMessage(`"value"`)
 	require.Equal(t, expected, json.RawMessage(got))
+
+	// try loading twice, the FileGenesisSource should skip file loading and call
+	// unmarshalRawModuleWithField directly
+	reader2, err := gs.OpenReader(field)
+	require.NoError(t, err)
+	defer reader2.Close()
+
+	got, err = io.ReadAll(reader2)
+	require.NoError(t, err)
+
+	expected = json.RawMessage(`"value"`)
+	require.Equal(t, expected, json.RawMessage(got))
 }
 
 func TestFileGenesisSourceOpenReaderWithGenesisAppState(t *testing.T) {
@@ -102,9 +114,16 @@ func TestFileGenesisSourceReadRawJSON(t *testing.T) {
 
 	gs := NewFileGenesisSource(tmpdir, moduleName, testModuleState)
 
+	states := make(map[string]interface{})
+	require.NoError(t, json.Unmarshal(in, &states))
+	require.NoError(t, json.Unmarshal(testModuleState, &states))
+
+	expected, err := json.Marshal(states)
+	require.NoError(t, err)
+
 	rj, err := gs.ReadRawJSON()
 	require.NoError(t, err)
-	require.Equal(t, in, []byte(rj))
+	require.Equal(t, expected, []byte(rj))
 }
 
 func TestFileGenesisSourceReadRawJSONNoFileExist(t *testing.T) {

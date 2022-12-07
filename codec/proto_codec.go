@@ -138,12 +138,8 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
 func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
-	m, ok := o.(ProtoMarshaler)
-	if !ok {
-		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
-	}
 
-	return ProtoMarshalJSON(m, pc.interfaceRegistry)
+	return ProtoMarshalJSON(o, pc.interfaceRegistry)
 }
 
 // MustMarshalJSON implements JSONCodec.MustMarshalJSON method,
@@ -164,13 +160,9 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
-	m, ok := ptr.(ProtoMarshaler)
-	if !ok {
-		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
-	}
 
 	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
-	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), m)
+	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
 	if err != nil {
 		return err
 	}
@@ -283,7 +275,7 @@ func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 	switch m := v.(type) {
 	case proto.Message:
 		return proto.Marshal(m)
-	case ProtoMarshaler:
+	case gogoproto.Message:
 		return g.cdc.Marshal(m)
 	case legacyproto.Message:
 		return legacyproto.Marshal(m)
@@ -296,7 +288,7 @@ func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
 	switch m := v.(type) {
 	case proto.Message:
 		return proto.Unmarshal(data, m)
-	case ProtoMarshaler:
+	case gogoproto.Message:
 		return g.cdc.Unmarshal(data, m)
 	case legacyproto.Message:
 		return legacyproto.Unmarshal(data, m)

@@ -44,7 +44,7 @@ func TestProtoCodec(t *testing.T) {
 }
 
 type lyingProtoMarshaler struct {
-	codec.ProtoMarshaler
+	message   proto.Message
 	falseSize int
 }
 
@@ -154,11 +154,11 @@ func TestProtoCodecUnmarshalLengthPrefixedChecks(t *testing.T) {
 
 		t.Run(fmt.Sprintf("ByMarshaling falseSize=%d", falseSize), func(t *testing.T) {
 			lpm := &lyingProtoMarshaler{
-				ProtoMarshaler: &testdata.Cat{Lives: 9, Moniker: "glowing"},
-				falseSize:      falseSize,
+				message:   &testdata.Cat{Lives: 9, Moniker: "glowing"},
+				falseSize: falseSize,
 			}
 			var serialized []byte
-			require.NotPanics(t, func() { serialized = cdc.MustMarshalLengthPrefixed(lpm) })
+			require.NotPanics(t, func() { serialized = cdc.MustMarshalLengthPrefixed(lpm.message) })
 
 			recv := new(testdata.Cat)
 			gotErr := cdc.UnmarshalLengthPrefixed(serialized, recv)

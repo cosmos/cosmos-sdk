@@ -58,8 +58,8 @@ type mustMarshaler struct {
 
 type testCase struct {
 	name         string
-	input        codec.ProtoMarshaler
-	recv         codec.ProtoMarshaler
+	input        proto.Message
+	recv         proto.Message
 	marshalErr   bool
 	unmarshalErr bool
 }

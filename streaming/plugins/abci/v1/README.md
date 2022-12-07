@@ -1,8 +1,8 @@
 # ABCI and State Streaming Plugin (gRPC)
 
-The `BaseApp` package contains the interface for a [ABCIListener](../../../../baseapp/streaming.go)
+The `BaseApp` package contains the interface for a [ABCIListener](https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/streaming.go)
 service used to write state changes out from individual KVStores to external systems,
-as described in [ADR-038](../../../../docs/architecture/adr-038-state-listening.md).
+as described in [ADR-038](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-038-state-listening.md).
 
 Specific `ABCIListener` service implementations are written and loaded as [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin).
 
@@ -13,7 +13,7 @@ In this section we describe the implementation of the `ABCIListener` interface a
 ### Service Protocol
 
 The companion service protocol for the `ABCIListener` interface is described below.
-See [streaming/plugins/abci/v1/grpc.proto](../../proto/abci/v1/grpc.proto) for full details.
+See [streaming/plugins/proto/abci/v1/grpc.proto](https://github.com/cosmos/cosmos-sdk/blob/main/streaming/plugins/proto/abci/v1/grpc.proto) for full details.
 
 ```protobuf
 syntax = "proto3";
@@ -74,27 +74,18 @@ buf export buf.build/cosmos/cosmos-sdk:${commit} --output streaming/plugins/prot
 where `${commit}` is the commit of the buf commit of version of the Cosmos SDK you are using.
 That commit can be found [here](https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md).
 
-For Go:
-
 ```shell
 protoc -I streaming/plugins/proto --go_out=plugins=grpc:. streaming/plugins/proto/abci/v1/grpc.proto \
   && cp -r github.com/cosmos/cosmos-sdk/streaming/* streaming \
   && rm -rf github.com 
 ```
 
-For Python:
-
-```shell
-python3 -m grpc_tools.protoc -I ./streaming/plugins/proto \
---python_out=./streaming/plugins/abci/v1/examples/plugin-python \
---grpc_python_out=./streaming/plugins/abci/v1/examples/plugin-python \
-./streaming/plugins/proto/abci/v1/grpc.proto
-```
-
-For other languages you'll need to [download](../../../../third_party/proto/README.md) the CosmosSDK protos and
-the [streaming/plugins/proto/abci/v1/grpc.proto](../../proto/abci/v1/grpc.proto) into your project and compile. For language specific compilation
-instructions visit [https://github.com/grpc](https://github.com/grpc) and look in the `examples` folder of your
-language of choice `https://github.com/grpc/grpc-{language}/tree/master/examples`
+For other languages you'll need to [download](https://github.com/cosmos/cosmos-sdk/blob/main/third_party/proto/README.md)
+the CosmosSDK protos and the [streaming/plugins/proto/abci/v1/grpc.proto](https://github.com/cosmos/cosmos-sdk/blob/main/streaming/plugins/proto/abci/v1/grpc.proto)
+into your project and compile. For language specific compilation instructions visit
+[https://github.com/grpc](https://github.com/grpc) and look in the `examples` folder of your
+language of choice `https://github.com/grpc/grpc-{language}/tree/master/examples` and [https://grpc.io](https://grpc.io)
+for the documentation.
 
 ### gRPC Client and Server
 
@@ -301,7 +292,7 @@ func main() {
 
 A general purpose plugin loading system has been provided by the SDK to be able to load not just
 the `ABCIListener` service plugin but other protocol services as well. You can take a look
-at how plugins are loaded by the SDK in [streaming/streaming.go](../../../streaming.go)
+at how plugins are loaded by the SDK in [streaming/streaming.go](https://github.com/cosmos/cosmos-sdk/blob/main/streaming/streaming.go)
 
 You'll need to add this in your `app.go`
 ```go
@@ -365,54 +356,35 @@ If you update the protocol buffers file, you can regenerate the file using the f
 from the project root directory. You do not need to run this if you're just trying the Go or Python
 examples.
 
-For Go:
-
 ```shell
-git clone https://github.com/cosmos/cosmos-sdk && cd cosmos-sdk
+protoc -I streaming/plugins/proto --go_out=plugins=grpc:. streaming/plugins/proto/abci/v1/grpc.proto \
+  && cp -r github.com/cosmos/cosmos-sdk/streaming/* streaming \
+  && rm -rf github.com 
 ```
 
 ```shell
 # stdout plugin
-go build -o streaming/plugins/abci/v1/examples/plugin-go/stdout \
-streaming/plugins/abci/v1/examples/plugin-go/stdout.go
+go build -o streaming/plugins/abci/v1/examples/stdout \
+streaming/plugins/abci/v1/examples/stdout.go
 ```
 
 ```shell
 # file plugin (writes to ~/)
-go build -o streaming/plugins/abci/v1/examples/plugin-go/file \
-streaming/plugins/abci/v1/examples/plugin-go/file.go
-```
-
-For Python:
-
-```shell
-python3 -m pip install grpcio-health-checking confluent_kafka
+go build -o streaming/plugins/abci/v1/examples/file \
+streaming/plugins/abci/v1/examples/file.go
 ```
 
 ### Testing
 
 Export a plugin from one of the Go or Python examples.
 
-For Go:
-
 ```shell
 # for writing to stdout
-export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-go/stdout"
+export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/stdout"
 ```
 ```shell
 # for writing to files
-export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-go/file"
-```
-
-For Python:
-
-```shell
-# for writing to kafka (localhost:9092)
-export COSMOS_SDK_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-python/kafka.py"
-```
-```shell
-# for writing to files
-export COSMOS_SDK_ABCI_V1="python3 .../cosmos-sdk/streaming/plugins/abci/v1/examples/plugin-python/file.py"
+export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/file"
 ```
 
 Test:

@@ -184,16 +184,13 @@ func (tp *TextProposal) ProposalType() string { return ProposalTypeText }
 // ValidateBasic validates the content's title and description of the proposal
 func (tp *TextProposal) ValidateBasic() error { return ValidateAbstract(tp) }
 
-<<<<<<< HEAD
 // String implements Stringer interface
 func (tp TextProposal) String() string {
 	out, _ := yaml.Marshal(tp)
 	return string(out)
 }
 
-=======
 // ValidProposalStatus checks if the proposal status is valid
->>>>>>> f1062c7f2 (refactor: x/gov audit changes  (#14174))
 func ValidProposalStatus(status ProposalStatus) bool {
 	if status == StatusDepositPeriod ||
 		status == StatusVotingPeriod ||

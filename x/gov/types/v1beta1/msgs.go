@@ -168,17 +168,13 @@ func (msg MsgDeposit) ValidateBasic() error {
 	return nil
 }
 
-<<<<<<< HEAD
 // String implements the Stringer interface
 func (msg MsgDeposit) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-// GetSignBytes implements Msg
-=======
 // GetSignBytes returns the message bytes to sign over.
->>>>>>> f1062c7f2 (refactor: x/gov audit changes  (#14174))
 func (msg MsgDeposit) GetSignBytes() []byte {
 	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
@@ -215,17 +211,13 @@ func (msg MsgVote) ValidateBasic() error {
 	return nil
 }
 
-<<<<<<< HEAD
 // String implements the Stringer interface
 func (msg MsgVote) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-// GetSignBytes implements Msg
-=======
 // GetSignBytes returns the message bytes to sign over.
->>>>>>> f1062c7f2 (refactor: x/gov audit changes  (#14174))
 func (msg MsgVote) GetSignBytes() []byte {
 	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
@@ -283,17 +275,13 @@ func (msg MsgVoteWeighted) ValidateBasic() error {
 	return nil
 }
 
-<<<<<<< HEAD
 // String implements the Stringer interface
 func (msg MsgVoteWeighted) String() string {
 	out, _ := yaml.Marshal(msg)
 	return string(out)
 }
 
-// GetSignBytes implements Msg
-=======
 // GetSignBytes returns the message bytes to sign over.
->>>>>>> f1062c7f2 (refactor: x/gov audit changes  (#14174))
 func (msg MsgVoteWeighted) GetSignBytes() []byte {
 	bz := codec.ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)

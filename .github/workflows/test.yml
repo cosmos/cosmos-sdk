@@ -20,7 +20,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
-          cache: true
       - name: Create a file with all core Cosmos SDK pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
@@ -55,6 +54,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -90,6 +90,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -115,6 +116,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -144,6 +146,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -222,6 +225,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -250,6 +254,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -283,6 +288,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: client/v2/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -314,6 +320,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: core/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -345,6 +352,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: depinject/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -372,6 +380,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: errors/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -403,6 +412,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: math/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -432,6 +442,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: simapp/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -466,6 +477,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: tx/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -498,6 +510,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: tools/rosetta/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -530,6 +543,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
+          cache-dependency-path: tools/cosmovisor/go.sum
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:

@@ -23,7 +23,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
-          cache: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
       - uses: actions/cache@v3
@@ -38,7 +37,6 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
-          cache: true
       - uses: actions/cache@v3
         with:
           path: ~/go/bin

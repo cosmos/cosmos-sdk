@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/rosetta-sdk-go/types"
 )
 
 type errorRegistry struct {

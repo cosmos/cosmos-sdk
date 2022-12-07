@@ -11,14 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
 	_ "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
@@ -442,30 +440,4 @@ func TestAminoUnmarshalJSON(t *testing.T) {
 		err := pk.Unmarshal(key.Value)
 		require.NoError(t, err)
 	}
-}
-
-func TestProtoMarshalJSON(t *testing.T) {
-	require := require.New(t)
-	pubkeys := generatePubKeys(3)
-	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
-
-	registry := types.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-	cdc := codec.NewProtoCodec(registry)
-
-	bz, err := cdc.MarshalInterfaceJSON(msig)
-	require.NoError(err)
-
-	var pk2 cryptotypes.PubKey
-	err = cdc.UnmarshalInterfaceJSON(bz, &pk2)
-	require.NoError(err)
-	require.True(pk2.Equals(msig))
-
-	// Test that we can correctly unmarshal key from keyring output
-	k, err := keyring.NewMultiRecord("my multisig", msig)
-	require.NoError(err)
-	ko, err := keyring.MkAccKeyOutput(k)
-	require.NoError(err)
-	require.Equal(ko.Address, sdk.AccAddress(pk2.Address()).String())
-	require.Equal(ko.PubKey, string(bz))
 }

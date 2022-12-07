@@ -19,9 +19,25 @@ import (
 func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	queryCmd := topLevelCmd("query", "Querying subcommands")
 	queryCmd.Aliases = []string{"q"}
+	err := b.EnhanceQueryCommand(queryCmd, moduleOptions, customCmds)
+	if err != nil {
+		return nil, err
+	}
+
+	return queryCmd, nil
+}
+
+func (b *Builder) EnhanceQueryCommand(queryCmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) error {
 	for moduleName, modOpts := range moduleOptions {
-		if customCmds[moduleName] != nil {
+		// if we have an existing command skip adding one here
+		if existing := findSubCommand(queryCmd, moduleName); existing != nil {
+			continue
+		}
+
+		// if we have a custom command use that instead of generating one
+		if custom := customCmds[moduleName]; custom != nil {
 			// custom commands get added lower down
+			queryCmd.AddCommand(custom)
 			continue
 		}
 
@@ -29,18 +45,14 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 		if queryCmdDesc != nil {
 			cmd, err := b.BuildModuleQueryCommand(moduleName, queryCmdDesc)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			queryCmd.AddCommand(cmd)
 		}
 	}
 
-	for _, cmd := range customCmds {
-		queryCmd.AddCommand(cmd)
-	}
-
-	return queryCmd, nil
+	return nil
 }
 
 // BuildModuleQueryCommand builds the query command for a single module.

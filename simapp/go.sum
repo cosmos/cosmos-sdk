@@ -48,6 +48,8 @@ cloud.google.com/go/storage v1.27.0 h1:YOO045NZI9RKfCj1c5A/ZtuuENUc8OAW+gHdGnDgy
 cloud.google.com/go/storage v1.27.0/go.mod h1:x9DOL8TK/ygDUMieqwfhdpQryTeEkhGKMi80i/iqR2s=
 cosmossdk.io/api v0.2.5 h1:XKq7CAxTWs7JObceQKkjdI9J+aLB8ofXDGBEaPcPsks=
 cosmossdk.io/api v0.2.5/go.mod h1:vxhlMTeKWgQUaanTHPq7/vR3dkhhJ6pOgXK0EIBrBYw=
+cosmossdk.io/client/v2 v2.0.0-20221207142935-9bf027460bae h1:4UVdoWxXuOE233cavCd5QDgc0mpEW2X6nliXWt0jvus=
+cosmossdk.io/client/v2 v2.0.0-20221207142935-9bf027460bae/go.mod h1:4AFVuBbjWoF6MSvhf4cvdSkcjRfTvMwTm3az8MFW8zc=
 cosmossdk.io/core v0.3.2 h1:KlQIufpJHJvOs7YLGTZsZcCo1WlkencDXepsr8STKZQ=
 cosmossdk.io/core v0.3.2/go.mod h1:CO7vbe+evrBvHc0setFHL/u7nlY7HJGzdRSBkT/sirc=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=

@@ -7,6 +7,8 @@ import (
 
 	"cosmossdk.io/depinject"
 
+	"cosmossdk.io/client/v2/autocli"
+
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
 	"github.com/spf13/cobra"
@@ -28,10 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,11 +43,13 @@ import (
 func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
 	encodingConfig := params.EncodingConfig{}
+	var autoCliOpts autocli.AppOptions
 	err := depinject.Inject(simapp.AppConfig,
 		&encodingConfig.InterfaceRegistry,
 		&encodingConfig.Codec,
 		&encodingConfig.TxConfig,
 		&encodingConfig.Amino,
+		&autoCliOpts,
 	)
 	if err != nil {
 		panic(err)
@@ -95,6 +95,11 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	initRootCmd(rootCmd, encodingConfig)
+
+	err = autoCliOpts.EnhanceRootCommand(rootCmd)
+	if err != nil {
+		panic(err)
+	}
 
 	return rootCmd
 }
@@ -226,8 +231,6 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
-
-	simapp.ModuleBasics.AddQueryCommands(cmd)
 
 	return cmd
 }

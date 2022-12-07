@@ -17,8 +17,8 @@ type AppOptions struct {
 	ModuleOptions map[string]*autocliv1.ModuleOptions `optional:"true"`
 }
 
-func Run(appOptions AppOptions) error {
-	cmd, err := RootCmd(appOptions)
+func (appOptions AppOptions) Run() error {
+	cmd, err := appOptions.RootCmd()
 	if err != nil {
 		return err
 	}
@@ -26,17 +26,13 @@ func Run(appOptions AppOptions) error {
 	return cmd.Execute()
 }
 
-func RunFromAppConfig(appConfig depinject.Config) error {
-	var appOptions AppOptions
-	err := depinject.Inject(appConfig, &appOptions)
-	if err != nil {
-		return err
-	}
-
-	return Run(appOptions)
+func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
+	rootCmd := &cobra.Command{}
+	err := appOptions.EnhanceRootCommand(rootCmd)
+	return rootCmd, err
 }
 
-func RootCmd(appOptions AppOptions) (*cobra.Command, error) {
+func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
@@ -66,12 +62,20 @@ func RootCmd(appOptions AppOptions) (*cobra.Command, error) {
 		}
 	}
 
-	queryCmd, err := builder.BuildQueryCommand(moduleOptions, customQueryCmds)
-	if err != nil {
-		return nil, err
+	// if we have an existing query command, enhance it or build a custom one
+	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
+		err := builder.EnhanceQueryCommand(queryCmd, moduleOptions, customQueryCmds)
+		if err != nil {
+			return err
+		}
+	} else {
+		queryCmd, err := builder.BuildQueryCommand(moduleOptions, customQueryCmds)
+		if err != nil {
+			return err
+		}
+
+		rootCmd.AddCommand(queryCmd)
 	}
 
-	rootCmd := &cobra.Command{}
-	rootCmd.AddCommand(queryCmd)
-	return rootCmd, nil
+	return nil
 }

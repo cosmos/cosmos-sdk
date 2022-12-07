@@ -2,7 +2,6 @@ package valuerenderer_test
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"os"
 	"testing"
@@ -43,7 +42,6 @@ type txJsonTest struct {
 	Metadata   *bankv1beta1.Metadata
 	Error      bool
 	Screens    []valuerenderer.Screen
-	Cbor       string
 }
 
 func TestTxJsonTestcases(t *testing.T) {
@@ -84,11 +82,6 @@ func TestTxJsonTestcases(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)
 
-			// Make sure the CBOR bytes match.
-			bz, err := tr.GetSignBytes(ctx, bodyBz, authInfoBz, signerData)
-			require.NoError(t, err)
-			require.Equal(t, tc.Cbor, hex.EncodeToString(bz))
-
 			// Round trip.
 			parsedVal, err := rend.Parse(ctx, screens)
 			require.NoError(t, err)
@@ -99,16 +92,12 @@ func TestTxJsonTestcases(t *testing.T) {
 			parsedTextualData := parsedVal.Message().Interface().(*textualpb.TextualData)
 
 			parsedBody := &txv1beta1.TxBody{}
-			err = proto.Unmarshal(bodyBz, expBody)
-			require.NoError(t, err)
 			err = proto.Unmarshal(parsedTextualData.BodyBytes, parsedBody)
 			require.NoError(t, err)
 			diff := cmp.Diff(expBody, parsedBody, protocmp.Transform())
 			require.Empty(t, diff)
 
 			parsedAuthInfo := &txv1beta1.AuthInfo{}
-			err = proto.Unmarshal(authInfoBz, expAuthInfo)
-			require.NoError(t, err)
 			err = proto.Unmarshal(parsedTextualData.AuthInfoBytes, parsedAuthInfo)
 			require.NoError(t, err)
 			diff = cmp.Diff(expAuthInfo, parsedAuthInfo, protocmp.Transform())

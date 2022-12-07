@@ -193,7 +193,7 @@ func getHash(bodyBz, authInfoBz []byte) string {
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
 	// Process the screens to be parsable by a envelope message value renderer
 	parsable := make([]Screen, len(screens)+1)
-	parsable[0] = Screen{Text: "envelope object"}
+	parsable[0] = Screen{Text: "Envelope object"}
 	for i := range screens {
 		parsable[i+1].Indent = screens[i].Indent + 1
 

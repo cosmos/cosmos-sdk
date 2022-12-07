@@ -100,7 +100,7 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 		rpcOptMap[name] = option
 		// make sure method exists
 		if m := methods.ByName(name); m == nil {
-			return fmt.Errorf("rpc method %s not found for service %s", name, service.FullName())
+			return fmt.Errorf("rpc method %q not found for service %q", name, service.FullName())
 		}
 	}
 

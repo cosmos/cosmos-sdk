@@ -18,6 +18,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
+type appModule struct {
+	app *App
+}
+
+func (m appModule) RegisterServices(configurator module.Configurator) {
+	err := m.app.registerRuntimeServices(configurator)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (m appModule) IsOnePerModuleType() {}
+func (m appModule) IsAppModule()        {}
+
+var _ appmodule.AppModule = appModule{}
+var _ module.HasServices = appModule{}
+
 // BaseAppOption is a depinject.AutoGroupType which can be used to pass
 // BaseApp options into the depinject. It should be used carefully.
 type BaseAppOption func(*baseapp.BaseApp)
@@ -46,6 +63,7 @@ func ProvideApp() (
 	*AppBuilder,
 	codec.ProtoCodecMarshaler,
 	*baseapp.MsgServiceRouter,
+	appmodule.AppModule,
 ) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	amino := codec.NewLegacyAmino()
@@ -55,18 +73,17 @@ func ProvideApp() (
 
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
-	app := &AppBuilder{
-		&App{
-			storeKeys:         nil,
-			interfaceRegistry: interfaceRegistry,
-			cdc:               cdc,
-			amino:             amino,
-			basicManager:      module.BasicManager{},
-			msgServiceRouter:  msgServiceRouter,
-		},
+	app := &App{
+		storeKeys:         nil,
+		interfaceRegistry: interfaceRegistry,
+		cdc:               cdc,
+		amino:             amino,
+		basicManager:      module.BasicManager{},
+		msgServiceRouter:  msgServiceRouter,
 	}
+	appBuilder := &AppBuilder{app}
 
-	return interfaceRegistry, cdc, amino, app, cdc, msgServiceRouter
+	return interfaceRegistry, cdc, amino, appBuilder, cdc, msgServiceRouter, appModule{app}
 }
 
 type AppInputs struct {

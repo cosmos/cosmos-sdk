@@ -75,12 +75,6 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	// register runtime module services
-	err := a.registerRuntimeServices()
-	if err != nil {
-		return err
-	}
-
 	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
 	a.ModuleManager.RegisterServices(a.configurator)
 

@@ -71,7 +71,7 @@ func migrateStoreWeightedVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	return nil
 }
 
-// MigrateStore performs in-place store migrations from v0.40 to v0.43. The
+// MigrateStore performs in-place store migrations from v1 (v0.40) to v2 (v0.43). The
 // migration includes:
 //
 // - Change addresses to be length-prefixed.

@@ -17,6 +17,7 @@ import (
 // DefaultStartingProposalID is 1
 const DefaultStartingProposalID uint64 = 1
 
+// NewProposal creates a new Proposal instance
 func NewProposal(content Content, id uint64, submitTime, depositEndTime time.Time) (Proposal, error) {
 	msg, ok := content.(proto.Message)
 	if !ok {
@@ -56,6 +57,7 @@ func (p Proposal) GetContent() Content {
 	return content
 }
 
+// ProposalType returns the proposal type
 func (p Proposal) ProposalType() string {
 	content := p.GetContent()
 	if content == nil {
@@ -64,6 +66,7 @@ func (p Proposal) ProposalType() string {
 	return content.ProposalType()
 }
 
+// ProposalRoute returns the proposal route
 func (p Proposal) ProposalRoute() string {
 	content := p.GetContent()
 	if content == nil {
@@ -72,6 +75,7 @@ func (p Proposal) ProposalRoute() string {
 	return content.ProposalRoute()
 }
 
+// GetTitle gets the proposal's title
 func (p Proposal) GetTitle() string {
 	content := p.GetContent()
 	if content == nil {
@@ -186,6 +190,7 @@ func (tp TextProposal) String() string {
 	return string(out)
 }
 
+// ValidProposalStatus checks if the proposal status is valid
 func ValidProposalStatus(status ProposalStatus) bool {
 	if status == StatusDepositPeriod ||
 		status == StatusVotingPeriod ||

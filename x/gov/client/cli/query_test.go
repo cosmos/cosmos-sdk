@@ -22,8 +22,8 @@ func (s *CLITestSuite) TestCmdParams() {
 		},
 		{
 			"text output",
-			[]string{},
-			"",
+			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
+			"--output=text",
 		},
 	}
 
@@ -34,9 +34,7 @@ func (s *CLITestSuite) TestCmdParams() {
 			cmd := cli.GetCmdQueryParams()
 			cmd.SetArgs(tc.args)
 
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -98,7 +96,7 @@ func (s *CLITestSuite) TestCmdProposer() {
 			"--output=json",
 		},
 		{
-			"json output",
+			"with proposal id",
 			[]string{
 				"1",
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
@@ -132,7 +130,7 @@ func (s *CLITestSuite) TestCmdTally() {
 			"--output=json",
 		},
 		{
-			"json output",
+			"with proposal id (json output)",
 			[]string{
 				"2",
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
@@ -140,12 +138,12 @@ func (s *CLITestSuite) TestCmdTally() {
 			"2 --output=json",
 		},
 		{
-			"json output",
+			"with proposal id (text output)",
 			[]string{
 				"1",
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 			},
-			"1 --output=json",
+			"1 --output=text",
 		},
 	}
 
@@ -166,14 +164,6 @@ func (s *CLITestSuite) TestCmdGetProposal() {
 		args         []string
 		expCmdOutput string
 	}{
-		{
-			"get non existing proposal",
-			[]string{
-				"10",
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			"10 --output=json",
-		},
 		{
 			"get proposal with json response",
 			[]string{
@@ -236,14 +226,14 @@ func (s *CLITestSuite) TestCmdQueryDeposits() {
 		expCmdOutput string
 	}{
 		{
-			"get deposits of non existing proposal",
+			"get deposits",
 			[]string{
 				"10",
 			},
 			"10",
 		},
 		{
-			"get deposits(valid req)",
+			"get deposits(json output)",
 			[]string{
 				"1",
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
@@ -257,10 +247,7 @@ func (s *CLITestSuite) TestCmdQueryDeposits() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryDeposits()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -304,10 +291,7 @@ func (s *CLITestSuite) TestCmdQueryDeposit() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryDeposit()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -321,17 +305,17 @@ func (s *CLITestSuite) TestCmdQueryVotes() {
 		{
 			"get votes with no proposal id",
 			[]string{},
-			"true",
+			"",
 		},
 		{
-			"get votes of non existed proposal",
+			"get votes of a proposal",
 			[]string{
 				"10",
 			},
 			"10",
 		},
 		{
-			"vote for invalid proposal",
+			"get votes of a proposal (json output)",
 			[]string{
 				"1",
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
@@ -345,10 +329,7 @@ func (s *CLITestSuite) TestCmdQueryVotes() {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryVotes()
 			cmd.SetArgs(tc.args)
-
-			if len(tc.args) != 0 {
-				s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
-			}
+			s.Require().Contains(fmt.Sprint(cmd), strings.TrimSpace(tc.expCmdOutput))
 		})
 	}
 }
@@ -362,7 +343,7 @@ func (s *CLITestSuite) TestCmdQueryVote() {
 		expCmdOutput string
 	}{
 		{
-			"get vote of non existing proposal",
+			"get vote of a proposal",
 			[]string{
 				"10",
 				val[0].Address.String(),
@@ -378,22 +359,13 @@ func (s *CLITestSuite) TestCmdQueryVote() {
 			"1 wrong address",
 		},
 		{
-			"vote for valid proposal",
+			"get vote of a proposal (json output)",
 			[]string{
 				"1",
 				val[0].Address.String(),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			fmt.Sprintf("1 %s --output=json", val[0].Address.String()),
-		},
-		{
-			"split vote for valid proposal",
-			[]string{
-				"3",
-				val[0].Address.String(),
-				fmt.Sprintf("--%s=json", flags.FlagOutput),
-			},
-			fmt.Sprintf("3 %s --output=json", val[0].Address.String()),
 		},
 	}
 

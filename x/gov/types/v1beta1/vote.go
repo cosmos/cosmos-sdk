@@ -46,6 +46,7 @@ func (v Votes) Equal(other Votes) bool {
 	return true
 }
 
+// String implements stringer interface
 func (v Votes) String() string {
 	if len(v) == 0 {
 		return "[]"

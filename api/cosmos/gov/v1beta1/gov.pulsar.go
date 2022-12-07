@@ -5621,8 +5621,10 @@ type WeightedVoteOption struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// option defines the valid vote options, it must not contain duplicate vote options.
 	Option VoteOption `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
-	Weight string     `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
+	// weight is the vote weight associated with the vote option.
+	Weight string `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
 }
 
 func (x *WeightedVoteOption) Reset() {
@@ -5666,7 +5668,9 @@ type TextProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title of the proposal.
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description associated with the proposal.
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 }
 
@@ -5711,9 +5715,12 @@ type Deposit struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProposalId uint64          `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Depositor  string          `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// amount to be deposited by depositor.
+	Amount []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *Deposit) Reset() {
@@ -5763,18 +5770,26 @@ type Proposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProposalId uint64         `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Content    *anypb.Any     `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	Status     ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// content is the proposal's content.
+	Content *anypb.Any `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	// status defines the proposal status.
+	Status ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
 	// final_tally_result is the final tally result of the proposal. When
 	// querying a proposal via gRPC, this field is not populated until the
 	// proposal's voting period has ended.
-	FinalTallyResult *TallyResult           `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
-	SubmitTime       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3" json:"submit_time,omitempty"`
-	DepositEndTime   *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3" json:"deposit_end_time,omitempty"`
-	TotalDeposit     []*v1beta1.Coin        `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit,omitempty"`
-	VotingStartTime  *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3" json:"voting_start_time,omitempty"`
-	VotingEndTime    *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3" json:"voting_end_time,omitempty"`
+	FinalTallyResult *TallyResult `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
+	// submit_time is the time of proposal submission.
+	SubmitTime *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3" json:"submit_time,omitempty"`
+	// deposit_end_time is the end time for deposition.
+	DepositEndTime *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3" json:"deposit_end_time,omitempty"`
+	// total_deposit is the total deposit on the proposal.
+	TotalDeposit []*v1beta1.Coin `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit,omitempty"`
+	// voting_start_time is the starting time to vote on a proposal.
+	VotingStartTime *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3" json:"voting_start_time,omitempty"`
+	// voting_end_time is the end time of voting on a proposal.
+	VotingEndTime *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3" json:"voting_end_time,omitempty"`
 }
 
 func (x *Proposal) Reset() {
@@ -5866,9 +5881,13 @@ type TallyResult struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Yes        string `protobuf:"bytes,1,opt,name=yes,proto3" json:"yes,omitempty"`
-	Abstain    string `protobuf:"bytes,2,opt,name=abstain,proto3" json:"abstain,omitempty"`
-	No         string `protobuf:"bytes,3,opt,name=no,proto3" json:"no,omitempty"`
+	// yes is the number of yes votes on a proposal.
+	Yes string `protobuf:"bytes,1,opt,name=yes,proto3" json:"yes,omitempty"`
+	// abstain is the number of abstain votes on a proposal.
+	Abstain string `protobuf:"bytes,2,opt,name=abstain,proto3" json:"abstain,omitempty"`
+	// no is the number of no votes on a proposal.
+	No string `protobuf:"bytes,3,opt,name=no,proto3" json:"no,omitempty"`
+	// no_with_veto is the number of no with veto votes on a proposal.
 	NoWithVeto string `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3" json:"no_with_veto,omitempty"`
 }
 
@@ -5927,14 +5946,18 @@ type Vote struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Voter      string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// voter is the voter address of the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// Deprecated: Prefer to use `options` instead. This field is set in queries
 	// if and only if `len(options) == 1` and that option has weight 1. In all
 	// other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
 	//
 	// Deprecated: Do not use.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
+	// options is the weighted vote options.
+	//
 	// Since: cosmos-sdk 0.43
 	Options []*WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty"`
 }
@@ -6041,7 +6064,7 @@ type VotingParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Length of the voting period.
+	// Duration of the voting period.
 	VotingPeriod *durationpb.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
 }
 

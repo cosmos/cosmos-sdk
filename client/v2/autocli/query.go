@@ -28,7 +28,15 @@ func (b *Builder) BuildQueryCommand(moduleOptions map[string]*autocliv1.ModuleOp
 }
 
 func (b *Builder) EnhanceQueryCommand(queryCmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) error {
-	for moduleName, modOpts := range moduleOptions {
+	allModuleNames := map[string]bool{}
+	for moduleName := range moduleOptions {
+		allModuleNames[moduleName] = true
+	}
+	for moduleName := range customCmds {
+		allModuleNames[moduleName] = true
+	}
+
+	for moduleName := range allModuleNames {
 		// if we have an existing command skip adding one here
 		if existing := findSubCommand(queryCmd, moduleName); existing != nil {
 			continue
@@ -38,6 +46,12 @@ func (b *Builder) EnhanceQueryCommand(queryCmd *cobra.Command, moduleOptions map
 		if custom := customCmds[moduleName]; custom != nil {
 			// custom commands get added lower down
 			queryCmd.AddCommand(custom)
+			continue
+		}
+
+		// check for autocli options
+		modOpts := moduleOptions[moduleName]
+		if modOpts == nil {
 			continue
 		}
 

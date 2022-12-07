@@ -44,7 +44,11 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 		return fmt.Errorf("%w: value encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 
-	m.getStore(ctx).Set(keyBytes, valueBytes)
+	store, err := m.getStore(ctx)
+	if err != nil {
+		return err
+	}
+	store.Set(keyBytes, valueBytes)
 	return nil
 }
 
@@ -58,7 +62,12 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 		return v, err
 	}
 
-	valueBytes := m.getStore(ctx).Get(keyBytes)
+	store, err := m.getStore(ctx)
+	if err != nil {
+		var v V
+		return v, err
+	}
+	valueBytes := store.Get(keyBytes)
 	if valueBytes == nil {
 		var v V
 		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
@@ -79,7 +88,11 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return m.getStore(ctx).Has(bytesKey), nil
+	store, err := m.getStore(ctx)
+	if err != nil {
+		return false, err
+	}
+	return store.Has(bytesKey), nil
 }
 
 // Remove removes the key from the storage.
@@ -90,12 +103,20 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 	if err != nil {
 		return err
 	}
-	m.getStore(ctx).Delete(bytesKey)
+	store, err := m.getStore(ctx)
+	if err != nil {
+		return err
+	}
+	store.Delete(bytesKey)
 	return nil
 }
 
-func (m Map[K, V]) getStore(ctx context.Context) storetypes.KVStore {
-	return ctx.(StorageProvider).KVStore(m.sk)
+func (m Map[K, V]) getStore(ctx context.Context) (storetypes.KVStore, error) {
+	provider, ok := ctx.(StorageProvider)
+	if !ok {
+		return nil, fmt.Errorf("context is not a StorageProvider: underlying type %T", ctx)
+	}
+	return provider.KVStore(m.sk), nil
 }
 
 func (m Map[K, V]) encodeKey(key K) ([]byte, error) {
@@ -103,9 +124,7 @@ func (m Map[K, V]) encodeKey(key K) ([]byte, error) {
 	// preallocate buffer
 	keyBytes := make([]byte, prefixLen+m.kc.Size(key))
 	// put prefix
-	for i, c := range m.prefix {
-		keyBytes[i] = c
-	}
+	copy(keyBytes, m.prefix)
 	// put key
 	_, err := m.kc.EncodeKey(keyBytes[prefixLen:], key)
 	if err != nil {

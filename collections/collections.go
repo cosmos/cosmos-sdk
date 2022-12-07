@@ -33,7 +33,17 @@ type Prefix struct {
 func (n Prefix) Bytes() []byte { return n.raw }
 
 // NewPrefix returns a Prefix given the provided namespace identifier.
-// Prefixes of the same module must not start
+// In the same module, no prefixes should share the same starting bytes
+// meaning that having two namespaces whose bytes representation is:
+// p1 := []byte("prefix")
+// p2 := []byte("prefix1")
+// yields to iterations of p1 overlapping over p2.
+// If a numeric prefix is provided, it must be between 0 and 255 (uint8).
+// If out of bounds this function will panic.
+// Reason for which this function is constrained to `int` instead of `uint8` is for
+// API ergonomics, golang's type inference will infer int properly but not uint8
+// meaning that developers would need to write NewPrefix(uint8(number)) for numeric
+// prefixes.
 func NewPrefix[T interface{ int | string | []byte }](identifier T) Prefix {
 	i := any(identifier)
 	var prefix []byte

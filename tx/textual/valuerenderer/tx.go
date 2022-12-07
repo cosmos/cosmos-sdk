@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	// msgRe is a regex matching the beginning of the TxBody msgs in the enveloppe.
+	// msgRe is a regex matching the beginning of the TxBody msgs in the envelope.
 	msgRe = regexp.MustCompile("Message: ([0-9]+) Any")
 	// inverseMsgRe is a regex matching the textual output of the TxBody msgs
 	// header.
@@ -63,7 +63,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		return nil, err
 	}
 
-	enveloppe := &textualpb.Enveloppe{
+	envelope := &textualpb.Envelope{
 		ChainId:                     textualData.SignerData.ChainId,
 		AccountNumber:               textualData.SignerData.AccountNumber,
 		Sequence:                    textualData.SignerData.Sequence,
@@ -81,8 +81,8 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		HashOfRawBytes:              getHash(textualData.BodyBytes, textualData.AuthInfoBytes),
 	}
 	if txAuthInfo.Tip != nil {
-		enveloppe.Tip = txAuthInfo.Tip.Amount
-		enveloppe.Tipper = txAuthInfo.Tip.Tipper
+		envelope.Tip = txAuthInfo.Tip.Amount
+		envelope.Tipper = txAuthInfo.Tip.Tipper
 	}
 	// Find all other tx signers than the current signer. In the case where our
 	// Textual signer is one key of a multisig, then otherSigners will include
@@ -95,20 +95,20 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 
 		otherSigners = append(otherSigners, si)
 	}
-	enveloppe.OtherSigner = otherSigners
+	envelope.OtherSigner = otherSigners
 
-	mvr, err := vr.tr.GetMessageValueRenderer(enveloppe.ProtoReflect().Descriptor())
+	mvr, err := vr.tr.GetMessageValueRenderer(envelope.ProtoReflect().Descriptor())
 	if err != nil {
 		return nil, err
 	}
 
-	screens, err := mvr.Format(ctx, protoreflect.ValueOf(enveloppe.ProtoReflect()))
+	screens, err := mvr.Format(ctx, protoreflect.ValueOf(envelope.ProtoReflect()))
 	if err != nil {
 		return nil, err
 	}
 
-	// Since we're value-rendering the (internal) Enveloppe message, we do some
-	// postprocessing. First, we remove first enveloppe header screen, and
+	// Since we're value-rendering the (internal) envelope message, we do some
+	// postprocessing. First, we remove first envelope header screen, and
 	// unindent 1 level.
 
 	// Remove 1st screen
@@ -191,9 +191,9 @@ func getHash(bodyBz, authInfoBz []byte) string {
 
 // Parse implements the ValueRenderer interface.
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
-	// Process the screens to be parsable by a Enveloppe message value renderer
+	// Process the screens to be parsable by a envelope message value renderer
 	parsable := make([]Screen, len(screens)+1)
-	parsable[0] = Screen{Text: "Enveloppe object"}
+	parsable[0] = Screen{Text: "envelope object"}
 	for i := range screens {
 		parsable[i+1].Indent = screens[i].Indent + 1
 
@@ -209,36 +209,36 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		}
 	}
 
-	mvr, err := vr.tr.GetMessageValueRenderer((&textualpb.Enveloppe{}).ProtoReflect().Descriptor())
+	mvr, err := vr.tr.GetMessageValueRenderer((&textualpb.Envelope{}).ProtoReflect().Descriptor())
 	if err != nil {
 		return nilValue, err
 	}
 
-	enveloppeV, err := mvr.Parse(ctx, parsable)
+	envelopeV, err := mvr.Parse(ctx, parsable)
 	if err != nil {
 		return nilValue, err
 	}
-	enveloppe := enveloppeV.Message().Interface().(*textualpb.Enveloppe)
+	envelope := envelopeV.Message().Interface().(*textualpb.Envelope)
 
 	txBody := &txv1beta1.TxBody{
-		Messages:                    enveloppe.Message,
-		Memo:                        enveloppe.Memo,
-		TimeoutHeight:               enveloppe.TimeoutHeight,
-		ExtensionOptions:            enveloppe.ExtensionOptions,
-		NonCriticalExtensionOptions: enveloppe.NonCriticalExtensionOptions,
+		Messages:                    envelope.Message,
+		Memo:                        envelope.Memo,
+		TimeoutHeight:               envelope.TimeoutHeight,
+		ExtensionOptions:            envelope.ExtensionOptions,
+		NonCriticalExtensionOptions: envelope.NonCriticalExtensionOptions,
 	}
 	authInfo := &txv1beta1.AuthInfo{
 		Fee: &txv1beta1.Fee{
-			Amount:   enveloppe.Fees,
-			GasLimit: enveloppe.GasLimit,
-			Payer:    enveloppe.FeePayer,
-			Granter:  enveloppe.FeeGranter,
+			Amount:   envelope.Fees,
+			GasLimit: envelope.GasLimit,
+			Payer:    envelope.FeePayer,
+			Granter:  envelope.FeeGranter,
 		},
 	}
-	if enveloppe.Tip != nil {
+	if envelope.Tip != nil {
 		authInfo.Tip = &txv1beta1.Tip{
-			Amount: enveloppe.Tip,
-			Tipper: enveloppe.Tipper,
+			Amount: envelope.Tip,
+			Tipper: envelope.Tipper,
 		}
 	}
 
@@ -250,9 +250,9 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 
 	signerInfos := make([]*txv1beta1.SignerInfo, len(signers))
 	for i, s := range signers {
-		if s == enveloppe.Address {
+		if s == envelope.Address {
 			signerInfos[i] = &txv1beta1.SignerInfo{
-				PublicKey: enveloppe.PublicKey,
+				PublicKey: envelope.PublicKey,
 				ModeInfo: &txv1beta1.ModeInfo{
 					Sum: &txv1beta1.ModeInfo_Single_{
 						Single: &txv1beta1.ModeInfo_Single{
@@ -260,12 +260,12 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 						},
 					},
 				},
-				Sequence: enveloppe.Sequence,
+				Sequence: envelope.Sequence,
 			}
 		} else {
 			// We know that signerInfos is well ordered, so just pop from it.
-			signerInfos[i] = enveloppe.OtherSigner[0]
-			enveloppe.OtherSigner = enveloppe.OtherSigner[1:]
+			signerInfos[i] = envelope.OtherSigner[0]
+			envelope.OtherSigner = envelope.OtherSigner[1:]
 		}
 	}
 	authInfo.SignerInfos = signerInfos
@@ -286,11 +286,11 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		BodyBytes:     bodyBz,
 		AuthInfoBytes: authInfoBz,
 		SignerData: &textualpb.SignerData{
-			Address:       enveloppe.Address,
-			AccountNumber: enveloppe.AccountNumber,
-			ChainId:       enveloppe.ChainId,
-			Sequence:      enveloppe.Sequence,
-			PubKey:        enveloppe.PublicKey,
+			Address:       envelope.Address,
+			AccountNumber: envelope.AccountNumber,
+			ChainId:       envelope.ChainId,
+			Sequence:      envelope.Sequence,
+			PubKey:        envelope.PublicKey,
 		},
 	}
 

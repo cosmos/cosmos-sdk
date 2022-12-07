@@ -10,7 +10,7 @@
 * Sep 18, 2022: Structured format instead of lines of text
 * Nov 23, 2022: Specify CBOR encoding.
 * Dec 01, 2022: Link to examples in separate JSON file.
-* Dec 06, 2022: Re-ordering of enveloppe screens.
+* Dec 06, 2022: Re-ordering of envelope screens.
 
 ## Status
 

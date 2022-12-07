@@ -28,6 +28,23 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 	suite.Require().Equal(proposal, gotProposal)
 }
 
+func (suite *KeeperTestSuite) TestDeleteProposal() {
+	// delete non-existing proposal
+	suite.Require().PanicsWithValue(fmt.Sprintf("couldn't find proposal with id#%d", 10),
+		func() {
+			suite.govKeeper.DeleteProposal(suite.ctx, 10)
+		},
+	)
+	tp := TestProposal
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "")
+	suite.Require().NoError(err)
+	proposalID := proposal.Id
+	suite.govKeeper.SetProposal(suite.ctx, proposal)
+	suite.Require().NotPanics(func() {
+		suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+	}, "")
+}
+
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	tp := TestProposal
 	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "")

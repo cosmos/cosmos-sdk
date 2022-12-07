@@ -3,10 +3,11 @@ package v1
 
 import (
 	"context"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 )
 
 // Handshake is a common handshake that is shared by streaming and host.
@@ -19,9 +20,7 @@ var Handshake = plugin.HandshakeConfig{
 	MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-var (
-	_ plugin.GRPCPlugin = (*ABCIListenerGRPCPlugin)(nil)
-)
+var _ plugin.GRPCPlugin = (*ABCIListenerGRPCPlugin)(nil)
 
 // ABCIListenerGRPCPlugin is the implementation of plugin.GRPCPlugin, so we can serve/consume this.
 type ABCIListenerGRPCPlugin struct {

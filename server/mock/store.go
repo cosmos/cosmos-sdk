@@ -58,7 +58,7 @@ func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
 	panic("not implemented")
 }
 
-func (ms multiStore) PopStateCache() []storetypes.StoreKVPair {
+func (ms multiStore) PopStateCache() []*storetypes.StoreKVPair {
 	panic("not implemented")
 }
 

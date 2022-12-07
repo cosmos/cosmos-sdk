@@ -3,12 +3,14 @@ package baseapp
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cast"
 	"sort"
+
+	"github.com/spf13/cast"
+
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // ABCIListener is the interface that we're exposing as a streaming service.

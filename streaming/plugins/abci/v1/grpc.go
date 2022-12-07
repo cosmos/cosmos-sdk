@@ -3,15 +3,14 @@ package v1
 import (
 	"context"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
-var (
-	_ baseapp.ABCIListener = (*GRPCClient)(nil)
-)
+var _ baseapp.ABCIListener = (*GRPCClient)(nil)
 
 // GRPCClient is an implementation of the ABCIListener interface that talks over RPC.
 type GRPCClient struct {

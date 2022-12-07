@@ -113,9 +113,9 @@ func TestFileGenesisSourceReadRawJSONNoFileExist(t *testing.T) {
 
 	gs := NewFileGenesisSource(tmpdir, moduleName, testModuleState)
 
-	_, err := gs.ReadRawJSON()
-	require.Error(t, err)
-	require.True(t, os.IsNotExist(err))
+	bz, err := gs.ReadRawJSON()
+	require.NoError(t, err)
+	require.Equal(t, testModuleState, bz)
 }
 
 func TestFileGenesisSourceReadMessage(t *testing.T) {

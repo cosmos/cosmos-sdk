@@ -62,19 +62,12 @@ func (f *FileGenesisSource) OpenReader(field string) (io.ReadCloser, error) {
 
 	// if cannot find it, try reading from <sourceDir>/<module>.json
 	rawBz, err := f.ReadRawJSON()
-	if err == nil {
-		f.moduleRootJson = rawBz
-		return f.unmarshalRawModuleWithField(rawBz, field)
-	}
-
-	if !os.IsNotExist(err) {
+	if err != nil {
 		return nil, err
 	}
 
-	if f.moduleRootJson == nil {
-		return nil, fmt.Errorf("failed to retrieve the state of %s from moduleRootJson", f.moduleName)
-	}
-	return f.unmarshalRawModuleWithField(f.moduleRootJson, field)
+	f.moduleRootJson = rawBz
+	return f.unmarshalRawModuleWithField(rawBz, field)
 }
 
 func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field string) (io.ReadCloser, error) {
@@ -98,24 +91,24 @@ func (f *FileGenesisSource) unmarshalRawModuleWithField(rawBz []byte, field stri
 func (f *FileGenesisSource) ReadMessage(msg proto.Message) error {
 	bz, err := f.ReadRawJSON()
 	if err != nil {
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("unexpected error: %w", err)
-		}
-
-		// read the data from moduleRootJson if the source file doesn't exist
-		bz = f.moduleRootJson
+		return fmt.Errorf("unexpected error: %w", err)
 	}
+
 	return protojson.Unmarshal(bz, msg)
 }
 
 // ReadRawJSON returns a json.RawMessage read from the source file given by the
 // source directory and the module name.
+// Return the rawModuleJson coming from Initchain if the err is equal to ErrNotExist
 func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	fName := fmt.Sprintf("%s.json", f.moduleName)
 	fPath := filepath.Join(f.sourceDir, fName)
 
 	fp, err := os.Open(filepath.Clean(fPath))
 	if err != nil {
+		if os.IsNotExist(err) {
+			return f.moduleRootJson, nil
+		}
 		return nil, err
 	}
 

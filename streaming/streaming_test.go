@@ -64,7 +64,7 @@ func (s *PluginTestSuite) SetupTest() {
 	s.endBlockReq = abci.RequestEndBlock{Height: 1}
 	s.endBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &abci.ConsensusParams{},
+		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
 	}
 	s.deliverTxReq = abci.RequestDeliverTx{
@@ -100,11 +100,10 @@ func TestPluginTestSuite(t *testing.T) {
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 		pluginVersion := "abci_v1"
-		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
+		pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/stdout", s.workDir)
 		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/plugin-go/file", s.workDir)
 		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/file.py", s.workDir)
 		//pluginPath := fmt.Sprintf("python3 %s/plugins/abci/v1/examples/plugin-python/kafka.py", s.workDir)
-		pluginPath := fmt.Sprintf("java -jar /Users/ergelsgaxhaj/workspace/provenance-abci-listener-kotlin/build/libs/provenance-abci-listener-kotlin-0.1.0-SNAPSHOT.jar")
 		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 			t.Fail()
 		}
@@ -115,7 +114,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		abciListener, ok := raw.(baseapp.ABCIListener)
 		require.True(t, ok, "should pass type check")
 
-		for i := range [100]int{} {
+		for i := range [50]int{} {
 			s.updateHeight(int64(i))
 
 			err = abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)

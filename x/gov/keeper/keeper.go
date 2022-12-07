@@ -46,7 +46,7 @@ type Keeper struct {
 	authority string
 }
 
-// GetAuthority returns the x/distribution module's authority.
+// GetAuthority returns the x/gov module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
@@ -110,6 +110,7 @@ func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 	return keeper
 }
 
+// SetLegacyRouter sets the legacy router for governance
 func (keeper *Keeper) SetLegacyRouter(router v1beta1.Router) {
 	// It is vital to seal the governance proposal router here as to not allow
 	// further handlers to be registered after the keeper is created since this
@@ -140,7 +141,7 @@ func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccou
 
 // ProposalQueues
 
-// InsertActiveProposalQueue inserts a ProposalID into the active proposal queue at endTime
+// InsertActiveProposalQueue inserts a proposalID into the active proposal queue at endTime
 func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
@@ -153,7 +154,7 @@ func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID u
 	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
-// InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
+// InsertInactiveProposalQueue inserts a proposalID into the inactive proposal queue at endTime
 func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
 	store := ctx.KVStore(keeper.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
@@ -219,7 +220,7 @@ func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time
 }
 
 // assertMetadataLength returns an error if given metadata length
-// is greater than a pre-defined maxMetadataLen.
+// is greater than a pre-defined MaxMetadataLen.
 func (keeper Keeper) assertMetadataLength(metadata string) error {
 	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))

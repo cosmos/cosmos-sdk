@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,6 +47,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 	}
 }
 
+// NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
 	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
@@ -61,7 +63,7 @@ func NewParams(
 	}
 }
 
-// DefaultParams default governance params
+// DefaultParams returns the default governance params
 func DefaultParams() Params {
 	return NewParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
@@ -74,6 +76,7 @@ func DefaultParams() Params {
 	)
 }
 
+// ValidateBasic performs basic validation on governance parameters.
 func (p Params) ValidateBasic() error {
 	if minDeposit := sdk.Coins(p.MinDeposit); minDeposit.Empty() || !minDeposit.IsValid() {
 		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)

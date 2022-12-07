@@ -44,3 +44,6 @@ jobs:
       - name: Build Cosmovisor
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
+      - name: Build Rosetta
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make rosetta

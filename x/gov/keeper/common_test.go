@@ -30,6 +30,7 @@ var (
 	TestProposal = getTestProposal()
 )
 
+// getTestProposal creates and returns a test proposal message.
 func getTestProposal() []sdk.Msg {
 	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), authtypes.NewModuleAddress(types.ModuleName).String())
 	if err != nil {

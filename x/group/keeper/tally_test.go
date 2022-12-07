@@ -71,14 +71,12 @@ func (s *TestSuite) TestTally() {
 		spec := spec
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
-			ctx := sdk.WrapSDKContext(sdkCtx)
-
-			pId := spec.setupProposal(ctx)
+			pId := spec.setupProposal(sdkCtx)
 			req := &group.QueryTallyResultRequest{
 				ProposalId: pId,
 			}
 
-			res, err := s.groupKeeper.TallyResult(ctx, req)
+			res, err := s.groupKeeper.TallyResult(sdkCtx, req)
 			if spec.expErr {
 				s.Require().Error(err)
 			} else {

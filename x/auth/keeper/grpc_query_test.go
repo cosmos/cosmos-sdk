@@ -57,9 +57,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.Accounts(ctx, req)
+			res, err := suite.queryClient.Accounts(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -139,9 +137,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.Account(ctx, req)
+			res, err := suite.queryClient.Account(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -211,9 +207,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccountAddressByID() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.AccountAddressByID(ctx, req)
+			res, err := suite.queryClient.AccountAddressByID(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -254,9 +248,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParameters() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.Params(ctx, req)
+			res, err := suite.queryClient.Params(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -332,9 +324,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			suite.SetupTest() // reset
 
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-
-			res, err := suite.queryClient.ModuleAccounts(ctx, req)
+			res, err := suite.queryClient.ModuleAccounts(suite.ctx, req)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -400,8 +390,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 			tc.malleate()
-			ctx := sdk.WrapSDKContext(suite.ctx)
-			res, err := suite.queryClient.ModuleAccountByName(ctx, req)
+			res, err := suite.queryClient.ModuleAccountByName(suite.ctx, req)
 			if tc.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)

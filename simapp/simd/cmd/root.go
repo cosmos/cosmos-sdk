@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/depinject"
+
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
 	"github.com/spf13/cast"
@@ -32,7 +34,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -47,12 +48,15 @@ import (
 // main function.
 func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
-	encodingConfig := params.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
+	encodingConfig := params.EncodingConfig{}
+	err := depinject.Inject(simapp.AppConfig,
+		&encodingConfig.InterfaceRegistry,
+		&encodingConfig.Codec,
+		&encodingConfig.TxConfig,
+		&encodingConfig.Amino,
+	)
+	if err != nil {
+		panic(err)
 	}
 
 	initClientCtx := client.Context{}.

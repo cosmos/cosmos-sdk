@@ -1,9 +1,7 @@
 package client
 
 import (
-	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -11,14 +9,10 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
+	"github.com/tendermint/tendermint/libs/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
-	corectx "cosmossdk.io/core/context"
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -172,7 +166,7 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 				})))
 			}
 
-			grpcClient, err := grpc.NewClient(grpcURI, dialOpts...)
+			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
 			if err != nil {
 				return Context{}, err
 			}

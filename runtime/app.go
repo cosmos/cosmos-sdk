@@ -80,9 +80,6 @@ func (a *App) Load(loadLatest bool) error {
 		return err
 	}
 
-	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(a.configurator)
-
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
 		a.SetInitChainer(a.InitChainer)
@@ -174,6 +171,11 @@ func (a *App) RegisterNodeService(clientCtx client.Context) {
 
 func (a *App) Configurator() module.Configurator {
 	return a.configurator
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return a.basicManager.DefaultGenesis(a.cdc)
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

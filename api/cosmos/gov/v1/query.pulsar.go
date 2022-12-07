@@ -2,18 +2,17 @@
 package govv1
 
 import (
-	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -8322,7 +8321,7 @@ type QueryParamsResponse struct {
 	//
 	// Deprecated: Do not use.
 	TallyParams *TallyParams `protobuf:"bytes,3,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"`
-	// params defines all the parameters of x/gov module.
+	// params defines all the paramaters of x/gov module.
 	//
 	// Since: cosmos-sdk 0.47
 	Params *Params `protobuf:"bytes,4,opt,name=params,proto3" json:"params,omitempty"`

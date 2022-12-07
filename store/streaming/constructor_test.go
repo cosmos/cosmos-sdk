@@ -3,6 +3,10 @@ package streaming_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,13 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/stretchr/testify/require"
 )
 
 type fakeOptions struct{}
@@ -32,7 +30,7 @@ func (f *fakeOptions) Get(key string) interface{} {
 
 var (
 	mockOptions       = new(fakeOptions)
-	mockKeys          = []types.StoreKey{sdk.NewKVStoreKey("mockKey1"), sdk.NewKVStoreKey("mockKey2")}
+	mockKeys          = []types.StoreKey{types.NewKVStoreKey("mockKey1"), types.NewKVStoreKey("mockKey2")}
 	interfaceRegistry = codecTypes.NewInterfaceRegistry()
 	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
 )
@@ -59,7 +57,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 func TestLoadStreamingServices(t *testing.T) {
 	db := dbm.NewMemDB()
 	encCdc := testutil.MakeTestEncodingConfig()
-	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
+	keys := types.NewKVStoreKeys("mockKey1", "mockKey2")
 	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
 
 	testCases := map[string]struct {

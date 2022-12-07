@@ -277,12 +277,14 @@ func (c Context) Value(key interface{}) interface{} {
 // ----------------------------------------------------------------------------
 
 // KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key storetypes.StoreKey) KVStore {
+// NOTE: Uses pointer receiver to save on execution time.
+func (c *Context) KVStore(key storetypes.StoreKey) KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.GasMeter(), c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
+// NOTE: Uses pointer receiver to save on execution time.
+func (c *Context) TransientStore(key storetypes.StoreKey) KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.GasMeter(), c.transientKVGasConfig)
 }
 

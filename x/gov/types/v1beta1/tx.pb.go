@@ -37,9 +37,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 type MsgSubmitProposal struct {
-	Content        *types.Any                               `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	// content is the proposal's content.
+	Content *types.Any `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	// initial_deposit is the deposit value that must be paid at proposal submission.
 	InitialDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_deposit"`
-	Proposer       string                                   `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// proposer is the account address of the proposer.
+	Proposer string `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }
 
 func (m *MsgSubmitProposal) Reset()         { *m = MsgSubmitProposal{} }
@@ -77,6 +80,7 @@ var xxx_messageInfo_MsgSubmitProposal proto.InternalMessageInfo
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 type MsgSubmitProposalResponse struct {
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
 }
 
@@ -122,9 +126,12 @@ func (m *MsgSubmitProposalResponse) GetProposalId() uint64 {
 
 // MsgVote defines a message to cast a vote.
 type MsgVote struct {
-	ProposalId uint64     `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Voter      string     `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Option     VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// voter is the voter address for the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// option defines the vote option.
+	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
 }
 
 func (m *MsgVote) Reset()         { *m = MsgVote{} }
@@ -201,9 +208,12 @@ var xxx_messageInfo_MsgVoteResponse proto.InternalMessageInfo
 //
 // Since: cosmos-sdk 0.43
 type MsgVoteWeighted struct {
-	ProposalId uint64               `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
-	Voter      string               `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Options    []WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	// voter is the voter address for the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// options defines the weighted vote options.
+	Options []WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options"`
 }
 
 func (m *MsgVoteWeighted) Reset()         { *m = MsgVoteWeighted{} }
@@ -280,9 +290,12 @@ var xxx_messageInfo_MsgVoteWeightedResponse proto.InternalMessageInfo
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 type MsgDeposit struct {
-	ProposalId uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
-	Depositor  string                                   `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// amount to be deposited by depositor.
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }

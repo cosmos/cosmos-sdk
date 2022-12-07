@@ -3,8 +3,8 @@ package types
 import (
 	"context"
 
-	"github.com/coinbase/rosetta-sdk-go/server"
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/rosetta-sdk-go/server"
+	"github.com/cosmos/rosetta-sdk-go/types"
 )
 
 // SpecVersion defines the specification of rosetta

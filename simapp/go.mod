@@ -7,8 +7,13 @@ require (
 	cosmossdk.io/core v0.3.2
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
+<<<<<<< HEAD
 	cosmossdk.io/tools/rosetta v0.1.0
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20220909113810-4882f933b1a1
+=======
+	cosmossdk.io/tools/rosetta v0.2.0
+	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
+>>>>>>> a21ce7dee (ci: add goreleaser for rosetta and add go cache (#14190))
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1

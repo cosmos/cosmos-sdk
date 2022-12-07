@@ -287,6 +287,7 @@ type legacyQueryServer struct {
 	keeper *Keeper
 }
 
+// NewLegacyQueryServer returns an implementation of the v1beta1 legacy QueryServer interface.
 func NewLegacyQueryServer(k *Keeper) v1beta1.QueryServer {
 	return &legacyQueryServer{keeper: k}
 }

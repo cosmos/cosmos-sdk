@@ -112,6 +112,7 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	fp, err := os.Open(filepath.Clean(fPath))
 	if err != nil {
 		if os.IsNotExist(err) {
+			f.mergedStates = true
 			return f.moduleRootJson, nil
 		}
 		return nil, err
@@ -143,7 +144,20 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 		return nil, rerr
 	}
 
-	// combine data with moduleRootJson
+	// if the file is empty, return moduleRootJson instead
+	if len(buf) == 0 {
+		f.mergedStates = true
+		return f.moduleRootJson, nil
+	}
+
+	// if moduleRootJson is empty, no data combined needed
+	if len(f.moduleRootJson) == 0 {
+		f.moduleRootJson = buf
+		f.mergedStates = true
+		return f.moduleRootJson, nil
+	}
+
+	// else, combine data with moduleRootJson
 	moduleStates := make(map[string]interface{})
 	if err := json.Unmarshal(f.moduleRootJson, &moduleStates); err != nil {
 		rerr = fmt.Errorf("failed to unmarshal moduleRootJson: %w", err)

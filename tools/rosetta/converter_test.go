@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	rosettatypes "github.com/cosmos/rosetta-sdk-go/types"
 	"github.com/stretchr/testify/suite"
 
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"

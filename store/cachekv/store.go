@@ -339,7 +339,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 		}
 	}
 
-	kvL := make([]*kv.Pair, 0)
+	kvL := make([]*kv.Pair, 0, 1+endIndex-startIndex)
 	for i := startIndex; i <= endIndex; i++ {
 		key := strL[i]
 		cacheValue := store.cache[key]

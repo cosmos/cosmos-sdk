@@ -12,10 +12,10 @@ The Rosetta API server is a stand-alone server that connects to a node of a chai
 
 To enable Rosetta API support, it's required to add the `RosettaCommand` to your application's root command file (e.g. `simd/cmd/root.go`).
 
-Import the `server` package:
+Import the `rosettaCmd` package:
 
 ```go
-import "github.com/cosmos/cosmos-sdk/server"
+import "cosmossdk.io/tools/rosetta/cmd"
 ```
 
 Find the following line:
@@ -28,11 +28,11 @@ After that line, add the following:
 
 ```go
 rootCmd.AddCommand(
-  server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec)
+  rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec)
 )
 ```
 
-The `RosettaCommand` function builds the `rosetta` root command and is defined in the `server` package within Cosmos SDK.
+The `RosettaCommand` function builds the `rosetta` root command and is defined in the `rosettaCmd` package (`cosmossdk.io/tools/rosetta/cmd`).
 
 Since we’ve updated the Cosmos SDK to work with the Rosetta API, updating the application's root command file is all you need to do.
 
@@ -57,6 +57,16 @@ simd rosetta
      --addr "rosetta binding address (ex: :8080)"
 ```
 
+## Use Rosetta Standalone
+
+To use Rosetta standalone, without having to add it in your application, install it with the following command:
+
+```bash
+go install cosmossdk.io/tools/rosetta/cmd/rosetta
+```
+
+Alternatively, for building from source, simply run `make rosetta`. The binary will be located in `tools/rosetta`.
+
 ## Extensions
 
 There are two ways in which you can customize and extend the implementation with your custom settings.
@@ -76,7 +86,7 @@ package custom_client
 import (
 
 "context"
-"github.com/coinbase/rosetta-sdk-go/types"
+"github.com/cosmos/rosetta-sdk-go/types"
 "cosmossdk.io/tools/rosetta/lib"
 )
 

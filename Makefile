@@ -137,7 +137,10 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor
+rosetta:
+	$(MAKE) -C tools/rosetta rosetta
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
 
 
 mocks: $(MOCKS_DIR)

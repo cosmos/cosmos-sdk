@@ -31,4 +31,7 @@ func TestImportExportQueues_ErrorUnconsistentState(t *testing.T) {
 			},
 		})
 	})
+	gov.InitGenesis(ctx, suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, v1.DefaultGenesisState())
+	genState := gov.ExportGenesis(ctx, suite.GovKeeper)
+	require.Equal(t, genState, v1.DefaultGenesisState())
 }

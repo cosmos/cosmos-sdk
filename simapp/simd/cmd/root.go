@@ -39,9 +39,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -202,7 +200,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand(encodingConfig params.EncodingConfig, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genesisCoreCommand(encodingConfig)
+	cmd := genutilcli.GenesisCoreCommand(encodingConfig.TxConfig, simapp.ModuleBasics, simapp.DefaultNodeHome)
 
 	for _, sub_cmd := range cmds {
 		cmd.AddCommand(sub_cmd)
@@ -210,30 +208,6 @@ func genesisCommand(encodingConfig params.EncodingConfig, cmds ...*cobra.Command
 	return cmd
 }
 
-// genesisCoreCommand adds core sdk's sub-commands into genesis command:
-// -> gentx, migrate, collect-gentxs, validate-genesis, add-genesis-account
-func genesisCoreCommand(encodingConfig params.EncodingConfig) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                        "genesis",
-		Short:                      "Application's genesis-related subcommands",
-		DisableFlagParsing:         false,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       client.ValidateCmd,
-	}
-	gentxModule := simapp.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
-
-	cmd.AddCommand(
-		genutilcli.GenTxCmd(simapp.ModuleBasics, encodingConfig.TxConfig,
-			banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome),
-		genutilcli.MigrateGenesisCmd(),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, simapp.DefaultNodeHome,
-			gentxModule.GenTxValidator),
-		genutilcli.ValidateGenesisCmd(simapp.ModuleBasics),
-		genutilcli.AddGenesisAccountCmd(simapp.DefaultNodeHome),
-	)
-
-	return cmd
-}
 func queryCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "query",

@@ -75,35 +75,6 @@ jobs:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
           path: ./${{ matrix.part }}profile.out
 
-  tests-legacy:
-    runs-on: ubuntu-latest
-    needs: split-test-files
-    strategy:
-      fail-fast: false
-      matrix:
-        part: ["00", "01", "02", "03"]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.3
-      - uses: technote-space/get-diff-action@v6.1.1
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
-      - uses: actions/download-artifact@v3
-        with:
-          name: "${{ github.sha }}-${{ matrix.part }}"
-      - name: test app (v1)
-        if: env.GIT_DIFF
-        run: |
-          cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -timeout 30m -tags='app_v1 norace ledger test_ledger_mock'
-
   test-integration:
     runs-on: ubuntu-latest
     steps:

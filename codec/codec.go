@@ -79,7 +79,7 @@ type (
 	// ProtoMarshaler defines an interface a type must implement to serialize itself
 	// as a protocol buffer defined message.
 	//
-	// Depreactated: Use proto.Message instead from github.com/cosmos/gogoproto/proto.
+	// Deprecated: Use proto.Message instead from github.com/cosmos/gogoproto/proto.
 	ProtoMarshaler interface {
 		proto.Message // for JSON serialization
 

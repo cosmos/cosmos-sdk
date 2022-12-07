@@ -39,8 +39,8 @@ type Context struct {
 	consParams           *tmproto.ConsensusParams
 	eventManager         *EventManager
 	priority             int64 // The tx priority, only relevant in CheckTx
-	kvGasConfig          storetypes.GasConfig
-	transientKVGasConfig storetypes.GasConfig
+	kvGasConfig          *storetypes.GasConfig
+	transientKVGasConfig *storetypes.GasConfig
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -62,8 +62,8 @@ func (c Context) IsReCheckTx() bool                          { return c.recheckT
 func (c Context) MinGasPrices() DecCoins                     { return c.minGasPrice }
 func (c Context) EventManager() *EventManager                { return c.eventManager }
 func (c Context) Priority() int64                            { return c.priority }
-func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasConfig }
-func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }
+func (c Context) KVGasConfig() storetypes.GasConfig          { return *c.kvGasConfig }
+func (c Context) TransientKVGasConfig() storetypes.GasConfig { return *c.transientKVGasConfig }
 
 // clone the header before returning
 func (c Context) BlockHeader() tmproto.Header {
@@ -203,14 +203,14 @@ func (c Context) WithBlockGasMeter(meter GasMeter) Context {
 // WithKVGasConfig returns a Context with an updated gas configuration for
 // the KVStore
 func (c Context) WithKVGasConfig(gasConfig storetypes.GasConfig) Context {
-	c.kvGasConfig = gasConfig
+	c.kvGasConfig = &gasConfig
 	return c
 }
 
 // WithTransientKVGasConfig returns a Context with an updated gas configuration for
 // the transient KVStore
 func (c Context) WithTransientKVGasConfig(gasConfig storetypes.GasConfig) Context {
-	c.transientKVGasConfig = gasConfig
+	c.transientKVGasConfig = &gasConfig
 	return c
 }
 
@@ -279,7 +279,8 @@ func (c Context) Value(key interface{}) interface{} {
 // KVStore fetches a KVStore from the MultiStore.
 // NOTE: Uses pointer receiver to save on execution time.
 func (c *Context) KVStore(key storetypes.StoreKey) KVStore {
-	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.kvGasConfig)
+	kv := c.ms.GetKVStore(key)
+	return gaskv.NewStore(kv, c.gasMeter, c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.

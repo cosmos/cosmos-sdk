@@ -609,7 +609,8 @@ func TestABCI_CheckTx(t *testing.T) {
 		require.Empty(t, r.GetEvents())
 	}
 
-	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	ctx := getCheckStateCtx(suite.baseApp)
+	checkStateStore := ctx.KVStore(capKey1)
 	storedCounter := getIntFromStore(t, checkStateStore, counterKey)
 
 	// ensure AnteHandler ran
@@ -625,7 +626,8 @@ func TestABCI_CheckTx(t *testing.T) {
 	suite.baseApp.EndBlock(abci.RequestEndBlock{})
 	suite.baseApp.Commit()
 
-	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	stateCtx := getCheckStateCtx(suite.baseApp)
+	checkStateStore = stateCtx.KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
@@ -697,7 +699,8 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	store := getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+	ctx := getDeliverStateCtx(suite.baseApp)
+	store := ctx.KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(t, store, anteKey)
@@ -725,7 +728,8 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 	res = suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
 
-	store = getDeliverStateCtx(suite.baseApp).KVStore(capKey1)
+	ctx = getDeliverStateCtx(suite.baseApp)
+	store = ctx.KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(t, store, anteKey)

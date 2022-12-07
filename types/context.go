@@ -278,12 +278,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key storetypes.StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), c.kvGasConfig)
+	return gaskv.NewStore(c.ms.GetKVStore(key), c.GasMeter(), c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
-	return gaskv.NewStore(c.MultiStore().GetKVStore(key), c.GasMeter(), c.transientKVGasConfig)
+	return gaskv.NewStore(c.ms.GetKVStore(key), c.GasMeter(), c.transientKVGasConfig)
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new
@@ -291,7 +291,7 @@ func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
 // is called. Note, events are automatically emitted on the parent context's
 // EventManager when the caller executes the write.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
-	cms := c.MultiStore().CacheMultiStore()
+	cms := c.ms.CacheMultiStore()
 	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
 
 	writeCache = func() {

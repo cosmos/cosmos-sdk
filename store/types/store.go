@@ -364,6 +364,19 @@ func NewKVStoreKey(name string) *KVStoreKey {
 	}
 }
 
+// NewKVStoreKeys returns a map of new  pointers to KVStoreKey's.
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
+	assertNoCommonPrefix(names)
+	keys := make(map[string]*KVStoreKey, len(names))
+	for _, n := range names {
+		keys[n] = NewKVStoreKey(n)
+	}
+
+	return keys
+}
+
 func (key *KVStoreKey) Name() string {
 	return key.name
 }

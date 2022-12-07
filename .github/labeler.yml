@@ -35,6 +35,8 @@
   - x/staking/**/*
 "C:x/upgrade":
   - x/upgrade/**/*
+"C:x/consensus":
+  - x/consensus/**/*
 "C:Cosmovisor":
   - tools/cosmovisor/**/*
 "C:Rosetta":

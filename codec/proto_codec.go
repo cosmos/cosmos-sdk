@@ -42,19 +42,19 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // Marshal implements BinaryMarshaler.Marshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
-func (pc *ProtoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
+func (pc *ProtoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
 	// Size() check can catch the typed nil value.
-	if o == nil || o.Size() == 0 {
+	if o == nil || gogoproto.Size(o) == 0 {
 		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
 		return []byte{}, nil
 	}
-	return o.Marshal()
+	return gogoproto.Marshal(o)
 }
 
 // MustMarshal implements BinaryMarshaler.MustMarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
-func (pc *ProtoCodec) MustMarshal(o ProtoMarshaler) []byte {
+func (pc *ProtoCodec) MustMarshal(o gogoproto.Message) []byte {
 	bz, err := pc.Marshal(o)
 	if err != nil {
 		panic(err)
@@ -64,19 +64,19 @@ func (pc *ProtoCodec) MustMarshal(o ProtoMarshaler) []byte {
 }
 
 // MarshalLengthPrefixed implements BinaryMarshaler.MarshalLengthPrefixed method.
-func (pc *ProtoCodec) MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
+func (pc *ProtoCodec) MarshalLengthPrefixed(o gogoproto.Message) ([]byte, error) {
 	bz, err := pc.Marshal(o)
 	if err != nil {
 		return nil, err
 	}
 
 	var sizeBuf [binary.MaxVarintLen64]byte
-	n := binary.PutUvarint(sizeBuf[:], uint64(o.Size()))
+	n := binary.PutUvarint(sizeBuf[:], uint64(gogoproto.Size(o)))
 	return append(sizeBuf[:n], bz...), nil
 }
 
 // MustMarshalLengthPrefixed implements BinaryMarshaler.MustMarshalLengthPrefixed method.
-func (pc *ProtoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
+func (pc *ProtoCodec) MustMarshalLengthPrefixed(o gogoproto.Message) []byte {
 	bz, err := pc.MarshalLengthPrefixed(o)
 	if err != nil {
 		panic(err)
@@ -88,8 +88,8 @@ func (pc *ProtoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
 // Unmarshal implements BinaryMarshaler.Unmarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
-func (pc *ProtoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
-	err := ptr.Unmarshal(bz)
+func (pc *ProtoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
+	err := gogoproto.Unmarshal(bz, ptr)
 	if err != nil {
 		return err
 	}
@@ -103,14 +103,14 @@ func (pc *ProtoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
 // MustUnmarshal implements BinaryMarshaler.MustUnmarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
-func (pc *ProtoCodec) MustUnmarshal(bz []byte, ptr ProtoMarshaler) {
+func (pc *ProtoCodec) MustUnmarshal(bz []byte, ptr gogoproto.Message) {
 	if err := pc.Unmarshal(bz, ptr); err != nil {
 		panic(err)
 	}
 }
 
 // UnmarshalLengthPrefixed implements BinaryMarshaler.UnmarshalLengthPrefixed method.
-func (pc *ProtoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
+func (pc *ProtoCodec) UnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Message) error {
 	size, n := binary.Uvarint(bz)
 	if n < 0 {
 		return fmt.Errorf("invalid number of bytes read from length-prefixed encoding: %d", n)
@@ -127,7 +127,7 @@ func (pc *ProtoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) err
 }
 
 // MustUnmarshalLengthPrefixed implements BinaryMarshaler.MustUnmarshalLengthPrefixed method.
-func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
+func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Message) {
 	if err := pc.UnmarshalLengthPrefixed(bz, ptr); err != nil {
 		panic(err)
 	}

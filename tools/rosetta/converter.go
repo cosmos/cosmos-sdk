@@ -2,14 +2,13 @@ package rosetta
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcec/v2"
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	rosettatypes "github.com/cosmos/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -115,7 +114,7 @@ func NewConverter(cdc *codec.ProtoCodec, ir codectypes.InterfaceRegistry, cfg sd
 		txDecode:        cfg.TxDecoder(),
 		txEncode:        cfg.TxEncoder(),
 		bytesToSign: func(tx authsigning.Tx, signerData authsigning.SignerData) (b []byte, err error) {
-			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(context.TODO(), signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
+			bytesToSign, err := cfg.SignModeHandler().GetSignBytes(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signerData, tx)
 			if err != nil {
 				return nil, err
 			}

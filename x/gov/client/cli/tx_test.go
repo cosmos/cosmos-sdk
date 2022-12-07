@@ -295,7 +295,7 @@ func (s *CLITestSuite) TestNewCmdDeposit() {
 			true,
 		},
 		{
-			"deposit on non existing proposal",
+			"deposit on a proposal",
 			[]string{
 				"10",
 				sdk.NewCoin("stake", sdk.NewInt(10)).String(), // 10stake

@@ -9,7 +9,7 @@ import (
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/rosetta-sdk-go/types"
 	tmtypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 

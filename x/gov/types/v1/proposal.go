@@ -95,7 +95,6 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 }
 
 // Format implements the fmt.Formatter interface.
-
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

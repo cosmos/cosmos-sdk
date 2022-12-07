@@ -2,15 +2,16 @@
 package modulev1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -500,6 +501,8 @@ type Module struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// max_metadata_len defines the maximum proposal metadata length.
+	// Defaults to 255 if not explicitly set.
 	MaxMetadataLen uint64 `protobuf:"varint,1,opt,name=max_metadata_len,json=maxMetadataLen,proto3" json:"max_metadata_len,omitempty"`
 	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`

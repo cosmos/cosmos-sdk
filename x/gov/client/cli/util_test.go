@@ -18,7 +18,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestParseSubmitLegacyProposalFlags(t *testing.T) {
+func TestParseSubmitLegacyProposal(t *testing.T) {
 	okJSON := testutil.WriteToNewTempFile(t, `
 {
   "title": "Test Proposal",
@@ -33,17 +33,17 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 
 	// nonexistent json
 	fs.Set(FlagProposal, "fileDoesNotExist")
-	_, err := parseSubmitLegacyProposalFlags(fs)
+	_, err := parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// invalid json
 	fs.Set(FlagProposal, badJSON.Name())
-	_, err = parseSubmitLegacyProposalFlags(fs)
+	_, err = parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// ok json
 	fs.Set(FlagProposal, okJSON.Name())
-	proposal1, err := parseSubmitLegacyProposalFlags(fs)
+	proposal1, err := parseSubmitLegacyProposal(fs)
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, "Test Proposal", proposal1.Title)
 	require.Equal(t, "My awesome proposal", proposal1.Description)
@@ -53,7 +53,7 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 	// flags that can't be used with --proposal
 	for _, incompatibleFlag := range ProposalFlags {
 		fs.Set(incompatibleFlag, "some value")
-		_, err := parseSubmitLegacyProposalFlags(fs)
+		_, err := parseSubmitLegacyProposal(fs)
 		require.Error(t, err)
 		fs.Set(incompatibleFlag, "")
 	}
@@ -97,7 +97,7 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 			fs.Set(FlagDescription, tc.pDescription)
 			fs.Set(FlagProposalType, tc.pType)
 			fs.Set(FlagDeposit, proposal1.Deposit)
-			proposal2, err := parseSubmitLegacyProposalFlags(fs)
+			proposal2, err := parseSubmitLegacyProposal(fs)
 
 			if tc.expErr {
 				require.Error(t, err)

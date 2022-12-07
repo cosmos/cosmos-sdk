@@ -302,7 +302,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 			false, 2,
 		},
 		{
-			"deposit on non existing proposal",
+			"deposit on existing proposal",
 			[]string{
 				"1",
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10)).String(), // 10stake

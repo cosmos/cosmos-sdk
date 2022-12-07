@@ -15,7 +15,7 @@ import (
 
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	rosettatypes "github.com/cosmos/rosetta-sdk-go/types"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 

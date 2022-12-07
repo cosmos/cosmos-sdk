@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/tools/rosetta/lib/errors"
-	"github.com/coinbase/rosetta-sdk-go/types"
+	"github.com/cosmos/rosetta-sdk-go/types"
 )
 
 func (on OnlineNetwork) NetworkList(_ context.Context, _ *types.MetadataRequest) (*types.NetworkListResponse, *types.Error) {

@@ -189,7 +189,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// call the hooks with the BeginBlock messages
 	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			app.logger.Error("BeginBlock listening hook failed", "height", req.Header.Height, "err", err)
+			panic(fmt.Errorf("BeginBlock listening hook failed, height: %d, err: %w", req.Header.Height, err))
 		}
 	}
 
@@ -214,7 +214,7 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	// call the streaming service hooks with the EndBlock messages
 	for _, streamingListener := range app.abciListeners {
 		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			app.logger.Error("EndBlock listening hook failed", "height", req.Height, "err", err)
+			panic(fmt.Errorf("EndBlock listening hook failed, height: %d, err: %w", req.Height, err))
 		}
 	}
 
@@ -268,7 +268,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 	defer func() {
 		for _, streamingListener := range app.abciListeners {
 			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
-				app.logger.Error("DeliverTx listening hook failed", "err", err)
+				panic(fmt.Errorf("DeliverTx listening hook failed: %w", err))
 			}
 		}
 	}()
@@ -302,7 +302,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // defined in config, Commit will execute a deferred function call to check
 // against that height and gracefully halt if it matches the latest committed
 // height.
-func (app *BaseApp) Commit() (res abci.ResponseCommit) {
+func (app *BaseApp) Commit() abci.ResponseCommit {
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -311,6 +311,19 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// MultiStore (app.cms) so when Commit() is called is persists those values.
 	app.deliverState.ms.Write()
 	commitID := app.cms.Commit()
+
+	res := abci.ResponseCommit{
+		Data:         commitID.Hash,
+		RetainHeight: retainHeight,
+	}
+
+	// call the hooks with the Commit message
+	for _, streamingListener := range app.abciListeners {
+		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
+			panic(fmt.Errorf("Commit listening hook failed, height: %d, err: %w", header.Height, err))
+		}
+	}
+
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 
 	// Reset the Check state to the latest committed.
@@ -342,10 +355,7 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 
 	go app.snapshotManager.SnapshotIfApplicable(header.Height)
 
-	return abci.ResponseCommit{
-		Data:         commitID.Hash,
-		RetainHeight: retainHeight,
-	}
+	return res
 }
 
 // halt attempts to gracefully shutdown the node via SIGINT and SIGTERM falling
@@ -597,7 +607,13 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 		return sdk.Context{}, err
 	}
 
-	lastBlockHeight := app.LastBlockHeight()
+	// use custom query multistore if provided
+	qms := app.qms
+	if qms == nil {
+		qms = sdk.MultiStore(app.cms)
+	}
+
+	lastBlockHeight := qms.LatestVersion()
 	if height > lastBlockHeight {
 		return sdk.Context{},
 			sdkerrors.Wrap(
@@ -619,7 +635,7 @@ func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, e
 			)
 	}
 
-	cacheMS, err := app.cms.CacheMultiStoreWithVersion(height)
+	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			sdkerrors.Wrapf(

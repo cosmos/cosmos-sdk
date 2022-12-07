@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -31,8 +30,6 @@ type Store struct {
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
-
-	listeners map[types.StoreKey][]types.WriteListener
 }
 
 var _ types.CacheMultiStore = Store{}
@@ -43,18 +40,13 @@ var _ types.CacheMultiStore = Store{}
 func NewFromKVStore(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
-	listeners map[types.StoreKey][]types.WriteListener,
 ) Store {
-	if listeners == nil {
-		listeners = make(map[types.StoreKey][]types.WriteListener)
-	}
 	cms := Store{
 		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
 		keys:         keys,
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
-		listeners:    listeners,
 	}
 
 	for key, store := range stores {
@@ -64,9 +56,6 @@ func NewFromKVStore(
 			})
 
 			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
-		}
-		if cms.ListeningEnabled(key) {
-			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])
 		}
 		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}
@@ -78,9 +67,9 @@ func NewFromKVStore(
 // CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
 	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
-	traceWriter io.Writer, traceContext types.TraceContext, listeners map[types.StoreKey][]types.WriteListener,
+	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext, listeners)
+	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
 }
 
 func newCacheMultiStoreFromCMS(cms Store) Store {
@@ -89,8 +78,7 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	// don't pass listeners to nested cache store.
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, nil)
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -121,21 +109,9 @@ func (cms Store) TracingEnabled() bool {
 	return cms.traceWriter != nil
 }
 
-// AddListeners adds listeners for a specific KVStore
-func (cms Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
-	if ls, ok := cms.listeners[key]; ok {
-		cms.listeners[key] = append(ls, listeners...)
-	} else {
-		cms.listeners[key] = listeners
-	}
-}
-
-// ListeningEnabled returns if listening is enabled for a specific KVStore
-func (cms Store) ListeningEnabled(key types.StoreKey) bool {
-	if ls, ok := cms.listeners[key]; ok {
-		return len(ls) != 0
-	}
-	return false
+// LatestVersion returns the branch version of the store
+func (cms Store) LatestVersion() int64 {
+	panic("cannot get latest version from branch cached multi-store")
 }
 
 // GetStoreType returns the type of the store.
@@ -158,11 +134,6 @@ func (cms Store) CacheWrap() types.CacheWrap {
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
 func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
-	return cms.CacheWrap()
-}
-
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (cms Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
 	return cms.CacheWrap()
 }
 

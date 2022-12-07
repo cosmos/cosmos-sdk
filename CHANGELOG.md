@@ -40,6 +40,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (client) [#14051](https://github.com/cosmos/cosmos-sdk/pull/14051) Add `--grpc` client option.
+* (x/gentutil) [#14149](https://github.com/cosmos/cosmos-sdk/pull/14149) Add `genutilcli.GenesisCoreCommand` command, which contains all genesis-related sub-commands.
+
+### CLI Breaking Changes
+
+* (genesis) [#14149](https://github.com/cosmos/cosmos-sdk/pull/14149) Add `simd genesis` command, which contains all genesis-related sub-commands.
 
 ## [v0.47.0-alpha2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-alpha2) - 2022-12-06
 

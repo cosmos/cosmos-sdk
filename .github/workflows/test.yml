@@ -173,8 +173,6 @@ jobs:
     needs: [tests, test-integration, test-e2e]
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: technote-space/get-diff-action@v6.1.1
         id: git_diff
         with:
@@ -282,8 +280,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
@@ -314,8 +310,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
@@ -346,8 +340,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
@@ -406,8 +398,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
@@ -504,8 +494,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4

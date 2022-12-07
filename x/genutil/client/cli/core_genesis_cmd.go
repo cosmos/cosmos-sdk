@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// genesisCoreCommand adds core sdk's sub-commands into genesis command:
+// GenesisCoreCommand adds core sdk's sub-commands into genesis command:
 // -> gentx, migrate, collect-gentxs, validate-genesis, add-genesis-account
-func GenesisCoreCommand(encodingConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
+func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "genesis",
 		Short:                      "Application's genesis-related subcommands",
@@ -23,7 +23,7 @@ func GenesisCoreCommand(encodingConfig client.TxConfig, moduleBasics module.Basi
 	gentxModule := moduleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 
 	cmd.AddCommand(
-		GenTxCmd(moduleBasics, encodingConfig,
+		GenTxCmd(moduleBasics, txConfig,
 			banktypes.GenesisBalancesIterator{}, defaultNodeHome),
 		MigrateGenesisCmd(),
 		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome,

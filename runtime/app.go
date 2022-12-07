@@ -85,6 +85,7 @@ func (a *App) Load(loadLatest bool) error {
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
+		a.SetInitChainer(a.InitChainer)
 	}
 
 	if len(a.config.ExportGenesis) != 0 {
@@ -101,6 +102,10 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.EndBlockers) != 0 {
 		a.ModuleManager.SetOrderEndBlockers(a.config.EndBlockers...)
 		a.SetEndBlocker(a.EndBlocker)
+	}
+
+	if len(a.config.OrderMigrations) != 0 {
+		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
 	}
 
 	if loadLatest {

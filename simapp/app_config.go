@@ -152,6 +152,8 @@ var (
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
 					// ExportGenesis: genesisModuleOrder,
+					// Uncomment if you want to set a custom migration order here.
+					// OrderMigrations: nil,
 				}),
 			},
 			{

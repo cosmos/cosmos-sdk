@@ -250,7 +250,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   ModuleBasics.DefaultGenesis(app.AppCodec()),
+		GenesisState:   app.DefaultGenesis(),
 		EncodingConfig: testutil.TestEncodingConfig{
 			InterfaceRegistry: app.InterfaceRegistry(),
 			Codec:             app.AppCodec(),

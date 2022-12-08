@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -51,7 +50,7 @@ func migrateVotes(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
-		var oldVote v1beta1.Vote
+		var oldVote govv1beta1.Vote
 		err := cdc.Unmarshal(iter.Value(), &oldVote)
 		if err != nil {
 			return err

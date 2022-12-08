@@ -217,12 +217,12 @@ func (suite *KeeperTestSuite) TestAppendSendRestriction() {
 	calls = nil
 	bk.AppendSendRestriction(testRestriction(2))
 	_, _ = bk.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
-	suite.Require().Equal([]int{1, 2}, calls, "restriction counter after second append")
+	suite.Require().Equal([]int{1, 2}, calls, "restriction calls after second append")
 
 	// make sure the original bank keeper has the restrictions too.
 	calls = nil
 	_, _ = suite.bankKeeper.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
-	suite.Require().Equal([]int{1, 2}, calls, "restriction counter from original bank keeper")
+	suite.Require().Equal([]int{1, 2}, calls, "restriction calls from original bank keeper")
 }
 
 func (suite *KeeperTestSuite) TestPrependSendRestriction() {
@@ -246,12 +246,12 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 	calls = nil
 	bk.PrependSendRestriction(testRestriction(2))
 	_, _ = bk.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
-	suite.Require().Equal([]int{2, 1}, calls, "restriction counter after second append")
+	suite.Require().Equal([]int{2, 1}, calls, "restriction calls after second append")
 
 	// make sure the original bank keeper has the restrictions too.
 	calls = nil
 	_, _ = suite.bankKeeper.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
-	suite.Require().Equal([]int{2, 1}, calls, "restriction counter from original bank keeper")
+	suite.Require().Equal([]int{2, 1}, calls, "restriction calls from original bank keeper")
 }
 
 func (suite *KeeperTestSuite) TestGetAuthority() {

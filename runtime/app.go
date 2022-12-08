@@ -183,7 +183,7 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.basicManager.DefaultGenesis(a.cdc)
 }
 
-// GetStoreKeys returns all the keys stored store keys.
+// GetStoreKeys returns all the stored store keys.
 func (a *App) GetStoreKeys() []storetypes.StoreKey {
 	return a.storeKeys
 }

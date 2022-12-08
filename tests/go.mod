@@ -160,9 +160,6 @@ require (
 )
 
 replace (
-	// temporarily until tagging new api
-	cosmossdk.io/api => ../api
-
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

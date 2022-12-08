@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
@@ -26,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -257,9 +259,6 @@ func NewSimApp(
 
 	/****  Module Options ****/
 
-	// Sets the version setter for the upgrade module
-	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
-
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
@@ -285,6 +284,10 @@ func NewSimApp(
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
+
+	// Set upgrade module options
+	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
+	app.UpgradeKeeper.SetModuleVersionMap(sdk.NewContext(app.BaseApp.CommitMultiStore(), types.Header{}, false, logger), app.ModuleManager.GetVersionMap())
 
 	return app
 }

@@ -44,7 +44,6 @@ func (sup *SoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(sup)
 }
 
-<<<<<<< HEAD
 func (sup SoftwareUpgradeProposal) String() string {
 	return fmt.Sprintf(`Software Upgrade Proposal:
   Title:       %s
@@ -52,9 +51,7 @@ func (sup SoftwareUpgradeProposal) String() string {
 `, sup.Title, sup.Description)
 }
 
-=======
 // NewCancelSoftwareUpgradeProposal creates a new CancelSoftwareUpgradeProposal instance
->>>>>>> bd59987df (refactor: x/upgrade audit changes (#14188))
 func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 	return &CancelSoftwareUpgradeProposal{title, description}
 }

@@ -196,6 +196,64 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc authtypes
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
+func (suite *KeeperTestSuite) TestAppendSendRestriction() {
+	var calls []int
+	testRestriction := func(index int) keeper.SendRestrictionFn {
+		return func(_ sdk.Context, _, _ sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
+			calls = append(calls, index)
+			return nil, nil
+		}
+	}
+
+	bk := suite.bankKeeper
+
+	// Initial append of the test restriction.
+	bk.SetSendRestriction(nil)
+	bk.AppendSendRestriction(testRestriction(1))
+	_, _ = bk.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
+	suite.Require().Equal([]int{1}, calls, "restriction calls after first append")
+
+	// Append the test restriction again.
+	calls = nil
+	bk.AppendSendRestriction(testRestriction(2))
+	_, _ = bk.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
+	suite.Require().Equal([]int{1, 2}, calls, "restriction counter after second append")
+
+	// make sure the original bank keeper has the restrictions too.
+	calls = nil
+	_, _ = suite.bankKeeper.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
+	suite.Require().Equal([]int{1, 2}, calls, "restriction counter from original bank keeper")
+}
+
+func (suite *KeeperTestSuite) TestPrependSendRestriction() {
+	var calls []int
+	testRestriction := func(index int) keeper.SendRestrictionFn {
+		return func(_ sdk.Context, _, _ sdk.AccAddress, _ sdk.Coins) (sdk.AccAddress, error) {
+			calls = append(calls, index)
+			return nil, nil
+		}
+	}
+
+	bk := suite.bankKeeper
+
+	// Initial append of the test restriction.
+	bk.SetSendRestriction(nil)
+	bk.PrependSendRestriction(testRestriction(1))
+	_, _ = bk.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
+	suite.Require().Equal([]int{1}, calls, "restriction calls after first append")
+
+	// Append the test restriction again.
+	calls = nil
+	bk.PrependSendRestriction(testRestriction(2))
+	_, _ = bk.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
+	suite.Require().Equal([]int{2, 1}, calls, "restriction counter after second append")
+
+	// make sure the original bank keeper has the restrictions too.
+	calls = nil
+	_, _ = suite.bankKeeper.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
+	suite.Require().Equal([]int{2, 1}, calls, "restriction counter from original bank keeper")
+}
+
 func (suite *KeeperTestSuite) TestGetAuthority() {
 	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
 		return keeper.NewBaseKeeper(

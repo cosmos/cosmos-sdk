@@ -124,9 +124,6 @@ type SimApp struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keys to access the substores
-	keys map[string]*storetypes.KVStoreKey
-
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
@@ -250,12 +247,13 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.keys); err != nil {
+	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.kvStoreKeys()); err != nil {
 		fmt.Printf("failed to load state streaming: %s", err)
 		os.Exit(1)
 	}
 
 	/****  Module Options ****/
+  
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
@@ -275,9 +273,6 @@ func NewSimApp(
 
 	app.sm.RegisterStoreDecoders()
 
-	// initialize stores
-	app.MountKVStores(app.keys)
-
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
@@ -287,11 +282,6 @@ func NewSimApp(
 
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
-
-// LoadHeight loads a particular height
-func (app *SimApp) LoadHeight(height int64) error {
-	return app.LoadVersion(height)
-}
 
 // LegacyAmino returns SimApp's amino codec.
 //
@@ -323,17 +313,23 @@ func (app *SimApp) TxConfig() client.TxConfig {
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	kvsk := app.keys[storeKey]
-	if kvsk != nil {
-		return kvsk
-	}
-
 	sk := app.UnsafeFindStoreKey(storeKey)
 	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
 	if !ok {
 		return nil
 	}
 	return kvStoreKey
+}
+
+func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
+	keys := make(map[string]*storetypes.KVStoreKey)
+	for _, k := range app.GetStoreKeys() {
+		if kv, ok := k.(*storetypes.KVStoreKey); ok {
+			keys[kv.Name()] = kv
+		}
+	}
+
+	return keys
 }
 
 // GetSubspace returns a param subspace for a given module name.
@@ -353,7 +349,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 // API server.
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	app.App.RegisterAPIRoutes(apiSvr, apiConfig)
-	// register swagger API from root so that other applications can override easily
+	// register swagger API in app.go so that other applications can override easily
 	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
 		panic(err)
 	}

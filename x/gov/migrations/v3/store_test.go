@@ -67,7 +67,7 @@ func TestMigrateStore(t *testing.T) {
 	var newVote1 v1.Vote
 	err = cdc.Unmarshal(store.Get(v1gov.VoteKey(prop1.ProposalId, voter)), &newVote1)
 	require.NoError(t, err)
-	// Without the votes migration, we would have 500000000000000000 in state,
+	// Without the votes migration, we would have 300000000000000000 in state,
 	// because of how sdk.Dec stores itself in state.
 	require.Equal(t, "0.300000000000000000", newVote1.Options[0].Weight)
 	require.Equal(t, "0.700000000000000000", newVote1.Options[1].Weight)

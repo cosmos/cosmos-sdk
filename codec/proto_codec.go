@@ -42,18 +42,13 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
 func (pc *ProtoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
-	bz, err := gogoproto.Marshal(o)
-	if err != nil {
-		return bz, err
-	}
-
 	// Size() check can catch the typed nil value.
 	if o == nil || gogoproto.Size(o) == 0 {
 		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
 		return []byte{}, nil
 	}
 
-	return bz, nil
+	return gogoproto.Marshal(o)
 }
 
 // MustMarshal implements BinaryMarshaler.MustMarshal method.

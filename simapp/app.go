@@ -593,7 +593,7 @@ func (app *SimApp) TxConfig() client.TxConfig {
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
-func (a *App) DefaultGenesis() map[string]json.RawMessage {
+func (a *SimApp) DefaultGenesis() map[string]json.RawMessage {
 	return ModuleBasics.DefaultGenesis(a.appCodec)
 }
 

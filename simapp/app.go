@@ -228,6 +228,22 @@ func NewSimApp(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
+	// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
+	// handlers. These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+	// them.
+	//
+	// nonceMempool := mempool.NewSenderNonceMempool()
+	// mempoolOpt   := baseapp.SetMempool(nonceMempool)
+	// prepareOpt   := func(app *baseapp.BaseApp) {
+	// 	app.SetPrepareProposal(app.DefaultPrepareProposal())
+	// }
+	// processOpt := func(app *baseapp.BaseApp) {
+	// 	app.SetProcessProposal(app.DefaultProcessProposal())
+	// }
+	//
+	// Further down we'd set the options in the AppBuilder like below.
+	// baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
+
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)

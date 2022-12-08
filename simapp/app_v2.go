@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 
 	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
@@ -27,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -174,20 +172,20 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
-		// handlers.  These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+		// handlers. These defaults are already set in the SDK's BaseApp, this shows an example of how to override
 		// them.
 		//
-		//nonceMempool = mempool.NewNonceMempool()
-		//mempoolOpt   = baseapp.SetMempool(nonceMempool)
-		//prepareOpt   = func(app *baseapp.BaseApp) {
-		//	app.SetPrepareProposal(app.DefaultPrepareProposal())
-		//}
-		//processOpt = func(app *baseapp.BaseApp) {
-		//	app.SetProcessProposal(app.DefaultProcessProposal())
-		//}
+		// nonceMempool = mempool.NewSenderNonceMempool()
+		// mempoolOpt   = baseapp.SetMempool(nonceMempool)
+		// prepareOpt   = func(app *baseapp.BaseApp) {
+		// 	app.SetPrepareProposal(app.DefaultPrepareProposal())
+		// }
+		// processOpt = func(app *baseapp.BaseApp) {
+		// 	app.SetProcessProposal(app.DefaultProcessProposal())
+		// }
 		//
 		// Further down we'd set the options in the AppBuilder like below.
-		//baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
+		// baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -287,7 +285,7 @@ func NewSimApp(
 
 	// Set upgrade module options
 	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
-	app.UpgradeKeeper.SetModuleVersionMap(sdk.NewContext(app.BaseApp.CommitMultiStore(), types.Header{}, false, logger), app.ModuleManager.GetVersionMap())
+	// app.UpgradeKeeper.SetModuleVersionMap(sdk.NewContext(app.BaseApp.CommitMultiStore(), types.Header{}, false, logger), app.ModuleManager.GetVersionMap())
 
 	return app
 }

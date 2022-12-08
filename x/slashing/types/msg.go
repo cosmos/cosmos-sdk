@@ -25,8 +25,13 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	}
 }
 
+// Route implements the sdk.Msg interface.
 func (msg MsgUnjail) Route() string { return RouterKey }
-func (msg MsgUnjail) Type() string  { return TypeMsgUnjail }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUnjail) Type() string { return TypeMsgUnjail }
+
+// GetSigners implements the sdk.Msg interface.
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 	return []sdk.AccAddress{sdk.AccAddress(valAddr)}
@@ -38,7 +43,7 @@ func (msg MsgUnjail) GetSignBytes() []byte {
 	return sdk.MustSortJSON(bz)
 }
 
-// ValidateBasic does a sanity check on the provided message
+// ValidateBasic does a sanity check on the provided message.
 func (msg MsgUnjail) ValidateBasic() error {
 	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddr); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("validator input address: %s", err)

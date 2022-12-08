@@ -145,6 +145,18 @@ func (mr *MockBankKeeperMockRecorder) AllBalances(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllBalances", reflect.TypeOf((*MockBankKeeper)(nil).AllBalances), arg0, arg1)
 }
 
+// AppendSendRestriction mocks base method.
+func (m *MockBankKeeper) AppendSendRestriction(restriction keeper.SendRestrictionFn) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AppendSendRestriction", restriction)
+}
+
+// AppendSendRestriction indicates an expected call of AppendSendRestriction.
+func (mr *MockBankKeeperMockRecorder) AppendSendRestriction(restriction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppendSendRestriction", reflect.TypeOf((*MockBankKeeper)(nil).AppendSendRestriction), restriction)
+}
+
 // Balance mocks base method.
 func (m *MockBankKeeper) Balance(arg0 context.Context, arg1 *types1.QueryBalanceRequest) (*types1.QueryBalanceResponse, error) {
 	m.ctrl.T.Helper()
@@ -666,6 +678,18 @@ func (m *MockBankKeeper) Params(arg0 context.Context, arg1 *types1.QueryParamsRe
 func (mr *MockBankKeeperMockRecorder) Params(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Params", reflect.TypeOf((*MockBankKeeper)(nil).Params), arg0, arg1)
+}
+
+// PrependSendRestriction mocks base method.
+func (m *MockBankKeeper) PrependSendRestriction(restriction keeper.SendRestrictionFn) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PrependSendRestriction", restriction)
+}
+
+// PrependSendRestriction indicates an expected call of PrependSendRestriction.
+func (mr *MockBankKeeperMockRecorder) PrependSendRestriction(restriction interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrependSendRestriction", reflect.TypeOf((*MockBankKeeper)(nil).PrependSendRestriction), restriction)
 }
 
 // SendCoins mocks base method.

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -559,6 +560,119 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	})
 	require.Len(coins, 1)
 	require.Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
+}
+
+func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
+	type restrictionArgs struct {
+		ctx      sdk.Context
+		fromAddr sdk.AccAddress
+		toAddr   sdk.AccAddress
+		amt      sdk.Coins
+	}
+	var actualRestrictionArgs *restrictionArgs
+	restrictionError := func(message string) keeper.SendRestrictionFn {
+		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			actualRestrictionArgs = &restrictionArgs{
+				ctx:      ctx,
+				fromAddr: fromAddr,
+				toAddr:   toAddr,
+				amt:      amt,
+			}
+			return nil, errors.New(message)
+		}
+	}
+	restrictionPassthrough := func() keeper.SendRestrictionFn {
+		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			actualRestrictionArgs = &restrictionArgs{
+				ctx:      ctx,
+				fromAddr: fromAddr,
+				toAddr:   toAddr,
+				amt:      amt,
+			}
+			return toAddr, nil
+		}
+	}
+	restrictionNewTo := func(newToAddr sdk.AccAddress) keeper.SendRestrictionFn {
+		return func(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
+			actualRestrictionArgs = &restrictionArgs{
+				ctx:      ctx,
+				fromAddr: fromAddr,
+				toAddr:   toAddr,
+				amt:      amt,
+			}
+			return newToAddr, nil
+		}
+	}
+	type expBal struct {
+		addr sdk.AccAddress
+		amt  sdk.Coins
+	}
+
+	setupCtx := suite.ctx
+	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
+	fromAddr := accAddrs[0]
+	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
+	toAddr1 := accAddrs[1]
+	toAddr2 := accAddrs[2]
+
+	suite.mockFundAccount(accAddrs[0])
+	suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, setupCtx, accAddrs[0], balances))
+
+	tests := []struct {
+		name    string
+		fn      keeper.SendRestrictionFn
+		toAddr  sdk.AccAddress
+		amt     sdk.Coins
+		expArgs *restrictionArgs
+		expErr  string
+		expBals []*expBal
+	}{
+		{
+			name:    "nil restriction",
+			fn:      nil,
+			toAddr:  toAddr1,
+			amt:     sdk.NewCoins(newFooCoin(5)),
+			expArgs: nil,
+			expBals: []*expBal{
+				{addr: fromAddr, amt: sdk.NewCoins(newFooCoin(995), newBarCoin(500))},
+				{addr: toAddr1, amt: sdk.NewCoins(newFooCoin(5))},
+				{addr: toAddr2, amt: sdk.Coins{}},
+			},
+		},
+		// TODO[14124]: Add more test cases.
+	}
+
+	_ = restrictionError
+	_ = restrictionPassthrough
+	_ = restrictionNewTo
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			// TODO[14124]: provide tc.fn to the bank keeper.
+			ctx := suite.ctx
+			suite.mockSendCoins(ctx, fromAcc, tc.toAddr)
+			var err error
+			testFunc := func() {
+				err = suite.bankKeeper.SendCoins(ctx, fromAddr, tc.toAddr, tc.amt)
+			}
+			suite.Require().NotPanics(testFunc, "SendCoins")
+			if len(tc.expErr) > 0 {
+				suite.Assert().EqualError(err, tc.expErr, "SendCoins error")
+			} else {
+				suite.Assert().NoError(err, "SendCoins error")
+			}
+			if tc.expArgs != nil {
+				suite.Assert().Equal(tc.expArgs.ctx, actualRestrictionArgs.ctx, "ctx provided to restriction")
+				suite.Assert().Equal(tc.expArgs.fromAddr, actualRestrictionArgs.fromAddr, "fromAddr provided to restriction")
+				suite.Assert().Equal(tc.expArgs.toAddr, actualRestrictionArgs.toAddr, "toAddr provided to restriction")
+				suite.Assert().Equal(tc.expArgs.amt, actualRestrictionArgs.amt, "amt provided to restriction")
+			}
+			for i, bal := range tc.expBals {
+				actual := suite.bankKeeper.GetAllBalances(ctx, bal.addr)
+				suite.Assert().Equal(bal.amt, actual, "expected balance[%d]", i)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {

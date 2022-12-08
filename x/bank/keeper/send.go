@@ -20,6 +20,7 @@ type SendKeeper interface {
 
 	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsWithoutRestriction(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params) error
@@ -58,6 +59,8 @@ type BaseSendKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+
+	sendRestrictionFn SendRestrictionFn
 }
 
 func NewBaseSendKeeper(
@@ -72,12 +75,13 @@ func NewBaseSendKeeper(
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper: NewBaseViewKeeper(cdc, storeKey, ak),
-		cdc:            cdc,
-		ak:             ak,
-		storeKey:       storeKey,
-		blockedAddrs:   blockedAddrs,
-		authority:      authority,
+		BaseViewKeeper:    NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:               cdc,
+		ak:                ak,
+		storeKey:          storeKey,
+		blockedAddrs:      blockedAddrs,
+		authority:         authority,
+		sendRestrictionFn: nil,
 	}
 }
 
@@ -150,6 +154,12 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 		if err != nil {
 			return err
 		}
+		if k.sendRestrictionFn != nil {
+			outAddress, err = k.sendRestrictionFn(ctx, inAddress, outAddress, out.Coins)
+			if err != nil {
+				return err
+			}
+		}
 		err = k.addCoins(ctx, outAddress, out.Coins)
 		if err != nil {
 			return err
@@ -158,7 +168,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeTransfer,
-				sdk.NewAttribute(types.AttributeKeyRecipient, out.Address),
+				sdk.NewAttribute(types.AttributeKeyRecipient, outAddress.String()),
 				sdk.NewAttribute(sdk.AttributeKeyAmount, out.Coins.String()),
 			),
 		)
@@ -180,6 +190,19 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	if k.sendRestrictionFn != nil {
+		var err error
+		toAddr, err = k.sendRestrictionFn(ctx, fromAddr, toAddr, amt)
+		if err != nil {
+			return err
+		}
+	}
+	return k.SendCoinsWithoutRestriction(ctx, fromAddr, toAddr, amt)
+}
+
+// SendCoinsWithoutRestriction transfers amt coins from a sending account to a receiving account without checking the injectable restrictions.
+// An error is returned upon failure.
+func (k BaseSendKeeper) SendCoinsWithoutRestriction(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err

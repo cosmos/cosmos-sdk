@@ -27,7 +27,7 @@ type MsgClient interface {
 	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(ctx context.Context, in *MsgSoftwareUpgrade, opts ...grpc.CallOption) (*MsgSoftwareUpgradeResponse, error)
 	// CancelUpgrade is a governance operation for cancelling a previously
-	// approvid software upgrade.
+	// approved software upgrade.
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUpgrade(ctx context.Context, in *MsgCancelUpgrade, opts ...grpc.CallOption) (*MsgCancelUpgradeResponse, error)
@@ -68,7 +68,7 @@ type MsgServer interface {
 	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(context.Context, *MsgSoftwareUpgrade) (*MsgSoftwareUpgradeResponse, error)
 	// CancelUpgrade is a governance operation for cancelling a previously
-	// approvid software upgrade.
+	// approved software upgrade.
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUpgrade(context.Context, *MsgCancelUpgrade) (*MsgCancelUpgradeResponse, error)

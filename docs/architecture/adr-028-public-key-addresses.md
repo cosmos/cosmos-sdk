@@ -114,7 +114,7 @@ Motivation: this algorithm keeps the address relatively small (length of the `ty
 and it's more secure than [post-hash-prefix-proposal] (which uses the first 20 bytes of a pubkey hash, significantly reducing the address space).
 Moreover the cryptographer motivated the choice of adding `typ` in the hash to protect against a switch table attack.
 
-`address.Hash` is a low level function to generate _base_ addresses for a new key types. Example:
+`address.Hash` is a low level function to generate _base_ addresses for new key types. Example:
 
 * BLS: `address.Hash("bls", pubkey)`
 
@@ -178,7 +178,7 @@ func (multisig PubKey) Address() {
 We must be able to cryptographically derive one address from another one. The derivation process must guarantee hash properties, hence we use the already defined `Hash` function:
 
 ```go
-func Derive(address []byte, derivationKey []byte) []byte {
+func Derive(address, derivationKey []byte) []byte {
     return Hash(addres, derivationKey)
 }
 ```

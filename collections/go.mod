@@ -9,6 +9,7 @@ require (
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect

@@ -865,7 +865,7 @@ type MsgUpdateGroupPolicyMetadata struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// group_policy_address is the account address of group policy.
 	GroupPolicyAddress string `protobuf:"bytes,2,opt,name=group_policy_address,json=groupPolicyAddress,proto3" json:"group_policy_address,omitempty"`
-	// metadata is the updated group policy metadata.
+	// metadata is the group policy metadata to be updated.
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
@@ -967,7 +967,7 @@ type MsgSubmitProposal struct {
 	// proposers are the account addresses of the proposers.
 	// Proposers signatures will be counted as yes votes.
 	Proposers []string `protobuf:"bytes,2,rep,name=proposers,proto3" json:"proposers,omitempty"`
-	// metadata is any arbitrary metadata to attached to the proposal.
+	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
 	Messages []*types.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
@@ -1156,7 +1156,7 @@ type MsgVote struct {
 	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1.VoteOption" json:"option,omitempty"`
-	// metadata is any arbitrary metadata to attached to the vote.
+	// metadata is any arbitrary metadata attached to the vote.
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// exec defines whether the proposal should be executed
 	// immediately after voting or not.

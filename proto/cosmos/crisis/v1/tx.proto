@@ -1,0 +1,97 @@
+syntax = "proto3";
+package cosmos.crisis.v1;
+
+import "cosmos/msg/v1/msg.proto";
+
+// Msg defines the crisis Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // AuthorizeCircuitBreaker allows a super-admin to grant (or revoke) another
+  // account's circuit breaker permissions.
+  rpc AuthorizeCircuitBreaker(MsgAuthorizeCircuitBreaker) returns (MsgAuthorizeCircuitBreakerResponse);
+
+  // TripCircuitBreaker pauses Msg processing in the state machine of Msg's.
+  rpc TripCircuitBreaker(MsgTripCircuitBreaker) returns (MsgTripCircuitBreakerResponse);
+
+  // ResetCircuitBreaker resumes processing of Msg's in the state machine that
+  // have been been paused using TripCircuitBreaker.
+  rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
+}
+
+message MsgAuthorizeCircuitBreaker {
+  option (cosmos.msg.v1.signer) = "granter";
+
+  string granter = 1;
+  string grantee = 2;
+  CircuitBreakerPermissions permissions = 3;
+}
+
+message CircuitBreakerPermissions {
+  // level is the level of permissions granted to this account.
+  Level level = 1;
+
+  // limit_type_urls is used with LEVEL_SOME_MSGS to limit the lists of Msg type
+  // URLs that the account can pause. It is an error to use limit_type_urls with
+  // a level other than LEVEL_SOME_MSGS.
+  repeated string limit_type_urls = 2;
+
+  enum Level {
+    // LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
+    // breaker permissions.
+    LEVEL_NONE_UNSPECIFIED = 0;
+
+    // LEVEL_SOME_MSGS indicates that the account will have permission to
+    // trip or reset the circuit breaker for some Msg type URLs. If this level
+    // is chosen, a non-empty list of Msg type URLs must be provided in
+    // limit_type_urls.
+    LEVEL_SOME_MSGS = 1;
+
+    // LEVEL_ALL_MSGS indicates that the account can trip or reset the circuit
+    // breaker for Msg's of all type URLs.
+    LEVEL_ALL_MSGS = 2;
+
+    // LEVEL_SUPER_ADMIN indicates that the account can take all circuit breaker
+    // actions and can grant permissions to other accounts.
+    LEVEL_SUPER_ADMIN = 3;
+  }
+}
+
+message MsgAuthorizeCircuitBreakerResponse {}
+
+message MsgDeauthorizeCircuitBreaker {
+  option (cosmos.msg.v1.signer) = "granter";
+
+  string granter = 1;
+  string grantee = 2;
+  repeated string msg_type_urls = 3;
+}
+
+message MsgDeauthorizeCircuitBreakerResponse {}
+
+message MsgTripCircuitBreaker {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the account authorized to trip the circuit breaker.
+  string signer = 1;
+
+  // msg_type_urls specifies a list of type URLs to immediately stop processing.
+  // IF IT IS LEFT EMPTY, ALL MSG PROCESSING WILL STOP IMMEDIATELY.
+  repeated string msg_type_urls = 2;
+}
+
+message MsgTripCircuitBreakerResponse {}
+
+message MsgResetCircuitBreaker {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the account authorized to trip or reset the circuit breaker.
+  string signer = 1;
+
+  // msg_type_urls specifies a list of Msg type URLs to resume processing. If
+  // it is left empty all Msg processing for type URLs that the account is
+  // authorized to trip will resume.
+  repeated string msg_type_urls = 3;
+}
+
+message MsgResetCircuitBreakerResponse {}

@@ -15,12 +15,6 @@ require (
 )
 
 require (
-<<<<<<< HEAD
-=======
-	cosmossdk.io/api v0.2.6 // indirect
-	cosmossdk.io/core v0.3.2 // indirect
-	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
->>>>>>> 4e2196fcc (fix: app config and simapp (v1,v2) fixes (#14209))
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

@@ -18,6 +18,11 @@ func (u Uint) BigInt() *big.Int {
 	return new(big.Int).Set(u.i)
 }
 
+// IsNil returns true if Uint is uninitialized
+func (u Uint) IsNil() bool {
+	return u.i == nil
+}
+
 // NewUintFromBigUint constructs Uint from big.Uint
 func NewUintFromBigInt(i *big.Int) Uint {
 	u, err := checkNewUint(i)

@@ -2,9 +2,13 @@
 
 ## Changelog
 
-- Dec 06, 2021: Initial Draft.
-- Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
-- May 16, 2022: Change status to Accepted.
+* Dec 06, 2021: Initial Draft.
+* Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
+* May 16, 2022: Change status to Accepted.
+* Aug 11, 2022: Require signing over tx raw bytes.
+* Sep 07, 2022: Add custom `Msg`-renderers.
+* Sep 18, 2022: Structured format instead of lines of text
+* Nov 23, 2022: Specify CBOR encoding.
 
 ## Status
 
@@ -18,75 +22,145 @@ This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targe
 
 Protobuf-based SIGN_MODE_DIRECT was introduced in [ADR-020](./adr-020-protobuf-transaction-encoding.md) and is intended to replace SIGN_MODE_LEGACY_AMINO_JSON in most situations, such as mobile wallets and CLI keyrings. However, the [Ledger](https://www.ledger.com/) hardware wallet is still using SIGN_MODE_LEGACY_AMINO_JSON for displaying the sign bytes to the user. Hardware wallets cannot transition to SIGN_MODE_DIRECT as:
 
-- SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users. Technically, hardware wallets could simply display the sign bytes to the user. But this would be considered as blind signing, and is a security concern.
-- hardware cannot decode the protobuf sign bytes due to memory constraints, as the Protobuf definitions would need to be embedded on the hardware device.
+* SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users. Technically, hardware wallets could simply display the sign bytes to the user. But this would be considered as blind signing, and is a security concern.
+* hardware cannot decode the protobuf sign bytes due to memory constraints, as the Protobuf definitions would need to be embedded on the hardware device.
 
-In an effort to remove Amino from the SDK, a new sign mode needs to be created for hardware devices. [Initial discussions](https://github.com/cosmos/cosmos-sdk/issues/6513) propose a string-based sign mode, which this ADR formally specifies.
+In an effort to remove Amino from the SDK, a new sign mode needs to be created for hardware devices. [Initial discussions](https://github.com/cosmos/cosmos-sdk/issues/6513) propose a text-based sign mode, which this ADR formally specifies.
 
 ## Decision
 
-We propose to have SIGN_MODE_TEXTUAL’s signing payload `SignDocTextual` to be an array of strings, encoded as a `\n`-delimited string (see point #9). Each string corresponds to one "screen" on the hardware wallet device, with no (or little) additional formatting done by the hardware wallet itself.
+In SIGN_MODE_TEXTUAL, a transaction is rendered into a textual representation,
+which is then sent to a secure device or subsystem for the user to review and sign.
+Unlike `SIGN_MODE_DIRECT`, the transmitted data can be simply decoded into legible text
+even on devices with limited processing and display.
 
-```proto
-message SignDocTextual {
-  repeated string screens = 1;
+The textual representation is a sequence of _screens_.
+Each screen is meant to be displayed in its entirety (if possible) even on a small device like a Ledger.
+A screen is roughly equivalent to a short line of text.
+Large screens can be displayed in several pieces,
+much as long lines of text are wrapped,
+so no hard guidance is given, though 40 characters is a good target.
+A screen is used to display a single key/value pair for scalar values
+(or composite values with a compact notation, such as `Coins`)
+or to introduce or conclude a larger grouping.
+
+The text can contain the full range of Unicode code points, including control characters and nul.
+The device is responsible for deciding how to display characters it cannot render natively.
+See [annex 2](./adr-050-sign-mode-textual-annex2.md) for guidance.
+
+Screens have a non-negative indentation level to signal composite or nested structures.
+Indentation level zero is the top level.
+Indentation is displayed via some device-specific mechanism.
+Message quotation notation is an appropriate model, such as
+leading `>` characters or vertical bars on more capable displays.
+
+Some screens are marked as _expert_ screens,
+meant to be displayed only if the viewer chooses to opt in for the extra detail.
+Expert screens are meant for information that is rarely useful,
+or needs to be present only for signature integrity (see below).
+
+### Invertible Rendering
+
+We require that the rendering of the transaction be invertible:
+there must be a parsing function such that for every transaction,
+when rendered to the textual representation,
+parsing that representation yeilds a proto message equivalent
+to the original under proto equality.
+
+Note that this inverse function does not need to perform correct
+parsing or error signaling for the whole domain of textual data.
+Merely that the range of valid transactions be invertible under
+the composition of rendering and parsing.
+
+Note that the existence of an inverse function ensures that the
+rendered text contains the full information of the original transaction,
+not a hash or subset.
+
+### Chain State
+
+The rendering function (and parsing function) may depend on the current chain state.
+This is useful for reading parameters, such as coin display metadata,
+or for reading user-specific preferences such as language or address aliases.
+Note that if the observed state changes between signature generation
+and the transaction's inclusion in a block, the delivery-time rendering
+might differ. If so, the signature will be invalid and the transaction
+will be rejected.
+
+### Signature and Security
+
+For security, transaction signatures should have three properties:
+
+1. Given the transaction, signatures, and chain state, it must be possible to validate that the signatures matches the transaction,
+to verify that the signers must have known their respective secret keys.
+
+2. It must be computationally infeasible to find a substantially different transaction for which the given signatures are valid, given the same chain state.
+
+3. The user should be able to give informed consent to the signed data via a simple, secure device with limited display capabilities.
+
+The correctness and security of `SIGN_MODE_TEXTUAL` is guaranteed by demonstrating an inverse function from the rendering to transaction protos.
+This means that it is impossible for a different protocol buffer message to render to the same text.
+
+### Transaction Hash Malleability
+
+When client software forms a transaction, the "raw" transaction (`TxRaw`) is serialized as a proto
+and a hash of the resulting byte sequence is computed.
+This is the `TxHash`, and is used by various services to track the submitted transaction through its lifecycle.
+Various misbehavior is possible if one can generate a modified transaction with a different TxHash
+but for which the signature still checks out.
+
+SIGN_MODE_TEXTUAL prevents this transaction malleability by including the TxHash as an expert screen
+in the rendering.
+
+### SignDoc
+
+The SignDoc for `SIGN_MODE_TEXTUAL` is formed from a data structure like:
+
+```
+type Screen struct {
+  Text string text  // possibly size limited to, e.g. 255 characters
+  Indent uint8  // size limited to something small like 16 or 32
+  Expert bool
 }
+
+type SignDocTextual = []Screen
 ```
 
-The string array MUST follow the specifications below.
+We do not plan to use protobuf serialization to form the sequence of bytes
+that will be tranmitted and signed, in order to keep the decoder simple.
+We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
+The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor.org/rfc/rfc8610)):
 
-### 1. Bijectivity with Protobuf transactions
+```
+;;; CDDL (RFC 8610) Specification of SignDoc for SIGN_MODE_TEXTUAL.
+;;; Must be encoded using CBOR deterministic encoding (RFC 8949, section 4.2.1).
 
-The encoding and decoding operations between a Protobuf transaction (whose definition can be found [here](https://github.com/cosmos/cosmos-sdk/blob/master/proto/cosmos/tx/v1beta1/tx.proto#L13)) and the string array MUST be bijective.
+;; A Textual document is an array of screens.
+screens = [* screen]
 
-We concede that bijectivity is not strictly needed. Avoiding transaction malleability only requires collision resistance on the encoding. Lossless encoding also does not require decodability. However, bijectivity assures both non-malleability and losslessness.
+;; A screen consists of a text string, an indentation, and the expert flag,
+;; represented as an integer-keyed map. All entries are optional
+;; and MUST be omitted from the encoding if empty, zero, or false.
+;; Text defaults to the empty string, indent defaults to zero,
+;; and expert defaults to false.
+screen = {
+  ? text_key: tstr,
+  ? indent_key: uint,
+  ? expert_key: bool,
+}
 
-Bijectivity will be tested in two ways:
+;; Keys are small integers to keep the encoding small.
+text_key = 1
+indent_key = 2
+expert_key = 3
+```
 
-- by providing a set of test fixtures between a transaction's Proto JSON representation and its TEXTUAL representation, and checking that encoding/decoding in both directions matches the fixtures,
-- by using property testing on the proto transaction itself, and testing that the composition of encoding and decoding yields the original transaction itself.
+## Details
 
-This also prevents users signing over any hashed transaction data (fee, transaction body, `Msg` content that might be hashed etc), which is a security concern for Ledger's security team.
+In the examples that follow, screens will be shown as lines of text,
+indentation is indicated with a leading '>',
+and expert screens are marked with a leading `*`.
 
-We propose to maintain functional tests using bijectivity in the SDK.
-
-### 2. Only ASCII 32-127 characters allowed
-
-Ledger devices have limited character display capabilities, so all strings MUST only contain ASCII characters in the 32-127 range.
-
-In particular, the newline `"\n"` (ASCII: 10) character is forbidden.
-
-### 3. Strings SHOULD have the `<key>: <value>` format
-
-Given the Regex `/^(\* )?(>* )?(.*: )?(.*)$/`, all strings SHOULD match the Regex with capture groups 3 and 4 non-empty. This is helpful for UIs displaying SignDocTextual to users.
-
-- The initial `*` character is optional and denotes the Ledger Expert mode, see #5.
-- Strings can also include a number of `>` character to denote nesting.
-- In the case where the first Regex capture group is not empty, it represents an indicative key, whose associated value is given in the second capture group. This MAY be used in the Ledger app to perform custom on-screen formatting, for example to break long lines into multiple screens.
-
-This Regex is however not mandatory, to allow for some flexibility, for example to display an English sentence to denote end of sections.
-
-The `<value>` itself can contain the `": "` characters.
-
-### 4. Values are encoded using Value Renderers
-
-Value Renderers describe how Protobuf types are encoded to and decoded from a string array. The full specification of Value Renderers can be found in [Annex 1](./adr-050-sign-mode-textual-annex1.md).
-
-### 5. Strings starting with `*` are only shown in Expert mode
-
-Ledger devices have the an Expert mode for advanced users. Expert mode needs to be manually activated by the device holder, inside the device settings. There is currently no official documentation on Expert mode, but according to the [@Ledger_Support twitter account](https://twitter.com/Ledger_Support/status/1364524431800950785),
-
-> Expert mode enables further, more sophisticated features. This could be useful for advanced users
-
-Strings starting with the `*` character will only be shown in Expert mode. These strings are either hardcoded in the transaction envelope (see point #7).
-
-For hardware wallets that don't have an expert mode, all strings MUST be shown on the device.
-
-### 6. Strings MAY contain `>` characters to denote nesting
-
-Protobuf objects can be arbitrarily complex, containing nested arrays and messages. In order to help the Ledger-signing users, we propose to use the `>` symbol in the beginning of strings to represent nested objects, where each additional `>` represents a new level of nesting.
-
-### 7. Encoding of the Transaction Envelope
+### Encoding of the Transaction Envelope
 
 We define "transaction envelope" as all data in a transaction that is not in the `TxBody.Messages` field. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.
 
@@ -115,9 +189,10 @@ Tip: <string>
 *Public Key: <hex_string>
 *Sequence: <uint64>
 *End of other signers
+*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined in #10, to prevent tx hash malleability.
 ```
 
-### 8. Encoding of the Transaction Body
+### Encoding of the Transaction Body
 
 Transaction Body is the `Tx.TxBody.Messages` field, which is an array of `Any`s, where each `Any` packs a `sdk.Msg`. Since `sdk.Msg`s are widely used, they have a slightly different encoding than usual array of `Any`s (Protobuf: `repeated google.protobuf.Any`) described in Annex 1.
 
@@ -133,7 +208,7 @@ End of transaction messages
 
 Given the following Protobuf message:
 
-```proto
+```protobuf
 message Grant {
   google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
@@ -158,17 +233,50 @@ Grantee: cosmos1ghi...jkl
 End of transaction messages
 ```
 
-### 9. Signing Payload and Wire Format
+### Custom `Msg` Renderers
 
-This string array is encoded as a single `\n`-delimited string before transmitted to the hardware device, and this long string is the signing payload signed by the hardware wallet.
+Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
+
+This is done by setting the `cosmos.msg.v1.textual.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
+
+```protobuf
+message MsgFooBar {
+  // Optional comments to describe in human-readable language the formatting
+  // rules of the custom renderer.
+  option (cosmos.msg.v1.textual.expert_custom_renderer) = "<unique algorithm identifier>";
+
+  // proto fields
+}
+```
+
+When this option is set on a `Msg`, a registered function will transform the `Msg` into an array of one or more strings, which MAY use the key/value format (described in point #3) with the expert field prefix (described in point #5) and arbitrary indentation (point #6). These strings MAY be rendered from a `Msg` field using a default value renderer, or they may be generated from several fields using custom logic.
+
+The `<unique algorithm identifier>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the documentation or specification of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
+
+Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, the parse function MUST be the inverse of the formatting function. This property will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test invertibility, as to not introduce security bugs.
+
+### Require signing over the `TxBody` and `AuthInfo` raw bytes
+
+Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.proto#L33), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
+
+```
+*Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))>
+```
+
+where:
+* `++` denotes concatenation,
+* `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
+* and `len()` is encoded as a Big-Endian uint64.
+
+This is to prevent transaction hash malleability. The point #1 about invertiblity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
+
+By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
+
+These bytes are only shown in expert mode, hence the leading `*`.
 
 ## Additional Formatting by the Hardware Device
 
-Hardware devices differ in screen sizes and memory capacities. The above specifications are all verified on the protocol level, but we still allow the hardware device to add custom formatting rules that are specific to the device. Rules can include:
-
-- if a string is too long, show it on multiple screens,
-- break line between the `key` and `value` from #3,
-- perform line breaks on a number or a coin values only when necessary. For example, a `sdk.Coins` with multiple denoms would be better shown as one denom per line instead of an coin amount being cut in the middle.
+See [annex 2](./adr-050-sign-mode-textual-annex2.md).
 
 ## Examples
 
@@ -232,6 +340,7 @@ Amount: 10 atom            // Conversion from uatom to atom using value renderer
 End of transaction messages
 Fee: 0.002 atom
 *Gas: 100'000
+*Hash of raw bytes: <hex_string>
 ```
 
 #### Example 2: Multi-Msg Transaction with 3 signers
@@ -317,9 +426,10 @@ Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
 *This transaction has 1 other signer:
 *Signer (1/2):
 *Public Key: iQ...==
-*Sign mode: Direct Aux
+*Sign mode: SIGN_MODE_DIRECT_AUX
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <hex_string>
 ```
 
 #### Example 5: Complex Transaction with Nested Messages
@@ -463,9 +573,10 @@ Fee: 0.002 atom
 *This transaction has 1 other signer:
 *Signer (2/2):
 *Public Key: iR...==
-*Sign mode: Direct
+*Sign mode: SIGN_MODE_DIRECT
 *Sequence: 42
 *End of other signers
+*Hash of raw bytes: <hex_string>
 ```
 
 ## Consequences
@@ -476,30 +587,30 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 ### Positive
 
-- Human-friendly way of signing in hardware devices.
-- Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, once the ecosystem has totally migrated, Amino can be totally removed.
+* Human-friendly way of signing in hardware devices.
+* Once SIGN_MODE_TEXTUAL is shipped, SIGN_MODE_LEGACY_AMINO_JSON can be deprecated and removed. On the longer term, once the ecosystem has totally migrated, Amino can be totally removed.
 
 ### Negative
 
-- Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
-- New ledger app needs to be released, still unclear
+* Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
+* New ledger app needs to be released, still unclear
 
 ### Neutral
 
-- If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
+* If the transaction is complex, the string array can be arbitrarily long, and some users might just skip some screens and blind sign.
 
 ## Further Discussions
 
-- Some details on value renderers need to be polished, see [Annex 1](./adr-050-sign-mode-textual-annex1.md).
-- Are ledger apps able to support both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL at the same time?
-- Open question: should we add a Protobuf field option to allow app developers to overwrite the textual representation of certain Protobuf fields and message? This would be similar to Ethereum's [EIP4430](https://github.com/ethereum/EIPs/pull/4430), where the contract developer decides on the textual representation.
-- Internationalization.
+* Some details on value renderers need to be polished, see [Annex 1](./adr-050-sign-mode-textual-annex1.md).
+* Are ledger apps able to support both SIGN_MODE_LEGACY_AMINO_JSON and SIGN_MODE_TEXTUAL at the same time?
+* Open question: should we add a Protobuf field option to allow app developers to overwrite the textual representation of certain Protobuf fields and message? This would be similar to Ethereum's [EIP4430](https://github.com/ethereum/EIPs/pull/4430), where the contract developer decides on the textual representation.
+* Internationalization.
 
 ## References
 
-- [Annex 1](./adr-050-sign-mode-textual-annex1.md)
+* [Annex 1](./adr-050-sign-mode-textual-annex1.md)
 
-- Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
-- Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
-- Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw
-- Ethereum's "Described Transactions" https://github.com/ethereum/EIPs/pull/4430
+* Initial discussion: https://github.com/cosmos/cosmos-sdk/issues/6513
+* Living document used in the working group: https://hackmd.io/fsZAO-TfT0CKmLDtfMcKeA?both
+* Working group meeting notes: https://hackmd.io/7RkGfv_rQAaZzEigUYhcXw
+* Ethereum's "Described Transactions" https://github.com/ethereum/EIPs/pull/4430

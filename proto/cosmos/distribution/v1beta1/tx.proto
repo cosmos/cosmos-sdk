@@ -1,36 +1,35 @@
 syntax = "proto3";
 package cosmos.distribution.v1beta1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
+option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 
 // Msg defines the distribution Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // SetWithdrawAddress defines a method to change the withdraw address
   // for a delegator (or validator self-delegation).
-  rpc SetWithdrawAddress(MsgSetWithdrawAddress)
-      returns (MsgSetWithdrawAddressResponse);
+  rpc SetWithdrawAddress(MsgSetWithdrawAddress) returns (MsgSetWithdrawAddressResponse);
 
   // WithdrawDelegatorReward defines a method to withdraw rewards of delegator
   // from a single validator.
-  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward)
-      returns (MsgWithdrawDelegatorRewardResponse);
+  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
 
   // WithdrawValidatorCommission defines a method to withdraw the
   // full commission to the validator address.
-  rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission)
-      returns (MsgWithdrawValidatorCommissionResponse);
+  rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission) returns (MsgWithdrawValidatorCommissionResponse);
 
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
-  rpc FundCommunityPool(MsgFundCommunityPool)
-      returns (MsgFundCommunityPoolResponse);
+  rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
 
   // UpdateParams defines a governance operation for updating the x/distribution
   // module parameters. The authority is defined in the keeper.
@@ -44,14 +43,14 @@ service Msg {
   // keeper.
   //
   // Since: cosmos-sdk 0.47
-  rpc CommunityPoolSpend(MsgCommunityPoolSpend)
-      returns (MsgCommunityPoolSpendResponse);
+  rpc CommunityPoolSpend(MsgCommunityPoolSpend) returns (MsgCommunityPoolSpendResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
 // a delegator (or validator self-delegation).
 message MsgSetWithdrawAddress {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgModifyWithdrawAddress";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -68,6 +67,7 @@ message MsgSetWithdrawAddressResponse {}
 // from a single validator.
 message MsgWithdrawDelegatorReward {
   option (cosmos.msg.v1.signer) = "delegator_address";
+  option (amino.name)           = "cosmos-sdk/MsgWithdrawDelegationReward";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -82,6 +82,7 @@ message MsgWithdrawDelegatorRewardResponse {
   // Since: cosmos-sdk 0.46
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -90,6 +91,7 @@ message MsgWithdrawDelegatorRewardResponse {
 // address.
 message MsgWithdrawValidatorCommission {
   option (cosmos.msg.v1.signer) = "validator_address";
+  option (amino.name)           = "cosmos-sdk/MsgWithdrawValCommission";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -103,6 +105,7 @@ message MsgWithdrawValidatorCommissionResponse {
   // Since: cosmos-sdk 0.46
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -111,12 +114,14 @@ message MsgWithdrawValidatorCommissionResponse {
 // fund the community pool.
 message MsgFundCommunityPool {
   option (cosmos.msg.v1.signer) = "depositor";
+  option (amino.name)           = "cosmos-sdk/MsgFundCommunityPool";
 
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
   repeated cosmos.base.v1beta1.Coin amount = 1 [
     (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
   string depositor = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -130,6 +135,7 @@ message MsgFundCommunityPoolResponse {}
 // Since: cosmos-sdk 0.47
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/distribution/MsgUpdateParams";
 
   // authority is the address of the governance account.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -137,7 +143,7 @@ message MsgUpdateParams {
   // params defines the x/distribution parameters to update.
   //
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false];
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a
@@ -153,12 +159,14 @@ message MsgUpdateParamsResponse {}
 // Since: cosmos-sdk 0.47
 message MsgCommunityPoolSpend {
   option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name)           = "cosmos-sdk/distr/MsgCommunityPoolSpend";
 
   // authority is the address of the governance account.
-  string   authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string   recipient = 2;
+  string   authority                       = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string   recipient                       = 2;
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

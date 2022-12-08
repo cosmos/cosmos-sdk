@@ -13,9 +13,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -44,6 +44,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
 		configurator.GovModule(),
+		configurator.ConsensusModule(),
 		configurator.TxModule())
 
 	cfg, err := network.DefaultConfigWithAppConfig(appConfig)
@@ -55,8 +56,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
 }
@@ -73,7 +73,7 @@ func (s *IntegrationTestSuite) TestQueryNodeInfo() {
 	s.Require().NoError(err)
 	s.Require().Equal(res.ApplicationVersion.AppName, version.NewInfo().AppName)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
+	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
 	s.Require().NoError(err)
 	var getInfoRes tmservice.GetNodeInfoResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &getInfoRes))
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestQuerySyncing() {
 	_, err := s.queryClient.GetSyncing(context.Background(), &tmservice.GetSyncingRequest{})
 	s.Require().NoError(err)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
+	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
 	s.Require().NoError(err)
 	var syncingRes tmservice.GetSyncingResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &syncingRes))
@@ -98,7 +98,7 @@ func (s *IntegrationTestSuite) TestQueryLatestBlock() {
 	_, err := s.queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
 	s.Require().NoError(err)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
+	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
@@ -111,7 +111,7 @@ func (s *IntegrationTestSuite) TestQueryBlockByHeight() {
 	_, err := s.queryClient.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
 
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
+	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
 	var blockInfoRes tmservice.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
@@ -139,11 +139,11 @@ func (s *IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	s.Require().NoError(err)
 
 	// rest request without pagination
-	_, err = rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest", val.APIAddress))
+	_, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest", val.APIAddress))
 	s.Require().NoError(err)
 
 	// rest request with pagination
-	restRes, err := rest.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
+	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
 	var validatorSetRes tmservice.GetLatestValidatorSetResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &validatorSetRes))
@@ -199,7 +199,7 @@ func (s *IntegrationTestSuite) TestLatestValidatorSet_GRPCGateway() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			res, err := rest.GetRequest(tc.url)
+			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
@@ -261,7 +261,7 @@ func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			res, err := rest.GetRequest(tc.url)
+			res, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)

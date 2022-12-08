@@ -7,3 +7,11 @@ a maintainer by running `buf push` in this folder.
 User facing documentation should not be placed here but instead goes in
 `buf.md` and in each protobuf package following the guidelines in
 https://docs.buf.build/bsr/documentation.
+
+## SDK x Buf
+
+| Cosmos SDK Version | Buf Commit Version                                         |
+| ------------------ | ---------------------------------------------------------- |
+| Prior v0.46.0      | [Unavailable](https://github.com/bufbuild/buf/issues/1415) |
+| v0.46.x            | 8cb30a2c4de74dc9bd8d260b1e75e176                           |
+| v0.47.x            | -                                                          |

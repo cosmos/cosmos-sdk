@@ -3,6 +3,9 @@ package keeper
 import (
 	"fmt"
 	"math"
+	"sort"
+
+	"golang.org/x/exp/maps"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,12 +41,8 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 	}
 	defer groupIt.Close()
 
+	groups := make(map[uint64]group.GroupInfo)
 	for {
-		membersWeight, err := groupmath.NewNonNegativeDecFromString("0")
-		if err != nil {
-			msg += fmt.Sprintf("error while parsing positive dec zero for group member\n%v\n", err)
-			return msg, broken
-		}
 		var groupInfo group.GroupInfo
 		_, err = groupIt.LoadNext(&groupInfo)
 		if errors.ErrORMIteratorDone.Is(err) {
@@ -51,6 +50,21 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 		}
 		if err != nil {
 			msg += fmt.Sprintf("LoadNext failure on group table iterator\n%v\n", err)
+			return msg, broken
+		}
+
+		groups[groupInfo.Id] = groupInfo
+	}
+
+	groupByIDs := maps.Keys(groups)
+	sort.Slice(groupByIDs, func(i, j int) bool {
+		return groupByIDs[i] < groupByIDs[j]
+	})
+	for _, groupID := range groupByIDs {
+		groupInfo := groups[groupID]
+		membersWeight, err := groupmath.NewNonNegativeDecFromString("0")
+		if err != nil {
+			msg += fmt.Sprintf("error while parsing positive dec zero for group member\n%v\n", err)
 			return msg, broken
 		}
 
@@ -77,6 +91,7 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 				msg += fmt.Sprintf("error while parsing non-nengative decimal for group member %s\n%v\n", groupMember.Member.Address, err)
 				return msg, broken
 			}
+
 			membersWeight, err = groupmath.Add(membersWeight, curMemWeight)
 			if err != nil {
 				msg += fmt.Sprintf("decimal addition error while adding group member voting weight to total voting weight\n%v\n", err)
@@ -96,5 +111,6 @@ func GroupTotalWeightInvariantHelper(ctx sdk.Context, key storetypes.StoreKey, g
 			break
 		}
 	}
+
 	return msg, broken
 }

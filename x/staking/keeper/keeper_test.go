@@ -3,72 +3,95 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+)
+
+var (
+	bondedAcc    = authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName)
+	notBondedAcc = authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName)
+	PKs          = simtestutil.CreateTestPubKeys(500)
 )
 
 type KeeperTestSuite struct {
 	suite.Suite
 
-	app         *simapp.SimApp
-	ctx         sdk.Context
-	addrs       []sdk.AccAddress
-	vals        []types.Validator
-	queryClient types.QueryClient
-	msgServer   types.MsgServer
+	ctx           sdk.Context
+	stakingKeeper *stakingkeeper.Keeper
+	bankKeeper    *stakingtestutil.MockBankKeeper
+	accountKeeper *stakingtestutil.MockAccountKeeper
+	queryClient   stakingtypes.QueryClient
+	msgServer     stakingtypes.MsgServer
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) SetupTest() {
+	key := sdk.NewKVStoreKey(stakingtypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
 
-	querier := keeper.Querier{Keeper: app.StakingKeeper}
+	ctrl := gomock.NewController(s.T())
+	accountKeeper := stakingtestutil.NewMockAccountKeeper(ctrl)
+	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.BondedPoolName).Return(bondedAcc.GetAddress())
+	accountKeeper.EXPECT().GetModuleAddress(stakingtypes.NotBondedPoolName).Return(notBondedAcc.GetAddress())
+	bankKeeper := stakingtestutil.NewMockBankKeeper(ctrl)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, querier)
-	queryClient := types.NewQueryClient(queryHelper)
+	keeper := stakingkeeper.NewKeeper(
+		encCfg.Codec,
+		key,
+		accountKeeper,
+		bankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	keeper.SetParams(ctx, stakingtypes.DefaultParams())
 
-	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
+	s.ctx = ctx
+	s.stakingKeeper = keeper
+	s.bankKeeper = bankKeeper
+	s.accountKeeper = accountKeeper
 
-	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
-	header := tmproto.Header{
-		ChainID: "HelloChain",
-		Height:  5,
-	}
-
-	// sort a copy of the validators, so that original validators does not
-	// have its order changed
-	sortedVals := make([]types.Validator, len(validators))
-	copy(sortedVals, validators)
-	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
-	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
-
-	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
+	stakingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: keeper})
+	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
+	s.msgServer = stakingkeeper.NewMsgServerImpl(keeper)
 }
 
-func TestParams(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+func (s *KeeperTestSuite) TestParams() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
 
-	expParams := types.DefaultParams()
+	expParams := stakingtypes.DefaultParams()
+	expParams.MaxValidators = 555
+	expParams.MaxEntries = 111
+	keeper.SetParams(ctx, expParams)
+	resParams := keeper.GetParams(ctx)
+	require.True(expParams.Equal(resParams))
+}
 
-	// check that the empty keeper loads the default
-	resParams := app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+func (s *KeeperTestSuite) TestLastTotalPower() {
+	ctx, keeper := s.ctx, s.stakingKeeper
+	require := s.Require()
 
-	// modify a params, save, and retrieve
-	expParams.MaxValidators = 777
-	app.StakingKeeper.SetParams(ctx, expParams)
-	resParams = app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	expTotalPower := math.NewInt(10 ^ 9)
+	keeper.SetLastTotalPower(ctx, expTotalPower)
+	resTotalPower := keeper.GetLastTotalPower(ctx)
+	require.True(expTotalPower.Equal(resTotalPower))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

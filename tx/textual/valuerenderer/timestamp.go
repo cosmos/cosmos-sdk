@@ -3,7 +3,6 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -20,12 +19,12 @@ func NewTimestampValueRenderer() ValueRenderer {
 }
 
 // Format implements the ValueRenderer interface.
-func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
+func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
 	// Reify the reflected message as a proto Timestamp
 	msg := v.Message().Interface()
 	timestamp, ok := msg.(*tspb.Timestamp)
 	if !ok {
-		return fmt.Errorf("expected Timestamp, got %T", msg)
+		return nil, fmt.Errorf("expected Timestamp, got %T", msg)
 	}
 
 	// Convert proto timestamp to a Go Time.
@@ -33,18 +32,16 @@ func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value,
 
 	// Format the Go Time as RFC 3339.
 	s := t.Format(time.RFC3339Nano)
-	w.Write([]byte(s))
-	return nil
+	return []Screen{{Text: s}}, nil
 }
 
 // Parse implements the ValueRenderer interface.
-func (vr timestampValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
+func (vr timestampValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	// Parse the RFC 3339 input as a Go Time.
-	bz, err := io.ReadAll(r)
-	if err != nil {
-		return protoreflect.Value{}, err
+	if len(screens) != 1 {
+		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
-	t, err := time.Parse(time.RFC3339Nano, string(bz))
+	t, err := time.Parse(time.RFC3339Nano, screens[0].Text)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}

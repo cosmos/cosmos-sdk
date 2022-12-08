@@ -28,14 +28,6 @@ func (ms msgServer) SubmitEvidence(goCtx context.Context, msg *types.MsgSubmitEv
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSubmitter().String()),
-		),
-	)
-
 	return &types.MsgSubmitEvidenceResponse{
 		Hash: evidence.Hash(),
 	}, nil

@@ -6,7 +6,7 @@ import (
 	binary "encoding/binary"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -25234,6 +25234,7 @@ type Customer3 struct {
 	Surcharge   float32 `protobuf:"fixed32,4,opt,name=surcharge,proto3" json:"surcharge,omitempty"`
 	Destination string  `protobuf:"bytes,5,opt,name=destination,proto3" json:"destination,omitempty"`
 	// Types that are assignable to Payment:
+	//
 	//	*Customer3_CreditCardNo
 	//	*Customer3_ChequeNo
 	Payment  isCustomer3_Payment `protobuf_oneof:"payment"`
@@ -25350,6 +25351,7 @@ type TestVersion1 struct {
 	C []*TestVersion1 `protobuf:"bytes,4,rep,name=c,proto3" json:"c,omitempty"`
 	D []*TestVersion1 `protobuf:"bytes,5,rep,name=d,proto3" json:"d,omitempty"`
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersion1_E
 	//	*TestVersion1_F
 	Sum isTestVersion1_Sum `protobuf_oneof:"sum"`
@@ -25484,6 +25486,7 @@ type TestVersion2 struct {
 	C []*TestVersion2 `protobuf:"bytes,4,rep,name=c,proto3" json:"c,omitempty"`
 	D []*TestVersion2 `protobuf:"bytes,5,rep,name=d,proto3" json:"d,omitempty"` // [(gogoproto.nullable) = false];
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersion2_E
 	//	*TestVersion2_F
 	Sum isTestVersion2_Sum `protobuf_oneof:"sum"`
@@ -25626,6 +25629,7 @@ type TestVersion3 struct {
 	C []*TestVersion3 `protobuf:"bytes,4,rep,name=c,proto3" json:"c,omitempty"`
 	D []*TestVersion3 `protobuf:"bytes,5,rep,name=d,proto3" json:"d,omitempty"` // [(gogoproto.nullable) = false];
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersion3_E
 	//	*TestVersion3_F
 	Sum isTestVersion3_Sum `protobuf_oneof:"sum"`
@@ -25768,6 +25772,7 @@ type TestVersion3LoneOneOfValue struct {
 	C []*TestVersion3 `protobuf:"bytes,4,rep,name=c,proto3" json:"c,omitempty"`
 	D []*TestVersion3 `protobuf:"bytes,5,rep,name=d,proto3" json:"d,omitempty"` // [(gogoproto.nullable) = false];
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersion3LoneOneOfValue_E
 	Sum isTestVersion3LoneOneOfValue_Sum `protobuf_oneof:"sum"`
 	G   *anypb.Any                       `protobuf:"bytes,8,opt,name=g,proto3" json:"g,omitempty"`
@@ -25896,6 +25901,7 @@ type TestVersion3LoneNesting struct {
 	C []*TestVersion3 `protobuf:"bytes,4,rep,name=c,proto3" json:"c,omitempty"`
 	D []*TestVersion3 `protobuf:"bytes,5,rep,name=d,proto3" json:"d,omitempty"` // [(gogoproto.nullable) = false];
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersion3LoneNesting_F
 	Sum isTestVersion3LoneNesting_Sum `protobuf_oneof:"sum"`
 	G   *anypb.Any                    `protobuf:"bytes,8,opt,name=g,proto3" json:"g,omitempty"`
@@ -26040,6 +26046,7 @@ type TestVersion4LoneNesting struct {
 	C []*TestVersion3 `protobuf:"bytes,4,rep,name=c,proto3" json:"c,omitempty"`
 	D []*TestVersion3 `protobuf:"bytes,5,rep,name=d,proto3" json:"d,omitempty"` // [(gogoproto.nullable) = false];
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersion4LoneNesting_F
 	Sum isTestVersion4LoneNesting_Sum `protobuf_oneof:"sum"`
 	G   *anypb.Any                    `protobuf:"bytes,8,opt,name=g,proto3" json:"g,omitempty"`
@@ -26181,6 +26188,7 @@ type TestVersionFD1 struct {
 	X int64         `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
 	A *TestVersion1 `protobuf:"bytes,2,opt,name=a,proto3" json:"a,omitempty"`
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersionFD1_E
 	//	*TestVersionFD1_F
 	Sum isTestVersionFD1_Sum `protobuf_oneof:"sum"`
@@ -26281,6 +26289,7 @@ type TestVersionFD1WithExtraAny struct {
 	X int64         `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
 	A *TestVersion1 `protobuf:"bytes,2,opt,name=a,proto3" json:"a,omitempty"`
 	// Types that are assignable to Sum:
+	//
 	//	*TestVersionFD1WithExtraAny_E
 	//	*TestVersionFD1WithExtraAny_F
 	Sum isTestVersionFD1WithExtraAny_Sum `protobuf_oneof:"sum"`

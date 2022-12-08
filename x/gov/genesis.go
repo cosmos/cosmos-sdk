@@ -53,16 +53,14 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-//
-//nolint:staticcheck
 func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *v1.GenesisState {
 	startingProposalID, _ := k.GetProposalID(ctx)
 	proposals := k.GetProposals(ctx)
 	params := k.GetParams(ctx)
 
-	depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
-	votingParams := v1.NewVotingParams(params.VotingPeriod)
-	tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+	depositParams := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)        //nolint:staticcheck
+	votingParams := v1.NewVotingParams(params.VotingPeriod)                                 //nolint:staticcheck
+	tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold) //nolint:staticcheck
 
 	var proposalsDeposits v1.Deposits
 	var proposalsVotes v1.Votes

@@ -5,9 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"os"
-	"strings"
 	"testing"
 
+	"cosmossdk.io/tx/textual/valuerenderer"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -18,25 +18,25 @@ func TestBytesJsonTestCases(t *testing.T) {
 	// their expected results in hex.
 	raw, err := os.ReadFile("../internal/testdata/bytes.json")
 	require.NoError(t, err)
-
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
+
+	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
 
 	for _, tc := range testcases {
 		data, err := base64.StdEncoding.DecodeString(tc.base64)
 		require.NoError(t, err)
 
-		valrend, err := valueRendererOf(data)
+		valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
-		b := new(strings.Builder)
-		err = valrend.Format(context.Background(), protoreflect.ValueOfBytes(data), b)
+		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
 		require.NoError(t, err)
-		require.Equal(t, tc.hex, b.String())
+		require.Equal(t, 1, len(screens))
+		require.Equal(t, tc.hex, screens[0].Text)
 
 		// Round trip
-		r := strings.NewReader(tc.hex)
-		val, err := valrend.Parse(context.Background(), r)
+		val, err := valrend.Parse(context.Background(), screens)
 		require.NoError(t, err)
 		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}

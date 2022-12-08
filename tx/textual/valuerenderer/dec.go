@@ -3,42 +3,51 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/math"
 )
 
-const thousandSeparator string = "'"
+// NewDecValueRenderer returns a ValueRenderer for encoding sdk.Dec cosmos
+// scalars.
+func NewDecValueRenderer() ValueRenderer {
+	return decValueRenderer{}
+}
 
 type decValueRenderer struct{}
 
 var _ ValueRenderer = decValueRenderer{}
 
-func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
-	formatted, err := formatDecimal(v.String())
+func (vr decValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
+	formatted, err := math.FormatDec(v.String())
 	if err != nil {
-		return err
+		return nil, err
+	}
+	return []Screen{{Text: formatted}}, nil
+}
+
+func (vr decValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
+	if n := len(screens); n != 1 {
+		return nilValue, fmt.Errorf("expected 1 screen, got: %d", n)
 	}
 
-	_, err = io.WriteString(w, formatted)
-	return err
+	parsed, err := parseDec(screens[0].Text)
+	if err != nil {
+		return nilValue, err
+	}
+
+	return protoreflect.ValueOfString(parsed), nil
 }
 
-func (vr decValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
-	panic("implement me")
-}
-
-// formatDecimal formats a decimal into a value-rendered string. This function
-// operates with string manipulation (instead of manipulating the sdk.Dec
-// object).
-func formatDecimal(v string) (string, error) {
+func parseDec(v string) (string, error) {
 	parts := strings.Split(v, ".")
 	if len(parts) > 2 {
 		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
 	}
 
-	intPart, err := formatInteger(parts[0])
+	intPart, err := parseInt(parts[0])
 	if err != nil {
 		return "", err
 	}
@@ -47,16 +56,5 @@ func formatDecimal(v string) (string, error) {
 		return intPart, nil
 	}
 
-	decPart := strings.TrimRight(parts[1], "0")
-	if len(decPart) == 0 {
-		return intPart, nil
-	}
-
-	// Ensure that the decimal part has only digits.
-	// https://github.com/cosmos/cosmos-sdk/issues/12811
-	if !hasOnlyDigits(decPart) {
-		return "", fmt.Errorf("non-digits detected after decimal point in: %q", decPart)
-	}
-
-	return intPart + "." + decPart, nil
+	return intPart + "." + parts[1], nil
 }

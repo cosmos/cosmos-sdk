@@ -65,6 +65,18 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewAccount", reflect.TypeOf((*MockAccountKeeper)(nil).NewAccount), arg0, arg1)
 }
 
+// RemoveAccount mocks base method.
+func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types0.AccountI) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RemoveAccount", ctx, acc)
+}
+
+// RemoveAccount indicates an expected call of RemoveAccount.
+func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAccount", reflect.TypeOf((*MockAccountKeeper)(nil).RemoveAccount), ctx, acc)
+}
+
 // SetAccount mocks base method.
 func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountI) {
 	m.ctrl.T.Helper()
@@ -170,6 +182,21 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderM
 func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
+}
+
+// SetSendEnabled mocks base method.
+func (m *MockBankKeeper) SetSendEnabled(arg0 context.Context, arg1 *types1.MsgSetSendEnabled) (*types1.MsgSetSendEnabledResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetSendEnabled", arg0, arg1)
+	ret0, _ := ret[0].(*types1.MsgSetSendEnabledResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetSendEnabled indicates an expected call of SetSendEnabled.
+func (mr *MockBankKeeperMockRecorder) SetSendEnabled(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).SetSendEnabled), arg0, arg1)
 }
 
 // SpendableCoins mocks base method.

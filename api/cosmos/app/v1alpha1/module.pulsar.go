@@ -3,14 +3,15 @@ package appv1alpha1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_ModuleDescriptor_2_list)(nil)
@@ -1715,10 +1716,10 @@ type PackageReference struct {
 	// with pinned file descriptors to make sure there are no incompatible changes.
 	//
 	// This behavior ensures that:
-	// * pinned proto images are up-to-date
-	// * protobuf files are carefully annotated with revision comments which
-	//   are important good client UX
-	// * protobuf files are changed in backwards and forwards compatible ways
+	//   - pinned proto images are up-to-date
+	//   - protobuf files are carefully annotated with revision comments which
+	//     are important good client UX
+	//   - protobuf files are changed in backwards and forwards compatible ways
 	Revision uint32 `protobuf:"varint,2,opt,name=revision,proto3" json:"revision,omitempty"`
 }
 

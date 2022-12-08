@@ -3,13 +3,14 @@ package queryv1beta1
 
 import (
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var (
@@ -1124,10 +1125,10 @@ const (
 // PageRequest is to be embedded in gRPC request messages for efficient
 // pagination. Ex:
 //
-//  message SomeRequest {
-//          Foo some_parameter = 1;
-//          PageRequest pagination = 2;
-//  }
+//	message SomeRequest {
+//	        Foo some_parameter = 1;
+//	        PageRequest pagination = 2;
+//	}
 type PageRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1213,10 +1214,10 @@ func (x *PageRequest) GetReverse() bool {
 // PageResponse is to be embedded in gRPC response messages where the
 // corresponding request message has used PageRequest.
 //
-//  message SomeResponse {
-//          repeated Bar results = 1;
-//          PageResponse page = 2;
-//  }
+//	message SomeResponse {
+//	        repeated Bar results = 1;
+//	        PageResponse page = 2;
+//	}
 type PageResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

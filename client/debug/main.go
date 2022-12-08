@@ -37,6 +37,7 @@ func Cmd() *cobra.Command {
 	cmd.AddCommand(PubkeyRawCmd())
 	cmd.AddCommand(AddrCmd())
 	cmd.AddCommand(RawBytesCmd())
+	cmd.AddCommand(PrefixesCmd())
 
 	return cmd
 }
@@ -253,6 +254,21 @@ $ %s debug raw-bytes [72 101 108 108 111 44 32 112 108 97 121 103 114 111 117 11
 				byteArray = append(byteArray, byte(b))
 			}
 			fmt.Printf("%X\n", byteArray)
+			return nil
+		},
+	}
+}
+
+func PrefixesCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "prefixes",
+		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
+		Long:    "List prefixes used in Bech32 addresses.",
+		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
+			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
+			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())
 			return nil
 		},
 	}

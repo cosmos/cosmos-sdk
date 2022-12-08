@@ -10,6 +10,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/protobuf/any.proto";
+import "amino/amino.proto";
 
 // Member represents a group member with an account address,
 // non-zero weight, metadata and added_at timestamp.
@@ -25,7 +26,8 @@ message Member {
   string metadata = 3;
 
   // added_at is a timestamp specifying when a member was added.
-  google.protobuf.Timestamp added_at = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp added_at = 4
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }
 
 // MemberRequest represents a group member to be used in Msg server requests.
@@ -51,6 +53,7 @@ message MemberRequest {
 //    given by `windows`.
 message ThresholdDecisionPolicy {
   option (cosmos_proto.implements_interface) = "DecisionPolicy";
+  option (amino.name)                        = "cosmos-sdk/ThresholdDecisionPolicy";
 
   // threshold is the minimum weighted sum of `YES` votes that must be met or
   // exceeded for a proposal to succeed.
@@ -68,6 +71,7 @@ message ThresholdDecisionPolicy {
 //    given by `windows`.
 message PercentageDecisionPolicy {
   option (cosmos_proto.implements_interface) = "DecisionPolicy";
+  option (amino.name)                        = "cosmos-sdk/PercentageDecisionPolicy";
 
   // percentage is the minimum percentage the weighted sum of `YES` votes must
   // meet for a proposal to succeed.
@@ -81,7 +85,8 @@ message PercentageDecisionPolicy {
 message DecisionPolicyWindows {
   // voting_period is the duration from submission of a proposal to the end of voting period
   // Within this times votes can be submitted with MsgVote.
-  google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration voting_period = 1
+      [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // min_execution_period is the minimum duration after the proposal submission
   // where members can start sending MsgExec. This means that the window for
@@ -94,7 +99,8 @@ message DecisionPolicyWindows {
   // `voting_period + max_execution_period`, or else the above execution window
   // is empty, meaning that all proposals created with this decision policy
   // won't be able to be executed.
-  google.protobuf.Duration min_execution_period = 2 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  google.protobuf.Duration min_execution_period = 2
+      [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // VoteOption enumerates the valid vote options for a given proposal.
@@ -140,7 +146,8 @@ message GroupInfo {
   string total_weight = 5;
 
   // created_at is a timestamp specifying when a group was created.
-  google.protobuf.Timestamp created_at = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp created_at = 6
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }
 
 // GroupMember represents the relationship between a group and a member.
@@ -178,7 +185,8 @@ message GroupPolicyInfo {
   google.protobuf.Any decision_policy = 6 [(cosmos_proto.accepts_interface) = "cosmos.group.v1.DecisionPolicy"];
 
   // created_at is a timestamp specifying when a group policy was created.
-  google.protobuf.Timestamp created_at = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp created_at = 7
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }
 
 // Proposal defines a group proposal. Any member of a group can submit a proposal
@@ -201,7 +209,8 @@ message Proposal {
   repeated string proposers = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // submit_time is a timestamp specifying when a proposal was submitted.
-  google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp submit_time = 5
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 
   // group_version tracks the version of the group at proposal submission.
   // This field is here for informational purposes only.
@@ -220,14 +229,15 @@ message Proposal {
   // proposal for each vote option. It is empty at submission, and only
   // populated after tallying, at voting period end or at proposal execution,
   // whichever happens first.
-  TallyResult final_tally_result = 9 [(gogoproto.nullable) = false];
+  TallyResult final_tally_result = 9 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // voting_period_end is the timestamp before which voting must be done.
-  // Unless a successfull MsgExec is called before (to execute a proposal whose
+  // Unless a successful MsgExec is called before (to execute a proposal whose
   // tally is successful before the voting period ends), tallying will be done
   // at this point, and the `final_tally_result`and `status` fields will be
   // accordingly updated.
-  google.protobuf.Timestamp voting_period_end = 10 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp voting_period_end = 10
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 
   // executor_result is the final result of the proposal execution. Initial value is NotRun.
   ProposalExecutorResult executor_result = 11;
@@ -313,5 +323,6 @@ message Vote {
   string metadata = 4;
 
   // submit_time is the timestamp when the vote was submitted.
-  google.protobuf.Timestamp submit_time = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp submit_time = 5
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 }

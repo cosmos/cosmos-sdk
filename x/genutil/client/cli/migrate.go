@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -38,15 +39,7 @@ func GetMigrationCallback(version string) types.MigrationCallback {
 
 // GetMigrationVersions get all migration version in a sorted slice.
 func GetMigrationVersions() []string {
-	versions := make([]string, len(migrationMap))
-
-	var i int
-
-	for version := range migrationMap {
-		versions[i] = version
-		i++
-	}
-
+	versions := maps.Keys(migrationMap)
 	sort.Strings(versions)
 
 	return versions

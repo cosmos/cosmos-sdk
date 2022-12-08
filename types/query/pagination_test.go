@@ -26,6 +26,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 )
 
@@ -67,6 +68,7 @@ func (s *paginationTestSuite) SetupTest() {
 			configurator.AuthModule(),
 			configurator.BankModule(),
 			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
 			configurator.OmitInitGenesis(),
 		),
 		&bankKeeper, &accountKeeper, &reg, &cdc)

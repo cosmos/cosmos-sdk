@@ -3,22 +3,27 @@ package tx_test
 import (
 	gocontext "context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	ante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -156,6 +161,55 @@ func TestBuildUnsignedTx(t *testing.T) {
 	sigs, err := tx.GetTx().(signing.SigVerifiableTx).GetSignaturesV2()
 	require.NoError(t, err)
 	require.Empty(t, sigs)
+}
+
+func TestMnemonicInMemo(t *testing.T) {
+	txConfig, cdc := newTestTxConfig(t)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
+	require.NoError(t, err)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+
+	_, seed, err := kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name  string
+		memo  string
+		error bool
+	}{
+		{name: "bare seed", memo: seed, error: true},
+		{name: "padding bare seed", memo: fmt.Sprintf("   %s", seed), error: true},
+		{name: "prefixed", memo: fmt.Sprintf("%s: %s", "prefixed: ", seed), error: false},
+		{name: "normal memo", memo: "this is a memo", error: false},
+		{name: "empty memo", memo: "", error: false},
+		{name: "invalid mnemonic", memo: strings.Repeat("egg", 24), error: false},
+		{name: "caps", memo: strings.ToUpper(seed), error: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			txf := tx.Factory{}.
+				WithTxConfig(txConfig).
+				WithAccountNumber(50).
+				WithSequence(23).
+				WithFees("50stake").
+				WithMemo(tc.memo).
+				WithChainID("test-chain").
+				WithKeybase(kb)
+
+			msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
+			tx, err := txf.BuildUnsignedTx(msg)
+			if tc.error {
+				require.Error(t, err)
+				require.ErrorContains(t, err, "mnemonic")
+				require.Nil(t, tx)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, tx)
+			}
+		})
+	}
 }
 
 func TestSign(t *testing.T) {
@@ -299,7 +353,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = tx.Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
+			err = tx.Sign(nil, tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -312,6 +366,81 @@ func TestSign(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPreprocessHook(t *testing.T) {
+	txConfig, cdc := newTestTxConfig(t)
+	requireT := require.New(t)
+	path := hd.CreateHDPath(118, 0, 0).String()
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
+	requireT.NoError(err)
+
+	from := "test_key"
+	kr, _, err := kb.NewMnemonic(from, keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	requireT.NoError(err)
+
+	extVal := &testdata.Cat{
+		Moniker: "einstein",
+		Lives:   9,
+	}
+	extAny, err := codectypes.NewAnyWithValue(extVal)
+	requireT.NoError(err)
+
+	coin := sdk.Coin{
+		Denom:  "atom",
+		Amount: sdk.NewInt(20),
+	}
+	newTip := &txtypes.Tip{
+		Amount: sdk.Coins{coin},
+		Tipper: "galaxy",
+	}
+
+	preprocessHook := client.PreprocessTxFn(func(chainID string, key keyring.KeyType, tx client.TxBuilder) error {
+		extensionBuilder, ok := tx.(authtx.ExtensionOptionsTxBuilder)
+		requireT.True(ok)
+
+		// Set new extension and tip
+		extensionBuilder.SetExtensionOptions(extAny)
+		tx.SetTip(newTip)
+
+		return nil
+	})
+
+	txfDirect := tx.Factory{}.
+		WithTxConfig(txConfig).
+		WithAccountNumber(50).
+		WithSequence(23).
+		WithFees("50stake").
+		WithMemo("memo").
+		WithChainID("test-chain").
+		WithKeybase(kb).
+		WithSignMode(signingtypes.SignMode_SIGN_MODE_DIRECT).
+		WithPreprocessTxHook(preprocessHook)
+
+	addr1, err := kr.GetAddress()
+	requireT.NoError(err)
+	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
+	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
+	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
+
+	err = tx.Sign(nil, txfDirect, from, txb, false)
+	requireT.NoError(err)
+
+	// Run preprocessing
+	err = txfDirect.PreprocessTx(from, txb)
+	requireT.NoError(err)
+
+	hasExtOptsTx, ok := txb.(ante.HasExtensionOptionsTx)
+	requireT.True(ok)
+
+	hasOneExt := len(hasExtOptsTx.GetExtensionOptions()) == 1
+	requireT.True(hasOneExt)
+
+	opt := hasExtOptsTx.GetExtensionOptions()[0]
+	requireT.Equal(opt, extAny)
+
+	tip := txb.GetTx().GetTip()
+	requireT.Equal(tip, newTip)
 }
 
 func testSigners(require *require.Assertions, tr signing.Tx, pks ...cryptotypes.PubKey) []signingtypes.SignatureV2 {

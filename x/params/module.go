@@ -13,9 +13,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -91,6 +89,14 @@ func NewAppModule(k keeper.Keeper) AppModule {
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs a no-op.
@@ -130,23 +136,18 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMess
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-			provideSubspace,
+			ProvideModule,
+			ProvideSubspace,
 		))
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type paramsInputs struct {
+type ParamsInputs struct {
 	depinject.In
 
 	KvStoreKey        *store.KVStoreKey
@@ -155,27 +156,24 @@ type paramsInputs struct {
 	LegacyAmino       *codec.LegacyAmino
 }
 
-type paramsOutputs struct {
+type ParamsOutputs struct {
 	depinject.Out
 
-	ParamsKeeper  keeper.Keeper
-	BaseAppOption runtime.BaseAppOption
-	Module        runtime.AppModuleWrapper
-	GovHandler    govv1beta1.HandlerRoute
+	ParamsKeeper keeper.Keeper
+	Module       appmodule.AppModule
+	GovHandler   govv1beta1.HandlerRoute
 }
 
-func provideModule(in paramsInputs) paramsOutputs {
+func ProvideModule(in ParamsInputs) ParamsOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
-	baseappOpt := func(app *baseapp.BaseApp) {
-		app.SetParamStore(k.Subspace(baseapp.Paramspace).WithKeyTable(types.ConsensusParamsKeyTable()))
-	}
-	m := runtime.WrapAppModule(NewAppModule(k))
+
+	m := NewAppModule(k)
 	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return paramsOutputs{ParamsKeeper: k, BaseAppOption: baseappOpt, Module: m, GovHandler: govHandler}
+	return ParamsOutputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
 }
 
-type subspaceInputs struct {
+type SubspaceInputs struct {
 	depinject.In
 
 	Key       depinject.ModuleKey
@@ -183,7 +181,7 @@ type subspaceInputs struct {
 	KeyTables map[string]types.KeyTable
 }
 
-func provideSubspace(in subspaceInputs) types.Subspace {
+func ProvideSubspace(in SubspaceInputs) types.Subspace {
 	moduleName := in.Key.Name()
 	kt, exists := in.KeyTables[moduleName]
 	if !exists {

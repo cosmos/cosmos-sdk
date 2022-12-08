@@ -7,24 +7,24 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
+	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
-	"github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
+	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
+	v2 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestStoreMigration(t *testing.T) {
 	stakingKey := sdk.NewKVStoreKey("staking")
 	tStakingKey := sdk.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(stakingKey, tStakingKey)
+	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
 	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
 	valAddr1 := sdk.ValAddress(addr1)
-	val := teststaking.NewValidator(t, valAddr1, pk1)
+	val := testutil.NewValidator(t, valAddr1, pk1)
 	_, pk1, addr2 := testdata.KeyTestPubAddr()
 	valAddr2 := sdk.ValAddress(addr2)
 	_, _, addr3 := testdata.KeyTestPubAddr()

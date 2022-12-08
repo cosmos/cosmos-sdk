@@ -30,7 +30,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.Type(), types.TypeEquivocation)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
 	require.Equal(t, e.Hash().String(), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
-	require.Equal(t, e.String(), "consensus_address: cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\nheight: 100\npower: 1000000\ntime: \"2006-01-02T15:04:05Z\"\n")
+	require.Equal(t, "height:100 time:<seconds:1136214245 > power:1000000 consensus_address:\"cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\" ", e.String())
 	require.NoError(t, e.ValidateBasic())
 
 	require.Equal(t, int64(0), e.GetTotalPower())
@@ -41,7 +41,7 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, types.TypeEquivocation, e.Type())
 	require.Equal(t, types.RouteEquivocation, e.Route())
 	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", e.Hash().String())
-	require.Equal(t, "consensus_address: cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\nheight: 100\npower: 1000000\ntime: \"2006-01-02T15:04:05Z\"\n", e.String())
+	require.Equal(t, "height:100 time:<seconds:1136214245 > power:1000000 consensus_address:\"cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\" ", e.String())
 	require.NoError(t, e.ValidateBasic())
 }
 
@@ -72,8 +72,8 @@ func TestEquivocationValidateBasic(t *testing.T) {
 
 func TestEvidenceAddressConversion(t *testing.T) {
 	sdk.GetConfig().SetBech32PrefixForConsensusNode("testcnclcons", "testcnclconspub")
-	tmEvidence := abci.Evidence{
-		Type: abci.EvidenceType_DUPLICATE_VOTE,
+	tmEvidence := abci.Misbehavior{
+		Type: abci.MisbehaviorType_DUPLICATE_VOTE,
 		Validator: abci.Validator{
 			Address: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			Power:   100,

@@ -15,9 +15,9 @@ import (
 
 func TestIndexKeyCodec(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-		idxPartCdc := testutil.TestKeyCodecGen(1, 5).Draw(t, "idxPartCdc").(testutil.TestKeyCodec)
-		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "pkCdc").(testutil.TestKeyCodec)
-		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix").([]byte)
+		idxPartCdc := testutil.TestKeyCodecGen(1, 5).Draw(t, "idxPartCdc")
+		pkCodec := testutil.TestKeyCodecGen(1, 5).Draw(t, "pkCdc")
+		prefix := rapid.SliceOfN(rapid.Byte(), 0, 5).Draw(t, "prefix")
 		messageType := (&testpb.ExampleTable{}).ProtoReflect().Type()
 		indexKeyCdc, err := ormkv.NewIndexKeyCodec(
 			prefix,
@@ -27,7 +27,7 @@ func TestIndexKeyCodec(t *testing.T) {
 		)
 		assert.NilError(t, err)
 		for i := 0; i < 100; i++ {
-			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i)).(*testpb.ExampleTable)
+			a := testutil.GenA.Draw(t, fmt.Sprintf("a%d", i))
 			key := indexKeyCdc.GetKeyValues(a.ProtoReflect())
 			pk := pkCodec.Codec.GetKeyValues(a.ProtoReflect())
 			idx1 := &ormkv.IndexKeyEntry{

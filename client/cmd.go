@@ -1,6 +1,7 @@
 package client
 
 import (
+	"crypto/tls"
 	"fmt"
 	"strings"
 
@@ -8,6 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tendermint/tendermint/libs/cli"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -147,6 +151,28 @@ func ReadPersistentCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Cont
 		}
 	}
 
+	if clientCtx.GRPCClient == nil || flagSet.Changed(flags.FlagGRPC) {
+		grpcURI, _ := flagSet.GetString(flags.FlagGRPC)
+		if grpcURI != "" {
+			var dialOpts []grpc.DialOption
+
+			useInsecure, _ := flagSet.GetBool(flags.FlagGRPCInsecure)
+			if useInsecure {
+				dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			} else {
+				dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+					MinVersion: tls.VersionTLS12,
+				})))
+			}
+
+			grpcClient, err := grpc.Dial(grpcURI, dialOpts...)
+			if err != nil {
+				return Context{}, err
+			}
+			clientCtx = clientCtx.WithGRPCClient(grpcClient)
+		}
+	}
+
 	return clientCtx, nil
 }
 
@@ -258,7 +284,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 		// If the `from` signer account is a ledger key, we need to use
 		// SIGN_MODE_AMINO_JSON, because ledger doesn't support proto yet.
 		// ref: https://github.com/cosmos/cosmos-sdk/issues/8109
-		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON {
+		if keyType == keyring.TypeLedger && clientCtx.SignModeStr != flags.SignModeLegacyAminoJSON && !clientCtx.LedgerHasProtobuf {
 			fmt.Println("Default sign-mode 'direct' not supported by Ledger, using sign-mode 'amino-json'.")
 			clientCtx = clientCtx.WithSignModeStr(flags.SignModeLegacyAminoJSON)
 		}

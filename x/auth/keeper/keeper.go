@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	gogotypes "github.com/gogo/protobuf/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -45,7 +46,7 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	GetNextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) uint64
 
 	// GetModulePermissions fetches per-module account permissions
 	GetModulePermissions() map[string]types.PermissionsForAddress
@@ -80,8 +81,9 @@ func NewAccountKeeper(
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
-	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
+	permNames := maps.Keys(maccPerms)
+	for _, name := range permNames {
+		permAddrs[name] = types.NewPermissionsForAddress(name, maccPerms[name])
 	}
 
 	bech32Codec := newBech32Codec(bech32Prefix)
@@ -126,9 +128,9 @@ func (ak AccountKeeper) GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint6
 	return acc.GetSequence(), nil
 }
 
-// GetNextAccountNumber returns and increments the global account number counter.
+// NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
-func (ak AccountKeeper) GetNextAccountNumber(ctx sdk.Context) uint64 {
+func (ak AccountKeeper) NextAccountNumber(ctx sdk.Context) uint64 {
 	var accNumber uint64
 	store := ctx.KVStore(ak.storeKey)
 

@@ -18,10 +18,10 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -37,7 +37,8 @@ const (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
+	_ module.EndBlockAppModule   = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -126,6 +127,14 @@ func NewAppModule(
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the staking module's name.
 func (AppModule) Name() string {
 	return types.ModuleName
@@ -186,16 +195,12 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(provideModuleBasic, provideModule),
-		appmodule.Invoke(invokeSetStakingHooks),
+		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeSetStakingHooks),
 	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type stakingInputs struct {
+type StakingInputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
@@ -203,25 +208,24 @@ type stakingInputs struct {
 	BankKeeper    types.BankKeeper
 	Cdc           codec.Codec
 	Key           *store.KVStoreKey
-	ModuleKey     depinject.OwnModuleKey
-	Authority     map[string]sdk.AccAddress `optional:"true"`
+
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
 }
 
 // Dependency Injection Outputs
-type stakingOutputs struct {
+type StakingOutputs struct {
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper
-	Module        runtime.AppModuleWrapper
+	Module        appmodule.AppModule
 }
 
-func provideModule(in stakingInputs) stakingOutputs {
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+func ProvideModule(in StakingInputs) StakingOutputs {
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
@@ -232,10 +236,10 @@ func provideModule(in stakingInputs) stakingOutputs {
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
-	return stakingOutputs{StakingKeeper: k, Module: runtime.WrapAppModule(m)}
+	return StakingOutputs{StakingKeeper: k, Module: m}
 }
 
-func invokeSetStakingHooks(
+func InvokeSetStakingHooks(
 	config *modulev1.Module,
 	keeper *keeper.Keeper,
 	stakingHooks map[string]types.StakingHooksWrapper,

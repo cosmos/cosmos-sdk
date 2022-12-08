@@ -6,7 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	keeper.SetParams(ctx, testslashing.TestParams())
+	keeper.SetParams(ctx, testutil.TestParams())
 
 	consAddr1 := sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
 	consAddr2 := sdk.ConsAddress(sdk.AccAddress([]byte("addr2_______________")))
@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	keeper.SetValidatorSigningInfo(ctx, consAddr2, info2)
 	genesisState := keeper.ExportGenesis(ctx)
 
-	require.Equal(genesisState.Params, testslashing.TestParams())
+	require.Equal(genesisState.Params, testutil.TestParams())
 	require.Len(genesisState.SigningInfos, 2)
 	require.Equal(genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 

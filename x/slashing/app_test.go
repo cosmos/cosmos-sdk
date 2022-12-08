@@ -57,6 +57,7 @@ func TestSlashingMsgs(t *testing.T) {
 		configurator.StakingModule(),
 		configurator.SlashingModule(),
 		configurator.TxModule(),
+		configurator.ConsensusModule(),
 		configurator.BankModule()),
 		startupCfg, &stakingKeeper, &bankKeeper, &slashingKeeper)
 

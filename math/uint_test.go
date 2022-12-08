@@ -91,6 +91,11 @@ func (s *uintTestSuite) TestUintPanics() {
 	s.Require().True(sdkmath.ZeroUint().LTE(sdkmath.OneUint()))
 }
 
+func (s *uintTestSuite) TestIsNil() {
+	s.Require().False(sdkmath.OneUint().IsNil())
+	s.Require().True(sdkmath.Uint{}.IsNil())
+}
+
 func (s *uintTestSuite) TestArithUint() {
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())

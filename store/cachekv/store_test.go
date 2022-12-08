@@ -152,6 +152,59 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	require.Equal(t, 4, i)
 }
 
+func TestCacheKVReverseIteratorBounds(t *testing.T) {
+	st := newCacheKVStore()
+
+	// set some items
+	nItems := 5
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	// iterate over all of them
+	itr := st.ReverseIterator(nil, nil)
+	i := 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(nItems-1-i), k)
+		require.Equal(t, valFmt(nItems-1-i), v)
+		i++
+	}
+	require.Equal(t, nItems, i)
+
+	// iterate over none
+	itr = st.ReverseIterator(bz("money"), nil)
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+	}
+	require.Equal(t, 0, i)
+
+	// iterate over lower
+	end := 3
+	itr = st.ReverseIterator(keyFmt(0), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 3, i)
+
+	// iterate over upper
+	end = 4
+	itr = st.ReverseIterator(keyFmt(2), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 2, i)
+}
+
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	st := newCacheKVStore()
 
@@ -289,6 +342,21 @@ func TestCacheKVMergeIteratorChunks(t *testing.T) {
 	setRange(t, st, truth, 38, 42)
 	deleteRange(t, st, truth, 40, 43)
 	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 35}, {38, 40}, {45, 80}})
+}
+
+func TestCacheKVMergeIteratorDomain(t *testing.T) {
+	st := newCacheKVStore()
+
+	start, end := st.Iterator(nil, nil).Domain()
+	require.Equal(t, start, end)
+
+	start, end = st.Iterator(keyFmt(40), keyFmt(60)).Domain()
+	require.Equal(t, keyFmt(40), start)
+	require.Equal(t, keyFmt(60), end)
+
+	start, end = st.ReverseIterator(keyFmt(0), keyFmt(80)).Domain()
+	require.Equal(t, keyFmt(0), start)
+	require.Equal(t, keyFmt(80), end)
 }
 
 func TestCacheKVMergeIteratorRandom(t *testing.T) {

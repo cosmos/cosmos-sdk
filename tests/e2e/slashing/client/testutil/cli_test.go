@@ -6,7 +6,7 @@ package testutil
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 
 	"github.com/stretchr/testify/suite"

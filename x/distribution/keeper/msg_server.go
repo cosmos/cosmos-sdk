@@ -40,14 +40,6 @@ func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWi
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	)
-
 	return &types.MsgSetWithdrawAddressResponse{}, nil
 }
 
@@ -79,13 +71,6 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 		}
 	}()
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	)
 	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
 
@@ -113,14 +98,6 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 		}
 	}()
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
-		),
-	)
-
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
@@ -135,14 +112,6 @@ func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCo
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor),
-		),
-	)
-
 	return &types.MsgFundCommunityPoolResponse{}, nil
 }
 
@@ -155,14 +124,6 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, req.Authority),
-		),
-	)
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
@@ -189,14 +150,6 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 
 	logger := k.Logger(ctx)
 	logger.Info("transferred from the community pool to recipient", "amount", req.Amount.String(), "recipient", req.Recipient)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, req.Authority),
-		),
-	)
 
 	return &types.MsgCommunityPoolSpendResponse{}, nil
 }

@@ -21,10 +21,6 @@ type MockClient struct {
 	err error
 }
 
-func (c MockClient) BroadcastTxCommit(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
-	return nil, c.err
-}
-
 func (c MockClient) BroadcastTxAsync(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
@@ -50,7 +46,6 @@ func TestBroadcastError(t *testing.T) {
 
 	modes := []string{
 		flags.BroadcastAsync,
-		flags.BroadcastBlock,
 		flags.BroadcastSync,
 	}
 

@@ -9,6 +9,7 @@ import (
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	capabilitymodulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
+	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	crisismodulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
@@ -21,7 +22,7 @@ import (
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
@@ -32,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
@@ -48,6 +50,21 @@ import (
 )
 
 var (
+
+	// NOTE: The genutils module must occur after staking so that pools are
+	// properly initialized with tokens from genesis accounts.
+	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+	// NOTE: Capability module must occur first so that it can initialize any capabilities
+	// so that other modules that want to create or claim capabilities afterwards in InitChain
+	// can do so safely.
+	genesisModuleOrder = []string{
+		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName,
+		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
+		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
+		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
+		vestingtypes.ModuleName, consensustypes.ModuleName,
+	}
+
 	// module account permissions
 	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 		{Account: authtypes.FeeCollectorName},
@@ -102,6 +119,7 @@ var (
 						group.ModuleName,
 						paramstypes.ModuleName,
 						vestingtypes.ModuleName,
+						consensustypes.ModuleName,
 					},
 					EndBlockers: []string{
 						crisistypes.ModuleName,
@@ -120,6 +138,7 @@ var (
 						nft.ModuleName,
 						group.ModuleName,
 						paramstypes.ModuleName,
+						consensustypes.ModuleName,
 						upgradetypes.ModuleName,
 						vestingtypes.ModuleName,
 					},
@@ -129,6 +148,12 @@ var (
 							KvStoreKey: "acc",
 						},
 					},
+					// InitGenesis: genesisModuleOrder,
+					// When ExportGenesis is not specified, the export genesis module order
+					// is equal to the init genesis order
+					// ExportGenesis: genesisModuleOrder,
+					// Uncomment if you want to set a custom migration order here.
+					// OrderMigrations: nil,
 				}),
 			},
 			{
@@ -136,6 +161,9 @@ var (
 				Config: appconfig.WrapAny(&authmodulev1.Module{
 					Bech32Prefix:             "cosmos",
 					ModuleAccountPermissions: moduleAccPerms,
+					// By default modules authority is the governance module. This is configurable with the following:
+					// Authority: "group", // A custom module authority can be set using a module name
+					// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address
 				}),
 			},
 			{
@@ -162,7 +190,7 @@ var (
 			},
 			{
 				Name:   "tx",
-				Config: appconfig.WrapAny(&txmodulev1.Module{}),
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,
@@ -216,6 +244,10 @@ var (
 			{
 				Name:   crisistypes.ModuleName,
 				Config: appconfig.WrapAny(&crisismodulev1.Module{}),
+			},
+			{
+				Name:   consensustypes.ModuleName,
+				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 			},
 		},
 	})

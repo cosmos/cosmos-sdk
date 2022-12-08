@@ -2120,19 +2120,19 @@ type PrimaryKeyDescriptor struct {
 	//     is suitable for sorted iteration (not varint encoding). This type is
 	//     well-suited for small integers such as auto-incrementing sequences.
 	//   - fixed32, fixed64 are encoded as big-endian fixed width bytes and support
-	//   sorted iteration. These types are well-suited for encoding fixed with
-	//   decimals as integers.
+	//     sorted iteration. These types are well-suited for encoding fixed with
+	//     decimals as integers.
 	//   - string's are encoded as raw bytes in terminal key segments and null-terminated
-	//   in non-terminal segments. Null characters are thus forbidden in strings.
-	//   string fields support sorted iteration.
+	//     in non-terminal segments. Null characters are thus forbidden in strings.
+	//     string fields support sorted iteration.
 	//   - bytes are encoded as raw bytes in terminal segments and length-prefixed
-	//   with a 32-bit unsigned varint in non-terminal segments.
+	//     with a 32-bit unsigned varint in non-terminal segments.
 	//   - int32, sint32, int64, sint64, sfixed32, sfixed64 are encoded as fixed width bytes with
-	//   an encoding that enables sorted iteration.
+	//     an encoding that enables sorted iteration.
 	//   - google.protobuf.Timestamp and google.protobuf.Duration are encoded
-	//   as 12 bytes using an encoding that enables sorted iteration.
+	//     as 12 bytes using an encoding that enables sorted iteration.
 	//   - enum fields are encoded using varint encoding and do not support sorted
-	//   iteration.
+	//     iteration.
 	//   - bool fields are encoded as a single byte 0 or 1.
 	//
 	// All other fields types are unsupported in keys including repeated and

@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
@@ -32,7 +31,7 @@ func TestProposalContents(t *testing.T) {
 
 	// tests w0 interface:
 	require.Equal(t, simulation.OpWeightSubmitParamChangeProposal, w0.AppParamsKey())
-	require.Equal(t, simtestutil.DefaultWeightParamChangeProposal, w0.DefaultWeight())
+	require.Equal(t, simulation.DefaultWeightParamChangeProposal, w0.DefaultWeight())
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 

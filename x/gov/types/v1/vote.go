@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -46,6 +47,7 @@ func (v Votes) Equal(other Votes) bool {
 	return true
 }
 
+// String implements stringer interface
 func (v Votes) String() string {
 	if len(v) == 0 {
 		return "[]"
@@ -141,17 +143,6 @@ func ValidVoteOption(option VoteOption) bool {
 		return true
 	}
 	return false
-}
-
-// Marshal needed for protobuf compatibility.
-func (vo VoteOption) Marshal() ([]byte, error) {
-	return []byte{byte(vo)}, nil
-}
-
-// Unmarshal needed for protobuf compatibility.
-func (vo *VoteOption) Unmarshal(data []byte) error {
-	*vo = VoteOption(data[0])
-	return nil
 }
 
 // Format implements the fmt.Formatter interface.

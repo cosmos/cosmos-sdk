@@ -8,9 +8,11 @@ import (
 	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,8 +34,6 @@ import (
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app.go for an example of this setup.
-//
-//nolint:unused
 type App struct {
 	*baseapp.BaseApp
 
@@ -45,10 +45,9 @@ type App struct {
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
 	basicManager      module.BasicManager
-	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
-	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
+	appConfig         *appv1alpha1.Config
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -60,12 +59,12 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		if _, ok := a.ModuleManager.Modules[name]; ok {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
-		a.ModuleManager.Modules[name] = appModule
 
 		if _, ok := a.basicManager[name]; ok {
 			return fmt.Errorf("AppModuleBasic named %q already exists", name)
 		}
 
+		a.ModuleManager.Modules[name] = appModule
 		a.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
@@ -76,8 +75,10 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(a.configurator)
+	// register runtime module services
+	if err := a.registerRuntimeServices(); err != nil {
+		return err
+	}
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
@@ -98,6 +99,10 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.EndBlockers) != 0 {
 		a.ModuleManager.SetOrderEndBlockers(a.config.EndBlockers...)
 		a.SetEndBlocker(a.EndBlocker)
+	}
+
+	if len(a.config.OrderMigrations) != 0 {
+		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
 	}
 
 	if loadLatest {
@@ -134,8 +139,12 @@ func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
 	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -156,8 +165,27 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 	)
 }
 
+func (a *App) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
+}
+
 func (a *App) Configurator() module.Configurator {
 	return a.configurator
+}
+
+// LoadHeight loads a particular height
+func (a *App) LoadHeight(height int64) error {
+	return a.LoadVersion(height)
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return a.basicManager.DefaultGenesis(a.cdc)
+}
+
+// GetStoreKeys returns all the keys stored store keys.
+func (a *App) GetStoreKeys() []storetypes.StoreKey {
+	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

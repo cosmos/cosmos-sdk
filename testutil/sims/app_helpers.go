@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -28,16 +29,12 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// SimAppChainID hardcoded chainID for simulation
-const (
-	DefaultGenTxGas = 10000000
-	SimAppChainID   = "simulation-app"
-)
+const DefaultGenTxGas = 10000000
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
@@ -110,7 +107,7 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
-// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
 func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...interface{}) (*runtime.App, error) {
 	// create the app with depinject
@@ -151,7 +148,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
 	}
 
-	genesisState, err := GenesisStateWithValSet(codec, appBuilder.DefaultGenesis(), valSet, genAccounts, balances...)
+	genesisState, err := GenesisStateWithValSet(codec, app.DefaultGenesis(), valSet, genAccounts, balances...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create genesis state: %w", err)
 	}
@@ -186,8 +183,11 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 }
 
 // GenesisStateWithValSet returns a new genesis state with the validator set
-func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
+func GenesisStateWithValSet(
+	codec codec.Codec,
+	genesisState map[string]json.RawMessage,
+	valSet *tmtypes.ValidatorSet,
+	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
 	// set genesis accounts
@@ -227,6 +227,7 @@ func GenesisStateWithValSet(codec codec.Codec, genesisState map[string]json.RawM
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), math.LegacyOneDec()))
 
 	}
+
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
 	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)

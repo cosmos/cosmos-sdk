@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -149,7 +149,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		sdkEvents := make([]sdk.Event, 0, len(events))
 		for _, event := range events {
 			e := event
-			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: []byte("authz_msg_index"), Value: []byte(strconv.Itoa(i))})
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
 
 			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
@@ -177,11 +177,13 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	if oldGrant, found := k.getGrant(ctx, skey); found {
 		oldExp = oldGrant.Expiration
 	}
+
 	if oldExp != nil && (expiration == nil || !oldExp.Equal(*expiration)) {
 		if err = k.removeFromGrantQueue(ctx, skey, granter, grantee, *oldExp); err != nil {
 			return err
 		}
 	}
+
 	// If the expiration didn't change, then we don't remove it and we should not insert again
 	if expiration != nil && (oldExp == nil || !oldExp.Equal(*expiration)) {
 		if err = k.insertIntoGrantQueue(ctx, granter, grantee, msgType, *expiration); err != nil {
@@ -248,6 +250,25 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	}
 
 	return authorizations, nil
+}
+
+// GetAuthorization returns an Authorization and it's expiration time.
+// A nil Authorization is returned under the following circumstances:
+//   - No grant is found.
+//   - A grant is found, but it is expired.
+//   - There was an error getting the authorization from the grant.
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
+	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(ctx.BlockHeader().Time)) {
+		return nil, nil
+	}
+
+	auth, err := grant.GetAuthorization()
+	if err != nil {
+		return nil, nil
+	}
+
+	return auth, grant.Expiration
 }
 
 // IterateGrants iterates over all authorization grants

@@ -1,35 +1,32 @@
-package valuerenderer
+package valuerenderer_test
 
 import (
-	"strings"
+	"encoding/json"
+	"os"
 	"testing"
+
+	"cosmossdk.io/tx/textual/valuerenderer"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-func TestFormatDecimalNonDigits(t *testing.T) {
-	badCases := []string{
-		"10.a",
-		"1a.10",
-		"p1a10.",
-		"0.10p",
-		"--10",
-		"12.😎😎",
-		"11111111111133333333333333333333333333333a",
-		"11111111111133333333333333333333333333333 192892",
-	}
+func TestDecJsonTestcases(t *testing.T) {
+	type decimalTest []string
+	var testcases []decimalTest
+	raw, err := os.ReadFile("../internal/testdata/decimals.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
 
-	for _, value := range badCases {
-		value := value
-		t.Run(value, func(t *testing.T) {
-			s, err := formatDecimal(value)
-			if err == nil {
-				t.Fatal("Expected an error")
-			}
-			if g, w := err.Error(), "non-digits"; !strings.Contains(g, w) {
-				t.Errorf("Error mismatch\nGot:  %q\nWant substring: %q", g, w)
-			}
-			if s != "" {
-				t.Fatalf("Got a non-empty string: %q", s)
-			}
+	textual := valuerenderer.NewTextual(nil)
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKDEC"))
+			require.NoError(t, err)
+
+			checkNumberTest(t, r, protoreflect.ValueOf(tc[0]), tc[1])
 		})
 	}
 }

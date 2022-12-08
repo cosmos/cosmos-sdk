@@ -107,7 +107,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 		t.Fatalf("creating config.toml file failed: %v", err)
 	}
 
-	_, err = writer.WriteString(fmt.Sprintf("db_backend = '%s'\n", testDbBackend))
+	_, err = fmt.Fprintf(writer, "db_backend = '%s'\n", testDbBackend)
 	if err != nil {
 		t.Fatalf("Failed writing string to config.toml: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 		t.Fatalf("creating app.toml file failed: %v", err)
 	}
 
-	_, err = writer.WriteString(fmt.Sprintf("halt-time = %d\n", testHaltTime))
+	_, err = fmt.Fprintf(writer, "halt-time = %d\n", testHaltTime)
 	if err != nil {
 		t.Fatalf("Failed writing string to app.toml: %v", err)
 	}
@@ -312,7 +312,7 @@ func (v precedenceCommon) setAll(t *testing.T, setFlag *string, setEnvVar *strin
 			t.Fatalf("creating config.toml file failed: %v", err)
 		}
 
-		_, err = writer.WriteString(fmt.Sprintf("[rpc]\nladdr = \"%s\"\n", *setConfigFile))
+		_, err = fmt.Fprintf(writer, "[rpc]\nladdr = \"%s\"\n", *setConfigFile)
 		if err != nil {
 			t.Fatalf("Failed writing string to config.toml: %v", err)
 		}

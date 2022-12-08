@@ -1,7 +1,7 @@
 package baseapp_test
 
 import (
-	"fmt"
+	"context"
 	"math"
 	"testing"
 
@@ -12,9 +12,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/baseapp"
+
+	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,11 +33,25 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
 var blockMaxGas = uint64(simtestutil.DefaultConsensusParams.Block.MaxGas)
+
+type BlockGasImpl struct {
+	panicTx      bool
+	gasToConsume uint64
+	key          store.StoreKey
+}
+
+func (m BlockGasImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.KVStore(m.key).Set(msg.Key, msg.Value)
+	sdkCtx.GasMeter().ConsumeGas(m.gasToConsume, "TestMsg")
+	if m.panicTx {
+		panic("panic in tx execution")
+	}
+	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
+}
 
 func TestBaseApp_BlockGas(t *testing.T) {
 	testcases := []struct {
@@ -58,8 +72,6 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		var (
 			bankKeeper        bankkeeper.Keeper
 			accountKeeper     authkeeper.AccountKeeper
-			paramsKeeper      paramskeeper.Keeper
-			stakingKeeper     *stakingkeeper.Keeper
 			appBuilder        *runtime.AppBuilder
 			txConfig          client.TxConfig
 			cdc               codec.Codec
@@ -68,31 +80,11 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err               error
 		)
 
-		appConfig := depinject.Configs(makeTestConfig(),
-			depinject.ProvideInModule(banktypes.ModuleName,
-				func(_ *bankmodulev1.Module, key *store.KVStoreKey) runtime.BaseAppOption {
-					return func(app *baseapp.BaseApp) {
-						route := (&testdata.TestMsg{}).Route()
-						app.Router().AddRoute(sdk.NewRoute(route, func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-							_, ok := msg.(*testdata.TestMsg)
-							if !ok {
-								return &sdk.Result{}, fmt.Errorf("Wrong Msg type, expected %T, got %T", (*testdata.TestMsg)(nil), msg)
-							}
-							ctx.KVStore(key).Set([]byte("ok"), []byte("ok"))
-							ctx.GasMeter().ConsumeGas(tc.gasToConsume, "TestMsg")
-							if tc.panicTx {
-								panic("panic in tx execution")
-							}
-							return &sdk.Result{}, nil
-						}))
-					}
-				}))
+		appConfig := depinject.Configs(makeTestConfig())
 
 		err = depinject.Inject(appConfig,
 			&bankKeeper,
 			&accountKeeper,
-			&paramsKeeper,
-			&stakingKeeper,
 			&interfaceRegistry,
 			&txConfig,
 			&cdc,
@@ -105,9 +97,13 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
-			interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil),
-				&testdata.TestMsg{},
-			)
+			baseapptestutil.RegisterInterfaces(interfaceRegistry)
+			baseapptestutil.RegisterKeyValueServer(bapp.MsgServiceRouter(), BlockGasImpl{
+				panicTx:      tc.panicTx,
+				gasToConsume: tc.gasToConsume,
+				key:          bapp.UnsafeFindStoreKey(banktypes.ModuleName),
+			})
+
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
@@ -134,7 +130,11 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			require.Equal(t, uint64(0), seq)
 
 			// msg and signatures
-			msg := testdata.NewTestMsg(addr1)
+			msg := &baseapptestutil.MsgKeyValue{
+				Key:    []byte("ok"),
+				Value:  []byte("ok"),
+				Signer: addr1.String(),
+			}
 
 			txBuilder := txConfig.NewTxBuilder()
 
@@ -166,7 +166,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
-			baseGas := uint64(52744) // baseGas is the gas consumed before tx msg
+			baseGas := uint64(51822) // baseGas is the gas consumed before tx msg
 			expGasConsumed := addUint64Saturating(tc.gasToConsume, baseGas)
 			if expGasConsumed > txtypes.MaxGasWanted {
 				// capped by gasLimit
@@ -214,7 +214,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			txConfig.SignModeHandler().DefaultMode(), signerData,
+			nil, txConfig.SignModeHandler().DefaultMode(), signerData,
 			txBuilder, priv, txConfig, accSeqs[i])
 		if err != nil {
 			return nil, nil, err

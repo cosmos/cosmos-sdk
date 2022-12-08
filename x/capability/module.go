@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/appmodule"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +29,7 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -102,6 +103,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppMod
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the capability module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
@@ -169,22 +178,16 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		))
+		appmodule.Provide(ProvideModule),
+	)
 }
 
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-type capabilityInputs struct {
+type CapabilityInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -194,19 +197,19 @@ type capabilityInputs struct {
 	Cdc         codec.Codec
 }
 
-type capabilityOutputs struct {
+type CapabilityOutputs struct {
 	depinject.Out
 
 	CapabilityKeeper *keeper.Keeper
-	Module           runtime.AppModuleWrapper
+	Module           appmodule.AppModule
 }
 
-func provideModule(in capabilityInputs) capabilityOutputs {
+func ProvideModule(in CapabilityInputs) CapabilityOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
 	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
 
-	return capabilityOutputs{
+	return CapabilityOutputs{
 		CapabilityKeeper: k,
-		Module:           runtime.WrapAppModule(m),
+		Module:           m,
 	}
 }

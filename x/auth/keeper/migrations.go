@@ -1,12 +1,12 @@
 package keeper
 
 import (
-	"github.com/gogo/protobuf/grpc"
+	"github.com/cosmos/gogoproto/grpc"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
-	v043 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v043"
-	v046 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v046"
+	v2 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v2"
+	v3 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/auth/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -28,7 +28,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	var iterErr error
 
 	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
-		wb, err := v043.MigrateAccount(ctx, account, m.queryServer)
+		wb, err := v2.MigrateAccount(ctx, account, m.queryServer)
 		if err != nil {
 			iterErr = err
 			return true
@@ -48,7 +48,7 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 // Migrate2to3 migrates from consensus version 2 to version 3. Specifically, for each account
 // we index the account's ID to their address.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
-	return v046.MigrateStore(ctx, m.keeper.storeKey, m.keeper.cdc)
+	return v3.MigrateStore(ctx, m.keeper.storeKey, m.keeper.cdc)
 }
 
 // Migrate3to4 migrates the x/auth module state from the consensus version 3 to

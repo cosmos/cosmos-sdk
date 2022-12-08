@@ -4,7 +4,12 @@ package tendermint.p2p;
 option go_package = "github.com/tendermint/tendermint/proto/tendermint/p2p";
 
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
+
+message NetAddress {
+  string id   = 1 [(gogoproto.customname) = "ID"];
+  string ip   = 2 [(gogoproto.customname) = "IP"];
+  uint32 port = 3;
+}
 
 message ProtocolVersion {
   uint64 p2p   = 1 [(gogoproto.customname) = "P2P"];

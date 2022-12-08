@@ -157,15 +157,15 @@ func (mr *MockSlashingKeeperMockRecorder) JailUntil(arg0, arg1, arg2 interface{}
 }
 
 // Slash mocks base method.
-func (m *MockSlashingKeeper) Slash(arg0 types0.Context, arg1 types0.ConsAddress, arg2 types0.Dec, arg3, arg4 int64) {
+func (m *MockSlashingKeeper) Slash(arg0 types0.Context, arg1 types0.ConsAddress, arg2 types0.Dec, arg3, arg4 int64, arg5 types2.Infraction) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
+	m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Slash indicates an expected call of Slash.
-func (mr *MockSlashingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockSlashingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockSlashingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockSlashingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // SlashFractionDoubleSign mocks base method.

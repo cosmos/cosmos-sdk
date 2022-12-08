@@ -3,6 +3,10 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -16,10 +20,7 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )
 
 type InfractionTestSuite struct {
@@ -68,7 +69,7 @@ func (suite *InfractionTestSuite) TestHandleDoubleSign() {
 	power := int64(100)
 	stakingParams := suite.stakingKeeper.GetParams(ctx)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
-	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(suite.T(), ctx, suite.stakingKeeper)
 
 	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 
@@ -134,7 +135,7 @@ func (suite *InfractionTestSuite) TestHandleDoubleSign_TooOld() {
 	power := int64(100)
 	stakingParams := suite.stakingKeeper.GetParams(ctx)
 	operatorAddr, val := valAddresses[0], pubkeys[0]
-	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.stakingKeeper)
+	tstaking := stakingtestutil.NewHelper(suite.T(), ctx, suite.stakingKeeper)
 
 	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, true)
 

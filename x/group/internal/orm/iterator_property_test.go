@@ -3,26 +3,27 @@ package orm
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/stretchr/testify/require"
-	"pgregory.net/rapid"
 )
 
 func TestPaginationProperty(t *testing.T) {
 	t.Run("TestPagination", rapid.MakeCheck(func(t *rapid.T) {
 		// Create a slice of group members
-		tableModels := rapid.SliceOf(genTableModel).Draw(t, "tableModels").([]*testdata.TableModel)
+		tableModels := rapid.SliceOf(genTableModel).Draw(t, "tableModels")
 
 		// Choose a random limit for paging
 		upperLimit := uint64(len(tableModels))
 		if upperLimit == 0 {
 			upperLimit = 1
 		}
-		limit := rapid.Uint64Range(1, upperLimit).Draw(t, "limit").(uint64)
+		limit := rapid.Uint64Range(1, upperLimit).Draw(t, "limit")
 
 		// Reconstruct the slice from offset pages
 		reconstructedTableModels := make([]*testdata.TableModel, 0, len(tableModels))
@@ -94,7 +95,7 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 	if key != nil {
 		index = int(DecodeSequence(key))
 	}
-	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
+	return IteratorFunc(func(dest proto.Message) (RowID, error) {
 		if dest == nil {
 			return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
@@ -116,6 +117,6 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 
 		index++
 
-		return rowID, dest.Unmarshal(bytes)
+		return rowID, proto.Unmarshal(bytes, dest)
 	})
 }

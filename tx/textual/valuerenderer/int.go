@@ -3,65 +3,90 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"io"
+	"strconv"
 	"strings"
 
+	"cosmossdk.io/math"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type intValueRenderer struct{}
+// NewIntValueRenderer returns a ValueRenderer for uint32, uint64, int32 and
+// int64, and sdk.Int scalars.
+func NewIntValueRenderer(fd protoreflect.FieldDescriptor) ValueRenderer {
+	return intValueRenderer{fd}
+}
+
+type intValueRenderer struct {
+	fd protoreflect.FieldDescriptor
+}
 
 var _ ValueRenderer = intValueRenderer{}
 
-func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value, w io.Writer) error {
-	formatted, err := formatInteger(v.String())
+func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
+	formatted, err := math.FormatInt(v.String())
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	_, err = io.WriteString(w, formatted)
-	return err
+	return []Screen{{Text: formatted}}, nil
 }
 
-func (vr intValueRenderer) Parse(_ context.Context, r io.Reader) (protoreflect.Value, error) {
-	panic("implement me")
-}
-
-func hasOnlyDigits(s string) bool {
-	if s == "" {
-		return false
+func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
+	if n := len(screens); n != 1 {
+		return nilValue, fmt.Errorf("expected 1 screen, got: %d", n)
 	}
-	for _, r := range s {
-		if r < '0' || r > '9' {
-			return false
+
+	parsedInt, err := parseInt(screens[0].Text)
+	if err != nil {
+		return nilValue, err
+	}
+
+	switch vr.fd.Kind() {
+	case protoreflect.Uint32Kind:
+		value, err := strconv.ParseUint(parsedInt, 10, 32)
+		if err != nil {
+			return nilValue, err
 		}
+		return protoreflect.ValueOfUint32(uint32(value)), nil //nolint:gosec
+
+	case protoreflect.Uint64Kind:
+		value, err := strconv.ParseUint(parsedInt, 10, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return protoreflect.ValueOfUint64(value), nil
+
+	case protoreflect.Int32Kind:
+		value, err := strconv.ParseInt(parsedInt, 10, 32)
+		if err != nil {
+			return nilValue, err
+		}
+		return protoreflect.ValueOfInt32(int32(value)), nil //nolint:gosec
+
+	case protoreflect.Int64Kind:
+		value, err := strconv.ParseInt(parsedInt, 10, 64)
+		if err != nil {
+			return nilValue, err
+		}
+		return protoreflect.ValueOfInt64(value), nil
+
+	case protoreflect.StringKind:
+		return protoreflect.ValueOfString(parsedInt), nil
+
+	default:
+		return nilValue, fmt.Errorf("parsing integers into a %s field is not supported", vr.fd.Kind())
 	}
-	return true
 }
 
-// formatInteger formats an integer into a value-rendered string. This function
-// operates with string manipulation (instead of manipulating the int or sdk.Int
-// object).
-func formatInteger(v string) (string, error) {
+// parseInt parses a value-rendered string into an integer
+func parseInt(v string) (string, error) {
 	sign := ""
 	if v[0] == '-' {
 		sign = "-"
 		v = v[1:]
 	}
-	if len(v) > 1 {
-		v = strings.TrimLeft(v, "0")
-	}
 
-	// Ensure that the string contains only digits at this point.
-	if !hasOnlyDigits(v) {
-		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
-	}
-
-	startOffset := 3
-	for outputIndex := len(v); outputIndex > startOffset; {
-		outputIndex -= 3
-		v = v[:outputIndex] + thousandSeparator + v[outputIndex:]
-	}
+	// remove the 1000 separators (ex: 1'000'000 -> 1000000)
+	v = strings.ReplaceAll(v, "'", "")
 
 	return sign + v, nil
 }

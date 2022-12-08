@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutilhelpers/tx"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 )
 
 func testCodec() *codec.LegacyAmino {

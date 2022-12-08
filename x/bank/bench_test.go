@@ -30,7 +30,8 @@ func genSequenceOfTxs(txGen client.TxConfig,
 	accNums []uint64,
 	initSeqNums []uint64,
 	numToGenerate int,
-	priv ...cryptotypes.PrivKey) ([]sdk.Tx, error) {
+	priv ...cryptotypes.PrivKey,
+) ([]sdk.Tx, error) {
 	txs := make([]sdk.Tx, numToGenerate)
 	var err error
 	for i := 0; i < numToGenerate; i++ {
@@ -58,7 +59,7 @@ func genSequenceOfTxs(txGen client.TxConfig,
 }
 
 func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
-	//b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
+	// b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
 
 	b.ReportAllocs()
 	// Add an account at genesis
@@ -103,7 +104,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 }
 
 func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
-	//b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
+	// b.Skip("Skipping benchmark with buggy code reported at https://github.com/cosmos/cosmos-sdk/issues/10023")
 
 	b.ReportAllocs()
 	// Add an account at genesis

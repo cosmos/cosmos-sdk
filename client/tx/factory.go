@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"cosmossdk.io/math"
 	"github.com/spf13/pflag"
+
+	"github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -40,6 +43,7 @@ type Factory struct {
 	gasPrices          sdk.DecCoins
 	signMode           signing.SignMode
 	simulateAndExecute bool
+	preprocessTxHook   client.PreprocessTxFn
 }
 
 // NewFactoryCLI creates a new Factory.
@@ -96,6 +100,8 @@ func NewFactoryCLI(clientCtx client.Context, flagSet *pflag.FlagSet) Factory {
 
 	gasPricesStr, _ := flagSet.GetString(flags.FlagGasPrices)
 	f = f.WithGasPrices(gasPricesStr)
+
+	f = f.WithPreprocessTxHook(clientCtx.PreprocessTxHook)
 
 	return f
 }
@@ -242,6 +248,29 @@ func (f Factory) WithFeePayer(fp sdk.AccAddress) Factory {
 	return f
 }
 
+// WithPreprocessTxHook returns a copy of the Factory with an updated preprocess tx function,
+// allows for preprocessing of transaction data using the TxBuilder.
+func (f Factory) WithPreprocessTxHook(preprocessFn client.PreprocessTxFn) Factory {
+	f.preprocessTxHook = preprocessFn
+	return f
+}
+
+// PreprocessTx calls the preprocessing hook with the factory parameters and
+// returns the result.
+func (f Factory) PreprocessTx(keyname string, builder client.TxBuilder) error {
+	if f.preprocessTxHook == nil {
+		// Allow pass-through
+		return nil
+	}
+
+	key, err := f.Keybase().Key(keyname)
+	if err != nil {
+		return fmt.Errorf("error retrieving key from keyring: %w", err)
+	}
+
+	return f.preprocessTxHook(f.chainID, key.GetType(), builder)
+}
+
 // BuildUnsignedTx builds a transaction to be signed given a set of messages.
 // Once created, the fee, memo, and messages are set.
 func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
@@ -270,6 +299,11 @@ func (f Factory) BuildUnsignedTx(msgs ...sdk.Msg) (client.TxBuilder, error) {
 			fee := gp.Amount.Mul(glDec)
 			fees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 		}
+	}
+
+	// Prevent simple inclusion of a valid mnemonic in the memo field
+	if f.memo != "" && bip39.IsMnemonicValid(strings.ToLower(f.memo)) {
+		return nil, errors.New("cannot provide a valid mnemonic seed in the memo field")
 	}
 
 	tx := f.txConfig.NewTxBuilder()

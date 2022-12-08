@@ -6,9 +6,10 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/authz"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/group/module"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
@@ -18,6 +19,7 @@ import (
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -28,11 +30,12 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 )
 
 var AppConfig = appconfig.Compose(&appv1alpha1.Config{
@@ -49,6 +52,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					group.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
@@ -58,6 +62,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					group.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
@@ -67,6 +72,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					group.ModuleName,
 					paramstypes.ModuleName,
+					consensustypes.ModuleName,
 				},
 			}),
 		},
@@ -95,8 +101,12 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		},
 		{
+			Name:   consensustypes.ModuleName,
+			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+		},
+		{
 			Name:   "tx",
-			Config: appconfig.WrapAny(&txmodulev1.Module{}),
+			Config: appconfig.WrapAny(&txconfigv1.Config{}),
 		},
 		{
 			Name:   genutiltypes.ModuleName,

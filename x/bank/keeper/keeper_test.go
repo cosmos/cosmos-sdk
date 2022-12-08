@@ -195,6 +195,32 @@ func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc authtypes
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
+func (suite *KeeperTestSuite) TestGetAuthority() {
+	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
+		return keeper.NewBaseKeeper(
+			moduletestutil.MakeTestEncodingConfig().Codec,
+			sdk.NewKVStoreKey(banktypes.StoreKey),
+			nil,
+			nil,
+			authority,
+		)
+	}
+
+	tests := map[string]string{
+		"some random account":    "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
+		"gov module account":     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		"another module account": authtypes.NewModuleAddress(minttypes.ModuleName).String(),
+	}
+
+	for name, expected := range tests {
+		suite.T().Run(name, func(t *testing.T) {
+			kpr := NewKeeperWithAuthority(expected)
+			actual := kpr.GetAuthority()
+			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestSupply() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -541,6 +567,25 @@ func (suite *KeeperTestSuite) TestSendCoins() {
 	require.Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
+func (suite *KeeperTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
+	balances := sdk.NewCoins(newFooCoin(50))
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	acc0 := authtypes.NewBaseAccountWithAddress(accAddrs[0])
+	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+
+	suite.mockFundAccount(accAddrs[1])
+	suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, suite.ctx, accAddrs[1], balances))
+
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, accAddrs[0]).Return(vacc)
+	suite.Require().Error(suite.bankKeeper.SendCoins(suite.ctx, accAddrs[0], accAddrs[1], sendCoins))
+}
+
 func (suite *KeeperTestSuite) TestValidateBalance() {
 	ctx := suite.ctx
 	require := suite.Require()
@@ -643,15 +688,15 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[1].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[1].String()},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
 
 	event2 := sdk.Event{
@@ -660,7 +705,7 @@ func (suite *KeeperTestSuite) TestMsgSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 	)
 
 	// events are shifted due to the funding account events
@@ -713,7 +758,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeySender), Value: []byte(accAddrs[0].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeySender, Value: accAddrs[0].String()},
 	)
 	require.Equal(abci.Event(event1), events[7])
 
@@ -738,22 +783,22 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[2].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[2].String()},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
 	event3 := sdk.Event{
 		Type:       banktypes.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(banktypes.AttributeKeyRecipient), Value: []byte(accAddrs[3].String())},
+		abci.EventAttribute{Key: banktypes.AttributeKeyRecipient, Value: accAddrs[3].String()},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events
 	require.Equal(abci.Event(event1), events[25])
@@ -1570,9 +1615,7 @@ func (suite *KeeperTestSuite) TestIterateSendEnabledEntries() {
 		})
 	}
 
-	for _, denom := range denoms {
-		bankKeeper.DeleteSendEnabled(ctx, denom)
-	}
+	bankKeeper.DeleteSendEnabled(ctx, denoms...)
 
 	suite.T().Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
 		count := 0

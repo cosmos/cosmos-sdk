@@ -41,7 +41,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+			if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
 				panic(err)
 			}
 		}
@@ -68,7 +68,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			if err := k.BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+			if err := k.Hooks().BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
 				panic(err)
 			}
 		}
@@ -77,7 +77,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *types.GenesisState) (res []ab
 
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			if err := k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+			if err := k.Hooks().AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
 				panic(err)
 			}
 		}

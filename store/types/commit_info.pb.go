@@ -5,8 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -131,7 +131,7 @@ func (m *StoreInfo) GetCommitId() CommitID {
 	return CommitID{}
 }
 
-// CommitID defines the committment information when a specific store is
+// CommitID defines the commitment information when a specific store is
 // committed.
 type CommitID struct {
 	Version int64  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`

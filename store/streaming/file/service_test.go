@@ -1,21 +1,24 @@
 package file
 
 import (
+	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var (
@@ -23,17 +26,17 @@ var (
 	testMarshaller               = codec.NewProtoCodec(interfaceRegistry)
 	testStreamingService         *StreamingService
 	testListener1, testListener2 types.WriteListener
-	emptyContext                 = sdk.Context{}
+	emptyContext                 = context.TODO()
 
 	// test abci message types
 	mockHash          = []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}
 	testBeginBlockReq = abci.RequestBeginBlock{
-		Header: types1.Header{
+		Header: tmproto.Header{
 			Height: 1,
 		},
-		ByzantineValidators: []abci.Evidence{},
+		ByzantineValidators: []abci.Misbehavior{},
 		Hash:                mockHash,
-		LastCommitInfo: abci.LastCommitInfo{
+		LastCommitInfo: abci.CommitInfo{
 			Round: 1,
 			Votes: []abci.VoteInfo{},
 		},
@@ -53,8 +56,12 @@ var (
 	}
 	testEndBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
-		ConsensusParamUpdates: &abci.ConsensusParams{},
+		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
+	}
+	testCommitRes = abci.ResponseCommit{
+		Data:         []byte{1},
+		RetainHeight: 0,
 	}
 	mockTxBytes1      = []byte{9, 8, 7, 6, 5, 4, 3, 2, 1}
 	testDeliverTxReq1 = abci.RequestDeliverTx{
@@ -88,8 +95,8 @@ var (
 	}
 
 	// mock store keys
-	mockStoreKey1 = sdk.NewKVStoreKey("mockStore1")
-	mockStoreKey2 = sdk.NewKVStoreKey("mockStore2")
+	mockStoreKey1 = types.NewKVStoreKey("mockStore1")
+	mockStoreKey2 = types.NewKVStoreKey("mockStore2")
 
 	// file stuff
 	testPrefix = "testPrefix"
@@ -104,25 +111,6 @@ var (
 	mockValue3 = []byte{5, 4, 3}
 )
 
-func TestIntermediateWriter(t *testing.T) {
-	outChan := make(chan []byte, 0)
-	iw := NewIntermediateWriter(outChan)
-	require.IsType(t, &IntermediateWriter{}, iw)
-	testBytes := []byte{1, 2, 3, 4, 5}
-	var length int
-	var err error
-	waitChan := make(chan struct{}, 0)
-	go func() {
-		length, err = iw.Write(testBytes)
-		waitChan <- struct{}{}
-	}()
-	receivedBytes := <-outChan
-	<-waitChan
-	require.Equal(t, len(testBytes), length)
-	require.Equal(t, testBytes, receivedBytes)
-	require.Nil(t, err)
-}
-
 func TestFileStreamingService(t *testing.T) {
 	if os.Getenv("CI") != "" {
 		t.Skip("Skipping TestFileStreamingService in CI environment")
@@ -132,29 +120,23 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller)
+	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, log.NewNopLogger(), true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)
 	require.Equal(t, testDir, testStreamingService.writeDir)
 	require.Equal(t, testMarshaller, testStreamingService.codec)
-	testListener1 = testStreamingService.listeners[mockStoreKey1][0]
-	testListener2 = testStreamingService.listeners[mockStoreKey2][0]
+	testListener1 = testStreamingService.storeListeners[0]
+	testListener2 = testStreamingService.storeListeners[1]
 	wg := new(sync.WaitGroup)
 	testStreamingService.Stream(wg)
-	testListenBeginBlock(t)
-	testListenDeliverTx1(t)
-	testListenDeliverTx2(t)
-	testListenEndBlock(t)
+	testListenBlock(t)
 	testStreamingService.Close()
 	wg.Wait()
 }
 
-func testListenBeginBlock(t *testing.T) {
-	expectedBeginBlockReqBytes, err := testMarshaller.Marshal(&testBeginBlockReq)
-	require.Nil(t, err)
-	expectedBeginBlockResBytes, err := testMarshaller.Marshal(&testBeginBlockRes)
-	require.Nil(t, err)
+func testListenBlock(t *testing.T) {
+	var expectKVPairsStore1, expectKVPairsStore2 [][]byte
 
 	// write state changes
 	testListener1.OnWrite(mockStoreKey1, mockKey1, mockValue1, false)
@@ -183,162 +165,102 @@ func testListenBeginBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1, expectedKVPair3)
+	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2)
 
 	// send the ABCI messages
 	err = testStreamingService.ListenBeginBlock(emptyContext, testBeginBlockReq, testBeginBlockRes)
 	require.Nil(t, err)
 
-	// load the file, checking that it was created with the expected name
-	fileName := fmt.Sprintf("%s-block-%d-begin", testPrefix, testBeginBlockReq.GetHeader().Height)
-	fileBytes, err := readInFile(fileName)
-	require.Nil(t, err)
-
-	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
-	require.Nil(t, err)
-	require.Equal(t, 5, len(segments))
-	require.Equal(t, expectedBeginBlockReqBytes, segments[0])
-	require.Equal(t, expectedKVPair1, segments[1])
-	require.Equal(t, expectedKVPair2, segments[2])
-	require.Equal(t, expectedKVPair3, segments[3])
-	require.Equal(t, expectedBeginBlockResBytes, segments[4])
-}
-
-func testListenDeliverTx1(t *testing.T) {
-	expectedDeliverTxReq1Bytes, err := testMarshaller.Marshal(&testDeliverTxReq1)
-	require.Nil(t, err)
-	expectedDeliverTxRes1Bytes, err := testMarshaller.Marshal(&testDeliverTxRes1)
-	require.Nil(t, err)
-
 	// write state changes
 	testListener1.OnWrite(mockStoreKey1, mockKey1, mockValue1, false)
 	testListener2.OnWrite(mockStoreKey2, mockKey2, mockValue2, false)
-	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
+	testListener2.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair1, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,
 		Delete:   false,
 	})
 	require.Nil(t, err)
+	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1)
+	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2, expectedKVPair3)
 
 	// send the ABCI messages
 	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq1, testDeliverTxRes1)
 	require.Nil(t, err)
 
-	// load the file, checking that it was created with the expected name
-	fileName := fmt.Sprintf("%s-block-%d-tx-%d", testPrefix, testBeginBlockReq.GetHeader().Height, 0)
-	fileBytes, err := readInFile(fileName)
-	require.Nil(t, err)
-
-	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
-	require.Nil(t, err)
-	require.Equal(t, 5, len(segments))
-	require.Equal(t, expectedDeliverTxReq1Bytes, segments[0])
-	require.Equal(t, expectedKVPair1, segments[1])
-	require.Equal(t, expectedKVPair2, segments[2])
-	require.Equal(t, expectedKVPair3, segments[3])
-	require.Equal(t, expectedDeliverTxRes1Bytes, segments[4])
-}
-
-func testListenDeliverTx2(t *testing.T) {
-	expectedDeliverTxReq2Bytes, err := testMarshaller.Marshal(&testDeliverTxReq2)
-	require.Nil(t, err)
-	expectedDeliverTxRes2Bytes, err := testMarshaller.Marshal(&testDeliverTxRes2)
-	require.Nil(t, err)
-
 	// write state changes
-	testListener1.OnWrite(mockStoreKey2, mockKey1, mockValue1, false)
-	testListener2.OnWrite(mockStoreKey1, mockKey2, mockValue2, false)
-	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
+	testListener2.OnWrite(mockStoreKey2, mockKey1, mockValue1, false)
+	testListener1.OnWrite(mockStoreKey1, mockKey2, mockValue2, false)
+	testListener2.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair1, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,
 		Delete:   false,
 	})
 	require.Nil(t, err)
+	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair2)
+	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair1, expectedKVPair3)
 
 	// send the ABCI messages
 	err = testStreamingService.ListenDeliverTx(emptyContext, testDeliverTxReq2, testDeliverTxRes2)
 	require.Nil(t, err)
 
-	// load the file, checking that it was created with the expected name
-	fileName := fmt.Sprintf("%s-block-%d-tx-%d", testPrefix, testBeginBlockReq.GetHeader().Height, 1)
-	fileBytes, err := readInFile(fileName)
-	require.Nil(t, err)
-
-	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
-	require.Nil(t, err)
-	require.Equal(t, 5, len(segments))
-	require.Equal(t, expectedDeliverTxReq2Bytes, segments[0])
-	require.Equal(t, expectedKVPair1, segments[1])
-	require.Equal(t, expectedKVPair2, segments[2])
-	require.Equal(t, expectedKVPair3, segments[3])
-	require.Equal(t, expectedDeliverTxRes2Bytes, segments[4])
-}
-
-func testListenEndBlock(t *testing.T) {
-	expectedEndBlockReqBytes, err := testMarshaller.Marshal(&testEndBlockReq)
-	require.Nil(t, err)
-	expectedEndBlockResBytes, err := testMarshaller.Marshal(&testEndBlockRes)
-	require.Nil(t, err)
-
 	// write state changes
 	testListener1.OnWrite(mockStoreKey1, mockKey1, mockValue1, false)
-	testListener2.OnWrite(mockStoreKey1, mockKey2, mockValue2, false)
-	testListener1.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
+	testListener1.OnWrite(mockStoreKey1, mockKey2, mockValue2, false)
+	testListener2.OnWrite(mockStoreKey2, mockKey3, mockValue3, false)
 
 	// expected KV pairs
-	expectedKVPair1, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair1, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey1,
 		Value:    mockValue1,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
 		Value:    mockValue2,
 		Delete:   false,
 	})
 	require.Nil(t, err)
-	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
+	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
 		Value:    mockValue3,
@@ -346,29 +268,57 @@ func testListenEndBlock(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1, expectedKVPair2)
+	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair3)
+
 	// send the ABCI messages
 	err = testStreamingService.ListenEndBlock(emptyContext, testEndBlockReq, testEndBlockRes)
 	require.Nil(t, err)
 
-	// load the file, checking that it was created with the expected name
-	fileName := fmt.Sprintf("%s-block-%d-end", testPrefix, testEndBlockReq.Height)
-	fileBytes, err := readInFile(fileName)
+	err = testStreamingService.ListenCommit(emptyContext, testCommitRes)
 	require.Nil(t, err)
 
-	// segment the file into the separate gRPC messages and check the correctness of each
-	segments, err := segmentBytes(fileBytes)
+	// load the file, checking that it was created with the expected name
+	metaFileName := fmt.Sprintf("%s-block-%d-meta", testPrefix, testBeginBlockReq.GetHeader().Height)
+	dataFileName := fmt.Sprintf("%s-block-%d-data", testPrefix, testBeginBlockReq.GetHeader().Height)
+	metaFileBytes, err := readInFile(metaFileName)
+	dataFileBytes, err := readInFile(dataFileName)
 	require.Nil(t, err)
-	require.Equal(t, 5, len(segments))
-	require.Equal(t, expectedEndBlockReqBytes, segments[0])
-	require.Equal(t, expectedKVPair1, segments[1])
-	require.Equal(t, expectedKVPair2, segments[2])
-	require.Equal(t, expectedKVPair3, segments[3])
-	require.Equal(t, expectedEndBlockResBytes, segments[4])
+
+	metadata := types.BlockMetadata{
+		RequestBeginBlock:  &testBeginBlockReq,
+		ResponseBeginBlock: &testBeginBlockRes,
+		RequestEndBlock:    &testEndBlockReq,
+		ResponseEndBlock:   &testEndBlockRes,
+		ResponseCommit:     &testCommitRes,
+		DeliverTxs: []*types.BlockMetadata_DeliverTx{
+			{Request: &testDeliverTxReq1, Response: &testDeliverTxRes1},
+			{Request: &testDeliverTxReq2, Response: &testDeliverTxRes2},
+		},
+	}
+	expectedMetadataBytes, err := testMarshaller.Marshal(&metadata)
+	require.Nil(t, err)
+	require.Equal(t, expectedMetadataBytes, metaFileBytes)
+
+	// segment the file into the separate gRPC messages and check the correctness of each
+	segments, err := segmentBytes(dataFileBytes)
+	require.Nil(t, err)
+	require.Equal(t, len(expectKVPairsStore1)+len(expectKVPairsStore2), len(segments))
+	require.Equal(t, expectKVPairsStore1, segments[:len(expectKVPairsStore1)])
+	require.Equal(t, expectKVPairsStore2, segments[len(expectKVPairsStore1):])
 }
 
 func readInFile(name string) ([]byte, error) {
 	path := filepath.Join(testDir, name)
-	return os.ReadFile(path)
+	bz, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	size := sdk.BigEndianToUint64(bz[:8])
+	if len(bz) != int(size)+8 {
+		return nil, errors.New("incomplete file ")
+	}
+	return bz[8:], nil
 }
 
 // segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays

@@ -23,17 +23,15 @@ var intValues = []protoreflect.Value{
 func BenchmarkIntValueRendererFormat(b *testing.B) {
 	ctx := context.Background()
 	ivr := new(intValueRenderer)
-	buf := new(bytes.Buffer)
 	b.ResetTimer()
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		for _, value := range intValues {
-			if err := ivr.Format(ctx, value, buf); err != nil {
+			if _, err := ivr.Format(ctx, value); err != nil {
 				b.Fatal(err)
 			}
 		}
-		buf.Reset()
 	}
 }
 
@@ -52,17 +50,15 @@ var decimalValues = []protoreflect.Value{
 func BenchmarkDecimalValueRendererFormat(b *testing.B) {
 	ctx := context.Background()
 	dvr := new(decValueRenderer)
-	buf := new(bytes.Buffer)
 	b.ResetTimer()
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		for _, value := range intValues {
-			if err := dvr.Format(ctx, value, buf); err != nil {
+			if _, err := dvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
 			}
 		}
-		buf.Reset()
 	}
 }
 
@@ -81,16 +77,14 @@ var byteValues = []protoreflect.Value{
 func BenchmarkBytesValueRendererFormat(b *testing.B) {
 	ctx := context.Background()
 	bvr := new(bytesValueRenderer)
-	buf := new(bytes.Buffer)
 	b.ResetTimer()
 	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
 		for _, value := range byteValues {
-			if err := bvr.Format(ctx, value, buf); err != nil {
+			if _, err := bvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
 			}
 		}
-		buf.Reset()
 	}
 }

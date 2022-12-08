@@ -5,14 +5,16 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
+	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
+	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
@@ -36,6 +38,7 @@ var beginBlockOrder = []string{
 	"nft",
 	"group",
 	"params",
+	"consensus",
 	"vesting",
 }
 
@@ -56,6 +59,7 @@ var endBlockersOrder = []string{
 	"nft",
 	"group",
 	"params",
+	"consensus",
 	"upgrade",
 	"vesting",
 }
@@ -77,6 +81,7 @@ var initGenesisOrder = []string{
 	"nft",
 	"group",
 	"params",
+	"consensus",
 	"upgrade",
 	"vesting",
 }
@@ -129,7 +134,7 @@ func TxModule() ModuleOption {
 	return func(config *appConfig) {
 		config.moduleConfigs["tx"] = &appv1alpha1.ModuleConfig{
 			Name:   "tx",
-			Config: appconfig.WrapAny(&txmodulev1.Module{}),
+			Config: appconfig.WrapAny(&txconfigv1.Config{}),
 		}
 	}
 }
@@ -193,6 +198,30 @@ func GovModule() ModuleOption {
 		config.moduleConfigs["gov"] = &appv1alpha1.ModuleConfig{
 			Name:   "gov",
 			Config: appconfig.WrapAny(&govmodulev1.Module{}),
+		}
+	}
+}
+
+func ConsensusModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["consensus"] = &appv1alpha1.ModuleConfig{
+			Name:   "consensus",
+			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+		}
+	}
+}
+
+func MintModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["mint"] = &appv1alpha1.ModuleConfig{
+			Name:   "mint",
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
+			GolangBindings: []*appv1alpha1.GolangBinding{
+				{
+					InterfaceType:  "github.com/cosmos/cosmos-sdk/x/mint/types/types.StakingKeeper",
+					Implementation: "github.com/cosmos/cosmos-sdk/x/staking/keeper/*keeper.Keeper",
+				},
+			},
 		}
 	}
 }

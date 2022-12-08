@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -431,4 +433,72 @@ func (i *Int) UnmarshalAmino(bz []byte) error { return i.Unmarshal(bz) }
 // intended to be used with require/assert:  require.True(IntEq(...))
 func IntEq(t *testing.T, exp, got Int) (*testing.T, bool, string, string, string) {
 	return t, exp.Equal(got), "expected:\t%v\ngot:\t\t%v", exp.String(), got.String()
+}
+
+func hasOnlyDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+const thousandSeparator string = "'"
+
+var stringsBuilderPool = &sync.Pool{
+	New: func() any { return new(strings.Builder) },
+}
+
+// FormatInt formats an integer (encoded as in protobuf) into a value-rendered
+// string following ADR-050. This function operates with string manipulation
+// (instead of manipulating the int or sdk.Int object).
+func FormatInt(v string) (string, error) {
+	sign := ""
+	if v[0] == '-' {
+		sign = "-"
+		v = v[1:]
+	}
+	if len(v) > 1 {
+		v = strings.TrimLeft(v, "0")
+	}
+
+	// Ensure that the string contains only digits at this point.
+	if !hasOnlyDigits(v) {
+		return "", fmt.Errorf("expecting only digits 0-9, but got non-digits in %q", v)
+	}
+
+	// 1. Less than 4 digits don't need any formatting.
+	if len(v) <= 3 {
+		return sign + v, nil
+	}
+
+	sb := stringsBuilderPool.Get().(*strings.Builder)
+	defer stringsBuilderPool.Put(sb)
+	sb.Reset()
+	sb.Grow(len(v) + len(v)/3) // Exactly v + numberOfThousandSeparatorsIn(v)
+
+	// 2. If the length of v is not a multiple of 3 e.g. 1234 or 12345, to achieve 1'234 or 12'345,
+	// we can simply slide to the first mod3 values of v that aren't the multiples of 3 then insert in
+	// the thousands separator so in this case: write(12'); then the remaining v will be entirely multiple
+	// of 3 hence v = 34*
+	if mod3 := len(v) % 3; mod3 != 0 {
+		sb.WriteString(v[:mod3])
+		v = v[mod3:]
+		sb.WriteString(thousandSeparator)
+	}
+
+	// 3. By this point v is entirely multiples of 3 hence we just insert the separator at every 3 digit.
+	for i := 0; i < len(v); i += 3 {
+		end := i + 3
+		sb.WriteString(v[i:end])
+		if end < len(v) {
+			sb.WriteString(thousandSeparator)
+		}
+	}
+
+	return sign + sb.String(), nil
 }

@@ -2,8 +2,8 @@
 
 ## Changelog
 
-- Jan 19, 2022: Initial Draft
-- Apr 29, 2022: Safer extension snapshotter interface
+* Jan 19, 2022: Initial Draft
+* Apr 29, 2022: Safer extension snapshotter interface
 
 ## Status
 
@@ -35,7 +35,7 @@ snapshot and the restoration. Each module could have mutiple snapshotters, and f
 implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
 `RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 
-```proto
+```protobuf
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
 // On top of the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
 message SnapshotItem {
@@ -150,13 +150,13 @@ But for applications that does not have the state data outside of the IAVL tree 
 
 ### Positive
 
-- State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
+* State maintained outside of IAVL tree like CosmWasm blobs can create snapshots by implementing extension snapshotters, and being fetched by new clients via state-sync.
 
 ### Negative
 
 ### Neutral
 
-- All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
+* All modules that maintain state outside of IAVL tree need to implement `ExtensionSnapshotter` and the snapshot `Manager` need to call `RegisterExtensions` when setting up the application.
 
 ## Further Discussions
 
@@ -169,6 +169,6 @@ Test cases for an implementation are mandatory for ADRs that are affecting conse
 
 ## References
 
-- https://github.com/cosmos/cosmos-sdk/pull/10961
-- https://github.com/cosmos/cosmos-sdk/issues/7340
-- https://hackmd.io/gJoyev6DSmqqkO667WQlGw
+* https://github.com/cosmos/cosmos-sdk/pull/10961
+* https://github.com/cosmos/cosmos-sdk/issues/7340
+* https://hackmd.io/gJoyev6DSmqqkO667WQlGw

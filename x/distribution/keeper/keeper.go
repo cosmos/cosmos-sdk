@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -97,22 +96,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 	if err != nil {
 		return nil, err
 	}
-
-	if rewards.IsZero() {
-		baseDenom, _ := sdk.GetBaseDenom()
-		rewards = sdk.Coins{sdk.Coin{
-			Denom:  baseDenom,
-			Amount: math.ZeroInt(),
-		}}
-	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
-		),
-	)
 
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)

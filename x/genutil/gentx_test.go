@@ -1,9 +1,14 @@
 package genutil_test
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"testing"
+	"time"
+
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -19,9 +24,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"math/rand"
-	"testing"
-	"time"
 )
 
 var (
@@ -90,7 +92,6 @@ func (suite *GenTxTestSuite) setAccountBalance(balances []banktypes.Balance) jso
 	}
 	for _, balance := range balances {
 		bankGenesisState.Balances = append(bankGenesisState.Balances, balance)
-
 	}
 	for _, balance := range bankGenesisState.Balances {
 		bankGenesisState.Supply.Add(balance.Coins...)
@@ -261,7 +262,6 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 				genTxs[0] = tx
 			},
 			func(_ abci.RequestDeliverTx) abci.ResponseDeliverTx {
-
 				return abci.ResponseDeliverTx{
 					Code:      sdkerrors.ErrNoSignatures.ABCICode(),
 					GasWanted: int64(10000000),

@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cosmos/cosmos-sdk/x/slashing/testslashing"
+	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestValidatorMissedBlockBitArray() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	params := testslashing.TestParams()
+	params := testutil.TestParams()
 	params.SignedBlocksWindow = 100
 	require.NoError(keeper.SetParams(ctx, params))
 

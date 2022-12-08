@@ -1,25 +1,29 @@
-module github.com/cosmos/cosmos-sdk/client/v2
+module cosmossdk.io/client/v2
 
-go 1.18
+go 1.19
 
 require (
-	cosmossdk.io/api v0.1.0-alpha9
-	github.com/cosmos/cosmos-proto v1.0.0-alpha7
+	cosmossdk.io/api v0.2.6
+	cosmossdk.io/core v0.3.2
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/iancoleman/strcase v0.2.0
-	github.com/spf13/cobra v1.5.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.49.0
+	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
-	gotest.tools/v3 v3.3.0
+	gotest.tools/v3 v3.4.0
 )
 
 require (
-	github.com/gogo/protobuf v1.3.2 // indirect
+	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
+	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect
-	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
-	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
+	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
+	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 )

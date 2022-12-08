@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 type EndToEndTestSuite struct {
@@ -35,8 +35,7 @@ func (s *EndToEndTestSuite) SetupSuite() {
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
-	_, err = s.network.WaitForHeight(1)
-	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
 // TearDownSuite performs cleanup logic after all the tests, i.e. once after the
@@ -63,7 +62,7 @@ func (s *EndToEndTestSuite) TestGetCmdQuerySigningInfo() {
 			"valid address (json output)",
 			[]string{
 				pubKeyStr,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -73,7 +72,7 @@ func (s *EndToEndTestSuite) TestGetCmdQuerySigningInfo() {
 			"valid address (text output)",
 			[]string{
 				pubKeyStr,
-				fmt.Sprintf("--%s=text", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=text", flags.FlagOutput),
 				fmt.Sprintf("--%s=1", flags.FlagHeight),
 			},
 			false,
@@ -114,12 +113,12 @@ func (s *EndToEndTestSuite) TestGetCmdQueryParams() {
 	}{
 		{
 			"json output",
-			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			`{"signed_blocks_window":"100","min_signed_per_window":"0.500000000000000000","downtime_jail_duration":"600s","slash_fraction_double_sign":"0.050000000000000000","slash_fraction_downtime":"0.010000000000000000"}`,
 		},
 		{
 			"text output",
-			[]string{fmt.Sprintf("--%s=text", tmcli.OutputFlag)},
+			[]string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			`downtime_jail_duration: 600s
 min_signed_per_window: "0.500000000000000000"
 signed_blocks_window: "100"
@@ -159,7 +158,7 @@ func (s *EndToEndTestSuite) TestNewUnjailTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync), // sync mode as there are no funds yet
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
 			},
-			false, 0, &sdk.TxResponse{},
+			false, slashingtypes.ErrValidatorNotJailed.ABCICode(), &sdk.TxResponse{},
 		},
 	}
 
@@ -178,7 +177,7 @@ func (s *EndToEndTestSuite) TestNewUnjailTxCmd() {
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
 
 				txResp := tc.respType.(*sdk.TxResponse)
-				s.Require().Equal(tc.expectedCode, txResp.Code, out.String())
+				s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, txResp.TxHash, tc.expectedCode))
 			}
 		})
 	}

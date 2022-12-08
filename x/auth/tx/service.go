@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
@@ -19,6 +19,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // baseAppSimulateFn is the signature of the Baseapp#Simulate function.
@@ -44,7 +45,7 @@ var (
 	_ txtypes.ServiceServer = txServer{}
 
 	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
-	EventRegex = regexp.MustCompile(`^[a-zA-Z]+\.[a-zA-Z]+=\S+$`)
+	EventRegex = regexp.MustCompile(`^[a-zA-Z_]+\.[a-zA-Z_]+=\S+$`)
 )
 
 const (
@@ -129,7 +130,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 
 	gasInfo, result, err := s.simulate(txBytes)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Unknown, "%v With gas wanted: '%d' and gas used: '%d' ", err, gasInfo.GasWanted, gasInfo.GasUsed)
 	}
 
 	return &txtypes.SimulateResponse{
@@ -248,8 +249,92 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 	}, nil
 }
 
+// BroadcastTx implements the ServiceServer.BroadcastTx RPC method.
 func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxRequest) (*txtypes.BroadcastTxResponse, error) {
 	return client.TxServiceBroadcast(ctx, s.clientCtx, req)
+}
+
+// TxEncode implements the ServiceServer.TxEncode RPC method.
+func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+	if req.Tx == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
+	}
+
+	txBuilder := &wrapper{tx: req.Tx}
+
+	encodedBytes, err := s.clientCtx.TxConfig.TxEncoder()(txBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeResponse{
+		TxBytes: encodedBytes,
+	}, nil
+}
+
+// TxEncodeAmino implements the ServiceServer.TxEncodeAmino RPC method.
+func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
+	if req.AminoJson == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
+	}
+
+	var stdTx legacytx.StdTx
+	err := s.clientCtx.LegacyAmino.UnmarshalJSON([]byte(req.AminoJson), &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	encodedBytes, err := s.clientCtx.LegacyAmino.Marshal(stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxEncodeAminoResponse{
+		AminoBinary: encodedBytes,
+	}, nil
+}
+
+// TxDecode implements the ServiceServer.TxDecode RPC method.
+func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+	if req.TxBytes == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	txb, err := s.clientCtx.TxConfig.TxDecoder()(req.TxBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	txWrapper, ok := txb.(*wrapper)
+	if ok {
+		return &txtypes.TxDecodeResponse{
+			Tx: txWrapper.tx,
+		}, nil
+	}
+
+	return nil, fmt.Errorf("expected %T, got %T", &wrapper{}, txb)
+}
+
+// TxDecodeAmino implements the ServiceServer.TxDecodeAmino RPC method.
+func (s txServer) TxDecodeAmino(ctx context.Context, req *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
+	if req.AminoBinary == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
+	}
+
+	var stdTx legacytx.StdTx
+	err := s.clientCtx.LegacyAmino.Unmarshal(req.AminoBinary, &stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.clientCtx.LegacyAmino.MarshalJSON(stdTx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &txtypes.TxDecodeAminoResponse{
+		AminoJson: string(res),
+	}, nil
 }
 
 // RegisterTxService registers the tx service on the gRPC router.

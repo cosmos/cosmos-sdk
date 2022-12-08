@@ -1,12 +1,11 @@
 package testdata
 
-// DONTCOVER
 // nolint
 
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )

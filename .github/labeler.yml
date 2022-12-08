@@ -35,10 +35,13 @@
   - x/staking/**/*
 "C:x/upgrade":
   - x/upgrade/**/*
+"C:x/consensus":
+  - x/consensus/**/*
 "C:Cosmovisor":
-  - cosmovisor/**/*
+  - tools/cosmovisor/**/*
 "C:Rosetta":
   - contrib/rosetta/**/*
+  - tools/rosetta/**/*
 "C:Keys":
   - client/keys/**/*
 "Type: Build":
@@ -60,6 +63,5 @@
   - container/**/*
 "C:Store":
   - store/**/*
-  - db/**/*
 "C:orm":
   - orm/**/*

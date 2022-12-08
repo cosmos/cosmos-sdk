@@ -26,8 +26,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -37,7 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -130,6 +129,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 			configurator.BankModule(),
 			configurator.StakingModule(),
 			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
 			configurator.VestingModule()),
 		&suite.accountKeeper, &suite.bankKeeper, &suite.stakingKeeper,
 		&interfaceRegistry, &suite.appCodec, &suite.authConfig)
@@ -137,9 +137,6 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 	suite.fetchStoreKey = app.UnsafeFindStoreKey
-
-	// suite.Require().NoError(suite.accountKeeper.SetParams(suite.ctx, authtypes.DefaultParams()))
-	suite.Require().NoError(suite.bankKeeper.SetParams(suite.ctx, types.DefaultParams()))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.bankKeeper)
@@ -526,6 +523,26 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	suite.Require().Error(suite.bankKeeper.ValidateBalance(ctx, addr2))
 }
 
+func (suite *IntegrationTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
+	ctx := suite.ctx
+	balances := sdk.NewCoins(newFooCoin(50))
+	addr := sdk.AccAddress([]byte("addr1_______________"))
+	addr2 := sdk.AccAddress([]byte("addr2_______________"))
+
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+
+	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
+	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
+
+	acc0 := authtypes.NewBaseAccountWithAddress(addr)
+	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
+	suite.accountKeeper.SetAccount(ctx, vacc)
+
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr2, balances))
+	suite.Require().Error(suite.bankKeeper.SendCoins(ctx, addr, addr2, sendCoins))
+}
+
 func (suite *IntegrationTestSuite) TestSendEnabled() {
 	ctx := suite.ctx
 	enabled := true
@@ -602,15 +619,15 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr2.String())},
+		abci.EventAttribute{Key: types.AttributeKeyRecipient, Value: addr2.String()},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: types.AttributeKeySender, Value: addr.String()},
 	)
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()},
 	)
 
 	event2 := sdk.Event{
@@ -619,7 +636,7 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: types.AttributeKeySender, Value: addr.String()},
 	)
 
 	// events are shifted due to the funding account events
@@ -676,7 +693,7 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	}
 	event1.Attributes = append(
 		event1.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeySender), Value: []byte(addr.String())},
+		abci.EventAttribute{Key: types.AttributeKeySender, Value: addr.String()},
 	)
 	suite.Require().Equal(abci.Event(event1), events[7])
 
@@ -698,22 +715,22 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	}
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr3.String())},
+		abci.EventAttribute{Key: types.AttributeKeyRecipient, Value: addr3.String()},
 	)
 	event2.Attributes = append(
 		event2.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins.String())})
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins.String()})
 	event3 := sdk.Event{
 		Type:       types.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
 	}
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(types.AttributeKeyRecipient), Value: []byte(addr4.String())},
+		abci.EventAttribute{Key: types.AttributeKeyRecipient, Value: addr4.String()},
 	)
 	event3.Attributes = append(
 		event3.Attributes,
-		abci.EventAttribute{Key: []byte(sdk.AttributeKeyAmount), Value: []byte(newCoins2.String())},
+		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events
 	suite.Require().Equal(abci.Event(event1), events[25])
@@ -1618,11 +1635,11 @@ func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
 }
 
 type mockSubspace struct {
-	ps banktypes.Params
+	ps types.Params
 }
 
 func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
-	*ps.(*banktypes.Params) = ms.ps
+	*ps.(*types.Params) = ms.ps
 }
 
 func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
@@ -1634,7 +1651,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
 			legacySubspace := func(ps types.Params) mockSubspace {
 				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
+			}(types.NewParams(def))
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			actual := bankKeeper.GetParams(ctx)
@@ -1653,7 +1670,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
 			legacySubspace := func(ps types.Params) mockSubspace {
 				return mockSubspace{ps: ps}
-			}(banktypes.NewParams(def))
+			}(types.NewParams(def))
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)

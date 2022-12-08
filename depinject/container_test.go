@@ -3,7 +3,6 @@ package depinject_test
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -179,23 +178,26 @@ func TestUnexportedField(t *testing.T) {
 		scenarioConfigProvides = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedProvides{})),
+			depinject.ProvideInModule("a", ModuleA.Provide),
+			depinject.ProvideInModule("c", ModuleUnexportedProvides.Provide),
+			depinject.Supply(ModuleA{}, ModuleUnexportedProvides{}),
 		)
 
 		scenarioConfigDependency = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedDependency{})),
+			depinject.ProvideInModule("a", ModuleA.Provide),
+			depinject.ProvideInModule("c", ModuleUnexportedDependency.Provide),
+			depinject.Supply(ModuleA{}, ModuleUnexportedDependency{}),
 		)
 
 		scenarioConfigProvidesDependency = depinject.Configs(
 			depinject.Provide(ProvideMsgClientA),
 			depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-			depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-			depinject.ProvideInModule("c", wrapMethod0(ModuleUnexportedProvides{})),
-			depinject.ProvideInModule("d", wrapMethod0(ModuleD{})),
+			depinject.ProvideInModule("a", ModuleA.Provide),
+			depinject.ProvideInModule("c", ModuleUnexportedProvides.Provide),
+			depinject.ProvideInModule("d", ModuleD.Provide),
+			depinject.Supply(ModuleA{}, ModuleUnexportedProvides{}, ModuleD{}),
 		)
 	)
 
@@ -237,8 +239,9 @@ func TestUnexportedField(t *testing.T) {
 var scenarioConfig = depinject.Configs(
 	depinject.Provide(ProvideMsgClientA),
 	depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-	depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-	depinject.ProvideInModule("b", wrapMethod0(ModuleB{})),
+	depinject.ProvideInModule("a", ModuleA.Provide),
+	depinject.ProvideInModule("b", ModuleB.Provide),
+	depinject.Supply(ModuleA{}, ModuleB{}),
 )
 
 func TestScenario(t *testing.T) {
@@ -273,21 +276,6 @@ func TestScenario(t *testing.T) {
 	}, b)
 }
 
-func wrapMethod0(module interface{}) interface{} {
-	methodFn := reflect.TypeOf(module).Method(0).Func.Interface()
-	ctrInfo, err := depinject.ExtractProviderDescriptor(methodFn)
-	if err != nil {
-		panic(err)
-	}
-
-	ctrInfo.Inputs = ctrInfo.Inputs[1:]
-	fn := ctrInfo.Fn
-	ctrInfo.Fn = func(values []reflect.Value) ([]reflect.Value, error) {
-		return fn(append([]reflect.Value{reflect.ValueOf(module)}, values...))
-	}
-	return ctrInfo
-}
-
 func TestResolveError(t *testing.T) {
 	var x string
 	require.Error(t, depinject.Inject(
@@ -316,64 +304,41 @@ func TestErrorOption(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestBadCtr(t *testing.T) {
-	_, err := depinject.ExtractProviderDescriptor(KeeperA{})
-	require.Error(t, err)
-}
-
 func TestTrivial(t *testing.T) {
 	require.NoError(t, depinject.Inject(depinject.Configs()))
 }
 
-func TestErrorFunc(t *testing.T) {
-	_, err := depinject.ExtractProviderDescriptor(
-		func() (error, int) { return nil, 0 },
-	)
-	require.Error(t, err)
-
-	_, err = depinject.ExtractProviderDescriptor(
-		func() (int, error) { return 0, nil },
-	)
-	require.NoError(t, err)
-
-	var x int
-	require.Error(t,
-		depinject.Inject(
-			depinject.Provide(func() (int, error) {
-				return 0, fmt.Errorf("the error")
-			}),
-			&x,
-		))
-}
+func Provide0() int { return 0 }
+func Provide1() int { return 1 }
 
 func TestSimple(t *testing.T) {
 	var x int
 	require.NoError(t,
 		depinject.Inject(
-			depinject.Provide(
-				func() int { return 1 },
-			),
+			depinject.Provide(Provide1),
 			&x,
 		),
 	)
 
 	require.Error(t,
 		depinject.Inject(
-			depinject.Provide(
-				func() int { return 0 },
-				func() int { return 1 },
-			),
+			depinject.Provide(Provide0, Provide1),
 			&x,
 		),
 	)
 }
+
+func ProvideModuleScoped0(depinject.ModuleKey) int { return 0 }
+func ProvideModuleScoped1(depinject.ModuleKey) int { return 1 }
+func ProvideFloat64FromInt(x int) float64          { return float64(x) }
+func ProvideFloat32FromInt(x int) float32          { return float32(x) }
 
 func TestModuleScoped(t *testing.T) {
 	var x int
 	require.Error(t,
 		depinject.Inject(
 			depinject.Provide(
-				func(depinject.ModuleKey) int { return 0 },
+				ProvideModuleScoped0,
 			),
 			&x,
 		),
@@ -384,12 +349,10 @@ func TestModuleScoped(t *testing.T) {
 		depinject.Inject(
 			depinject.Configs(
 				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-					func() int { return 1 },
+					ProvideModuleScoped0,
+					Provide1,
 				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -399,12 +362,10 @@ func TestModuleScoped(t *testing.T) {
 		depinject.Inject(
 			depinject.Configs(
 				depinject.Provide(
-					func() int { return 0 },
-					func(depinject.ModuleKey) int { return 1 },
+					Provide0,
+					ProvideModuleScoped0,
 				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -414,12 +375,10 @@ func TestModuleScoped(t *testing.T) {
 		depinject.Inject(
 			depinject.Configs(
 				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-					func(depinject.ModuleKey) int { return 1 },
+					ProvideModuleScoped0,
+					ProvideModuleScoped1,
 				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -428,12 +387,8 @@ func TestModuleScoped(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-				),
-				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.Provide(ProvideModuleScoped0),
+				depinject.ProvideInModule("a", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -442,12 +397,8 @@ func TestModuleScoped(t *testing.T) {
 	require.Error(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-				),
-				depinject.ProvideInModule("",
-					func(x int) float64 { return float64(x) },
-				),
+				depinject.Provide(ProvideModuleScoped0),
+				depinject.ProvideInModule("", ProvideFloat64FromInt),
 			),
 			&y,
 		),
@@ -457,12 +408,10 @@ func TestModuleScoped(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.Provide(
-					func(depinject.ModuleKey) int { return 0 },
-				),
+				depinject.Provide(ProvideModuleScoped0),
 				depinject.ProvideInModule("a",
-					func(x int) float64 { return float64(x) },
-					func(x int) float32 { return float32(x) },
+					ProvideFloat64FromInt,
+					ProvideFloat32FromInt,
 				),
 			),
 			&y, &z,
@@ -474,6 +423,18 @@ func TestModuleScoped(t *testing.T) {
 type OnePerModuleInt int
 
 func (OnePerModuleInt) IsOnePerModuleType() {}
+
+func OnePerModuleInt3() OnePerModuleInt { return 3 }
+func OnePerModuleInt4() OnePerModuleInt { return 4 }
+func CollectOnePerModuleInts(x map[string]OnePerModuleInt) string {
+	sum := 0
+	for _, v := range x {
+		sum += int(v)
+	}
+	return fmt.Sprintf("%d", sum)
+}
+
+func ReturnOnePerModuleMap() map[string]OnePerModuleInt { return nil }
 
 func TestOnePerModule(t *testing.T) {
 	var x OnePerModuleInt
@@ -487,19 +448,9 @@ func TestOnePerModule(t *testing.T) {
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Configs(
-				depinject.ProvideInModule("a",
-					func() OnePerModuleInt { return 3 },
-				),
-				depinject.ProvideInModule("b",
-					func() OnePerModuleInt { return 4 },
-				),
-				depinject.Provide(func(x map[string]OnePerModuleInt) string {
-					sum := 0
-					for _, v := range x {
-						sum += int(v)
-					}
-					return fmt.Sprintf("%d", sum)
-				}),
+				depinject.ProvideInModule("a", OnePerModuleInt3),
+				depinject.ProvideInModule("b", OnePerModuleInt4),
+				depinject.Provide(CollectOnePerModuleInts),
 			),
 			&y,
 			&z,
@@ -516,8 +467,8 @@ func TestOnePerModule(t *testing.T) {
 	require.Error(t,
 		depinject.Inject(
 			depinject.ProvideInModule("a",
-				func() OnePerModuleInt { return 0 },
-				func() OnePerModuleInt { return 0 },
+				OnePerModuleInt3,
+				OnePerModuleInt3,
 			),
 			&m,
 		),
@@ -527,7 +478,7 @@ func TestOnePerModule(t *testing.T) {
 	require.Error(t,
 		depinject.Inject(
 			depinject.Provide(
-				func() OnePerModuleInt { return 0 },
+				OnePerModuleInt3,
 			),
 			&m,
 		),
@@ -536,19 +487,14 @@ func TestOnePerModule(t *testing.T) {
 
 	require.Error(t,
 		depinject.Inject(
-			depinject.Provide(
-				func() map[string]OnePerModuleInt { return nil },
-			),
+			depinject.Provide(ReturnOnePerModuleMap),
 			&m,
 		),
 		"bad return type",
 	)
 
 	require.NoError(t,
-		depinject.Inject(
-			depinject.Configs(),
-			&m,
-		),
+		depinject.Inject(depinject.Configs(), &m),
 		"no providers",
 	)
 }
@@ -557,21 +503,24 @@ type ManyPerContainerInt int
 
 func (ManyPerContainerInt) IsManyPerContainerType() {}
 
+func ManyPerContainerInt4() ManyPerContainerInt { return 4 }
+func ManyPerContainerInt9() ManyPerContainerInt { return 9 }
+func CollectManyPerContainerInts(xs []ManyPerContainerInt) string {
+	sum := 0
+	for _, x := range xs {
+		sum += int(x)
+	}
+	return fmt.Sprintf("%d", sum)
+}
+
 func TestManyPerContainer(t *testing.T) {
 	var xs []ManyPerContainerInt
 	var sum string
 	require.NoError(t,
 		depinject.Inject(
 			depinject.Provide(
-				func() ManyPerContainerInt { return 4 },
-				func() ManyPerContainerInt { return 9 },
-				func(xs []ManyPerContainerInt) string {
-					sum := 0
-					for _, x := range xs {
-						sum += int(x)
-					}
-					return fmt.Sprintf("%d", sum)
-				},
+				ManyPerContainerInt4, ManyPerContainerInt9,
+				CollectManyPerContainerInts,
 			),
 			&xs,
 			&sum,
@@ -584,12 +533,7 @@ func TestManyPerContainer(t *testing.T) {
 
 	var z ManyPerContainerInt
 	require.Error(t,
-		depinject.Inject(
-			depinject.Provide(
-				func() ManyPerContainerInt { return 0 },
-			),
-			&z,
-		),
+		depinject.Inject(depinject.Provide(ManyPerContainerInt4), &z),
 		"bad input type",
 	)
 
@@ -657,6 +601,14 @@ type TestOutput struct {
 	Y int64
 }
 
+func ProvideTestOutput() (TestOutput, error) {
+	return TestOutput{X: "A", Y: -10}, nil
+}
+
+func ProvideTestOutputErr() (TestOutput, error) {
+	return TestOutput{}, fmt.Errorf("error")
+}
+
 func TestStructArgs(t *testing.T) {
 	var input TestInput
 	require.Error(t, depinject.Inject(depinject.Configs(), &input))
@@ -678,18 +630,14 @@ func TestStructArgs(t *testing.T) {
 	var x string
 	var y int64
 	require.NoError(t, depinject.Inject(
-		depinject.Provide(func() (TestOutput, error) {
-			return TestOutput{X: "A", Y: -10}, nil
-		}),
+		depinject.Provide(ProvideTestOutput),
 		&x, &y,
 	))
 	require.Equal(t, "A", x)
 	require.Equal(t, int64(-10), y)
 
 	require.Error(t, depinject.Inject(
-		depinject.Provide(func() (TestOutput, error) {
-			return TestOutput{}, fmt.Errorf("error")
-		}),
+		depinject.Provide(ProvideTestOutputErr),
 		&x,
 	))
 }
@@ -703,11 +651,21 @@ func TestDebugOptions(t *testing.T) {
 	stdout := os.Stdout
 	os.Stdout = outfile
 	defer func() { os.Stdout = stdout }()
-	defer os.Remove(outfile.Name())
+	defer func() {
+		err := os.Remove(outfile.Name())
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	graphfile, err := os.CreateTemp("", "graph")
 	require.NoError(t, err)
-	defer os.Remove(graphfile.Name())
+	defer func() {
+		err := os.Remove(graphfile.Name())
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	require.NoError(t, depinject.InjectDebug(
 		depinject.DebugOptions(
@@ -748,8 +706,8 @@ func TestGraphAndLogOutput(t *testing.T) {
 
 	badConfig := depinject.Configs(
 		depinject.ProvideInModule("runtime", ProvideKVStoreKey),
-		depinject.ProvideInModule("a", wrapMethod0(ModuleA{})),
-		depinject.ProvideInModule("b", wrapMethod0(ModuleB{})),
+		depinject.ProvideInModule("a", ModuleA.Provide),
+		depinject.ProvideInModule("b", ModuleB.Provide),
 	)
 	require.Error(t, depinject.InjectDebug(debugOpts, badConfig, &b))
 	golden.Assert(t, graphOut, "example_error.dot")

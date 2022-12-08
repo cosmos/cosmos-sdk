@@ -1,0 +1,18 @@
+go 1.19
+
+use (
+	.
+	./api
+	./client/v2
+	./collections
+	./core
+	./depinject
+	./errors
+	./math
+	./orm
+	./tx
+	./simapp
+	./tests
+	./tools/rosetta
+	./tools/cosmovisor
+)

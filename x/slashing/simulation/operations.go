@@ -21,7 +21,8 @@ import (
 //
 //nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgUnjail = "op_weight_msg_unjail"
+	OpWeightMsgUnjail      = "op_weight_msg_unjail"
+	DefaultWeightMsgUnjail = 100
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -33,7 +34,7 @@ func WeightedOperations(
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
 		func(_ *rand.Rand) {
-			weightMsgUnjail = simtestutil.DefaultWeightMsgUnjail
+			weightMsgUnjail = DefaultWeightMsgUnjail
 		},
 	)
 

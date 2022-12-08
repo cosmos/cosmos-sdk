@@ -22,11 +22,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -35,7 +35,7 @@ import (
 func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
 
-	_, ctx, genDoc, cmd := setupApp(t, tempDir)
+	_, ctx, _, cmd := setupApp(t, tempDir)
 
 	output := &bytes.Buffer{}
 	cmd.SetOut(output)
@@ -50,7 +50,6 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 
 	require.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxBytes, exportedGenDoc.ConsensusParams.Block.MaxBytes)
 	require.Equal(t, simtestutil.DefaultConsensusParams.Block.MaxGas, exportedGenDoc.ConsensusParams.Block.MaxGas)
-	require.Equal(t, genDoc.ConsensusParams.Block.TimeIotaMs, exportedGenDoc.ConsensusParams.Block.TimeIotaMs)
 
 	require.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeDuration, exportedGenDoc.ConsensusParams.Evidence.MaxAgeDuration)
 	require.Equal(t, simtestutil.DefaultConsensusParams.Evidence.MaxAgeNumBlocks, exportedGenDoc.ConsensusParams.Evidence.MaxAgeNumBlocks)
@@ -123,6 +122,47 @@ func TestExportCmd_Height(t *testing.T) {
 	}
 }
 
+func TestExportCmd_Output(t *testing.T) {
+	testCases := []struct {
+		name           string
+		flags          []string
+		outputDocument string
+	}{
+		{
+			"should export state to the specified file",
+			[]string{
+				fmt.Sprintf("--%s=%s", server.FlagOutputDocument, "foobar.json"),
+			},
+			"foobar.json",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			_, ctx, _, cmd := setupApp(t, tempDir)
+
+			output := &bytes.Buffer{}
+			cmd.SetOut(output)
+			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.ExecuteContext(ctx))
+
+			var exportedGenDoc tmtypes.GenesisDoc
+			f, err := os.ReadFile(tc.outputDocument)
+			if err != nil {
+				t.Fatalf("error reading exported genesis doc: %s", err)
+			}
+			require.NoError(t, tmjson.Unmarshal(f, &exportedGenDoc))
+
+			// Cleanup
+			if err = os.Remove(tc.outputDocument); err != nil {
+				t.Fatalf("error removing exported genesis doc: %s", err)
+			}
+		})
+	}
+}
+
 func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *tmtypes.GenesisDoc, *cobra.Command) {
 	t.Helper()
 
@@ -158,7 +198,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 	app.Commit()
 
 	cmd := server.ExportCmd(
-		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions) (types.ExportedApp, error) {
+		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
 			var simApp *simapp.SimApp
 			if height != -1 {
 				simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
@@ -170,7 +210,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *t
 				simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
 			}
 
-			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 		}, tempDir)
 
 	ctx := context.Background()

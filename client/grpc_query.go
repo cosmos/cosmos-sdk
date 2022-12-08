@@ -7,12 +7,12 @@ import (
 	"reflect"
 	"strconv"
 
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

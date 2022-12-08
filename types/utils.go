@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	dbm "github.com/tendermint/tm-db"
-)
+	log "github.com/tendermint/tendermint/libs/log"
 
-// This is set at compile time. Could be cleveldb, defaults is goleveldb.
-var backend = dbm.GoLevelDBBackend
+	"github.com/cosmos/cosmos-sdk/types/kv"
+)
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces
 // are removed.
@@ -101,19 +99,6 @@ func ParseTime(T any) (time.Time, error) { //nolint:gocritic
 	return result.UTC().Round(0), nil
 }
 
-// NewLevelDB instantiate a new LevelDB instance according to DBBackend.
-//
-// Deprecated: Use NewDB (from "github.com/tendermint/tm-db") instead. Suggested backendType is tendermint config's DBBackend value.
-func NewLevelDB(name, dir string) (db dbm.DB, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("couldn't create db: %v", r)
-		}
-	}()
-
-	return dbm.NewDB(name, backend, dir)
-}
-
 // copy bytes
 func CopyBytes(bz []byte) (ret []byte) {
 	if bz == nil {
@@ -149,4 +134,23 @@ func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]by
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
+}
+
+// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
+func LogDeferred(logger log.Logger, f func() error) {
+	if err := f(); err != nil {
+		logger.Error(err.Error())
+	}
+}
+
+// SliceContains implements a generic function for checking if a slice contains
+// a certain value.
+func SliceContains[T comparable](elements []T, v T) bool {
+	for _, s := range elements {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
 }

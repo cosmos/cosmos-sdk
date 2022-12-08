@@ -20,5 +20,4 @@ const (
 	AttributeKeyCreationHeight    = "creation_height"
 	AttributeKeyCompletionTime    = "completion_time"
 	AttributeKeyNewShares         = "new_shares"
-	AttributeValueCategory        = ModuleName
 )

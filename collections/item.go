@@ -7,8 +7,8 @@ import (
 )
 
 // NewItem instantiates a new Item instance, given the value encoder of the item V.
-func NewItem[V any](sk storetypes.StoreKey, prefix Prefix, valueEncoder ValueCodec[V]) Item[V] {
-	return (Item[V])(NewMap[noKey, V](sk, prefix, noKey{}, valueEncoder))
+func NewItem[V any](sk storetypes.StoreKey, prefix Prefix, valueCodec ValueCodec[V]) Item[V] {
+	return (Item[V])(NewMap[noKey, V](sk, prefix, noKey{}, valueCodec))
 }
 
 // Item is a type declaration based on Map

@@ -10,11 +10,11 @@ import (
 // NewMap returns a Map given a StoreKey, a Prefix and the relative value and key encoders.
 func NewMap[K, V any](
 	sk storetypes.StoreKey, prefix Prefix,
-	keyEncoder KeyCodec[K], valueEncoder ValueCodec[V],
+	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
 ) Map[K, V] {
 	return Map[K, V]{
-		kc:     keyEncoder,
-		vc:     valueEncoder,
+		kc:     keyCodec,
+		vc:     valueCodec,
 		sk:     sk,
 		prefix: prefix.Bytes(),
 	}

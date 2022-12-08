@@ -86,8 +86,7 @@ func NewGasCountingMockContext() *GasCountingMockContext {
 }
 
 func (g GasCountingMockContext) KVStore(store sdk.KVStore) sdk.KVStore {
-	gasConfig := storetypes.KVGasConfig()
-	return gaskv.NewStore(store, g.GasMeter, gasConfig)
+	return gaskv.NewStore(store, g.GasMeter, storetypes.KVGasConfig())
 }
 
 func (g GasCountingMockContext) GasConsumed() storetypes.Gas {

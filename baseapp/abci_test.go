@@ -626,8 +626,8 @@ func TestABCI_CheckTx(t *testing.T) {
 	suite.baseApp.EndBlock(abci.RequestEndBlock{})
 	suite.baseApp.Commit()
 
-	stateCtx := getCheckStateCtx(suite.baseApp)
-	checkStateStore = stateCtx.KVStore(capKey1)
+	ctx = getCheckStateCtx(suite.baseApp)
+	checkStateStore = ctx.KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }

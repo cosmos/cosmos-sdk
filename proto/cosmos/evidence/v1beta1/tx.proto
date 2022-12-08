@@ -29,8 +29,8 @@ message MsgSubmitEvidence {
   option (gogoproto.goproto_getters) = false;
 
   // submitter is the signer account address of evidence.
-  string              submitter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  
+  string submitter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // evidence defines the evidence of misbehavior.
   google.protobuf.Any evidence = 2 [(cosmos_proto.accepts_interface) = "cosmos.evidence.v1beta1.Evidence"];
 }

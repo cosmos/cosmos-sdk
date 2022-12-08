@@ -1,0 +1,6 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/cosmos/cosmos-sdk/types
+BenchmarkCoinsAdditionIntersect/sizes:_A_1,_B_1-10         	 4446832	       268.2 ns/op	     168 B/op	       5 allocs/op
+BenchmarkCoinsAdditionIntersect/sizes:_A_5,_B_5-10         	signal: interrupt
+FAIL	github.com/cosmos/cosmos-sdk/types	2.523s

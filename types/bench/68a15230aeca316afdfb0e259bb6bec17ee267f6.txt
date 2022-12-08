@@ -1,0 +1,25 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/cosmos/cosmos-sdk/types/bench
+BenchmarkContext_KVStore-10    	20739073	        55.09 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21798430	        55.67 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21430644	        56.01 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	20910932	        55.51 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21865904	        55.88 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21379560	        55.18 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21551514	        55.77 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	22033441	        57.24 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21947973	        55.43 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21619381	        55.99 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21761781	        56.12 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21252352	        55.77 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21788139	        56.13 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21688494	        55.10 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21115298	        55.83 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	22044352	        55.51 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21388404	        55.64 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	22072600	        55.77 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21504380	        56.32 ns/op	      96 B/op	       1 allocs/op
+BenchmarkContext_KVStore-10    	21514404	        55.44 ns/op	      96 B/op	       1 allocs/op
+PASS
+ok  	github.com/cosmos/cosmos-sdk/types/bench	25.427s

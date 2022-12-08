@@ -55,6 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#13210](https://github.com/cosmos/cosmos-sdk/pull/13210) Add `Query/AccountInfo` endpoint for simplified access to basic account info.
 * (x/consensus) [#12905](https://github.com/cosmos/cosmos-sdk/pull/12905) Create a new `x/consensus` module that is now responsible for maintaining Tendermint consensus parameters instead of `x/param`. Legacy types remain in order to facilitate parameter migration from the deprecated `x/params`. App developers should ensure that they execute `baseapp.MigrateParams` during their chain upgrade. These legacy types will be removed in a future release.
 * (client/tx) [#13670](https://github.com/cosmos/cosmos-sdk/pull/13670) Add validation in `BuildUnsignedTx` to prevent simple inclusion of valid mnemonics
+* (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) Allow injection of restrictions on transfers using `AppendSendRestriction` or `PrependSendRestriction`.
 
 ### Improvements
 
@@ -196,6 +197,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
   * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
   * Add three new options to file streaming service constructor.
   * Modify `ABCIListener` such that any error from any method will always halt the app via `panic`
+* (x/bank) [#14224](https://github.com/cosmos/cosmos-sdk/pull/14224) `InputOutputCoins` now only allows for a single `Input`.
 
 ### CLI Breaking Changes
 

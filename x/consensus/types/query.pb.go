@@ -29,7 +29,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryParamsRequest defines the request type for querying x/consensus_param parameters.
+// QueryParamsRequest defines the request type for querying x/consensus parameters.
 type QueryParamsRequest struct {
 }
 
@@ -66,8 +66,11 @@ func (m *QueryParamsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsRequest proto.InternalMessageInfo
 
-// QueryParamsResponse defines the response type for querying x/consensus_param parameters.
+// QueryParamsResponse defines the response type for querying x/consensus parameters.
 type QueryParamsResponse struct {
+	// params are the tendermint consensus params stored in the consensus module.
+	// Please note that `params.version` is not populated in this response, it is
+	// tracked separately in the x/upgrade module.
 	Params *types.ConsensusParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 }
 

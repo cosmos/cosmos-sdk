@@ -27,31 +27,31 @@ message A {
   google.protobuf.Any               ANY       = 13;
 
   // Fields that are not handled by SIGN_MODE_TEXTUAL.
-  sint32 SINT32 = 101;
-  sint64 SINT64 = 102;
-  sfixed32 SFIXED32 = 105;
-  fixed32 FIXED32 = 106;
-  float FLOAT = 107;
-  sfixed64 SFIXED64 = 108;
-  fixed64 FIXED64 = 109;
-  double DOUBLE = 110;
-  map<string, A> MAP = 111;
+  sint32         SINT32   = 101;
+  sint64         SINT64   = 102;
+  sfixed32       SFIXED32 = 105;
+  fixed32        FIXED32  = 106;
+  float          FLOAT    = 107;
+  sfixed64       SFIXED64 = 108;
+  fixed64        FIXED64  = 109;
+  double         DOUBLE   = 110;
+  map<string, A> MAP      = 111;
 }
 
 // Foo is a sample message type used for testing message rendering.
 message Foo {
-  string full_name = 1;
-  string nickname = 2;
-  google.protobuf.Timestamp mtime = 3;
-  Foo left = 4;
-  Foo right = 5;
-  Bar bar = 8; // skip some field numbers
+  string                    full_name = 1;
+  string                    nickname  = 2;
+  google.protobuf.Timestamp mtime     = 3;
+  Foo                       left      = 4;
+  Foo                       right     = 5;
+  Bar                       bar       = 8; // skip some field numbers
 }
 
 // Bar is a sample message type used for testing message rendering.
 message Bar {
-  string bar_id = 1;
-  bytes data = 2;
+  string              bar_id  = 1;
+  bytes               data    = 2;
   google.protobuf.Any payload = 3;
 }
 
@@ -74,19 +74,19 @@ message Baz {
 }
 
 enum BallotOption {
-  BALLOT_OPTION_UNSPECIFIED = 0;
-  BALLOT_OPTION_YES = 1;
-  BALLOT_OPTION_ABSTAIN = 2;
-  BALLOT_OPTION_NO = 3;
+  BALLOT_OPTION_UNSPECIFIED  = 0;
+  BALLOT_OPTION_YES          = 1;
+  BALLOT_OPTION_ABSTAIN      = 2;
+  BALLOT_OPTION_NO           = 3;
   BALLOT_OPTION_NO_WITH_VETO = 4;
 }
 
 // Qux is a sample message type used for testing repeated rendering.
 message Qux {
-  repeated Foo messages = 1;
-  repeated string string_messages = 2;
-  Ballot vote = 3;
-  repeated cosmos.base.v1beta1.Coin price = 4;
+  repeated Foo    messages                       = 1;
+  repeated string string_messages                = 2;
+  Ballot          vote                           = 3;
+  repeated cosmos.base.v1beta1.Coin price        = 4;
   repeated google.protobuf.Timestamp expirations = 5;
 }
 

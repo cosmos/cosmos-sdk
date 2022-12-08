@@ -199,7 +199,7 @@ type Iterator[K, V any] struct {
 
 	iter storetypes.Iterator
 
-	prefixLength int
+	prefixLength int // prefixLength refers to the bytes provided by Prefix.Bytes, not Ranger.RangeValues() prefix.
 }
 
 // Value returns the current iterator value bytes decoded.

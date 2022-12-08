@@ -146,6 +146,13 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(types.AttributeKeySender, in.Address),
+			),
+		)
 	}
 
 	for _, out := range outputs {
@@ -211,6 +218,10 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		),
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 		),
 	})
 
@@ -413,10 +424,10 @@ func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, value bool
 }
 
 // SetAllSendEnabled sets all the provided SendEnabled entries in the bank store.
-func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled) {
+func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, entries []*types.SendEnabled) {
 	store := ctx.KVStore(k.storeKey)
-	for _, se := range sendEnableds {
-		k.setSendEnabledEntry(store, se.Denom, se.Enabled)
+	for _, entry := range entries {
+		k.setSendEnabledEntry(store, entry.Denom, entry.Enabled)
 	}
 }
 
@@ -462,7 +473,7 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom
 }
 
 // GetAllSendEnabledEntries gets all the SendEnabled entries that are stored.
-// Any denoms not returned use the default value (set in Params).
+// Any denominations not returned use the default value (set in Params).
 func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled {
 	var rv []types.SendEnabled
 	k.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) bool {
@@ -490,7 +501,7 @@ func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, b
 	}
 
 	bz := store.Get(key)
-	if len(bz) == 0 {
+	if bz == nil {
 		return false, false
 	}
 

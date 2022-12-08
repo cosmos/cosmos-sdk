@@ -400,7 +400,6 @@ func (s *IntegrationTestSuite) TestGetParamsGRPC() {
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)
-			fmt.Println(resp, tc.respType)
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType)
 
 			if tc.expErr {

@@ -140,6 +140,9 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 //
 //nolint:stdmethods
 func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
+	if o == nil {
+		return nil, fmt.Errorf("cannot protobuf JSON encode nil")
+	}
 	return ProtoMarshalJSON(o, pc.interfaceRegistry)
 }
 
@@ -161,6 +164,9 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
+	if ptr == nil {
+		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
+	}
 	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
 	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
 	if err != nil {

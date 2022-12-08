@@ -392,14 +392,12 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 	suite.Require().Nil(suite.accountKeeper.GetAccount(ctx, addr2))
 	suite.Require().Empty(suite.bankKeeper.GetAllBalances(ctx, addr2))
 
-	inputs := []types.Input{
-		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
-	}
+	input := types.Input{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	suite.Require().NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	suite.Require().NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
 	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, addr2)
@@ -423,9 +421,7 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	acc3 := suite.accountKeeper.NewAccountWithAddress(ctx, addr3)
 	suite.accountKeeper.SetAccount(ctx, acc3)
 
-	input := []types.Input{
-		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
-	}
+	input := types.Input{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))}
 	outputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -436,11 +432,9 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 
 	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, balances))
 
-	insufficientInput := []types.Input{
-		{
-			Address: addr1.String(),
-			Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
-		},
+	insufficientInput := types.Input{
+		Address: addr1.String(),
+		Coins:   sdk.NewCoins(newFooCoin(300), newBarCoin(100)),
 	}
 	insufficientOutputs := []types.Output{
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
@@ -664,11 +658,9 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 	newCoins2 := sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
-	input := []types.Input{
-		{
-			Address: addr.String(),
-			Coins:   coins,
-		},
+	input := types.Input{
+		Address: addr.String(),
+		Coins:   coins,
 	}
 	outputs := []types.Output{
 		{Address: addr3.String(), Coins: newCoins},

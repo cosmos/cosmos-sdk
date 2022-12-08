@@ -82,7 +82,7 @@ func (k msgServer) MultiSend(goCtx context.Context, msg *types.MsgMultiSend) (*t
 		}
 	}
 
-	err := k.InputOutputCoins(ctx, msg.Inputs, msg.Outputs)
+	err := k.InputOutputCoins(ctx, msg.Inputs[0], msg.Outputs)
 	if err != nil {
 		return nil, err
 	}

@@ -92,7 +92,7 @@ func (msg MsgMultiSend) ValidateBasic() error {
 		return ErrNoOutputs
 	}
 
-	return ValidateInputsOutputs(msg.Inputs, msg.Outputs)
+	return ValidateInputOutputs(msg.Inputs[0], msg.Outputs)
 }
 
 // GetSignBytes Implements Msg.
@@ -165,17 +165,15 @@ func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	}
 }
 
-// ValidateInputsOutputs validates that each respective input and output is
+// ValidateInputOutputs validates that each respective input and output is
 // valid and that the sum of inputs is equal to the sum of outputs.
-func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
+func ValidateInputOutputs(input Input, outputs []Output) error {
 	var totalIn, totalOut sdk.Coins
 
-	for _, in := range inputs {
-		if err := in.ValidateBasic(); err != nil {
-			return err
-		}
-		totalIn = totalIn.Add(in.Coins...)
+	if err := input.ValidateBasic(); err != nil {
+		return err
 	}
+	totalIn = input.Coins
 
 	for _, out := range outputs {
 		if err := out.ValidateBasic(); err != nil {

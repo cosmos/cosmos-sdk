@@ -619,38 +619,96 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 	suite.Require().NoError(banktestutil.FundAccount(suite.bankKeeper, setupCtx, accAddrs[0], balances))
 
 	tests := []struct {
-		name    string
-		fn      keeper.SendRestrictionFn
-		toAddr  sdk.AccAddress
-		amt     sdk.Coins
-		expArgs *restrictionArgs
-		expErr  string
-		expBals []*expBal
+		name      string
+		fn        keeper.SendRestrictionFn
+		toAddr    sdk.AccAddress
+		finalAddr sdk.AccAddress
+		amt       sdk.Coins
+		expArgs   *restrictionArgs
+		expErr    string
+		expBals   []*expBal
 	}{
 		{
-			name:    "nil restriction",
-			fn:      nil,
-			toAddr:  toAddr1,
-			amt:     sdk.NewCoins(newFooCoin(5)),
-			expArgs: nil,
+			name:      "nil restriction",
+			fn:        nil,
+			toAddr:    toAddr1,
+			finalAddr: toAddr1,
+			amt:       sdk.NewCoins(newFooCoin(5)),
+			expArgs:   nil,
 			expBals: []*expBal{
 				{addr: fromAddr, amt: sdk.NewCoins(newFooCoin(995), newBarCoin(500))},
 				{addr: toAddr1, amt: sdk.NewCoins(newFooCoin(5))},
 				{addr: toAddr2, amt: sdk.Coins{}},
 			},
 		},
-		// TODO[14124]: Add more test cases.
+		{
+			name:      "passthrough restriction",
+			fn:        restrictionPassthrough(),
+			toAddr:    toAddr1,
+			finalAddr: toAddr1,
+			amt:       sdk.NewCoins(newFooCoin(10)),
+			expArgs: &restrictionArgs{
+				ctx:      suite.ctx,
+				fromAddr: fromAddr,
+				toAddr:   toAddr1,
+				amt:      sdk.NewCoins(newFooCoin(10)),
+			},
+			expBals: []*expBal{
+				{addr: fromAddr, amt: sdk.NewCoins(newFooCoin(985), newBarCoin(500))},
+				{addr: toAddr1, amt: sdk.NewCoins(newFooCoin(15))},
+				{addr: toAddr2, amt: sdk.Coins{}},
+			},
+		},
+		{
+			name:      "new to addr restriction",
+			fn:        restrictionNewTo(toAddr2),
+			toAddr:    toAddr1,
+			finalAddr: toAddr2,
+			amt:       sdk.NewCoins(newBarCoin(27)),
+			expArgs: &restrictionArgs{
+				ctx:      suite.ctx,
+				fromAddr: fromAddr,
+				toAddr:   toAddr1,
+				amt:      sdk.NewCoins(newBarCoin(27)),
+			},
+			expBals: []*expBal{
+				{addr: fromAddr, amt: sdk.NewCoins(newFooCoin(985), newBarCoin(473))},
+				{addr: toAddr1, amt: sdk.NewCoins(newFooCoin(15))},
+				{addr: toAddr2, amt: sdk.NewCoins(newBarCoin(27))},
+			},
+		},
+		{
+			name:      "restriction returns error",
+			fn:        restrictionError("test restriction error"),
+			toAddr:    toAddr1,
+			finalAddr: toAddr1,
+			amt:       sdk.NewCoins(newFooCoin(100), newBarCoin(200)),
+			expArgs: &restrictionArgs{
+				ctx:      suite.ctx,
+				fromAddr: fromAddr,
+				toAddr:   toAddr1,
+				amt:      sdk.NewCoins(newFooCoin(100), newBarCoin(200)),
+			},
+			expErr: "test restriction error",
+			expBals: []*expBal{
+				{addr: fromAddr, amt: sdk.NewCoins(newFooCoin(985), newBarCoin(473))},
+				{addr: toAddr1, amt: sdk.NewCoins(newFooCoin(15))},
+				{addr: toAddr2, amt: sdk.NewCoins(newBarCoin(27))},
+			},
+		},
 	}
-
-	_ = restrictionError
-	_ = restrictionPassthrough
-	_ = restrictionNewTo
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
-			// TODO[14124]: provide tc.fn to the bank keeper.
+			existingSendRestrictionFn := suite.bankKeeper.GetSendRestrictionFn()
+			defer suite.bankKeeper.SetSendRestriction(existingSendRestrictionFn)
+			actualRestrictionArgs = nil
+			suite.bankKeeper.SetSendRestriction(tc.fn)
 			ctx := suite.ctx
-			suite.mockSendCoins(ctx, fromAcc, tc.toAddr)
+			if len(tc.expErr) == 0 {
+				suite.mockSendCoins(ctx, fromAcc, tc.finalAddr)
+			}
+
 			var err error
 			testFunc := func() {
 				err = suite.bankKeeper.SendCoins(ctx, fromAddr, tc.toAddr, tc.amt)
@@ -666,6 +724,8 @@ func (suite *KeeperTestSuite) TestSendCoinsWithRestrictions() {
 				suite.Assert().Equal(tc.expArgs.fromAddr, actualRestrictionArgs.fromAddr, "fromAddr provided to restriction")
 				suite.Assert().Equal(tc.expArgs.toAddr, actualRestrictionArgs.toAddr, "toAddr provided to restriction")
 				suite.Assert().Equal(tc.expArgs.amt, actualRestrictionArgs.amt, "amt provided to restriction")
+			} else {
+				suite.Assert().Nil(actualRestrictionArgs, "args provided to a restriction")
 			}
 			for i, bal := range tc.expBals {
 				actual := suite.bankKeeper.GetAllBalances(ctx, bal.addr)

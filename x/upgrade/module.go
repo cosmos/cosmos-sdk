@@ -205,10 +205,7 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 }
 
 func InvokeKeeperOptions(upgradeKeeper keeper.Keeper, modules map[string]appmodule.AppModule, baseApp *baseapp.BaseApp) {
-	fmt.Println(modules)
-	fmt.Println(upgradeKeeper)
-
-	if baseApp == nil {
+	if len(modules) == 0 || baseApp == nil {
 		return
 	}
 

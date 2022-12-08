@@ -114,7 +114,7 @@ func (pc *TestCodec) MarshalLengthPrefixed(o proto.Message) ([]byte, error) {
 	}
 
 	var sizeBuf [binary.MaxVarintLen64]byte
-	n := binary.PutUvarint(sizeBuf[:], uint64(proto.Size(o)))
+	n := binary.PutUvarint(sizeBuf[:], uint64(len(bz)))
 	return append(sizeBuf[:n], bz...), nil
 }
 

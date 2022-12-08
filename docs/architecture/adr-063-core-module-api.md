@@ -1,8 +1,9 @@
-# ADR 061: Core Module API
+# ADR 063: Core Module API
 
 ## Changelog
 
 * 2022-08-18 First Draft
+* 2022-12-08 First Draft
 
 ## Status
 
@@ -10,8 +11,8 @@ PROPOSED Not Implemented
 
 ## Abstract
 
-A new core API is proposed to be added as a way to develop cosmos-sdk applications that will in the future replace the existing `AppModule` and `sdk.Context` frameworks a set of core services
-and a new `Handler` struct. This core API aims to:
+A new core API is proposed as a way to develop cosmos-sdk applications that will eventually replace the existing
+`AppModule` and `sdk.Context` frameworks a set of core services and extension interfaces. This core API aims to:
 - be simpler,
 - more extensible,
 - more stable than the current framework,
@@ -58,7 +59,7 @@ The design principles of the core API are as follows:
 * all independent services are isolated in independent packages with minimal APIs and minimal dependencies
 * the core API should be minimalistic and designed for long-term support (LTS)
 * a "runtime" module will implement all the "core services" defined by the core API and can handle all module
-  functionalities exposed by the core `Handler` type
+  functionalities exposed by core extension interfaces
 * other non-core and/or non-LTS services can be exposed by specific versions of runtime modules or other modules 
 following the same design principles, this includes functionality that interacts with specific non-stable versions of
 third party dependencies such as Tendermint
@@ -274,40 +275,23 @@ type Service interface {
 }
 ```
 
-### Core `Handler` Struct
+### Core `AppModule` extension interfaces
 
 
-Modules will provide their core services to runtime module via the `Handler` struct, defined in the `cosmossdk.io/core/appmodule`
-package, instead of the existing
-`AppModule` interface:
+Modules will provide their core services to the runtime module via extension interfaces built on top of the
+`cosmossdk.io/core/appmodule.AppModule` tag interface. This tag interface requires only two empty methods which
+allow `depinject` to identify implementors as `depinject.OnePerModule` types and as app module implementations:
 ```go
-package appmodule
+type AppModule interface {
+  depinject.OnePerModuleType
 
-type Handler struct {
-    // Services are the Msg and Query services for the module. Msg services
-    // must be annotated with the option cosmos.msg.v1.service = true.
-    Services []ServiceImpl
-    
-    DefaultGenesis func(GenesisTarget)
-    ValidateGenesis func(GenesisSource) error
-    InitGenesis func(context.Context, GenesisSource) error
-    ExportGenesis func(context.Context, GenesisTarget)
-
-    BeginBlocker func(context.Context) error
-    EndBlocker func(context.Context) error
-    
-    EventListeners []EventListener
-    
-    UpgradeHandlers []UpgradeHandler
+  // IsAppModule is a dummy method to tag a struct as implementing an AppModule.
+  IsAppModule()
 }
 ```
 
-A struct as opposed to an interface has been chosen for the following reasons:
-* it is always possible to add new fields to a struct without breaking backwards compatibility
-* it is not necessary to populate all fields in a struct, whereas interface methods must always be implemented
-* compared to extension interfaces, struct fields are more explicit
-
-Helper methods will be added to the `Handler` struct to simplify construction of more complex fields.
+Other core extension interfaces will be defined in `cosmossdk.io/core` should be supported by valid runtime
+implementations.
 
 #### `MsgServer` and `QueryServer` registration
 

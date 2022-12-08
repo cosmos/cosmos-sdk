@@ -173,9 +173,19 @@ func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
 
+// LoadHeight loads a particular height
+func (a *App) LoadHeight(height int64) error {
+	return a.LoadVersion(height)
+}
+
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.basicManager.DefaultGenesis(a.cdc)
+}
+
+// GetStoreKeys returns all the keys stored store keys.
+func (a *App) GetStoreKeys() []storetypes.StoreKey {
+	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

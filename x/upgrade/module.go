@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,9 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
-
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -156,6 +154,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeKeeperOptions),
 	)
 }
 
@@ -203,4 +202,23 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
 	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
+}
+
+func InvokeKeeperOptions(upgradeKeeper keeper.Keeper, modules map[string]appmodule.AppModule, baseApp *baseapp.BaseApp) {
+	fmt.Println(modules)
+	fmt.Println(upgradeKeeper)
+
+	if baseApp == nil {
+		return
+	}
+
+	upgradeKeeper.SetVersionSetter(baseApp)
+
+	ctxWithStore := sdk.Context{}
+	ctxWithStore = ctxWithStore.
+		WithMultiStore(baseApp.CommitMultiStore()).
+		WithGasMeter(store.NewInfiniteGasMeter()).
+		WithKVGasConfig(store.KVGasConfig())
+
+	upgradeKeeper.SetModuleVersionMap(ctxWithStore, module.NewManagerFromMap(modules).GetVersionMap())
 }

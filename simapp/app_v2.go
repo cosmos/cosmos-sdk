@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -27,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -258,14 +256,6 @@ func NewSimApp(
 	}
 
 	/****  Module Options ****/
-
-	// Set upgrade module options
-
-	// TODO to be done in app config
-	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
-	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
-	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
-
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
@@ -288,10 +278,6 @@ func NewSimApp(
 	// initialize stores
 	app.MountKVStores(app.keys)
 
-	// initialize BaseApp
-	// TODO should not be needed after x/upgrade app config refactor
-	app.SetInitChainer(app.InitChainer)
-
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
 	}
@@ -301,13 +287,6 @@ func NewSimApp(
 
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
-
-// InitChainer application update at chain initialization
-func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	// TODO to set in app config
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
-	return app.App.InitChainer(ctx, req)
-}
 
 // LoadHeight loads a particular height
 func (app *SimApp) LoadHeight(height int64) error {

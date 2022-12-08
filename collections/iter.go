@@ -52,7 +52,7 @@ type Ranger[K any] interface {
 	// or greater equal depending on the bound is inclusive or exclusive.
 	// If end is not nil, then the Iterator will return only keys which are smaller than the provided end
 	// or smaller equal depending on the bound is inclusive or exclusive.
-	RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order)
+	RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order, err error)
 }
 
 // Range is a Ranger implementer.
@@ -98,8 +98,8 @@ func (r *Range[K]) Descending() *Range[K] {
 	return r
 }
 
-func (r *Range[K]) RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order) {
-	return r.prefix, r.start, r.end, r.order
+func (r *Range[K]) RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order, err error) {
+	return r.prefix, r.start, r.end, r.order, nil
 }
 
 // iteratorFromRanger generates an Iterator instance, with the proper prefixing and ranging.
@@ -114,7 +114,10 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	)
 	// override defaults only if a Ranger is provided.
 	if r != nil {
-		prefix, start, end, order = r.RangeValues()
+		prefix, start, end, order, err = r.RangeValues()
+		if err != nil {
+			return iter, err
+		}
 	}
 	var prefixBytes []byte
 	if prefix != nil {

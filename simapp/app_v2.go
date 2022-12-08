@@ -257,11 +257,10 @@ func NewSimApp(
 	/****  Module Options ****/
 
 	// Set upgrade module options
+	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 
-	// TODO to be done in app config
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
-	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
@@ -283,7 +282,6 @@ func NewSimApp(
 	app.sm.RegisterStoreDecoders()
 
 	// initialize BaseApp
-	// TODO should not be needed after x/upgrade app config refactor
 	app.SetInitChainer(app.InitChainer)
 
 	if err := app.Load(loadLatest); err != nil {
@@ -298,7 +296,6 @@ func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // InitChainer application update at chain initialization
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	// TODO to set in app config
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	return app.App.InitChainer(ctx, req)
 }

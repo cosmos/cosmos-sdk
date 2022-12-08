@@ -31,12 +31,11 @@ func TestGogoUnmarshalProposal(t *testing.T) {
 	var p group.Proposal
 	err = cdc.Unmarshal(p1Bz, &p)
 	require.NoError(t, err)
-	err = cdc.Unmarshal(p2Bz, &p)
+
+	var i group.Proposal
+	err = cdc.Unmarshal(p2Bz, &i)
 	require.NoError(t, err)
 
-	// One would expect that unmarshalling into the same `&p` reference would
-	// clear the previous `p` value. But it seems that (at least for array
-	// fields), the values are not replaced, but concatenated, which
-	// is not an intuitive behavior.
-	require.Len(t, p.Proposers, 2)
+	require.Len(t, p.Proposers, 1)
+	require.Len(t, i.Proposers, 1)
 }

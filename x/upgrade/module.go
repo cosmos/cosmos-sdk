@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -83,11 +84,11 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -154,7 +155,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeKeeperOptions),
 	)
 }
 
@@ -171,9 +171,10 @@ type UpgradeInputs struct {
 type UpgradeOutputs struct {
 	depinject.Out
 
-	UpgradeKeeper keeper.Keeper
+	UpgradeKeeper *keeper.Keeper
 	Module        appmodule.AppModule
 	GovHandler    govv1beta1.HandlerRoute
+	BaseAppOption runtime.BaseAppOption
 }
 
 func ProvideModule(in UpgradeInputs) UpgradeOutputs {
@@ -198,18 +199,19 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 
 	// set the governance module account as the authority for conducting upgrades
 	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	baseappOpt := func(app *baseapp.BaseApp) {
+		k.SetVersionSetter(app)
+	}
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
+	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
 }
 
 func InvokeKeeperOptions(upgradeKeeper keeper.Keeper, modules map[string]appmodule.AppModule, baseApp *baseapp.BaseApp) {
 	if len(modules) == 0 || baseApp == nil {
 		return
 	}
-
-	upgradeKeeper.SetVersionSetter(baseApp)
 
 	ctxWithStore := sdk.Context{}
 	ctxWithStore = ctxWithStore.

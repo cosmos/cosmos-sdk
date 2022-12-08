@@ -18,6 +18,9 @@ import (
 type SendKeeper interface {
 	ViewKeeper
 
+	AppendSendRestriction(restriction SendRestrictionFn)
+	PrependSendRestriction(restriction SendRestrictionFn)
+
 	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
@@ -59,7 +62,7 @@ type BaseSendKeeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	sendRestrictionFn SendRestrictionFn
+	sendRestriction *SendRestriction
 }
 
 func NewBaseSendKeeper(
@@ -74,14 +77,24 @@ func NewBaseSendKeeper(
 	}
 
 	return BaseSendKeeper{
-		BaseViewKeeper:    NewBaseViewKeeper(cdc, storeKey, ak),
-		cdc:               cdc,
-		ak:                ak,
-		storeKey:          storeKey,
-		blockedAddrs:      blockedAddrs,
-		authority:         authority,
-		sendRestrictionFn: nil,
+		BaseViewKeeper:  NewBaseViewKeeper(cdc, storeKey, ak),
+		cdc:             cdc,
+		ak:              ak,
+		storeKey:        storeKey,
+		blockedAddrs:    blockedAddrs,
+		authority:       authority,
+		sendRestriction: NewSendRestriction(),
 	}
+}
+
+// AppendSendRestriction adds the provided SendRestrictionFn to run after previously provided restrictions.
+func (k BaseSendKeeper) AppendSendRestriction(restriction SendRestrictionFn) {
+	k.sendRestriction.Append(restriction)
+}
+
+// PrependSendRestriction adds the provided SendRestrictionFn to run before previously provided restrictions.
+func (k BaseSendKeeper) PrependSendRestriction(restriction SendRestrictionFn) {
+	k.sendRestriction.Prepend(restriction)
 }
 
 // GetAuthority returns the x/bank module's authority.
@@ -153,8 +166,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 		if err != nil {
 			return err
 		}
-		if k.sendRestrictionFn != nil {
-			outAddress, err = k.sendRestrictionFn(ctx, inAddress, outAddress, out.Coins)
+		if k.sendRestriction.Fn != nil {
+			outAddress, err = k.sendRestriction.Fn(ctx, inAddress, outAddress, out.Coins)
 			if err != nil {
 				return err
 			}
@@ -189,9 +202,9 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, input types.Input, out
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	if k.sendRestrictionFn != nil {
+	if k.sendRestriction.Fn != nil {
 		var err error
-		toAddr, err = k.sendRestrictionFn(ctx, fromAddr, toAddr, amt)
+		toAddr, err = k.sendRestriction.Fn(ctx, fromAddr, toAddr, amt)
 		if err != nil {
 			return err
 		}

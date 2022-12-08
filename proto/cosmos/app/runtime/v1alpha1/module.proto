@@ -38,8 +38,8 @@ message Module {
   // to be used in keeper construction.
   repeated StoreKeyConfig override_store_keys = 6;
 
-  // order_migrations defines the order in which module migrations are performed
-  // If this is left empty, it uses the default migration order
+  // order_migrations defines the order in which module migrations are performed.
+  // If this is left empty, it uses the default migration order.
   // https://pkg.go.dev/github.com/cosmos/cosmos-sdk@v0.47.0-alpha2/types/module#DefaultMigrationsOrder
   repeated string order_migrations = 7;
 }

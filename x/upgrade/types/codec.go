@@ -22,6 +22,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCancelUpgrade{}, "cosmos-sdk/MsgCancelUpgrade")
 }
 
+// RegisterInterfaces registers the interfaces types with the Interface Registry.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

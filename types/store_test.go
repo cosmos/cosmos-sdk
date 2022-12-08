@@ -120,8 +120,8 @@ func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 }
 
 func (s *storeTestSuite) checkDiffResults(store1, store2 types.KVStore) {
-	kvAs1, kvBs1 := types.DiffKVStores(store1, store2, nil)
-	kvAs2, kvBs2 := types.DiffKVStores(store1, store2, nil)
+	kvAs1, kvBs1 := sdk.DiffKVStores(store1, store2, nil)
+	kvAs2, kvBs2 := sdk.DiffKVStores(store1, store2, nil)
 	s.Require().Equal(kvAs1, kvAs2)
 	s.Require().Equal(kvBs1, kvBs2)
 }

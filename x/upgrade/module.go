@@ -67,16 +67,17 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *g
 	}
 }
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the CLI query commands for this module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the CLI transaction commands for this module
 func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.GetTxCmd()
 }
 
+// RegisterInterfaces registers interfaces and implementations of the upgrade module.
 func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }

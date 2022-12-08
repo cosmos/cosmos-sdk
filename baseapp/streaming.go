@@ -85,8 +85,8 @@ func exposeStoreKeysSorted(keysStr []string, keys map[string]*store.KVStoreKey) 
 	var exposeStoreKeys []store.StoreKey
 	if exposeAll(keysStr) {
 		exposeStoreKeys = make([]store.StoreKey, 0, len(keys))
-		for _, storeKey := range keys {
-			exposeStoreKeys = append(exposeStoreKeys, storeKey)
+		for key := range keys {
+			exposeStoreKeys = append(exposeStoreKeys, keys[key])
 		}
 	} else {
 		exposeStoreKeys = make([]store.StoreKey, 0, len(keysStr))

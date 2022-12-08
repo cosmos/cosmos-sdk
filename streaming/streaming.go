@@ -41,8 +41,11 @@ func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 		HandshakeConfig: HandshakeMap[name],
 		Managed:         true,
 		Plugins:         PluginMap,
-		Cmd:             exec.Command("sh", "-c", env),
-		Logger:          logger,
+		// For verifying the integrity of executables see SecureConfig documentation
+		// https://pkg.go.dev/github.com/hashicorp/go-plugin#SecureConfig
+		//#nosec G204 -- Required to load plugins
+		Cmd:    exec.Command("sh", "-c", env),
+		Logger: logger,
 		AllowedProtocols: []plugin.Protocol{
 			plugin.ProtocolNetRPC, plugin.ProtocolGRPC,
 		},

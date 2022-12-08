@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
@@ -137,8 +136,9 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Messa
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
+//
+//nolint:stdmethods
 func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
-
 	return ProtoMarshalJSON(o, pc.interfaceRegistry)
 }
 
@@ -160,7 +160,6 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
-
 	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
 	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
 	if err != nil {
@@ -277,8 +276,6 @@ func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 		return proto.Marshal(m)
 	case gogoproto.Message:
 		return g.cdc.Marshal(m)
-	case legacyproto.Message:
-		return legacyproto.Marshal(m)
 	default:
 		return nil, fmt.Errorf("%w: cannot marshal type %T", errUnknownProtoType, v)
 	}
@@ -290,8 +287,6 @@ func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
 		return proto.Unmarshal(data, m)
 	case gogoproto.Message:
 		return g.cdc.Unmarshal(data, m)
-	case legacyproto.Message:
-		return legacyproto.Unmarshal(data, m)
 	default:
 		return fmt.Errorf("%w: cannot unmarshal type %T", errUnknownProtoType, v)
 	}

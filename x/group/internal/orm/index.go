@@ -3,13 +3,13 @@ package orm
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 // indexer creates and modifies the second MultiKeyIndex based on the operations and changes on the primary object.
@@ -198,7 +198,7 @@ func getPrefixScanKeyBytes(keyI interface{}) ([]byte, error) {
 	return key, nil
 }
 
-func (i MultiKeyIndex) onSet(store sdk.KVStore, rowID RowID, newValue, oldValue codec.ProtoMarshaler) error {
+func (i MultiKeyIndex) onSet(store sdk.KVStore, rowID RowID, newValue, oldValue proto.Message) error {
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	if oldValue == nil {
 		return i.indexer.OnCreate(pStore, rowID, newValue)
@@ -206,7 +206,7 @@ func (i MultiKeyIndex) onSet(store sdk.KVStore, rowID RowID, newValue, oldValue 
 	return i.indexer.OnUpdate(pStore, rowID, newValue, oldValue)
 }
 
-func (i MultiKeyIndex) onDelete(store sdk.KVStore, rowID RowID, oldValue codec.ProtoMarshaler) error {
+func (i MultiKeyIndex) onDelete(store sdk.KVStore, rowID RowID, oldValue proto.Message) error {
 	pStore := prefix.NewStore(store, []byte{i.prefix})
 	return i.indexer.OnDelete(pStore, rowID, oldValue)
 }
@@ -241,7 +241,7 @@ type indexIterator struct {
 // LoadNext loads the next value in the sequence into the pointer passed as dest and returns the key. If there
 // are no more items the errors.ErrORMIteratorDone error is returned
 // The key is the rowID and not any MultiKeyIndex key.
-func (i indexIterator) LoadNext(dest codec.ProtoMarshaler) (RowID, error) {
+func (i indexIterator) LoadNext(dest proto.Message) (RowID, error) {
 	if !i.it.Valid() {
 		return nil, errors.ErrORMIteratorDone
 	}

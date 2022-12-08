@@ -16,8 +16,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          # ci is set to go1.19 to match developer setups
-          go-version: 1.19.3
+          go-version: 1.19.4
       - uses: actions/checkout@v3
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3

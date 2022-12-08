@@ -20,7 +20,6 @@ type SendKeeper interface {
 
 	InputOutputCoins(ctx sdk.Context, input types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsWithoutRestriction(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params) error
@@ -197,12 +196,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 			return err
 		}
 	}
-	return k.SendCoinsWithoutRestriction(ctx, fromAddr, toAddr, amt)
-}
 
-// SendCoinsWithoutRestriction transfers amt coins from a sending account to a receiving account without checking the injectable restrictions.
-// An error is returned upon failure.
-func (k BaseSendKeeper) SendCoinsWithoutRestriction(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err

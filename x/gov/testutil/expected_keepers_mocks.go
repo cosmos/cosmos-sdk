@@ -724,20 +724,6 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderMod
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
 }
 
-// SendCoinsWithoutRestriction mocks base method.
-func (m *MockBankKeeper) SendCoinsWithoutRestriction(ctx types.Context, fromAddr, toAddr types.AccAddress, amt types.Coins) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendCoinsWithoutRestriction", ctx, fromAddr, toAddr, amt)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SendCoinsWithoutRestriction indicates an expected call of SendCoinsWithoutRestriction.
-func (mr *MockBankKeeperMockRecorder) SendCoinsWithoutRestriction(ctx, fromAddr, toAddr, amt interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsWithoutRestriction", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsWithoutRestriction), ctx, fromAddr, toAddr, amt)
-}
-
 // SendEnabled mocks base method.
 func (m *MockBankKeeper) SendEnabled(arg0 context.Context, arg1 *types1.QuerySendEnabledRequest) (*types1.QuerySendEnabledResponse, error) {
 	m.ctrl.T.Helper()

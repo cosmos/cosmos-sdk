@@ -103,7 +103,7 @@ func NewFileStreamingService(
 		fileDir = path.Join(homePath, fileDir)
 	}
 
-	// try to create output directory if not exists.
+	// try to create output directory if it does not exist
 	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
 		if err = os.MkdirAll(fileDir, os.ModePerm); err != nil {
 			return nil, err

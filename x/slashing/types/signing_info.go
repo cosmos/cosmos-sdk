@@ -12,11 +12,11 @@ import (
 //
 //nolint:interfacer
 func NewValidatorSigningInfo(
-	condAddr sdk.ConsAddress, startHeight, indexOffset int64,
+	consAddr sdk.ConsAddress, startHeight, indexOffset int64,
 	jailedUntil time.Time, tombstoned bool, missedBlocksCounter int64,
 ) ValidatorSigningInfo {
 	return ValidatorSigningInfo{
-		Address:             condAddr.String(),
+		Address:             consAddr.String(),
 		StartHeight:         startHeight,
 		IndexOffset:         indexOffset,
 		JailedUntil:         jailedUntil,
@@ -25,6 +25,7 @@ func NewValidatorSigningInfo(
 	}
 }
 
+<<<<<<< HEAD
 // String implements the stringer interface for ValidatorSigningInfo
 func (i ValidatorSigningInfo) String() string {
 	return fmt.Sprintf(`Validator Signing Info:
@@ -39,6 +40,9 @@ func (i ValidatorSigningInfo) String() string {
 }
 
 // unmarshal a validator signing info from a store value
+=======
+// UnmarshalValSigningInfo unmarshals a validator signing info from a store value
+>>>>>>> 7ded32163 (chore: x/slashing audit changes (#14211))
 func UnmarshalValSigningInfo(cdc codec.Codec, value []byte) (signingInfo ValidatorSigningInfo, err error) {
 	err = cdc.Unmarshal(value, &signingInfo)
 	return signingInfo, err

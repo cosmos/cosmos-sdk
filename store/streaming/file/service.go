@@ -98,8 +98,8 @@ func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListene
 
 // ListenBeginBlock satisfies the ABCIListener interface. It sets the received
 // BeginBlock request, response and the current block number. Note, these are
-// not written to file until ListenCommit is executed, after which it will be
-// reset again on the next block.
+// not written to file until ListenCommit is executed and outputMetadata is set,
+// after which it will be reset again on the next block.
 func (fss *StreamingService) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
 	fss.blockMetadata.RequestBeginBlock = &req
 	fss.blockMetadata.ResponseBeginBlock = &res
@@ -109,8 +109,8 @@ func (fss *StreamingService) ListenBeginBlock(ctx context.Context, req abci.Requ
 
 // ListenDeliverTx satisfies the ABCIListener interface. It appends the received
 // DeliverTx request and response to a list of DeliverTxs objects. Note, these
-// are not written to file until ListenCommit is executed, after which it will be
-// reset again on the next block.
+// are not written to file until ListenCommit is executed and outputMetadata is
+// set, after which it will be reset again on the next block.
 func (fss *StreamingService) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
 	fss.blockMetadata.DeliverTxs = append(fss.blockMetadata.DeliverTxs, &types.BlockMetadata_DeliverTx{
 		Request:  &req,
@@ -122,8 +122,8 @@ func (fss *StreamingService) ListenDeliverTx(ctx context.Context, req abci.Reque
 
 // ListenEndBlock satisfies the ABCIListener interface. It sets the received
 // EndBlock request, response and the current block number. Note, these are
-// not written to file until ListenCommit is executed, after which it will be
-// reset again on the next block.
+// not written to file until ListenCommit is executed and outputMetadata is set,
+// after which it will be reset again on the next block.
 func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
 	fss.blockMetadata.RequestEndBlock = &req
 	fss.blockMetadata.ResponseEndBlock = &res

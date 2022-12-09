@@ -352,44 +352,40 @@ stop-node-on-err = true
 
 ## Updating the protocol
 
-If you update the protocol buffers file, you can regenerate the file using the following command
-from the project root directory. You do not need to run this if you're just trying the Go or Python
-examples.
+If you update the protocol buffers file, you can regenerate the file and plugins using the
+following commands from the project root directory. You do not need to run this if you're
+just trying the examples, you can skip ahead to the [Testing](#testing) section.
 
 ```shell
-protoc -I streaming/plugins/proto --go_out=plugins=grpc:. streaming/plugins/proto/abci/v1/grpc.proto \
-  && cp -r github.com/cosmos/cosmos-sdk/streaming/* streaming \
-  && rm -rf github.com 
+make proto-gen 
 ```
 
+- stdout plugin
 ```shell
-# stdout plugin
-go build -o streaming/plugins/abci/v1/examples/stdout \
-streaming/plugins/abci/v1/examples/stdout.go
+go build -o streaming/plugins/abci/v1/examples/stdout streaming/plugins/abci/v1/examples/stdout.go
 ```
 
+- file plugin (writes to ~/)
 ```shell
-# file plugin (writes to ~/)
-go build -o streaming/plugins/abci/v1/examples/file \
-streaming/plugins/abci/v1/examples/file.go
+go build -o streaming/plugins/abci/v1/examples/file streaming/plugins/abci/v1/examples/file.go
 ```
 
 ### Testing
 
 Export a plugin from one of the Go or Python examples.
 
+- stdout plugin
 ```shell
-# for writing to stdout
-export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/stdout"
+export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/streaming/plugins/abci/v1/examples/stdout"
 ```
+- file plugin (writes to ~/)
 ```shell
-# for writing to files
-export COSMOS_SDK_ABCI_V1=".../cosmos-sdk/streaming/plugins/abci/v1/examples/file"
+export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/streaming/plugins/abci/v1/examples/file"
 ```
+where `{path to}` is the parent path to the `cosmos-sdk` repo on you system.
 
 Test:
 ```shell
-# looks for the exported "abci_v1" plugin
 make test-sim-nondeterminism-streaming
 ```
 

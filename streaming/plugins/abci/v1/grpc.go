@@ -53,36 +53,38 @@ func (m GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit,
 	return err
 }
 
+//var _ ABCIListenerServiceServer = (*GRPCServer)(nil)
+
 // GRPCServer is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {
 	// This is the real implementation
 	Impl baseapp.ABCIListener
 }
 
-func (m GRPCServer) ListenBeginBlock(ctx context.Context, request *ListenBeginBlockRequest) (*Empty, error) {
+func (m GRPCServer) ListenBeginBlock(ctx context.Context, request *ListenBeginBlockRequest) (*ListenBeginBlockResponse, error) {
 	if err := m.Impl.ListenBeginBlock(ctx, *request.Req, *request.Res); err != nil {
 		return nil, err
 	}
-	return &Empty{}, nil
+	return &ListenBeginBlockResponse{}, nil
 }
 
-func (m GRPCServer) ListenEndBlock(ctx context.Context, request *ListenEndBlockRequest) (*Empty, error) {
+func (m GRPCServer) ListenEndBlock(ctx context.Context, request *ListenEndBlockRequest) (*ListenEndBlockResponse, error) {
 	if err := m.Impl.ListenEndBlock(ctx, *request.Req, *request.Res); err != nil {
 		return nil, err
 	}
-	return &Empty{}, nil
+	return &ListenEndBlockResponse{}, nil
 }
 
-func (m GRPCServer) ListenDeliverTx(ctx context.Context, request *ListenDeliverTxRequest) (*Empty, error) {
+func (m GRPCServer) ListenDeliverTx(ctx context.Context, request *ListenDeliverTxRequest) (*ListenDeliverTxResponse, error) {
 	if err := m.Impl.ListenDeliverTx(ctx, *request.Req, *request.Res); err != nil {
 		return nil, err
 	}
-	return &Empty{}, nil
+	return &ListenDeliverTxResponse{}, nil
 }
 
-func (m GRPCServer) ListenCommit(ctx context.Context, request *ListenCommitRequest) (*Empty, error) {
+func (m GRPCServer) ListenCommit(ctx context.Context, request *ListenCommitRequest) (*ListenCommitResponse, error) {
 	if err := m.Impl.ListenCommit(ctx, *request.Res, request.ChangeSet); err != nil {
 		return nil, err
 	}
-	return &Empty{}, nil
+	return &ListenCommitResponse{}, nil
 }

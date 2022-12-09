@@ -7,19 +7,20 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/spf13/cast"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/spf13/cast"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
+type ServiceConstructor func(servertypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -27,7 +28,6 @@ type ServiceType int
 const (
 	Unknown ServiceType = iota
 	File
-	// add more in the future
 )
 
 // Streaming option keys
@@ -47,6 +47,7 @@ func ServiceTypeFromString(name string) ServiceType {
 	switch strings.ToLower(name) {
 	case "file", "f":
 		return File
+
 	default:
 		return Unknown
 	}
@@ -57,32 +58,37 @@ func (sst ServiceType) String() string {
 	switch sst {
 	case File:
 		return "file"
+
 	default:
 		return "unknown"
 	}
 }
 
-// ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to streaming.ServiceConstructors
+// ServiceConstructorLookupTable is a mapping of streaming.ServiceTypes to
+// streaming.ServiceConstructors types.
 var ServiceConstructorLookupTable = map[ServiceType]ServiceConstructor{
 	File: NewFileStreamingService,
 }
 
-// NewServiceConstructor returns the streaming.ServiceConstructor corresponding to the provided name
+// NewServiceConstructor returns the streaming.ServiceConstructor corresponding
+// to the provided name.
 func NewServiceConstructor(name string) (ServiceConstructor, error) {
 	ssType := ServiceTypeFromString(name)
 	if ssType == Unknown {
 		return nil, fmt.Errorf("unrecognized streaming service name %s", name)
 	}
+
 	if constructor, ok := ServiceConstructorLookupTable[ssType]; ok && constructor != nil {
 		return constructor, nil
 	}
+
 	return nil, fmt.Errorf("streaming service constructor of type %s not found", ssType.String())
 }
 
 // NewFileStreamingService is the streaming.ServiceConstructor function for
 // creating a FileStreamingService.
 func NewFileStreamingService(
-	opts serverTypes.AppOptions,
+	opts servertypes.AppOptions,
 	keys []types.StoreKey,
 	marshaller codec.BinaryCodec,
 	logger log.Logger,
@@ -99,7 +105,7 @@ func NewFileStreamingService(
 		fileDir = path.Join(homePath, fileDir)
 	}
 
-	// try to create output directory if not exists.
+	// try to create output directory if it does not exist
 	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
 		if err = os.MkdirAll(fileDir, os.ModePerm); err != nil {
 			return nil, err
@@ -115,21 +121,26 @@ func NewFileStreamingService(
 // and any error that occurs during the setup.
 func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
-	appOpts serverTypes.AppOptions,
+	appOpts servertypes.AppOptions,
 	appCodec codec.BinaryCodec,
 	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
 	wg := new(sync.WaitGroup)
+
 	// configure state listening capabilities using AppOptions
-	streamers := cast.ToStringSlice(appOpts.Get("store.streamers"))
+	streamers := cast.ToStringSlice(appOpts.Get(OptStoreStreamers))
 	activeStreamers := make([]baseapp.StreamingService, 0, len(streamers))
+
 	for _, streamerName := range streamers {
+		var exposeStoreKeys []types.StoreKey
+
 		// get the store keys allowed to be exposed for this streaming service
 		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
-		var exposeStoreKeys []types.StoreKey
-		if exposeAll(exposeKeyStrs) { // if list contains `*`, expose all StoreKeys
+
+		// if list contains '*', expose all store keys
+		if sdk.SliceContains(exposeKeyStrs, "*") {
 			exposeStoreKeys = make([]types.StoreKey, 0, len(keys))
 			for _, storeKey := range keys {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)
@@ -142,16 +153,19 @@ func LoadStreamingServices(
 				}
 			}
 		}
-		if len(exposeStoreKeys) == 0 { // short circuit if we are not exposing anything
+
+		if len(exposeStoreKeys) == 0 {
 			continue
 		}
-		// get the constructor for this streamer name
+
 		constructor, err := NewServiceConstructor(streamerName)
 		if err != nil {
-			// close any services we may have already spun up before hitting the error on this one
+			// Close any services we may have already spun up before hitting the error
+			// on this one.
 			for _, activeStreamer := range activeStreamers {
 				activeStreamer.Close()
 			}
+
 			return nil, nil, err
 		}
 
@@ -159,28 +173,26 @@ func LoadStreamingServices(
 		// StoreKeys we want to expose.
 		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger)
 		if err != nil {
-			// close any services we may have already spun up before hitting the error on this one
+			// Close any services we may have already spun up before hitting the error
+			// on this one.
 			for _, activeStreamer := range activeStreamers {
 				activeStreamer.Close()
 			}
+
 			return nil, nil, err
 		}
+
 		// register the streaming service with the BaseApp
 		bApp.SetStreamingService(streamingService)
+
 		// kick off the background streaming service loop
 		streamingService.Stream(wg)
+
 		// add to the list of active streamers
 		activeStreamers = append(activeStreamers, streamingService)
 	}
-	// if there are no active streamers, activeStreamers is empty (len == 0) and the waitGroup is not waiting on anything
-	return activeStreamers, wg, nil
-}
 
-func exposeAll(list []string) bool {
-	for _, ele := range list {
-		if ele == "*" {
-			return true
-		}
-	}
-	return false
+	// If there are no active streamers, activeStreamers is empty (len == 0) and
+	// the waitGroup is not waiting on anything.
+	return activeStreamers, wg, nil
 }

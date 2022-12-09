@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 var (
@@ -133,4 +134,16 @@ func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]by
 	byteSlice := key[startIndex:neededLength]
 
 	return byteSlice, endIndex
+}
+
+// SliceContains implements a generic function for checking if a slice contains
+// a certain value.
+func SliceContains[T comparable](elements []T, v T) bool {
+	for _, s := range elements {
+		if v == s {
+			return true
+		}
+	}
+
+	return false
 }

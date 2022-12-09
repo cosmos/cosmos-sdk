@@ -78,29 +78,14 @@ func CopyBytes(bz []byte) (ret []byte) {
 	return ret
 }
 
-// AppendLengthPrefixedBytes combines the slices of bytes to one slice of bytes.
-func AppendLengthPrefixedBytes(args ...[]byte) []byte {
-	length := 0
-	for _, v := range args {
-		length += len(v)
-	}
-	res := make([]byte, length)
-
-	length = 0
-	for _, v := range args {
-		copy(res[length:length+len(v)], v)
-		length += len(v)
+// SliceContains implements a generic function for checking if a slice contains
+// a certain value.
+func SliceContains[T comparable](elements []T, v T) bool {
+	for _, s := range elements {
+		if v == s {
+			return true
+		}
 	}
 
-	return res
-}
-
-// ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
-func ParseLengthPrefixedBytes(key []byte, startIndex, sliceLength int) ([]byte, int) {
-	neededLength := startIndex + sliceLength
-	endIndex := neededLength - 1
-	kv.AssertKeyAtLeastLength(key, neededLength)
-	byteSlice := key[startIndex:neededLength]
-
-	return byteSlice, endIndex
+	return false
 }

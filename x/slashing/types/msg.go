@@ -31,7 +31,7 @@ func (msg MsgUnjail) Route() string { return RouterKey }
 // Type implements the sdk.Msg interface.
 func (msg MsgUnjail) Type() string { return TypeMsgUnjail }
 
-// GetSigners implements the sdk.Msg interface.
+// GetSigners returns the expected signers for MsgUnjail.
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 	return []sdk.AccAddress{sdk.AccAddress(valAddr)}

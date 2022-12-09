@@ -31,7 +31,6 @@ const (
 
 // Streaming option keys
 const (
-<<<<<<< HEAD
 	OptStreamersFilePrefix          = "streamers.file.prefix"
 	OptStreamersFileWriteDir        = "streamers.file.write_dir"
 	OptStreamersFileOutputMetadata  = "streamers.file.output-metadata"
@@ -39,11 +38,6 @@ const (
 	OptStreamersFileFsync           = "streamers.file.fsync"
 
 	OptStoreStreamers = "store.streamers"
-=======
-	OptStreamersFilePrefix   = "streamers.file.prefix"
-	OptStreamersFileWriteDir = "streamers.file.write_dir"
-	OptStoreStreamers        = "store.streamers"
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 )
 
 // ServiceTypeFromString returns the streaming.ServiceType corresponding to the
@@ -97,7 +91,6 @@ func NewFileStreamingService(
 	keys []types.StoreKey,
 	marshaller codec.BinaryCodec,
 ) (baseapp.StreamingService, error) {
-<<<<<<< HEAD
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
 	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
 	fileDir := cast.ToString(opts.Get(OptStreamersFileWriteDir))
@@ -110,7 +103,7 @@ func NewFileStreamingService(
 		fileDir = path.Join(homePath, fileDir)
 	}
 
-	// try to create output directory if not exists.
+	// try to create output directory if it does not exists
 	if _, err := os.Stat(fileDir); os.IsNotExist(err) {
 		if err = os.MkdirAll(fileDir, os.ModePerm); err != nil {
 			return nil, err
@@ -118,12 +111,6 @@ func NewFileStreamingService(
 	}
 
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, outputMetadata, stopNodeOnErr, fsync)
-=======
-	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
-	fileDir := cast.ToString(opts.Get(OptStreamersFileWriteDir))
-
-	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 }
 
 // LoadStreamingServices is a function for loading StreamingServices onto the

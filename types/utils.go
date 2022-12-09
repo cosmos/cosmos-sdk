@@ -6,13 +6,7 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
 	dbm "github.com/tendermint/tm-db"
-=======
-	log "github.com/tendermint/tendermint/libs/log"
-
-	"github.com/cosmos/cosmos-sdk/types/kv"
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 )
 
 var (
@@ -110,42 +104,6 @@ func CopyBytes(bz []byte) (ret []byte) {
 	copy(ret, bz)
 	return ret
 }
-<<<<<<< HEAD
-=======
-
-// AppendLengthPrefixedBytes combines the slices of bytes to one slice of bytes.
-func AppendLengthPrefixedBytes(args ...[]byte) []byte {
-	length := 0
-	for _, v := range args {
-		length += len(v)
-	}
-	res := make([]byte, length)
-
-	length = 0
-	for _, v := range args {
-		copy(res[length:length+len(v)], v)
-		length += len(v)
-	}
-
-	return res
-}
-
-// ParseLengthPrefixedBytes panics when store key length is not equal to the given length.
-func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]byte, int) {
-	neededLength := startIndex + sliceLength
-	endIndex := neededLength - 1
-	kv.AssertKeyAtLeastLength(key, neededLength)
-	byteSlice := key[startIndex:neededLength]
-
-	return byteSlice, endIndex
-}
-
-// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
-func LogDeferred(logger log.Logger, f func() error) {
-	if err := f(); err != nil {
-		logger.Error(err.Error())
-	}
-}
 
 // SliceContains implements a generic function for checking if a slice contains
 // a certain value.
@@ -158,4 +116,3 @@ func SliceContains[T comparable](elements []T, v T) bool {
 
 	return false
 }
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)

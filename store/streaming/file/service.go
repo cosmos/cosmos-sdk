@@ -13,11 +13,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ baseapp.StreamingService = &StreamingService{}
@@ -28,7 +28,7 @@ type StreamingService struct {
 	storeListeners []*types.MemoryListener // a series of KVStore listeners for each KVStore
 	filePrefix     string                  // optional prefix for each of the generated files
 	writeDir       string                  // directory to write files into
-	codec          codec.BinaryCodec       // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+	codec          types.Codec             // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
 	logger         log.Logger
 
 	currentBlockNumber int64
@@ -50,7 +50,7 @@ type StreamingService struct {
 func NewStreamingService(
 	writeDir, filePrefix string,
 	storeKeys []types.StoreKey,
-	c codec.BinaryCodec,
+	cdc types.Codec,
 	logger log.Logger,
 	outputMetadata, stopNodeOnErr, fsync bool,
 ) (*StreamingService, error) {
@@ -76,7 +76,7 @@ func NewStreamingService(
 		storeListeners: listeners,
 		filePrefix:     filePrefix,
 		writeDir:       writeDir,
-		codec:          c,
+		codec:          cdc,
 		logger:         logger,
 		outputMetadata: outputMetadata,
 		stopNodeOnErr:  stopNodeOnErr,
@@ -217,30 +217,30 @@ func writeLengthPrefixedFile(path string, data []byte, fsync bool) (err error) {
 	var f *os.File
 	f, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "open file failed: %s", path)
+		return errors.Wrapf(err, "open file failed: %s", path)
 	}
 
 	defer func() {
 		// avoid overriding the real error with file close error
 		if err1 := f.Close(); err1 != nil && err == nil {
-			err = sdkerrors.Wrapf(err, "close file failed: %s", path)
+			err = errors.Wrapf(err, "close file failed: %s", path)
 		}
 	}()
 
 	_, err = f.Write(sdk.Uint64ToBigEndian(uint64(len(data))))
 	if err != nil {
-		return sdkerrors.Wrapf(err, "write length prefix failed: %s", path)
+		return errors.Wrapf(err, "write length prefix failed: %s", path)
 	}
 
 	_, err = f.Write(data)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "write block data failed: %s", path)
+		return errors.Wrapf(err, "write block data failed: %s", path)
 	}
 
 	if fsync {
 		err = f.Sync()
 		if err != nil {
-			return sdkerrors.Wrapf(err, "fsync failed: %s", path)
+			return errors.Wrapf(err, "fsync failed: %s", path)
 		}
 	}
 

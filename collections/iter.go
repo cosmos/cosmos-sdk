@@ -2,9 +2,13 @@ package collections
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
+
+// ErrInvalidIterator is returned when an Iterate call resulted in an invalid iterator.
+var ErrInvalidIterator = errors.New("collections: invalid iterator")
 
 // Order defines the key order.
 type Order uint8
@@ -181,11 +185,14 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 		return iter, fmt.Errorf("collections: unrecognized order identifier: %d", order)
 	}
 
+	if storeIter.Valid() {
+		return iter, ErrInvalidIterator
+	}
+
 	iter.kc = m.kc
 	iter.vc = m.vc
 	iter.iter = storeIter
 	iter.prefixLength = len(m.prefix)
-
 	return iter, nil
 }
 

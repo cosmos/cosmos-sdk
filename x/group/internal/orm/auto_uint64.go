@@ -1,6 +1,8 @@
 package orm
 
 import (
+	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,7 +20,7 @@ type AutoUInt64Table struct {
 }
 
 // NewAutoUInt64Table creates a new AutoUInt64Table.
-func NewAutoUInt64Table(prefixData [2]byte, prefixSeq byte, model codec.ProtoMarshaler, cdc codec.Codec) (*AutoUInt64Table, error) {
+func NewAutoUInt64Table(prefixData [2]byte, prefixSeq byte, model proto.Message, cdc codec.Codec) (*AutoUInt64Table, error) {
 	table, err := newTable(prefixData, model, cdc)
 	if err != nil {
 		return nil, err
@@ -34,7 +36,7 @@ func NewAutoUInt64Table(prefixData [2]byte, prefixSeq byte, model codec.ProtoMar
 //
 // Create iterates through the registered callbacks that may add secondary index
 // keys.
-func (a AutoUInt64Table) Create(store sdk.KVStore, obj codec.ProtoMarshaler) (uint64, error) {
+func (a AutoUInt64Table) Create(store sdk.KVStore, obj proto.Message) (uint64, error) {
 	autoIncID := a.seq.NextVal(store)
 	err := a.table.Create(store, EncodeSequence(autoIncID), obj)
 	if err != nil {
@@ -50,7 +52,7 @@ func (a AutoUInt64Table) Create(store sdk.KVStore, obj codec.ProtoMarshaler) (ui
 //
 // Update iterates through the registered callbacks that may add or remove
 // secondary index keys.
-func (a AutoUInt64Table) Update(store sdk.KVStore, rowID uint64, newValue codec.ProtoMarshaler) error {
+func (a AutoUInt64Table) Update(store sdk.KVStore, rowID uint64, newValue proto.Message) error {
 	return a.table.Update(store, EncodeSequence(rowID), newValue)
 }
 
@@ -70,7 +72,7 @@ func (a AutoUInt64Table) Has(store sdk.KVStore, rowID uint64) bool {
 
 // GetOne load the object persisted for the given RowID into the dest parameter.
 // If none exists `ErrNotFound` is returned instead. Parameters must not be nil.
-func (a AutoUInt64Table) GetOne(store sdk.KVStore, rowID uint64, dest codec.ProtoMarshaler) (RowID, error) {
+func (a AutoUInt64Table) GetOne(store sdk.KVStore, rowID uint64, dest proto.Message) (RowID, error) {
 	rawRowID := EncodeSequence(rowID)
 	if err := a.table.GetOne(store, rawRowID, dest); err != nil {
 		return nil, err

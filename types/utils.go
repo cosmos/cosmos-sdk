@@ -6,14 +6,9 @@ import (
 	"fmt"
 	"time"
 
-<<<<<<< HEAD
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	dbm "github.com/tendermint/tm-db"
-=======
-	log "github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/types/kv"
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 )
 
 var (
@@ -140,15 +135,6 @@ func ParseLengthPrefixedBytes(key []byte, startIndex int, sliceLength int) ([]by
 
 	return byteSlice, endIndex
 }
-<<<<<<< HEAD
-=======
-
-// LogDeferred logs an error in a deferred function call if the returned error is non-nil.
-func LogDeferred(logger log.Logger, f func() error) {
-	if err := f(); err != nil {
-		logger.Error(err.Error())
-	}
-}
 
 // SliceContains implements a generic function for checking if a slice contains
 // a certain value.
@@ -161,4 +147,3 @@ func SliceContains[T comparable](elements []T, v T) bool {
 
 	return false
 }
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)

@@ -5,15 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func TestNewStoreKVPairWriteListener(t *testing.T) {
 	testWriter := new(bytes.Buffer)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	testMarshaller := codec.NewProtoCodec(interfaceRegistry)
+	testMarshaller := NewTestCodec()
 
 	wl := NewStoreKVPairWriteListener(testWriter, testMarshaller)
 
@@ -24,8 +20,7 @@ func TestNewStoreKVPairWriteListener(t *testing.T) {
 
 func TestOnWrite(t *testing.T) {
 	testWriter := new(bytes.Buffer)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	testMarshaller := codec.NewProtoCodec(interfaceRegistry)
+	testMarshaller := NewTestCodec()
 
 	wl := NewStoreKVPairWriteListener(testWriter, testMarshaller)
 

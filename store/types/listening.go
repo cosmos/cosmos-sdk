@@ -2,8 +2,6 @@ package types
 
 import (
 	"io"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // WriteListener interface for streaming data out from a listenkv.Store
@@ -18,11 +16,11 @@ type WriteListener interface {
 // protobuf encoded StoreKVPairs to an underlying io.Writer
 type StoreKVPairWriteListener struct {
 	writer     io.Writer
-	marshaller codec.BinaryCodec
+	marshaller Codec
 }
 
-// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryCodec
-func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
+// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and Marshaler interface
+func NewStoreKVPairWriteListener(w io.Writer, m Codec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer:     w,
 		marshaller: m,

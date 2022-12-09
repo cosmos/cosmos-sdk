@@ -7,27 +7,20 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/spf13/cast"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-<<<<<<< HEAD
-	"github.com/tendermint/tendermint/libs/log"
-=======
 	sdk "github.com/cosmos/cosmos-sdk/types"
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
-
-	"github.com/spf13/cast"
 )
 
 // ServiceConstructor is used to construct a streaming service
-<<<<<<< HEAD
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
-=======
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec) (baseapp.StreamingService, error)
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
+type ServiceConstructor func(servertypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -39,7 +32,6 @@ const (
 
 // Streaming option keys
 const (
-<<<<<<< HEAD
 	OptStreamersFilePrefix          = "streamers.file.prefix"
 	OptStreamersFileWriteDir        = "streamers.file.write_dir"
 	OptStreamersFileOutputMetadata  = "streamers.file.output-metadata"
@@ -47,11 +39,6 @@ const (
 	OptStreamersFileFsync           = "streamers.file.fsync"
 
 	OptStoreStreamers = "store.streamers"
-=======
-	OptStreamersFilePrefix   = "streamers.file.prefix"
-	OptStreamersFileWriteDir = "streamers.file.write_dir"
-	OptStoreStreamers        = "store.streamers"
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 )
 
 // ServiceTypeFromString returns the streaming.ServiceType corresponding to the
@@ -101,10 +88,9 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 // NewFileStreamingService is the streaming.ServiceConstructor function for
 // creating a FileStreamingService.
 func NewFileStreamingService(
-	opts serverTypes.AppOptions,
+	opts servertypes.AppOptions,
 	keys []types.StoreKey,
 	marshaller codec.BinaryCodec,
-<<<<<<< HEAD
 	logger log.Logger,
 ) (baseapp.StreamingService, error) {
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
@@ -127,13 +113,6 @@ func NewFileStreamingService(
 	}
 
 	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller, logger, outputMetadata, stopNodeOnErr, fsync)
-=======
-) (baseapp.StreamingService, error) {
-	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
-	fileDir := cast.ToString(opts.Get(OptStreamersFileWriteDir))
-
-	return file.NewStreamingService(fileDir, filePrefix, keys, marshaller)
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 }
 
 // LoadStreamingServices is a function for loading StreamingServices onto the
@@ -142,12 +121,9 @@ func NewFileStreamingService(
 // and any error that occurs during the setup.
 func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
-	appOpts serverTypes.AppOptions,
+	appOpts servertypes.AppOptions,
 	appCodec codec.BinaryCodec,
-<<<<<<< HEAD
 	logger log.Logger,
-=======
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
@@ -195,11 +171,7 @@ func LoadStreamingServices(
 
 		// Generate the streaming service using the constructor, appOptions, and the
 		// StoreKeys we want to expose.
-<<<<<<< HEAD
 		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger)
-=======
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec)
->>>>>>> c6189bb63 (refactor: cleanup store/streaming/constructor.go #14044)
 		if err != nil {
 			// Close any services we may have already spun up before hitting the error
 			// on this one.

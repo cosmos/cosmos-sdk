@@ -10,10 +10,9 @@ import (
 	"sort"
 	"sync"
 
+	"cosmossdk.io/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-
-	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/types"

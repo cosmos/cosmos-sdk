@@ -50,7 +50,7 @@ type StreamingService struct {
 func NewStreamingService(
 	writeDir, filePrefix string,
 	storeKeys []types.StoreKey,
-	cdc codec.Codec,
+	cdc codec.BinaryCodec,
 	logger log.Logger,
 	outputMetadata, stopNodeOnErr, fsync bool,
 ) (*StreamingService, error) {

@@ -10,7 +10,6 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -46,18 +45,12 @@ type StreamingService struct {
 	fsync bool
 }
 
-<<<<<<< HEAD
-// NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec, outputMetadata bool, stopNodeOnErr bool, fsync bool) (*StreamingService, error) {
-=======
 func NewStreamingService(
 	writeDir, filePrefix string,
 	storeKeys []types.StoreKey,
-	cdc types.Codec,
-	logger log.Logger,
+	cdc codec.BinaryCodec,
 	outputMetadata, stopNodeOnErr, fsync bool,
 ) (*StreamingService, error) {
->>>>>>> ae2c762bd (chore: audit store/streaming/file/service.go (#14234))
 	// sort storeKeys for deterministic output
 	sort.SliceStable(storeKeys, func(i, j int) bool {
 		return storeKeys[i].Name() < storeKeys[j].Name()
@@ -80,12 +73,7 @@ func NewStreamingService(
 		storeListeners: listeners,
 		filePrefix:     filePrefix,
 		writeDir:       writeDir,
-<<<<<<< HEAD
-		codec:          c,
-=======
 		codec:          cdc,
-		logger:         logger,
->>>>>>> ae2c762bd (chore: audit store/streaming/file/service.go (#14234))
 		outputMetadata: outputMetadata,
 		stopNodeOnErr:  stopNodeOnErr,
 		fsync:          fsync,
@@ -142,13 +130,7 @@ func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.Reques
 // ABCI Commit request and is responsible for writing all staged data to files.
 // It will only return a non-nil error when stopNodeOnErr is set.
 func (fss *StreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit) error {
-<<<<<<< HEAD
-	err := fss.doListenCommit(ctx, res)
-	if err != nil {
-=======
 	if err := fss.doListenCommit(ctx, res); err != nil {
-		fss.logger.Error("Listen commit failed", "height", fss.currentBlockNumber, "err", err)
->>>>>>> ae2c762bd (chore: audit store/streaming/file/service.go (#14234))
 		if fss.stopNodeOnErr {
 			return err
 		}

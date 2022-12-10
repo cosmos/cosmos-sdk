@@ -12,7 +12,6 @@ import (
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/spf13/cast"
@@ -139,7 +138,7 @@ func LoadStreamingServices(
 		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
 
 		// if list contains '*', expose all store keys
-		if sdk.SliceContains(exposeKeyStrs, "*") {
+		if types.SliceContains(exposeKeyStrs, "*") {
 			exposeStoreKeys = make([]types.StoreKey, 0, len(keys))
 			for _, storeKey := range keys {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)

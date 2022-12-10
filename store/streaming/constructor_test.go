@@ -12,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 type fakeOptions struct{}
@@ -61,7 +60,7 @@ func TestLoadStreamingServices(t *testing.T) {
 		activeStreamersLen int
 	}{
 		"empty app options": {
-			appOpts: simtestutil.EmptyAppOptions{},
+			appOpts: emptyAppOptions{},
 		},
 		"all StoreKeys exposed": {
 			appOpts:            streamingAppOptions{keys: []string{"*"}},
@@ -100,4 +99,10 @@ func (ao streamingAppOptions) Get(o string) interface{} {
 	default:
 		return nil
 	}
+}
+
+type emptyAppOptions struct{}
+
+func (ao emptyAppOptions) Get(o string) interface{} {
+	return nil
 }

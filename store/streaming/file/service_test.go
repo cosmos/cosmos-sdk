@@ -16,7 +16,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -328,8 +327,7 @@ func readInFile(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	size := sdk.BigEndianToUint64(bz[:8])
+	size := types.BigEndianToUint64(bz[:8])
 	if len(bz) != int(size)+8 {
 		return nil, errors.New("incomplete file ")
 	}

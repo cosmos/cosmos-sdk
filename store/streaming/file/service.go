@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ baseapp.StreamingService = &StreamingService{}
@@ -225,8 +224,7 @@ func writeLengthPrefixedFile(path string, data []byte, fsync bool) (err error) {
 			err = errors.Wrapf(err, "close file failed: %s", path)
 		}
 	}()
-
-	_, err = f.Write(sdk.Uint64ToBigEndian(uint64(len(data))))
+	_, err = f.Write(types.Uint64ToBigEndian(uint64(len(data))))
 	if err != nil {
 		return errors.Wrapf(err, "write length prefix failed: %s", path)
 	}

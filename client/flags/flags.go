@@ -48,7 +48,7 @@ const (
 	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
-	FlagGRPC             = "grpc"
+	FlagGRPC             = "grpc-addr"
 	FlagGRPCInsecure     = "grpc-insecure"
 	FlagHeight           = "height"
 	FlagGasAdjustment    = "gas-adjustment"

@@ -43,22 +43,22 @@ func (uint64Key) KeyType() string {
 
 type stringKey struct{}
 
-func (s stringKey) Encode(buffer []byte, key string) (int, error) {
+func (stringKey) Encode(buffer []byte, key string) (int, error) {
 	return copy(buffer, key), nil
 }
 
-func (s stringKey) Decode(buffer []byte) (int, string, error) {
+func (stringKey) Decode(buffer []byte) (int, string, error) {
 	return len(buffer), string(buffer), nil
 }
 
-func (s stringKey) Size(key string) int {
+func (stringKey) Size(key string) int {
 	return len(key)
 }
 
-func (s stringKey) Stringify(key string) string {
+func (stringKey) Stringify(key string) string {
 	return key
 }
 
-func (s stringKey) KeyType() string {
+func (stringKey) KeyType() string {
 	return "string"
 }

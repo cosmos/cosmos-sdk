@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-// WriteListener interface for streaming data out from a listenkv.Store
+// WriteListener interface for streaming data out from a KVStore
 type WriteListener interface {
 	// if value is nil then it was deleted
 	// storeKey indicates the source KVStore, to facilitate using the same WriteListener across separate KVStores
@@ -12,14 +12,16 @@ type WriteListener interface {
 	OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error
 }
 
-// StoreKVPairWriteListener is used to configure listening to a KVStore by writing out length-prefixed
-// protobuf encoded StoreKVPairs to an underlying io.Writer
+// StoreKVPairWriteListener is used to configure listening to a KVStore by
+// writing out length-prefixed Protobuf encoded StoreKVPairs to an underlying
+// io.Writer object.
 type StoreKVPairWriteListener struct {
 	writer     io.Writer
 	marshaller Codec
 }
 
-// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and Marshaler interface
+// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a
+// provided io.Writer and codec.BinaryCodec.
 func NewStoreKVPairWriteListener(w io.Writer, m Codec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer:     w,
@@ -27,20 +29,25 @@ func NewStoreKVPairWriteListener(w io.Writer, m Codec) *StoreKVPairWriteListener
 	}
 }
 
-// OnWrite satisfies the WriteListener interface by writing length-prefixed protobuf encoded StoreKVPairs
+// OnWrite satisfies the WriteListener interface by writing length-prefixed
+// Protobuf encoded StoreKVPairs.
 func (wl *StoreKVPairWriteListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
-	kvPair := new(StoreKVPair)
-	kvPair.StoreKey = storeKey.Name()
-	kvPair.Delete = delete
-	kvPair.Key = key
-	kvPair.Value = value
+	kvPair := &StoreKVPair{
+		StoreKey: storeKey.Name(),
+		Key:      key,
+		Value:    value,
+		Delete:   delete,
+	}
+
 	by, err := wl.marshaller.MarshalLengthPrefixed(kvPair)
 	if err != nil {
 		return err
 	}
+
 	if _, err := wl.writer.Write(by); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -55,7 +62,7 @@ func NewMemoryListener(key StoreKey) *MemoryListener {
 	return &MemoryListener{key: key}
 }
 
-// OnWrite implements WriteListener interface
+// OnWrite implements WriteListener interface.
 func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, delete bool) error {
 	fl.stateCache = append(fl.stateCache, StoreKVPair{
 		StoreKey: storeKey.Name(),
@@ -63,17 +70,19 @@ func (fl *MemoryListener) OnWrite(storeKey StoreKey, key []byte, value []byte, d
 		Key:      key,
 		Value:    value,
 	})
+
 	return nil
 }
 
-// PopStateCache returns the current state caches and set to nil
+// PopStateCache returns the current state caches and set to nil.
 func (fl *MemoryListener) PopStateCache() []StoreKVPair {
 	res := fl.stateCache
 	fl.stateCache = nil
+
 	return res
 }
 
-// StoreKey returns the storeKey it listens to
+// StoreKey returns the storeKey it listens to.
 func (fl *MemoryListener) StoreKey() StoreKey {
 	return fl.key
 }

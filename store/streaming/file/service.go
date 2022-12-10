@@ -10,7 +10,6 @@ import (
 	"sort"
 	"sync"
 
-	"cosmossdk.io/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -48,18 +47,13 @@ type StreamingService struct {
 	fsync bool
 }
 
-<<<<<<< HEAD
-// NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec, logger log.Logger, outputMetadata bool, stopNodeOnErr bool, fsync bool) (*StreamingService, error) {
-=======
 func NewStreamingService(
 	writeDir, filePrefix string,
 	storeKeys []types.StoreKey,
-	cdc types.Codec,
+	cdc codec.Codec,
 	logger log.Logger,
 	outputMetadata, stopNodeOnErr, fsync bool,
 ) (*StreamingService, error) {
->>>>>>> ae2c762bd (chore: audit store/streaming/file/service.go (#14234))
 	// sort storeKeys for deterministic output
 	sort.SliceStable(storeKeys, func(i, j int) bool {
 		return storeKeys[i].Name() < storeKeys[j].Name()

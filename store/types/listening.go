@@ -22,14 +22,9 @@ type StoreKVPairWriteListener struct {
 	marshaller codec.BinaryCodec
 }
 
-<<<<<<< HEAD
-// NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a provdied io.Writer and codec.BinaryCodec
-func NewStoreKVPairWriteListener(w io.Writer, m codec.BinaryCodec) *StoreKVPairWriteListener {
-=======
 // NewStoreKVPairWriteListener wraps creates a StoreKVPairWriteListener with a
 // provided io.Writer and codec.BinaryCodec.
-func NewStoreKVPairWriteListener(w io.Writer, m Codec) *StoreKVPairWriteListener {
->>>>>>> ae2c762bd (chore: audit store/streaming/file/service.go (#14234))
+func NewStoreKVPairWriteListener(w io.Writer, m codec.Codec) *StoreKVPairWriteListener {
 	return &StoreKVPairWriteListener{
 		writer:     w,
 		marshaller: m,

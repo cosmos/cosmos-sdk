@@ -230,11 +230,14 @@ streamers = [{{ range .Store.Streamers }}{{ printf "%q, " . }}{{end}}]
 keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
 write_dir = "{{ .Streamers.File.WriteDir }}"
 prefix = "{{ .Streamers.File.Prefix }}"
+
 # output-metadata specifies if output the metadata file which includes the abci request/responses 
 # during processing the block.
 output-metadata = "{{ .Streamers.File.OutputMetadata }}"
+
 # stop-node-on-error specifies if propagate the file streamer errors to consensus state machine.
 stop-node-on-error = "{{ .Streamers.File.StopNodeOnError }}"
+
 # fsync specifies if call fsync after writing the files.
 fsync = "{{ .Streamers.File.Fsync }}"
 `

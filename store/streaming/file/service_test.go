@@ -119,14 +119,16 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
+	testStreamingService, err := NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)
 	require.Equal(t, testDir, testStreamingService.writeDir)
 	require.Equal(t, testMarshaller, testStreamingService.codec)
+
 	testListener1 = testStreamingService.storeListeners[0]
 	testListener2 = testStreamingService.storeListeners[1]
+
 	wg := new(sync.WaitGroup)
 
 	testStreamingService.Stream(wg)
@@ -136,7 +138,10 @@ func TestFileStreamingService(t *testing.T) {
 }
 
 func testListenBlock(t *testing.T) {
-	var expectKVPairsStore1, expectKVPairsStore2 [][]byte
+	var (
+		expectKVPairsStore1 [][]byte
+		expectKVPairsStore2 [][]byte
+	)
 
 	// write state changes
 	testListener1.OnWrite(mockStoreKey1, mockKey1, mockValue1, false)
@@ -167,6 +172,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1, expectedKVPair3)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2)
 
@@ -187,6 +193,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
@@ -194,6 +201,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -201,6 +209,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2, expectedKVPair3)
 
@@ -221,6 +230,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
@@ -228,6 +238,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -235,6 +246,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair2)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair1, expectedKVPair3)
 
@@ -255,6 +267,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
@@ -262,6 +275,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -319,10 +333,12 @@ func readInFile(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	size := sdk.BigEndianToUint64(bz[:8])
 	if len(bz) != int(size)+8 {
 		return nil, errors.New("incomplete file ")
 	}
+
 	return bz[8:], nil
 }
 

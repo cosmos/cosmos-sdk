@@ -119,11 +119,7 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
-<<<<<<< HEAD
-	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
-=======
-	testStreamingService, err := NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, log.NewNopLogger(), true, false, false)
->>>>>>> ae2c762bd (chore: audit store/streaming/file/service.go (#14234))
+	testStreamingService, err := NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)

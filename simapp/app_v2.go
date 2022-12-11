@@ -4,7 +4,6 @@ package simapp
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -248,7 +247,7 @@ func NewSimApp(
 
 	// load state streaming if enabled
 	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.kvStoreKeys()); err != nil {
-		fmt.Printf("failed to load state streaming: %s", err)
+		app.logger.Error("failed to load state streaming", "error", err)
 		os.Exit(1)
 	}
 

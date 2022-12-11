@@ -4,7 +4,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -265,7 +264,7 @@ func NewSimApp(
 
 	// load state streaming if enabled
 	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
-		fmt.Printf("failed to load state streaming: %s", err)
+		app.logger.Error("failed to load state streaming", "error", err)
 		os.Exit(1)
 	}
 
@@ -514,7 +513,7 @@ func NewSimApp(
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
-			fmt.Println(err.Error())
+			app.Logger().Error("error on loading last version", "error", err)
 			os.Exit(1)
 		}
 	}

@@ -168,12 +168,28 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	proposalResp, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], []sdk.Msg{prop}, "")
 	proposalID := proposalResp.Id
 
+	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], []sdk.Msg{prop}, "")
+	proposal2ID := proposal2Resp.Id
+	makeProposalPass := func() {
+		proposal2, ok := suite.govKeeper.GetProposal(suite.ctx, 2)
+		suite.Require().True(ok)
+
+		proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
+		suite.govKeeper.SetProposal(suite.ctx, proposal2)
+	}
+
 	testCases := []struct {
 		name        string
 		proposalID  uint64
 		proposer    string
 		expectedErr bool
 	}{
+		{
+			name:        "without proposer",
+			proposalID:  1,
+			proposer:    "",
+			expectedErr: true,
+		},
 		{
 			name:        "invalid proposal id",
 			proposalID:  1,
@@ -187,6 +203,12 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 			expectedErr: true,
 		},
 		{
+			name:        "valid proposalID but invalid proposal which has already passed",
+			proposalID:  proposal2ID,
+			proposer:    suite.addrs[1].String(),
+			expectedErr: true,
+		},
+		{
 			name:        "valid proposer and proposal id",
 			proposalID:  proposalID,
 			proposer:    suite.addrs[0].String(),
@@ -196,6 +218,10 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
+			if tc.proposalID == proposal2ID {
+				// making proposal status pass
+				makeProposalPass()
+			}
 			err = suite.govKeeper.CancelProposal(suite.ctx, tc.proposalID, tc.proposer)
 			if tc.expectedErr {
 				suite.Require().Error(err)

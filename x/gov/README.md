@@ -1229,7 +1229,7 @@ simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" -
 
 #### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. and `remaining deposits` will be sent to depositers.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

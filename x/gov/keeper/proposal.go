@@ -102,7 +102,7 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
 	}
 
-	// Checking proposal have proposer or not because old proposal doesn't have proposer feild,
+	// Checking proposal have proposer or not because old proposal doesn't have proposer field,
 	// https://github.com/cosmos/cosmos-sdk/blob/v0.46.2/proto/cosmos/gov/v1/gov.proto#L43
 	if proposal.Proposer == "" {
 		return types.ErrInvalidProposal.Wrapf("proposal %d doesn't have proposer %s, so cannot be canceled", proposalID, proposer)

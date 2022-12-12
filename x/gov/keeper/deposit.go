@@ -186,24 +186,23 @@ func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 	if !cancellationCharges.IsZero() {
 		// get the distribution module account address
 		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
-		if distributionAddress.String() == destAddress {
+		switch {
+		case len(destAddress) == 0:
+			// burn the cancellation charges from deposits
+			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
+			if err != nil {
+				return err
+			}
+		case distributionAddress.String() == destAddress:
 			err := keeper.distrkeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
 			if err != nil {
 				return err
 			}
-		} else {
-			if len(destAddress) == 0 {
-				// burn the remaining deposits also
-				err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
-				if err != nil {
-					return err
-				}
-			} else {
-				destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
-				err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destAccAddress, cancellationCharges)
-				if err != nil {
-					return err
-				}
+		default:
+			destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destAccAddress, cancellationCharges)
+			if err != nil {
+				return err
 			}
 		}
 	}

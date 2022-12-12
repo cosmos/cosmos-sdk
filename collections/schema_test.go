@@ -7,6 +7,7 @@ import (
 
 func TestNameRegex(t *testing.T) {
 	require.Regexp(t, nameRegex, "a")
+	require.Regexp(t, nameRegex, "ABC")
 	require.Regexp(t, nameRegex, "foo1_xyz")
 	require.NotRegexp(t, nameRegex, "1foo")
 	require.NotRegexp(t, nameRegex, "_bar")

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/math"
-
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -262,12 +262,16 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 	} else {
 		store := k.getSendEnabledPrefixStore(ctx)
 		var err error
+
 		resp.Pagination, err = query.FilteredPaginate(
 			store,
 			req.Pagination,
 			func(key []byte, value []byte, accumulate bool) (bool, error) {
 				if accumulate {
-					resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(string(key), types.IsTrueB(value)))
+					var enabled gogotypes.BoolValue
+					k.cdc.MustUnmarshal(value, &enabled)
+
+					resp.SendEnabled = append(resp.SendEnabled, types.NewSendEnabled(string(key), enabled.Value))
 				}
 				return true, nil
 			},
@@ -276,5 +280,6 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
+
 	return resp, nil
 }

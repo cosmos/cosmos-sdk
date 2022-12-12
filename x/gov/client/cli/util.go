@@ -19,6 +19,7 @@ type legacyProposal struct {
 	Deposit     string
 }
 
+// validate the legacyProposal
 func (p legacyProposal) validate() error {
 	if p.Type == "" {
 		return fmt.Errorf("proposal type is required")
@@ -34,7 +35,8 @@ func (p legacyProposal) validate() error {
 	return nil
 }
 
-func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) {
+// parseSubmitLegacyProposal reads and parses the legacy proposal.
+func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 	proposal := &legacyProposal{}
 	proposalFile, _ := fs.GetString(FlagProposal)
 
@@ -82,6 +84,7 @@ type proposal struct {
 	Deposit  string            `json:"deposit"`
 }
 
+// parseSubmitProposal reads and parses the proposal.
 func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.Coins, error) {
 	var proposal proposal
 

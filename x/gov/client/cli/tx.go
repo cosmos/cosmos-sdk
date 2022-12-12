@@ -202,7 +202,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
-			proposal, err := parseSubmitLegacyProposalFlags(cmd.Flags())
+			proposal, err := parseSubmitLegacyProposal(cmd.Flags())
 			if err != nil {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 			}

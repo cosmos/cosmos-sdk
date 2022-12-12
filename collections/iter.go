@@ -295,6 +295,7 @@ func (i Iterator[K, V]) Close() error { return i.iter.Close() }
 func (i Iterator[K, V]) Next()        { i.iter.Next() }
 func (i Iterator[K, V]) Valid() bool  { return i.iter.Valid() }
 
+// KeyValue represent a Key and Value pair of an iteration.
 type KeyValue[K, V any] struct {
 	Key   K
 	Value V

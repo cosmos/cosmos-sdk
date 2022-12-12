@@ -45,7 +45,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -265,7 +264,7 @@ func NewSimApp(
 				fmt.Printf("failed to load streaming plugin: %s", err)
 				os.Exit(1)
 			}
-			if err := baseapp.RegisterStreamingPlugin(app.BaseApp, appOpts, app.keys, plugin); err != nil {
+			if err := baseapp.RegisterStreamingPlugin(app.BaseApp, appOpts, app.kvStoreKeys(), plugin); err != nil {
 				fmt.Printf("failed to register streaming plugin: %s", err)
 				os.Exit(1)
 			}

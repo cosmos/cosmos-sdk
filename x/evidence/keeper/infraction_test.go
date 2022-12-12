@@ -3,66 +3,14 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )
 
-type InfractionTestSuite struct {
-	suite.Suite
-
-	ctx sdk.Context
-	app *runtime.App
-
-	evidenceKeeper    keeper.Keeper
-	bankKeeper        bankkeeper.Keeper
-	accountKeeper     authkeeper.AccountKeeper
-	slashingKeeper    slashingkeeper.Keeper
-	stakingKeeper     *stakingkeeper.Keeper
-	interfaceRegistry codectypes.InterfaceRegistry
-
-	queryClient types.QueryClient
-}
-
-func (suite *InfractionTestSuite) SetupTest() {
-	var evidenceKeeper keeper.Keeper
-
-	app, err := simtestutil.Setup(testutil.AppConfig,
-		&evidenceKeeper,
-		&suite.interfaceRegistry,
-		&suite.accountKeeper,
-		&suite.bankKeeper,
-		&suite.slashingKeeper,
-		&suite.stakingKeeper,
-	)
-	require.NoError(suite.T(), err)
-
-	router := types.NewRouter()
-	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
-	evidenceKeeper.SetRouter(router)
-
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
-	suite.app = app
-
-	suite.evidenceKeeper = evidenceKeeper
-}
-
-func (suite *InfractionTestSuite) TestHandleDoubleSign() {
+func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	ctx := suite.ctx.WithIsCheckTx(false).WithBlockHeight(1)
 	suite.populateValidators(ctx)
 
@@ -128,7 +76,7 @@ func (suite *InfractionTestSuite) TestHandleDoubleSign() {
 	suite.Len(evidences, 1)
 }
 
-func (suite *InfractionTestSuite) TestHandleDoubleSign_TooOld() {
+func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	ctx := suite.ctx.WithIsCheckTx(false).WithBlockHeight(1).WithBlockTime(time.Now())
 	suite.populateValidators(ctx)
 
@@ -165,7 +113,7 @@ func (suite *InfractionTestSuite) TestHandleDoubleSign_TooOld() {
 	suite.False(suite.slashingKeeper.IsTombstoned(ctx, sdk.ConsAddress(val.Address())))
 }
 
-func (suite *InfractionTestSuite) populateValidators(ctx sdk.Context) {
+func (suite *KeeperTestSuite) populateValidators(ctx sdk.Context) {
 	// add accounts and set total supply
 	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
 	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))

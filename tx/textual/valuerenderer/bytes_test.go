@@ -36,18 +36,21 @@ func TestBytesJsonTestCases(t *testing.T) {
 		require.Equal(t, tc.hex, screens[0].Text)
 
 		// Round trip
-		val, err := valrend.Parse(context.Background(), screens)
-		require.NoError(t, err)
-		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
+		// Only parse if the input bytes were <=32 in length.
+		if len(data) <= 32 {
+			val, err := valrend.Parse(context.Background(), screens)
+			require.NoError(t, err)
+			require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
+		}
 	}
 }
 
 type bytesTest struct {
-	hex    string
 	base64 string
+	hex    string
 }
 
 func (t *bytesTest) UnmarshalJSON(b []byte) error {
-	a := []interface{}{&t.hex, &t.base64}
+	a := []interface{}{&t.base64, &t.hex}
 	return json.Unmarshal(b, &a)
 }

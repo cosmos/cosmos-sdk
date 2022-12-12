@@ -5,6 +5,7 @@
 * Dec 06, 2021: Initial Draft
 * Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 * Dec 01, 2022: Remove `Object: ` prefix on Any header screen.
+* Dec 13, 2022: Sign over bytes hash when bytes length > 32.
 
 ## Status
 
@@ -254,7 +255,16 @@ Examples:
 
 ### bytes
 
-* Bytes are rendered in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length shorter or equal to 32 are rendered in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length greater than 32 are hashed using SHA256, and the rendered text is the hash, in hexadecimal, all capital letters, without the `0x` prefix.
+
+#### Examples
+
+Inputs are displayed as byte arrays.
+
+* `[0]`: `00`
+* `[0,1,2,..,31]`: `000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F` 
+* `[0,1,2,..,32]`: `5D8FCFEFA9AEEB711FB8ED1E4B7D5C8A9BAFA46E8E76E68AA18ADCE5A10DF6AB`
 
 ### address bytes
 

@@ -881,7 +881,7 @@ params:
   - amount: "10000000"
     denom: stake
   min_initial_deposit_ratio: "0.000000000000000000"
-  proposal_cancel_burn_rate: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
@@ -1229,7 +1229,7 @@ simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" -
 
 #### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `proposal_cancel_burn_rate * deposits` will be sent to the `ProposalCancelDest` address and `remaining deposits` will be burned.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. and `remaining deposits` will be sent to depositers.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

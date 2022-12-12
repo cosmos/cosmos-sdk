@@ -160,7 +160,7 @@ The `gov` module has been updated to support the ability to cancel governance pr
 	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
 ```
 
-By default, the new `ProposalCancelRatio` parameter is set to zero during migration and `ProposalCancelDest` is set to empty string.
+By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string.
 
 #### `x/consensus`
 

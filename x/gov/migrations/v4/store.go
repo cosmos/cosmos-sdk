@@ -69,7 +69,8 @@ func migrateProposalVotingPeriod(ctx sdk.Context, storeKey storetypes.StoreKey, 
 }
 
 // AddProposerAddressToProposal will add proposer to proposal
-// and set to the store
+// and set to the store. This function is optional, and only needed
+// if you wish that migrated proposals be cancellable.
 func AddProposerAddressToProposal(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, proposals map[uint64]string) error {
 	proposalIDs := make([]uint64, 0, len(proposals))
 

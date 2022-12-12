@@ -20,7 +20,7 @@ var (
 	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
 	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
 	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
-	DefaultProposalCancelRatio       = sdk.ZeroDec()
+	DefaultProposalCancelRatio       = sdk.MustNewDecFromStr("0.5")
 	DefaultProposalCancelDestAddress = ""
 )
 

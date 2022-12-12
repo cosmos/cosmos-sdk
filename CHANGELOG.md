@@ -55,7 +55,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#13210](https://github.com/cosmos/cosmos-sdk/pull/13210) Add `Query/AccountInfo` endpoint for simplified access to basic account info.
 * (x/consensus) [#12905](https://github.com/cosmos/cosmos-sdk/pull/12905) Create a new `x/consensus` module that is now responsible for maintaining Tendermint consensus parameters instead of `x/param`. Legacy types remain in order to facilitate parameter migration from the deprecated `x/params`. App developers should ensure that they execute `baseapp.MigrateParams` during their chain upgrade. These legacy types will be removed in a future release.
 * (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) Add `cancel-proposal` feature to proposals. Now proposers can cancel the proposal prior to the proposal's voting period end time.
-* (cli) [#13454](https://github.com/cosmos/cosmos-sdk/pull/13454) `sign-batch` CLI can now read multiple transaction files.
 * (client/tx) [#13670](https://github.com/cosmos/cosmos-sdk/pull/13670) Add validation in `BuildUnsignedTx` to prevent simple inclusion of valid mnemonics
 
 ### Improvements

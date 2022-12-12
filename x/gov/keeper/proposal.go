@@ -105,22 +105,22 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 	// Checking proposal have proposer or not because old proposal doesn't have proposer feild,
 	// https://github.com/cosmos/cosmos-sdk/blob/v0.46.2/proto/cosmos/gov/v1/gov.proto#L43
 	if proposal.Proposer == "" {
-		return sdkerrors.Wrapf(types.ErrInvalidProposal, "proposal %d doesn't have proposer %s, so cannot be canceled", proposalID, proposer)
+		return types.ErrInvalidProposal.Wrapf("proposal %d doesn't have proposer %s, so cannot be canceled", proposalID, proposer)
 	}
 
 	// Check creator of the proposal
 	if proposal.Proposer != proposer {
-		return sdkerrors.Wrapf(types.ErrInvalidProposer, "invalid proposer %s", proposer)
+		return types.ErrInvalidProposer.Wrapf("invalid proposer %s", proposer)
 	}
 
 	// Check if proposal is active or not
 	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
-		return sdkerrors.Wrap(types.ErrInvalidProposal, "proposal should be in the deposit or voting period")
+		return types.ErrInvalidProposal.Wrap("proposal should be in the deposit or voting period")
 	}
 
 	// Check proposal voting period is ended.
 	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(ctx.BlockTime()) {
-		return sdkerrors.Wrapf(types.ErrVotingPeriodEnded, "voting period is already ended for this proposal %d", proposalID)
+		return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)
 	}
 
 	// burn the (deposits * proposal_cancel_rate) amount or sent to cancellation destination address.
@@ -132,7 +132,7 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 	}
 
 	if proposal.VotingStartTime != nil {
-		keeper.DeleteVotes(ctx, proposal.Id)
+		keeper.deleteVotes(ctx, proposal.Id)
 	}
 
 	keeper.DeleteProposal(ctx, proposal.Id)

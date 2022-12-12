@@ -8,6 +8,8 @@ import (
 )
 
 // NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.
+// Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
+// else this method will panic.
 func NewMap[K, V any](
 	schema Schema, prefix Prefix, name string,
 	keyCodec KeyCodec[K], valueCodec ValueCodec[V],

@@ -6,6 +6,7 @@ import (
 	"regexp"
 )
 
+// NewSchema creates a new schema from the provided store key.
 func NewSchema(storeKey storetypes.StoreKey) Schema {
 	return Schema{
 		storeKey:            storeKey,
@@ -14,6 +15,11 @@ func NewSchema(storeKey storetypes.StoreKey) Schema {
 	}
 }
 
+// Schema specifies a group of collections stored within the storage specified
+// by a single store key. All the collections within the schema must have a
+// unique binary prefix and human-readable name. Schema will eventually include
+// methods for importing/exporting genesis data and for schema reflection for
+// clients.
 type Schema struct {
 	storeKey            storetypes.StoreKey
 	collectionsByPrefix map[string]Collection
@@ -40,4 +46,7 @@ func (s Schema) addCollection(collection Collection) {
 	s.collectionsByName[name] = collection
 }
 
-var nameRegex = regexp.MustCompile("^[A-Za-z][A-Za-z0-9_]*$")
+// NameRegex is the regular expression that all valid collection names must match.
+const NameRegex = "^[A-Za-z][A-Za-z0-9_]*$"
+
+var nameRegex = regexp.MustCompile(NameRegex)

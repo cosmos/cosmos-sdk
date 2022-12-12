@@ -275,6 +275,7 @@ func NewSimApp(
 	app.sm.RegisterStoreDecoders()
 
 	// Set custom init chainer that registers the module versions in the upgrade module
+	// NOTE: this is not required for apps that do not need custom pre-init genesis logic
 	app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 		return app.App.InitChainer(ctx, req)

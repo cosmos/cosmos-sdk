@@ -2,18 +2,26 @@ package collections
 
 import (
 	"context"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // NewItem instantiates a new Item instance, given the value encoder of the item V.
-func NewItem[V any](sk storetypes.StoreKey, prefix Prefix, valueCodec ValueCodec[V]) Item[V] {
-	return (Item[V])(NewMap[noKey, V](sk, prefix, noKey{}, valueCodec))
+func NewItem[V any](schema Schema, prefix Prefix, name string, valueCodec ValueCodec[V]) Item[V] {
+	item := (Item[V])(newMap[noKey, V](schema, prefix, name, noKey{}, valueCodec))
+	schema.addCollection(item)
+	return item
 }
 
 // Item is a type declaration based on Map
 // with a non-existent key.
 type Item[V any] Map[noKey, V]
+
+func (i Item[V]) Name() string {
+	return i.name
+}
+
+func (i Item[V]) Prefix() []byte {
+	return i.prefix
+}
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.

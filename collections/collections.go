@@ -23,6 +23,11 @@ type StorageProvider interface {
 	KVStore(key storetypes.StoreKey) storetypes.KVStore
 }
 
+type Collection interface {
+	Name() string
+	Prefix() []byte
+}
+
 // Prefix defines a segregation namespace
 // for specific collections objects.
 type Prefix struct {

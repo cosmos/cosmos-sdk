@@ -10,7 +10,8 @@ import (
 
 func TestMap(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("hi"), Uint64Key, Uint64Value)
+	schema := NewSchema(sk)
+	m := NewMap(schema, NewPrefix("hi"), "m", Uint64Key, Uint64Value)
 
 	// test not has
 	has, err := m.Has(ctx, 1)
@@ -40,7 +41,8 @@ func TestMap_encodeKey(t *testing.T) {
 	number := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 	expectedKey := append([]byte(prefix), number...)
 
-	m := NewMap(storetypes.NewKVStoreKey("test"), NewPrefix(prefix), Uint64Key, Uint64Value)
+	schema := NewSchema(storetypes.NewKVStoreKey("test"))
+	m := NewMap(schema, NewPrefix(prefix), "m", Uint64Key, Uint64Value)
 
 	gotKey, err := m.encodeKey(0)
 	require.NoError(t, err)

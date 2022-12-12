@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -14,11 +13,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	"github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
+	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{
@@ -50,13 +48,6 @@ func TestNewStore(t *testing.T) {
 
 func TestNewStore_ErrNoDir(t *testing.T) {
 	_, err := snapshots.NewStore(db.NewMemDB(), "")
-	require.Error(t, err)
-}
-
-func TestNewStore_ErrDirFailure(t *testing.T) {
-	notADir := filepath.Join(testutil.TempFile(t).Name(), "subdir")
-
-	_, err := snapshots.NewStore(db.NewMemDB(), notADir)
 	require.Error(t, err)
 }
 

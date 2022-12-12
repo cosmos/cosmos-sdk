@@ -2256,7 +2256,6 @@ type Plan struct {
 	// Deprecated: Do not use.
 	Time *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
 	// The height at which the upgrade must be performed.
-	// Only used if Time is not set.
 	Height int64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 	// Any application specific upgrade info to be included on-chain
 	// such as a git commit that validators could automatically upgrade to
@@ -2337,9 +2336,12 @@ type SoftwareUpgradeProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title of the proposal
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description of the proposal
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Plan        *Plan  `protobuf:"bytes,3,opt,name=plan,proto3" json:"plan,omitempty"`
+	// plan of the proposal
+	Plan *Plan `protobuf:"bytes,3,opt,name=plan,proto3" json:"plan,omitempty"`
 }
 
 func (x *SoftwareUpgradeProposal) Reset() {
@@ -2394,7 +2396,9 @@ type CancelSoftwareUpgradeProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title of the proposal
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description of the proposal
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 }
 

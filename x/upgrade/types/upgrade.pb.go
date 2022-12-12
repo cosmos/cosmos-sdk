@@ -45,7 +45,6 @@ type Plan struct {
 	// If this field is not empty, an error will be thrown.
 	Time time.Time `protobuf:"bytes,2,opt,name=time,proto3,stdtime" json:"time"` // Deprecated: Do not use.
 	// The height at which the upgrade must be performed.
-	// Only used if Time is not set.
 	Height int64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 	// Any application specific upgrade info to be included on-chain
 	// such as a git commit that validators could automatically upgrade to
@@ -95,9 +94,12 @@ var xxx_messageInfo_Plan proto.InternalMessageInfo
 //
 // Deprecated: Do not use.
 type SoftwareUpgradeProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title of the proposal
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description of the proposal
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Plan        Plan   `protobuf:"bytes,3,opt,name=plan,proto3" json:"plan"`
+	// plan of the proposal
+	Plan Plan `protobuf:"bytes,3,opt,name=plan,proto3" json:"plan"`
 }
 
 func (m *SoftwareUpgradeProposal) Reset()      { *m = SoftwareUpgradeProposal{} }
@@ -139,7 +141,9 @@ var xxx_messageInfo_SoftwareUpgradeProposal proto.InternalMessageInfo
 //
 // Deprecated: Do not use.
 type CancelSoftwareUpgradeProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title of the proposal
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description of the proposal
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 }
 

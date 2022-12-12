@@ -207,17 +207,3 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 
 	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
 }
-
-func InvokeKeeperOptions(upgradeKeeper keeper.Keeper, modules map[string]appmodule.AppModule, baseApp *baseapp.BaseApp) {
-	if len(modules) == 0 || baseApp == nil {
-		return
-	}
-
-	ctxWithStore := sdk.Context{}
-	ctxWithStore = ctxWithStore.
-		WithMultiStore(baseApp.CommitMultiStore()).
-		WithGasMeter(store.NewInfiniteGasMeter()).
-		WithKVGasConfig(store.KVGasConfig())
-
-	upgradeKeeper.SetModuleVersionMap(ctxWithStore, module.NewManagerFromMap(modules).GetVersionMap())
-}

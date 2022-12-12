@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -271,6 +273,12 @@ func NewSimApp(
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
 	app.sm.RegisterStoreDecoders()
+
+	// Set custom init chainer that registers the module versions in the upgrade module
+	app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
+		return app.App.InitChainer(ctx, req)
+	})
 
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)

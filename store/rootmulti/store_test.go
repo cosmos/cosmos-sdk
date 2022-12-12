@@ -832,36 +832,30 @@ func (tl *MockListener) OnWrite(storeKey types.StoreKey, key []byte, value []byt
 func TestStateListeners(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.Empty(t, ms.listeners)
 
-	listener := &MockListener{}
-	ms.AddListeners(testStoreKey1, []types.WriteListener{listener})
+	ms.AddListeners([]types.StoreKey{testStoreKey1})
+	require.Equal(t, 1, len(ms.listeners))
 
 	require.NoError(t, ms.LoadLatestVersion())
 	cacheMulti := ms.CacheMultiStore()
 
-	store1 := cacheMulti.GetKVStore(testStoreKey1)
-	store1.Set([]byte{1}, []byte{1})
-	require.Empty(t, listener.stateCache)
+	store := cacheMulti.GetKVStore(testStoreKey1)
+	store.Set([]byte{1}, []byte{1})
+	require.Empty(t, ms.PopStateCache())
 
 	// writes are observed when cache store commit.
 	cacheMulti.Write()
-	require.Equal(t, 1, len(listener.stateCache))
+	require.Equal(t, 1, len(ms.PopStateCache()))
 
-	// test nested cache store
-	listener.stateCache = []types.StoreKVPair{}
-	nested := cacheMulti.CacheMultiStore()
+	// test no listening on unobserved store
+	store = cacheMulti.GetKVStore(testStoreKey2)
+	store.Set([]byte{1}, []byte{1})
+	require.Empty(t, ms.PopStateCache())
 
-	store1 = nested.GetKVStore(testStoreKey1)
-	store1.Set([]byte{1}, []byte{1})
-	require.Empty(t, listener.stateCache)
-
-	// writes are not observed when nested cache store commit
-	nested.Write()
-	require.Empty(t, listener.stateCache)
-
-	// writes are observed when inner cache store commit
+	// writes are not observed when cache store commit
 	cacheMulti.Write()
-	require.Equal(t, 1, len(listener.stateCache))
+	require.Empty(t, ms.PopStateCache())
 }
 
 type commitKVStoreStub struct {

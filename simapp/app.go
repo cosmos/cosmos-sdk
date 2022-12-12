@@ -264,7 +264,7 @@ func NewSimApp(
 
 	// load state streaming if enabled
 	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
-		logger.Error("failed to load state streaming", "error", err)
+		logger.Error("failed to load state streaming", "err", err)
 		os.Exit(1)
 	}
 
@@ -513,7 +513,7 @@ func NewSimApp(
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
-			logger.Error("error on loading last version", "error", err)
+			logger.Error("error on loading last version", "err", err)
 			os.Exit(1)
 		}
 	}

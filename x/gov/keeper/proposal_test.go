@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 		},
 	)
 	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "")
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], tp, "")
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 	suite.govKeeper.SetProposal(suite.ctx, proposal)

@@ -50,6 +50,21 @@ import (
 )
 
 var (
+
+	// NOTE: The genutils module must occur after staking so that pools are
+	// properly initialized with tokens from genesis accounts.
+	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+	// NOTE: Capability module must occur first so that it can initialize any capabilities
+	// so that other modules that want to create or claim capabilities afterwards in InitChain
+	// can do so safely.
+	genesisModuleOrder = []string{
+		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName,
+		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
+		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
+		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
+		vestingtypes.ModuleName, consensustypes.ModuleName,
+	}
+
 	// module account permissions
 	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 		{Account: authtypes.FeeCollectorName},
@@ -133,6 +148,12 @@ var (
 							KvStoreKey: "acc",
 						},
 					},
+					// InitGenesis: genesisModuleOrder,
+					// When ExportGenesis is not specified, the export genesis module order
+					// is equal to the init genesis order
+					// ExportGenesis: genesisModuleOrder,
+					// Uncomment if you want to set a custom migration order here.
+					// OrderMigrations: nil,
 				}),
 			},
 			{

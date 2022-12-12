@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcec/v2"
-	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
+	rosettatypes "github.com/cosmos/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"

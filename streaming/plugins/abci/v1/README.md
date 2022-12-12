@@ -18,10 +18,12 @@ See [streaming/plugins/proto/abci/v1/grpc.proto](https://github.com/cosmos/cosmo
 ```protobuf
 syntax = "proto3";
 
-option go_package           = "github.com/cosmos/cosmos-sdk/streaming/plugins/abci/v1";
-option java_multiple_files  = true;
-option java_outer_classname = "AbciListenerProto";
-option java_package         = "network.cosmos.sdk.streaming.abci.v1";
+package cosmos.streaming.abci.v1;
+
+import "tendermint/abci/types.proto";
+import "cosmos/base/store/v1beta1/listening.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/streaming/plugins/abci/v1";
 
 // Empty is the response message for incoming requests
 message Empty {}

@@ -185,7 +185,7 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 		return iter, fmt.Errorf("collections: unrecognized order identifier: %d", order)
 	}
 
-	if storeIter.Valid() {
+	if !storeIter.Valid() {
 		return iter, ErrInvalidIterator
 	}
 

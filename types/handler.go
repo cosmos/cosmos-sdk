@@ -7,7 +7,8 @@ type Handler func(ctx Context, msg Msg) (*Result, error)
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
-// PostHandler
+// PostHandler like AnteHandler but it executes after RunMsgs. Runs on success
+// or failure and enables use cases like gas refunding.
 type PostHandler func(ctx Context, tx Tx, res *Result, simulate, success bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre-processing.

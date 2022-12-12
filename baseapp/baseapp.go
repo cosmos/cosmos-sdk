@@ -739,6 +739,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
+			// Follow-up Ref: https://github.com/cosmos/cosmos-sdk/pull/13941
 			newCtx, err := app.postHandler(runMsgCtx, tx, result, mode == runTxModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, nil, priority, err

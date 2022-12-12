@@ -16,7 +16,7 @@ import (
 
 var _ authz.QueryServer = Keeper{}
 
-// Authorizations implements the Query/Grants gRPC method.
+// Grants implements the Query/Grants gRPC method.
 // It returns grants for a granter-grantee pair. If msg type URL is set, it returns grants only for that msg type.
 func (k Keeper) Grants(c context.Context, req *authz.QueryGrantsRequest) (*authz.QueryGrantsResponse, error) {
 	if req == nil {

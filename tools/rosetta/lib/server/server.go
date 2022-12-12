@@ -3,16 +3,16 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
-	assert "github.com/coinbase/rosetta-sdk-go/asserter"
-	"github.com/coinbase/rosetta-sdk-go/server"
-	"github.com/coinbase/rosetta-sdk-go/types"
+	assert "github.com/cosmos/rosetta-sdk-go/asserter"
+	"github.com/cosmos/rosetta-sdk-go/server"
+	"github.com/cosmos/rosetta-sdk-go/types"
+	"github.com/rs/zerolog"
 
 	"cosmossdk.io/tools/rosetta/lib/internal/service"
+	"cosmossdk.io/tools/rosetta/lib/logger"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 const (
@@ -40,11 +40,11 @@ type Settings struct {
 type Server struct {
 	h      http.Handler
 	addr   string
-	logger log.Logger
+	logger *zerolog.Logger
 }
 
 func (h Server) Start() error {
-	h.logger.Info(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
+	h.logger.Info().Msg(fmt.Sprintf("Rosetta server listening on add %s", h.addr))
 	return http.ListenAndServe(h.addr, h.h) //nolint:gosec
 }
 
@@ -61,7 +61,7 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := logger.NewLogger()
 
 	var adapter crgtypes.API
 	switch settings.Offline {
@@ -95,7 +95,7 @@ func newOfflineAdapter(settings Settings) (crgtypes.API, error) {
 	return service.NewOffline(settings.Network, settings.Client)
 }
 
-func newOnlineAdapter(settings Settings, logger log.Logger) (crgtypes.API, error) {
+func newOnlineAdapter(settings Settings, logger *zerolog.Logger) (crgtypes.API, error) {
 	if settings.Client == nil {
 		return nil, fmt.Errorf("client is nil")
 	}
@@ -115,7 +115,7 @@ func newOnlineAdapter(settings Settings, logger log.Logger) (crgtypes.API, error
 	for i := 0; i < settings.Retries; i++ {
 		err = settings.Client.Ready()
 		if err != nil {
-			logger.Error(fmt.Sprintf("[Rosetta]- Client is not ready: %v. Retrying ...", err))
+			logger.Err(err).Msg("[Rosetta]- Client is not ready. Retrying ...")
 			time.Sleep(settings.RetryWait)
 			continue
 		}

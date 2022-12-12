@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	legacyproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/protobuf/proto"
 
@@ -42,19 +41,20 @@ func NewProtoCodec(interfaceRegistry types.InterfaceRegistry) *ProtoCodec {
 // Marshal implements BinaryMarshaler.Marshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
-func (pc *ProtoCodec) Marshal(o ProtoMarshaler) ([]byte, error) {
+func (pc *ProtoCodec) Marshal(o gogoproto.Message) ([]byte, error) {
 	// Size() check can catch the typed nil value.
-	if o == nil || o.Size() == 0 {
+	if o == nil || gogoproto.Size(o) == 0 {
 		// return empty bytes instead of nil, because nil has special meaning in places like store.Set
 		return []byte{}, nil
 	}
-	return o.Marshal()
+
+	return gogoproto.Marshal(o)
 }
 
 // MustMarshal implements BinaryMarshaler.MustMarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterface
-func (pc *ProtoCodec) MustMarshal(o ProtoMarshaler) []byte {
+func (pc *ProtoCodec) MustMarshal(o gogoproto.Message) []byte {
 	bz, err := pc.Marshal(o)
 	if err != nil {
 		panic(err)
@@ -64,19 +64,19 @@ func (pc *ProtoCodec) MustMarshal(o ProtoMarshaler) []byte {
 }
 
 // MarshalLengthPrefixed implements BinaryMarshaler.MarshalLengthPrefixed method.
-func (pc *ProtoCodec) MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error) {
+func (pc *ProtoCodec) MarshalLengthPrefixed(o gogoproto.Message) ([]byte, error) {
 	bz, err := pc.Marshal(o)
 	if err != nil {
 		return nil, err
 	}
 
 	var sizeBuf [binary.MaxVarintLen64]byte
-	n := binary.PutUvarint(sizeBuf[:], uint64(o.Size()))
+	n := binary.PutUvarint(sizeBuf[:], uint64(len(bz)))
 	return append(sizeBuf[:n], bz...), nil
 }
 
 // MustMarshalLengthPrefixed implements BinaryMarshaler.MustMarshalLengthPrefixed method.
-func (pc *ProtoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
+func (pc *ProtoCodec) MustMarshalLengthPrefixed(o gogoproto.Message) []byte {
 	bz, err := pc.MarshalLengthPrefixed(o)
 	if err != nil {
 		panic(err)
@@ -88,8 +88,8 @@ func (pc *ProtoCodec) MustMarshalLengthPrefixed(o ProtoMarshaler) []byte {
 // Unmarshal implements BinaryMarshaler.Unmarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
-func (pc *ProtoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
-	err := ptr.Unmarshal(bz)
+func (pc *ProtoCodec) Unmarshal(bz []byte, ptr gogoproto.Message) error {
+	err := gogoproto.Unmarshal(bz, ptr)
 	if err != nil {
 		return err
 	}
@@ -103,14 +103,14 @@ func (pc *ProtoCodec) Unmarshal(bz []byte, ptr ProtoMarshaler) error {
 // MustUnmarshal implements BinaryMarshaler.MustUnmarshal method.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterface
-func (pc *ProtoCodec) MustUnmarshal(bz []byte, ptr ProtoMarshaler) {
+func (pc *ProtoCodec) MustUnmarshal(bz []byte, ptr gogoproto.Message) {
 	if err := pc.Unmarshal(bz, ptr); err != nil {
 		panic(err)
 	}
 }
 
 // UnmarshalLengthPrefixed implements BinaryMarshaler.UnmarshalLengthPrefixed method.
-func (pc *ProtoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error {
+func (pc *ProtoCodec) UnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Message) error {
 	size, n := binary.Uvarint(bz)
 	if n < 0 {
 		return fmt.Errorf("invalid number of bytes read from length-prefixed encoding: %d", n)
@@ -127,7 +127,7 @@ func (pc *ProtoCodec) UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) err
 }
 
 // MustUnmarshalLengthPrefixed implements BinaryMarshaler.MustUnmarshalLengthPrefixed method.
-func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) {
+func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr gogoproto.Message) {
 	if err := pc.UnmarshalLengthPrefixed(bz, ptr); err != nil {
 		panic(err)
 	}
@@ -137,13 +137,13 @@ func (pc *ProtoCodec) MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
 // it marshals to JSON using proto codec.
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.MarshalInterfaceJSON
+//
+//nolint:stdmethods
 func (pc *ProtoCodec) MarshalJSON(o gogoproto.Message) ([]byte, error) {
-	m, ok := o.(ProtoMarshaler)
-	if !ok {
-		return nil, fmt.Errorf("cannot protobuf JSON encode unsupported type: %T", o)
+	if o == nil {
+		return nil, fmt.Errorf("cannot protobuf JSON encode nil")
 	}
-
-	return ProtoMarshalJSON(m, pc.interfaceRegistry)
+	return ProtoMarshalJSON(o, pc.interfaceRegistry)
 }
 
 // MustMarshalJSON implements JSONCodec.MustMarshalJSON method,
@@ -164,13 +164,11 @@ func (pc *ProtoCodec) MustMarshalJSON(o gogoproto.Message) []byte {
 // NOTE: this function must be used with a concrete type which
 // implements proto.Message. For interface please use the codec.UnmarshalInterfaceJSON
 func (pc *ProtoCodec) UnmarshalJSON(bz []byte, ptr gogoproto.Message) error {
-	m, ok := ptr.(ProtoMarshaler)
-	if !ok {
+	if ptr == nil {
 		return fmt.Errorf("cannot protobuf JSON decode unsupported type: %T", ptr)
 	}
-
 	unmarshaler := jsonpb.Unmarshaler{AnyResolver: pc.interfaceRegistry}
-	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), m)
+	err := unmarshaler.Unmarshal(strings.NewReader(string(bz)), ptr)
 	if err != nil {
 		return err
 	}
@@ -283,10 +281,8 @@ func (g grpcProtoCodec) Marshal(v interface{}) ([]byte, error) {
 	switch m := v.(type) {
 	case proto.Message:
 		return proto.Marshal(m)
-	case ProtoMarshaler:
+	case gogoproto.Message:
 		return g.cdc.Marshal(m)
-	case legacyproto.Message:
-		return legacyproto.Marshal(m)
 	default:
 		return nil, fmt.Errorf("%w: cannot marshal type %T", errUnknownProtoType, v)
 	}
@@ -296,10 +292,8 @@ func (g grpcProtoCodec) Unmarshal(data []byte, v interface{}) error {
 	switch m := v.(type) {
 	case proto.Message:
 		return proto.Unmarshal(data, m)
-	case ProtoMarshaler:
+	case gogoproto.Message:
 		return g.cdc.Unmarshal(data, m)
-	case legacyproto.Message:
-		return legacyproto.Unmarshal(data, m)
 	default:
 		return fmt.Errorf("%w: cannot unmarshal type %T", errUnknownProtoType, v)
 	}

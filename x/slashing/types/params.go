@@ -46,7 +46,7 @@ func DefaultParams() Params {
 	)
 }
 
-// validate params
+// Validate validates the params
 func (p Params) Validate() error {
 	if err := validateSignedBlocksWindow(p.SignedBlocksWindow); err != nil {
 		return err

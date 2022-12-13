@@ -28,7 +28,7 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 		return []Screen{{Text: text}}, nil
 	}
 
-	// For long bytes, we show the hash.
+	// For long bytes, we display the hash.
 	hasher := sha256.New()
 	_, err := hasher.Write(bz)
 	if err != nil {

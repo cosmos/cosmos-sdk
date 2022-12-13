@@ -101,9 +101,9 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 // from <=v0.45.
 //
 // This function migrates the store in-place by fixing the gov votes weight to
-// be stored as decimals strings.
+// be stored as decimals strings (instead of the sdk.Dec BigInt representation).
 //
 // The store is expected to be the gov store, and not any prefixed substore.
-func Migrate_V046_6_To_V046_7(store sdk.KVStore) error {
-	return nil
+func Migrate_V046_6_To_V046_7(store sdk.KVStore, cdc codec.BinaryCodec) error {
+	return migrateVotes(store, cdc)
 }

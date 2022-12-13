@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [](https://github.com/cosmos/cosmos-sdk/pull/) Use `coinbase/rosetta-sdk-go/types` packages instead of comsos fork.
+* [#14272](https://github.com/cosmos/cosmos-sdk/pull/14272) Use `coinbase/rosetta-sdk-go/types` packages instead of comsos fork.
 
 ## v0.2.0 2022-12-07
 

@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) reset() {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	govKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+	govKeeper, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
 
 	tp := TestProposal
 	_, err := govKeeper.SubmitProposal(ctx, tp, "")

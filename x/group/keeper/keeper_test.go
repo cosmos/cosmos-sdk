@@ -1815,7 +1815,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64
+		proposalID uint64
 		admin      string
 		expErrMsg  string
 	}{
@@ -1826,7 +1826,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			admin:     addr5.String(),
 			expErrMsg: "unauthorized",
 		},
-		"wrong proposalId": {
+		"wrong proposalID": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return 1111
 			},
@@ -1837,7 +1837,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			proposalId: proposalID,
+			proposalID: proposalID,
 			admin:      proposers[0],
 		},
 		"already closed proposal": {
@@ -1850,7 +1850,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 				s.Require().NoError(err)
 				return pID
 			},
-			proposalId: proposalID,
+			proposalID: proposalID,
 			admin:      proposers[0],
 			expErrMsg:  "cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
 		},
@@ -1858,7 +1858,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			proposalId: proposalID,
+			proposalID: proposalID,
 			admin:      proposers[0],
 		},
 	}
@@ -2795,7 +2795,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64
+		proposalID uint64
 		admin      string
 		expErrMsg  string
 		newCtx     sdk.Context

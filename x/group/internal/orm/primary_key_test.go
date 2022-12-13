@@ -41,14 +41,14 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		Metadata: metadata,
 	}
 	for _, g := range []testdata.TableModel{t1, t2, t3} {
-		require.NoError(t, tb.Create(store, &g))
+		require.NoError(t, tb.Create(store, &g)) //nolint:gosec // this is a test
 	}
 
 	specs := map[string]struct {
 		start, end []byte
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error
+		expError   *sdkerrors.Error //nolint:staticcheck // using deprecated errors library
 		method     func(store sdk.KVStore, start, end []byte) (Iterator, error)
 	}{
 		"exact match with a single result": {

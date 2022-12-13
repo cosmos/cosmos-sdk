@@ -57,7 +57,7 @@ func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
 		src    proto.Message
-		expErr *sdkerrors.Error
+		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -125,7 +125,7 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
 		src    proto.Message
-		expErr *sdkerrors.Error
+		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -187,7 +187,7 @@ func TestUpdate(t *testing.T) {
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
 		rowId  []byte
-		expErr *sdkerrors.Error
+		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"happy path": {
 			rowId: EncodeSequence(1),

@@ -205,6 +205,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type EvidenceInputs struct {
 	depinject.In
 
@@ -215,6 +216,7 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
+//nolint:revive
 type EvidenceOutputs struct {
 	depinject.Out
 

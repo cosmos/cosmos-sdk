@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -458,7 +457,7 @@ func TestInMemoryLanguage(t *testing.T) {
 }
 
 func TestInMemoryWithKeyring(t *testing.T) {
-	priv := cryptotypes.PrivKey(secp256k1.GenPrivKey())
+	priv := types.PrivKey(secp256k1.GenPrivKey())
 	pub := priv.PubKey()
 
 	cdc := getCodec()
@@ -466,7 +465,7 @@ func TestInMemoryWithKeyring(t *testing.T) {
 	require.NoError(t, err)
 
 	multi := multisig.NewLegacyAminoPubKey(
-		1, []cryptotypes.PubKey{
+		1, []types.PubKey{
 			pub,
 		},
 	)

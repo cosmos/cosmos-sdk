@@ -94,7 +94,7 @@ func (z TestZip) SaveAs(path string) error {
 
 // saveTestZip saves a TestZip in this test's Home/src directory with the given name.
 // The full path to the saved archive is returned.
-func (s DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string {
+func (s DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string { //nolint:govet // it's a test so we dont' mind copying a lock
 	fullName := filepath.Join(s.Home, "src", name)
 	s.Require().NoError(z.SaveAs(fullName), "saving test zip %s", name)
 	return fullName
@@ -102,7 +102,7 @@ func (s DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string {
 
 // saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
-func (s DownloaderTestSuite) saveSrcTestFile(f *TestFile) string {
+func (s DownloaderTestSuite) saveSrcTestFile(f *TestFile) string { //nolint:govet // it's a test so we dont' mind copying a lock
 	path := filepath.Join(s.Home, "src")
 	fullName, err := f.SaveIn(path)
 	s.Require().NoError(err, "saving test file %s", f.Name)

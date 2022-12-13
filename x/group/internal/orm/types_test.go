@@ -32,7 +32,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 		srcRowID     RowID
 		srcModelType reflect.Type
 		expObj       interface{}
-		expErr       *sdkerrors.Error
+		expErr       *sdkerrors.Error //nolint:staticcheck // using deprecated errors library
 	}{
 		"happy path": {
 			srcRowID:     EncodeSequence(1),

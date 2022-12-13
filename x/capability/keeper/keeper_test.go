@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	stakingModuleName string = "staking"
-	bankModuleName    string = "bank"
+	stakingModuleName = "staking"
+	bankModuleName    = "bank"
 )
 
 type KeeperTestSuite struct {

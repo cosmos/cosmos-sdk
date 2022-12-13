@@ -5,8 +5,9 @@ go 1.19
 require (
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20221207001918-ed5124f932fd
-	github.com/cosmos/rosetta-sdk-go v0.9.0
+	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
@@ -16,7 +17,7 @@ require (
 )
 
 require (
-	cosmossdk.io/api v0.2.5 // indirect
+	cosmossdk.io/api v0.2.6 // indirect
 	cosmossdk.io/core v0.3.2 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect

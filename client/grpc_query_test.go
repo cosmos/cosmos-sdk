@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -70,7 +71,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(s.genesisAccountBalance))),
 	}
 
-	genesisState, err := sims.GenesisStateWithValSet(cdc, appBuilder.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
 	s.NoError(err)
 
 	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")

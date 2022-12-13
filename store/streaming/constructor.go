@@ -7,20 +7,19 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/spf13/cast"
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, codec.BinaryCodec, log.Logger) (baseapp.StreamingService, error)
+type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, types.Codec, log.Logger) (baseapp.StreamingService, error)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -90,7 +89,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 func NewFileStreamingService(
 	opts serverTypes.AppOptions,
 	keys []types.StoreKey,
-	marshaller codec.BinaryCodec,
+	marshaller types.Codec,
 	logger log.Logger,
 ) (baseapp.StreamingService, error) {
 	homePath := cast.ToString(opts.Get(flags.FlagHome))
@@ -122,7 +121,7 @@ func NewFileStreamingService(
 func LoadStreamingServices(
 	bApp *baseapp.BaseApp,
 	appOpts serverTypes.AppOptions,
-	appCodec codec.BinaryCodec,
+	appCodec types.Codec,
 	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
 ) ([]baseapp.StreamingService, *sync.WaitGroup, error) {
@@ -140,7 +139,7 @@ func LoadStreamingServices(
 		exposeKeyStrs := cast.ToStringSlice(appOpts.Get(fmt.Sprintf("streamers.%s.keys", streamerName)))
 
 		// if list contains '*', expose all store keys
-		if sdk.SliceContains(exposeKeyStrs, "*") {
+		if types.SliceContains(exposeKeyStrs, "*") {
 			exposeStoreKeys = make([]types.StoreKey, 0, len(keys))
 			for _, storeKey := range keys {
 				exposeStoreKeys = append(exposeStoreKeys, storeKey)

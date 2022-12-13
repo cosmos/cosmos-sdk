@@ -37,13 +37,6 @@ var (
 	ParamsKey = []byte{0x05}
 )
 
-const (
-	// TrueB is a byte with value 1 that represents true.
-	TrueB = byte(0x01)
-	// FalseB is a byte with value 0 that represents false.
-	FalseB = byte(0x00)
-)
-
 // AddressAndDenomFromBalancesStore returns an account address and denom from a balances prefix
 // store. The key must not contain the prefix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
@@ -93,17 +86,4 @@ func CreateSendEnabledKey(denom string) []byte {
 	copy(key, SendEnabledPrefix)
 	copy(key[len(SendEnabledPrefix):], denom)
 	return key
-}
-
-// IsTrueB returns true if the provided byte slice has exactly one byte, and it is equal to TrueB.
-func IsTrueB(bz []byte) bool {
-	return len(bz) == 1 && bz[0] == TrueB
-}
-
-// ToBoolB returns TrueB if v is true, and FalseB if it's false.
-func ToBoolB(v bool) byte {
-	if v {
-		return TrueB
-	}
-	return FalseB
 }

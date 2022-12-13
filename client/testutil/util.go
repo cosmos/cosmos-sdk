@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
-	_ "github.com/cosmos/cosmos-sdk/runtime"
+
 )
 
 var TestConfig = appconfig.Compose(&appv1alpha1.Config{

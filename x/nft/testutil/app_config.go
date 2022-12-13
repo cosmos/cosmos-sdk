@@ -2,15 +2,15 @@ package testutil
 
 import (
 	"cosmossdk.io/core/appconfig"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/nft/module"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import bank as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import consensus as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import genutil as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import mint as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/nft/module"     // import nft as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import params as a blank for ease
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import staking as a blank for ease
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

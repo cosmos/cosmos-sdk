@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
-	bankRes, err = bankClient.Balance(
+	_, err = bankClient.Balance(
 		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1"), // Add metadata to request
 		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header),

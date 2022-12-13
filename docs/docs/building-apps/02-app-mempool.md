@@ -17,13 +17,17 @@ Prepare proposal handles construction of the block, meaning that when a proposer
 Currently, there is a default `PrepareProposal` implementation provided by the application.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/baseapp.go#L866-L904
+https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/baseapp.go#L870-L908
 ```
 
-This default implementation can be overridden by the application developer in favor of a custom implementation:
+This default implementation can be overridden by the application developer in favor of a custom implementation in [`app.go`](./01-app-go-v2.md):
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go#L197-L199
+```go
+prepareOpt := func(app *baseapp.BaseApp) {
+	app.SetPrepareProposal(app.DefaultPrepareProposal())
+}
+
+baseAppOptions = append(baseAppOptions, prepareOpt)
 ```
 
 
@@ -34,30 +38,44 @@ Process proposal handles the validation of what is in a block, meaning that afte
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/bcff22a3767b9c5dd7d1d562aece90cf72e05e85/baseapp/baseapp.go#L906-L930
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha2/baseapp/baseapp.go#L911-L935
 ```
 
-Like `PrepareProposal` this implementation is the default and can be modified by the application developer. 
+Like `PrepareProposal` this implementation is the default and can be modified by the application developer in [`app.go`](./01-app-go-v2.md):
 
-```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go#L200-L203
+```go
+processOpt := func(app *baseapp.BaseApp) {
+	app.SetProcessProposal(app.DefaultProcessProposal())
+}
+
+baseAppOptions = append(baseAppOptions, processOpt)
 ```
 
 ## Mempool
 
 Now that we have walked through the `PrepareProposal` & `ProcessProposal`, we can move on to walking through the mempool. 
 
-There are countless designs that an application developer can write for a mempool, the core team opted to provide a simple implementation of a nonce mempool. The nonce mempool is a mempool that keeps transactions from an sorted by nonce in order to avoid the issues with nonces. 
+There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple implementations of mempool.
+Namely, the SDK provides the following mempools:
 
-It works by storing the transation in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
+* [Sender Nonce Mempool](#sender-nonce-mempool)
+* [Priority Nonce Mempool](#priority-nonce-mempool)
+* [No-op Mempool](#no-op-mempool)
 
-### Priority Nonce Mempool
+The default SDK is a [Sender Nonce Mempool](#sender-nonce-mempool), but it can be replaced by the application developer in [`app.go`](./01-app-go-v2.md):
+
+```go reference
+nonceMempool := mempool.NewSenderNonceMempool()
+mempoolOpt   := baseapp.SetMempool(nonceMempool)
+baseAppOptions = append(baseAppOptions, mempoolOpt)
+```
 
 ### Sender Nonce Mempool
 
-### No-op Mempool
+The nonce mempool is a mempool that keeps transactions from an sorted by nonce in order to avoid the issues with nonces. 
+It works by storing the transation in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
 
-### Configurations
+It can configurable by the following parameters:
 
 #### MaxTxs
 
@@ -66,3 +84,10 @@ Its an integer value that sets the mempool in one of three modes, bounded, unbou
 * **negative**: Disabled, mempool does not insert new tx and return early.
 * **zero**: Unbounded mempool has no tx limit and will never fail with ErrMempoolTxMaxCapacity.
 * **positive**: Bounded, it fails with ErrMempoolTxMaxCapacity when maxTx value is the same as CountTx()
+
+### Priority Nonce Mempool
+
+### No-op Mempool
+
+A no-op mempool is a mempool that does not do any ordering of transactions and keeps the transactions in the order they are received.
+It basically replicates the behavior previous to Cosmos SDK `v0.47`.

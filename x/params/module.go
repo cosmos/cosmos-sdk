@@ -147,7 +147,7 @@ func init() {
 		))
 }
 
-type ParamsInputs struct {
+type Inputs struct {
 	depinject.In
 
 	KvStoreKey        *store.KVStoreKey
@@ -156,7 +156,7 @@ type ParamsInputs struct {
 	LegacyAmino       *codec.LegacyAmino
 }
 
-type ParamsOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	ParamsKeeper keeper.Keeper
@@ -164,13 +164,13 @@ type ParamsOutputs struct {
 	GovHandler   govv1beta1.HandlerRoute
 }
 
-func ProvideModule(in ParamsInputs) ParamsOutputs {
+func ProvideModule(in Inputs) Outputs {
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
 
 	m := NewAppModule(k)
 	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
-	return ParamsOutputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
+	return Outputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
 }
 
 type SubspaceInputs struct {

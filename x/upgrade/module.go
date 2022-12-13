@@ -159,7 +159,7 @@ func init() {
 	)
 }
 
-type UpgradeInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -169,7 +169,7 @@ type UpgradeInputs struct {
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-type UpgradeOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	UpgradeKeeper keeper.Keeper
@@ -177,7 +177,7 @@ type UpgradeOutputs struct {
 	GovHandler    govv1beta1.HandlerRoute
 }
 
-func ProvideModule(in UpgradeInputs) UpgradeOutputs {
+func ProvideModule(in Inputs) Outputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)
@@ -202,5 +202,5 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
+	return Outputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
 }

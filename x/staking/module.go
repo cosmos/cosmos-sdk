@@ -200,7 +200,7 @@ func init() {
 	)
 }
 
-type StakingInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config        *modulev1.Module
@@ -214,14 +214,14 @@ type StakingInputs struct {
 }
 
 // Dependency Injection Outputs
-type StakingOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	StakingKeeper *keeper.Keeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in StakingInputs) StakingOutputs {
+func ProvideModule(in Inputs) Outputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -236,7 +236,7 @@ func ProvideModule(in StakingInputs) StakingOutputs {
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
-	return StakingOutputs{StakingKeeper: k, Module: m}
+	return Outputs{StakingKeeper: k, Module: m}
 }
 
 func InvokeSetStakingHooks(

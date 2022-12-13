@@ -129,21 +129,21 @@ func init() {
 	)
 }
 
-type VestingInputs struct {
+type Inputs struct {
 	depinject.In
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
 }
 
-type VestingOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	Module appmodule.AppModule
 }
 
-func ProvideModule(in VestingInputs) VestingOutputs {
+func ProvideModule(in Inputs) Outputs {
 	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
 
-	return VestingOutputs{Module: m}
+	return Outputs{Module: m}
 }

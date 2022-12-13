@@ -206,7 +206,7 @@ func init() {
 	)
 }
 
-type BankInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -219,14 +219,14 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type BankOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	BankKeeper keeper.BaseKeeper
 	Module     appmodule.AppModule
 }
 
-func ProvideModule(in BankInputs) BankOutputs {
+func ProvideModule(in Inputs) Outputs {
 	// Configure blocked module accounts.
 	//
 	// Default behavior for blockedAddresses is to regard any module mentioned in
@@ -258,5 +258,5 @@ func ProvideModule(in BankInputs) BankOutputs {
 	)
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
-	return BankOutputs{BankKeeper: bankKeeper, Module: m}
+	return Outputs{BankKeeper: bankKeeper, Module: m}
 }

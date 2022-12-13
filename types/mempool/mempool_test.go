@@ -48,6 +48,8 @@ type testTx struct {
 	priority int64
 	nonce    uint64
 	address  sdk.AccAddress
+	// useful for debugging
+	strAddress string
 }
 
 func (tx testTx) GetSigners() []sdk.AccAddress { panic("not implemented") }

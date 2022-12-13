@@ -11,11 +11,16 @@ import "google/protobuf/any.proto";
 option go_package                      = "github.com/cosmos/cosmos-sdk/x/authz";
 option (gogoproto.goproto_getters_all) = false;
 
+option (cosmos_proto.declare_interface) = {
+  name: "Authorization",
+  description: "This interface describes an authz authorization, i.e. the rules that define what a grantee can perform on behalf of the granter. Please see ADR-030 for more information.",
+};
+
 // GenericAuthorization gives the grantee unrestricted permissions to execute
 // the provided method on behalf of the granter's account.
 message GenericAuthorization {
   option (amino.name)                        = "cosmos-sdk/GenericAuthorization";
-  option (cosmos_proto.implements_interface) = "Authorization";
+  option (cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization";
 
   // Msg, identified by it's type URL, to grant unrestricted permissions to execute
   string msg = 1;
@@ -24,7 +29,7 @@ message GenericAuthorization {
 // Grant gives permissions to execute
 // the provide method with expiration time.
 message Grant {
-  google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Any authorization = 1 [(cosmos_proto.accepts_interface) = "cosmos.authz.v1beta1.Authorization"];
   // time when the grant will expire and will be pruned. If null, then the grant
   // doesn't have a time expiration (other conditions  in `authorization`
   // may apply to invalidate the grant)
@@ -37,7 +42,7 @@ message GrantAuthorization {
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Any       authorization = 3 [(cosmos_proto.accepts_interface) = "cosmos.authz.v1beta1.Authorization"];
   google.protobuf.Timestamp expiration    = 4 [(gogoproto.stdtime) = true];
 }
 

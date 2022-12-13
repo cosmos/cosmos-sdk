@@ -239,7 +239,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
-	appCtr := func(val testutil.Validator) servertypes.Application {
+	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),

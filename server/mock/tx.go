@@ -90,28 +90,28 @@ func NewTx(key, value string, accAddress sdk.AccAddress) *kvstoreTx {
 	}
 }
 
-func (tx *kvstoreTx) Type() string {
+func (msg *kvstoreTx) Type() string {
 	return "kvstore_tx"
 }
 
-func (tx *kvstoreTx) GetMsgs() []sdk.Msg {
-	return []sdk.Msg{tx}
+func (msg *kvstoreTx) GetMsgs() []sdk.Msg {
+	return []sdk.Msg{msg}
 }
 
-func (tx *kvstoreTx) GetSignBytes() []byte {
-	return tx.bytes
+func (msg *kvstoreTx) GetSignBytes() []byte {
+	return msg.bytes
 }
 
 // Should the app be calling this? Or only handlers?
-func (tx *kvstoreTx) ValidateBasic() error {
+func (msg *kvstoreTx) ValidateBasic() error {
 	return nil
 }
 
-func (tx *kvstoreTx) GetSigners() []sdk.AccAddress {
+func (msg *kvstoreTx) GetSigners() []sdk.AccAddress {
 	return nil
 }
 
-func (tx *kvstoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
+func (msg *kvstoreTx) GetPubKeys() ([]cryptotypes.PubKey, error) { panic("GetPubKeys not implemented") }
 
 // takes raw transaction bytes and decodes them into an sdk.Tx. An sdk.Tx has
 // all the signatures and can be used to authenticate.

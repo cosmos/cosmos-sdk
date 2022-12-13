@@ -68,13 +68,13 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Hooks gets the hooks for staking *Keeper {
-func (keeper *Keeper) Hooks() types.StakingHooks {
-	if keeper.hooks == nil {
+func (k *Keeper) Hooks() types.StakingHooks {
+	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set
 		return types.MultiStakingHooks{}
 	}
 
-	return keeper.hooks
+	return k.hooks
 }
 
 // SetHooks Set the validator hooks

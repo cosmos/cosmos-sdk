@@ -508,7 +508,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/MsgUpdateGroupPolicyMetadata.
+// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/UpdateGroupPolicyMetadata.
 func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
@@ -736,7 +736,7 @@ Parameters:
 	return cmd
 }
 
-// MsgExecCmd creates a CLI command for Msg/MsgExec.
+// MsgExecCmd creates a CLI command for Msg/Exec.
 func MsgExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [proposal-id]",

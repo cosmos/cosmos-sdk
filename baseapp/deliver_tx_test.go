@@ -1760,6 +1760,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				app.Commit()
 			},
 		},
+		// TODO: Test is failing events are always empty
 		{
 			"success case 2 - The msg errors and the PostHandler is set",
 			func() {

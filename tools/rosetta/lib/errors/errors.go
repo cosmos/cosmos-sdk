@@ -5,6 +5,7 @@ package errors
 
 import (
 	"fmt"
+	"net/http"
 
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -83,7 +84,7 @@ func ToRosetta(err error) *types.Error {
 // fromTendermintToRosettaError converts a tendermint jsonrpc error to rosetta error
 func fromTendermintToRosettaError(err *tmtypes.RPCError) *Error {
 	return &Error{rosErr: &types.Error{
-		Code:    int32(err.Code),
+		Code:    http.StatusInternalServerError,
 		Message: err.Message,
 		Details: map[string]interface{}{
 			"info": err.Data,

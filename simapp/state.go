@@ -13,7 +13,6 @@ import (
 
 	"cosmossdk.io/math"
 	simappparams "cosmossdk.io/simapp/params"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"

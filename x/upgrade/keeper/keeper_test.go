@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestIsSkipHeight() {
 	ok := s.upgradeKeeper.IsSkipHeight(11)
 	s.Require().False(ok)
 	skip := map[int64]bool{skipOne: true}
-	upgradeKeeper := keeper.NewKeeper(skip, s.key, s.encCfg.Codec, s.T().TempDir(), nil, string(authtypes.NewModuleAddress(govtypes.ModuleName).String()))
+	upgradeKeeper := keeper.NewKeeper(skip, s.key, s.encCfg.Codec, s.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	upgradeKeeper.SetVersionSetter(s.baseApp)
 	s.Require().True(upgradeKeeper.IsSkipHeight(9))
 	s.Require().False(upgradeKeeper.IsSkipHeight(10))

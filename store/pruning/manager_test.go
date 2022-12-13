@@ -284,7 +284,7 @@ func TestHandleHeight_FlushLoadFromDisk(t *testing.T) {
 			require.NotNil(t, manager)
 
 			manager.SetSnapshotInterval(tc.snapshotInterval)
-			manager.SetOptions(types.NewCustomPruningOptions(uint64(tc.keepRecent), uint64(10)))
+			manager.SetOptions(types.NewCustomPruningOptions(tc.keepRecent, uint64(10)))
 
 			for _, snapshotHeight := range tc.movedSnapshotHeights {
 				manager.HandleHeightSnapshot(snapshotHeight)

@@ -92,7 +92,7 @@ func (suite *SKSuite) TestSign() {
 
 	// check whether msg can be verified with same key, and high_s
 	// value using "regular" ecdsa signature
-	hash := sha256.Sum256([]byte(msg))
+	hash := sha256.Sum256(msg)
 	require.True(ecdsa.Verify(&suite.pk.PublicKey, hash[:], r, high_s))
 
 	// Mutate the message

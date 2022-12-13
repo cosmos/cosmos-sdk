@@ -533,7 +533,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		require.Error(t, err, "expected error when loading pruned height: %d", v)
 	}
 
-	for v := int64(numVersions - int64(keepRecent)); v < numVersions; v++ {
+	for v := (numVersions - int64(keepRecent)); v < numVersions; v++ {
 		err := ms.LoadVersion(v)
 		require.NoError(t, err, "expected no error when loading height: %d", v)
 	}

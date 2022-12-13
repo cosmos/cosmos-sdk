@@ -1197,26 +1197,26 @@ func (suite *KeeperTestSuite) TestBalanceTrackingEvents() {
 	for _, e := range suite.ctx.EventManager().ABCIEvents() {
 		switch e.Type {
 		case banktypes.EventTypeCoinBurn:
-			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			burnedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
 			supply = supply.Sub(burnedCoins...)
 
 		case banktypes.EventTypeCoinMint:
-			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			mintedCoins, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
 			supply = supply.Add(mintedCoins...)
 
 		case banktypes.EventTypeCoinSpent:
-			coinsSpent, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			coinsSpent, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
-			spender, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			spender, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
 			require.NoError(err)
 			balances[spender.String()] = balances[spender.String()].Sub(coinsSpent...)
 
 		case banktypes.EventTypeCoinReceived:
-			coinsRecv, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
+			coinsRecv, err := sdk.ParseCoinsNormalized(e.Attributes[1].Value)
 			require.NoError(err)
-			receiver, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
+			receiver, err := sdk.AccAddressFromBech32(e.Attributes[0].Value)
 			require.NoError(err)
 			balances[receiver.String()] = balances[receiver.String()].Add(coinsRecv...)
 		}

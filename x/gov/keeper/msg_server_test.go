@@ -659,7 +659,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 	for name, tc := range cases {
 		suite.Run(name, func() {
 			pId := tc.preRun()
-			voteReq := v1beta1.NewMsgVoteWeighted(tc.voter, pId, v1beta1.NewNonSplitVoteOption(v1beta1.VoteOption(tc.option)))
+			voteReq := v1beta1.NewMsgVoteWeighted(tc.voter, pId, v1beta1.NewNonSplitVoteOption(tc.option))
 			_, err := suite.legacyMsgSrvr.VoteWeighted(suite.ctx, voteReq)
 			if tc.expErr {
 				suite.Require().Error(err)

@@ -3212,7 +3212,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]
-	votingPeriod := time.Duration(4 * time.Minute)
+	votingPeriod := 4 * time.Minute
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
@@ -3271,7 +3271,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	addr3 := addrs[2]
-	votingPeriod := time.Duration(4 * time.Minute)
+	votingPeriod := 4 * time.Minute
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{

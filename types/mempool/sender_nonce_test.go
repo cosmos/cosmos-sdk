@@ -166,7 +166,6 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	ctx = ctx.WithPriority(tx.priority)
 	err = mp.Insert(ctx, tx2)
 	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
-
 }
 
 func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
@@ -192,5 +191,4 @@ func (s *MempoolTestSuite) TestTxNotFoundOnSender() {
 	require.NoError(t, err)
 	err = mp.Remove(tx)
 	require.Equal(t, mempool.ErrTxNotFound, err)
-
 }

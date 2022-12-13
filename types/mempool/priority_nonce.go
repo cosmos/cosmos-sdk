@@ -1,6 +1,7 @@
 package mempool
 
 import (
+	"context"
 	"fmt"
 	"math"
 
@@ -121,7 +122,7 @@ func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 //
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
-func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
+func (mp *priorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err
@@ -130,7 +131,8 @@ func (mp *priorityNonceMempool) Insert(ctx sdk.Context, tx sdk.Tx) error {
 		return fmt.Errorf("tx must have at least one signer")
 	}
 
-	priority := ctx.Priority()
+	sdkContext := sdk.UnwrapSDKContext(ctx)
+	priority := sdkContext.Priority()
 	sig := sigs[0]
 	sender := sig.PubKey.Address().String()
 	nonce := sig.Sequence
@@ -247,7 +249,7 @@ func (i *priorityNonceIterator) Tx() sdk.Tx {
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
 // return.
-func (mp *priorityNonceMempool) Select(_ sdk.Context, _ [][]byte) Iterator {
+func (mp *priorityNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 	if mp.priorityIndex.Len() == 0 {
 		return nil
 	}

@@ -44,11 +44,11 @@ type Map[K, V any] struct {
 	name   string
 }
 
-func (m Map[K, V]) Name() string {
+func (m Map[K, V]) getName() string {
 	return m.name
 }
 
-func (m Map[K, V]) Prefix() []byte {
+func (m Map[K, V]) getPrefix() []byte {
 	return m.prefix
 }
 

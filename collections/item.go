@@ -17,11 +17,11 @@ func NewItem[V any](schema Schema, prefix Prefix, name string, valueCodec ValueC
 // with a non-existent key.
 type Item[V any] Map[noKey, V]
 
-func (i Item[V]) Name() string {
+func (i Item[V]) getName() string {
 	return i.name
 }
 
-func (i Item[V]) Prefix() []byte {
+func (i Item[V]) getPrefix() []byte {
 	return i.prefix
 }
 

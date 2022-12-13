@@ -10,8 +10,8 @@ import (
 func NewSchema(storeKey storetypes.StoreKey) Schema {
 	return Schema{
 		storeKey:            storeKey,
-		collectionsByName:   map[string]Collection{},
-		collectionsByPrefix: map[string]Collection{},
+		collectionsByName:   map[string]collection{},
+		collectionsByPrefix: map[string]collection{},
 	}
 }
 
@@ -22,13 +22,13 @@ func NewSchema(storeKey storetypes.StoreKey) Schema {
 // clients.
 type Schema struct {
 	storeKey            storetypes.StoreKey
-	collectionsByPrefix map[string]Collection
-	collectionsByName   map[string]Collection
+	collectionsByPrefix map[string]collection
+	collectionsByName   map[string]collection
 }
 
-func (s Schema) addCollection(collection Collection) {
-	prefix := collection.Prefix()
-	name := collection.Name()
+func (s Schema) addCollection(collection collection) {
+	prefix := collection.getPrefix()
+	name := collection.getName()
 
 	if _, ok := s.collectionsByPrefix[string(prefix)]; ok {
 		panic(fmt.Errorf("prefix %v already taken within schema", prefix))

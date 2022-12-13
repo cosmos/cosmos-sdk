@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -132,7 +131,7 @@ func TestMsgService(t *testing.T) {
 		Sequence:      0,
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		context.TODO(), txConfig.SignModeHandler().DefaultMode(), signerData,
+		nil, txConfig.SignModeHandler().DefaultMode(), signerData,
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

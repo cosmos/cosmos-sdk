@@ -129,7 +129,7 @@ func (s InfoTestSuite) TestParseInfo() {
 	}
 }
 
-func (s InfoTestSuite) TestInfoValidateFull() { //nolint:govet // it's a test so we dont' mind copying a lock
+func (s InfoTestSuite) TestInfoValidateFull() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)
@@ -186,7 +186,7 @@ func (s InfoTestSuite) TestInfoValidateFull() { //nolint:govet // it's a test so
 	}
 }
 
-func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() { //nolint:govet // it's a test so we dont' mind copying a lock
+func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() {
 	addDummyChecksum := func(url string) string {
 		return url + "?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
 	}
@@ -282,7 +282,7 @@ func (s InfoTestSuite) TestBinaryDownloadURLMapValidateBasic() { //nolint:govet 
 	}
 }
 
-func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() { //nolint:govet // it's a test so we dont' mind copying a lock
+func (s InfoTestSuite) TestBinaryDownloadURLMapCheckURLs() {
 	darwinAMD64File := NewTestFile("darwin_amd64", "#!/usr/bin\necho 'darwin/amd64'\n")
 	linux386File := NewTestFile("linux_386", "#!/usr/bin\necho 'darwin/amd64'\n")
 	darwinAMD64Path := s.saveTestFile(darwinAMD64File)

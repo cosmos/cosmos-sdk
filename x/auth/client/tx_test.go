@@ -153,7 +153,7 @@ func TestBatchScanner_Scan(t *testing.T) {
 
 func compareEncoders(t *testing.T, expected sdk.TxEncoder, actual sdk.TxEncoder) {
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "") //nolint:staticcheck // SA1019: legacytx.StdFee is deprecated: use FeeTx interface instead
+	tx := legacytx.NewStdTx(msgs, legacytx.StdFee{}, []legacytx.StdSignature{}, "")
 
 	defaultEncoderBytes, err := expected(tx)
 	require.NoError(t, err)

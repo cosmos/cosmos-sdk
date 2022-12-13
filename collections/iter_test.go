@@ -128,6 +128,70 @@ func TestIteratorRanging(t *testing.T) {
 	require.Equal(t, []uint64{4, 3, 2, 1}, result)
 }
 
+func TestRange(t *testing.T) {
+	type test struct {
+		rng        *Range[string]
+		wantPrefix *string
+		wantStart  *Bound[string]
+		wantEnd    *Bound[string]
+		wantOrder  Order
+		wantErr    error
+	}
+
+	cases := map[string]test{
+		"ok - empty": {
+			rng: new(Range[string]),
+		},
+		"ok - start exclusive - end exclusive": {
+			rng:       new(Range[string]).StartExclusive("A").EndExclusive("B"),
+			wantStart: BoundExclusive("A"),
+			wantEnd:   BoundExclusive("B"),
+		},
+		"ok - start inclusive - end inclusive - descending": {
+			rng:       new(Range[string]).StartInclusive("A").EndInclusive("B").Descending(),
+			wantStart: BoundInclusive("A"),
+			wantEnd:   BoundInclusive("B"),
+			wantOrder: OrderDescending,
+		},
+		"ok - prefix": {
+			rng:        new(Range[string]).Prefix("A"),
+			wantPrefix: func() *string { p := "A"; return &p }(),
+		},
+
+		"err - prefix and start set": {
+			rng:     new(Range[string]).Prefix("A").StartExclusive("B"),
+			wantErr: errRange,
+		},
+		"err - prefix and end set": {
+			rng:     new(Range[string]).Prefix("A").StartInclusive("B"),
+			wantErr: errRange,
+		},
+	}
+
+	for name, tc := range cases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			gotPrefix, gotStart, gotEnd, gotOrder, gotErr := tc.rng.RangeValues()
+			require.ErrorIs(t, gotErr, tc.wantErr)
+			require.Equal(t, tc.wantPrefix, gotPrefix)
+			require.Equal(t, tc.wantStart, gotStart)
+			require.Equal(t, tc.wantEnd, gotEnd)
+			require.Equal(t, tc.wantOrder, gotOrder)
+		})
+	}
+}
+
+type unsafeRange struct {
+	prefix string
+	start  *Bound[string]
+	end    *Bound[string]
+	order  Order
+}
+
+func (r unsafeRange) RangeValues() (*string, *Bound[string], *Bound[string], Order, error) {
+	return &r.prefix, r.start, r.end, r.order, nil
+}
+
 func TestIteratorPrefixRanging(t *testing.T) {
 	sk, ctx := deps()
 	m := NewMap(sk, NewPrefix("cool"), StringKey, Uint64Value)
@@ -136,10 +200,12 @@ func TestIteratorPrefixRanging(t *testing.T) {
 	require.NoError(t, m.Set(ctx, "AA3", 3))
 	require.NoError(t, m.Set(ctx, "AB1", 4))
 
-	rng := new(Range[string]).
-		Prefix("AA").
-		StartExclusive("1").
-		EndInclusive("3")
+	rng := unsafeRange{
+		prefix: "AA",
+		start:  BoundExclusive("1"),
+		end:    BoundInclusive("3"),
+		order:  OrderAscending,
+	}
 	// expected AA2,AA3
 	iter, err := m.Iterate(ctx, rng)
 	require.NoError(t, err)

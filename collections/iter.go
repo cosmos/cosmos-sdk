@@ -102,7 +102,13 @@ func (r *Range[K]) Descending() *Range[K] {
 	return r
 }
 
+// test sentinel error
+var errRange = errors.New("collections: range error")
+
 func (r *Range[K]) RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order, err error) {
+	if r.prefix != nil && (r.end != nil || r.start != nil) {
+		return nil, nil, nil, order, fmt.Errorf("%w: prefix must not be set if either start or end are specified", errRange)
+	}
 	return r.prefix, r.start, r.end, r.order, nil
 }
 

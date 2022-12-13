@@ -60,7 +60,7 @@ message CircuitBreakerPermissions {
 message MsgAuthorizeCircuitBreakerResponse {}
 
 message MsgTripCircuitBreaker {
-  option (cosmos.msg.v1.signer) = "signer";
+  option (cosmos.msg.v1.signer) = "authority";
 
   // authority is the account authorized to trip the circuit breaker.
   string authority = 1;

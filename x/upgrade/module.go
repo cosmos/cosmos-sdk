@@ -121,18 +121,16 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	// set version map automatically if available
-	if versionMap != nil {
-		newVersionMap := *versionMap
-
+	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer to setting the version map
 		// however this means that we need to combine the module version map with app wiring enabled module
 		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
-			if _, ok := newVersionMap[name]; !ok {
-				newVersionMap[name] = version
+			if _, ok := versionMap[name]; !ok {
+				versionMap[name] = version
 			}
 		}
 
-		am.keeper.SetModuleVersionMap(ctx, newVersionMap)
+		am.keeper.SetModuleVersionMap(ctx, versionMap)
 	}
 
 	return []abci.ValidatorUpdate{}
@@ -224,9 +222,10 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
 }
 
-var versionMap *module.VersionMap = nil
+func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {
+	if upgradeKeeper == nil {
+		return
+	}
 
-func PopulateVersionMap(modules map[string]appmodule.AppModule) {
-	vm := module.NewManagerFromMap(modules).GetVersionMap()
-	versionMap = &vm
+	upgradeKeeper.SetInitVersionMap(module.NewManagerFromMap(modules).GetVersionMap())
 }

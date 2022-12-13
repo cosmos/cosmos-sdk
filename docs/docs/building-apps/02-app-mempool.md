@@ -108,4 +108,4 @@ Allow to set a callback to be called when a transaction is read from the mempool
 A no-op mempool is a mempool that does not do any ordering of transactions and keeps the transactions in the order they are received.
 It basically replicates the behavior previous to Cosmos SDK `v0.47`.
 
-More information on the mempool can be found in the [mempool documentation](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).
+More information on the SDK mempool implementation can be found in the [godocs](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).

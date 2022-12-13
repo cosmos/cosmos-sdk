@@ -347,22 +347,20 @@ func validateOrder(mtxs []sdk.Tx) error {
 					if a.n > b.n {
 						return fmt.Errorf("same sender tx have wrong nonce order\n%v\n%v", a, b)
 					}
-				} else {
-					// different sender
-					if a.p < b.p {
-						// find a tx with same sender as b and lower nonce
-						found := false
-						for _, c := range itxs {
-							iterations++
-							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
-								found = true
-								break
-							}
-						}
-						if !found {
-							return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+				} else if a.p < b.p { // different sender
+					// find a tx with same sender as b and lower nonce
+					found := false
+					for _, c := range itxs {
+						iterations++
+						if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
+							found = true
+							break
 						}
 					}
+					if !found {
+						return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+					}
+
 				}
 			}
 		}

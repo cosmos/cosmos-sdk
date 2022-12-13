@@ -107,7 +107,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		newKey := denomMetadataIter.Key()
 
 		// make sure old entry is deleted
-		oldKey := append(newKey, newKey[0:]...)
+		oldKey := append(newKey, newKey[0:]...) //nolint:gocritic // append is ok here
 		bz := denomMetadataStore.Get(oldKey)
 		require.Nil(t, bz)
 

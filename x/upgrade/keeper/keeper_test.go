@@ -279,7 +279,7 @@ func (s *KeeperTestSuite) TestMigrations() {
 	vmBefore := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ sdk.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		// simulate upgrading the bank module
-		vm["bank"] = vm["bank"] + 1
+		vm["bank"] = vm["bank"] + 1 //nolint:gocritic
 		return vm, nil
 	})
 	dummyPlan := types.Plan{

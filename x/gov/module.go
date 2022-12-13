@@ -188,7 +188,7 @@ type GovOutputs struct {
 }
 
 func ProvideModule(in GovInputs) GovOutputs {
-	Config := govtypes.DefaultConfig()
+	defaultConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		Config.MaxMetadataLen = in.Config.MaxMetadataLen
 	}

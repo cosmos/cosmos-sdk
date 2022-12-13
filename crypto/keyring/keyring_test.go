@@ -160,8 +160,9 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	newPath := filepath.Join(tempDir, "random")
 	require.NoError(t, os.Mkdir(newPath, 0o755))
 	items, err := os.ReadDir(tempDir)
+	require.NoError(t, err)
 	require.GreaterOrEqual(t, len(items), 2)
-	keyS, err = kb.List()
+	_, err = kb.List()
 	require.NoError(t, err)
 
 	// addr cache gets nuked - and test skip flag
@@ -462,6 +463,7 @@ func TestInMemoryWithKeyring(t *testing.T) {
 
 	cdc := getCodec()
 	_, err := NewLocalRecord("test record", priv, pub)
+	require.NoError(t, err)
 
 	multi := multisig.NewLegacyAminoPubKey(
 		1, []cryptotypes.PubKey{
@@ -1406,7 +1408,7 @@ func TestRenameKey(t *testing.T) {
 				newRecord, err := kr.Key(newKeyUID) // new key should be in keyring
 				require.NoError(t, err)
 				requireEqualRenamedKey(t, newRecord, oldKeyRecord, false) // oldKeyRecord and newRecord should be the same except name
-				oldKeyRecord, err = kr.Key(oldKeyUID)                     // old key should be gone from keyring
+				_, err = kr.Key(oldKeyUID)                                // old key should be gone from keyring
 				require.Error(t, err)
 			},
 		},

@@ -404,7 +404,8 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
-	cid := multi.Commit()
+	// Commit the multistore.
+	_ = multi.Commit()
 
 	// Make sure we can get by name.
 	garbage := multi.GetStoreByName("bad-name")
@@ -419,7 +420,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
-	cid = multi.Commit()
+	cid := multi.Commit()
 	ver := cid.Version
 
 	// Reload multistore from database

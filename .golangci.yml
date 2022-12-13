@@ -2,6 +2,8 @@ run:
   tests: true
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
+  sort-results: true
+  allow-parallel-runners: true
 
 linters:
   disable-all: true

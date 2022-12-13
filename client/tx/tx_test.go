@@ -1,6 +1,7 @@
 package tx_test
 
 import (
+	"context"
 	gocontext "context"
 	"fmt"
 	"strings"
@@ -422,8 +423,9 @@ func TestPreprocessHook(t *testing.T) {
 	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
+	requireT.NoError(err)
 
-	err = tx.Sign(nil, txfDirect, from, txb, false)
+	err = tx.Sign(context.TODO(), txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

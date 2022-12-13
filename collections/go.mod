@@ -3,7 +3,7 @@ module cosmossdk.io/collections
 go 1.19
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20221207205747-f3be41836f4d
+	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
 	github.com/stretchr/testify v1.8.1
 )
 

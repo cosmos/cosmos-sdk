@@ -48,7 +48,6 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
-	initChainer       sdk.InitChainer
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -83,9 +82,7 @@ func (a *App) Load(loadLatest bool) error {
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
-		if a.initChainer == nil {
-			a.SetInitChainer(a.InitChainer)
-		}
+		a.SetInitChainer(a.InitChainer)
 	}
 
 	if len(a.config.ExportGenesis) != 0 {
@@ -191,14 +188,6 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 // GetStoreKeys returns all the stored store keys.
 func (a *App) GetStoreKeys() []storetypes.StoreKey {
 	return a.storeKeys
-}
-
-// SetInitChainer sets the init chainer function
-// It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
-// TODO possibly improve app wiring to allow setting custom init chainer logic (before init genesis).
-func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
-	a.initChainer = initChainer
-	a.BaseApp.SetInitChainer(initChainer)
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

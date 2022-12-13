@@ -119,7 +119,12 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+	// set version map automatically if available
+	if versionMap != nil {
+		am.keeper.SetModuleVersionMap(ctx, *versionMap)
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 
@@ -155,6 +160,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(PopulateVersionMap),
 	)
 }
 
@@ -206,4 +212,11 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
 	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+}
+
+var versionMap *module.VersionMap = nil
+
+func PopulateVersionMap(modules map[string]appmodule.AppModule) {
+	vm := module.NewManagerFromMap(modules).GetVersionMap()
+	versionMap = &vm
 }

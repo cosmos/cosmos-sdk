@@ -1707,6 +1707,171 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	}
 }
 
+func TestBaseAppPostHandler(t *testing.T) {
+	testCases := []struct {
+		name     string
+		testFunc func()
+	}{
+		{
+			"success case 1 - The msg errors and the PostHandler is not set",
+			func() {
+				// Setup baseapp.
+				var (
+					appBuilder *runtime.AppBuilder
+					cdc        codec.ProtoCodecMarshaler
+				)
+				err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+				require.NoError(t, err)
+
+				testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app.SetCMS(testCtx.CMS)
+				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+				// patch in TxConfig instead of using an output from x/auth/tx
+				txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+				// set the TxDecoder in the BaseApp for minimal tx simulations
+				app.SetTxDecoder(txConfig.TxDecoder())
+
+				app.InitChain(abci.RequestInitChain{})
+
+				deliverKey := []byte("deliver-key")
+				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+				header := tmproto.Header{Height: int64(1)}
+				app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+				tx := newTxCounter(txConfig, 1, 0)
+				tx = setFailOnHandler(txConfig, tx, true)
+				txBytes, err := txConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+
+				r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+				require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+				res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+				require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+				events := res.GetEvents()
+				require.Len(t, events, 0, "Should not contain any events as the post handler is not set")
+
+				app.EndBlock(abci.RequestEndBlock{})
+				app.Commit()
+			},
+		},
+		{
+			"success case 2 - The msg errors and the PostHandler is set",
+			func() {
+				postKey := []byte("post-key")
+				anteKey := []byte("ante-key")
+				// Setup baseapp.
+				var (
+					appBuilder *runtime.AppBuilder
+					cdc        codec.ProtoCodecMarshaler
+				)
+				err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+				require.NoError(t, err)
+
+				testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app.SetCMS(testCtx.CMS)
+				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+				// patch in TxConfig instead of using an output from x/auth/tx
+				txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+				// set the TxDecoder in the BaseApp for minimal tx simulations
+				app.SetTxDecoder(txConfig.TxDecoder())
+
+				app.InitChain(abci.RequestInitChain{})
+
+				deliverKey := []byte("deliver-key")
+				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+				app.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+				app.SetPostHandler(postHandlerTxTest(t, capKey1, postKey))
+				header := tmproto.Header{Height: int64(1)}
+				app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+				tx := newTxCounter(txConfig, 0, 0)
+				tx = setFailOnHandler(txConfig, tx, true)
+				txBytes, err := txConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+
+				r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+				require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+				res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+				require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+				events := res.GetEvents()
+				require.Len(t, events, 0, "Should not contain any events as the post handler is not set")
+
+				app.EndBlock(abci.RequestEndBlock{})
+				app.Commit()
+			},
+		},
+		{
+			"success case 3 - Run Post Handler with runMsgCtx so that the state from runMsgs is persisted",
+			func() {
+				postKey := []byte("post-key")
+				// Setup baseapp.
+				var (
+					appBuilder *runtime.AppBuilder
+					cdc        codec.ProtoCodecMarshaler
+				)
+				err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+				require.NoError(t, err)
+
+				testCtx := testutil.DefaultContextWithDB(t, capKey1, sdk.NewTransientStoreKey("transient_test"))
+
+				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app.SetCMS(testCtx.CMS)
+				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+				// patch in TxConfig instead of using an output from x/auth/tx
+				txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+				// set the TxDecoder in the BaseApp for minimal tx simulations
+				app.SetTxDecoder(txConfig.TxDecoder())
+
+				app.InitChain(abci.RequestInitChain{})
+
+				deliverKey := []byte("deliver-key")
+				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+				app.SetPostHandler(postHandlerTxTest(t, capKey1, postKey))
+				header := tmproto.Header{Height: int64(1)}
+				app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+				tx := newTxCounter(txConfig, 0, 0)
+				txBytes, err := txConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+
+				r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+				require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+				res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+				events := res.GetEvents()
+				require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+
+				require.NoError(t, err)
+				app.EndBlock(abci.RequestEndBlock{})
+				app.Commit()
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.testFunc()
+		})
+	}
+
+}
+
 func TestBaseAppAnteHandler(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -1757,7 +1922,6 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	// mutate) but will fail the message handler
 	tx = newTxCounter(txConfig, 0, 0)
 	tx = setFailOnHandler(txConfig, tx, true)
-
 	txBytes, err = txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 
@@ -2033,8 +2197,9 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 			FailOnHandler: fail,
 		}
 	}
-
 	builder.SetMsgs(msgs...)
+	setTxSignature(builder, 1)
+
 	return builder.GetTx()
 }
 
@@ -2054,6 +2219,20 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 
 		ctx.EventManager().EmitEvents(
 			counterEvent("ante_handler", counter),
+		)
+
+		ctx = ctx.WithPriority(testTxPriority)
+
+		return ctx, nil
+	}
+}
+
+func postHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.PostHandler {
+	return func(ctx sdk.Context, tx sdk.Tx, res *sdk.Result, simulate, success bool) (sdk.Context, error) {
+		counter, _ := parseTxMemo(tx)
+
+		ctx.EventManager().EmitEvents(
+			counterEvent("post_handler", counter),
 		)
 
 		ctx = ctx.WithPriority(testTxPriority)

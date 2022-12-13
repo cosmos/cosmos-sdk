@@ -42,10 +42,6 @@ func (s *contextTestSuite) TestCacheContext() {
 	s.Require().Equal(v1, cstore.Get(k1))
 	s.Require().Nil(cstore.Get(k2))
 
-	// emit some events
-	cctx.EventManager().EmitEvent(types.NewEvent("foo", types.NewAttribute("key", "value")))
-	cctx.EventManager().EmitEvent(types.NewEvent("bar", types.NewAttribute("key", "value")))
-
 	cstore.Set(k2, v2)
 	s.Require().Equal(v2, cstore.Get(k2))
 	s.Require().Nil(store.Get(k2))
@@ -53,7 +49,6 @@ func (s *contextTestSuite) TestCacheContext() {
 	write()
 
 	s.Require().Equal(v2, store.Get(k2))
-	s.Require().Len(ctx.EventManager().Events(), 2)
 }
 
 func (s *contextTestSuite) TestLogContext() {

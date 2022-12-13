@@ -59,7 +59,7 @@ func buildTestTx(t *testing.T, builder client.TxBuilder) {
 
 type TestSuite struct {
 	suite.Suite
-	codec    codec.Codec //nolint:unused
+	codec    codec.Codec
 	amino    *codec.LegacyAmino
 	protoCfg client.TxConfig
 	aminoCfg client.TxConfig

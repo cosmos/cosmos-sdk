@@ -1,7 +1,7 @@
 package tx_test
 
 import (
-	"context"
+	gocontext "context"
 	"fmt"
 	"strings"
 	"testing"
@@ -46,7 +46,7 @@ type mockContext struct {
 	wantErr bool
 }
 
-func (m mockContext) Invoke(grpcCtx context.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
+func (m mockContext) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	if m.wantErr {
 		return fmt.Errorf("mock err")
 	}
@@ -59,7 +59,7 @@ func (m mockContext) Invoke(grpcCtx context.Context, method string, req, reply i
 	return nil
 }
 
-func (mockContext) NewStream(context.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
+func (mockContext) NewStream(gocontext.Context, *grpc.StreamDesc, string, ...grpc.CallOption) (grpc.ClientStream, error) {
 	panic("not implemented")
 }
 
@@ -422,9 +422,8 @@ func TestPreprocessHook(t *testing.T) {
 	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
-	requireT.NoError(err)
 
-	err = tx.Sign(context.TODO(), txfDirect, from, txb, false)
+	err = tx.Sign(nil, txfDirect, from, txb, false)
 	requireT.NoError(err)
 
 	// Run preprocessing

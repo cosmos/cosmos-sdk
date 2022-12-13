@@ -36,7 +36,7 @@ type InfractionTestSuite struct {
 	stakingKeeper     *stakingkeeper.Keeper
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	queryClient types.QueryClient
+	queryClient types.QueryClient //nolint:unused
 }
 
 func (suite *InfractionTestSuite) SetupTest() {

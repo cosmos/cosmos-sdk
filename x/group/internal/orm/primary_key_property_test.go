@@ -1,3 +1,4 @@
+//nolint:unused // this file contains tests
 package orm
 
 import (

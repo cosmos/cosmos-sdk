@@ -20,6 +20,7 @@ linters:
     - nakedret
     - nolintlint
     - staticcheck
+    - revive
     - stylecheck
     - typecheck
     - unconvert

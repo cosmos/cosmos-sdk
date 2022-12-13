@@ -114,14 +114,14 @@ func TestBatchScanner_Scan(t *testing.T) {
 	bldr.SetGasLimit(50000)
 	bldr.SetFeeAmount(sdk.NewCoins(sdk.NewInt64Coin("atom", 150)))
 	bldr.SetMemo("foomemo")
-	txJson, err := txGen.TxJSONEncoder()(bldr.GetTx())
+	txJSON, err := txGen.TxJSONEncoder()(bldr.GetTx())
 	require.NoError(t, err)
 
 	// use the tx JSON to generate some tx batches (it doesn't matter that we use the same JSON because we don't care about the actual context)
-	goodBatchOf3Txs := fmt.Sprintf("%s\n%s\n%s\n", txJson, txJson, txJson)
-	malformedBatch := fmt.Sprintf("%s\nmalformed\n%s\n", txJson, txJson)
-	batchOf2TxsWithNoNewline := fmt.Sprintf("%s\n%s", txJson, txJson)
-	batchWithEmptyLine := fmt.Sprintf("%s\n\n%s", txJson, txJson)
+	goodBatchOf3Txs := fmt.Sprintf("%s\n%s\n%s\n", txJSON, txJSON, txJSON)
+	malformedBatch := fmt.Sprintf("%s\nmalformed\n%s\n", txJSON, txJSON)
+	batchOf2TxsWithNoNewline := fmt.Sprintf("%s\n%s", txJSON, txJSON)
+	batchWithEmptyLine := fmt.Sprintf("%s\n\n%s", txJSON, txJSON)
 
 	tests := []struct {
 		name               string

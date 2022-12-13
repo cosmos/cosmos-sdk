@@ -7,8 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
-
-
 )
 
 // RegisterSwaggerAPI provides a common function which registers swagger route with API Server

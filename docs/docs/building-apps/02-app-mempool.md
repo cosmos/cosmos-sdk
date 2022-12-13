@@ -8,8 +8,7 @@ sidebar_position: 1
 This sections describes how the app side mempool can be used and replaced. 
 :::
 
-
-Since `0.47` the application has its own mempool to allow much more granular block building than previous versions. This change was enabled by [ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md). Notably it introduces the prepare and process proposal steps of ABCI. 
+Since `v0.47` the application has its own mempool to allow much more granular block building than previous versions. This change was enabled by [ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md). Notably it introduces the prepare and process proposal steps of ABCI. 
 
 ## Prepare Proposal
 
@@ -52,12 +51,18 @@ There are countless designs that an application developer can write for a mempoo
 
 It works by storing the transation in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
 
+### Priority Nonce Mempool
+
+### Sender Nonce Mempool
+
+### No-op Mempool
+
 ### Configurations
 
 #### MaxTxs
 
 Its an integer value that sets the mempool in one of three modes, bounded, unbounded, or disabled.
 
-- **negative**: Disabled, mempool does not insert new tx and return early.
-- **zero**: Unbounded mempool has no tx limit and will never fail with ErrMempoolTxMaxCapacity.
-- **positive**: Bounded, it fails with ErrMempoolTxMaxCapacity when maxTx value is the same as CountTx()
+* **negative**: Disabled, mempool does not insert new tx and return early.
+* **zero**: Unbounded mempool has no tx limit and will never fail with ErrMempoolTxMaxCapacity.
+* **positive**: Bounded, it fails with ErrMempoolTxMaxCapacity when maxTx value is the same as CountTx()

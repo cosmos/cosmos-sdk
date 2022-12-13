@@ -132,8 +132,7 @@ func (bm BasicManager) RegisterGRPCGatewayRoutes(clientCtx client.Context, rtr *
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
-	values := maps.Values(bm)
-	for _, b := range values {
+	for _, b := range bm {
 		if cmd := b.GetTxCmd(); cmd != nil {
 			rootTxCmd.AddCommand(cmd)
 		}
@@ -145,8 +144,7 @@ func (bm BasicManager) AddTxCommands(rootTxCmd *cobra.Command) {
 // TODO: Remove clientCtx argument.
 // REF: https://github.com/cosmos/cosmos-sdk/issues/6571
 func (bm BasicManager) AddQueryCommands(rootQueryCmd *cobra.Command) {
-	values := maps.Values(bm)
-	for _, b := range values {
+	for _, b := range bm {
 		if cmd := b.GetQueryCmd(); cmd != nil {
 			rootQueryCmd.AddCommand(cmd)
 		}
@@ -324,8 +322,7 @@ func (m *Manager) SetOrderMigrations(moduleNames ...string) {
 
 // RegisterInvariants registers all module invariants
 func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
-	modules := maps.Values(m.Modules)
-	for _, module := range modules {
+	for _, module := range m.Modules {
 		if module, ok := module.(HasInvariants); ok {
 			module.RegisterInvariants(ir)
 		}
@@ -334,8 +331,7 @@ func (m *Manager) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // RegisterServices registers all module services
 func (m *Manager) RegisterServices(cfg Configurator) {
-	modules := maps.Values(m.Modules)
-	for _, module := range modules {
+	for _, module := range m.Modules {
 		if module, ok := module.(HasServices); ok {
 			module.RegisterServices(cfg)
 		}

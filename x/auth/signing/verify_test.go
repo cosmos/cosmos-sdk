@@ -63,7 +63,7 @@ func TestVerifySignature(t *testing.T) {
 	require.NoError(t, err)
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)}) //nolint:staticcheck // SA1019: legacytx.NewStdFee is deprecated: use NewStdFeeV2
+	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)}) //nolint:staticcheck // SA1019: legacytx.StdFee is deprecated: use StdFeeV2
 	signerData := signing.SignerData{
 		Address:       addr.String(),
 		ChainID:       chainID,
@@ -80,7 +80,7 @@ func TestVerifySignature(t *testing.T) {
 	require.NoError(t, err)
 
 	handler := MakeTestHandlerMap()
-	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo) //nolint:staticcheck // SA1019: legacytx.NewStdTx is deprecated: use NewStdTxV2
+	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo) //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2
 	stdTx.TimeoutHeight = 10
 	err = signing.VerifySignature(nil, pubKey, signerData, sigV2.Data, handler, stdTx) //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2
 	require.NoError(t, err)
@@ -108,7 +108,7 @@ func TestVerifySignature(t *testing.T) {
 	err = multisig.AddSignatureFromPubKey(multisignature, sig2V2.Data, pkSet[1], pkSet)
 	require.NoError(t, err)
 
-	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo) //nolint:staticcheck // SA1019: legacytx.NewStdTx is deprecated: use NewStdTxV2
+	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo) //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2
 	stdTx.TimeoutHeight = 10
 
 	err = signing.VerifySignature(nil, multisigKey, signerData, multisignature, handler, stdTx) //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2

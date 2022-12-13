@@ -50,7 +50,6 @@ func (m *primaryKeyMachine) genTableModel() *rapid.Generator[*testdata.TableMode
 		return genTableModel
 	}
 	return rapid.OneOf(genTableModel, genStateTableModel)
-
 }
 
 // Init creates a new instance of the state machine model by building the real

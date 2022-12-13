@@ -7,12 +7,11 @@ import (
 	"fmt"
 	"path/filepath"
 
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/types"
 	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,26 +22,22 @@ import (
 
 // NewApp creates a simple mock kvstore app for testing. It should work
 // similar to a real app. Make sure rootDir is empty before running the test,
-// in order to guarantee consistent results
+// in order to guarantee consistent results.
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	db, err := db.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
 	if err != nil {
 		return nil, err
 	}
 
-	// Capabilities key to access the main KVStore.
 	capKeyMainStore := sdk.NewKVStoreKey("main")
 
-	// Create BaseApp.
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
-
-	// Set mounts for BaseApp's MultiStore.
 	baseApp.MountStores(capKeyMainStore)
-
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &kvstoreTx{})
+
 	router := bam.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
 
@@ -59,7 +54,6 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	router.RegisterService(newDesc, &MsgServerImpl{capKeyMainStore})
 	baseApp.SetMsgServiceRouter(router)
 
-	// Load latest version.
 	if err := baseApp.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
@@ -68,7 +62,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 }
 
 // KVStoreHandler is a simple handler that takes kvstoreTx and writes
-// them to the db
+// them to the db.
 func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		dTx, ok := msg.(*kvstoreTx)
@@ -76,7 +70,6 @@ func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 			return nil, errors.New("KVStoreHandler should only receive kvstoreTx")
 		}
 
-		// tx is already unmarshalled
 		key := dTx.key
 		value := dTx.value
 

@@ -22,8 +22,8 @@ func NewQuerier(keeper Keeper) Querier {
 	return Querier{Keeper: keeper}
 }
 
-// Params Balance implements the Query/Balance gRPC method
-func (k Querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+// Params queries params of consensus module
+func (k Querier) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	params, err := k.Keeper.Get(sdkCtx)

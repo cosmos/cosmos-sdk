@@ -40,7 +40,7 @@ func migrateProposals(store sdk.KVStore, cdc codec.BinaryCodec) error {
 	return nil
 }
 
-// MigrateStore performs in-place store migrations from v0.43 to v0.46. The
+// MigrateStore performs in-place store migrations from v2 (v0.43) to v3 (v0.46). The
 // migration includes:
 //
 // - Migrate proposals to be Msg-based.

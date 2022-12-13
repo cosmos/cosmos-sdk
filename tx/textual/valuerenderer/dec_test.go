@@ -23,7 +23,7 @@ func TestDecJsonTestcases(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc[0], func(t *testing.T) {
-			r, err := textual.GetValueRenderer(fieldDescriptorFromName("SDKDEC"))
+			r, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("SDKDEC"))
 			require.NoError(t, err)
 
 			checkNumberTest(t, r, protoreflect.ValueOf(tc[0]), tc[1])

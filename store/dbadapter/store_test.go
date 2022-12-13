@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/mock"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 )
 
 var errFoo = errors.New("dummy")
@@ -84,7 +84,4 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
 	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
-
-	cacheWrappedWithListeners := store.CacheWrapWithListeners(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithListeners)
 }

@@ -29,6 +29,7 @@ func NewProposer(proposalID uint64, proposer string) Proposer {
 	return Proposer{proposalID, proposer}
 }
 
+// String implements the fmt.Stringer interface.
 func (p Proposer) String() string {
 	return fmt.Sprintf("Proposal with ID %d was proposed by %s", p.ProposalID, p.Proposer)
 }

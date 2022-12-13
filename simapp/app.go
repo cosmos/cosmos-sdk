@@ -228,6 +228,22 @@ func NewSimApp(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
+	// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
+	// handlers. These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+	// them.
+	//
+	// nonceMempool := mempool.NewSenderNonceMempool()
+	// mempoolOpt   := baseapp.SetMempool(nonceMempool)
+	// prepareOpt   := func(app *baseapp.BaseApp) {
+	// 	app.SetPrepareProposal(app.DefaultPrepareProposal())
+	// }
+	// processOpt := func(app *baseapp.BaseApp) {
+	// 	app.SetProcessProposal(app.DefaultProcessProposal())
+	// }
+	//
+	// Further down we'd set the options in the AppBuilder like below.
+	// baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
+
 	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
@@ -248,7 +264,7 @@ func NewSimApp(
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
 	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
+	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
 		fmt.Printf("failed to load state streaming: %s", err)
 		os.Exit(1)
 	}
@@ -350,8 +366,8 @@ func NewSimApp(
 		),
 	)
 
-	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	app.RegisterUpgradeHandlers()
+	// Set legacy router for backwards compatibility with gov v1beta1
+	govKeeper.SetLegacyRouter(govRouter)
 
 	app.NFTKeeper = nftkeeper.NewKeeper(keys[nftkeeper.StoreKey], appCodec, app.AccountKeeper, app.BankKeeper)
 
@@ -438,6 +454,10 @@ func NewSimApp(
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.ModuleManager.RegisterServices(app.configurator)
+
+	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
+	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
+	app.RegisterUpgradeHandlers()
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
@@ -588,6 +608,11 @@ func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *SimApp) DefaultGenesis() map[string]json.RawMessage {
+	return ModuleBasics.DefaultGenesis(a.appCodec)
+}
+
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
@@ -675,19 +700,12 @@ func GetMaccPerms() map[string][]string {
 	return dupMaccPerms
 }
 
-// ModuleAccountAddrsLegacy returns all the app's module account addresses.
-func ModuleAccountAddrsLegacy() map[string]bool {
+// BlockedAddresses returns all the app's blocked account addresses.
+func BlockedAddresses() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range GetMaccPerms() {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
-
-	return modAccAddrs
-}
-
-// BlockedAddresses returns all the app's blocked account addresses.
-func BlockedAddresses() map[string]bool {
-	modAccAddrs := ModuleAccountAddrsLegacy()
 
 	// allow the following addresses to receive funds
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())

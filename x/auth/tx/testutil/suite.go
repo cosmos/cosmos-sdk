@@ -16,24 +16,24 @@ import (
 )
 
 // TxConfigTestSuite provides a test suite that can be used to test that a TxConfig implementation is correct.
-type ConfigTestSuite struct {
+type TxConfigTestSuite struct { //nolint:revive
 	suite.Suite
 	TxConfig client.TxConfig
 }
 
 // NewTxConfigTestSuite returns a new TxConfigTestSuite with the provided TxConfig implementation
-func NewTxConfigTestSuite(txConfig client.TxConfig) *ConfigTestSuite {
-	return &ConfigTestSuite{TxConfig: txConfig}
+func NewTxConfigTestSuite(txConfig client.TxConfig) *TxConfigTestSuite {
+	return &TxConfigTestSuite{TxConfig: txConfig}
 }
 
-func (s *ConfigTestSuite) TestTxBuilderGetTx() {
+func (s *TxConfigTestSuite) TestTxBuilderGetTx() {
 	txBuilder := s.TxConfig.NewTxBuilder()
 	tx := txBuilder.GetTx()
 	s.Require().NotNil(tx)
 	s.Require().Equal(len(tx.GetMsgs()), 0)
 }
 
-func (s *ConfigTestSuite) TestTxBuilderSetFeeAmount() {
+func (s *TxConfigTestSuite) TestTxBuilderSetFeeAmount() {
 	txBuilder := s.TxConfig.NewTxBuilder()
 	feeAmount := sdk.Coins{
 		sdk.NewInt64Coin("atom", 20000000),
@@ -43,7 +43,7 @@ func (s *ConfigTestSuite) TestTxBuilderSetFeeAmount() {
 	s.Require().Equal(feeAmount, feeTx.GetFee())
 }
 
-func (s *ConfigTestSuite) TestTxBuilderSetGasLimit() {
+func (s *TxConfigTestSuite) TestTxBuilderSetGasLimit() {
 	const newGas uint64 = 300000
 	txBuilder := s.TxConfig.NewTxBuilder()
 	txBuilder.SetGasLimit(newGas)
@@ -51,7 +51,7 @@ func (s *ConfigTestSuite) TestTxBuilderSetGasLimit() {
 	s.Require().Equal(newGas, feeTx.GetGas())
 }
 
-func (s *ConfigTestSuite) TestTxBuilderSetMemo() {
+func (s *TxConfigTestSuite) TestTxBuilderSetMemo() {
 	const newMemo string = "newfoomemo"
 	txBuilder := s.TxConfig.NewTxBuilder()
 	txBuilder.SetMemo(newMemo)
@@ -59,7 +59,7 @@ func (s *ConfigTestSuite) TestTxBuilderSetMemo() {
 	s.Require().Equal(txWithMemo.GetMemo(), newMemo)
 }
 
-func (s *ConfigTestSuite) TestTxBuilderSetMsgs() {
+func (s *TxConfigTestSuite) TestTxBuilderSetMsgs() {
 	_, _, addr1 := testdata.KeyTestPubAddr()
 	_, _, addr2 := testdata.KeyTestPubAddr()
 	msg1 := testdata.NewTestMsg(addr1)
@@ -77,7 +77,7 @@ func (s *ConfigTestSuite) TestTxBuilderSetMsgs() {
 	s.Require().Error(tx.ValidateBasic()) // should fail because of no signatures
 }
 
-func (s *ConfigTestSuite) TestTxBuilderSetSignatures() {
+func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	privKey2, pubkey2, _ := testdata.KeyTestPubAddr()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pubkey, pubkey2})
@@ -222,7 +222,7 @@ func sigDataEquals(data1, data2 signingtypes.SignatureData) bool {
 	}
 }
 
-func (s *ConfigTestSuite) TestTxEncodeDecode() {
+func (s *TxConfigTestSuite) TestTxEncodeDecode() {
 	log := s.T().Log
 	_, pubkey, addr := testdata.KeyTestPubAddr()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
@@ -291,7 +291,7 @@ func (s *ConfigTestSuite) TestTxEncodeDecode() {
 	s.Require().Equal([]cryptotypes.PubKey{pubkey}, pks)
 }
 
-func (s *ConfigTestSuite) TestWrapTxBuilder() {
+func (s *TxConfigTestSuite) TestWrapTxBuilder() {
 	_, _, addr := testdata.KeyTestPubAddr()
 	feeAmount := sdk.Coins{sdk.NewInt64Coin("atom", 150)}
 	gasLimit := uint64(50000)

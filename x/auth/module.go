@@ -203,7 +203,8 @@ func init() {
 	)
 }
 
-type Inputs struct {
+//nolint:revive
+type AuthInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -217,14 +218,15 @@ type Inputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-type Outputs struct {
+//nolint:revive
+type AuthOutputs struct {
 	depinject.Out
 
 	AccountKeeper keeper.AccountKeeper
 	Module        appmodule.AppModule
 }
 
-func ProvideModule(in Inputs) Outputs {
+func ProvideModule(in AuthInputs) AuthOutputs {
 	maccPerms := map[string][]string{}
 	for _, permission := range in.Config.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -247,5 +249,5 @@ func ProvideModule(in Inputs) Outputs {
 	k := keeper.NewAccountKeeper(in.Cdc, in.Key, in.AccountI, maccPerms, in.Config.Bech32Prefix, authority.String())
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
-	return Outputs{AccountKeeper: k, Module: m}
+	return AuthOutputs{AccountKeeper: k, Module: m}
 }

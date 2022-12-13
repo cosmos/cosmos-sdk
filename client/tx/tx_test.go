@@ -421,7 +421,8 @@ func TestPreprocessHook(t *testing.T) {
 	requireT.NoError(err)
 	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
-	txb, _ := txfDirect.BuildUnsignedTx(msg1, msg2)
+	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
+	requireT.NoError(err)
 
 	err = tx.Sign(nil, txfDirect, from, txb, false) //nolint:staticcheck
 	requireT.NoError(err)

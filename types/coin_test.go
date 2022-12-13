@@ -152,7 +152,7 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 				}
 			}
 		} else {
-			count += 1
+			count++
 		}
 		s.Require().Equal(count == 0, tc.expectPass, "unexpected result for coins.Denoms, tc #%d", i)
 	}

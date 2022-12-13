@@ -170,7 +170,7 @@ func decodeMultipleBase64Chunks(b []byte) ([]byte, error) {
 		if paddingIndex != -1 {
 			// find the consecutive =
 			for {
-				paddingIndex += 1
+				paddingIndex++
 				if paddingIndex >= len(chunk) || chunk[paddingIndex] != '=' {
 					break
 				}

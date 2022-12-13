@@ -119,7 +119,7 @@ func (s *TestSuite) SetupTest() {
 	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
 }
 
-func (s TestSuite) setNextAccount() {
+func (s TestSuite) setNextAccount() { //nolint:govet // this is a test, we can copy locks
 	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)

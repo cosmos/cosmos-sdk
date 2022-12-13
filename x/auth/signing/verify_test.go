@@ -28,7 +28,7 @@ func TestVerifySignature(t *testing.T) {
 
 	const (
 		memo    = "testmemo"
-		chainId = "test-chain"
+		chainID = "test-chain"
 	)
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
@@ -66,7 +66,7 @@ func TestVerifySignature(t *testing.T) {
 	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)}) //nolint:staticcheck // SA1019: legacytx.NewStdFee is deprecated: use NewStdFeeV2
 	signerData := signing.SignerData{
 		Address:       addr.String(),
-		ChainID:       chainId,
+		ChainID:       chainID,
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
 		PubKey:        pubKey,

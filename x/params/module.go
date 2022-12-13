@@ -186,7 +186,7 @@ func ProvideSubspace(in SubspaceInputs) types.Subspace {
 	kt, exists := in.KeyTables[moduleName]
 	if !exists {
 		return in.Keeper.Subspace(moduleName)
-	} else {
-		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 	}
+	return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
+
 }

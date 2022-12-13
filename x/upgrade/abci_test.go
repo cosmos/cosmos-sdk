@@ -59,7 +59,7 @@ func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 
 	s.module = upgrade.NewAppModule(s.keeper)
 	s.handler = upgrade.NewSoftwareUpgradeProposalHandler(s.keeper)
-	return s
+	return s //nolint:govet // this is a test, we can copy locks
 }
 
 func TestRequireName(t *testing.T) {

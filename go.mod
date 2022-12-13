@@ -163,8 +163,7 @@ replace (
 )
 
 retract (
-	// subject to a bug in the group module,
-	// these versions are safe to use when not using the group module
+	// subject to a bug in the group module and gov module migration
 	[v0.46.5, v0.46.6]
 	// subject to the dragonberry vulnerability
 	// and/or the bank coin metadata migration issue

@@ -37,6 +37,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.47.0-alpha3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-alpha3) - 2022-12-13
+
 ### Features
 
 * (client) [#14051](https://github.com/cosmos/cosmos-sdk/pull/14051) Add `--grpc` client option.

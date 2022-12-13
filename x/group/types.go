@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/cosmos/gogoproto/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -26,7 +27,7 @@ type DecisionPolicyResult struct {
 
 // DecisionPolicy is the persistent set of rules to determine the result of election on a proposal.
 type DecisionPolicy interface {
-	codec.ProtoMarshaler
+	proto.Message
 
 	// GetVotingPeriod returns the duration after proposal submission where
 	// votes are accepted.

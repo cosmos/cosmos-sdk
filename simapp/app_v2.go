@@ -35,29 +35,20 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import for side-effects
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -65,14 +56,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
 	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/params"
@@ -81,14 +68,11 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var (
@@ -142,9 +126,6 @@ type SimApp struct {
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
 
-	// keys to access the substores
-	keys map[string]*storetypes.KVStoreKey
-
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
 	BankKeeper            bankkeeper.Keeper
@@ -190,20 +171,20 @@ func NewSimApp(
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder
 		// Below we could construct and set an application specific mempool and ABCI 1.0 Prepare and Process Proposal
-		// handlers.  These defaults are already set in the SDK's BaseApp, this shows an example of how to override
+		// handlers. These defaults are already set in the SDK's BaseApp, this shows an example of how to override
 		// them.
 		//
-		//nonceMempool = mempool.NewNonceMempool()
-		//mempoolOpt   = baseapp.SetMempool(nonceMempool)
-		//prepareOpt   = func(app *baseapp.BaseApp) {
-		//	app.SetPrepareProposal(app.DefaultPrepareProposal())
-		//}
-		//processOpt = func(app *baseapp.BaseApp) {
-		//	app.SetProcessProposal(app.DefaultProcessProposal())
-		//}
+		// nonceMempool = mempool.NewSenderNonceMempool()
+		// mempoolOpt   = baseapp.SetMempool(nonceMempool)
+		// prepareOpt   = func(app *baseapp.BaseApp) {
+		// 	app.SetPrepareProposal(app.DefaultPrepareProposal())
+		// }
+		// processOpt = func(app *baseapp.BaseApp) {
+		// 	app.SetProcessProposal(app.DefaultProcessProposal())
+		// }
 		//
 		// Further down we'd set the options in the AppBuilder like below.
-		//baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
+		// baseAppOptions = append(baseAppOptions, mempoolOpt, prepareOpt, processOpt)
 
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
@@ -268,39 +249,22 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.keys); err != nil {
+	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.kvStoreKeys()); err != nil {
 		fmt.Printf("failed to load state streaming: %s", err)
 		os.Exit(1)
 	}
 
 	/****  Module Options ****/
 
-	// Sets the version setter for the upgrade module
+	// Set upgrade module options
 	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 
-	// NOTE: The genutils module must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
-	genesisModuleOrder := []string{
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName,
-		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
-		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
-		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
-		vestingtypes.ModuleName, consensustypes.ModuleName,
-	}
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
-
-	// Uncomment if you want to set a custom migration order here.
-	// app.ModuleManager.SetOrderMigrations(custom order)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
 	app.RegisterUpgradeHandlers()
 
 	// add test gRPC service for testing gRPC queries in isolation
@@ -316,9 +280,6 @@ func NewSimApp(
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
 	app.sm.RegisterStoreDecoders()
-
-	// initialize stores
-	app.MountKVStores(app.keys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -337,11 +298,6 @@ func (app *SimApp) Name() string { return app.BaseApp.Name() }
 func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 	return app.App.InitChainer(ctx, req)
-}
-
-// LoadHeight loads a particular height
-func (app *SimApp) LoadHeight(height int64) error {
-	return app.LoadVersion(height)
 }
 
 // LegacyAmino returns SimApp's amino codec.
@@ -374,17 +330,23 @@ func (app *SimApp) TxConfig() client.TxConfig {
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	kvsk := app.keys[storeKey]
-	if kvsk != nil {
-		return kvsk
-	}
-
 	sk := app.UnsafeFindStoreKey(storeKey)
 	kvStoreKey, ok := sk.(*storetypes.KVStoreKey)
 	if !ok {
 		return nil
 	}
 	return kvStoreKey
+}
+
+func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
+	keys := make(map[string]*storetypes.KVStoreKey)
+	for _, k := range app.GetStoreKeys() {
+		if kv, ok := k.(*storetypes.KVStoreKey); ok {
+			keys[kv.Name()] = kv
+		}
+	}
+
+	return keys
 }
 
 // GetSubspace returns a param subspace for a given module name.
@@ -404,7 +366,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 // API server.
 func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	app.App.RegisterAPIRoutes(apiSvr, apiConfig)
-	// register swagger API from root so that other applications can override easily
+	// register swagger API in app.go so that other applications can override easily
 	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
 		panic(err)
 	}

@@ -153,7 +153,7 @@ func TestStrategies(t *testing.T) {
 }
 
 func TestHandleHeight_Inputs(t *testing.T) {
-	var keepRecent int64 = int64(types.NewPruningOptions(types.PruningEverything).KeepRecent)
+	keepRecent := int64(types.NewPruningOptions(types.PruningEverything).KeepRecent)
 
 	testcases := map[string]struct {
 		height          int64

@@ -15,12 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var moduleAccAddr = authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
+var moduleAccAddr = types.NewModuleAddress(stakingtypes.BondedPoolName)
 
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
 // that they differ only by having the sequence numbers incremented between
@@ -63,7 +62,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 	b.ReportAllocs()
 	// Add an account at genesis
-	acc := authtypes.BaseAccount{
+	acc := types.BaseAccount{
 		Address: addr1.String(),
 	}
 
@@ -108,12 +107,12 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 
 	b.ReportAllocs()
 	// Add an account at genesis
-	acc := authtypes.BaseAccount{
+	acc := types.BaseAccount{
 		Address: addr1.String(),
 	}
 
 	// Construct genesis state
-	genAccs := []authtypes.GenesisAccount{&acc}
+	genAccs := []types.GenesisAccount{&acc}
 	s := createTestSuite(&testing.T{}, genAccs)
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, tmproto.Header{})

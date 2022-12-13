@@ -363,7 +363,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	require.NoError(t, err, "making goodGovProp")
 	badGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil),
+			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{Denom: "bad coin name!", Enabled: true}}, nil),
 		},
 		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
 		addr1Str,

@@ -2,7 +2,6 @@ package upgrade_test
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -214,7 +213,7 @@ func TestNoSpuriousUpgrades(t *testing.T) {
 
 func TestPlanStringer(t *testing.T) {
 	require.Equal(t, "name:\"test\" time:<seconds:-62135596800 > height:100 ", (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
-	require.Equal(t, fmt.Sprintf(`name:"test" time:<seconds:-62135596800 > height:100 `), (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
+	require.Equal(t, `name:"test" time:<seconds:-62135596800 > height:100 `, (&types.Plan{Name: "test", Height: 100, Info: ""}).String())
 }
 
 func VerifyNotDone(t *testing.T, newCtx sdk.Context, name string) {

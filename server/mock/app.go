@@ -147,7 +147,7 @@ type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { //nolint:revive
 	in := new(KVStoreTx)
 	if err := dec(in); err != nil {
 		return nil, err

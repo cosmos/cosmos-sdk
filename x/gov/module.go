@@ -160,6 +160,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
+//nolint:revive
 type GovInputs struct {
 	depinject.In
 
@@ -177,6 +178,7 @@ type GovInputs struct {
 	LegacySubspace govtypes.ParamSubspace
 }
 
+//nolint:revive
 type GovOutputs struct {
 	depinject.Out
 

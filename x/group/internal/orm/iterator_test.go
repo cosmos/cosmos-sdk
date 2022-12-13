@@ -20,7 +20,7 @@ func TestReadAll(t *testing.T) {
 	specs := map[string]struct {
 		srcIT     Iterator
 		destSlice func() ModelSlicePtr
-		expErr    *sdkerrors.Error
+		expErr    *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 		expIDs    []RowID
 		expResult ModelSlicePtr
 	}{

@@ -26,13 +26,13 @@ func TestInfoTestSuite(t *testing.T) {
 
 // saveSrcTestFile saves a TestFile in this test's Home/src directory.
 // The full path to the saved file is returned.
-func (s InfoTestSuite) saveTestFile(f *TestFile) string {
+func (s InfoTestSuite) saveTestFile(f *TestFile) string { //nolint:govet // false positive
 	fullName, err := f.SaveIn(s.Home)
 	s.Require().NoError(err, "saving test file %s", f.Name)
 	return fullName
 }
 
-func (s InfoTestSuite) TestParseInfo() {
+func (s InfoTestSuite) TestParseInfo() { //nolint:govet // false positive
 	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
 	binariesWrongJSON := `{"binaries":["foo","bar"]}`
 	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`

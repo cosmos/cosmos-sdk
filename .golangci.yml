@@ -4,6 +4,7 @@ run:
   timeout: 5m
   sort-results: true
   allow-parallel-runners: true
+  exclude-dir: testutil/testdata_pulsar
 
 linters:
   disable-all: true
@@ -45,6 +46,9 @@ issues:
       text: "SA1019:"
       linters:
         - staticcheck
+    - text: "leading space"
+      linters:
+        - nolintlint
 
   max-issues-per-linter: 10000
   max-same-issues: 10000

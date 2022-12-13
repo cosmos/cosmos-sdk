@@ -56,7 +56,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	s.Require().NotNil(res)
 	s.Require().Equal(2, len(balances))
 	s.Require().NotNil(res.NextKey)
-	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test2denom"))
+	s.Require().Equal(string(res.NextKey), "test2denom")
 	s.Require().Equal(uint64(4), res.Total)
 
 	s.T().Log("verify both key and offset can't be given")

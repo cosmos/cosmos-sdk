@@ -256,7 +256,7 @@ Examples:
 ### bytes
 
 * Bytes of length shorter or equal to 32 are rendered in hexadecimal, all capital letters, without the `0x` prefix.
-* Bytes of length greater than 32 are hashed using SHA256, and the rendered text is the hash, in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length greater than 32 are hashed using SHA256. The rendered text is the 32-byte hash, in hexadecimal, all capital letters, without the `0x` prefix.
 
 #### Examples
 

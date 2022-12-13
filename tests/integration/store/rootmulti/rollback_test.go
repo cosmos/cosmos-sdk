@@ -18,7 +18,7 @@ func TestRollback(t *testing.T) {
 	options := simapp.SetupOptions{
 		Logger:  log.NewNopLogger(),
 		DB:      db,
-		AppOpts: simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := simapp.NewSimappWithCustomOptions(t, false, options)
 	app.Commit()
@@ -46,7 +46,7 @@ func TestRollback(t *testing.T) {
 	require.Equal(t, target, app.LastBlockHeight())
 
 	// recreate app to have clean check state
-	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
 	require.Equal(t, []byte("value5"), store.Get([]byte("key")))
 

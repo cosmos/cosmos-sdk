@@ -63,7 +63,7 @@ var lock = new(sync.Mutex)
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
 type (
-	AppConstructor     = func(val moduletestutil.Validator) servertypes.Application
+	AppConstructor     = func(val ValidatorI) servertypes.Application
 	TestFixtureFactory = func() TestFixture
 )
 
@@ -172,7 +172,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
-	cfg.AppConstructor = func(val moduletestutil.Validator) servertypes.Application {
+	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
 		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
@@ -240,19 +240,25 @@ type (
 		grpc    *grpc.Server
 		grpcWeb *http.Server
 	}
+
+	// ValidatorI expose a validator's context and configuration
+	ValidatorI interface {
+		GetCtx() *server.Context
+		GetAppConfig() *srvconfig.Config
+	}
+
+	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
+	// This is not to be confused with logging that may happen at an individual node or validator level
+	Logger interface {
+		Log(args ...interface{})
+		Logf(format string, args ...interface{})
+	}
 )
 
-// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
-// This is not to be confused with logging that may happen at an individual node or validator level
-type Logger interface {
-	Log(args ...interface{})
-	Logf(format string, args ...interface{})
-}
-
 var (
-	_ Logger                   = (*testing.T)(nil)
-	_ Logger                   = (*CLILogger)(nil)
-	_ moduletestutil.Validator = Validator{}
+	_ Logger     = (*testing.T)(nil)
+	_ Logger     = (*CLILogger)(nil)
+	_ ValidatorI = Validator{}
 )
 
 func (v Validator) GetCtx() *server.Context {

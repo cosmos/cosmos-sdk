@@ -429,9 +429,8 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	for _, m := range moduleNames {
 		ms[m] = true
 	}
-	allKeys := maps.Keys(m.Modules)
 	var missing []string
-	for _, m := range allKeys {
+	for m := range m.Modules {
 		if !ms[m] {
 			missing = append(missing, m)
 		}

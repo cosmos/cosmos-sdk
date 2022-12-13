@@ -122,7 +122,17 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
 	// set version map automatically if available
 	if versionMap != nil {
-		am.keeper.SetModuleVersionMap(ctx, *versionMap)
+		newVersionMap := *versionMap
+
+		// chains can still use a custom init chainer to setting the version map
+		// however this means that we need to combine the module version map with app wiring enabled module
+		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
+			if _, ok := newVersionMap[name]; !ok {
+				newVersionMap[name] = version
+			}
+		}
+
+		am.keeper.SetModuleVersionMap(ctx, newVersionMap)
 	}
 
 	return []abci.ValidatorUpdate{}

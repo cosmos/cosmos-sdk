@@ -205,7 +205,7 @@ func init() {
 	)
 }
 
-type Inputs struct {
+type EvidenceInputs struct {
 	depinject.In
 
 	Key *store.KVStoreKey
@@ -215,16 +215,16 @@ type Inputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
-type Outputs struct {
+type EvidenceOutputs struct {
 	depinject.Out
 
 	EvidenceKeeper keeper.Keeper
 	Module         appmodule.AppModule
 }
 
-func ProvideModule(in Inputs) Outputs {
+func ProvideModule(in EvidenceInputs) EvidenceOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.Key, in.StakingKeeper, in.SlashingKeeper)
 	m := NewAppModule(*k)
 
-	return Outputs{EvidenceKeeper: *k, Module: m}
+	return EvidenceOutputs{EvidenceKeeper: *k, Module: m}
 }

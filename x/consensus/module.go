@@ -137,7 +137,7 @@ func init() {
 	)
 }
 
-type Inputs struct {
+type ConsensusInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -145,7 +145,7 @@ type Inputs struct {
 	Key    *store.KVStoreKey
 }
 
-type Outputs struct {
+type ConsensusOutputs struct {
 	depinject.Out
 
 	Keeper        keeper.Keeper
@@ -153,7 +153,7 @@ type Outputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in Inputs) Outputs {
+func ProvideModule(in ConsensusInputs) ConsensusOutputs {
 	// default to governance authority if not provided
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	if in.Config.Authority != "" {
@@ -166,7 +166,7 @@ func ProvideModule(in Inputs) Outputs {
 		app.SetParamStore(&k)
 	}
 
-	return Outputs{
+	return ConsensusOutputs{
 		Keeper:        k,
 		Module:        m,
 		BaseAppOption: baseappOpt,

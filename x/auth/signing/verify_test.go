@@ -1,7 +1,6 @@
 package signing_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,7 +28,7 @@ func TestVerifySignature(t *testing.T) {
 
 	const (
 		memo    = "testmemo"
-		chainID = "test-chain"
+		chainId = "test-chain"
 	)
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
@@ -64,10 +63,10 @@ func TestVerifySignature(t *testing.T) {
 	require.NoError(t, err)
 
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
-	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)}) //nolint:staticcheck // SA1019: legacytx.StdFee is deprecated: use FeeTx instead.
+	fee := legacytx.NewStdFee(50000, sdk.Coins{sdk.NewInt64Coin("atom", 150)})
 	signerData := signing.SignerData{
 		Address:       addr.String(),
-		ChainID:       chainID,
+		ChainID:       chainId,
 		AccountNumber: acc.GetAccountNumber(),
 		Sequence:      acc.GetSequence(),
 		PubKey:        pubKey,
@@ -76,14 +75,14 @@ func TestVerifySignature(t *testing.T) {
 	signature, err := priv.Sign(signBytes)
 	require.NoError(t, err)
 
-	stdSig := legacytx.StdSignature{PubKey: pubKey, Signature: signature} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2 instead.
+	stdSig := legacytx.StdSignature{PubKey: pubKey, Signature: signature}
 	sigV2, err := legacytx.StdSignatureToSignatureV2(encCfg.Amino, stdSig)
 	require.NoError(t, err)
 
 	handler := MakeTestHandlerMap()
-	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo) //nolint:stattx.StdSignature is deprecated: use SignatureV2 instead.
+	stdTx := legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig}, memo)
 	stdTx.TimeoutHeight = 10
-	err = signing.VerifySignature(context.TODO(), pubKey, signerData, sigV2.Data, handler, stdTx)
+	err = signing.VerifySignature(nil, pubKey, signerData, sigV2.Data, handler, stdTx)
 	require.NoError(t, err)
 
 	pkSet := []cryptotypes.PubKey{pubKey, pubKey1}
@@ -94,13 +93,13 @@ func TestVerifySignature(t *testing.T) {
 
 	sig1, err := priv.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig1 := legacytx.StdSignature{PubKey: pubKey, Signature: sig1} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2 instead.
+	stdSig1 := legacytx.StdSignature{PubKey: pubKey, Signature: sig1}
 	sig1V2, err := legacytx.StdSignatureToSignatureV2(encCfg.Amino, stdSig1)
 	require.NoError(t, err)
 
 	sig2, err := priv1.Sign(multiSignBytes)
 	require.NoError(t, err)
-	stdSig2 := legacytx.StdSignature{PubKey: pubKey, Signature: sig2} //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2 instead.
+	stdSig2 := legacytx.StdSignature{PubKey: pubKey, Signature: sig2}
 	sig2V2, err := legacytx.StdSignatureToSignatureV2(encCfg.Amino, stdSig2)
 	require.NoError(t, err)
 
@@ -109,9 +108,9 @@ func TestVerifySignature(t *testing.T) {
 	err = multisig.AddSignatureFromPubKey(multisignature, sig2V2.Data, pkSet[1], pkSet)
 	require.NoError(t, err)
 
-	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo) //nolint:staticcheck // SA1019: legacytx.StdSignature is deprecated: use SignatureV2 instead.
+	stdTx = legacytx.NewStdTx(msgs, fee, []legacytx.StdSignature{stdSig1, stdSig2}, memo)
 	stdTx.TimeoutHeight = 10
 
-	err = signing.VerifySignature(context.TODO(), multisigKey, signerData, multisignature, handler, stdTx)
+	err = signing.VerifySignature(nil, multisigKey, signerData, multisignature, handler, stdTx)
 	require.NoError(t, err)
 }

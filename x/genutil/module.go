@@ -132,7 +132,7 @@ func init() {
 	)
 }
 
-type Inputs struct {
+type GenutilInputs struct {
 	depinject.In
 
 	AccountKeeper types.AccountKeeper
@@ -141,7 +141,7 @@ type Inputs struct {
 	Config        client.TxConfig
 }
 
-func ProvideModule(in Inputs) appmodule.AppModule {
+func ProvideModule(in GenutilInputs) appmodule.AppModule {
 	m := NewAppModule(in.AccountKeeper, in.StakingKeeper, in.DeliverTx, in.Config)
 	return m
 }

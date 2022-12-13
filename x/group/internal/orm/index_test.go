@@ -119,7 +119,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		Metadata: []byte("metadata-b"),
 	}
 	for _, g := range []testdata.TableModel{g1, g2, g3} {
-		_, err := tb.Create(store, &g)
+		_, err := tb.Create(store, &g) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 		require.NoError(t, err)
 	}
 

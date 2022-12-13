@@ -188,5 +188,4 @@ func ProvideSubspace(in SubspaceInputs) types.Subspace {
 		return in.Keeper.Subspace(moduleName)
 	}
 	return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
-
 }

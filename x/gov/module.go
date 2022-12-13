@@ -188,9 +188,9 @@ type GovOutputs struct {
 }
 
 func ProvideModule(in GovInputs) GovOutputs {
-	kConfig := govtypes.DefaultConfig()
+	Config := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
-		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
+		Config.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
 	// default to governance authority if not provided
@@ -206,7 +206,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 		in.BankKeeper,
 		in.StakingKeeper,
 		in.MsgServiceRouter,
-		kConfig,
+		Config,
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)

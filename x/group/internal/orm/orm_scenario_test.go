@@ -273,7 +273,7 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	for i, m := range tms {
 		gCtx.ResetGasMeter()
 
-		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m)
+		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 		require.NoError(t, err)
 		t.Logf("%d: gas consumed on delete: %d", i, gCtx.GasConsumed())
 	}

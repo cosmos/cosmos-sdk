@@ -238,7 +238,7 @@ func TestPaginate(t *testing.T) {
 	}
 
 	for _, g := range []testdata.TableModel{t1, t2, t3, t4, t5} {
-		_, err := tb.Create(store, &g)
+		_, err := tb.Create(store, &g) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 		require.NoError(t, err)
 	}
 

@@ -41,7 +41,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		Metadata: metadata,
 	}
 	for _, g := range []testdata.TableModel{t1, t2, t3} {
-		require.NoError(t, tb.Create(store, &g))
+		require.NoError(t, tb.Create(store, &g)) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 	}
 
 	specs := map[string]struct {

@@ -187,7 +187,7 @@ func init() {
 	)
 }
 
-type CapabilityInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -197,18 +197,18 @@ type CapabilityInputs struct {
 	Cdc         codec.Codec
 }
 
-type CapabilityOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	CapabilityKeeper *keeper.Keeper
 	Module           appmodule.AppModule
 }
 
-func ProvideModule(in CapabilityInputs) CapabilityOutputs {
+func ProvideModule(in Inputs) Outputs {
 	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
 	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
 
-	return CapabilityOutputs{
+	return Outputs{
 		CapabilityKeeper: k,
 		Module:           m,
 	}

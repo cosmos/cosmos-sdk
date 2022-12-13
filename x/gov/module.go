@@ -160,7 +160,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
-type GovInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config           *modulev1.Module
@@ -177,7 +177,7 @@ type GovInputs struct {
 	LegacySubspace govtypes.ParamSubspace
 }
 
-type GovOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
@@ -185,7 +185,7 @@ type GovOutputs struct {
 	HandlerRoute v1beta1.HandlerRoute
 }
 
-func ProvideModule(in GovInputs) GovOutputs {
+func ProvideModule(in Inputs) Outputs {
 	kConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
 		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
@@ -210,7 +210,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
-	return GovOutputs{Module: m, Keeper: k, HandlerRoute: hr}
+	return Outputs{Module: m, Keeper: k, HandlerRoute: hr}
 }
 
 func ProvideKeyTable() paramtypes.KeyTable {

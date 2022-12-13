@@ -191,7 +191,7 @@ func init() {
 	)
 }
 
-type CrisisInputs struct {
+type Inputs struct {
 	depinject.In
 
 	Config  *modulev1.Module
@@ -205,14 +205,14 @@ type CrisisInputs struct {
 	LegacySubspace exported.Subspace
 }
 
-type CrisisOutputs struct {
+type Outputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
 }
 
-func ProvideModule(in CrisisInputs) CrisisOutputs {
+func ProvideModule(in Inputs) Outputs {
 	var invalidCheckPeriod uint
 	if in.AppOpts != nil {
 		invalidCheckPeriod = cast.ToUint(in.AppOpts.Get(server.FlagInvCheckPeriod))
@@ -245,5 +245,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: m}
+	return Outputs{CrisisKeeper: k, Module: m}
 }

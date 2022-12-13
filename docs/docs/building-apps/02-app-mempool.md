@@ -30,7 +30,6 @@ prepareOpt := func(app *baseapp.BaseApp) {
 baseAppOptions = append(baseAppOptions, prepareOpt)
 ```
 
-
 ## Process Proposal
 
 Process proposal handles the validation of what is in a block, meaning that after a block has been proposed the other validators have the right to vote no or yes on a block. The validator in the default implementation of `PrepareProposal` runs the transaction in a non execution fashion, it runs the antehandler and gas operations to make sure the transaction is valid. 
@@ -55,7 +54,7 @@ baseAppOptions = append(baseAppOptions, processOpt)
 
 Now that we have walked through the `PrepareProposal` & `ProcessProposal`, we can move on to walking through the mempool. 
 
-There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple implementations of mempool.
+There are countless designs that an application developer can write for a mempool, the SDK opted to provide only simple mempool implementations.
 Namely, the SDK provides the following mempools:
 
 * [Sender Nonce Mempool](#sender-nonce-mempool)
@@ -79,15 +78,34 @@ It can configurable by the following parameters:
 
 #### MaxTxs
 
-Its an integer value that sets the mempool in one of three modes, bounded, unbounded, or disabled.
+It is an integer value that sets the mempool in one of three modes, *bounded*, *unbounded*, or *disabled*.
 
-* **negative**: Disabled, mempool does not insert new tx and return early.
-* **zero**: Unbounded mempool has no tx limit and will never fail with ErrMempoolTxMaxCapacity.
-* **positive**: Bounded, it fails with ErrMempoolTxMaxCapacity when maxTx value is the same as CountTx()
+* **negative**: Disabled, mempool does not insert new transaction and return early.
+* **zero**: Unbounded mempool has no transaction limit and will never fail with `ErrMempoolTxMaxCapacity`.
+* **positive**: Bounded, it fails with `ErrMempoolTxMaxCapacity` when `maxTx` value is the same as CountTx()
+
+#### Seed
+
+Set the seed for the random number generator used to select transactions from the mempool.
 
 ### Priority Nonce Mempool
+
+The [priority nonce mempool](https://github.com/cosmos/cosmos-sdk/blob/main/types/mempool/priority_nonce_spec.md) is a mempool implementation that stores txs in a partially ordered set by 2 dimensions:
+
+* priority
+* sender-nonce (sequence number)
+
+Internally it uses one priority ordered [skip list](https://pkg.go.dev/github.com/huandu/skiplist) and one skip list per sender ordered by sender-nonce (sequence number). When there are multiple txs from the same sender, they are not always comparable by priority to other sender txs and must be partially ordered by both sender-nonce and priority.
+
+It can configurable by the following parameters:
+
+#### Callback
+
+Allow to set a callback to be called when a transaction is read from the mempool.
 
 ### No-op Mempool
 
 A no-op mempool is a mempool that does not do any ordering of transactions and keeps the transactions in the order they are received.
 It basically replicates the behavior previous to Cosmos SDK `v0.47`.
+
+More information on the mempool can be found in the [mempool documentation](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).

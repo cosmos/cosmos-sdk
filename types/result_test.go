@@ -159,8 +159,8 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 					Type: "message",
 					Attributes: []abci.EventAttribute{
 						{
-							Key:   []byte("action"),
-							Value: []byte("foo"),
+							Key:   "action",
+							Value: "foo",
 							Index: true,
 						},
 					},
@@ -184,8 +184,8 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 					Type: "message",
 					Attributes: []abci.EventAttribute{
 						{
-							Key:   []byte("action"),
-							Value: []byte("foo"),
+							Key:   "action",
+							Value: "foo",
 							Index: true,
 						},
 					},
@@ -209,8 +209,8 @@ func (s *resultTestSuite) TestResponseFormatBroadcastTxCommit() {
 				Type: "message",
 				Attributes: []abci.EventAttribute{
 					{
-						Key:   []byte("action"),
-						Value: []byte("foo"),
+						Key:   "action",
+						Value: "foo",
 						Index: true,
 					},
 				},

@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine as build
+FROM golang:1.18-alpine as build
 
 RUN apk add --no-cache tar
 
@@ -29,4 +29,3 @@ COPY --from=build /node/root /root/
 WORKDIR /root/.simapp
 
 RUN chmod -R 0777 ./
-

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/pflag"
 
 	"github.com/cosmos/cosmos-sdk/client"

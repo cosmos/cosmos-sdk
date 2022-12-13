@@ -5,7 +5,7 @@ package query
 
 import (
 	fmt "fmt"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -25,10 +25,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // PageRequest is to be embedded in gRPC request messages for efficient
 // pagination. Ex:
 //
-//  message SomeRequest {
-//          Foo some_parameter = 1;
-//          PageRequest pagination = 2;
-//  }
+//	message SomeRequest {
+//	        Foo some_parameter = 1;
+//	        PageRequest pagination = 2;
+//	}
 type PageRequest struct {
 	// key is a value returned in PageResponse.next_key to begin
 	// querying the next page most efficiently. Only one of offset or key
@@ -123,10 +123,10 @@ func (m *PageRequest) GetReverse() bool {
 // PageResponse is to be embedded in gRPC response messages where the
 // corresponding request message has used PageRequest.
 //
-//  message SomeResponse {
-//          repeated Bar results = 1;
-//          PageResponse page = 2;
-//  }
+//	message SomeResponse {
+//	        repeated Bar results = 1;
+//	        PageResponse page = 2;
+//	}
 type PageResponse struct {
 	// next_key is the key to be passed to PageRequest.key to
 	// query the next page most efficiently

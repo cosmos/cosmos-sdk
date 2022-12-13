@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package rest_test
@@ -5,7 +6,7 @@ package rest_test
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"

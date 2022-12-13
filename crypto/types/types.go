@@ -1,7 +1,7 @@
 package types
 
 import (
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
 

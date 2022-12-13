@@ -9,16 +9,17 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/pruning"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	protoio "github.com/cosmos/gogoproto/io"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
-	protoio "github.com/gogo/protobuf/io"
-	gogotypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/cosmos/cosmos-sdk/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"

@@ -3,25 +3,22 @@ package baseapp
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
-
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/reflection"
+	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var protoCodec = encoding.GetCodec(proto.Name)
-
 // GRPCQueryRouter routes ABCI Query requests to GRPC handlers
 type GRPCQueryRouter struct {
-	routes            map[string]GRPCQueryHandler
-	interfaceRegistry codectypes.InterfaceRegistry
-	serviceData       []serviceData
+	routes      map[string]GRPCQueryHandler
+	cdc         encoding.Codec
+	serviceData []serviceData
 }
 
 // serviceData represents a gRPC service, along with its handler.
@@ -83,21 +80,15 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 			// call the method handler from the service description with the handler object,
 			// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 			res, err := methodHandler(handler, sdk.WrapSDKContext(ctx), func(i interface{}) error {
-				err := protoCodec.Unmarshal(req.Data, i)
-				if err != nil {
-					return err
-				}
-				if qrt.interfaceRegistry != nil {
-					return codectypes.UnpackInterfaces(i, qrt.interfaceRegistry)
-				}
-				return nil
+				return qrt.cdc.Unmarshal(req.Data, i)
 			}, nil)
 			if err != nil {
 				return abci.ResponseQuery{}, err
 			}
 
 			// proto marshal the result bytes
-			resBytes, err := protoCodec.Marshal(res)
+			var resBytes []byte
+			resBytes, err = qrt.cdc.Marshal(res)
 			if err != nil {
 				return abci.ResponseQuery{}, err
 			}
@@ -119,11 +110,9 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 // SetInterfaceRegistry sets the interface registry for the router. This will
 // also register the interface reflection gRPC service.
 func (qrt *GRPCQueryRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
-	qrt.interfaceRegistry = interfaceRegistry
+	// instantiate the codec
+	qrt.cdc = codec.NewProtoCodec(interfaceRegistry).GRPCCodec()
 	// Once we have an interface registry, we can register the interface
 	// registry reflection gRPC service.
-	reflection.RegisterReflectionServiceServer(
-		qrt,
-		reflection.NewReflectionServiceServer(interfaceRegistry),
-	)
+	reflection.RegisterReflectionServiceServer(qrt, reflection.NewReflectionServiceServer(interfaceRegistry))
 }

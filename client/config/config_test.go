@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
@@ -27,7 +29,8 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
-		WithViper("")
+		WithViper("").
+		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()))
 
 	clientCtx.Viper.BindEnv(nodeEnv)
 	if envVar != "" {

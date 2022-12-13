@@ -3,7 +3,7 @@ package tmservice
 import (
 	"context"
 
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

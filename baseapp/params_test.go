@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -16,11 +15,11 @@ func TestValidateBlockParams(t *testing.T) {
 		expectErr bool
 	}{
 		{nil, true},
-		{&abci.BlockParams{}, true},
-		{abci.BlockParams{}, true},
-		{abci.BlockParams{MaxBytes: -1, MaxGas: -1}, true},
-		{abci.BlockParams{MaxBytes: 2000000, MaxGas: -5}, true},
-		{abci.BlockParams{MaxBytes: 2000000, MaxGas: 300000}, false},
+		{&tmproto.BlockParams{}, true},
+		{tmproto.BlockParams{}, true},
+		{tmproto.BlockParams{MaxBytes: -1, MaxGas: -1}, true},
+		{tmproto.BlockParams{MaxBytes: 2000000, MaxGas: -5}, true},
+		{tmproto.BlockParams{MaxBytes: 2000000, MaxGas: 300000}, false},
 	}
 
 	for _, tc := range testCases {

@@ -1,11 +1,12 @@
 package baseapp
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
@@ -18,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
 )
@@ -27,6 +29,8 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
+	runTxPrepareProposal
+	runTxProcessProposal
 )
 
 var (
@@ -57,17 +61,21 @@ type BaseApp struct { // nolint: maligned
 	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry types.InterfaceRegistry
-	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
+	txDecoder         sdk.TxDecoder   // unmarshal []byte into sdk.Tx
+	txEncoder         sdk.TxEncoder   // marshal sdk.Tx into []byte
+	mempool           mempool.Mempool // application-side mempool
 
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.AnteHandler // post handler, optional, e.g. for tips
 
-	initChainer    sdk.InitChainer  // initialize state with validators and state blob
-	beginBlocker   sdk.BeginBlocker // logic to run before any txs
-	endBlocker     sdk.EndBlocker   // logic to run after all txs, and to determine valset changes
-	addrPeerFilter sdk.PeerFilter   // filter peers by address and port
-	idPeerFilter   sdk.PeerFilter   // filter peers by node ID
-	fauxMerkleMode bool             // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	initChainer     sdk.InitChainer            // initialize state with validators and state blob
+	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
+	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
+	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
+	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
+	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
+	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
+	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -76,8 +84,10 @@ type BaseApp struct { // nolint: maligned
 	//
 	// checkState is set on InitChain and reset on Commit
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState   *state // for CheckTx
-	deliverState *state // for DeliverTx
+	checkState           *state // for CheckTx
+	deliverState         *state // for DeliverTx
+	processProposalState *state // for ProcessProposal
+	prepareProposalState *state // for PrepareProposal
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache
@@ -159,6 +169,18 @@ func NewBaseApp(
 		option(app)
 	}
 
+	if app.mempool == nil {
+		app.SetMempool(mempool.NewSenderNonceMempool())
+	}
+
+	if app.prepareProposal == nil {
+		app.SetPrepareProposal(app.DefaultPrepareProposal())
+	}
+
+	if app.processProposal == nil {
+		app.SetProcessProposal(app.DefaultProcessProposal())
+	}
+
 	if app.interBlockCache != nil {
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
@@ -190,6 +212,11 @@ func (app *BaseApp) Trace() bool {
 
 // MsgServiceRouter returns the MsgServiceRouter of a BaseApp.
 func (app *BaseApp) MsgServiceRouter() *MsgServiceRouter { return app.msgServiceRouter }
+
+// SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.
+func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
+	app.msgServiceRouter = msgServiceRouter
+}
 
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
@@ -308,8 +335,16 @@ func (app *BaseApp) init() error {
 		panic("cannot call initFromMainStore: baseapp already sealed")
 	}
 
-	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(tmproto.Header{})
+	emptyHeader := tmproto.Header{}
+
+	// Needed for the export command which inits from store but never calls
+	// InitChain.
+	app.setCheckState(emptyHeader)
+
+	// Needed for ABCI Replay Blocks mode which calls Prepare/Process proposal
+	// (InitChain is not called).
+	app.setPrepareProposalState(emptyHeader)
+	app.setProcessProposalState(emptyHeader)
 
 	appVersion, err := app.GetAppVersion()
 	if err != nil {
@@ -319,6 +354,7 @@ func (app *BaseApp) init() error {
 	if err := app.SetAppVersion(appVersion); err != nil {
 		return err
 	}
+
 	app.Seal()
 
 	rms, ok := app.cms.(*rootmulti.Store)
@@ -380,6 +416,28 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
+// setPrepareProposalState sets the BaseApp's prepareProposalState with a
+// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
+// same multi-store branch, and provided header. It is set on InitChain and Commit.
+func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.prepareProposalState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+}
+
+// setProcessProposalState sets the BaseApp's processProposalState with a
+// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
+// same multi-store branch, and provided header. It is set on InitChain and Commit.
+func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.processProposalState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+}
+
 // setCheckState sets the BaseApp's checkState with a branched multi-store
 // (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
 // provided header, and minimum gas prices set. It is set on InitChain and reset
@@ -406,15 +464,15 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
 // ParamStore. If the BaseApp has no ParamStore defined, nil is returned.
-func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
+func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *tmproto.ConsensusParams {
 	if app.paramStore == nil {
 		return nil
 	}
 
-	cp := new(abci.ConsensusParams)
+	cp := new(tmproto.ConsensusParams)
 
 	if app.paramStore.Has(ctx, ParamStoreKeyBlockParams) {
-		var bp abci.BlockParams
+		var bp tmproto.BlockParams
 
 		app.paramStore.Get(ctx, ParamStoreKeyBlockParams, &bp)
 		cp.Block = &bp
@@ -439,7 +497,7 @@ func (app *BaseApp) GetConsensusParams(ctx sdk.Context) *abci.ConsensusParams {
 		panic(err)
 	}
 	cp.Version = &tmproto.VersionParams{
-		AppVersion: appVersion,
+		App: appVersion,
 	}
 	return cp
 }
@@ -452,7 +510,7 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 }
 
 // StoreConsensusParams sets the consensus parameters to the baseapp's param store.
-func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusParams) {
+func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *tmproto.ConsensusParams) {
 	if app.paramStore == nil {
 		panic("cannot store consensus params with no params store set")
 	}
@@ -471,10 +529,10 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *abci.ConsensusPara
 	// deserialized by the state-synching node to be validated in Tendermint.
 }
 
-// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
+// GetMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
-func (app *BaseApp) getMaximumBlockGas(ctx sdk.Context) uint64 {
+func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	cp := app.GetConsensusParams(ctx)
 	if cp == nil || cp.Block == nil {
 		return 0
@@ -506,7 +564,7 @@ func (app *BaseApp) validateHeight(req abci.RequestBeginBlock) error {
 		// previous commit). The height we're expecting is the initial height.
 		expectedHeight = app.initialHeight
 	} else {
-		// This case can means two things:
+		// This case can mean two things:
 		// - either there was already a previous commit in the store, in which
 		// case we increment the version from there,
 		// - or there was no previous commit, and initial version was not set,
@@ -537,23 +595,35 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-// Returns the applications's deliverState if app is in runTxModeDeliver,
+// Returns the application's deliverState if app is in runTxModeDeliver,
 // otherwise it returns the application's checkstate.
 func (app *BaseApp) getState(mode runTxMode) *state {
-	if mode == runTxModeDeliver {
+	switch mode {
+	case runTxModeDeliver:
 		return app.deliverState
-	}
 
-	return app.checkState
+	case runTxPrepareProposal:
+		return app.prepareProposalState
+
+	case runTxProcessProposal:
+		return app.processProposalState
+
+	default:
+		return app.checkState
+	}
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
-	ctx := app.getState(mode).ctx.
-		WithTxBytes(txBytes).
-		WithVoteInfos(app.voteInfos)
+	modeState := app.getState(mode)
+	if modeState == nil {
+		panic(fmt.Sprintf("state is nil for mode %v", mode))
+	}
 
-	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
+	ctx := modeState.ctx.
+		WithTxBytes(txBytes).
+		WithVoteInfos(app.voteInfos).
+		WithConsensusParams(app.GetConsensusParams(modeState.ctx))
 
 	if mode == runTxModeReCheck {
 		ctx = ctx.WithIsReCheckTx(true)
@@ -595,7 +665,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
-	// meter so we initialize upfront.
+	// meter, so we initialize upfront.
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
@@ -616,9 +686,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
 	}()
 
-	blockGasConsumed := false
-	// consumeBlockGas makes sure block gas is consumed at most once. It must happen after
-	// tx processing, and must be execute even if tx processing fails. Hence we use trick with `defer`
+	var blockGasConsumed bool
+
+	// Note, consumeBlockGas makes sure block gas is consumed at most once. It
+	// must happen after tx processing, and must be executed even if tx processing
+	// fails. Hence, we use trick with `defer`.
 	consumeBlockGas := func() {
 		if !blockGasConsumed {
 			blockGasConsumed = true
@@ -687,6 +759,16 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteEvents = events.ToABCIEvents()
 	}
 
+	if mode == runTxModeCheck {
+		if err := app.mempool.Insert(ctx, tx); err != nil {
+			return gInfo, nil, anteEvents, err
+		}
+	} else if mode == runTxModeDeliver {
+		if err := app.mempool.Remove(tx); err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+			return gInfo, nil, anteEvents, fmt.Errorf("failed to remove tx from mempool: %w", err)
+		}
+	}
+
 	// Create a new Context based off of the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
@@ -699,7 +781,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	if err == nil {
 		// Run optional postHandlers.
 		//
-		// Note: If the postHandler fails, we also revert the runMsgs state!
+		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
 			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
 			if err != nil {
@@ -714,11 +796,11 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			consumeBlockGas()
 
 			msCache.Write()
+		}
 
-			if len(anteEvents) > 0 {
-				// append the events in the order of occurrence
-				result.Events = append(anteEvents, result.Events...)
-			}
+		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
+			// append the events in the order of occurrence
+			result.Events = append(anteEvents, result.Events...)
 		}
 	}
 
@@ -802,4 +884,91 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		Log:    strings.TrimSpace(msgLogs.String()),
 		Events: events.ToABCIEvents(),
 	}, nil
+}
+
+// DefaultPrepareProposal returns the default implementation for processing an
+// ABCI proposal. The application's mempool is enumerated and all valid
+// transactions are added to the proposal. Transactions are valid if they:
+//
+// 1) Successfully encode to bytes.
+// 2) Are valid (i.e. pass runTx, AnteHandler only).
+//
+// Enumeration is halted once RequestPrepareProposal.MaxBytes of transactions is
+// reached or the mempool is exhausted.
+//
+// Note that step (2) is identical to the validation step performed in
+// DefaultProcessProposal. It is very important that the same validation logic
+// is used in both steps, and applications must ensure that this is the case in
+// non-default handlers.
+func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		var (
+			txsBytes  [][]byte
+			byteCount int64
+		)
+
+		iterator := app.mempool.Select(ctx, req.Txs)
+		for iterator != nil {
+			memTx := iterator.Tx()
+
+			bz, err := app.txEncoder(memTx)
+			if err != nil {
+				panic(err)
+			}
+
+			txSize := int64(len(bz))
+
+			// NOTE: Since runTx was already executed in CheckTx, which calls
+			// mempool.Insert, ideally everything in the pool should be valid.
+			// some mempool implementations may insert invalid txs, so we check again.
+			_, _, _, err = app.runTx(runTxPrepareProposal, bz)
+			if err != nil {
+				if err := app.mempool.Remove(memTx); err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+					panic(err)
+				}
+
+				iterator = iterator.Next()
+				continue
+			} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+				txsBytes = append(txsBytes, bz)
+			} else {
+				break
+			}
+
+			iterator = iterator.Next()
+		}
+
+		return abci.ResponsePrepareProposal{Txs: txsBytes}
+	}
+}
+
+// DefaultProcessProposal returns the default implementation for processing an
+// ABCI proposal.
+//
+// Every transaction in the proposal must pass 2 conditions:
+//
+// 1. The transaction bytes must decode to a valid transaction.
+// 2. The transaction must be valid (i.e. pass runTx, AnteHandler only).
+//
+// If any transaction fails to pass either condition, the proposal is rejected.
+// Note that step (2) is identical to the validation step performed in
+// DefaultPrepareProposal. It is very important that the same validation logic
+// is used in both steps, and applications must ensure that this is the case in
+// non-default handlers.
+func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		for _, txBytes := range req.Txs {
+			_, err := app.txDecoder(txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+
+			_, _, _, err = app.runTx(runTxProcessProposal, txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+		}
+
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	}
 }

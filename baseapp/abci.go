@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
@@ -43,6 +43,8 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// req.InitialHeight is 1 by default.
 	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
 
+	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
+
 	// If req.InitialHeight is > 1, then we set the initial version in the
 	// stores.
 	if req.InitialHeight > 1 {
@@ -54,9 +56,11 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 		}
 	}
 
-	// initialize the deliver state and check state with a correct header
+	// initialize states with a correct header
 	app.setDeliverState(initHeader)
 	app.setCheckState(initHeader)
+	app.setPrepareProposalState(initHeader)
+	app.setProcessProposalState(initHeader)
 
 	if err := app.SetAppVersion(initialAppVersion); err != nil {
 		panic(err)
@@ -66,10 +70,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// done after the deliver state and context have been set as it's persisted
 	// to state.
 	if req.ConsensusParams != nil {
-		// When InitChain is called, the app version should either be absent and determined by the application
-		// or set to 0. Panic if it's not.
-		if req.ConsensusParams.Version != nil && req.ConsensusParams.Version.AppVersion != initialAppVersion {
-			panic(AppVersionError{Actual: req.ConsensusParams.Version.AppVersion, Initial: initialAppVersion})
+		// When InitChain is called, the app version should either be absent and
+		// determined by the application or set to 0. Panic if it's not.
+		if req.ConsensusParams.Version != nil && req.ConsensusParams.Version.App != initialAppVersion {
+			panic(AppVersionError{Actual: req.ConsensusParams.Version.App, Initial: initialAppVersion})
 		}
 
 		app.StoreConsensusParams(app.deliverState.ctx, req.ConsensusParams)
@@ -147,12 +151,6 @@ func (app *BaseApp) Info(req abci.RequestInfo) abci.ResponseInfo {
 	}
 }
 
-// SetOption implements the ABCI interface.
-func (app *BaseApp) SetOption(req abci.RequestSetOption) (res abci.ResponseSetOption) {
-	// TODO: Implement!
-	return
-}
-
 // FilterPeerByAddrPort filters peers by address/port.
 func (app *BaseApp) FilterPeerByAddrPort(info string) abci.ResponseQuery {
 	if app.addrPeerFilter != nil {
@@ -200,21 +198,20 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 
 	// add block gas meter
 	var gasMeter sdk.GasMeter
-	if maxGas := app.getMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
+	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
 		gasMeter = sdk.NewGasMeter(maxGas)
 	} else {
 		gasMeter = sdk.NewInfiniteGasMeter()
 	}
 
 	// NOTE: header hash is not set in NewContext, so we manually set it here
-
 	app.deliverState.ctx = app.deliverState.ctx.
 		WithBlockGasMeter(gasMeter).
 		WithHeaderHash(req.Hash).
 		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
-	// we also set block gas meter to checkState in case the application needs to
-	// verify gas consumption during (Re)CheckTx
+	// We also set block gas meter to checkState in case the application needs to
+	// verify gas consumption during (Re)CheckTx.
 	if app.checkState != nil {
 		app.checkState.ctx = app.checkState.ctx.
 			WithBlockGasMeter(gasMeter).
@@ -248,6 +245,59 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	return res
+}
+
+// PrepareProposal implements the PrepareProposal ABCI method and returns a
+// ResponsePrepareProposal object to the client. The PrepareProposal method is
+// responsible for allowing the block proposer to perform application-dependent
+// work in a block before proposing it.
+//
+// Transactions can be modified, removed, or added by the application. Since the
+// application maintains its own local mempool, it will ignore the transactions
+// provided to it in RequestPrepareProposal. Instead, it will determine which
+// transactions to return based on the mempool's semantics and the MaxTxBytes
+// provided by the client's request.
+//
+// Note, there is no need to execute the transactions for validity as they have
+// already passed CheckTx.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
+// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
+	if app.prepareProposal == nil {
+		panic("PrepareProposal method not set")
+	}
+
+	return app.prepareProposal(ctx, req)
+}
+
+// ProcessProposal implements the ProcessProposal ABCI method and returns a
+// ResponseProcessProposal object to the client. The ProcessProposal method is
+// responsible for allowing execution of application-dependent work in a proposed
+// block. Note, the application defines the exact implementation details of
+// ProcessProposal. In general, the application must at the very least ensure
+// that all transactions are valid. If all transactions are valid, then we inform
+// Tendermint that the Status is ACCEPT. However, the application is also able
+// to implement optimizations such as executing the entire proposed block
+// immediately. It may even execute the block in parallel.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
+// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	if app.processProposal == nil {
+		panic("app.ProcessProposal is not set")
+	}
+
+	ctx := app.processProposalState.ctx.
+		WithVoteInfos(app.voteInfos).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithHeaderHash(req.Hash).
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+
+	return app.processProposal(ctx, req)
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
@@ -343,6 +393,8 @@ func (app *BaseApp) Commit() (res abci.ResponseCommit) {
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setCheckState(header)
+	app.setPrepareProposalState(header)
+	app.setProcessProposalState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil
@@ -568,7 +620,7 @@ func (app *BaseApp) ApplySnapshotChunk(req abci.RequestApplySnapshotChunk) abci.
 }
 
 func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req abci.RequestQuery) abci.ResponseQuery {
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
+	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResultWithDebug(err, app.trace)
 	}
@@ -614,9 +666,9 @@ func checkNegativeHeight(height int64) error {
 	return nil
 }
 
-// createQueryContext creates a new sdk.Context for a query, taking as args
+// CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
-func (app *BaseApp) createQueryContext(height int64, prove bool) (sdk.Context, error) {
+func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
@@ -897,7 +949,7 @@ func handleQueryCustom(app *BaseApp, path []string, req abci.RequestQuery) abci.
 		return sdkerrors.QueryResultWithDebug(sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "no custom querier found for route %s", path[1]), app.trace)
 	}
 
-	ctx, err := app.createQueryContext(req.Height, req.Prove)
+	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResultWithDebug(err, app.trace)
 	}

@@ -26,35 +26,46 @@ func NewTestInterfaceRegistry() types.InterfaceRegistry {
 }
 
 func TestMarshalAny(t *testing.T) {
-	registry := types.NewInterfaceRegistry()
+	catRegistry := types.NewInterfaceRegistry()
+	catRegistry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Cat{})
 
+	registry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
 	kitty := &testdata.Cat{Moniker: "Kitty"}
-	bz, err := cdc.MarshalInterface(kitty)
+	emptyBz, err := cdc.MarshalInterface(kitty)
+	require.ErrorContains(t, err, "does not have a registered interface")
+
+	catBz, err := codec.NewProtoCodec(catRegistry).MarshalInterface(kitty)
 	require.NoError(t, err)
+	require.NotEmpty(t, catBz)
 
 	var animal testdata.Animal
 
-	// empty registry should fail
-	err = cdc.UnmarshalInterface(bz, &animal)
-	require.Error(t, err)
+	// deserializing cat bytes should error in an empty registry
+	err = cdc.UnmarshalInterface(catBz, &animal)
+	require.ErrorContains(t, err, "no registered implementations of type testdata.Animal")
+
+	// deserializing an empty byte array will return nil, but no error
+	err = cdc.UnmarshalInterface(emptyBz, &animal)
+	require.Nil(t, animal)
+	require.NoError(t, err)
 
 	// wrong type registration should fail
 	registry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Dog{})
-	err = cdc.UnmarshalInterface(bz, &animal)
+	err = cdc.UnmarshalInterface(catBz, &animal)
 	require.Error(t, err)
 
 	// should pass
 	registry = NewTestInterfaceRegistry()
 	cdc = codec.NewProtoCodec(registry)
-	err = cdc.UnmarshalInterface(bz, &animal)
+	err = cdc.UnmarshalInterface(catBz, &animal)
 	require.NoError(t, err)
 	require.Equal(t, kitty, animal)
 
 	// nil should fail
 	registry = NewTestInterfaceRegistry()
-	err = cdc.UnmarshalInterface(bz, nil)
+	err = cdc.UnmarshalInterface(catBz, nil)
 	require.Error(t, err)
 }
 

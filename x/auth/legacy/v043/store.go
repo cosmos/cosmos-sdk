@@ -21,8 +21,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gogo/protobuf/grpc"
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/grpc"
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

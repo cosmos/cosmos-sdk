@@ -88,6 +88,16 @@ type KeyCodec[T any] interface {
 	Stringify(key T) string
 	// KeyType returns a string identifier for the type of the key.
 	KeyType() string
+
+	// MULTIPART keys
+
+	// EncodeNonTerminal writes the key bytes into the buffer.
+	// TODO: docs.
+	EncodeNonTerminal(buffer []byte, key T) (int, error)
+	// DecodeNonTerminal todo doc
+	DecodeNonTerminal(buffer []byte) (int, T, error)
+	// SizeNonTerminal todo doc
+	SizeNonTerminal(key T) int
 }
 
 // ValueCodec defines a generic interface which is implemented

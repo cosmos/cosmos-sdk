@@ -45,13 +45,13 @@ func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
 // provided by modules with the HasCustomQueryCommand extension interface.
 // Example Usage:
 //
-//	 var autoCliOpts autocli.AppOptions
-//		err := depinject.Inject(appConfig, &autoCliOpts)
-//		if err != nil {
-//			panic(err)
-//		}
-//		rootCmd := initRootCmd()
-//		err = autoCliOpts.EnhanceRootCommand(rootCmd)
+//	var autoCliOpts autocli.AppOptions
+//	err := depinject.Inject(appConfig, &autoCliOpts)
+//	if err != nil {
+//		panic(err)
+//	}
+//	rootCmd := initRootCmd()
+//	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {

@@ -516,13 +516,8 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-<<<<<<< HEAD
-	testCases := map[string]struct{
-		preRun      func(keeper.Keeper, sdk.Context, string)
-=======
 	testCases := map[string]struct {
 		preRun      func(*keeper.Keeper, sdk.Context, string)
->>>>>>> 05a6da32e (refactor: improve `x/upgrade` app wiring (part of upgrade audit) (#14216))
 		expectPanic bool
 	}{
 		"valid binary": {

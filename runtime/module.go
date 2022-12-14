@@ -33,6 +33,7 @@ func init() {
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideDeliverTx,
+			ProvideVersionMap,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -139,5 +140,11 @@ func ProvideMemoryStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes
 func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
 		return appBuilder.app.BaseApp.DeliverTx(tx)
+	}
+}
+
+func ProvideVersionMap(appBuilder *AppBuilder) func() module.VersionMap {
+	return func() module.VersionMap {
+		return appBuilder.app.ModuleManager.GetVersionMap()
 	}
 }

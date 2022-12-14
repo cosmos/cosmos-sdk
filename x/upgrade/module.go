@@ -120,18 +120,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 // InitGenesis is ignored, no sense in serializing future upgrades
 func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
-	// set version map automatically if available
-	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
-		// chains can still use a custom init chainer for setting the version map
-		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
-		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
-			if _, ok := versionMap[name]; !ok {
-				versionMap[name] = version
-			}
-		}
-
-		am.keeper.SetModuleVersionMap(ctx, versionMap)
-	}
+	am.keeper.SetModuleVersionMap(ctx, am.keeper.GetAppVersionMap())
 
 	return []abci.ValidatorUpdate{}
 }
@@ -168,16 +157,16 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(PopulateVersionMap),
 	)
 }
 
 type UpgradeInputs struct {
 	depinject.In
 
-	Config *modulev1.Module
-	Key    *store.KVStoreKey
-	Cdc    codec.Codec
+	Config     *modulev1.Module
+	Key        *store.KVStoreKey
+	Cdc        codec.Codec
+	VersionMap module.VersionMap
 
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
@@ -212,7 +201,7 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	}
 
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String(), in.VersionMap)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}
@@ -220,12 +209,4 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
 	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
-}
-
-func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {
-	if upgradeKeeper == nil {
-		return
-	}
-
-	upgradeKeeper.SetInitVersionMap(module.NewManagerFromMap(modules).GetVersionMap())
 }

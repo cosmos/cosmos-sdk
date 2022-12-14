@@ -118,7 +118,12 @@ func TestFileStreamingService(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
+<<<<<<< HEAD
 	testStreamingService, err := NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, true, false, false)
+=======
+	var err error
+	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, log.NewNopLogger(), true, false, false)
+>>>>>>> aba4e6efb (fix(store): Fix the TestFileStreamingService unit test. (#14305))
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)

@@ -43,6 +43,15 @@ func (appOptions AppOptions) RootCmd() (*cobra.Command, error) {
 // existing app CLI commands where autocli simply automatically adds things that
 // weren't manually provided. It does take into account custom query commands
 // provided by modules with the HasCustomQueryCommand extension interface.
+// Example Usage:
+//
+//	 var autoCliOpts autocli.AppOptions
+//		err := depinject.Inject(appConfig, &autoCliOpts)
+//		if err != nil {
+//			panic(err)
+//		}
+//		rootCmd := initRootCmd()
+//		err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 	builder := &Builder{
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {

@@ -39,7 +39,7 @@ func (s Schema) addCollection(collection collection) {
 	}
 
 	if !nameRegex.MatchString(name) {
-		panic(fmt.Errorf("name must match regex %s, got %s", nameRegex.String(), name))
+		panic(fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
 	}
 
 	s.collectionsByPrefix[string(prefix)] = collection
@@ -47,6 +47,6 @@ func (s Schema) addCollection(collection collection) {
 }
 
 // NameRegex is the regular expression that all valid collection names must match.
-const NameRegex = "^[A-Za-z][A-Za-z0-9_]*$"
+const NameRegex = "[A-Za-z][A-Za-z0-9_]*"
 
-var nameRegex = regexp.MustCompile(NameRegex)
+var nameRegex = regexp.MustCompile("^" + NameRegex + "$")

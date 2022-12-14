@@ -1,6 +1,7 @@
 package collections
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -15,22 +16,26 @@ func TestNameRegex(t *testing.T) {
 }
 
 func TestAddCollection(t *testing.T) {
-	sk, _ := deps()
+	require.NotPanics(t, func() {
+		schema := NewSchema(storetypes.NewKVStoreKey("test"))
+		NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+		NewMap(schema, NewPrefix(2), "def", Uint64Key, Uint64Value)
+	})
 
-	require.Panics(t, func() {
-		schema := NewSchema(sk)
-		schema.addCollection(NewMap(schema, NewPrefix(2), "123", Uint64Key, Uint64Value))
-	}, "invalid name")
+	require.PanicsWithError(t, "name must match regex [A-Za-z][A-Za-z0-9_]*, got 123", func() {
+		schema := NewSchema(storetypes.NewKVStoreKey("test"))
+		NewMap(schema, NewPrefix(1), "123", Uint64Key, Uint64Value)
+	})
 
-	require.Panics(t, func() {
-		schema := NewSchema(sk)
-		schema.addCollection(NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value))
-		schema.addCollection(NewMap(schema, NewPrefix(1), "def", Uint64Key, Uint64Value))
-	}, "prefix conflict")
+	require.PanicsWithError(t, "prefix [1] already taken within schema", func() {
+		schema := NewSchema(storetypes.NewKVStoreKey("test"))
+		NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+		NewMap(schema, NewPrefix(1), "def", Uint64Key, Uint64Value)
+	})
 
-	require.Panics(t, func() {
-		schema := NewSchema(sk)
-		schema.addCollection(NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value))
-		schema.addCollection(NewMap(schema, NewPrefix(2), "abc", Uint64Key, Uint64Value))
-	}, "name conflict")
+	require.PanicsWithError(t, "name abc already taken within schema", func() {
+		schema := NewSchema(storetypes.NewKVStoreKey("test"))
+		NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+		NewMap(schema, NewPrefix(2), "abc", Uint64Key, Uint64Value)
+	})
 }

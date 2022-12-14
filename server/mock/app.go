@@ -21,7 +21,7 @@ import (
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data"))
+	db, err := sdk.NewLevelDB("mock", filepath.Join(rootDir, "data")) //nolint: staticcheck
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/lazyledger/smt"
+	"github.com/celestiaorg/smt"
 
 	tmproofs "github.com/cosmos/cosmos-sdk/store/internal/proofs"
 )

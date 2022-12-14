@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,7 @@ var (
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
 	selfDelegation sdk.Coin, description Description,
-	commission CommissionRates, minSelfDelegation sdk.Int,
+	commission CommissionRates, minSelfDelegation math.Int,
 	orch sdk.AccAddress, eth common.Address,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
@@ -147,7 +148,7 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 //nolint:interfacer
 func NewMsgEditValidator(
 	valAddr sdk.ValAddress, description Description,
-	newRate *sdk.Dec, newMinSelfDelegation *sdk.Int,
+	newRate *sdk.Dec, newMinSelfDelegation *math.Int,
 	newOrch *sdk.AccAddress, newEVMAddress *common.Address,
 ) *MsgEditValidator {
 	// TODO add test for Orchestrator and EVM addresses edit

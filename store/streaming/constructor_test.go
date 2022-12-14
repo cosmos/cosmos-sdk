@@ -81,7 +81,6 @@ func TestLoadStreamingServices(t *testing.T) {
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})
 	}
-
 }
 
 type streamingAppOptions struct {

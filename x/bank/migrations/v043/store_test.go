@@ -3,6 +3,7 @@ package v043_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -39,7 +40,7 @@ func TestSupplyMigration(t *testing.T) {
 	// New supply is indexed by denom.
 	supplyStore := prefix.NewStore(store, types.SupplyKey)
 	bz := supplyStore.Get([]byte("foo"))
-	var amount sdk.Int
+	var amount math.Int
 	err = amount.Unmarshal(bz)
 	require.NoError(t, err)
 
@@ -90,13 +91,13 @@ func TestBalanceKeysMigration(t *testing.T) {
 	err = v043bank.MigrateStore(ctx, bankKey, encCfg.Codec)
 	require.NoError(t, err)
 
-	newKey := append(types.CreateAccountBalancesPrefix(addr), []byte(fooCoin.Denom)...)
+	newKey := types.CreatePrefixedAccountStoreKey(addr, []byte(fooCoin.Denom))
 	// -7 because we replaced "balances" with 0x02,
 	// +1 because we added length-prefix to address.
 	require.Equal(t, len(oldFooKey)-7+1, len(newKey))
 	require.Nil(t, store.Get(oldFooKey))
 	require.Equal(t, fooBz, store.Get(newKey))
 
-	newKeyFooBar := append(types.CreateAccountBalancesPrefix(addr), []byte(fooBarCoin.Denom)...)
+	newKeyFooBar := types.CreatePrefixedAccountStoreKey(addr, []byte(fooBarCoin.Denom))
 	require.Nil(t, store.Get(newKeyFooBar)) // after migration zero balances pruned from store.
 }

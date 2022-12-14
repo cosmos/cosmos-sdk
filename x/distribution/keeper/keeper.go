@@ -104,14 +104,6 @@ func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddres
 		}}
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawRewards,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
-			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
-		),
-	)
-
 	// reinitialize the delegation
 	k.initializeDelegation(ctx, valAddr, delAddr)
 	return rewards, nil

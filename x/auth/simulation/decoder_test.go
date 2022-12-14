@@ -42,6 +42,10 @@ func TestDecodeStore(t *testing.T) {
 				Value: cdc.MustMarshal(&globalAccNumber),
 			},
 			{
+				Key:   types.AccountNumberStoreKey(5),
+				Value: acc.GetAddress().Bytes(),
+			},
+			{
 				Key:   []byte{0x99},
 				Value: []byte{0x99},
 			},
@@ -53,6 +57,7 @@ func TestDecodeStore(t *testing.T) {
 	}{
 		{"Account", fmt.Sprintf("%v\n%v", acc, acc)},
 		{"GlobalAccNumber", fmt.Sprintf("GlobalAccNumberA: %d\nGlobalAccNumberB: %d", globalAccNumber, globalAccNumber)},
+		{"AccNum", fmt.Sprintf("AccNumA: %s\nAccNumB: %s", acc.GetAddress(), acc.GetAddress())},
 		{"other", ""},
 	}
 

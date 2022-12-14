@@ -12,9 +12,10 @@ import (
 // positional parameters.
 //
 // Fields of the struct may support the following tags:
-//		optional	if set to true, the dependency is optional and will
-//					be set to its default value if not found, rather than causing
-//					an error
+//
+//	optional	if set to true, the dependency is optional and will
+//				be set to its default value if not found, rather than causing
+//				an error
 type In struct{}
 
 func (In) isIn() {}

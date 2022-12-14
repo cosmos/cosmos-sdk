@@ -40,10 +40,12 @@ func TxCmd(name string) *cobra.Command {
 		MsgUpdateGroupPolicyAdminCmd(),
 		MsgUpdateGroupPolicyDecisionPolicyCmd(),
 		MsgUpdateGroupPolicyMetadataCmd(),
+		MsgWithdrawProposalCmd(),
 		MsgSubmitProposalCmd(),
 		MsgVoteCmd(),
 		MsgExecCmd(),
 		MsgLeaveGroupCmd(),
+		NewCmdDraftProposal(),
 	)
 
 	return txCmd

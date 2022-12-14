@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,7 +15,7 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.Deci
 		return nil, fmt.Errorf("decision policy is required")
 	}
 
-	contents, err := ioutil.ReadFile(decisionPolicyFile)
+	contents, err := os.ReadFile(decisionPolicyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +35,7 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 		return members.Members, nil
 	}
 
-	contents, err := ioutil.ReadFile(membersFile)
+	contents, err := os.ReadFile(membersFile)
 	if err != nil {
 		return nil, err
 	}
@@ -51,41 +50,41 @@ func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 
 func execFromString(execStr string) group.Exec {
 	exec := group.Exec_EXEC_UNSPECIFIED
-	switch execStr {
+	switch execStr { //nolint:gocritic
 	case ExecTry:
 		exec = group.Exec_EXEC_TRY
 	}
 	return exec
 }
 
-// CLIProposal defines a Msg-based group proposal for CLI purposes.
-type CLIProposal struct {
+// Proposal defines a Msg-based group proposal for CLI purposes.
+type Proposal struct {
 	GroupPolicyAddress string `json:"group_policy_address"`
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages  []json.RawMessage `json:"messages"`
+	Messages  []json.RawMessage `json:"messages,omitempty"`
 	Metadata  string            `json:"metadata"`
-	Proposers []string          `json:"proposers"`
+	Proposers []string          `json:"proposers,omitempty"`
 }
 
-func getCLIProposal(path string) (CLIProposal, error) {
+func getCLIProposal(path string) (Proposal, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return CLIProposal{}, err
+		return Proposal{}, err
 	}
 
 	return parseCLIProposal(contents)
 }
 
-func parseCLIProposal(contents []byte) (CLIProposal, error) {
-	var p CLIProposal
+func parseCLIProposal(contents []byte) (Proposal, error) {
+	var p Proposal
 	if err := json.Unmarshal(contents, &p); err != nil {
-		return CLIProposal{}, err
+		return Proposal{}, err
 	}
 
 	return p, nil
 }
 
-func parseMsgs(cdc codec.Codec, p CLIProposal) ([]sdk.Msg, error) {
+func parseMsgs(cdc codec.Codec, p Proposal) ([]sdk.Msg, error) {
 	msgs := make([]sdk.Msg, len(p.Messages))
 	for i, anyJSON := range p.Messages {
 		var msg sdk.Msg

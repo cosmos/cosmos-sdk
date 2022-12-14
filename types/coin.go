@@ -310,7 +310,7 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 // The function panics if `coins` or  `coinsB` are not sorted (ascending).
-func (coins Coins) safeAdd(coinsB Coins) Coins {
+func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 	// probably the best way will be to make Coins and interface and hide the structure
 	// definition (type alias)
 	if !coins.isSorted() {
@@ -320,51 +320,24 @@ func (coins Coins) safeAdd(coinsB Coins) Coins {
 		panic("Wrong argument: coins must be sorted")
 	}
 
-	sum := ([]Coin)(nil)
-	indexA, indexB := 0, 0
-	lenA, lenB := len(coins), len(coinsB)
-
-	for {
-		if indexA == lenA {
-			if indexB == lenB {
-				// return nil coins if both sets are empty
-				return sum
-			}
-
-			// return set B (excluding zero coins) if set A is empty
-			return append(sum, removeZeroCoins(coinsB[indexB:])...)
-		} else if indexB == lenB {
-			// return set A (excluding zero coins) if set B is empty
-			return append(sum, removeZeroCoins(coins[indexA:])...)
-		}
-
-		coinA, coinB := coins[indexA], coinsB[indexB]
-
-		switch strings.Compare(coinA.Denom, coinB.Denom) {
-		case -1: // coin A denom < coin B denom
-			if !coinA.IsZero() {
-				sum = append(sum, coinA)
-			}
-
-			indexA++
-
-		case 0: // coin A denom == coin B denom
-			res := coinA.Add(coinB)
-			if !res.IsZero() {
-				sum = append(sum, res)
-			}
-
-			indexA++
-			indexB++
-
-		case 1: // coin A denom > coin B denom
-			if !coinB.IsZero() {
-				sum = append(sum, coinB)
-			}
-
-			indexB++
+	uniqCoins := make(map[string]Coins, len(coins)+len(coinsB))
+	// Traverse all the coins for each of the coins and coinsB.
+	for _, cL := range []Coins{coins, coinsB} {
+		for _, c := range cL {
+			uniqCoins[c.Denom] = append(uniqCoins[c.Denom], c)
 		}
 	}
+
+	for denom, cL := range uniqCoins {
+		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
+		for _, c := range cL {
+			comboCoin = comboCoin.Add(c)
+		}
+		if !comboCoin.IsZero() {
+			coalesced = append(coalesced, comboCoin)
+		}
+	}
+	return coalesced.Sort()
 }
 
 // DenomsSubsetOf returns true if receiver's denom set
@@ -411,7 +384,7 @@ func (coins Coins) SafeSub(coinsB ...Coin) (Coins, bool) {
 }
 
 // MulInt performs the scalar multiplication of coins with a `multiplier`
-// All coins are multipled by x
+// All coins are multiplied by x
 // e.g.
 // {2A, 3B} * 2 = {4A, 6B}
 // {2A} * 0 panics
@@ -480,10 +453,11 @@ func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//     a.IsAllLTE(a.Max(b))
-//     b.IsAllLTE(a.Max(b))
-//     a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
-//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+//	a.IsAllLTE(a.Max(b))
+//	b.IsAllLTE(a.Max(b))
+//	a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
+//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
@@ -525,10 +499,11 @@ func (coins Coins) Max(coinsB Coins) Coins {
 // of AmountOf(D) of the inputs.  Note that the result might be not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
-//     a.Min(b).IsAllLTE(a)
-//     a.Min(b).IsAllLTE(b)
-//     c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
-//     a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//
+//	a.Min(b).IsAllLTE(a)
+//	a.Min(b).IsAllLTE(b)
+//	c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
+//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})

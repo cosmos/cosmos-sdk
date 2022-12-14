@@ -93,12 +93,13 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 
 /*
 input
-	- bip39 mnemonic
-	- bip39 passphrase
-	- bip44 path
-	- local encryption password
+  - bip39 mnemonic
+  - bip39 passphrase
+  - bip44 path
+  - local encryption password
+
 output
-	- armor encrypted private key (saved to file)
+  - armor encrypted private key (saved to file)
 */
 func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
@@ -298,7 +299,7 @@ func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemo
 
 		// print mnemonic unless requested not to.
 		if showMnemonic {
-			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic)); err != nil {
+			if _, err := fmt.Fprintln(cmd.ErrOrStderr(), fmt.Sprintf("\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic)); err != nil { //nolint:gosimple
 				return fmt.Errorf("failed to print mnemonic: %v", err)
 			}
 		}

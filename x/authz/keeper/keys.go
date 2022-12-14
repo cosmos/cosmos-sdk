@@ -15,7 +15,6 @@ import (
 //
 // - 0x01<grant_Bytes>: Grant
 // - 0x02<grant_expiration_Bytes>: GrantQueueItem
-//
 var (
 	GrantKey         = []byte{0x01} // prefix for each key
 	GrantQueuePrefix = []byte{0x02}
@@ -78,7 +77,8 @@ func parseGrantQueueKey(key []byte) (time.Time, sdk.AccAddress, sdk.AccAddress, 
 // GrantQueueKey - return grant queue store key. If a given grant doesn't have a defined
 // expiration, then it should not be used in the pruning queue.
 // Key format is:
-//     0x02<grant_expiration_Bytes>: GrantQueueItem
+//
+//	0x02<grant_expiration_Bytes>: GrantQueueItem
 func GrantQueueKey(expiration time.Time, granter sdk.AccAddress, grantee sdk.AccAddress) []byte {
 	exp := sdk.FormatTimeBytes(expiration)
 	granter = address.MustLengthPrefix(granter)

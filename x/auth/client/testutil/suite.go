@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -29,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	bankcli "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
@@ -69,6 +69,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	pub1, err := account1.GetPubKey()
 	s.Require().NoError(err)
 	pub2, err := account2.GetPubKey()
+	s.Require().NoError(err)
+
+	// Create a dummy account for testing purpose
+	_, _, err = kb.NewMnemonic("dummyAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	multi := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{pub1, pub2})
@@ -279,6 +283,40 @@ func (s *IntegrationTestSuite) TestCLISignBatch() {
 	// Sign batch malformed tx file signature only.
 	_, err = TxSignBatchExec(val.ClientCtx, val.Address, malformedFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
 	s.Require().Error(err)
+
+	// make a txn to increase the sequence of sender
+	_, seq, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+
+	account1, err := val.ClientCtx.Keyring.Key("newAccount1")
+	s.Require().NoError(err)
+
+	addr, err := account1.GetAddress()
+	s.Require().NoError(err)
+
+	// Send coins from validator to multisig.
+	_, err = s.createBankMsg(
+		val,
+		addr,
+		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1000)),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// fetch the sequence after a tx, should be incremented.
+	_, seq1, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)
+	s.Require().NoError(err)
+	s.Require().Equal(seq+1, seq1)
+
+	// signing sign-batch should start from the last sequence.
+	signed, err := TxSignBatchExec(val.ClientCtx, val.Address, outputFile.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--signature-only")
+	s.Require().NoError(err)
+	signedTxs := strings.Split(strings.Trim(signed.String(), "\n"), "\n")
+	s.Require().GreaterOrEqual(len(signedTxs), 1)
+
+	sigs, err := s.cfg.TxConfig.UnmarshalSignatureJSON([]byte(signedTxs[0]))
+	s.Require().NoError(err)
+	s.Require().Equal(sigs[0].Sequence, seq1)
 }
 
 func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
@@ -317,7 +355,7 @@ func (s *IntegrationTestSuite) TestCliGetAccountAddressByID() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				var res types.QueryAccountAddressByIDResponse
+				var res authtypes.QueryAccountAddressByIDResponse
 				require.NoError(val1.ClientCtx.Codec.UnmarshalJSON(queryResJSON.Bytes(), &res))
 				require.NotNil(res.GetAccountAddress())
 			}
@@ -443,9 +481,10 @@ func (s *IntegrationTestSuite) TestCLIQueryTxCmdByHash() {
 		sdk.NewCoins(sendTokens),
 	)
 	s.Require().NoError(err)
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name           string
@@ -938,6 +977,10 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 	multisigRecord, err := val1.ClientCtx.Keyring.Key("multi")
 	s.Require().NoError(err)
 
+	// Generate dummy account which is not a part of multisig.
+	dummyAcc, err := val1.ClientCtx.Keyring.Key("dummyAccount")
+	s.Require().NoError(err)
+
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
 	resp, err := bankcli.QueryBalancesExec(val1.ClientCtx, addr)
@@ -995,13 +1038,20 @@ func (s *IntegrationTestSuite) TestCLIMultisignSortSignatures() {
 
 	sign1File := testutil.WriteToNewTempFile(s.T(), account1Signature.String())
 
-	// Sign with account1
+	// Sign with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
 	sign2File := testutil.WriteToNewTempFile(s.T(), account2Signature.String())
+
+	// Sign with dummy account
+	dummyAddr, err := dummyAcc.GetAddress()
+	s.Require().NoError(err)
+	_, err = TxSignExec(val1.ClientCtx, dummyAddr, multiGeneratedTxFile.Name(), "--multisig", addr.String())
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "signing key is not a part of multisig key")
 
 	multiSigWith2Signatures, err := TxMultiSignExec(val1.ClientCtx, multisigRecord.Name, multiGeneratedTxFile.Name(), sign1File.Name(), sign2File.Name())
 	s.Require().NoError(err)
@@ -1057,7 +1107,7 @@ func (s *IntegrationTestSuite) TestSignWithMultisig() {
 	// as the main point of this test is to test the `--multisig` flag with an address
 	// that is not in the keyring.
 	_, err = TxSignExec(val1.ClientCtx, addr1, multiGeneratedTx2File.Name(), "--multisig", multisigAddr.String())
-	s.Require().Contains(err.Error(), "tx intended signer does not match the given signer")
+	s.Require().Contains(err.Error(), "error getting account from keybase")
 }
 
 func (s *IntegrationTestSuite) TestCLIMultisign() {
@@ -1124,7 +1174,7 @@ func (s *IntegrationTestSuite) TestCLIMultisign() {
 
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	// Sign with account1
+	// Sign with account2
 	account2Signature, err := TxSignExec(val1.ClientCtx, addr2, multiGeneratedTxFile.Name(), "--multisig", addr.String())
 	s.Require().NoError(err)
 
@@ -1195,7 +1245,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file
-	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1204,7 +1254,7 @@ func (s *IntegrationTestSuite) TestSignBatchMultisig() {
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
 	// sign-batch file with account2
-	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String())
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(1, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file2
@@ -1262,7 +1312,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file
 	addr1, err := account1.GetAddress()
 	s.Require().NoError(err)
-	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err := TxSignBatchExec(val.ClientCtx, addr1, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 	// write sigs to file
@@ -1271,7 +1321,7 @@ func (s *IntegrationTestSuite) TestMultisignBatch() {
 	// sign-batch file with account2
 	addr2, err := account2.GetAddress()
 	s.Require().NoError(err)
-	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())))
+	res, err = TxSignBatchExec(val.ClientCtx, addr2, filename.Name(), fmt.Sprintf("--%s=%s", flags.FlagChainID, val.ClientCtx.ChainID), "--multisig", addr.String(), fmt.Sprintf("--%s", flags.FlagOffline), fmt.Sprintf("--%s=%s", flags.FlagAccountNumber, fmt.Sprint(account.GetAccountNumber())), fmt.Sprintf("--%s=%s", flags.FlagSequence, fmt.Sprint(account.GetSequence())), "--signature-only")
 	s.Require().NoError(err)
 	s.Require().Equal(3, len(strings.Split(strings.Trim(res.String(), "\n"), "\n")))
 
@@ -1344,9 +1394,71 @@ func (s *IntegrationTestSuite) TestGetAccountsCmd() {
 	s.Require().NotEmpty(res.Accounts)
 }
 
+func (s *IntegrationTestSuite) TestQueryModuleAccountByNameCmd() {
+	val := s.network.Validators[0]
+
+	testCases := []struct {
+		name       string
+		moduleName string
+		expectErr  bool
+	}{
+		{
+			"invalid module name",
+			"gover",
+			true,
+		},
+		{
+			"valid module name",
+			"mint",
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			clientCtx := val.ClientCtx
+
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountByNameCmd(), []string{
+				tc.moduleName,
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			})
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().NotEqual("internal", err.Error())
+			} else {
+				var res authtypes.QueryModuleAccountByNameResponse
+				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+
+				var account authtypes.AccountI
+				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
+				s.Require().NoError(err)
+
+				moduleAccount, ok := account.(authtypes.ModuleAccountI)
+				s.Require().True(ok)
+				s.Require().Equal(tc.moduleName, moduleAccount.GetName())
+			}
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestQueryModuleAccountsCmd() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, authcli.QueryModuleAccountsCmd(), []string{
+		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+	})
+	s.Require().NoError(err)
+
+	var res authtypes.QueryModuleAccountsResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
+	s.Require().NotEmpty(res.Accounts)
+}
+
 func TestGetBroadcastCommandOfflineFlag(t *testing.T) {
 	clientCtx := client.Context{}.WithOffline(true)
-	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig)
+	clientCtx = clientCtx.WithTxConfig(simapp.MakeTestEncodingConfig().TxConfig) //nolint:staticcheck
 
 	cmd := authcli.GetBroadcastCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
@@ -1836,7 +1948,7 @@ func (s *IntegrationTestSuite) TestAuxToFeeWithTips() {
 					tc.feePayerArgs...,
 				)
 
-				if tc.expectErrBroadCast {
+				if tc.expectErrBroadCast { //nolint:gocritic
 					require.Error(err)
 				} else if tc.errMsg != "" {
 					require.NoError(err)
@@ -1875,7 +1987,7 @@ func (s *IntegrationTestSuite) createBankMsg(val *network.Validator, toAddr sdk.
 	return bankcli.MsgSendExec(val.ClientCtx, val.Address, toAddr, amount, flags...)
 }
 
-func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) sdk.Int {
+func (s *IntegrationTestSuite) getBalances(clientCtx client.Context, addr sdk.AccAddress, denom string) math.Int {
 	resp, err := bankcli.QueryBalancesExec(clientCtx, addr)
 	s.Require().NoError(err)
 

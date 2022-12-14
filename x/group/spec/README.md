@@ -56,3 +56,8 @@ This module allows the creation and management of on-chain multisig accounts and
     * [CLI](05_client.md#cli)
     * [gRPC](05_client.md#grpc)
     * [REST](05_client.md#rest)
+6. **[Metadata](06_metadata.md)**
+    * [Proposal](06_metadata.md#proposal)
+    * [Vote](06_metadata.md#vote)
+    * [Group](06_metadata.md#group)
+    * [Decision policy](06_metadata.md#decision%20policy)

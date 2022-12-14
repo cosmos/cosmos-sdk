@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	dbm "github.com/tendermint/tm-db"
@@ -13,7 +12,7 @@ import (
 
 type MockContext struct {
 	db    *dbm.MemDB
-	store types.CommitMultiStore
+	store storetypes.CommitMultiStore
 }
 
 func NewMockContext() *MockContext {
@@ -36,18 +35,18 @@ func (m MockContext) KVStore(key storetypes.StoreKey) sdk.KVStore {
 }
 
 type debuggingGasMeter struct {
-	g types.GasMeter
+	g storetypes.GasMeter
 }
 
-func (d debuggingGasMeter) GasConsumed() types.Gas {
+func (d debuggingGasMeter) GasConsumed() storetypes.Gas {
 	return d.g.GasConsumed()
 }
 
-func (d debuggingGasMeter) GasRemaining() types.Gas {
+func (d debuggingGasMeter) GasRemaining() storetypes.Gas {
 	return d.g.GasRemaining()
 }
 
-func (d debuggingGasMeter) GasConsumedToLimit() types.Gas {
+func (d debuggingGasMeter) GasConsumedToLimit() storetypes.Gas {
 	return d.g.GasConsumedToLimit()
 }
 
@@ -55,11 +54,11 @@ func (d debuggingGasMeter) RefundGas(amount uint64, descriptor string) {
 	d.g.RefundGas(amount, descriptor)
 }
 
-func (d debuggingGasMeter) Limit() types.Gas {
+func (d debuggingGasMeter) Limit() storetypes.Gas {
 	return d.g.Limit()
 }
 
-func (d debuggingGasMeter) ConsumeGas(amount types.Gas, descriptor string) {
+func (d debuggingGasMeter) ConsumeGas(amount storetypes.Gas, descriptor string) {
 	fmt.Printf("++ Consuming gas: %q :%d\n", descriptor, amount)
 	d.g.ConsumeGas(amount, descriptor)
 }
@@ -87,14 +86,14 @@ func NewGasCountingMockContext() *GasCountingMockContext {
 }
 
 func (g GasCountingMockContext) KVStore(store sdk.KVStore) sdk.KVStore {
-	return gaskv.NewStore(store, g.GasMeter, types.KVGasConfig())
+	return gaskv.NewStore(store, g.GasMeter, storetypes.KVGasConfig())
 }
 
-func (g GasCountingMockContext) GasConsumed() types.Gas {
+func (g GasCountingMockContext) GasConsumed() storetypes.Gas {
 	return g.GasMeter.GasConsumed()
 }
 
-func (g GasCountingMockContext) GasRemaining() types.Gas {
+func (g GasCountingMockContext) GasRemaining() storetypes.Gas {
 	return g.GasMeter.GasRemaining()
 }
 

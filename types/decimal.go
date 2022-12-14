@@ -130,12 +130,15 @@ func NewDecFromIntWithPrec(i Int, prec int64) Dec {
 
 // create a decimal from an input decimal string.
 // valid must come in the form:
-//   (-) whole integers (.) decimal integers
+//
+//	(-) whole integers (.) decimal integers
+//
 // examples of acceptable input include:
-//   -123.456
-//   456.7890
-//   345
-//   -456789
+//
+//	-123.456
+//	456.7890
+//	345
+//	-456789
 //
 // NOTE - An error will return if more decimal places
 // are provided in the string than the constant Precision.

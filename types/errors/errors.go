@@ -7,7 +7,9 @@ import (
 // Type Aliases to errors module
 //
 // Deprecated: functionality of this package has been moved to it's own module:
-//    cosmossdk.io/errors
+//
+//	cosmossdk.io/errors
+//
 // Please use the above module instead of this package.
 var (
 	SuccessABCICode    = errorsmod.SuccessABCICode

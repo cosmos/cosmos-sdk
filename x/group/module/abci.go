@@ -9,12 +9,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if err := k.TallyProposalsAtVPEnd(ctx); err != nil {
 		panic(err)
 	}
-	pruneProposals(ctx, k)
-}
 
-func pruneProposals(ctx sdk.Context, k keeper.Keeper) {
-	err := k.PruneProposals(ctx)
-	if err != nil {
+	if err := k.PruneProposals(ctx); err != nil {
 		panic(err)
 	}
 }

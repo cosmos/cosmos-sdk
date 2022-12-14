@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"cosmossdk.io/math"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
@@ -86,9 +87,9 @@ type Config struct {
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    sdk.Int                    // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    sdk.Int                    // the amount of tokens each validator has available to stake
-	BondedTokens     sdk.Int                    // the amount of tokens each validator stakes
+	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
+	BondedTokens     math.Int                   // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup

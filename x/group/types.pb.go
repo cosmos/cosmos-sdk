@@ -297,10 +297,10 @@ func (m *MemberRequest) GetMetadata() string {
 
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it
 // satisfies the two following conditions:
-//  1. The sum of all `YES` voters' weights is greater or equal than the defined
-//     `threshold`.
-//  2. The voting and execution periods of the proposal respect the parameters
-//     given by `windows`.
+// 1. The sum of all `YES` voters' weights is greater or equal than the defined
+//    `threshold`.
+// 2. The voting and execution periods of the proposal respect the parameters
+//    given by `windows`.
 type ThresholdDecisionPolicy struct {
 	// threshold is the minimum weighted sum of `YES` votes that must be met or
 	// exceeded for a proposal to succeed.
@@ -358,10 +358,10 @@ func (m *ThresholdDecisionPolicy) GetWindows() *DecisionPolicyWindows {
 
 // PercentageDecisionPolicy is a decision policy where a proposal passes when
 // it satisfies the two following conditions:
-//  1. The percentage of all `YES` voters' weights out of the total group weight
-//     is greater or equal than the given `percentage`.
-//  2. The voting and execution periods of the proposal respect the parameters
-//     given by `windows`.
+// 1. The percentage of all `YES` voters' weights out of the total group weight
+//    is greater or equal than the given `percentage`.
+// 2. The voting and execution periods of the proposal respect the parameters
+//    given by `windows`.
 type PercentageDecisionPolicy struct {
 	// percentage is the minimum percentage the weighted sum of `YES` votes must
 	// meet for a proposal to succeed.

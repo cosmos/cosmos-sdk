@@ -34,12 +34,12 @@ type wrapper struct {
 }
 
 var (
-	_ authsigning.Tx                   = &wrapper{}
-	_ client.TxBuilder                 = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
+	_ authsigning.Tx             = &wrapper{}
+	_ client.TxBuilder           = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
 	_ ante.HasExtensionOptionsTx = &wrapper{}
-	_ ExtensionOptionsTxBuilder        = &wrapper{}
-	_ tx.TipTx                         = &wrapper{}
+	_ ExtensionOptionsTxBuilder  = &wrapper{}
+	_ tx.TipTx                   = &wrapper{}
 )
 
 // ExtensionOptionsTxBuilder defines a TxBuilder that can also set extensions.

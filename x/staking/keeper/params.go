@@ -3,6 +3,7 @@ package keeper
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -43,7 +44,7 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 // Currently, this returns a global variable that the app developer can tweak.
 // TODO: we might turn this into an on-chain param:
 // https://github.com/cosmos/cosmos-sdk/issues/8365
-func (k Keeper) PowerReduction(ctx sdk.Context) sdk.Int {
+func (k Keeper) PowerReduction(ctx sdk.Context) math.Int {
 	return sdk.DefaultPowerReduction
 }
 

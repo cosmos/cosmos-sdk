@@ -77,9 +77,9 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 // proposal defines the new Msg-based proposal.
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages []json.RawMessage
-	Metadata string
-	Deposit  string
+	Messages []json.RawMessage `json:"messages,omitempty"`
+	Metadata string            `json:"metadata"`
+	Deposit  string            `json:"deposit"`
 }
 
 func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.Coins, error) {

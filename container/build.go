@@ -7,8 +7,9 @@ package container
 // can be provided by the container.
 //
 // Ex:
-//  var x int
-//  Build(Provide(func() int { return 1 }), &x)
+//
+//	var x int
+//	Build(Provide(func() int { return 1 }), &x)
 //
 // Build uses the debug mode provided by AutoDebug which means there will be
 // verbose debugging information if there is an error and nothing upon success.

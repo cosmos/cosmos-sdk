@@ -19,6 +19,7 @@ var commonArgs = []string{
 
 // MsgSubmitLegacyProposal creates a tx for submit legacy proposal
 func MsgSubmitLegacyProposal(clientCtx client.Context, from, title, description, proposalType string, extraArgs ...string) (testutil.BufferWriter, error) {
+	//nolint:staticcheck
 	args := append([]string{
 		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
 		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),

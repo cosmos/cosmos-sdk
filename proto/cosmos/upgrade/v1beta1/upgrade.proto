@@ -47,10 +47,10 @@ message Plan {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgSoftwareUpgrade.
 message SoftwareUpgradeProposal {
-  option deprecated                   = true;
+  option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = false;
 
   string title       = 1;
   string description = 2;
@@ -62,10 +62,10 @@ message SoftwareUpgradeProposal {
 // Deprecated: This legacy proposal is deprecated in favor of Msg-based gov
 // proposals, see MsgCancelUpgrade.
 message CancelSoftwareUpgradeProposal {
-  option deprecated                   = true;
+  option deprecated                          = true;
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.equal)                   = true;
+  option (gogoproto.goproto_stringer)        = false;
 
   string title       = 1;
   string description = 2;

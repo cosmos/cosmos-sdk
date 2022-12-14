@@ -35,7 +35,7 @@ type Keeper struct {
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
-	appVersionMap      module.VersionMap               // the module version map of the app config
+	appVersionMap      module.VersionMap               // the current module version map of the app
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -67,7 +67,7 @@ func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
 	return k.versionSetter
 }
 
-// GetAppVersionMap gets the version map of the app
+// GetAppVersionMap gets the current version map of the app
 // This is only used in upgrade InitGenesis and should not be used in any other context.
 func (k *Keeper) GetAppVersionMap() module.VersionMap {
 	return k.appVersionMap

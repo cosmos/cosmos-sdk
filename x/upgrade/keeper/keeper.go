@@ -35,6 +35,7 @@ type Keeper struct {
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
+	initVersionMap     module.VersionMap               // the module version map at init genesis
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -43,8 +44,8 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
-	return Keeper{
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+	return &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
@@ -63,6 +64,18 @@ func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
 // GetVersionSetter gets the protocol version field of baseapp
 func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
 	return k.versionSetter
+}
+
+// SetInitVersionMap sets the initial version map.
+// This is only used in app wiring and should not be used in any other context.
+func (k *Keeper) SetInitVersionMap(vm module.VersionMap) {
+	k.initVersionMap = vm
+}
+
+// GetInitVersionMap gets the initial version map
+// This is only used in upgrade InitGenesis and should not be used in any other context.
+func (k *Keeper) GetInitVersionMap() module.VersionMap {
+	return k.initVersionMap
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade

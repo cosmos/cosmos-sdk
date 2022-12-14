@@ -144,7 +144,6 @@ func AppStateRandomizedFn(
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	// TODO - in case runtime.RegisterModules(...) is used, the genesis state of the module won't be reflected here
 	genesisState := ModuleBasics.DefaultGenesis(cdc)
 
 	// generate a random amount of initial stake coins and a random initial

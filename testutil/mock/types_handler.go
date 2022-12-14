@@ -8,6 +8,7 @@
 package mock
 
 import (
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -76,11 +77,11 @@ func (m *MockPostDecorator) EXPECT() *MockPostDecoratorMockRecorder {
 }
 
 // PostHandle mocks base method.
-func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, res *types.Result, simulate, success bool, next types.PostHandler) (types.Context, error) {
+func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, msgResponses []*codectypes.Any, simulate, success bool, next types.PostHandler) (types.Context, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PostHandle", ctx, tx, res, simulate, success, next)
+	m.ctrl.Call(m, "PostHandle", ctx, tx, msgResponses, simulate, success, next)
 	// NOTE: we need to edit the generated code to call the "next handler"
-	return next(ctx, tx, res, simulate, success)
+	return next(ctx, tx, msgResponses, simulate, success)
 }
 
 // PostHandle indicates an expected call of PostHandle.

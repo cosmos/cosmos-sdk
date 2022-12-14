@@ -9,6 +9,7 @@
 * Sep 07, 2022: Add custom `Msg`-renderers.
 * Sep 18, 2022: Structured format instead of lines of text
 * Nov 23, 2022: Specify CBOR encoding.
+* Dec 14, 2022: Mention exceptions for invertability.
 
 ## Status
 
@@ -75,6 +76,14 @@ the composition of rendering and parsing.
 Note that the existence of an inverse function ensures that the
 rendered text contains the full information of the original transaction,
 not a hash or subset.
+
+We make an exception for invertibility for data which are too large to
+meaningfully display, such as byte strings longer than 32 bytes. We may then
+selectively render them with a cryptographically-strong hash. In these cases,
+it is still computationally infeasible to find a different transaction which
+has the same rendering. However, we must ensure that the hash computation is
+simple enough to be reliably executed independently, so at least the hash is
+itself reasonably verifiable when the raw byte string is not.
 
 ### Chain State
 

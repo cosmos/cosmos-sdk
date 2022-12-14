@@ -10,6 +10,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
+var hashPrefix = "SHA-256="
+
 // NewBytesValueRenderer returns a ValueRenderer for Protobuf bytes, which are
 // encoded as capital-letter hexadecimal, without the '0x' prefix.
 func NewBytesValueRenderer() ValueRenderer {
@@ -36,22 +38,25 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	}
 	h := hasher.Sum(nil)
 
-	text := strings.ToUpper(hex.EncodeToString(h))
+	text := fmt.Sprintf("%s%s", hashPrefix, strings.ToUpper(hex.EncodeToString(h)))
 	return []Screen{{Text: text}}, nil
 }
 
 func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
-		return protoreflect.ValueOfBytes([]byte{}), fmt.Errorf("expected single screen: %v", screens)
+		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 	formatted := screens[0].Text
 
-	// If the formatted string's length is 32 bytes, there's actually no way to
-	// know if it was a hash of even longer bytes, or those bytes as-is. We
-	// simply return the bytes as-is.
-	data, err := hex.DecodeString(string(formatted))
+	// If the formatted string starts with `SHA-256=`, then we can't actually
+	// invert to get the original bytes. In this case, we simply return the
+	// hashed bytes.
+	// Which means that in the general case, we trim the (optional) prefix, and
+	// return whatever is left.
+	hexStr := strings.TrimPrefix(formatted, hashPrefix)
+	data, err := hex.DecodeString(hexStr)
 	if err != nil {
-		return protoreflect.ValueOfBytes([]byte{}), err
+		return nilValue, err
 	}
 
 	return protoreflect.ValueOfBytes(data), nil

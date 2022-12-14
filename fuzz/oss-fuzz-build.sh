@@ -12,14 +12,12 @@ build_go_fuzzer() {
 	compile_native_go_fuzzer "$FUZZ_ROOT"/fuzz/tests "$function" "$fuzzer"
 }
 
-go get github.com/AdamKorcz/go-118-fuzz-build/utils
+go get github.com/AdamKorcz/go-118-fuzz-build/testing
 
 build_go_fuzzer FuzzCryptoHDDerivePrivateKeyForPath fuzz_crypto_hd_deriveprivatekeyforpath
 build_go_fuzzer FuzzCryptoHDNewParamsFromPath fuzz_crypto_hd_newparamsfrompath
 
 build_go_fuzzer FuzzCryptoTypesCompactbitarrayMarshalUnmarshal fuzz_crypto_types_compactbitarray_marshalunmarshal
-
-build_go_fuzzer FuzzStoreInternalProofsCreateNonmembershipProof fuzz_store_internal_proofs_createnonmembershipproof
 
 build_go_fuzzer FuzzTendermintAminoDecodeTime fuzz_tendermint_amino_decodetime
 

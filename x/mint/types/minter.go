@@ -33,7 +33,7 @@ func DefaultInitialMinter() Minter {
 	)
 }
 
-// validate minter
+// ValidateMinter does a basic validation on minter.
 func ValidateMinter(minter Minter) error {
 	if minter.Inflation.IsNegative() {
 		return fmt.Errorf("mint parameter Inflation should be positive, is %s",

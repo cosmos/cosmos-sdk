@@ -17,7 +17,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/testutil"
@@ -55,7 +54,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// Create a new AppConstructor for this test suite, where we manually
 	// add a subspace and `myParams` to the x/params store.
-	s.cfg.AppConstructor = func(val moduletestutil.Validator) servertypes.Application {
+	s.cfg.AppConstructor = func(val network.ValidatorI) servertypes.Application {
 		var (
 			appBuilder   *runtime.AppBuilder
 			paramsKeeper keeper.Keeper

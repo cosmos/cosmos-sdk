@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/kv"
 	log "github.com/tendermint/tendermint/libs/log"
+
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // SortedJSON takes any JSON and returns it sorted by keys. Also, all white-spaces

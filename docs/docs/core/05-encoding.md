@@ -125,7 +125,7 @@ the consensus engine accepts only transactions in the form of raw bytes.
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/tx_msg.go#L72-L76
 ```
 
-A standard implementation of both these objects can be found in the [`auth` module](../modules/auth/README.md):
+A standard implementation of both these objects can be found in the [`auth/tx` module](../modules/auth/tx/README.md):
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/tx/decoder.go
@@ -150,7 +150,7 @@ message Profile {
 }
 ```
 
-In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../modules/vesting/README.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
+In this `Profile` example, we hardcoded `account` as a `BaseAccount`. However, there are several other types of [user accounts related to vesting](../modules/auth/1-vesting.md), such as `BaseVestingAccount` or `ContinuousVestingAccount`. All of these accounts are different, but they all implement the `AccountI` interface. How would you create a `Profile` that allows all these types of accounts with an `account` field that accepts an `AccountI` interface?
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L301-L324
@@ -242,6 +242,34 @@ A real-life example of encoding the pubkey as `Any` inside the Validator struct 
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/validator.go#L40-L61
+```
+
+#### `Any`'s TypeURL
+
+When packing a protobuf message inside an `Any`, the message's type is uniquely defined by its type URL, which is the message's fully qualified name prefixed by a `/` (slash) character. In some implementations of `Any`, like the gogoproto one, there's generally [a resolvable prefix, e.g. `type.googleapis.com`](https://github.com/gogo/protobuf/blob/b03c65ea87cdc3521ede29f62fe3ce239267c1bc/protobuf/google/protobuf/any.proto#L87-L91). However, in the Cosmos SDK, we made the decision to not include such prefix, to have shorter type URLs. The Cosmos SDK's own `Any` implementation can be found in `github.com/cosmos/cosmos-sdk/codec/types`.
+
+The Cosmos SDK is also switching away from gogoproto to the official `google.golang.org/protobuf` (known as the Protobuf API v2). Its default `Any` implementation also contains the [`type.googleapis.com`](https://github.com/protocolbuffers/protobuf-go/blob/v1.28.1/types/known/anypb/any.pb.go#L266) prefix. To maintain compatibility with the SDK, the following methods from `"google.golang.org/protobuf/types/known/anypb"` should not be used:
+- `anypb.New`
+- `anypb.MarshalFrom`
+- `anypb.Any#MarshalFrom`
+
+Instead, the Cosmos SDK provides helper functions in `"github.com/cosmos/cosmos-proto/any"`, which create an official `anypb.Any` without inserting the prefixes:
+- `any.New`
+- `any.MarshalFrom`
+
+For example, to pack a `sdk.Msg` called `internalMsg`, use:
+
+```diff
+import (
+- 	"google.golang.org/protobuf/types/known/anypb"
++	"github.com/cosmos/cosmos-proto/any"
+)
+
+- anyMsg, err := anypb.New(internalMsg.Message().Interface())
++ anyMsg, err := any.New(internalMsg.Message().Interface())
+
+- fmt.Println(anyMsg.TypeURL) // type.googleapis.com/cosmos.bank.v1beta1.MsgSend
++ fmt.Println(anyMsg.TypeURL) // /cosmos.bank.v1beta1.MsgSend
 ```
 
 ## FAQ

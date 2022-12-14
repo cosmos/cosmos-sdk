@@ -10,7 +10,7 @@ import (
 
 var _ nft.MsgServer = Keeper{}
 
-// Send implement Send method of the types.MsgServer.
+// Send implements Send method of the types.MsgServer.
 func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)

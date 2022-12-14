@@ -60,6 +60,7 @@ func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
 	k.versionSetter = vs
 }
 
+// GetVersionSetter gets the protocol version field of baseapp
 func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
 	return k.versionSetter
 }
@@ -156,7 +157,7 @@ func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 	return mv
 }
 
-// gets the version for a given module, and returns true if it exists, false otherwise
+// getModuleVersion gets the version for a given module, and returns true if it exists, false otherwise
 func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
@@ -223,7 +224,7 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) 
 	return bz, true
 }
 
-// SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+// SetUpgradedConsensusState sets the expected upgraded consensus state for the next version of this chain
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
 	store := ctx.KVStore(k.storeKey)
@@ -231,7 +232,7 @@ func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz 
 	return nil
 }
 
-// GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain
 func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UpgradedConsStateKey(lastHeight))

@@ -6,8 +6,6 @@ import (
 	"io"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -30,9 +28,8 @@ var kvPairs = []types.KVPair{
 }
 
 var (
-	testStoreKey      = types.NewKVStoreKey("listen_test")
-	interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
+	testStoreKey   = types.NewKVStoreKey("listen_test")
+	testMarshaller = types.NewTestCodec()
 )
 
 func newListenKVStore(w io.Writer) *listenkv.Store {
@@ -291,9 +288,4 @@ func TestListenKVStoreCacheWrap(t *testing.T) {
 func TestListenKVStoreCacheWrapWithTrace(t *testing.T) {
 	store := newEmptyListenKVStore(nil)
 	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
-}
-
-func TestListenKVStoreCacheWrapWithListeners(t *testing.T) {
-	store := newEmptyListenKVStore(nil)
-	require.Panics(t, func() { store.CacheWrapWithListeners(nil, nil) })
 }

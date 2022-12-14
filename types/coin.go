@@ -247,18 +247,16 @@ func (coins Coins) Validate() error {
 		}
 
 		lowDenom := coins[0].Denom
-		seenDenoms := make(map[string]bool)
-		seenDenoms[lowDenom] = true
 
 		for _, coin := range coins[1:] {
-			if seenDenoms[coin.Denom] {
-				return fmt.Errorf("duplicate denomination %s", coin.Denom)
-			}
 			if err := ValidateDenom(coin.Denom); err != nil {
 				return err
 			}
-			if coin.Denom <= lowDenom {
+			if coin.Denom < lowDenom {
 				return fmt.Errorf("denomination %s is not sorted", coin.Denom)
+			}
+			if coin.Denom == lowDenom {
+				return fmt.Errorf("duplicate denomination %s", coin.Denom)
 			}
 			if !coin.IsPositive() {
 				return fmt.Errorf("coin %s amount is not positive", coin.Denom)
@@ -266,7 +264,6 @@ func (coins Coins) Validate() error {
 
 			// we compare each coin against the last denom
 			lowDenom = coin.Denom
-			seenDenoms[coin.Denom] = true
 		}
 
 		return nil
@@ -789,26 +786,15 @@ func (coins Coins) negative() Coins {
 
 // removeZeroCoins removes all zero coins from the given coin set in-place.
 func removeZeroCoins(coins Coins) Coins {
-	for i := 0; i < len(coins); i++ {
-		if coins[i].IsZero() {
-			break
-		} else if i == len(coins)-1 {
-			return coins
-		}
-	}
-
-	var result []Coin
-	if len(coins) > 0 {
-		result = make([]Coin, 0, len(coins)-1)
-	}
+	nonZeros := make([]Coin, 0, len(coins))
 
 	for _, coin := range coins {
 		if !coin.IsZero() {
-			result = append(result, coin)
+			nonZeros = append(nonZeros, coin)
 		}
 	}
 
-	return result
+	return nonZeros
 }
 
 //-----------------------------------------------------------------------------

@@ -14,6 +14,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
+// Params returns parameters of x/slashing module
 func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -25,6 +26,7 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
+// SigningInfo returns signing-info of a specific validator.
 func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
@@ -48,6 +50,7 @@ func (k Keeper) SigningInfo(c context.Context, req *types.QuerySigningInfoReques
 	return &types.QuerySigningInfoResponse{ValSigningInfo: signingInfo}, nil
 }
 
+// SigningInfos returns signing-infos of all validators.
 func (k Keeper) SigningInfos(c context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")

@@ -8,6 +8,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -18,10 +19,9 @@ type AppBuilder struct {
 	app *App
 }
 
-// DefaultGenesis returns a default genesis from the registered
-// AppModuleBasic's.
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *AppBuilder) DefaultGenesis() map[string]json.RawMessage {
-	return a.app.basicManager.DefaultGenesis(a.app.cdc)
+	return a.app.DefaultGenesis()
 }
 
 // Build builds an *App instance.
@@ -43,5 +43,8 @@ func (a *AppBuilder) Build(
 	bApp.MountStores(a.app.storeKeys...)
 
 	a.app.BaseApp = bApp
+	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())
+	a.app.ModuleManager.RegisterServices(a.app.configurator)
+
 	return a.app
 }

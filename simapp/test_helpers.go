@@ -50,7 +50,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, appOptions)
 	if withGenesis {
-		return app, NewDefaultGenesisState(app.AppCodec())
+		return app, app.DefaultGenesis()
 	}
 	return app, GenesisState{}
 }
@@ -75,7 +75,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	}
 
 	app := NewSimApp(options.Logger, options.DB, nil, true, options.AppOpts)
-	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
 
@@ -180,7 +180,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 		},
 	}
 
-	genesisState := NewDefaultGenesisState(app.appCodec)
+	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 	require.NoError(t, err)
 
@@ -239,7 +239,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
-	appCtr := func(val testutil.Validator) servertypes.Application {
+	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
@@ -250,7 +250,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   ModuleBasics.DefaultGenesis(app.AppCodec()),
+		GenesisState:   app.DefaultGenesis(),
 		EncodingConfig: testutil.TestEncodingConfig{
 			InterfaceRegistry: app.InterfaceRegistry(),
 			Codec:             app.AppCodec(),

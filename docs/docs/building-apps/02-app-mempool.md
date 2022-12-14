@@ -71,8 +71,9 @@ baseAppOptions = append(baseAppOptions, mempoolOpt)
 
 ### No-op Mempool
 
-A no-op mempool is a mempool that does not do any ordering of transactions and keeps the transactions in the order they are received.
-It basically keeps the behavior prior as in previous version of the SDK (which did not have any application mempool).
+A no-op mempool is a mempool where transactions are completely discarded and ignored when BaseApp interacts with the mempool.
+When this mempool is used, it assumed that an application will rely on Tendermint's transaction ordering defined in `RequestPrepareProposal`,
+which is FIFO-ordered by default.
 
 ### Sender Nonce Mempool
 

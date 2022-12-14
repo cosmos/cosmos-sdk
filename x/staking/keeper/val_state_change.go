@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"sort"
 
-	"cosmossdk.io/math"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -309,7 +310,7 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	return validator, err
 }
 
-// perform all the store operations for when a validator begins unbonding
+// BeginUnbondingValidator performs all the store operations for when a validator begins unbonding
 func (k Keeper) BeginUnbondingValidator(ctx sdk.Context, validator types.Validator) (types.Validator, error) {
 	params := k.GetParams(ctx)
 

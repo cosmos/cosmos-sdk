@@ -1760,7 +1760,6 @@ func TestBaseAppPostHandler(t *testing.T) {
 				app.Commit()
 			},
 		},
-		// TODO: Test is failing events are always empty
 		{
 			"success case 2 - The msg errors and the PostHandler is set",
 			func() {
@@ -1807,7 +1806,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
 
 				events := res.GetEvents()
-				require.Len(t, events, 0, "Should not contain any events as the post handler is not set")
+				require.Len(t, events, 3, "Contains the AnteHandler and the PostHandler")
 
 				app.EndBlock(abci.RequestEndBlock{})
 				app.Commit()

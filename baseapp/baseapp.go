@@ -763,19 +763,23 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			postCache.Write()
 		}
 
-		if len(events) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
+		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 			// append the events in the order of occurrence
 			postEvents = newCtx.EventManager().ABCIEvents()
-			events = append(events, postEvents...)
-			// TODO: copy slice
+			events = make([]abci.Event, len(anteEvents)+len(postEvents))
+			copy(events[:len(anteEvents)], anteEvents)
+			copy(events[len(anteEvents):], postEvents)
 			result.Events = append(result.Events, events...)
+		} else {
+			events = make([]abci.Event, len(postEvents))
+			copy(events, postEvents)
+			result.Events = append(result.Events, postEvents...)
 		}
 
 		return gInfo, result, events, priority, err
 	}
 
 	// Case 3: Run Post Handler with runMsgCtx so that the state from runMsgs is persisted
-
 	if app.postHandler != nil {
 		newCtx, err := app.postHandler(runMsgCtx, tx, result, mode == runTxModeSimulate, err == nil)
 		if err != nil {

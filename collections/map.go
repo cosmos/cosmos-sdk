@@ -76,7 +76,6 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 
 	v, err := m.vc.Decode(valueBytes)
 	if err != nil {
-		var v V
 		return v, fmt.Errorf("%w: value decode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 	return v, nil

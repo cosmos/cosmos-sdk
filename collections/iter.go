@@ -104,6 +104,7 @@ func (r *Range[K]) Descending() *Range[K] {
 
 // test sentinel error
 var errRange = errors.New("collections: range error")
+var errOrder = errors.New("collections: invalid order")
 
 func (r *Range[K]) RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order, err error) {
 	if r.prefix != nil && (r.end != nil || r.start != nil) {
@@ -115,91 +116,111 @@ func (r *Range[K]) RangeValues() (prefix *K, start *Bound[K], end *Bound[K], ord
 // iteratorFromRanger generates an Iterator instance, with the proper prefixing and ranging.
 // a nil Ranger can be seen as an ascending iteration over all the possible keys.
 func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K]) (iter Iterator[K, V], err error) {
-	// defaults
 	var (
 		prefix *K
 		start  *Bound[K]
 		end    *Bound[K]
 		order  = OrderAscending
 	)
-	// override defaults only if a Ranger is provided.
+	// if Ranger is specified then we override the defaults
 	if r != nil {
 		prefix, start, end, order, err = r.RangeValues()
 		if err != nil {
 			return iter, err
 		}
 	}
-	var prefixBytes []byte
+	if prefix != nil && (start != nil || end != nil) {
+		return iter, fmt.Errorf("%w: prefix must not be set if either start or end are specified", errRange)
+	}
+
+	// compute start and end bytes
+	var startBytes, endBytes []byte
 	if prefix != nil {
-		prefixBytes, err = encodeKeyWithPrefix(m.prefix, m.kc, *prefix)
+		startBytes, endBytes, err = prefixStartEndBytes(m, *prefix)
 		if err != nil {
 			return iter, err
 		}
 	} else {
-		prefixBytes = m.prefix
-	}
-	var startBytes []byte // default is nil
-	if start != nil {
-		startBytes, err = encodeKeyWithPrefix(nil, m.kc, start.value)
-		if err != nil {
-			return
-		}
-		// iterators are inclusive at start by default
-		// so if we want to make the iteration exclusive
-		// we extend by one byte.
-		if !start.inclusive {
-			startBytes = extendOneByte(startBytes)
-		}
-	}
-	var endBytes []byte // default is nil
-	if end != nil {
-		endBytes, err = encodeKeyWithPrefix(nil, m.kc, end.value)
+		startBytes, endBytes, err = rangeStartEndBytes(m, start, end)
 		if err != nil {
 			return iter, err
 		}
-		// iterators are exclusive at end by default
-		// so if we want to make the iteration
-		// inclusive we need to extend by one byte.
-		if end.inclusive {
-			endBytes = extendOneByte(endBytes)
-		}
 	}
 
+	// get store
 	store, err := m.getStore(ctx)
 	if err != nil {
 		return iter, err
 	}
-	prefixedStartBytes := append(prefixBytes, startBytes...)
-	// since we're dealing with a prefixed end, if end bytes
-	// are not specified then we need to increase the prefix
-	// by 1, otherwise we would end up ranging over [bytes, bytes),
-	// which is invalid.
-	var prefixedEndBytes []byte
-	if endBytes == nil {
-		prefixedEndBytes = storetypes.PrefixEndBytes(prefixBytes)
-	} else {
-		prefixedEndBytes = append(prefixBytes, endBytes...)
-	}
 
+	// create iter
 	var storeIter storetypes.Iterator
 	switch order {
 	case OrderAscending:
-		storeIter = store.Iterator(prefixedStartBytes, prefixedEndBytes)
+		storeIter = store.Iterator(startBytes, endBytes)
 	case OrderDescending:
-		storeIter = store.ReverseIterator(prefixedStartBytes, prefixedEndBytes)
+		storeIter = store.ReverseIterator(startBytes, endBytes)
 	default:
-		return iter, fmt.Errorf("collections: unrecognized order identifier: %d", order)
+		return iter, fmt.Errorf("%w: %d", errOrder, order)
 	}
 
+	// check if valid
 	if !storeIter.Valid() {
 		return iter, ErrInvalidIterator
 	}
 
+	// all good
 	iter.kc = m.kc
 	iter.vc = m.vc
-	iter.iter = storeIter
 	iter.prefixLength = len(m.prefix)
+	iter.iter = storeIter
 	return iter, nil
+}
+
+// rangeStartEndBytes computes a range's start and end bytes to be passed to the store's iterator.
+func rangeStartEndBytes[K, V any](m Map[K, V], start, end *Bound[K]) (startBytes, endBytes []byte, err error) {
+	startBytes = m.prefix
+	if start != nil {
+		startBytes, err = encodeKeyWithPrefix(m.prefix, m.kc, start.value)
+		if err != nil {
+			return startBytes, endBytes, err
+		}
+		// the start of iterators is by default inclusive,
+		// in order to make it exclusive we extend the start
+		// by one single byte.
+		if !start.inclusive {
+			startBytes = extendOneByte(startBytes)
+		}
+	}
+	if end != nil {
+		endBytes, err = encodeKeyWithPrefix(m.prefix, m.kc, end.value)
+		if err != nil {
+			return startBytes, endBytes, err
+		}
+		// the end of iterators is by default exclusive
+		// in order to make it inclusive we extend the end
+		// by one single byte.
+		if end.inclusive {
+			endBytes = extendOneByte(endBytes)
+		}
+	} else {
+		// if end is not specified then we simply are
+		// inclusive up to the last key of the Prefix
+		// of the collection.
+		endBytes = storetypes.PrefixEndBytes(m.prefix)
+	}
+
+	return startBytes, endBytes, nil
+}
+
+// prefixStartEndBytes returns the start and end bytes to be provided to the store's iterator, considering we're prefixing
+// over a specific key.
+func prefixStartEndBytes[K, V any](m Map[K, V], prefix K) (startBytes, endBytes []byte, err error) {
+	startBytes, err = encodeKeyWithPrefix(m.prefix, m.kc, prefix)
+	if err != nil {
+		return
+	}
+	return startBytes, storetypes.PrefixEndBytes(startBytes), nil
 }
 
 // Iterator defines a generic wrapper around an sdk.Iterator.

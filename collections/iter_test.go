@@ -98,6 +98,21 @@ func TestIteratorKeyValues(t *testing.T) {
 	require.False(t, iter.Valid())
 }
 
+func TestIteratorPrefixing(t *testing.T) {
+	sk, ctx := deps()
+	m := NewMap(sk, NewPrefix("cool"), StringKey, Uint64Value)
+
+	require.NoError(t, m.Set(ctx, "A1", 11))
+	require.NoError(t, m.Set(ctx, "A2", 12))
+	require.NoError(t, m.Set(ctx, "B1", 21))
+
+	iter, err := m.Iterate(ctx, new(Range[string]).Prefix("A"))
+	require.NoError(t, err)
+	keys, err := iter.Keys()
+	require.NoError(t, err)
+	require.Equal(t, []string{"A1", "A2"}, keys)
+}
+
 func TestIteratorRanging(t *testing.T) {
 	sk, ctx := deps()
 	m := NewMap(sk, NewPrefix("cool"), Uint64Key, Uint64Value)
@@ -126,6 +141,10 @@ func TestIteratorRanging(t *testing.T) {
 	result, err = iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, []uint64{4, 3, 2, 1}, result)
+
+	// test iterator invalid
+	_, err = m.Iterate(ctx, new(Range[uint64]).StartInclusive(10).EndInclusive(1))
+	require.ErrorIs(t, err, ErrInvalidIterator)
 }
 
 func TestRange(t *testing.T) {
@@ -179,37 +198,4 @@ func TestRange(t *testing.T) {
 			require.Equal(t, tc.wantOrder, gotOrder)
 		})
 	}
-}
-
-type unsafeRange struct {
-	prefix string
-	start  *Bound[string]
-	end    *Bound[string]
-	order  Order
-}
-
-func (r unsafeRange) RangeValues() (*string, *Bound[string], *Bound[string], Order, error) {
-	return &r.prefix, r.start, r.end, r.order, nil
-}
-
-func TestIteratorPrefixRanging(t *testing.T) {
-	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("cool"), StringKey, Uint64Value)
-	require.NoError(t, m.Set(ctx, "AA1", 1))
-	require.NoError(t, m.Set(ctx, "AA2", 2))
-	require.NoError(t, m.Set(ctx, "AA3", 3))
-	require.NoError(t, m.Set(ctx, "AB1", 4))
-
-	rng := unsafeRange{
-		prefix: "AA",
-		start:  BoundExclusive("1"),
-		end:    BoundInclusive("3"),
-		order:  OrderAscending,
-	}
-	// expected AA2,AA3
-	iter, err := m.Iterate(ctx, rng)
-	require.NoError(t, err)
-	keys, err := iter.Keys()
-	require.NoError(t, err)
-	require.Equal(t, []string{"AA2", "AA3"}, keys)
 }

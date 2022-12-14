@@ -932,3 +932,19 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }
+
+// NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
+// return the transactions sent by the client's request
+func NoOpPrepareProposal() sdk.PrepareProposalHandler {
+	return func(_ sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		return abci.ResponsePrepareProposal{Txs: req.Txs}
+	}
+}
+
+// NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
+// return ACCEPT.
+func NoOpProcessProposal() sdk.ProcessProposalHandler {
+	return func(_ sdk.Context, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	}
+}

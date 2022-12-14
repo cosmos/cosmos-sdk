@@ -19,11 +19,20 @@ service Msg {
   rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
 }
 
+// MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker request type.
 message MsgAuthorizeCircuitBreaker {
   option (cosmos.msg.v1.signer) = "granter";
 
+  // granter is the granter of the circuit breaker permissions and must have
+  // LEVEL_SUPER_ADMIN.
   string granter = 1;
+
+  // grantee is the account authorized with the provided permissions.
   string grantee = 2;
+
+  // permissions are the circuit breaker permissions that the grantee receives.
+  // These will overwrite any existing permissions. LEVEL_NONE_UNSPECIFIED can
+  // be specified to revoke all permissions.
   CircuitBreakerPermissions permissions = 3;
 }
 
@@ -36,6 +45,7 @@ message CircuitBreakerPermissions {
   // a level other than LEVEL_SOME_MSGS.
   repeated string limit_type_urls = 2;
 
+  // Level is the permission level.
   enum Level {
     // LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
     // breaker permissions.
@@ -57,8 +67,10 @@ message CircuitBreakerPermissions {
   }
 }
 
+// MsgAuthorizeCircuitBreaker defines the Msg/AuthorizeCircuitBreaker response type.
 message MsgAuthorizeCircuitBreakerResponse {}
 
+// MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker request type.
 message MsgTripCircuitBreaker {
   option (cosmos.msg.v1.signer) = "signer";
 
@@ -73,8 +85,10 @@ message MsgTripCircuitBreaker {
   repeated string msg_type_urls = 2;
 }
 
+// MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker response type.
 message MsgTripCircuitBreakerResponse {}
 
+// MsgResetCircuitBreaker defines the Msg/ResetCircuitBreaker request type.
 message MsgResetCircuitBreaker {
   option (cosmos.msg.v1.signer) = "signer";
 
@@ -87,4 +101,5 @@ message MsgResetCircuitBreaker {
   repeated string msg_type_urls = 3;
 }
 
+// MsgResetCircuitBreakerResponse defines the Msg/ResetCircuitBreaker response type.
 message MsgResetCircuitBreakerResponse {}

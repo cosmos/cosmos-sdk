@@ -10,6 +10,10 @@ var _ Mempool = (*NoOpMempool)(nil)
 
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and
 // ignored when BaseApp interacts with the mempool.
+//
+// Note: When this mempool is used, it assumed that an application will rely
+// on Tendermint's transaction ordering defined in `RequestPrepareProposal`, which
+// is FIFO-ordered by default.
 type NoOpMempool struct{}
 
 func (m NoOpMempool) Insert(context.Context, sdk.Tx) error      { return nil }

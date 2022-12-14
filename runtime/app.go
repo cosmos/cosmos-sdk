@@ -75,8 +75,10 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(a.configurator)
+	// register runtime module services
+	if err := a.registerRuntimeServices(); err != nil {
+		return err
+	}
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
@@ -97,6 +99,10 @@ func (a *App) Load(loadLatest bool) error {
 	if len(a.config.EndBlockers) != 0 {
 		a.ModuleManager.SetOrderEndBlockers(a.config.EndBlockers...)
 		a.SetEndBlocker(a.EndBlocker)
+	}
+
+	if len(a.config.OrderMigrations) != 0 {
+		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
 	}
 
 	if loadLatest {
@@ -165,6 +171,21 @@ func (a *App) RegisterNodeService(clientCtx client.Context) {
 
 func (a *App) Configurator() module.Configurator {
 	return a.configurator
+}
+
+// LoadHeight loads a particular height
+func (a *App) LoadHeight(height int64) error {
+	return a.LoadVersion(height)
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return a.basicManager.DefaultGenesis(a.cdc)
+}
+
+// GetStoreKeys returns all the keys stored store keys.
+func (a *App) GetStoreKeys() []storetypes.StoreKey {
+	return a.storeKeys
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

@@ -99,11 +99,10 @@ type AppInputs struct {
 }
 
 func SetupAppBuilder(inputs AppInputs) {
-	mm := module.NewManagerFromMap(inputs.Modules)
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = mm
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
 
 	for name, mod := range inputs.Modules {

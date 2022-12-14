@@ -11,8 +11,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -646,12 +644,11 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 }
 
 var (
-	interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
-	testKey1          = []byte{1, 2, 3, 4, 5}
-	testValue1        = []byte{5, 4, 3, 2, 1}
-	testKey2          = []byte{2, 3, 4, 5, 6}
-	testValue2        = []byte{6, 5, 4, 3, 2}
+	testMarshaller = types.NewTestCodec()
+	testKey1       = []byte{1, 2, 3, 4, 5}
+	testValue1     = []byte{5, 4, 3, 2, 1}
+	testKey2       = []byte{2, 3, 4, 5, 6}
+	testValue2     = []byte{6, 5, 4, 3, 2}
 )
 
 func TestGetListenWrappedKVStore(t *testing.T) {

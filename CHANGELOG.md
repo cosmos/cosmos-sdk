@@ -215,7 +215,6 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
-* (store) [#14305](https://github.com/cosmos/cosmos-sdk/pull/14305) Fix `TestFileStreamingService` unit test.
 
 ### Deprecated
 

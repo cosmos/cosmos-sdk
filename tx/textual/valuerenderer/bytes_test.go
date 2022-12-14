@@ -36,12 +36,15 @@ func TestBytesJsonTestCases(t *testing.T) {
 		require.Equal(t, tc.hex, screens[0].Text)
 
 		// Round trip
-		// Only parse if the input bytes were <=32 in length.
-		if len(data) <= 32 {
-			val, err := valrend.Parse(context.Background(), screens)
-			require.NoError(t, err)
-			require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
+		val, err := valrend.Parse(context.Background(), screens)
+		if err != nil {
+			// Make sure Parse() only errors because of hashed bytes.
+			require.Equal(t, "cannot parse bytes hash", err.Error())
+			require.Greater(t, len(tc.base64), 32)
+			continue
 		}
+		require.NoError(t, err)
+		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}
 }
 

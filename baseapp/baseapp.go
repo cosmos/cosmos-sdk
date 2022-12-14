@@ -119,6 +119,7 @@ type BaseApp struct { // nolint: maligned
 type appStore struct {
 	db          dbm.DB               // common DB backend
 	cms         sdk.CommitMultiStore // Main (uncached) state
+	qms         sdk.MultiStore       // Optional alternative state provider for query service
 	storeLoader StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
 
 	// an inter-block write-through cache provided to the context during deliverState
@@ -725,7 +726,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
-			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate)
+			// The runMsgCtx context currently contains events emitted by the ante handler.
+			// We clear this to correctly order events without duplicates.
+			// Note that the state is still preserved.
+			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
+
+			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate)
 			if err != nil {
 				return gInfo, nil, nil, priority, ctx, err
 			}

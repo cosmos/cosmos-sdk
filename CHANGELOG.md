@@ -43,6 +43,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
 
+### Improvements
+
+* Bring in Cosmos-SDK [v0.46.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.7) changes [#402](https://github.com/provenance-io/cosmos-sdk/pull/402).
+
 ---
 
 ## [v0.46.6-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.6-pio-1) - 2022-11-21
@@ -199,17 +203,51 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 
 # Cosmos-SDK releases
 
+## [v0.46.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.7) - 2022-12-13
+
+### Features
+
+* (client) [#14051](https://github.com/cosmos/cosmos-sdk/pull/14051) Add `--grpc` client option.
+
+### Improvements
+
+* (deps) Bump Tendermint version to [v0.34.24](https://github.com/tendermint/tendermint/releases/tag/v0.34.24).
+* [#13651](https://github.com/cosmos/cosmos-sdk/pull/13651) Update `server/config/config.GetConfig` function.
+* [#13781](https://github.com/cosmos/cosmos-sdk/pull/13781) Remove `client/keys.KeysCdc`.
+* [#14175](https://github.com/cosmos/cosmos-sdk/pull/14175) Add `server.DefaultBaseappOptions(appopts)` function to reduce boiler plate in root.go. 
+
+### State Machine Breaking
+
+* (x/gov) [#14214](https://github.com/cosmos/cosmos-sdk/pull/14214) Fix gov v0.46 migration to v1 votes.
+  * Also provide a helper function `govv046.Migrate_V0466_To_V0467` for migrating a chain already on v0.46 with versions <=v0.46.6 to the latest v0.46.7 correct state.
+* (x/group) [#14071](https://github.com/cosmos/cosmos-sdk/pull/14071) Don't re-tally proposal after voting period end if they have been marked as ACCEPTED or REJECTED.
+
+### API Breaking Changes
+
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Update State Streaming APIs:
+    * Add method `ListenCommit` to `ABCIListener`
+    * Move `ListeningEnabled` and  `AddListener` methods to `CommitMultiStore`
+    * Remove `CacheWrapWithListeners` from `CacheWrap` and `CacheWrapper` interfaces
+    * Remove listening APIs from the caching layer (it should only listen to the `rootmulti.Store`)
+    * Add three new options to file streaming service constructor.
+    * Modify `ABCIListener` such that any error from any method will always halt the app via `panic`
+* (store) [#13529](https://github.com/cosmos/cosmos-sdk/pull/13529) Add method `LatestVersion` to `MultiStore` interface, add method `SetQueryMultiStore` to baesapp to support alternative `MultiStore` implementation for query service.
+
+### Bug Fixes
+
+* (baseapp) [#13983](https://github.com/cosmos/cosmos-sdk/pull/13983) Don't emit duplicate ante-handler events when a post-handler is defined.
+* (baseapp) [#14049](https://github.com/cosmos/cosmos-sdk/pull/14049) Fix state sync when interval is zero.
+* (store) [#13516](https://github.com/cosmos/cosmos-sdk/pull/13516) Fix state listener that was observing writes at wrong time.
+
 ## [v0.46.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.6) - 2022-11-18
 
 ### Improvements
 
 * (config) [#13894](https://github.com/cosmos/cosmos-sdk/pull/13894) Support state streaming configuration in `app.toml` template and default configuration.
 
-## Bug Fixes
+### Bug Fixes
 
 * (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Fix propagation of message errors when executing a proposal.
-
----
 
 ## [v0.46.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.5) - 2022-11-17
 
@@ -239,8 +277,6 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 * (store) [#13803](https://github.com/cosmos/cosmos-sdk/pull/13803) Add an error log if IAVL set operation failed.
 * [#13861](https://github.com/cosmos/cosmos-sdk/pull/13861) Allow `_` characters in tx event queries, i.e. `GetTxsEvent`.
 
----
-
 ## [v0.46.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.4) - 2022-11-01
 
 ### Features
@@ -263,8 +299,6 @@ It also contains the Provenance Blockchain customizations that were part of [v0.
 ### API Breaking Changes
 
 * (context) [#13063](https://github.com/cosmos/cosmos-sdk/pull/13063) Update `Context#CacheContext` to automatically emit all events on the parent context's `EventManager`.
-
----
 
 ## [v0.46.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.3) - 2022-10-20
 

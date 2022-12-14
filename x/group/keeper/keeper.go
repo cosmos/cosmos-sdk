@@ -401,7 +401,7 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 			if err := k.pruneVotes(ctx, proposalID); err != nil {
 				return err
 			}
-		} else {
+		} else if proposal.Status == group.PROPOSAL_STATUS_SUBMITTED {
 			if err := k.doTallyAndUpdate(ctx, &proposal, electorate, policyInfo); err != nil {
 				return sdkerrors.Wrap(err, "doTallyAndUpdate")
 			}
@@ -410,6 +410,8 @@ func (k Keeper) TallyProposalsAtVPEnd(ctx sdk.Context) error {
 				return sdkerrors.Wrap(err, "proposal update")
 			}
 		}
+		// Note: We do nothing if the proposal has been marked as ACCEPTED or
+		// REJECTED.
 	}
 	return nil
 }

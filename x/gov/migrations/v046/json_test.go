@@ -19,6 +19,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+var voter = sdk.MustAccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
+
 func TestMigrateJSON(t *testing.T) {
 	encodingConfig := simapp.MakeTestEncodingConfig()
 	clientCtx := client.Context{}.

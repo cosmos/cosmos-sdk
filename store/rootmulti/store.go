@@ -244,7 +244,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 
 		// If it was deleted, remove all data
 		if upgrades.IsDeleted(key.Name()) {
-			if err := deleteKVStore(store.(types.KVStore)); err != nil {
+			if err := deleteKVStore(types.KVStore(store)); err != nil {
 				return errors.Wrapf(err, "failed to delete store %s", key.Name())
 			}
 			rs.removalMap[key] = true
@@ -262,7 +262,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			}
 
 			// move all data
-			if err := moveKVStoreData(oldStore.(types.KVStore), store.(types.KVStore)); err != nil {
+			if err := moveKVStoreData(types.KVStore(oldStore), types.KVStore(store)); err != nil {
 				return errors.Wrapf(err, "failed to move store %s -> %s", oldName, key.Name())
 			}
 
@@ -395,6 +395,11 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	return false
 }
 
+// LatestVersion returns the latest version in the store
+func (rs *Store) LatestVersion() int64 {
+	return rs.LastCommitID().Version
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	if rs.lastCommitInfo == nil {
@@ -457,19 +462,20 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return rs.CacheWrap()
 }
 
-// CacheWrapWithListeners implements the CacheWrapper interface.
-func (rs *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
-	return rs.CacheWrap()
-}
-
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
-		stores[k] = v
+		store := types.KVStore(v)
+		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+		// set same listeners on cache store will observe duplicated writes.
+		if rs.ListeningEnabled(k) {
+			store = listenkv.NewStore(store, k, rs.listeners[k])
+		}
+		stores[k] = store
 	}
-	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners)
+	return cachemulti.NewStore(rs.db, stores, rs.keysByName, rs.traceWriter, rs.getTracingContext())
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -479,6 +485,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	for key, store := range rs.stores {
+		var cacheStore types.KVStore
 		switch store.GetStoreType() {
 		case types.StoreTypeIAVL:
 			// If the store is wrapped with an inter-block cache, we must first unwrap
@@ -487,19 +494,25 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
-			iavlStore, err := store.(*iavl.Store).GetImmutable(version)
+			var err error
+			cacheStore, err = store.(*iavl.Store).GetImmutable(version)
 			if err != nil {
 				return nil, err
 			}
-
-			cachedStores[key] = iavlStore
-
 		default:
-			cachedStores[key] = store
+			cacheStore = store
 		}
+
+		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
+		// set same listeners on cache store will observe duplicated writes.
+		if rs.ListeningEnabled(key) {
+			cacheStore = listenkv.NewStore(cacheStore, key, rs.listeners[key])
+		}
+
+		cachedStores[key] = cacheStore
 	}
 
-	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext(), rs.listeners), nil
+	return cachemulti.NewStore(rs.db, cachedStores, rs.keysByName, rs.traceWriter, rs.getTracingContext()), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -528,7 +541,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	if s == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
 	}
-	store := s.(types.KVStore)
+	store := types.KVStore(s)
 
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())

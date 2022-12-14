@@ -232,6 +232,8 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 	)
 
+	simapp.ModuleBasics.AddQueryCommands(cmd)
+
 	return cmd
 }
 

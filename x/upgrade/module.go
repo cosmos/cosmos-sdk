@@ -5,20 +5,21 @@ import (
 	"encoding/json"
 	"fmt"
 
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -26,9 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
-
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -85,11 +84,11 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -120,7 +119,20 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // InitGenesis is ignored, no sense in serializing future upgrades
-func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) []abci.ValidatorUpdate {
+	// set version map automatically if available
+	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
+		// chains can still use a custom init chainer for setting the version map
+		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
+		for name, version := range am.keeper.GetModuleVersionMap(ctx) {
+			if _, ok := versionMap[name]; !ok {
+				versionMap[name] = version
+			}
+		}
+
+		am.keeper.SetModuleVersionMap(ctx, versionMap)
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 
@@ -156,6 +168,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(PopulateVersionMap),
 	)
 }
 
@@ -172,9 +185,10 @@ type UpgradeInputs struct {
 type UpgradeOutputs struct {
 	depinject.Out
 
-	UpgradeKeeper keeper.Keeper
+	UpgradeKeeper *keeper.Keeper
 	Module        appmodule.AppModule
 	GovHandler    govv1beta1.HandlerRoute
+	BaseAppOption runtime.BaseAppOption
 }
 
 func ProvideModule(in UpgradeInputs) UpgradeOutputs {
@@ -199,8 +213,19 @@ func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 
 	// set the governance module account as the authority for conducting upgrades
 	k := keeper.NewKeeper(skipUpgradeHeights, in.Key, in.Cdc, homePath, nil, authority.String())
+	baseappOpt := func(app *baseapp.BaseApp) {
+		k.SetVersionSetter(app)
+	}
 	m := NewAppModule(k)
 	gh := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSoftwareUpgradeProposalHandler(k)}
 
-	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh}
+	return UpgradeOutputs{UpgradeKeeper: k, Module: m, GovHandler: gh, BaseAppOption: baseappOpt}
+}
+
+func PopulateVersionMap(upgradeKeeper *keeper.Keeper, modules map[string]appmodule.AppModule) {
+	if upgradeKeeper == nil {
+		return
+	}
+
+	upgradeKeeper.SetInitVersionMap(module.NewManagerFromMap(modules).GetVersionMap())
 }

@@ -148,7 +148,7 @@ var (
 							KvStoreKey: "acc",
 						},
 					},
-					// InitGenesis: genesisModuleOrder,
+					InitGenesis: genesisModuleOrder,
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
 					// ExportGenesis: genesisModuleOrder,

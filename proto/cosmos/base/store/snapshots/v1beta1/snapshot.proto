@@ -16,7 +16,7 @@ message Snapshot {
 
 // Metadata contains SDK-specific snapshot metadata.
 message Metadata {
-  repeated bytes chunk_hashes = 1;  // SHA-256 chunk hashes
+  repeated bytes chunk_hashes = 1; // SHA-256 chunk hashes
 }
 
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.

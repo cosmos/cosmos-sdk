@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func NewIntegrationTestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) *IntegrationTestSuite {
+func NewIntegrationTestSuite(cfg network.Config, keeper *keeper.Keeper, ctx sdk.Context) *IntegrationTestSuite {
 	return &IntegrationTestSuite{
 		cfg:           cfg,
 		upgradeKeeper: keeper,
@@ -24,7 +24,7 @@ func NewIntegrationTestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.C
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	upgradeKeeper keeper.Keeper
+	upgradeKeeper *keeper.Keeper
 	cfg           network.Config
 	network       *network.Network
 	ctx           sdk.Context

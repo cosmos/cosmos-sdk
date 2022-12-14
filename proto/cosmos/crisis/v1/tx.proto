@@ -72,9 +72,9 @@ message MsgAuthorizeCircuitBreakerResponse {}
 
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker request type.
 message MsgTripCircuitBreaker {
-  option (cosmos.msg.v1.signer) = "signer";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // signer is the account authorized to trip the circuit breaker.
+  // authority is the account authorized to trip the circuit breaker.
   string authority = 1;
 
   // msg_type_urls specifies a list of type URLs to immediately stop processing.

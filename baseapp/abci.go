@@ -307,7 +307,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 }
 
 // ProcessProposal fulfills the celestia-core version of the ABCI++ interface.
-// It allows for arbitrary processing to occur after recieving a proposal block
+// It allows for arbitrary processing to occur after receiving a proposal block
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 	return abci.ResponseProcessProposal{
 		Result: abci.ResponseProcessProposal_ACCEPT,

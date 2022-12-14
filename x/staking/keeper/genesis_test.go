@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

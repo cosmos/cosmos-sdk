@@ -2,9 +2,10 @@ package v043_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

@@ -2,9 +2,10 @@ package staking_test
 
 import (
 	"crypto/ecdsa"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

@@ -3,9 +3,10 @@ package testutil
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"strings"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"

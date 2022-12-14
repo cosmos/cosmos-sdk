@@ -3,10 +3,11 @@ package types_test
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"math/big"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/require"
 

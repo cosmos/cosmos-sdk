@@ -2,8 +2,9 @@ package teststaking
 
 import (
 	"crypto/ecdsa"
-	"github.com/ethereum/go-ethereum/crypto"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/stretchr/testify/require"
 

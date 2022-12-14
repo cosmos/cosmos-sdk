@@ -663,7 +663,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		commissionRates, minSelfDelegation,
 		orchAddr, evmAddr,
 	)
-
 	if err != nil {
 		return txBldr, msg, err
 	}

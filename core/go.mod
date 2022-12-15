@@ -3,7 +3,7 @@ module cosmossdk.io/core
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.5
+	cosmossdk.io/api v0.2.6
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1

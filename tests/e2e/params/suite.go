@@ -17,7 +17,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/testutil"
@@ -26,9 +25,7 @@ import (
 
 // mySubspace is a x/params subspace created for the purpose of this
 // test suite.
-const (
-	mySubspace = "foo"
-)
+const mySubspace = "foo"
 
 // myParams defines some params in the `mySubspace` subspace.
 type myParams struct{}
@@ -39,23 +36,23 @@ func (p *myParams) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	// Create a new AppConstructor for this test suite, where we manually
 	// add a subspace and `myParams` to the x/params store.
-	s.cfg.AppConstructor = func(val moduletestutil.Validator) servertypes.Application {
+	s.cfg.AppConstructor = func(val network.ValidatorI) servertypes.Application {
 		var (
 			appBuilder   *runtime.AppBuilder
 			paramsKeeper keeper.Keeper
@@ -98,12 +95,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestNewQuerySubspaceParamsCmd() {
+func (s *E2ETestSuite) TestNewQuerySubspaceParamsCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {

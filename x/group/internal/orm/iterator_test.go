@@ -3,6 +3,10 @@ package orm
 import (
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -10,8 +14,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestReadAll(t *testing.T) {
@@ -150,11 +152,11 @@ func TestFirst(t *testing.T) {
 	testCases := []struct {
 		name          string
 		iterator      Iterator
-		dest          codec.ProtoMarshaler
+		dest          proto.Message
 		expectErr     bool
 		expectedErr   string
 		expectedRowID RowID
-		expectedDest  codec.ProtoMarshaler
+		expectedDest  proto.Message
 	}{
 		{
 			name:        "nil iterator",
@@ -342,8 +344,8 @@ func TestPaginate(t *testing.T) {
 }
 
 // mockIter encodes + decodes value object.
-func mockIter(rowID RowID, val codec.ProtoMarshaler) Iterator {
-	b, err := val.Marshal()
+func mockIter(rowID RowID, val proto.Message) Iterator {
+	b, err := proto.Marshal(val)
 	if err != nil {
 		panic(err)
 	}
@@ -351,7 +353,7 @@ func mockIter(rowID RowID, val codec.ProtoMarshaler) Iterator {
 }
 
 func noopIter() Iterator {
-	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
+	return IteratorFunc(func(dest proto.Message) (RowID, error) {
 		return nil, nil
 	})
 }

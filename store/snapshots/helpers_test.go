@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -18,8 +19,7 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func checksums(slice [][]byte) [][]byte {
@@ -174,7 +174,7 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
-	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
+	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
 	require.NoError(t, err)
 	hung := newHungSnapshotter()
 	hung.SetSnapshotInterval(opts.Interval)
@@ -258,7 +258,7 @@ func (s *extSnapshotter) SupportedFormats() []uint32 {
 
 func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshottypes.ExtensionPayloadWriter) error {
 	for _, i := range s.state {
-		if err := payloadWriter(sdk.Uint64ToBigEndian(uint64(i))); err != nil {
+		if err := payloadWriter(types.Uint64ToBigEndian(uint64(i))); err != nil {
 			return err
 		}
 	}
@@ -273,8 +273,21 @@ func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadR
 		} else if err != nil {
 			return err
 		}
-		s.state = append(s.state, sdk.BigEndianToUint64(payload))
+		s.state = append(s.state, types.BigEndianToUint64(payload))
 	}
 	// finalize restoration
 	return nil
+}
+
+// GetTempDir returns a writable temporary director for the test to use.
+func GetTempDir(t testing.TB) string {
+	t.Helper()
+	// os.MkDir() is used instead of testing.T.TempDir()
+	// see https://github.com/cosmos/cosmos-sdk/pull/8475 and
+	// https://github.com/cosmos/cosmos-sdk/pull/10341 for
+	// this change's rationale.
+	tempdir, err := os.MkdirTemp("", "")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+	return tempdir
 }

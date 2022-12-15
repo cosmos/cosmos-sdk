@@ -15,27 +15,41 @@ func TestNameRegex(t *testing.T) {
 	require.NotRegexp(t, nameRegex, "abc-xyz")
 }
 
-func TestAddCollection(t *testing.T) {
-	require.NotPanics(t, func() {
-		schema := NewSchema(storetypes.NewKVStoreKey("test"))
-		NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value)
-		NewMap(schema, NewPrefix(2), "def", Uint64Key, Uint64Value)
-	})
+func TestGoodSchema(t *testing.T) {
+	schemaBuilder := NewSchemaBuilder(storetypes.NewKVStoreKey("test"))
+	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+	NewMap(schemaBuilder, NewPrefix(2), "def", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.NoError(t, err)
+}
 
-	require.PanicsWithError(t, "name must match regex [A-Za-z][A-Za-z0-9_]*, got 123", func() {
-		schema := NewSchema(storetypes.NewKVStoreKey("test"))
-		NewMap(schema, NewPrefix(1), "123", Uint64Key, Uint64Value)
-	})
+func TestBadName(t *testing.T) {
+	schemaBuilder := NewSchemaBuilder(storetypes.NewKVStoreKey("test"))
+	NewMap(schemaBuilder, NewPrefix(1), "123", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.ErrorContains(t, err, "name must match regex")
+}
 
-	require.PanicsWithError(t, "prefix [1] already taken within schema", func() {
-		schema := NewSchema(storetypes.NewKVStoreKey("test"))
-		NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value)
-		NewMap(schema, NewPrefix(1), "def", Uint64Key, Uint64Value)
-	})
+func TestDuplicatePrefix(t *testing.T) {
+	schemaBuilder := NewSchemaBuilder(storetypes.NewKVStoreKey("test"))
+	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+	NewMap(schemaBuilder, NewPrefix(1), "def", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.ErrorContains(t, err, "prefix [1] already taken")
+}
 
-	require.PanicsWithError(t, "name abc already taken within schema", func() {
-		schema := NewSchema(storetypes.NewKVStoreKey("test"))
-		NewMap(schema, NewPrefix(1), "abc", Uint64Key, Uint64Value)
-		NewMap(schema, NewPrefix(2), "abc", Uint64Key, Uint64Value)
-	})
+func TestDuplicateName(t *testing.T) {
+	schemaBuilder := NewSchemaBuilder(storetypes.NewKVStoreKey("test"))
+	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+	NewMap(schemaBuilder, NewPrefix(2), "abc", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.ErrorContains(t, err, "name abc already taken")
+}
+
+func TestOverlappingPrefixes(t *testing.T) {
+	schemaBuilder := NewSchemaBuilder(storetypes.NewKVStoreKey("test"))
+	NewMap(schemaBuilder, NewPrefix("ab"), "ab", Uint64Key, Uint64Value)
+	NewMap(schemaBuilder, NewPrefix("abc"), "abc", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.ErrorContains(t, err, "overlapping prefixes")
 }

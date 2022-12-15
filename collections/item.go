@@ -12,7 +12,7 @@ type Item[V any] Map[noKey, V]
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
 // else this method will panic.
 func NewItem[V any](
-	schema Schema,
+	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
 	valueCodec ValueCodec[V],

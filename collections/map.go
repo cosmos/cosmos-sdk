@@ -2,9 +2,8 @@ package collections
 
 import (
 	"context"
+	"cosmossdk.io/core/store"
 	"fmt"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Map represents the basic collections object.
@@ -14,7 +13,7 @@ type Map[K, V any] struct {
 	kc KeyCodec[K]
 	vc ValueCodec[V]
 
-	sk     storetypes.StoreKey
+	sk     func(context.Context) store.KVStore
 	prefix []byte
 	name   string
 }
@@ -41,7 +40,7 @@ func newMap[K, V any](
 	return Map[K, V]{
 		kc:     keyCodec,
 		vc:     valueCodec,
-		sk:     schema.storeKey,
+		sk:     schema.storeAccessor,
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
@@ -69,11 +68,8 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 		return fmt.Errorf("%w: value encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 
-	store, err := m.getStore(ctx)
-	if err != nil {
-		return err
-	}
-	store.Set(bytesKey, valueBytes)
+	kvStore := m.sk(ctx)
+	kvStore.Set(bytesKey, valueBytes)
 	return nil
 }
 
@@ -87,12 +83,8 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 		return v, err
 	}
 
-	store, err := m.getStore(ctx)
-	if err != nil {
-		var v V
-		return v, err
-	}
-	valueBytes := store.Get(bytesKey)
+	kvStore := m.sk(ctx)
+	valueBytes := kvStore.Get(bytesKey)
 	if valueBytes == nil {
 		var v V
 		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
@@ -112,11 +104,8 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	store, err := m.getStore(ctx)
-	if err != nil {
-		return false, err
-	}
-	return store.Has(bytesKey), nil
+	kvStore := m.sk(ctx)
+	return kvStore.Has(bytesKey), nil
 }
 
 // Remove removes the key from the storage.
@@ -127,11 +116,8 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 	if err != nil {
 		return err
 	}
-	store, err := m.getStore(ctx)
-	if err != nil {
-		return err
-	}
-	store.Delete(bytesKey)
+	kvStore := m.sk(ctx)
+	kvStore.Delete(bytesKey)
 	return nil
 }
 
@@ -139,14 +125,6 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 // A nil ranger equals to iterate over all the keys in ascending order.
 func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V], error) {
 	return iteratorFromRanger(ctx, m, ranger)
-}
-
-func (m Map[K, V]) getStore(ctx context.Context) (storetypes.KVStore, error) {
-	provider, ok := ctx.(StorageProvider)
-	if !ok {
-		return nil, fmt.Errorf("context is not a StorageProvider: underlying type %T", ctx)
-	}
-	return provider.KVStore(m.sk), nil
 }
 
 func encodeKeyWithPrefix[K any](prefix []byte, kc KeyCodec[K], key K) ([]byte, error) {

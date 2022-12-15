@@ -13,13 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-<<<<<<< HEAD
-func NewIntegrationTestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) *IntegrationTestSuite {
-	return &IntegrationTestSuite{
-=======
-func NewE2ETestSuite(cfg network.Config, keeper *keeper.Keeper, ctx sdk.Context) *E2ETestSuite {
+func NewE2ETestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) *E2ETestSuite {
 	return &E2ETestSuite{
->>>>>>> ce167a207 (test: rename e2e tests (#13913))
 		cfg:           cfg,
 		upgradeKeeper: keeper,
 		ctx:           ctx,

@@ -2,8 +2,9 @@ package slashing_test
 
 import (
 	"errors"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

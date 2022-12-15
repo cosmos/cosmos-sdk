@@ -286,7 +286,7 @@ func Sign(txf Factory, name string, txBuilder client.TxBuilder, overwriteSig boo
 	if overwriteSig {
 		sigs = []signing.SignatureV2{sig}
 	} else {
-		sigs = append(prevSignatures, sig)
+		sigs = append(prevSignatures, sig) //nolint:gocritic
 	}
 	if err := txBuilder.SetSignatures(sigs...); err != nil {
 		return err

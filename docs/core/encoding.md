@@ -274,6 +274,19 @@ type UnpackInterfacesMessage interface {
 }
 ```
 
+### Custom Stringer
+
+Using `option (gogoproto.goproto_stringer) = false;` in a proto message definition leads to unexpected behaviour, like returning wrong output or having missing fields in the output.
+For that reason a proto Message's `String()` must not be customized, and the `goproto_stringer` option must be avoided.
+
+A correct YAML output can be obtained through ProtoJSON, using the `JSONToYAML` function:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/codec/yaml.go#L8-L20
+
+For example:
+
++++ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/types/account.go#L139-L151
+
 ## Next {hide}
 
 Learn about [gRPC, REST and other endpoints](./grpc_rest.md) {hide}

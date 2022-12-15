@@ -30,9 +30,9 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 // getBlockSize returns a block size as determined from the transition matrix.
 // It targets making average block size the provided parameter. The three
 // states it moves between are:
-//  - "over stuffed" blocks with average size of 2 * avgblocksize,
-//  - normal sized blocks, hitting avgBlocksize on average,
-//  - and empty blocks, with no txs / only txs scheduled from the past.
+//   - "over stuffed" blocks with average size of 2 * avgblocksize,
+//   - normal sized blocks, hitting avgBlocksize on average,
+//   - and empty blocks, with no txs / only txs scheduled from the past.
 func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.

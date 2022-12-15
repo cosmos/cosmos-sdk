@@ -405,7 +405,9 @@ func checkEqualVotes(t *testing.T, vote1, vote2 v1.Vote) {
 // --- Expected
 // +++ Actual
 // @@ -68,3 +68,7 @@
-// 	},
+//
+//	},
+//
 // - VotingStartTime: (*time.Time)(<nil>),
 // + VotingStartTime: (*time.Time)({
 // +  wall: (uint64) 0,

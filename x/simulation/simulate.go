@@ -336,7 +336,7 @@ func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	numOpsRan = len(queuedOp)
 	for i := 0; i < numOpsRan; i++ {
 		opMsg, futureOps, err := queuedOp[i](r, app, ctx, accounts, chainID)
-		if futureOps != nil && len(futureOps) > 0 {
+		if len(futureOps) > 0 {
 			allFutureOps = append(allFutureOps, futureOps...)
 		}
 
@@ -380,7 +380,7 @@ func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
 			tb.FailNow()
 		}
 
-		if futureOps != nil && len(futureOps) > 0 {
+		if len(futureOps) > 0 {
 			allFutureOps = append(allFutureOps, futureOps...)
 		}
 

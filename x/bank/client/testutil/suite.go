@@ -2,9 +2,10 @@ package testutil
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
+	"cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -415,7 +416,7 @@ func (s *IntegrationTestSuite) TestNewSendTxCmdDryRun() {
 	s.Require().NoError(err)
 
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stderr = oldSterr
 
 	s.Require().Regexp("gas estimate: [0-9]+", string(out))
@@ -658,7 +659,7 @@ func (s *IntegrationTestSuite) TestNewMultiSendTxCmd() {
 	}
 }
 
-func NewCoin(denom string, amount sdk.Int) *sdk.Coin {
+func NewCoin(denom string, amount math.Int) *sdk.Coin {
 	coin := sdk.NewCoin(denom, amount)
 	return &coin
 }

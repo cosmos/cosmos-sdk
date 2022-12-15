@@ -49,7 +49,7 @@ func (dp DepositParams) Equal(dp2 DepositParams) bool {
 	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
-func validateDepositParams(i interface{}) error {
+func validateDepositParams(i interface{}) error { //nolint:unused
 	v, ok := i.(DepositParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -90,7 +90,7 @@ func (tp TallyParams) String() string {
 	return string(out)
 }
 
-func validateTallyParams(i interface{}) error {
+func validateTallyParams(i interface{}) error { //nolint:unused
 	v, ok := i.(TallyParams)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -141,6 +141,7 @@ func (vp VotingParams) String() string {
 	return string(out)
 }
 
+//nolint:unused
 func validateVotingParams(i interface{}) error {
 	v, ok := i.(VotingParams)
 	if !ok {

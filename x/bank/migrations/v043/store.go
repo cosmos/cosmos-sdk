@@ -1,6 +1,7 @@
 package v043
 
 import (
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -62,7 +63,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v042bank.AddressFromBalancesStore(oldStoreIter.Key())
 		denom := oldStoreIter.Key()[v042auth.AddrLen:]
-		newStoreKey := append(CreateAccountBalancesPrefix(addr), denom...)
+		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())
@@ -118,7 +119,7 @@ func pruneZeroSupply(store sdk.KVStore) error {
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var amount sdk.Int
+		var amount math.Int
 		if err := amount.Unmarshal(iterator.Value()); err != nil {
 			return err
 		}

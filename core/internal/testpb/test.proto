@@ -31,5 +31,6 @@ message TestUnregisteredModule {
 message TestNoModuleOptionModule {}
 
 message TestNoGoImportModule {
-  option (cosmos.app.v1alpha1.module) = {};
+  option (cosmos.app.v1alpha1.module) = {
+  };
 }

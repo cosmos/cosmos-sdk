@@ -10,9 +10,10 @@ import (
 // testing purposes independent of any storage layer.
 //
 // Example:
-//  backend := ormtest.NewMemoryBackend()
-//  ctx := ormtable.WrapContextDefault()
-//  ...
+//
+//	backend := ormtest.NewMemoryBackend()
+//	ctx := ormtable.WrapContextDefault()
+//	...
 func NewMemoryBackend() ormtable.Backend {
 	return testkv.NewSplitMemBackend()
 }

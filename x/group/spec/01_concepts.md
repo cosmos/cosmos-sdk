@@ -54,6 +54,16 @@ A threshold decision policy defines a threshold of yes votes (based on a tally
 of voter weights) that must be achieved in order for a proposal to pass. For
 this decision policy, abstain and veto are simply treated as no's.
 
+This decision policy also has a VotingPeriod window and a MinExecutionPeriod
+window. The former defines the duration after proposal submission where members
+are allowed to vote, after which tallying is performed. The latter specifies
+the minimum duration after proposal submission where the proposal can be
+executed. If set to 0, then the proposal is allowed to be executed immediately
+on submission (using the `TRY_EXEC` option). Obviously, MinExecutionPeriod
+cannot be greater than VotingPeriod+MaxExecutionPeriod (where MaxExecution is
+the app-defined duration that specifies the window after voting ended where a
+proposal can be executed).
+
 ### Percentage decision policy
 
 A percentage decision policy is similar to a threshold decision policy, except
@@ -61,6 +71,9 @@ that the threshold is not defined as a constant weight, but as a percentage.
 It's more suited for groups where the group members' weights can be updated, as
 the percentage threshold stays the same, and doesn't depend on how those member
 weights get updated.
+
+Same as the Threshold decision policy, the percentage decision policy has the
+two VotingPeriod and MinExecutionPeriod parameters.
 
 ## Proposal
 

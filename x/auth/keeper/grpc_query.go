@@ -25,13 +25,13 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 	}
 
 	if req.Id < 0 {
-		return nil, status.Error(codes.InvalidArgument, "Invalid account id")
+		return nil, status.Error(codes.InvalidArgument, "invalid account number")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 	address := ak.GetAccountAddressByID(ctx, uint64(req.GetId()))
 	if len(address) == 0 {
-		return nil, status.Errorf(codes.NotFound, "account address not found with id %d", req.Id)
+		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}
 
 	return &types.QueryAccountAddressByIDResponse{AccountAddress: address}, nil
@@ -133,6 +133,31 @@ func (ak AccountKeeper) ModuleAccounts(c context.Context, req *types.QueryModule
 	}
 
 	return &types.QueryModuleAccountsResponse{Accounts: modAccounts}, nil
+}
+
+// ModuleAccountByName returns module account by module name
+func (ak AccountKeeper) ModuleAccountByName(c context.Context, req *types.QueryModuleAccountByNameRequest) (*types.QueryModuleAccountByNameResponse, error) {
+	if req == nil {
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+	}
+
+	if len(req.Name) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "module name is empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	moduleName := req.Name
+
+	account := ak.GetModuleAccount(ctx, moduleName)
+	if account == nil {
+		return nil, status.Errorf(codes.NotFound, "account %s not found", moduleName)
+	}
+	any, err := codectypes.NewAnyWithValue(account)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	return &types.QueryModuleAccountByNameResponse{Account: any}, nil
 }
 
 // Bech32Prefix returns the keeper internally stored bech32 prefix.

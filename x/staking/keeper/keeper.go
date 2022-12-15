@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -74,7 +75,7 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 }
 
 // Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
+func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
 
@@ -89,7 +90,7 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 }
 
 // Set the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
+func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)

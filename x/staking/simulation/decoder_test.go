@@ -2,9 +2,10 @@ package simulation_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/require"
 

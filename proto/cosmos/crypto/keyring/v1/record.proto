@@ -31,7 +31,7 @@ message Record {
   // Item is a keyring item stored in a keyring backend.
   // Local item
   message Local {
-    google.protobuf.Any priv_key      = 1;
+    google.protobuf.Any priv_key = 1;
   }
 
   // Ledger item

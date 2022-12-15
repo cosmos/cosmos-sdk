@@ -1,10 +1,11 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"math/rand"
 	"sort"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"

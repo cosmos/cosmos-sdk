@@ -4,8 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/celestiaorg/smt"
 	ics23 "github.com/confio/ics23/go"
-	"github.com/lazyledger/smt"
 )
 
 // PreimageMap represents an interface for accessing hashed tree paths and retrieving their

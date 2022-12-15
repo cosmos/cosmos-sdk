@@ -187,6 +187,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	}{
 		{
 			"invalid proposal (file)",
+			//nolint:staticcheck
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -197,6 +198,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		},
 		{
 			"invalid proposal",
+			//nolint:staticcheck
 			[]string{
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText),
@@ -210,7 +212,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"valid transaction (file)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()), //nolint:staticcheck
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
@@ -220,6 +222,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 		},
 		{
 			"valid transaction",
+			//nolint:staticcheck
 			[]string{
 				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),

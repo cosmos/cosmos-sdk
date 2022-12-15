@@ -293,10 +293,7 @@ func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
 
 // GetSigners returns the expected signers for a MsgCreateGroupPolicy.
 func (m MsgCreateGroupPolicy) GetSigners() []sdk.AccAddress {
-	admin, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
-		panic(err)
-	}
+	admin := sdk.MustAccAddressFromBech32(m.Admin)
 	return []sdk.AccAddress{admin}
 }
 

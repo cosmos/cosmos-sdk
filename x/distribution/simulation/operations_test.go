@@ -1,9 +1,10 @@
 package simulation_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"math/rand"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"

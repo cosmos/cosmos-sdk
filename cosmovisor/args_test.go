@@ -77,8 +77,9 @@ func (c *cosmovisorEnv) Set(envVar, envVal string) {
 
 // clearEnv clears environment variables and what they were.
 // Designed to be used like this:
-//    initialEnv := clearEnv()
-//    defer setEnv(nil, initialEnv)
+//
+//	initialEnv := clearEnv()
+//	defer setEnv(nil, initialEnv)
 func (s *argsTestSuite) clearEnv() *cosmovisorEnv {
 	s.T().Logf("Clearing environment variables.")
 	rv := cosmovisorEnv{}

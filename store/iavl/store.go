@@ -37,22 +37,23 @@ var (
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
-	tree Tree
+	tree   Tree
+	logger log.Logger
 }
 
 // LoadStore returns an IAVL Store as a CommitKVStore. Internally, it will load the
 // store's version (id) from the provided DB. An error is returned if the version
 // fails to load, or if called with a positive version on an empty tree.
-func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, cacheSize int) (types.CommitKVStore, error) {
-	return LoadStoreWithInitialVersion(db, logger, key, id, lazyLoading, 0, cacheSize)
+func LoadStore(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, cacheSize int, disableFastNode bool) (types.CommitKVStore, error) {
+	return LoadStoreWithInitialVersion(db, logger, key, id, lazyLoading, 0, cacheSize, disableFastNode)
 }
 
 // LoadStoreWithInitialVersion returns an IAVL Store as a CommitKVStore setting its initialVersion
 // to the one given. Internally, it will load the store's version (id) from the
 // provided DB. An error is returned if the version fails to load, or if called with a positive
 // version on an empty tree.
-func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int) (types.CommitKVStore, error) {
-	tree, err := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion})
+func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKey, id types.CommitID, lazyLoading bool, initialVersion uint64, cacheSize int, disableFastNode bool) (types.CommitKVStore, error) {
+	tree, err := iavl.NewMutableTreeWithOpts(db, cacheSize, &iavl.Options{InitialVersion: initialVersion}, disableFastNode)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +88,8 @@ func LoadStoreWithInitialVersion(db dbm.DB, logger log.Logger, key types.StoreKe
 	}
 
 	return &Store{
-		tree: tree,
+		tree:   tree,
+		logger: logger,
 	}, nil
 }
 
@@ -198,7 +200,10 @@ func (st *Store) CacheWrapWithListeners(storeKey types.StoreKey, listeners []typ
 func (st *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
-	st.tree.Set(key, value)
+	_, err := st.tree.Set(key, value)
+	if err != nil && st.logger != nil {
+		st.logger.Error("iavl set error", "error", err.Error())
+	}
 }
 
 // Implements types.KVStore.
@@ -232,6 +237,12 @@ func (st *Store) Delete(key []byte) {
 // happen in a single batch with a single commit.
 func (st *Store) DeleteVersions(versions ...int64) error {
 	return st.tree.DeleteVersions(versions...)
+}
+
+// LoadVersionForOverwriting attempts to load a tree at a previously committed
+// version, or the latest version below it. Any versions greater than targetVersion will be deleted.
+func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
 // Implements types.KVStore.
@@ -417,7 +428,7 @@ var _ types.Iterator = (*iavlIterator)(nil)
 // newIAVLIterator will create a new iavlIterator.
 // CONTRACT: Caller must release the iavlIterator, as each one creates a new
 // goroutine.
-func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator {
+func newIAVLIterator(tree *iavl.ImmutableTree, start, end []byte, ascending bool) *iavlIterator { //nolint:unused
 	iterator, err := tree.Iterator(start, end, ascending)
 	if err != nil {
 		panic(err)

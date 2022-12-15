@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcec"
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -30,9 +31,9 @@ import (
 // Converter is a utility that can be used to convert
 // back and forth from rosetta to sdk and tendermint types
 // IMPORTANT NOTES:
-// - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
-//   IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
-//   WITH TENDERMINT RPC AND COSMOS GRPC
+//   - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
+//     IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
+//     WITH TENDERMINT RPC AND COSMOS GRPC
 //
 // - IT SHOULD RETURN cosmos rosetta gateway error types!
 type Converter interface {
@@ -402,7 +403,7 @@ func sdkEventToBalanceOperations(status string, event abci.Event) (operations []
 // Amounts converts []sdk.Coin to rosetta amounts
 func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*rosettatypes.Amount {
 	amounts := make([]*rosettatypes.Amount, len(availableCoins))
-	ownedCoinsMap := make(map[string]sdk.Int, len(availableCoins))
+	ownedCoinsMap := make(map[string]math.Int, len(availableCoins))
 
 	for _, ownedCoin := range ownedCoins {
 		ownedCoinsMap[ownedCoin.Denom] = ownedCoin.Amount
@@ -557,7 +558,7 @@ func (c converter) Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer {
 
 	for i, peer := range peers {
 		converted[i] = &rosettatypes.Peer{
-			PeerID: string(peer.NodeInfo.Moniker),
+			PeerID: peer.NodeInfo.Moniker,
 			Metadata: map[string]interface{}{
 				"addr": peer.NodeInfo.ListenAddr,
 			},

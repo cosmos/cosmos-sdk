@@ -208,6 +208,12 @@ message ResponseCheckTx {
   int64          gas_used   = 6 [json_name = "gas_used"];
   repeated Event events     = 7 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   string         codespace  = 8;
+  string         sender     = 9;
+  int64          priority   = 10;
+
+  // mempool_error is set by Tendermint.
+  // ABCI applictions creating a ResponseCheckTX should not set mempool_error.
+  string mempool_error = 11;
 }
 
 message ResponseDeliverTx {
@@ -217,8 +223,10 @@ message ResponseDeliverTx {
   string         info       = 4; // nondeterministic
   int64          gas_wanted = 5 [json_name = "gas_wanted"];
   int64          gas_used   = 6 [json_name = "gas_used"];
-  repeated Event events     = 7 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
-  string         codespace  = 8;
+  repeated Event events     = 7
+      [(gogoproto.nullable) = false,
+       (gogoproto.jsontag)  = "events,omitempty"]; // nondeterministic
+  string codespace = 8;
 }
 
 message ResponseEndBlock {

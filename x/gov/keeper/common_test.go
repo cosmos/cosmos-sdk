@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
 
 	"github.com/stretchr/testify/require"
 

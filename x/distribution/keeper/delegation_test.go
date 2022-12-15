@@ -712,11 +712,13 @@ func Test100PercentCommissionReward(t *testing.T) {
 		},
 	}
 	require.True(t, rewards.IsEqual(zeroRewards))
+
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]
-	hasValue := false
+
+	var hasValue bool
 	for _, attr := range lastEvent.Attributes {
-		if string(attr.Key) == "amount" && string(attr.Value) == "0" {
+		if string(attr.Key) == "amount" && string(attr.Value) == "0stake" {
 			hasValue = true
 		}
 	}

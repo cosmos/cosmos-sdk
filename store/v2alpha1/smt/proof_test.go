@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/celestiaorg/smt"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	smtstore "github.com/cosmos/cosmos-sdk/store/v2alpha1/smt"
-	"github.com/lazyledger/smt"
 )
 
 func TestProofOpInterface(t *testing.T) {

@@ -140,7 +140,7 @@ func (store *Store) getView(version int64) (ret *viewStore, err error) {
 		substoreCache:       map[string]*viewSubstore{},
 		schema:              pr.StoreSchema,
 	}
-	return
+	return ret, nil
 }
 
 func (vs *viewStore) GetKVStore(skey types.StoreKey) types.KVStore {

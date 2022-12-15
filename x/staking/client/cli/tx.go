@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/math"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -126,7 +127,7 @@ func NewEditValidatorCmd() *cobra.Command {
 				newRate = &rate
 			}
 
-			var newMinSelfDelegation *sdk.Int
+			var newMinSelfDelegation *math.Int
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
 			if minSelfDelegationString != "" {
@@ -662,7 +663,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		commissionRates, minSelfDelegation,
 		orchAddr, evmAddr,
 	)
-
 	if err != nil {
 		return txBldr, msg, err
 	}

@@ -17,12 +17,12 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
-	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
-	OpWeightMsgDelegate                  = "op_weight_msg_delegate"
-	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"
-	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"
-	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
+	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"            //nolint:gosec
+	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"              //nolint:gosec
+	OpWeightMsgDelegate                  = "op_weight_msg_delegate"                    //nolint:gosec
+	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"                  //nolint:gosec
+	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"            //nolint:gosec
+	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation" //nolint:gosec
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -418,8 +418,22 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
 		}
 
-		// get random unbonding delegation entry at block height
-		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
+		// This is a temporary fix to make staking simulation pass. We should fetch
+		// the first unbondingDelegationEntry that matches the creationHeight, because
+		// currently the staking msgServer chooses the first unbondingDelegationEntry
+		// with the matching creationHeight.
+		//
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/12932
+		creationHeight := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))].CreationHeight
+
+		var unbondingDelegationEntry types.UnbondingDelegationEntry
+
+		for _, entry := range unbondingDelegation.Entries {
+			if entry.CreationHeight == creationHeight {
+				unbondingDelegationEntry = entry
+				break
+			}
+		}
 
 		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil

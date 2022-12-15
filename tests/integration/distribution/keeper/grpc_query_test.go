@@ -40,6 +40,10 @@ type KeeperTestSuite struct {
 	msgServer         types.MsgServer
 }
 
+func TestDistributionTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (suite *KeeperTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(testutil.AppConfig,
 		&suite.interfaceRegistry,
@@ -671,8 +675,4 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 			}
 		})
 	}
-}
-
-func TestDistributionTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

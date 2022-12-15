@@ -1,8 +1,12 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
@@ -202,6 +206,42 @@ func (s *KeeperTestSuite) TestCommunityPoolSpend() {
 
 				b := s.bankKeeper.GetAllBalances(s.ctx, r)
 				s.Require().False(b.IsZero())
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
+	tstaking := stakingtestutil.NewHelper(s.T(), s.ctx, s.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(s.valAddrs[1], valConsPk0, sdk.NewInt(100), true)
+
+	testCases := []struct {
+		name      string
+		input     *types.MsgDepositValidatorRewardsPool
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "happy path",
+			input: &types.MsgDepositValidatorRewardsPool{
+				Authority:        s.addrs[0].String(),
+				ValidatorAddress: s.valAddrs[1].String(),
+				Amount:           sdk.NewCoins(sdk.NewCoin(s.stakingKeeper.BondDenom(s.ctx), sdk.NewInt(100))),
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.DepositValidatorRewardsPool(s.ctx, tc.input)
+
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
 			}
 		})
 	}

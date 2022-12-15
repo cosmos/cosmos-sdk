@@ -131,14 +131,6 @@ func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V
 	return iteratorFromRanger(ctx, m, ranger)
 }
 
-func (m Map[K, V]) getStore(ctx context.Context) (storetypes.KVStore, error) {
-	provider, ok := ctx.(StorageProvider)
-	if !ok {
-		return nil, fmt.Errorf("context is not a StorageProvider: underlying type %T", ctx)
-	}
-	return provider.KVStore(m.sk), nil
-}
-
 func (m Map[K, V]) defaultGenesis(writer io.Writer) error {
 	_, err := writer.Write([]byte(`[]`))
 	return err

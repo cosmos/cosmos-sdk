@@ -8,7 +8,8 @@ import (
 
 func TestMap(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("hi"), Uint64Key, Uint64Value)
+	schema := NewSchema(sk)
+	m := NewMap(schema, NewPrefix("hi"), "m", Uint64Key, Uint64Value)
 
 	// test not has
 	has, err := m.Has(ctx, 1)

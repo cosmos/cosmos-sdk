@@ -9,6 +9,9 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// SchemaBuilder is used for building schemas. The Build method should always
+// be called after all collections have been initialized. Initializing new
+// collections with the builder after initialization will result in panics.
 type SchemaBuilder struct {
 	schema *Schema
 	err    *multierror.Error
@@ -28,8 +31,10 @@ func NewSchemaBuilder(storeKey storetypes.StoreKey) *SchemaBuilder {
 }
 
 // Build should be called after all collections that are part of the schema
-// have been initialized in order to get a reference to the Schema and to
-// check for any initialization errors.
+// have been initialized in order to get a reference to the Schema. It is
+// important to check the returned error for any initialization errors.
+// The SchemaBuilder CANNOT be used after Build is called - doing so will
+// result in panics.
 func (s *SchemaBuilder) Build() (Schema, error) {
 	if s.err != nil {
 		return Schema{}, s.err
@@ -51,7 +56,10 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 		}
 	}
 
-	return *s.schema, nil
+	schema := *s.schema
+	s.schema = nil // this makes the builder unusable
+
+	return schema, nil
 }
 
 // Schema specifies a group of collections stored within the storage specified

@@ -53,3 +53,14 @@ func TestOverlappingPrefixes(t *testing.T) {
 	_, err := schemaBuilder.Build()
 	require.ErrorContains(t, err, "overlapping prefixes")
 }
+
+func TestSchemaBuilderCantBeUsedAfterBuild(t *testing.T) {
+	schemaBuilder := NewSchemaBuilder(storetypes.NewKVStoreKey("test"))
+	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.NoError(t, err)
+	// can't use schema builder safely after calling build
+	require.Panics(t, func() {
+		NewMap(schemaBuilder, NewPrefix(2), "def", Uint64Key, Uint64Value)
+	})
+}

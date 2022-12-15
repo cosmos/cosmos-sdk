@@ -230,6 +230,16 @@ func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
 				Amount:           sdk.NewCoins(sdk.NewCoin(s.stakingKeeper.BondDenom(s.ctx), sdk.NewInt(100))),
 			},
 		},
+		{
+			name: "invalid validator",
+			input: &types.MsgDepositValidatorRewardsPool{
+				Authority:        s.addrs[0].String(),
+				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
+				Amount:           sdk.NewCoins(sdk.NewCoin(s.stakingKeeper.BondDenom(s.ctx), sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
 	}
 
 	for _, tc := range testCases {

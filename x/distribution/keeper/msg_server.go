@@ -173,6 +173,9 @@ func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types
 	}
 
 	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAddr.String())
+	}
 
 	// Allocate tokens from the distribution module to the validator, which are
 	// then distributed to the validator's delegators.

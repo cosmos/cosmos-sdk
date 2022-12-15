@@ -103,7 +103,6 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the total set of bank parameters.
 //
 // Note: params.SendEnabled is deprecated but it should be here regardless.
-//
 
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	// Normally SendEnabled is deprecated but we still support it for backwards

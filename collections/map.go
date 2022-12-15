@@ -11,8 +11,11 @@ import (
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
 // else this method will panic.
 func NewMap[K, V any](
-	schema Schema, prefix Prefix, name string,
-	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
+	schema Schema,
+	prefix Prefix,
+	name string,
+	keyCodec KeyCodec[K],
+	valueCodec ValueCodec[V],
 ) Map[K, V] {
 	m := newMap(schema, prefix, name, keyCodec, valueCodec)
 	schema.addCollection(m)

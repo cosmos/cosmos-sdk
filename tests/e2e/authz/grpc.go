@@ -13,7 +13,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
+func (s *E2ETestSuite) TestQueryGrantGRPC() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
@@ -81,7 +81,7 @@ func (s *IntegrationTestSuite) TestQueryGrantGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
+func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
@@ -166,7 +166,7 @@ func (s *IntegrationTestSuite) TestQueryGrantsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
+func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[1]
 	require := s.Require()
@@ -218,7 +218,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrantsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGranteeGrantsGRPC() {
+func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[1]
 	require := s.Require()

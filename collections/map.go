@@ -2,8 +2,9 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/core/store"
 	"fmt"
+
+	"cosmossdk.io/core/store"
 )
 
 // Map represents the basic collections object.
@@ -13,7 +14,8 @@ type Map[K, V any] struct {
 	kc KeyCodec[K]
 	vc ValueCodec[V]
 
-	sk     func(context.Context) store.KVStore
+	// store accessor
+	sa     func(context.Context) store.KVStore
 	prefix []byte
 	name   string
 }
@@ -40,7 +42,7 @@ func newMap[K, V any](
 	return Map[K, V]{
 		kc:     keyCodec,
 		vc:     valueCodec,
-		sk:     schema.storeAccessor,
+		sa:     schema.storeAccessor,
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
@@ -68,7 +70,7 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 		return fmt.Errorf("%w: value encode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
 
-	kvStore := m.sk(ctx)
+	kvStore := m.sa(ctx)
 	kvStore.Set(bytesKey, valueBytes)
 	return nil
 }
@@ -83,7 +85,7 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 		return v, err
 	}
 
-	kvStore := m.sk(ctx)
+	kvStore := m.sa(ctx)
 	valueBytes := kvStore.Get(bytesKey)
 	if valueBytes == nil {
 		var v V
@@ -104,7 +106,7 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	kvStore := m.sk(ctx)
+	kvStore := m.sa(ctx)
 	return kvStore.Has(bytesKey), nil
 }
 
@@ -116,7 +118,7 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 	if err != nil {
 		return err
 	}
-	kvStore := m.sk(ctx)
+	kvStore := m.sa(ctx)
 	kvStore.Delete(bytesKey)
 	return nil
 }

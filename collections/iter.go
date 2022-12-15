@@ -2,9 +2,10 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/core/store"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/core/store"
 )
 
 // ErrInvalidIterator is returned when an Iterate call resulted in an invalid iterator.
@@ -148,7 +149,7 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	}
 
 	// get store
-	kv := m.sk(ctx)
+	kv := m.sa(ctx)
 
 	// create iter
 	var storeIter store.Iterator

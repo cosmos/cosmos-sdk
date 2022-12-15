@@ -172,7 +172,7 @@ func init() {
 	)
 }
 
-type Inputs struct {
+type UpgradeInputs struct {
 	depinject.In
 
 	Config *modulev1.Module
@@ -182,7 +182,7 @@ type Inputs struct {
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
-type Outputs struct {
+type UpgradeOutputs struct {
 	depinject.Out
 
 	UpgradeKeeper *keeper.Keeper
@@ -191,7 +191,7 @@ type Outputs struct {
 	BaseAppOption runtime.BaseAppOption
 }
 
-func ProvideModule(in Inputs) Outputs {
+func ProvideModule(in UpgradeInputs) UpgradeOutputs {
 	var (
 		homePath           string
 		skipUpgradeHeights = make(map[int64]bool)

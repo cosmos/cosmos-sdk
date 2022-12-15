@@ -171,7 +171,8 @@ func init() {
 	)
 }
 
-type Inputs struct {
+//nolint:revive
+type AuthzInputs struct {
 	depinject.In
 
 	Key              *store.KVStoreKey
@@ -182,17 +183,18 @@ type Inputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
-type Outputs struct {
+//nolint:revive
+type AuthzOutputs struct {
 	depinject.Out
 
 	AuthzKeeper keeper.Keeper
 	Module      appmodule.AppModule
 }
 
-func ProvideModule(in Inputs) Outputs {
+func ProvideModule(in AuthzInputs) AuthzOutputs {
 	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
-	return Outputs{AuthzKeeper: k, Module: m}
+	return AuthzOutputs{AuthzKeeper: k, Module: m}
 }
 
 // ____________________________________________________________________________

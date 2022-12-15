@@ -33,13 +33,11 @@ func (uint64Key) Decode(buffer []byte) (int, uint64, error) {
 }
 
 func (uint64Key) EncodeJSON(value uint64) ([]byte, error) {
-	return json.Marshal(value)
+	return uint64EncodeJSON(value)
 }
 
 func (uint64Key) DecodeJSON(b []byte) (uint64, error) {
-	var value uint64
-	err := json.Unmarshal(b, &value)
-	return value, err
+	return uint64DecodeJSON(b)
 }
 
 func (uint64Key) Size(_ uint64) int { return 8 }

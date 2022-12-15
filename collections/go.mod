@@ -3,17 +3,20 @@ module cosmossdk.io/collections
 go 1.19
 
 require (
+	cosmossdk.io/core v0.3.4
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20221207205747-f3be41836f4d
 	github.com/stretchr/testify v1.8.1
 )
 
 require (
-	cosmossdk.io/core v0.3.4 // indirect
+	cosmossdk.io/api v0.2.6 // indirect
+	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

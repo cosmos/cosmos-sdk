@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 var Uint64Value ValueCodec[uint64] = uint64Value{}
@@ -30,11 +31,23 @@ func (u uint64Value) ValueType() string {
 }
 
 func (u uint64Value) EncodeJSON(value uint64) ([]byte, error) {
-	return json.Marshal(value)
+	return uint64EncodeJSON(value)
 }
 
 func (u uint64Value) DecodeJSON(b []byte) (uint64, error) {
-	var value uint64
-	err := json.Unmarshal(b, &value)
-	return value, err
+	return uint64DecodeJSON(b)
+}
+
+func uint64EncodeJSON(value uint64) ([]byte, error) {
+	str := `"` + strconv.FormatUint(value, 10) + `"`
+	return []byte(str), nil
+}
+
+func uint64DecodeJSON(b []byte) (uint64, error) {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseUint(str, 10, 64)
 }

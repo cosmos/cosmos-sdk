@@ -48,7 +48,7 @@ func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
 }
 
 func (s *E2ETestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+	s.T().Log("setting up e2e test suite")
 
 	// Create a new AppConstructor for this test suite, where we manually
 	// add a subspace and `myParams` to the x/params store.

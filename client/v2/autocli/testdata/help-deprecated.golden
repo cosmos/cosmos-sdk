@@ -16,21 +16,21 @@ Flags:
       --enums Enum (unspecified | one | two | five | neg-three) (repeated)   
   -h, --help                                                                 help for echo
       --hidden-bool                                                          
-      --i-32 int32                                                           
-      --i-64 int                                                             
+      --i32 int32                                                            
+      --i64 int                                                              
       --page-count-total                                                     
       --page-key bytesBase64                                                 
       --page-limit uint                                                      
       --page-offset uint                                                     
       --page-reverse                                                         
-      --positional-1 int32                                                   
-      --positional-2 string                                                  
-      --positional-3-varargs cosmos.base.v1beta1.Coin (json) (repeated)      
+      --positional1 int32                                                    
+      --positional2 string                                                   
+      --positional3-varargs cosmos.base.v1beta1.Coin (json) (repeated)       
       --shorthand-deprecated-field string                                    
       --some-messages testpb.AMessage (json) (repeated)                      
       --str string                                                           
       --strings strings                                                      
       --timestamp timestamp (RFC 3339)                                       
-      --u-32 uint32                                                          
-      --u-64 uint                                                            
+      --u32 uint32                                                           
+      --u64 uint                                                             
       --uints uints                                                           (default [])

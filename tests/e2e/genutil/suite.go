@@ -19,19 +19,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -40,12 +40,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGenTxCmd() {
+func (s *E2ETestSuite) TestGenTxCmd() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	amount := sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(12))

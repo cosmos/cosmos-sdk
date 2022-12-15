@@ -26,19 +26,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	if testing.Short() {
 		s.T().Skip("skipping test in unit-tests mode.")
@@ -88,12 +88,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
+func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -245,7 +245,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
+func (s *E2ETestSuite) TestGetCmdQueryValidator() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -286,7 +286,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidator() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
+func (s *E2ETestSuite) TestGetCmdQueryValidators() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -326,7 +326,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidators() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
+func (s *E2ETestSuite) TestGetCmdQueryDelegation() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -393,7 +393,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
+func (s *E2ETestSuite) TestGetCmdQueryDelegations() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -449,7 +449,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDelegations() {
+func (s *E2ETestSuite) TestGetCmdQueryValidatorDelegations() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -505,7 +505,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
+func (s *E2ETestSuite) TestGetCmdQueryUnbondingDelegations() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -553,7 +553,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
+func (s *E2ETestSuite) TestGetCmdQueryUnbondingDelegation() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -613,7 +613,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryUnbondingDelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
+func (s *E2ETestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -661,7 +661,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorUnbondingDelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
+func (s *E2ETestSuite) TestGetCmdQueryRedelegations() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -713,7 +713,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
+func (s *E2ETestSuite) TestGetCmdQueryRedelegation() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -789,7 +789,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryRedelegation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
+func (s *E2ETestSuite) TestGetCmdQueryValidatorRedelegations() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -841,7 +841,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryValidatorRedelegations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
+func (s *E2ETestSuite) TestGetCmdQueryHistoricalInfo() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -887,7 +887,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryHistoricalInfo() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+func (s *E2ETestSuite) TestGetCmdQueryParams() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name           string
@@ -922,7 +922,7 @@ unbonding_time: 1814400s`,
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryPool() {
+func (s *E2ETestSuite) TestGetCmdQueryPool() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name           string
@@ -959,7 +959,7 @@ not_bonded_tokens: "0"`, cli.DefaultTokens.Mul(sdk.NewInt(2)).String()),
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
+func (s *E2ETestSuite) TestNewEditValidatorCmd() {
 	val := s.network.Validators[0]
 
 	details := "bio"
@@ -1075,7 +1075,7 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewDelegateCmd() {
+func (s *E2ETestSuite) TestNewDelegateCmd() {
 	val := s.network.Validators[0]
 
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -1161,7 +1161,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
+func (s *E2ETestSuite) TestNewRedelegateCmd() {
 	val := s.network.Validators[0]
 	val2 := s.network.Validators[1]
 
@@ -1247,7 +1247,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewUnbondCmd() {
+func (s *E2ETestSuite) TestNewUnbondCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -1314,7 +1314,7 @@ func (s *IntegrationTestSuite) TestNewUnbondCmd() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
+func (s *E2ETestSuite) TestNewCancelUnbondingDelegationCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -1436,7 +1436,7 @@ func (s *IntegrationTestSuite) TestNewCancelUnbondingDelegationCmd() {
 // TestBlockResults tests that the validator updates correctly show when
 // calling the /block_results RPC endpoint.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7401.
-func (s *IntegrationTestSuite) TestBlockResults() {
+func (s *E2ETestSuite) TestBlockResults() {
 	require := s.Require()
 	val := s.network.Validators[0]
 
@@ -1508,7 +1508,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 }
 
 // https://github.com/cosmos/cosmos-sdk/issues/10660
-func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
+func (s *E2ETestSuite) TestEditValidatorMoniker() {
 	val := s.network.Validators[0]
 	require := s.Require()
 

@@ -142,15 +142,3 @@ func LogDeferred(logger log.Logger, f func() error) {
 		logger.Error(err.Error())
 	}
 }
-
-// SliceContains implements a generic function for checking if a slice contains
-// a certain value.
-func SliceContains[T comparable](elements []T, v T) bool {
-	for _, s := range elements {
-		if v == s {
-			return true
-		}
-	}
-
-	return false
-}

@@ -7,7 +7,7 @@ mkdir -p ~/versioned_docs  ~/versioned_sidebars
 for version in $(jq -r .[] versions.json); do
     echo "building docusaurus $version docs"
     git clean -fdx && git reset --hard && git checkout release/$version.x
-    sh ./pre.sh
+    ./pre.sh
     npm ci && npm run docusaurus docs:version $version
     mv ./versioned_docs/* ~/versioned_docs/
     mv ./versioned_sidebars/* ~/versioned_sidebars/

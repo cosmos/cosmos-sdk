@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
+func TestE2ETestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 
@@ -23,5 +23,5 @@ func TestIntegrationTestSuite(t *testing.T) {
 	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
 
-	suite.Run(t, NewIntegrationTestSuite(cfg, app.UpgradeKeeper, ctx))
+	suite.Run(t, NewE2ETestSuite(cfg, app.UpgradeKeeper, ctx))
 }

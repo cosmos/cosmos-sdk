@@ -42,7 +42,7 @@ func setupStore(t *testing.T) *snapshots.Store {
 }
 
 func TestNewStore(t *testing.T) {
-	tempdir := t.TempDir()
+	tempdir := testutil.GetTempDir(t)
 	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
 	require.NoError(t, err)

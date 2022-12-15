@@ -19,9 +19,9 @@ func toKebab(t testing.TB) {
 		{"Bech32", "bech32"},
 		{"Bech32Address", "bech32-address"},
 		{"Bech32_Address", "bech32-address"},
-		{"Bech32Adress10", "bech32-adress10"},
+		{"Bech32Address10", "bech32-address10"},
 		{"Bech32-Address10", "bech32-address10"},
-		{"Bech32_Address10", "bech32-address10"},
+		{"SecondBech32Address10Foo", "second-bech32-address10-foo"},
 	}
 	for _, i := range cases {
 		in := i[0]

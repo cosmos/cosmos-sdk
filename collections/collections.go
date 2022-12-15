@@ -23,6 +23,18 @@ type StorageProvider interface {
 	KVStore(key storetypes.StoreKey) storetypes.KVStore
 }
 
+// collection is the interface that all collections support. It will eventually
+// include methods for importing/exporting genesis data and schema
+// reflection for clients.
+type collection interface {
+	// getName is the unique name of the collection within a schema. It must
+	// match format specified by NameRegex.
+	getName() string
+
+	// getPrefix is the unique prefix of the collection within a schema.
+	getPrefix() []byte
+}
+
 // Prefix defines a segregation namespace
 // for specific collections objects.
 type Prefix struct {

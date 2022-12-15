@@ -22,19 +22,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-type EndToEndTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewEndToEndTestSuite(cfg network.Config) *EndToEndTestSuite {
-	return &EndToEndTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *EndToEndTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	genesisState := s.cfg.GenesisState
 	var bankGenesis types.GenesisState
@@ -90,12 +90,12 @@ func (s *EndToEndTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *EndToEndTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *EndToEndTestSuite) TestGetBalancesCmd() {
+func (s *E2ETestSuite) TestGetBalancesCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -166,7 +166,7 @@ func (s *EndToEndTestSuite) TestGetBalancesCmd() {
 	}
 }
 
-func (s *EndToEndTestSuite) TestGetCmdQueryTotalSupply() {
+func (s *E2ETestSuite) TestGetCmdQueryTotalSupply() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -238,7 +238,7 @@ func (s *EndToEndTestSuite) TestGetCmdQueryTotalSupply() {
 	}
 }
 
-func (s *EndToEndTestSuite) TestGetCmdQueryDenomsMetadata() {
+func (s *E2ETestSuite) TestGetCmdQueryDenomsMetadata() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -365,7 +365,7 @@ func (s *EndToEndTestSuite) TestGetCmdQueryDenomsMetadata() {
 	}
 }
 
-func (s *EndToEndTestSuite) TestNewSendTxCmdGenOnly() {
+func (s *E2ETestSuite) TestNewSendTxCmdGenOnly() {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
@@ -390,7 +390,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmdGenOnly() {
 	s.Require().Equal([]sdk.Msg{types.NewMsgSend(from, to, amount)}, tx.GetMsgs())
 }
 
-func (s *EndToEndTestSuite) TestNewSendTxCmdDryRun() {
+func (s *E2ETestSuite) TestNewSendTxCmdDryRun() {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
@@ -422,7 +422,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmdDryRun() {
 	s.Require().Regexp("gas estimate: [0-9]+", string(out))
 }
 
-func (s *EndToEndTestSuite) TestNewSendTxCmd() {
+func (s *E2ETestSuite) TestNewSendTxCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -524,7 +524,7 @@ func (s *EndToEndTestSuite) TestNewSendTxCmd() {
 	}
 }
 
-func (s *EndToEndTestSuite) TestNewMultiSendTxCmd() {
+func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 	val := s.network.Validators[0]
 	testAddr := sdk.AccAddress("cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5")
 

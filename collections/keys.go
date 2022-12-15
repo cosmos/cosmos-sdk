@@ -2,6 +2,7 @@ package collections
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -31,6 +32,16 @@ func (uint64Key) Decode(buffer []byte) (int, uint64, error) {
 	return 8, binary.BigEndian.Uint64(buffer), nil
 }
 
+func (uint64Key) EncodeJSON(value uint64) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func (uint64Key) DecodeJSON(b []byte) (uint64, error) {
+	var value uint64
+	err := json.Unmarshal(b, &value)
+	return value, err
+}
+
 func (uint64Key) Size(_ uint64) int { return 8 }
 
 func (uint64Key) Stringify(key uint64) string {
@@ -49,6 +60,16 @@ func (stringKey) Encode(buffer []byte, key string) (int, error) {
 
 func (stringKey) Decode(buffer []byte) (int, string, error) {
 	return len(buffer), string(buffer), nil
+}
+
+func (stringKey) EncodeJSON(value string) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func (stringKey) DecodeJSON(b []byte) (string, error) {
+	var value string
+	err := json.Unmarshal(b, &value)
+	return value, err
 }
 
 func (stringKey) Size(key string) int {

@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	io "io"
 
@@ -156,18 +157,133 @@ func (m Map[K, V]) defaultGenesis(writer io.Writer) error {
 }
 
 func (m Map[K, V]) validateGenesis(reader io.Reader) error {
-	//TODO implement me
-	panic("implement me")
+	return m.doDecodeJson(reader, func(key K, value V) error {
+		return nil
+	})
+}
+
+type jsonMapEntry struct {
+	Key   json.RawMessage `json:"key"`
+	Value json.RawMessage `json:"value"`
 }
 
 func (m Map[K, V]) importGenesis(ctx context.Context, reader io.Reader) error {
-	//TODO implement me
-	panic("implement me")
+	return m.doDecodeJson(reader, func(key K, value V) error {
+		return m.Set(ctx, key, value)
+	})
 }
 
 func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
-	//TODO implement me
-	panic("implement me")
+	_, err := writer.Write([]byte("["))
+	if err != nil {
+		return err
+	}
+
+	it, err := m.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	start := true
+	for ; it.Valid(); it.Next() {
+		if !start {
+			_, err = writer.Write([]byte(",\n"))
+			if err != nil {
+				return err
+			}
+		}
+		start = false
+
+		key, err := it.Key()
+		if err != nil {
+			return err
+		}
+
+		keyBz, err := m.kc.EncodeJSON(key)
+		if err != nil {
+			return err
+		}
+
+		value, err := it.Value()
+		if err != nil {
+			return err
+		}
+
+		valueBz, err := m.vc.EncodeJSON(value)
+		if err != nil {
+			return err
+		}
+
+		entry := jsonMapEntry{
+			Key:   keyBz,
+			Value: valueBz,
+		}
+
+		bz, err := json.Marshal(entry)
+		if err != nil {
+
+		}
+
+		_, err = writer.Write(bz)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = writer.Write([]byte("]"))
+	return err
+}
+
+func (m Map[K, V]) doDecodeJson(reader io.Reader, onEntry func(key K, value V) error) error {
+	decoder := json.NewDecoder(reader)
+	token, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+
+	if token != json.Delim('[') {
+		return fmt.Errorf("expected [ got %s", token)
+	}
+
+	for decoder.More() {
+		var rawJson json.RawMessage
+		err := decoder.Decode(&rawJson)
+		if err != nil {
+			return err
+		}
+
+		var mapEntry jsonMapEntry
+		err = json.Unmarshal(rawJson, &mapEntry)
+		if err != nil {
+			return err
+		}
+
+		key, err := m.kc.DecodeJSON(mapEntry.Key)
+		if err != nil {
+			return err
+		}
+
+		value, err := m.vc.DecodeJSON(mapEntry.Value)
+		if err != nil {
+			return err
+		}
+
+		err = onEntry(key, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	token, err = decoder.Token()
+	if err != nil {
+		return err
+	}
+
+	if token != json.Delim(']') {
+		return fmt.Errorf("expected ] got %s", token)
+	}
+
+	return nil
 }
 
 func encodeKeyWithPrefix[K any](prefix []byte, kc KeyCodec[K], key K) ([]byte, error) {

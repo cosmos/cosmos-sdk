@@ -2,10 +2,7 @@ package collections
 
 import (
 	"context"
-	"github.com/cosmos/gogoproto/jsonpb"
-	"github.com/cosmos/gogoproto/proto"
 	io "io"
-	"reflect"
 )
 
 // Item is a type declaration based on Map
@@ -57,48 +54,46 @@ func (i Item[V]) Remove(ctx context.Context) error {
 }
 
 func (i Item[V]) defaultGenesis(writer io.Writer) error {
-	_, err := writer.Write([]byte(`{}`))
+	var value V
+	bz, err := i.vc.EncodeJSON(value)
+	_, err = writer.Write(bz)
 	return err
 }
 
 func (i Item[V]) validateGenesis(reader io.Reader) error {
-	var value V
-	var gogoProtoMsg proto.Message
-	if reflect.TypeOf(value).Implements(reflect.TypeOf(gogoProtoMsg)) {
-		err := (&jsonpb.Unmarshaler{}).Unmarshal(reader, gogoProtoMsg)
-		if err != nil {
-			return err
-		}
-	} else {
-
+	bz, err := io.ReadAll(reader)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	_, err = i.vc.DecodeJSON(bz)
+	return err
 }
 
 func (i Item[V]) importGenesis(ctx context.Context, reader io.Reader) error {
-	var value V
-	var gogoProtoMsg proto.Message
-	if reflect.TypeOf(value).Implements(reflect.TypeOf(gogoProtoMsg)) {
-		err := (&jsonpb.Unmarshaler{}).Unmarshal(reader, gogoProtoMsg)
-		if err != nil {
-			return err
-		}
-	} else {
-
+	bz, err := io.ReadAll(reader)
+	if err != nil {
+		return err
 	}
+
+	value, err := i.vc.DecodeJSON(bz)
 
 	return i.Set(ctx, value)
 }
 
 func (i Item[V]) exportGenesis(ctx context.Context, writer io.Writer) error {
-	_, err := i.Get(ctx)
+	value, err := i.Get(ctx)
 	if err != nil {
 		return err
 	}
 
-	//TODO implement me
-	panic("implement me")
+	bz, err := i.vc.EncodeJSON(value)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(bz)
+	return err
 }
 
 // noKey defines a KeyCodec which decodes nothing.
@@ -109,3 +104,5 @@ func (noKey) KeyType() string                       { return "no_key" }
 func (noKey) Size(_ noKey) int                      { return 0 }
 func (noKey) Encode(_ []byte, _ noKey) (int, error) { return 0, nil }
 func (noKey) Decode(_ []byte) (int, noKey, error)   { return 0, noKey{}, nil }
+func (noKey) EncodeJSON(_ noKey) ([]byte, error)    { return []byte("null"), nil }
+func (noKey) DecodeJSON(_ []byte) (noKey, error)    { return noKey{}, nil }

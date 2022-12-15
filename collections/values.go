@@ -2,6 +2,7 @@ package collections
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 )
 
@@ -26,4 +27,14 @@ func (u uint64Value) Stringify(value uint64) string {
 
 func (u uint64Value) ValueType() string {
 	return Uint64Key.KeyType()
+}
+
+func (u uint64Value) EncodeJSON(value uint64) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func (u uint64Value) DecodeJSON(b []byte) (uint64, error) {
+	var value uint64
+	err := json.Unmarshal(b, &value)
+	return value, err
 }

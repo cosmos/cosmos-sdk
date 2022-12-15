@@ -16,8 +16,8 @@ var (
 	_ Iterator = (*priorityNonceIterator)(nil)
 )
 
-// priorityNonceMempool defines the SDK's default mempool implementation which stores
-// txs in a partially ordered set by 2 dimensions: priority, and sender-nonce
+// priorityNonceMempool is a mempool implementation that stores txs
+// in a partially ordered set by 2 dimensions: priority, and sender-nonce
 // (sequence number). Internally it uses one priority ordered skip list and one
 // skip list per sender ordered by sender-nonce (sequence number). When there
 // are multiple txs from the same sender, they are not always comparable by

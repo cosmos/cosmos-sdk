@@ -24,19 +24,6 @@ type primaryKeyMachine struct {
 	state map[string]*testdata.TableModel
 }
 
-// stateKeys gets all the keys in the model map
-func (m *primaryKeyMachine) stateKeys() []string {
-	keys := make([]string, len(m.state))
-
-	i := 0
-	for k := range m.state {
-		keys[i] = k
-		i++
-	}
-
-	return keys
-}
-
 // Init creates a new instance of the state machine model by building the real
 // table and making the empty model map
 func (m *primaryKeyMachine) Init(t *rapid.T) {

@@ -1,8 +1,9 @@
 package runtime
 
 import (
-	"cosmossdk.io/core/store"
 	"fmt"
+
+	"cosmossdk.io/core/store"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 

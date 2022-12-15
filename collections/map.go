@@ -7,6 +7,18 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
+// Map represents the basic collections object.
+// It is used to map arbitrary keys to arbitrary
+// objects.
+type Map[K, V any] struct {
+	kc KeyCodec[K]
+	vc ValueCodec[V]
+
+	sk     storetypes.StoreKey
+	prefix []byte
+	name   string
+}
+
 // NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
 // else this method will panic.
@@ -33,18 +45,6 @@ func newMap[K, V any](
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
-}
-
-// Map represents the basic collections object.
-// It is used to map arbitrary keys to arbitrary
-// objects.
-type Map[K, V any] struct {
-	kc KeyCodec[K]
-	vc ValueCodec[V]
-
-	sk     storetypes.StoreKey
-	prefix []byte
-	name   string
 }
 
 func (m Map[K, V]) getName() string {

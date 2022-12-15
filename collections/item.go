@@ -4,18 +4,23 @@ import (
 	"context"
 )
 
+// Item is a type declaration based on Map
+// with a non-existent key.
+type Item[V any] Map[noKey, V]
+
 // NewItem instantiates a new Item instance, given the value encoder of the item V.
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
 // else this method will panic.
-func NewItem[V any](schema Schema, prefix Prefix, name string, valueCodec ValueCodec[V]) Item[V] {
+func NewItem[V any](
+	schema Schema,
+	prefix Prefix,
+	name string,
+	valueCodec ValueCodec[V],
+) Item[V] {
 	item := (Item[V])(newMap[noKey, V](schema, prefix, name, noKey{}, valueCodec))
 	schema.addCollection(item)
 	return item
 }
-
-// Item is a type declaration based on Map
-// with a non-existent key.
-type Item[V any] Map[noKey, V]
 
 func (i Item[V]) getName() string {
 	return i.name

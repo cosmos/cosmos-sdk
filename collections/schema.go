@@ -6,15 +6,6 @@ import (
 	"regexp"
 )
 
-// NewSchema creates a new schema from the provided store key.
-func NewSchema(storeKey storetypes.StoreKey) Schema {
-	return Schema{
-		storeKey:            storeKey,
-		collectionsByName:   map[string]collection{},
-		collectionsByPrefix: map[string]collection{},
-	}
-}
-
 // Schema specifies a group of collections stored within the storage specified
 // by a single store key. All the collections within the schema must have a
 // unique binary prefix and human-readable name. Schema will eventually include
@@ -24,6 +15,15 @@ type Schema struct {
 	storeKey            storetypes.StoreKey
 	collectionsByPrefix map[string]collection
 	collectionsByName   map[string]collection
+}
+
+// NewSchema creates a new schema from the provided store key.
+func NewSchema(storeKey storetypes.StoreKey) Schema {
+	return Schema{
+		storeKey:            storeKey,
+		collectionsByName:   map[string]collection{},
+		collectionsByPrefix: map[string]collection{},
+	}
 }
 
 func (s Schema) addCollection(collection collection) {

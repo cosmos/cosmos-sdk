@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/coinbase/rosetta-sdk-go/types"
 	assert "github.com/cosmos/rosetta-sdk-go/asserter"
 	"github.com/cosmos/rosetta-sdk-go/server"
-	"github.com/cosmos/rosetta-sdk-go/types"
 	"github.com/rs/zerolog"
 
 	"cosmossdk.io/tools/rosetta/lib/internal/service"

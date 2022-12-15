@@ -11,9 +11,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
+	"github.com/cosmos/cosmos-sdk/store/internal/kv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 // cValue represents a cached value.

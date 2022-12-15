@@ -31,7 +31,6 @@ message Plan {
       [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
-  // Only used if Time is not set.
   int64 height = 3;
 
   // Any application specific upgrade info to be included on-chain
@@ -54,8 +53,13 @@ message SoftwareUpgradeProposal {
   option (amino.name)                        = "cosmos-sdk/SoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
 
+  // title of the proposal
   string title       = 1;
+
+  // description of the proposal
   string description = 2;
+
+  // plan of the proposal
   Plan   plan        = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -69,7 +73,10 @@ message CancelSoftwareUpgradeProposal {
   option (amino.name)                        = "cosmos-sdk/CancelSoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
 
+  // title of the proposal
   string title       = 1;
+
+  // description of the proposal
   string description = 2;
 }
 

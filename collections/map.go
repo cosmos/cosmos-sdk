@@ -7,19 +7,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
-// NewMap returns a Map given a StoreKey, a Prefix and the relative value and key encoders.
-func NewMap[K, V any](
-	sk storetypes.StoreKey, prefix Prefix,
-	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
-) Map[K, V] {
-	return Map[K, V]{
-		kc:     keyCodec,
-		vc:     valueCodec,
-		sk:     sk,
-		prefix: prefix.Bytes(),
-	}
-}
-
 // Map represents the basic collections object.
 // It is used to map arbitrary keys to arbitrary
 // objects.
@@ -29,6 +16,43 @@ type Map[K, V any] struct {
 
 	sk     storetypes.StoreKey
 	prefix []byte
+	name   string
+}
+
+// NewMap returns a Map given a StoreKey, a Prefix, human-readable name and the relative value and key encoders.
+// Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
+// else this method will panic.
+func NewMap[K, V any](
+	schema Schema,
+	prefix Prefix,
+	name string,
+	keyCodec KeyCodec[K],
+	valueCodec ValueCodec[V],
+) Map[K, V] {
+	m := newMap(schema, prefix, name, keyCodec, valueCodec)
+	schema.addCollection(m)
+	return m
+}
+
+func newMap[K, V any](
+	schema Schema, prefix Prefix, name string,
+	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
+) Map[K, V] {
+	return Map[K, V]{
+		kc:     keyCodec,
+		vc:     valueCodec,
+		sk:     schema.storeKey,
+		prefix: prefix.Bytes(),
+		name:   name,
+	}
+}
+
+func (m Map[K, V]) getName() string {
+	return m.name
+}
+
+func (m Map[K, V]) getPrefix() []byte {
+	return m.prefix
 }
 
 // Set maps the provided value to the provided key in the store.

@@ -9,7 +9,7 @@ import (
 // be streamed over. Modules should open a separate reader for each field that
 // is required. When fields represent arrays they can efficiently be streamed
 // over.
-type Source interface {
+type Source func (field string) (io.ReadCloser, error)
 	// OpenReader returns an io.ReadCloser for the named field. If there
 	// is data for this field, this method will return nil, nil. It is
 	// important that the caller closes the reader when done with it.

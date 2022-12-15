@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-func (s *IntegrationTestSuite) TestQueryParamsGRPC() {
+func (s *E2ETestSuite) TestQueryParamsGRPC() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

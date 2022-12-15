@@ -18,7 +18,11 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
+<<<<<<< HEAD:snapshots/store_test.go
 	store, err := snapshots.NewStore(db.NewMemDB(), testutil.GetTempDir(t))
+=======
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
+>>>>>>> ce167a207 (test: rename e2e tests (#13913)):store/snapshots/store_test.go
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{
@@ -42,7 +46,7 @@ func setupStore(t *testing.T) *snapshots.Store {
 }
 
 func TestNewStore(t *testing.T) {
-	tempdir := t.TempDir()
+	tempdir := GetTempDir(t)
 	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
 	require.NoError(t, err)

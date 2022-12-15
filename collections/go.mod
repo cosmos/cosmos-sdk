@@ -8,6 +8,7 @@ require (
 )
 
 require (
+	cosmossdk.io/core v0.3.4 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect

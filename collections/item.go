@@ -2,6 +2,10 @@ package collections
 
 import (
 	"context"
+	"github.com/cosmos/gogoproto/jsonpb"
+	"github.com/cosmos/gogoproto/proto"
+	io "io"
+	"reflect"
 )
 
 // Item is a type declaration based on Map
@@ -50,6 +54,51 @@ func (i Item[V]) Has(ctx context.Context) (bool, error) {
 // Remove removes the item in the store.
 func (i Item[V]) Remove(ctx context.Context) error {
 	return (Map[noKey, V])(i).Remove(ctx, noKey{})
+}
+
+func (i Item[V]) defaultGenesis(writer io.Writer) error {
+	_, err := writer.Write([]byte(`{}`))
+	return err
+}
+
+func (i Item[V]) validateGenesis(reader io.Reader) error {
+	var value V
+	var gogoProtoMsg proto.Message
+	if reflect.TypeOf(value).Implements(reflect.TypeOf(gogoProtoMsg)) {
+		err := (&jsonpb.Unmarshaler{}).Unmarshal(reader, gogoProtoMsg)
+		if err != nil {
+			return err
+		}
+	} else {
+
+	}
+
+	return nil
+}
+
+func (i Item[V]) importGenesis(ctx context.Context, reader io.Reader) error {
+	var value V
+	var gogoProtoMsg proto.Message
+	if reflect.TypeOf(value).Implements(reflect.TypeOf(gogoProtoMsg)) {
+		err := (&jsonpb.Unmarshaler{}).Unmarshal(reader, gogoProtoMsg)
+		if err != nil {
+			return err
+		}
+	} else {
+
+	}
+
+	return i.Set(ctx, value)
+}
+
+func (i Item[V]) exportGenesis(ctx context.Context, writer io.Writer) error {
+	_, err := i.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	//TODO implement me
+	panic("implement me")
 }
 
 // noKey defines a KeyCodec which decodes nothing.

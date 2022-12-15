@@ -1,7 +1,9 @@
 package collections
 
 import (
+	"context"
 	"errors"
+	"io"
 	"math"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -33,6 +35,11 @@ type collection interface {
 
 	// getPrefix is the unique prefix of the collection within a schema.
 	getPrefix() []byte
+
+	defaultGenesis(io.Writer) error
+	validateGenesis(io.Reader) error
+	importGenesis(context.Context, io.Reader) error
+	exportGenesis(context.Context, io.Writer) error
 }
 
 // Prefix defines a segregation namespace

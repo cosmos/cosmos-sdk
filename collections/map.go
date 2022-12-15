@@ -3,6 +3,7 @@ package collections
 import (
 	"context"
 	"fmt"
+	io "io"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
@@ -147,6 +148,26 @@ func (m Map[K, V]) getStore(ctx context.Context) (storetypes.KVStore, error) {
 		return nil, fmt.Errorf("context is not a StorageProvider: underlying type %T", ctx)
 	}
 	return provider.KVStore(m.sk), nil
+}
+
+func (m Map[K, V]) defaultGenesis(writer io.Writer) error {
+	_, err := writer.Write([]byte(`[]`))
+	return err
+}
+
+func (m Map[K, V]) validateGenesis(reader io.Reader) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m Map[K, V]) importGenesis(ctx context.Context, reader io.Reader) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func encodeKeyWithPrefix[K any](prefix []byte, kc KeyCodec[K], key K) ([]byte, error) {

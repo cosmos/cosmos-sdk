@@ -1,6 +1,8 @@
 package collections
 
 import (
+	"context"
+	"cosmossdk.io/core/appmodule"
 	"fmt"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"regexp"
@@ -50,3 +52,87 @@ func (s Schema) addCollection(collection collection) {
 const NameRegex = "[A-Za-z][A-Za-z0-9_]*"
 
 var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
+
+func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
+	for name, coll := range s.collectionsByName {
+		writer, err := target(name)
+		if err != nil {
+			return err
+		}
+
+		err = coll.defaultGenesis(writer)
+		if err != nil {
+			return err
+		}
+
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
+	for name, coll := range s.collectionsByName {
+		reader, err := source(name)
+		if err != nil {
+			return err
+		}
+
+		err = coll.validateGenesis(reader)
+		if err != nil {
+			return err
+		}
+
+		err = reader.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
+	for name, coll := range s.collectionsByName {
+		reader, err := source(name)
+		if err != nil {
+			return err
+		}
+
+		err = coll.importGenesis(ctx, reader)
+		if err != nil {
+			return err
+		}
+
+		err = reader.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
+	for name, coll := range s.collectionsByName {
+		writer, err := target(name)
+		if err != nil {
+			return err
+		}
+
+		err = coll.exportGenesis(ctx, writer)
+		if err != nil {
+			return err
+		}
+
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

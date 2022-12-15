@@ -2,10 +2,11 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"regexp"
+
+	"cosmossdk.io/core/appmodule"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // Schema specifies a group of collections stored within the storage specified
@@ -53,6 +54,7 @@ const NameRegex = "[A-Za-z][A-Za-z0-9_]*"
 
 var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 
+// DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
 	for name, coll := range s.collectionsByName {
 		writer, err := target(name)
@@ -74,6 +76,7 @@ func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
 	return nil
 }
 
+// ValidateGenesis implements the appmodule.HasGenesis.ValidateGenesis method.
 func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
 	for name, coll := range s.collectionsByName {
 		reader, err := source(name)
@@ -95,6 +98,7 @@ func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
 	return nil
 }
 
+// InitGenesis implements the appmodule.HasGenesis.InitGenesis method.
 func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
 	for name, coll := range s.collectionsByName {
 		reader, err := source(name)
@@ -116,6 +120,7 @@ func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource)
 	return nil
 }
 
+// ExportGenesis implements the appmodule.HasGenesis.ExportGenesis method.
 func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
 	for name, coll := range s.collectionsByName {
 		writer, err := target(name)

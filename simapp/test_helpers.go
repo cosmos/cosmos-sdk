@@ -14,7 +14,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -215,18 +213,6 @@ func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coi
 	if err != nil {
 		panic(err)
 	}
-}
-
-// ModuleAccountAddrs provides a list of blocked module accounts from configuration in AppConfig
-//
-// Ported from SimApp
-func ModuleAccountAddrs() map[string]bool {
-	var bk bankkeeper.Keeper
-	err := depinject.Inject(AppConfig, &bk)
-	if err != nil {
-		panic("unable to load DI container")
-	}
-	return bk.GetBlockedAddresses()
 }
 
 // NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests

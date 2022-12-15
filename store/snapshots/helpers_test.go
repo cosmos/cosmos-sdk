@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -276,4 +277,17 @@ func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadR
 	}
 	// finalize restoration
 	return nil
+}
+
+// GetTempDir returns a writable temporary director for the test to use.
+func GetTempDir(t testing.TB) string {
+	t.Helper()
+	// os.MkDir() is used instead of testing.T.TempDir()
+	// see https://github.com/cosmos/cosmos-sdk/pull/8475 and
+	// https://github.com/cosmos/cosmos-sdk/pull/10341 for
+	// this change's rationale.
+	tempdir, err := os.MkdirTemp("", "")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+	return tempdir
 }

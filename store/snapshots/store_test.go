@@ -16,7 +16,7 @@ import (
 )
 
 func setupStore(t *testing.T) *snapshots.Store {
-	store, err := snapshots.NewStore(db.NewMemDB(), t.TempDir())
+	store, err := snapshots.NewStore(db.NewMemDB(), GetTempDir(t))
 	require.NoError(t, err)
 
 	_, err = store.Save(1, 1, makeChunks([][]byte{
@@ -40,7 +40,7 @@ func setupStore(t *testing.T) *snapshots.Store {
 }
 
 func TestNewStore(t *testing.T) {
-	tempdir := t.TempDir()
+	tempdir := GetTempDir(t)
 	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
 	require.NoError(t, err)

@@ -41,4 +41,6 @@ func (m *sequenceMachine) Init(t *rapid.T) {
 }
 
 // Check does nothing, because all our invariants are captured in the commands
-func (m *sequenceMachine) Check(t *rapid.T) {}
+func (m *sequenceMachine) Check(t *rapid.T) {
+	require.NotEmpty(t, m.state)
+}

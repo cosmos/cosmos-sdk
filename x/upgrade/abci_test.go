@@ -32,7 +32,7 @@ type TestSuite struct {
 	suite.Suite
 
 	module  module.BeginBlockAppModule
-	keeper  keeper.Keeper
+	keeper  *keeper.Keeper
 	handler govtypesv1beta1.Handler
 	ctx     sdk.Context
 	baseApp *baseapp.BaseApp
@@ -516,19 +516,19 @@ func TestDowngradeVerification(t *testing.T) {
 	})
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 
-	testCases := map[string]struct{
-		preRun      func(keeper.Keeper, sdk.Context, string)
+	testCases := map[string]struct {
+		preRun      func(*keeper.Keeper, sdk.Context, string)
 		expectPanic bool
 	}{
 		"valid binary": {
-			preRun: func(k keeper.Keeper, ctx sdk.Context, name string) {
+			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
 				k.SetUpgradeHandler(planName, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
 			},
 		},
 		"downgrade with an active plan": {
-			preRun: func(k keeper.Keeper, ctx sdk.Context, name string) {
+			preRun: func(k *keeper.Keeper, ctx sdk.Context, name string) {
 				handler := upgrade.NewSoftwareUpgradeProposalHandler(k)
 				err := handler(ctx, &types.SoftwareUpgradeProposal{Title: "test", Plan: types.Plan{Name: "another" + planName, Height: ctx.BlockHeight() + 1}})
 				require.NoError(t, err, name)

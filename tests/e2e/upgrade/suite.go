@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func NewE2ETestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) *E2ETestSuite {
+func NewE2ETestSuite(cfg network.Config, keeper *keeper.Keeper, ctx sdk.Context) *E2ETestSuite {
 	return &E2ETestSuite{
 		cfg:           cfg,
 		upgradeKeeper: keeper,
@@ -24,7 +24,7 @@ func NewE2ETestSuite(cfg network.Config, keeper keeper.Keeper, ctx sdk.Context) 
 type E2ETestSuite struct {
 	suite.Suite
 
-	upgradeKeeper keeper.Keeper
+	upgradeKeeper *keeper.Keeper
 	cfg           network.Config
 	network       *network.Network
 	ctx           sdk.Context

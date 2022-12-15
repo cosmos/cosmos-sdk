@@ -24,7 +24,6 @@ func init() {
 	)
 }
 
-//nolint:revive
 type AuthInputs struct {
 	depinject.In
 
@@ -36,7 +35,6 @@ type AuthInputs struct {
 	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
 }
 
-//nolint:revive
 type AuthOutputs struct {
 	depinject.Out
 

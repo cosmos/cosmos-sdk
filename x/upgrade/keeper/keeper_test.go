@@ -28,7 +28,7 @@ type KeeperTestSuite struct {
 
 	key           *storetypes.KVStoreKey
 	baseApp       *baseapp.BaseApp
-	upgradeKeeper keeper.Keeper
+	upgradeKeeper *keeper.Keeper
 	homeDir       string
 	ctx           sdk.Context
 	msgSrvr       types.MsgServer

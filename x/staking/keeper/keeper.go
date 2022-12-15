@@ -3,13 +3,13 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -49,7 +49,7 @@ func NewKeeper(
 
 	// ensure that authority is a valid AccAddress
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
-		panic(("authority is not a valid acc address"))
+		panic("authority is not a valid acc address")
 	}
 
 	return &Keeper{
@@ -77,7 +77,8 @@ func (k *Keeper) Hooks() types.StakingHooks {
 	return k.hooks
 }
 
-// SetHooks Set the validator hooks
+// SetHooks Set the validator hooks.  In contrast to other receivers, this method must take a pointer due to nature
+// of the hooks interface and SDK start up sequence.
 func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	if k.hooks != nil {
 		panic("cannot set validator hooks twice")

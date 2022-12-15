@@ -52,8 +52,6 @@ type AppModuleBasic interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
-	HasGenesisBasics
-
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
@@ -103,7 +101,20 @@ func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry)
 func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
 	for _, b := range bm {
-		genesis[b.Name()] = b.DefaultGenesis(cdc)
+		if mod, ok := b.(appmodule.HasGenesis); ok {
+			target := newGenesisTarget()
+			err := mod.DefaultGenesis(target.target())
+			if err != nil {
+				panic(err)
+			}
+
+			genesis[b.Name()], err = target.json()
+			if err != nil {
+				panic(err)
+			}
+		} else if mod, ok := b.(HasGenesisBasics); ok {
+			genesis[b.Name()] = mod.DefaultGenesis(cdc)
+		}
 	}
 
 	return genesis
@@ -112,8 +123,19 @@ func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMe
 // ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
-			return err
+		if mod, ok := b.(appmodule.HasGenesis); ok {
+			source, err := genesisSource(genesis[b.Name()])
+			if err != nil {
+				return err
+			}
+
+			if err := mod.ValidateGenesis(source); err != nil {
+				return err
+			}
+		} else if mod, ok := b.(HasGenesisBasics); ok {
+			if err := mod.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -349,9 +371,22 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			continue
 		}
 
-		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-			ctx.Logger().Debug("running initialization for module", "module", moduleName)
+		mod := m.Modules[moduleName]
 
+		ctx.Logger().Debug("running initialization for module", "module", moduleName)
+
+		if module, ok := mod.(appmodule.HasGenesis); ok {
+			// core API genesis
+			source, err := genesisSource(genesisData[moduleName])
+			if err != nil {
+				panic(err)
+			}
+
+			err = module.InitGenesis(ctx, source)
+			if err != nil {
+				panic(err)
+			}
+		} else if module, ok := mod.(HasGenesis); ok {
 			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
@@ -399,7 +434,21 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	}
 
 	for _, moduleName := range modulesToExport {
-		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
+		mod := m.Modules[moduleName]
+
+		if module, ok := mod.(appmodule.HasGenesis); ok {
+			// core API genesis
+			target := newGenesisTarget()
+			err := module.ExportGenesis(ctx, target.target())
+			if err != nil {
+				panic(err)
+			}
+
+			genesisData[moduleName], err = target.json()
+			if err != nil {
+				panic(err)
+			}
+		} else if module, ok := mod.(HasGenesis); ok {
 			genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
 		}
 	}

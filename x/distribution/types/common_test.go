@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-//nolint:deadcode,varcheck
 var (
 	delPk1       = ed25519.GenPrivKey().PubKey()
 	delPk2       = ed25519.GenPrivKey().PubKey()

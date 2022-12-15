@@ -49,19 +49,19 @@ func (s *handlerTestSuite) TestChainPostDecorators() {
 	mockPostDecorator2 := mock.NewMockPostDecorator(mockCtrl)
 
 	// Test chaining only one post decorator
-	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res), true, gomock.Eq(true), gomock.Any()).Times(1)
-	_, err := sdk.ChainPostDecorators(mockPostDecorator1)(ctx, tx, res, true, true)
+	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res.MsgResponses), true, gomock.Eq(true), gomock.Any()).Times(1)
+	_, err := sdk.ChainPostDecorators(mockPostDecorator1)(ctx, tx, res.MsgResponses, true, true)
 	s.Require().NoError(err)
 
 	// Tests chaining multiple post decorators
-	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res), true, gomock.Eq(true), gomock.Any()).Times(1)
-	mockPostDecorator2.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res), true, gomock.Eq(true), gomock.Any()).Times(1)
+	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res.MsgResponses), true, gomock.Eq(true), gomock.Any()).Times(1)
+	mockPostDecorator2.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res.MsgResponses), true, gomock.Eq(true), gomock.Any()).Times(1)
 	// NOTE: we can't check that mockAnteDecorator2 is passed as the last argument because
 	// ChainAnteDecorators wraps the decorators into closures, so each decorator is
 	// receiving a closure.
 	_, err = sdk.ChainPostDecorators(
 		mockPostDecorator1,
 		mockPostDecorator2,
-	)(ctx, tx, res, true, true)
+	)(ctx, tx, res.MsgResponses, true, true)
 	s.Require().NoError(err)
 }

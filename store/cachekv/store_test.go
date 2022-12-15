@@ -431,6 +431,22 @@ func TestNilEndIterator(t *testing.T) {
 	}
 }
 
+// TestIteratorDeadlock demonstrate the deadlock issue in cache store.
+func TestIteratorDeadlock(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	store := cachekv.NewStore(mem)
+	// the channel buffer is 64 and received once, so put at least 66 elements.
+	for i := 0; i < 66; i++ {
+		store.Set([]byte(fmt.Sprintf("key%d", i)), []byte{1})
+	}
+	it := store.Iterator(nil, nil)
+	defer it.Close()
+	store.Set([]byte("key20"), []byte{1})
+	// it'll be blocked here with previous version, or enable lock on btree.
+	it2 := store.Iterator(nil, nil)
+	defer it2.Close()
+}
+
 //-------------------------------------------------------------------------------------------
 // do some random ops
 

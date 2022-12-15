@@ -9,7 +9,6 @@ import (
 	"github.com/rakyll/statik/fs"
 
 	_ "github.com/cosmos/cosmos-sdk/client/docs/statik" // we use this to help with sderving the docs
-
 )
 
 // RegisterSwaggerAPI provides a common function which registers swagger route with API Server

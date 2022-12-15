@@ -22,8 +22,8 @@ Flags:
       --durations duration (repeated)                                        
       --enums Enum (unspecified | one | two | five | neg-three) (repeated)   
   -h, --help                                                                 help for echo
-      --i-32 int32                                                           some random int32
-      --i-64 int                                                             
+      --i32 int32                                                            some random int32
+      --i64 int                                                             
       --page-count-total                                                     
       --page-key bytesBase64                                                 
       --page-limit uint                                                      
@@ -34,7 +34,7 @@ Flags:
       --str string                                                           
       --strings strings                                                      
       --timestamp timestamp (RFC 3339)                                       
-      --u-64 uint[=5]                                                        some random uint64
+      --u64 uint[=5]                                                         some random uint64
   -u, --uint32 uint32                                                        some random uint32
       --uints uints                                                           (default [])
   -v, --version                                                              version for echo

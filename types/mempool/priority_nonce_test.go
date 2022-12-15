@@ -373,7 +373,7 @@ func validateOrder(mtxs []sdk.Tx) error {
 
 func (s *MempoolTestSuite) TestRandomGeneratedTxs() {
 	s.iterations = 0
-	s.mempool = mempool.NewPriorityMempool(mempool.WithOnRead(func(tx sdk.Tx) {
+	s.mempool = mempool.NewPriorityMempool(mempool.PriorityNonceWithOnRead(func(tx sdk.Tx) {
 		s.iterations++
 	}))
 	t := s.T()
@@ -580,5 +580,56 @@ func TestTxOrderN(t *testing.T) {
 	fmt.Println("shuffled")
 	for _, tx := range shuffled {
 		fmt.Printf("%s, %d, %d\n", tx.address, tx.priority, tx.nonce)
+	}
+}
+
+func TestTxLimit(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+
+	txs := []testTx{
+		{priority: 20, nonce: 1, address: sa},
+		{priority: 21, nonce: 1, address: sb},
+		{priority: 15, nonce: 2, address: sa},
+		{priority: 88, nonce: 2, address: sb},
+		{priority: 66, nonce: 3, address: sa},
+		{priority: 15, nonce: 3, address: sb},
+		{priority: 20, nonce: 4, address: sa},
+		{priority: 21, nonce: 4, address: sb},
+		{priority: 88, nonce: 5, address: sa},
+		{priority: 66, nonce: 5, address: sb},
+	}
+
+	// unlimited
+	mp := mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(0))
+	for i, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+		require.Equal(t, i+1, mp.CountTx())
+	}
+
+	// limit: 3
+	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(3))
+	for i, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		err := mp.Insert(c, tx)
+		if i < 3 {
+			require.NoError(t, err)
+			require.Equal(t, i+1, mp.CountTx())
+		} else {
+			require.ErrorIs(t, err, mempool.ErrMempoolTxMaxCapacity)
+			require.Equal(t, 3, mp.CountTx())
+		}
+	}
+
+	// disabled
+	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(-1))
+	for _, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		err := mp.Insert(c, tx)
+		require.NoError(t, err)
+		require.Equal(t, 0, mp.CountTx())
 	}
 }

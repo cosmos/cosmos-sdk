@@ -609,6 +609,12 @@ func TestTxLimit(t *testing.T) {
 		require.NoError(t, mp.Insert(c, tx))
 		require.Equal(t, i+1, mp.CountTx())
 	}
+	mp = mempool.NewPriorityMempool()
+	for i, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+		require.Equal(t, i+1, mp.CountTx())
+	}
 
 	// limit: 3
 	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithMaxTx(3))

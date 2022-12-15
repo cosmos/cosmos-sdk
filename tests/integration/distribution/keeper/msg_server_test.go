@@ -252,6 +252,13 @@ func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
 				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
+
+				valAddr, err := sdk.ValAddressFromBech32(tc.input.ValidatorAddress)
+				s.Require().NoError(err)
+
+				// check validator outstanding rewards
+				outstandingRewards := s.distrKeeper.GetValidatorOutstandingRewards(s.ctx, valAddr)
+				s.Require().Equal(outstandingRewards.Rewards, sdk.NewDecCoinsFromCoins(tc.input.Amount...))
 			}
 		})
 	}

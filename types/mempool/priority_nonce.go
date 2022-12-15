@@ -92,7 +92,11 @@ func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption 
 	}
 }
 
-// PriorityNonceWithMaxTx sets the maximum number of transactions allowed in the mempool.
+// PriorityNonceWithMaxTx sets the maximum number of transactions allowed in the mempool with the semantics:
+//
+// <0: disabled, `Insert` is a no-op
+// 0: unlimited
+// >0: maximum number of transactions allowed
 func PriorityNonceWithMaxTx(maxTx int) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.maxTx = maxTx

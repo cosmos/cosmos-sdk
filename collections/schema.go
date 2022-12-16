@@ -1,8 +1,9 @@
 package collections
 
 import (
+	"context"
+	"cosmossdk.io/core/store"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"regexp"
 )
 
@@ -12,15 +13,36 @@ import (
 // methods for importing/exporting genesis data and for schema reflection for
 // clients.
 type Schema struct {
-	storeKey            storetypes.StoreKey
+	storeAccessor       func(context.Context) store.KVStore
 	collectionsByPrefix map[string]collection
 	collectionsByName   map[string]collection
 }
 
-// NewSchema creates a new schema from the provided store key.
-func NewSchema(storeKey storetypes.StoreKey) Schema {
+// NewSchema creates a new schema for the provided KVStoreService.
+func NewSchema(service store.KVStoreService) Schema {
+	return NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+		return service.OpenKVStore(ctx)
+	})
+}
+
+// NewMemoryStoreSchema creates a new schema for the provided MemoryStoreService.
+func NewMemoryStoreSchema(service store.MemoryStoreService) Schema {
+	return NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+		return service.OpenMemoryStore(ctx)
+	})
+}
+
+// NewSchemaFromAccessor creates a new schema for the provided store accessor
+// function. Modules built against versions of the SDK which do not support
+// the cosmossdk.io/core/appmodule APIs should use this method.
+// Ex:
+
+//	NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+//			return sdk.UnwrapSDKContext(ctx).KVStore(kvStoreKey)
+//	}
+func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema {
 	return Schema{
-		storeKey:            storeKey,
+		storeAccessor:       accessor,
 		collectionsByName:   map[string]collection{},
 		collectionsByPrefix: map[string]collection{},
 	}

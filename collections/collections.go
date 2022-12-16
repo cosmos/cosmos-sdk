@@ -3,8 +3,6 @@ package collections
 import (
 	"errors"
 	"math"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 var (
@@ -13,15 +11,6 @@ var (
 	// ErrEncoding is returned when something fails during key or value encoding/decoding.
 	ErrEncoding = errors.New("collections: encoding error")
 )
-
-// StorageProvider is implemented by types
-// which provide a KVStore given a StoreKey.
-// It represents sdk.Context, it exists to
-// reduce dependencies.
-type StorageProvider interface {
-	// KVStore returns a KVStore given its StoreKey.
-	KVStore(key storetypes.StoreKey) storetypes.KVStore
-}
 
 // collection is the interface that all collections support. It will eventually
 // include methods for importing/exporting genesis data and schema

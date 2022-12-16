@@ -205,7 +205,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 		{
 			name:        "valid proposalID but invalid proposal which has already passed",
 			proposalID:  proposal2ID,
-			proposer:    suite.addrs[1].String(),
+			proposer:    suite.addrs[0].String(),
 			expectedErr: true,
 		},
 		{

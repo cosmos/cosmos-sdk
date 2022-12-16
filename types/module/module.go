@@ -402,7 +402,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 			go func(moduleName string, module HasGenesis, cdc codec.JSONCodec, ch chan json.RawMessage) {
 				ch <- module.ExportGenesis(ctx, cdc)
 				close(ch)
-			}(moduleName, module, cdc, channels[len(channels)-1])
+			}(moduleName, module, cdc, channels[i])
 		}
 	}
 

@@ -9,11 +9,6 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-<<<<<<< HEAD
-=======
-	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
-	"github.com/cosmos/cosmos-sdk/store/internal/kv"
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"

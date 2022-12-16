@@ -53,22 +53,13 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.7
-<<<<<<< HEAD
+	github.com/tidwall/btree v1.5.2
 	golang.org/x/crypto v0.2.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	pgregory.net/rapid v0.4.7
-=======
-	github.com/tidwall/btree v1.5.2
-	golang.org/x/crypto v0.4.0
-	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
-	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6
-	google.golang.org/grpc v1.51.0
-	google.golang.org/protobuf v1.28.1
-	pgregory.net/rapid v0.5.3
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	sigs.k8s.io/yaml v1.3.0
 )
 

@@ -25,3 +25,9 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return v046.MigrateStore(ctx, m.keeper.storeKey, m.keeper.cdc)
 }
+
+// Migrate_V046_6_To_V046_7 fixes votes from <=v0.46.6
+// to v0.46.7 ONLY.
+func (m Migrator) Migrate_V046_6_To_V046_7(ctx sdk.Context) error {
+	return v046.Migrate_V046_6_To_V046_7(ctx.KVStore(m.keeper.storeKey), m.keeper.cdc)
+}

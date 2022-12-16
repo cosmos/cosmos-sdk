@@ -16,8 +16,8 @@ var (
 	_ Iterator = (*priorityNonceIterator)(nil)
 )
 
-// priorityNonceMempool defines the SDK's default mempool implementation which stores
-// txs in a partially ordered set by 2 dimensions: priority, and sender-nonce
+// priorityNonceMempool is a mempool implementation that stores txs
+// in a partially ordered set by 2 dimensions: priority, and sender-nonce
 // (sequence number). Internally it uses one priority ordered skip list and one
 // skip list per sender ordered by sender-nonce (sequence number). When there
 // are multiple txs from the same sender, they are not always comparable by
@@ -29,6 +29,7 @@ type priorityNonceMempool struct {
 	senderIndices  map[string]*skiplist.SkipList
 	scores         map[txMeta]txMeta
 	onRead         func(tx sdk.Tx)
+	maxTx          int
 }
 
 type priorityNonceIterator struct {
@@ -84,10 +85,21 @@ func txMetaLess(a, b any) int {
 
 type PriorityNonceMempoolOption func(*priorityNonceMempool)
 
-// WithOnRead sets a callback to be called when a tx is read from the mempool.
-func WithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption {
+// PriorityNonceWithOnRead sets a callback to be called when a tx is read from the mempool.
+func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.onRead = onRead
+	}
+}
+
+// PriorityNonceWithMaxTx sets the maximum number of transactions allowed in the mempool with the semantics:
+//
+// <0: disabled, `Insert` is a no-op
+// 0: unlimited
+// >0: maximum number of transactions allowed
+func PriorityNonceWithMaxTx(maxTx int) PriorityNonceMempoolOption {
+	return func(mp *priorityNonceMempool) {
+		mp.maxTx = maxTx
 	}
 }
 
@@ -123,6 +135,12 @@ func NewPriorityMempool(opts ...PriorityNonceMempoolOption) Mempool {
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
 func (mp *priorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
+	if mp.maxTx > 0 && mp.CountTx() >= mp.maxTx {
+		return ErrMempoolTxMaxCapacity
+	} else if mp.maxTx < 0 {
+		return nil
+	}
+
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

@@ -66,7 +66,7 @@ var v040Valid = `{
 	"validators": []
 }`
 
-func (s *IntegrationTestSuite) TestValidateGenesis() {
+func (s *E2ETestSuite) TestValidateGenesis() {
 	val0 := s.network.Validators[0]
 
 	testCases := []struct {

@@ -53,7 +53,7 @@ func TestPaginationProperty(t *testing.T) {
 
 		// Reconstruct the slice from keyed pages
 		reconstructedTableModels = make([]*testdata.TableModel, 0, len(tableModels))
-		var start uint64
+		var start uint64 = 0
 		key := EncodeSequence(0)
 		for key != nil {
 			pageRequest := &query.PageRequest{

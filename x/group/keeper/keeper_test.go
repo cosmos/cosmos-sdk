@@ -119,7 +119,7 @@ func (s *TestSuite) SetupTest() {
 	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
 }
 
-func (s TestSuite) setNextAccount() { //nolint:govet // this is a test, we can copy locks
+func (s TestSuite) setNextAccount() {
 	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
@@ -1405,12 +1405,12 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
 		if spec.preRun != nil {
-			policyAddr1, groupID := spec.preRun(admin)
+			policyAddr1, groupId := spec.preRun(admin)
 			policyAddr = policyAddr1
 
 			// update the expected info with new group policy details
 			spec.expGroupPolicy.Address = policyAddr1
-			spec.expGroupPolicy.GroupId = groupID
+			spec.expGroupPolicy.GroupId = groupId
 
 			// update req with new group policy addr
 			spec.req.GroupPolicyAddress = policyAddr1
@@ -1815,7 +1815,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
-		proposalID uint64
+		proposalId uint64
 		admin      string
 		expErrMsg  string
 	}{
@@ -1837,20 +1837,20 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			proposalID: proposalID,
+			proposalId: proposalID,
 			admin:      proposers[0],
 		},
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-					ProposalId: pID,
+					ProposalId: pId,
 					Address:    proposers[0],
 				})
 				s.Require().NoError(err)
-				return pID
+				return pId
 			},
-			proposalID: proposalID,
+			proposalId: proposalID,
 			admin:      proposers[0],
 			expErrMsg:  "cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
 		},
@@ -1858,17 +1858,17 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			proposalID: proposalID,
+			proposalId: proposalID,
 			admin:      proposers[0],
 		},
 	}
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			pID := spec.preRun(s.sdkCtx)
+			pId := spec.preRun(s.sdkCtx)
 
 			_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-				ProposalId: pID,
+				ProposalId: pId,
 				Address:    spec.admin,
 			})
 
@@ -1879,7 +1879,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			}
 
 			s.Require().NoError(err)
-			resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pID})
+			resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
 		})
@@ -2795,7 +2795,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64 //nolint:revive
+		proposalId uint64
 		admin      string
 		expErrMsg  string
 		newCtx     sdk.Context
@@ -2860,14 +2860,14 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		},
 		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-					ProposalId: pID,
+					ProposalId: pId,
 					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)
-				return pID
+				return pId
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
@@ -2876,14 +2876,14 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		},
 		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pID := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
+				pId := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-					ProposalId: pID,
+					ProposalId: pId,
 					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)
-				return pID
+				return pId
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
@@ -2895,11 +2895,11 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			pID := spec.preRun(s.sdkCtx)
+			pId := spec.preRun(s.sdkCtx)
 
 			module.EndBlocker(spec.newCtx, s.groupKeeper)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
-				ProposalId: pID,
+				ProposalId: pId,
 			})
 
 			if spec.expErrMsg != "" {
@@ -3212,7 +3212,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]
-	votingPeriod := 4 * time.Minute
+	votingPeriod := time.Duration(4 * time.Minute)
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
@@ -3271,7 +3271,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	addr3 := addrs[2]
-	votingPeriod := 4 * time.Minute
+	votingPeriod := time.Duration(4 * time.Minute)
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{

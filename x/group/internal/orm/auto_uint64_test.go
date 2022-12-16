@@ -4,11 +4,11 @@ import (
 	"math"
 	"testing"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,7 +41,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		Metadata: metadata,
 	}
 	for _, g := range []testdata.TableModel{t1, t2, t3} {
-		_, err := tb.Create(store, &g) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
 

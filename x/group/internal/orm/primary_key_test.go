@@ -41,14 +41,14 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		Metadata: metadata,
 	}
 	for _, g := range []testdata.TableModel{t1, t2, t3} {
-		require.NoError(t, tb.Create(store, &g)) //nolint:gosec // G601: Implicit memory aliasing in for loop.
+		require.NoError(t, tb.Create(store, &g))
 	}
 
 	specs := map[string]struct {
 		start, end []byte
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated
+		expError   *sdkerrors.Error
 		method     func(store sdk.KVStore, start, end []byte) (Iterator, error)
 	}{
 		"exact match with a single result": {

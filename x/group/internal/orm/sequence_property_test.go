@@ -41,6 +41,28 @@ func (m *sequenceMachine) Init(t *rapid.T) {
 }
 
 // Check does nothing, because all our invariants are captured in the commands
-func (m *sequenceMachine) Check(t *rapid.T) {
-	require.NotEmpty(t, m.state)
+func (m *sequenceMachine) Check(t *rapid.T) {}
+
+// NextVal is one of the model commands. It checks that the next value of the
+// sequence matches the model and increments the model state.
+func (m *sequenceMachine) NextVal(t *rapid.T) {
+	// Check that the next value in the sequence matches the model
+	require.Equal(t, m.state+1, m.seq.NextVal(m.store))
+
+	// Increment the model state
+	m.state++
+}
+
+// CurVal is one of the model commands. It checks that the current value of the
+// sequence matches the model.
+func (m *sequenceMachine) CurVal(t *rapid.T) {
+	// Check the current value matches the model
+	require.Equal(t, m.state, m.seq.CurVal(m.store))
+}
+
+// PeekNextVal is one of the model commands. It checks that the next value of
+// the sequence matches the model without modifying the state.
+func (m *sequenceMachine) PeekNextVal(t *rapid.T) {
+	// Check that the next value in the sequence matches the model
+	require.Equal(t, m.state+1, m.seq.PeekNextVal(m.store))
 }

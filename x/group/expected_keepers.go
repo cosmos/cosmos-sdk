@@ -6,15 +6,15 @@ import (
 )
 
 type AccountKeeper interface {
-	// NewAccount returns a new account with the next account number. Does not save the new account to the store.
+	// Return a new account with the next account number. Does not save the new account to the store.
 	NewAccount(sdk.Context, authtypes.AccountI) authtypes.AccountI
 
-	// GetAccount retrieves an account from the store.
+	// Retrieve an account from the store.
 	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
 
-	// SetAccount sets an account in the store.
+	// Set an account in the store.
 	SetAccount(sdk.Context, authtypes.AccountI)
-	// RemoveAccount removes an account in the store.
+	// Remove an account in the store.
 	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 

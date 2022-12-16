@@ -1,7 +1,7 @@
 package group_test
 
 import (
-	"fmt"
+	fmt "fmt"
 	"testing"
 	"time"
 

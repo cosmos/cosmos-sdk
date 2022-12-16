@@ -54,9 +54,13 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 				return v1beta1.Proposal{}, err
 			}
 			legacyProposal.Content = legacyMsg.Content
+			return legacyProposal, nil
 		}
 	}
-	return legacyProposal, nil
+	// hack to fill up the content with the first message
+	legacyProposal.Content, err = codectypes.NewAnyWithValue(msgs[0])
+
+	return legacyProposal, err
 }
 
 func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, error) {

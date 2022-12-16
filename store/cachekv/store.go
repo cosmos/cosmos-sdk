@@ -9,6 +9,11 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
+<<<<<<< HEAD
+=======
+	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
+	"github.com/cosmos/cosmos-sdk/store/internal/kv"
+>>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -30,7 +35,7 @@ type Store struct {
 	cache         map[string]*cValue
 	deleted       map[string]struct{}
 	unsortedCache map[string]struct{}
-	sortedCache   *dbm.MemDB // always ascending sorted
+	sortedCache   *internal.BTree // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -42,7 +47,7 @@ func NewStore(parent types.KVStore) *Store {
 		cache:         make(map[string]*cValue),
 		deleted:       make(map[string]struct{}),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   dbm.NewMemDB(),
+		sortedCache:   internal.NewBTree(),
 		parent:        parent,
 	}
 }
@@ -101,6 +106,14 @@ func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
+<<<<<<< HEAD
+=======
+	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
+		store.sortedCache = internal.NewBTree()
+		return
+	}
+
+>>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
 	keys := make([]string, 0, len(store.cache))
@@ -144,7 +157,7 @@ func (store *Store) Write() {
 	for key := range store.unsortedCache {
 		delete(store.unsortedCache, key)
 	}
-	store.sortedCache = dbm.NewMemDB()
+	store.sortedCache = internal.NewBTree()
 }
 
 // CacheWrap implements CacheWrapper.
@@ -183,9 +196,9 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	}
 
 	store.dirtyItems(start, end)
-	cache = newMemIterator(start, end, store.sortedCache, store.deleted, ascending)
+	cache = internal.NewMemIterator(start, end, store.sortedCache, store.deleted, ascending)
 
-	return newCacheMergeIterator(parent, cache, ascending)
+	return internal.NewCacheMergeIterator(parent, cache, ascending)
 }
 
 func findStartIndex(strL []string, startQ string) int {
@@ -364,10 +377,15 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 			store.sortedCache.Set(item.Key, []byte{})
 			continue
 		}
+<<<<<<< HEAD
 		err := store.sortedCache.Set(item.Key, item.Value)
 		if err != nil {
 			panic(err)
 		}
+=======
+
+		store.sortedCache.Set(item.Key, item.Value)
+>>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	}
 }
 

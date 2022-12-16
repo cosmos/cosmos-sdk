@@ -393,7 +393,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		panic(err)
 	}
 
-	var channels []chan json.RawMessage
+	channels := make([]chan json.RawMessage, len(modulesToExport))
 
 	for _, moduleName := range modulesToExport {
 		channels[i] = make(chan json.RawMessage)

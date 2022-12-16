@@ -81,6 +81,16 @@ func checkKeyCodec[T any](t *testing.T, encoder KeyCodec[T], key T) {
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")
+	// test if terminality is correctly applied
+	pairEncoder := PairKeyCodec(encoder, StringKey)
+	pairKey := Join(key, "TEST")
+	buffer = make([]byte, pairEncoder.Size(pairKey))
+	written, err = pairEncoder.Encode(buffer, pairKey)
+	require.NoError(t, err)
+	read, decodedPairKey, err := pairEncoder.Decode(buffer)
+	require.NoError(t, err)
+	require.Equal(t, len(buffer), read, "encoded non terminal key and pair key read bytes must have same size")
+	require.Equal(t, pairKey, decodedPairKey, "encoding and decoding produces different keys with non terminal encoding")
 }
 
 // checkValueCodec asserts the correct behaviour of a ValueCodec over the type T.

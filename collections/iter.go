@@ -2,10 +2,9 @@ package collections
 
 import (
 	"context"
+	"cosmossdk.io/core/store"
 	"errors"
 	"fmt"
-
-	"cosmossdk.io/core/store"
 )
 
 // ErrInvalidIterator is returned when an Iterate call resulted in an invalid iterator.
@@ -113,7 +112,7 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 		order = OrderAscending
 	)
 
-	if r == nil {
+	if r != nil {
 		start, end, order, err = r.RangeValues()
 		if err != nil {
 			return iter, err
@@ -140,21 +139,24 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	kv := m.sa(ctx)
 	switch order {
 	case OrderAscending:
-		return newIterator(kv.Iterator(startBytes, endBytes), m), nil
+		return newIterator(kv.Iterator(startBytes, endBytes), m)
 	case OrderDescending:
-		return newIterator(kv.ReverseIterator(startBytes, endBytes), m), nil
+		return newIterator(kv.ReverseIterator(startBytes, endBytes), m)
 	default:
 		return iter, errOrder
 	}
 }
 
-func newIterator[K, V any](iterator store.Iterator, m Map[K, V]) Iterator[K, V] {
+func newIterator[K, V any](iterator store.Iterator, m Map[K, V]) (Iterator[K, V], error) {
+	if iterator.Valid() == false {
+		return Iterator[K, V]{}, ErrInvalidIterator
+	}
 	return Iterator[K, V]{
 		kc:           m.kc,
 		vc:           m.vc,
 		iter:         iterator,
 		prefixLength: len(m.prefix),
-	}
+	}, nil
 }
 
 // Iterator defines a generic wrapper around an sdk.Iterator.

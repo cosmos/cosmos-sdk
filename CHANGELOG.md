@@ -37,6 +37,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (gov) [#14355](https://github.com/cosmos/cosmos-sdk/pull/14355) Expose gov Migrate_V046_6_To_V046_7 through migrator.
+
+
 ## [v0.46.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.7) - 2022-12-13
 
 ### Features

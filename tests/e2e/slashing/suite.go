@@ -15,21 +15,21 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-type EndToEndTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewEndToEndTestSuite(cfg network.Config) *EndToEndTestSuite {
-	return &EndToEndTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
 // SetupSuite executes bootstrapping logic before all the tests, i.e. once before
 // the entire suite, start executing.
-func (s *EndToEndTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -40,12 +40,12 @@ func (s *EndToEndTestSuite) SetupSuite() {
 
 // TearDownSuite performs cleanup logic after all the tests, i.e. once after the
 // entire suite, has finished executing.
-func (s *EndToEndTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *EndToEndTestSuite) TestGetCmdQuerySigningInfo() {
+func (s *E2ETestSuite) TestGetCmdQuerySigningInfo() {
 	val := s.network.Validators[0]
 	pubKeyBz, err := s.cfg.Codec.MarshalInterfaceJSON(val.PubKey)
 	s.Require().NoError(err)
@@ -103,7 +103,7 @@ tombstoned: false`, sdk.ConsAddress(val.PubKey.Address())),
 	}
 }
 
-func (s *EndToEndTestSuite) TestGetCmdQueryParams() {
+func (s *E2ETestSuite) TestGetCmdQueryParams() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -141,7 +141,7 @@ slash_fraction_downtime: "0.010000000000000000"`,
 	}
 }
 
-func (s *EndToEndTestSuite) TestNewUnjailTxCmd() {
+func (s *E2ETestSuite) TestNewUnjailTxCmd() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name         string

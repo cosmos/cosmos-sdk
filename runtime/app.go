@@ -48,6 +48,9 @@ type App struct {
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
 	appConfig         *appv1alpha1.Config
+	// initChainer is the init chainer function defined by the app config.
+	// this is only required if the chain wants to add special InitChainer logic.
+	initChainer sdk.InitChainer
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -82,7 +85,9 @@ func (a *App) Load(loadLatest bool) error {
 
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
-		a.SetInitChainer(a.InitChainer)
+		if a.initChainer == nil {
+			a.SetInitChainer(a.InitChainer)
+		}
 	}
 
 	if len(a.config.ExportGenesis) != 0 {
@@ -165,10 +170,12 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 	)
 }
 
+// RegisterNodeService registers the node gRPC service on the app gRPC router.
 func (a *App) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
 }
 
+// Configurator returns the app's configurator.
 func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
@@ -183,9 +190,16 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.basicManager.DefaultGenesis(a.cdc)
 }
 
-// GetStoreKeys returns all the keys stored store keys.
+// GetStoreKeys returns all the stored store keys.
 func (a *App) GetStoreKeys() []storetypes.StoreKey {
 	return a.storeKeys
+}
+
+// SetInitChainer sets the init chainer function
+// It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
+func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
+	a.initChainer = initChainer
+	a.BaseApp.SetInitChainer(initChainer)
 }
 
 // UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.

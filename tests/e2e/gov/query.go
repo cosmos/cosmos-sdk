@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-func (s *IntegrationTestSuite) TestCmdParams() {
+func (s *E2ETestSuite) TestCmdParams() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -70,7 +70,7 @@ voting_params:
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdParam() {
+func (s *E2ETestSuite) TestCmdParam() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -118,7 +118,7 @@ func (s *IntegrationTestSuite) TestCmdParam() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdProposer() {
+func (s *E2ETestSuite) TestCmdProposer() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) TestCmdProposer() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdTally() {
+func (s *E2ETestSuite) TestCmdTally() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -220,7 +220,7 @@ func (s *IntegrationTestSuite) TestCmdTally() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdGetProposal() {
+func (s *E2ETestSuite) TestCmdGetProposal() {
 	val := s.network.Validators[0]
 
 	title := "Text Proposal 1"
@@ -268,7 +268,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdGetProposals() {
+func (s *E2ETestSuite) TestCmdGetProposals() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -314,7 +314,7 @@ func (s *IntegrationTestSuite) TestCmdGetProposals() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
+func (s *E2ETestSuite) TestCmdQueryDeposits() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -360,7 +360,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposits() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
+func (s *E2ETestSuite) TestCmdQueryDeposit() {
 	val := s.network.Validators[0]
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
 
@@ -416,7 +416,7 @@ func (s *IntegrationTestSuite) TestCmdQueryDeposit() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdQueryVotes() {
+func (s *E2ETestSuite) TestCmdQueryVotes() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -467,7 +467,7 @@ func (s *IntegrationTestSuite) TestCmdQueryVotes() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdQueryVote() {
+func (s *E2ETestSuite) TestCmdQueryVote() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {

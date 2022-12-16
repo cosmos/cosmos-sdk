@@ -5,11 +5,12 @@ package errors
 
 import (
 	"fmt"
+	"net/http"
 
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
-	"github.com/cosmos/rosetta-sdk-go/types"
+	"github.com/coinbase/rosetta-sdk-go/types"
 	tmtypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 )
 
@@ -83,7 +84,7 @@ func ToRosetta(err error) *types.Error {
 // fromTendermintToRosettaError converts a tendermint jsonrpc error to rosetta error
 func fromTendermintToRosettaError(err *tmtypes.RPCError) *Error {
 	return &Error{rosErr: &types.Error{
-		Code:    int32(err.Code),
+		Code:    http.StatusInternalServerError,
 		Message: err.Message,
 		Details: map[string]interface{}{
 			"info": err.Data,

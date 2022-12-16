@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// UnbondingTime
+// UnbondingTime - The time duration for unbonding
 func (k Keeper) UnbondingTime(ctx sdk.Context) time.Duration {
 	return k.GetParams(ctx).UnbondingTime
 }

@@ -204,10 +204,4 @@ func TestRange(t *testing.T) {
 		})
 	}
 }
-
-func Test_prefixEndBytes(t *testing.T) {
-	x := []byte("hello")
-	end := prefixEndBytes(x)
-	t.Logf("%s", end)
-}
 */

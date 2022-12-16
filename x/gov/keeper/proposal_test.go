@@ -222,7 +222,8 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 				// making proposal status pass
 				makeProposalPass()
 			}
-			err = suite.govKeeper.CancelProposal(suite.ctx, tc.proposalID, tc.proposer)
+			cancelProposalReq := v1.NewMsgCancelProposal(tc.proposalID, tc.proposer)
+			_, err = suite.msgSrvr.CancelProposal(suite.ctx, cancelProposalReq)
 			if tc.expectedErr {
 				suite.Require().Error(err)
 			} else {

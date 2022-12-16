@@ -9,6 +9,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
+	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -369,15 +370,7 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 			store.sortedCache.Set(item.Key, []byte{})
 			continue
 		}
-<<<<<<< HEAD
-		err := store.sortedCache.Set(item.Key, item.Value)
-		if err != nil {
-			panic(err)
-		}
-=======
-
 		store.sortedCache.Set(item.Key, item.Value)
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	}
 }
 

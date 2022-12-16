@@ -14,7 +14,7 @@ var _ types.Iterator = (*memIterator)(nil)
 // if key is nil, means it was deleted.
 // Implements Iterator.
 type memIterator struct {
-	iter btree.GenericIter[item]
+	iter btree.IterG[item]
 
 	start     []byte
 	end       []byte

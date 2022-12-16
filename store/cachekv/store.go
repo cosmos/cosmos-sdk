@@ -101,14 +101,11 @@ func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-<<<<<<< HEAD
-=======
 	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
 		store.sortedCache = internal.NewBTree()
 		return
 	}
 
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
 	keys := make([]string, 0, len(store.cache))

@@ -133,10 +133,7 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-cosmovisor:
-	$(MAKE) -C cosmovisor cosmovisor
-
-.PHONY: build build-linux cosmovisor
+.PHONY: build build-linux
 
 mockgen_cmd=go run github.com/golang/mock/mockgen
 

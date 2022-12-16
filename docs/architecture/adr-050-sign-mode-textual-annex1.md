@@ -4,6 +4,7 @@
 
 * Dec 06, 2021: Initial Draft
 * Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
+* Dec 01, 2022: Remove `Object: ` prefix on Any header screen.
 
 ## Status
 
@@ -50,11 +51,13 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 * an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
 * the list of coins is ordered by unicode code point of the display denom: `A-Z` < `a-z`. For example, the string `aAbBcC` would be sorted `ABCabc`.
+- if the coins list had 0 items in it then it'll be rendered as `zero`
 
 ### Example
 
 * `["3cosm", "2000000uatom"]` -> `2 atom, 3 COSM` (assuming the display denoms are `atom` and `COSM`)
 * `["10atom", "20Acoin"]` -> `20 Acoin, 10 atom` (assuming the display denoms are `atom` and `Acoin`)
+- `[]` -> `zero` 
 
 ### `repeated`
 
@@ -179,14 +182,14 @@ See example above with `message Vote{}`.
 * Rendered as:
 
 ```
-Object: <type_url>
+<type_url>
 > <value rendered underlying message>
 ```
 
 #### Examples
 
 ```
-Object: type.googleapis.com/cosmos.gov.v1.Vote
+type.googleapis.com/cosmos.gov.v1.Vote
 > Vote object
 >> Proposal id: 4
 >> Vote: cosmos1abc...def

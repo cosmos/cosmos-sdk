@@ -4,6 +4,7 @@ use (
 	.
 	./api
 	./client/v2
+	./collections
 	./core
 	./depinject
 	./errors

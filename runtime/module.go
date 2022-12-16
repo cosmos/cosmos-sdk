@@ -3,6 +3,8 @@ package runtime
 import (
 	"fmt"
 
+	"cosmossdk.io/core/store"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
@@ -33,6 +35,9 @@ func init() {
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
 			ProvideDeliverTx,
+			ProvideKVStoreService,
+			ProvideMemoryStoreService,
+			ProvideTransientStoreService,
 		),
 		appmodule.Invoke(SetupAppBuilder),
 	)
@@ -81,11 +86,10 @@ type AppInputs struct {
 }
 
 func SetupAppBuilder(inputs AppInputs) {
-	mm := module.NewManagerFromMap(inputs.Modules)
 	app := inputs.AppBuilder.app
 	app.baseAppOptions = inputs.BaseAppOptions
 	app.config = inputs.Config
-	app.ModuleManager = mm
+	app.ModuleManager = module.NewManagerFromMap(inputs.Modules)
 	app.appConfig = inputs.AppConfig
 
 	for name, mod := range inputs.Modules {
@@ -141,4 +145,19 @@ func ProvideDeliverTx(appBuilder *AppBuilder) func(abci.RequestDeliverTx) abci.R
 	return func(tx abci.RequestDeliverTx) abci.ResponseDeliverTx {
 		return appBuilder.app.BaseApp.DeliverTx(tx)
 	}
+}
+
+func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
+	storeKey := ProvideKVStoreKey(config, key, app)
+	return kvStoreService{key: storeKey}
+}
+
+func ProvideMemoryStoreService(key depinject.ModuleKey, app *AppBuilder) store.MemoryStoreService {
+	storeKey := ProvideMemoryStoreKey(key, app)
+	return memStoreService{key: storeKey}
+}
+
+func ProvideTransientStoreService(key depinject.ModuleKey, app *AppBuilder) store.TransientStoreService {
+	storeKey := ProvideTransientStoreKey(key, app)
+	return transientStoreService{key: storeKey}
 }

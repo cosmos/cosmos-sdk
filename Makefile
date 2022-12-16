@@ -109,7 +109,7 @@ ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
-all: tools build lint test
+all: tools build lint test vulncheck
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -137,13 +137,21 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor
+rosetta:
+	$(MAKE) -C tools/rosetta rosetta
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
 
 
 mocks: $(MOCKS_DIR)
 	@go install github.com/golang/mock/mockgen@v1.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
+
+
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
@@ -384,7 +392,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.2
+protoVer=0.11.3
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

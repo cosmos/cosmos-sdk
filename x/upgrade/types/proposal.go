@@ -9,6 +9,7 @@ const (
 	ProposalTypeCancelSoftwareUpgrade string = "CancelSoftwareUpgrade"
 )
 
+// NewSoftwareUpgradeProposal creates a new SoftwareUpgradeProposal instance
 func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Content {
 	return &SoftwareUpgradeProposal{title, description, plan}
 }
@@ -21,10 +22,19 @@ func init() {
 	gov.RegisterProposalType(ProposalTypeCancelSoftwareUpgrade)
 }
 
-func (sup *SoftwareUpgradeProposal) GetTitle() string       { return sup.Title }
+// GetTitle gets the proposal's title
+func (sup *SoftwareUpgradeProposal) GetTitle() string { return sup.Title }
+
+// GetDescription gets the proposal's description
 func (sup *SoftwareUpgradeProposal) GetDescription() string { return sup.Description }
-func (sup *SoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
-func (sup *SoftwareUpgradeProposal) ProposalType() string   { return ProposalTypeSoftwareUpgrade }
+
+// ProposalRoute gets the proposal's router key
+func (sup *SoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType is "SoftwareUpgrade"
+func (sup *SoftwareUpgradeProposal) ProposalType() string { return ProposalTypeSoftwareUpgrade }
+
+// ValidateBasic validates the proposal
 func (sup *SoftwareUpgradeProposal) ValidateBasic() error {
 	if err := sup.Plan.ValidateBasic(); err != nil {
 		return err
@@ -32,6 +42,7 @@ func (sup *SoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(sup)
 }
 
+// NewCancelSoftwareUpgradeProposal creates a new CancelSoftwareUpgradeProposal instance
 func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 	return &CancelSoftwareUpgradeProposal{title, description}
 }
@@ -39,13 +50,21 @@ func NewCancelSoftwareUpgradeProposal(title, description string) gov.Content {
 // Implements Proposal Interface
 var _ gov.Content = &CancelSoftwareUpgradeProposal{}
 
-func (csup *CancelSoftwareUpgradeProposal) GetTitle() string       { return csup.Title }
+// GetTitle gets the proposal's title
+func (csup *CancelSoftwareUpgradeProposal) GetTitle() string { return csup.Title }
+
+// GetDescription gets the proposal's description
 func (csup *CancelSoftwareUpgradeProposal) GetDescription() string { return csup.Description }
-func (csup *CancelSoftwareUpgradeProposal) ProposalRoute() string  { return RouterKey }
+
+// ProposalRoute gets the proposal's router key
+func (csup *CancelSoftwareUpgradeProposal) ProposalRoute() string { return RouterKey }
+
+// ProposalType is "CancelSoftwareUpgrade"
 func (csup *CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
 
+// ValidateBasic validates the proposal
 func (csup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(csup)
 }

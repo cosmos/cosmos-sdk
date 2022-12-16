@@ -11,15 +11,12 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestStoreType(t *testing.T) {
@@ -433,19 +430,19 @@ func TestMultiStoreQuery(t *testing.T) {
 	// Test bad path.
 	query := abci.RequestQuery{Path: "/key", Data: k, Height: ver}
 	qres := multi.Query(query)
-	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	query.Path = "h897fy32890rf63296r92"
 	qres = multi.Query(query)
-	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test invalid store name.
 	query.Path = "/garbage/key"
 	qres = multi.Query(query)
-	require.EqualValues(t, sdkerrors.ErrUnknownRequest.ABCICode(), qres.Code)
-	require.EqualValues(t, sdkerrors.ErrUnknownRequest.Codespace(), qres.Codespace)
+	require.EqualValues(t, types.ErrUnknownRequest.ABCICode(), qres.Code)
+	require.EqualValues(t, types.ErrUnknownRequest.Codespace(), qres.Codespace)
 
 	// Test valid query with data.
 	query.Path = "/store1/key"
@@ -647,12 +644,11 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 }
 
 var (
-	interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
-	testKey1          = []byte{1, 2, 3, 4, 5}
-	testValue1        = []byte{5, 4, 3, 2, 1}
-	testKey2          = []byte{2, 3, 4, 5, 6}
-	testValue2        = []byte{6, 5, 4, 3, 2}
+	testMarshaller = types.NewTestCodec()
+	testKey1       = []byte{1, 2, 3, 4, 5}
+	testValue1     = []byte{5, 4, 3, 2, 1}
+	testKey2       = []byte{2, 3, 4, 5, 6}
+	testValue2     = []byte{6, 5, 4, 3, 2}
 )
 
 func TestGetListenWrappedKVStore(t *testing.T) {
@@ -741,9 +737,6 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithTrace := multi.CacheWrapWithTrace(nil, nil)
 	require.IsType(t, cachemulti.Store{}, cacheWrappedWithTrace)
-
-	cacheWrappedWithListeners := multi.CacheWrapWithListeners(nil, nil)
-	require.IsType(t, cachemulti.Store{}, cacheWrappedWithListeners)
 }
 
 func TestTraceConcurrency(t *testing.T) {

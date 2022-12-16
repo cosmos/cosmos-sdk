@@ -62,6 +62,7 @@ func QueryEvidenceCmd() func(*cobra.Command, []string) error {
 	}
 }
 
+// queryEvidence queries for a single evidence by the given hash.
 func queryEvidence(clientCtx client.Context, hash string) error {
 	queryClient := types.NewQueryClient(clientCtx)
 
@@ -74,6 +75,7 @@ func queryEvidence(clientCtx client.Context, hash string) error {
 	return clientCtx.PrintProto(res.Evidence)
 }
 
+// queryAllEvidence returns all evidences.
 func queryAllEvidence(clientCtx client.Context, pageReq *query.PageRequest) error {
 	queryClient := types.NewQueryClient(clientCtx)
 

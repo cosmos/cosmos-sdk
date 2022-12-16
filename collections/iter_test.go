@@ -151,6 +151,7 @@ func TestIteratorRanging(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidIterator)
 }
 
+/*
 func TestRange(t *testing.T) {
 	type test struct {
 		rng        *Range[string]
@@ -203,3 +204,10 @@ func TestRange(t *testing.T) {
 		})
 	}
 }
+
+func Test_prefixEndBytes(t *testing.T) {
+	x := []byte("hello")
+	end := prefixEndBytes(x)
+	t.Logf("%s", end)
+}
+*/

@@ -91,8 +91,8 @@ func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
 
 type PairRange[K1, K2 any] struct {
 	prefix *K1
-	start  *Bound[K2]
-	end    *Bound[K2]
+	start  *RangeBound[K2]
+	end    *RangeBound[K2]
 	order  Order
 }
 

@@ -156,8 +156,6 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 	require.NoError(t, itr.Close())
 }
 
-<<<<<<< HEAD
-=======
 func TestCacheKVReverseIteratorBounds(t *testing.T) {
 	st := newCacheKVStore()
 
@@ -215,7 +213,6 @@ func TestCacheKVReverseIteratorBounds(t *testing.T) {
 	require.NoError(t, itr.Close())
 }
 
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	st := newCacheKVStore()
 
@@ -355,8 +352,6 @@ func TestCacheKVMergeIteratorChunks(t *testing.T) {
 	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 35}, {38, 40}, {45, 80}})
 }
 
-<<<<<<< HEAD
-=======
 func TestCacheKVMergeIteratorDomain(t *testing.T) {
 	st := newCacheKVStore()
 
@@ -376,7 +371,6 @@ func TestCacheKVMergeIteratorDomain(t *testing.T) {
 	require.Equal(t, keyFmt(80), end)
 }
 
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()
@@ -392,8 +386,6 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	}
 }
 
-<<<<<<< HEAD
-=======
 func TestNilEndIterator(t *testing.T) {
 	const SIZE = 3000
 
@@ -455,7 +447,6 @@ func TestIteratorDeadlock(t *testing.T) {
 	defer it2.Close()
 }
 
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 //-------------------------------------------------------------------------------------------
 // do some random ops
 

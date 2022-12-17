@@ -10,11 +10,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-<<<<<<< HEAD
-=======
 	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
-	"github.com/cosmos/cosmos-sdk/store/internal/kv"
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -106,15 +102,12 @@ func (store *Store) Delete(key []byte) {
 func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
-<<<<<<< HEAD
 	defer telemetry.MeasureSince(time.Now(), "store", "cachekv", "write")
-=======
 
 	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
 		store.sortedCache = internal.NewBTree()
 		return
 	}
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
@@ -372,22 +365,11 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 		if item.Value == nil {
 			// deleted element, tracked by store.deleted
 			// setting arbitrary value
-<<<<<<< HEAD
-			// TODO: Don't ignore this error.
-			store.sortedCache.Set(item.Key, []byte{})
-			continue
-		}
-		err := store.sortedCache.Set(item.Key, item.Value)
-		if err != nil {
-			panic(err)
-		}
-=======
 			store.sortedCache.Set(item.Key, []byte{})
 			continue
 		}
 
 		store.sortedCache.Set(item.Key, item.Value)
->>>>>>> cbee1b3ea (perf: optimize iteration on nested cache context (#13881))
 	}
 }
 

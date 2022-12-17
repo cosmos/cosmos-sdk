@@ -184,6 +184,8 @@ func NewBaseApp(
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
+	// Set module names on the message server router
+
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	return app
@@ -225,6 +227,8 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 // MountStores mounts all IAVL or DB stores to the provided keys in the BaseApp
 // multistore.
 func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
+	app.msgServiceRouter.SetModuleName(keys)
+
 	for _, key := range keys {
 		switch key.(type) {
 		case *storetypes.KVStoreKey:
@@ -796,7 +800,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		// create message events
-		msgEvents := createEvents(msg).AppendEvents(msgResult.GetEvents())
+		msgEvents := createEvents(msg, app.msgServiceRouter.moduleNames[msg.String()]).AppendEvents(msgResult.GetEvents())
 
 		// append message events, data and logs
 		//
@@ -838,7 +842,7 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(msg sdk.Msg) sdk.Events {
+func createEvents(msg sdk.Msg, name string) sdk.Events {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
@@ -847,12 +851,7 @@ func createEvents(msg sdk.Msg) sdk.Events {
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
 	}
 
-	// here we assume that routes module name is the second element of the route
-	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
-	moduleName := strings.Split(eventMsgName, ".")
-	if len(moduleName) > 1 {
-		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
-	}
+	msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, name))
 
 	return sdk.Events{msgEvent}
 }

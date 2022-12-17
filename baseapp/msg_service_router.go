@@ -3,12 +3,14 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -17,6 +19,8 @@ import (
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
+	moduleNames       map[string]string // map of module names associated with each Msg service msgURL/moduleName
+	mn                map[string]struct{}
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -24,12 +28,23 @@ var _ gogogrpc.Server = &MsgServiceRouter{}
 // NewMsgServiceRouter creates a new MsgServiceRouter.
 func NewMsgServiceRouter() *MsgServiceRouter {
 	return &MsgServiceRouter{
-		routes: map[string]MsgServiceHandler{},
+		routes:      map[string]MsgServiceHandler{},
+		moduleNames: map[string]string{},
 	}
 }
 
 // MsgServiceHandler defines a function type which handles Msg service message.
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
+
+// SetModuleName sets a module name used
+func (msr MsgServiceRouter) SetModuleName(names []storetypes.StoreKey) {
+	msr.mn = make(map[string]struct{})
+
+	for _, e := range names {
+		msr.mn[e.Name()] = struct{}{}
+	}
+
+}
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
 func (msr *MsgServiceRouter) Handler(msg sdk.Msg) MsgServiceHandler {
@@ -54,8 +69,26 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 	for _, method := range sd.Methods {
 		fqMethod := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 		methodHandler := method.Handler
-
 		var requestTypeName string
+
+		// assign a module name to the message url
+		if _, ok := msr.moduleNames[sd.ServiceName]; !ok {
+			for k := range msr.mn {
+				fmt.Println(k, sd.ServiceName)
+				if strings.Contains(k, sd.ServiceName) {
+					fmt.Println("test")
+					if strings.Contains(k, ":") {
+
+					}
+					msr.moduleNames[sd.ServiceName] = k // put the module name on the message url
+				}
+			}
+		}
+
+		// check if the new map contains the service name, if not add it
+		// add the module name from the moduleNames map associated with the service name
+
+		// fmt.Println(msr.moduleNames, "msr.moduleName", sd.ServiceName)
 
 		// NOTE: This is how we pull the concrete request type for each handler for registering in the InterfaceRegistry.
 		// This approach is maybe a bit hacky, but less hacky than reflecting on the handler object itself.

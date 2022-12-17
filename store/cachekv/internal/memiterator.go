@@ -8,12 +8,12 @@ import (
 	"github.com/tidwall/btree"
 )
 
-var _ types.Iterator = (*memIterator)(nil)
+var _ types.Iterator = (*MemIterator)(nil)
 
 // memIterator iterates over iterKVCache items.
 // if key is nil, means it was deleted.
 // Implements Iterator.
-type memIterator struct {
+type MemIterator struct {
 	iter btree.IterG[item]
 
 	start     []byte
@@ -24,7 +24,7 @@ type memIterator struct {
 	valid     bool
 }
 
-func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator {
+func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *MemIterator {
 	iter := items.tree.Iter()
 	var valid bool
 	if ascending {
@@ -47,7 +47,7 @@ func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}
 		}
 	}
 
-	mi := &memIterator{
+	mi := &MemIterator{
 		iter:      iter,
 		start:     start,
 		end:       end,
@@ -64,27 +64,27 @@ func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}
 	return mi
 }
 
-func (mi *memIterator) Domain() (start []byte, end []byte) {
+func (mi *MemIterator) Domain() (start []byte, end []byte) {
 	return mi.start, mi.end
 }
 
-func (mi *memIterator) Close() error {
+func (mi *MemIterator) Close() error {
 	mi.iter.Release()
 	return nil
 }
 
-func (mi *memIterator) Error() error {
+func (mi *MemIterator) Error() error {
 	if !mi.Valid() {
 		return errors.New("invalid memIterator")
 	}
 	return nil
 }
 
-func (mi *memIterator) Valid() bool {
+func (mi *MemIterator) Valid() bool {
 	return mi.valid
 }
 
-func (mi *memIterator) Next() {
+func (mi *MemIterator) Next() {
 	mi.assertValid()
 
 	if mi.ascending {
@@ -98,7 +98,7 @@ func (mi *memIterator) Next() {
 	}
 }
 
-func (mi *memIterator) keyInRange(key []byte) bool {
+func (mi *MemIterator) keyInRange(key []byte) bool {
 	if mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
 	}
@@ -108,11 +108,11 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 	return true
 }
 
-func (mi *memIterator) Key() []byte {
+func (mi *MemIterator) Key() []byte {
 	return mi.iter.Item().key
 }
 
-func (mi *memIterator) Value() []byte {
+func (mi *MemIterator) Value() []byte {
 	item := mi.iter.Item()
 	key := item.key
 	// We need to handle the case where deleted is modified and includes our current key
@@ -130,7 +130,7 @@ func (mi *memIterator) Value() []byte {
 	return item.value
 }
 
-func (mi *memIterator) assertValid() {
+func (mi *MemIterator) assertValid() {
 	if err := mi.Error(); err != nil {
 		panic(err)
 	}

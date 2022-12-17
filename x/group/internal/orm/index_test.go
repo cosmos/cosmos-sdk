@@ -119,6 +119,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		Metadata: []byte("metadata-b"),
 	}
 	for _, g := range []testdata.TableModel{g1, g2, g3} {
+		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
@@ -127,7 +128,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		start, end interface{}
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error
+		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 		method     func(store sdk.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {

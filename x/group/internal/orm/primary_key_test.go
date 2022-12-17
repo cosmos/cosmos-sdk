@@ -41,6 +41,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		Metadata: metadata,
 	}
 	for _, g := range []testdata.TableModel{t1, t2, t3} {
+		g := g
 		require.NoError(t, tb.Create(store, &g))
 	}
 
@@ -48,7 +49,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		start, end []byte
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error
+		expError   *sdkerrors.Error //nolint:staticcheck
 		method     func(store sdk.KVStore, start, end []byte) (Iterator, error)
 	}{
 		"exact match with a single result": {

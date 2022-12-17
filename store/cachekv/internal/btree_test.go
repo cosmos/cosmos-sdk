@@ -181,7 +181,7 @@ func TestDBIterator(t *testing.T) {
 	verifyIterator(t, ritr, nil, "reverse iterator with empty db")
 }
 
-func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string) {
+func verifyIterator(t *testing.T, itr *MemIterator, expected []int64, msg string) {
 	i := 0
 	for itr.Valid() {
 		key := itr.Key()

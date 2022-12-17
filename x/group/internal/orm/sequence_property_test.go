@@ -1,3 +1,4 @@
+//nolint:unused // these are tests, which are actually used for testing
 package orm
 
 import (

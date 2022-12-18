@@ -1,4 +1,3 @@
-//nolint:unused // these are used for testing
 package orm
 
 import (
@@ -48,8 +47,9 @@ func (m *primaryKeyMachine) genTableModel() *rapid.Generator[*testdata.TableMode
 
 	if len(m.stateKeys()) == 0 {
 		return genTableModel
+	} else {
+		return rapid.OneOf(genTableModel, genStateTableModel)
 	}
-	return rapid.OneOf(genTableModel, genStateTableModel)
 }
 
 // Init creates a new instance of the state machine model by building the real

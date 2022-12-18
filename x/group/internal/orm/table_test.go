@@ -57,7 +57,7 @@ func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
 		src    proto.Message
-		expErr *sdkerrors.Error //nolint:staticcheck
+		expErr *sdkerrors.Error
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -125,7 +125,7 @@ func TestCreate(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
 		src    proto.Message
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expErr *sdkerrors.Error
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -186,14 +186,14 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
-		rowID  []byte
-		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		rowId  []byte
+		expErr *sdkerrors.Error
 	}{
 		"happy path": {
-			rowID: EncodeSequence(1),
+			rowId: EncodeSequence(1),
 		},
 		"not found": {
-			rowID:  []byte("not-found"),
+			rowId:  []byte("not-found"),
 			expErr: sdkerrors.ErrNotFound,
 		},
 	}
@@ -218,7 +218,7 @@ func TestDelete(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
-			err = myTable.Delete(store, spec.rowID)
+			err = myTable.Delete(store, spec.rowId)
 			require.True(t, spec.expErr.Is(err), "got ", err)
 
 			// then

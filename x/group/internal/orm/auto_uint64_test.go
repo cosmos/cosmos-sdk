@@ -41,7 +41,6 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		Metadata: metadata,
 	}
 	for _, g := range []testdata.TableModel{t1, t2, t3} {
-		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}
@@ -50,7 +49,7 @@ func TestAutoUInt64PrefixScan(t *testing.T) {
 		start, end uint64
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
-		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
+		expError   *sdkerrors.Error
 		method     func(store sdk.KVStore, start uint64, end uint64) (Iterator, error)
 	}{
 		"first element": {

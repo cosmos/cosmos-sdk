@@ -126,7 +126,9 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 //
 // Since: cosmos-sdk 0.43
 type WeightedVoteOption struct {
-	Option VoteOption                             `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
+	// option defines the valid vote options, it must not contain duplicate vote options.
+	Option VoteOption `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
+	// weight is the vote weight associated with the vote option.
 	Weight github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"weight"`
 }
 
@@ -166,7 +168,9 @@ var xxx_messageInfo_WeightedVoteOption proto.InternalMessageInfo
 // TextProposal defines a standard text proposal whose changes need to be
 // manually updated in case of approval.
 type TextProposal struct {
-	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// title of the proposal.
+	Title string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	// description associated with the proposal.
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 }
 
@@ -206,9 +210,12 @@ var xxx_messageInfo_TextProposal proto.InternalMessageInfo
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 type Deposit struct {
-	ProposalId uint64                                   `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Depositor  string                                   `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// amount to be deposited by depositor.
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
 }
 
 func (m *Deposit) Reset()         { *m = Deposit{} }
@@ -246,18 +253,26 @@ var xxx_messageInfo_Deposit proto.InternalMessageInfo
 
 // Proposal defines the core field members of a governance proposal.
 type Proposal struct {
-	ProposalId uint64         `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Content    *types1.Any    `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
-	Status     ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// content is the proposal's content.
+	Content *types1.Any `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	// status defines the proposal status.
+	Status ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1beta1.ProposalStatus" json:"status,omitempty"`
 	// final_tally_result is the final tally result of the proposal. When
 	// querying a proposal via gRPC, this field is not populated until the
 	// proposal's voting period has ended.
-	FinalTallyResult TallyResult                              `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result"`
-	SubmitTime       time.Time                                `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`
-	DepositEndTime   time.Time                                `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time"`
-	TotalDeposit     github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_deposit"`
-	VotingStartTime  time.Time                                `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time"`
-	VotingEndTime    time.Time                                `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time"`
+	FinalTallyResult TallyResult `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result"`
+	// submit_time is the time of proposal submission.
+	SubmitTime time.Time `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`
+	// deposit_end_time is the end time for deposition.
+	DepositEndTime time.Time `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time"`
+	// total_deposit is the total deposit on the proposal.
+	TotalDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"total_deposit"`
+	// voting_start_time is the starting time to vote on a proposal.
+	VotingStartTime time.Time `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time"`
+	// voting_end_time is the end time of voting on a proposal.
+	VotingEndTime time.Time `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time"`
 }
 
 func (m *Proposal) Reset()         { *m = Proposal{} }
@@ -295,9 +310,13 @@ var xxx_messageInfo_Proposal proto.InternalMessageInfo
 
 // TallyResult defines a standard tally for a governance proposal.
 type TallyResult struct {
-	Yes        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"yes"`
-	Abstain    github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"abstain"`
-	No         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no"`
+	// yes is the number of yes votes on a proposal.
+	Yes github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"yes"`
+	// abstain is the number of abstain votes on a proposal.
+	Abstain github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"abstain"`
+	// no is the number of no votes on a proposal.
+	No github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no"`
+	// no_with_veto is the number of no with veto votes on a proposal.
 	NoWithVeto github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"no_with_veto"`
 }
 
@@ -337,12 +356,16 @@ var xxx_messageInfo_TallyResult proto.InternalMessageInfo
 // Vote defines a vote on a governance proposal.
 // A Vote consists of a proposal ID, the voter, and the vote option.
 type Vote struct {
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"id"`
-	Voter      string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// voter is the voter address of the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// Deprecated: Prefer to use `options` instead. This field is set in queries
 	// if and only if `len(options) == 1` and that option has weight 1. In all
 	// other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"` // Deprecated: Do not use.
+	// options is the weighted vote options.
+	//
 	// Since: cosmos-sdk 0.43
 	Options []WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options"`
 }
@@ -382,10 +405,10 @@ var xxx_messageInfo_Vote proto.InternalMessageInfo
 
 // DepositParams defines the params for deposits on governance proposals.
 type DepositParams struct {
-	//  Minimum deposit for a proposal to enter voting period.
+	// Minimum deposit for a proposal to enter voting period.
 	MinDeposit github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"min_deposit,omitempty"`
-	//  Maximum period for Atom holders to deposit on a proposal. Initial value: 2
-	//  months.
+	// Maximum period for Atom holders to deposit on a proposal. Initial value: 2
+	// months.
 	MaxDepositPeriod time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty"`
 }
 
@@ -424,7 +447,7 @@ var xxx_messageInfo_DepositParams proto.InternalMessageInfo
 
 // VotingParams defines the params for voting on governance proposals.
 type VotingParams struct {
-	//  Length of the voting period.
+	// Duration of the voting period.
 	VotingPeriod time.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period,omitempty"`
 }
 
@@ -463,13 +486,13 @@ var xxx_messageInfo_VotingParams proto.InternalMessageInfo
 
 // TallyParams defines the params for tallying votes on governance proposals.
 type TallyParams struct {
-	//  Minimum percentage of total stake needed to vote for a result to be
-	//  considered valid.
+	// Minimum percentage of total stake needed to vote for a result to be
+	// considered valid.
 	Quorum github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"quorum,omitempty"`
-	//  Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
+	// Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
 	Threshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"threshold,omitempty"`
-	//  Minimum value of Veto votes to Total votes ratio for proposal to be
-	//  vetoed. Default value: 1/3.
+	// Minimum value of Veto votes to Total votes ratio for proposal to be
+	// vetoed. Default value: 1/3.
 	VetoThreshold github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=veto_threshold,json=vetoThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"veto_threshold,omitempty"`
 }
 

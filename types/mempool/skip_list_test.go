@@ -3,7 +3,7 @@ package mempool_test
 import (
 	"testing"
 
-	huandu "github.com/huandu/skiplist"
+	"github.com/huandu/skiplist"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +13,7 @@ type collisionKey struct {
 }
 
 func TestSkipListCollisions(t *testing.T) {
-	integerList := huandu.New(huandu.Int)
+	integerList := skiplist.New(skiplist.Int)
 
 	integerList.Set(1, 1)
 	integerList.Set(2, 2)
@@ -34,13 +34,13 @@ func TestSkipListCollisions(t *testing.T) {
 	require.Equal(t, 4, integerList.Get(1).Value)
 
 	// prove this again with a compound key
-	compoundList := huandu.New(huandu.LessThanFunc(func(x, y any) int {
+	compoundList := skiplist.New(skiplist.LessThanFunc(func(x, y any) int {
 		kx := x.(collisionKey)
 		ky := y.(collisionKey)
 		if kx.a == ky.a {
-			return huandu.Int.Compare(kx.b, ky.b)
+			return skiplist.Int.Compare(kx.b, ky.b)
 		}
-		return huandu.Int.Compare(kx.a, ky.a)
+		return skiplist.Int.Compare(kx.a, ky.a)
 	}))
 
 	compoundList.Set(collisionKey{a: 1, b: 1}, 1)

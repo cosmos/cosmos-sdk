@@ -169,7 +169,7 @@ func NewBaseApp(
 	}
 
 	if app.mempool == nil {
-		app.SetMempool(mempool.NewSenderNonceMempool())
+		app.SetMempool(mempool.NoOpMempool{})
 	}
 
 	if app.processProposal == nil {
@@ -485,10 +485,10 @@ func (app *BaseApp) AddRunTxRecoveryHandler(handlers ...RecoveryHandler) {
 	}
 }
 
-// getMaximumBlockGas gets the maximum gas from the consensus params. It panics
+// GetMaximumBlockGas gets the maximum gas from the consensus params. It panics
 // if maximum block gas is less than negative one and returns zero if negative
 // one.
-func (app *BaseApp) getMaximumBlockGas(ctx sdk.Context) uint64 {
+func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	cp := app.GetConsensusParams(ctx)
 	if cp == nil || cp.Block == nil {
 		return 0
@@ -857,18 +857,35 @@ func createEvents(msg sdk.Msg) sdk.Events {
 	return sdk.Events{msgEvent}
 }
 
-// DefaultPrepareProposal returns the default implementation for processing an ABCI proposal.  The application's
-// mempool is enumerated and all valid transactions are added to the proposal.  Transactions are valid if they:
+// DefaultPrepareProposal returns the default implementation for processing an
+// ABCI proposal. The application's mempool is enumerated and all valid
+// transactions are added to the proposal. Transactions are valid if they:
 //
 // 1) Successfully encode to bytes.
-// 2) Are valid (i.e. pass runTx, AnteHandler only)
+// 2) Are valid (i.e. pass runTx, AnteHandler only).
 //
-// Enumeration is halted once RequestPrepareProposal.MaxBytes of transactions is reached or the mempool is exhausted.
-// Note that step (2) is identical to the validation step performed in DefaultProcessProposal.  It is very important
-// that the same validation logic is used in both steps, and applications must ensure that this is the case in
+// Enumeration is halted once RequestPrepareProposal.MaxBytes of transactions is
+// reached or the mempool is exhausted.
+//
+// Note:
+//
+// - Step (2) is identical to the validation step performed in
+// DefaultProcessProposal. It is very important that the same validation logic
+// is used in both steps, and applications must ensure that this is the case in
 // non-default handlers.
+//
+// - If no mempool is set or if the mempool is a no-op mempool, the transactions
+// requested from Tendermint will simply be returned, which, by default, are in
+// FIFO order.
 func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		// If the mempool is nil or a no-op mempool, we simply return the transactions
+		// requested from Tendermint, which, by default, should be in FIFO order.
+		_, isNoOp := app.mempool.(mempool.NoOpMempool)
+		if app.mempool == nil || isNoOp {
+			return abci.ResponsePrepareProposal{Txs: req.Txs}
+		}
+
 		var (
 			txsBytes  [][]byte
 			byteCount int64
@@ -885,14 +902,16 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 
 			txSize := int64(len(bz))
 
-			// NOTE: runTx was already run in CheckTx which calls mempool.Insert so ideally everything in the pool
-			// should be valid. But some mempool implementations may insert invalid txs, so we check again.
+			// NOTE: Since runTx was already executed in CheckTx, which calls
+			// mempool.Insert, ideally everything in the pool should be valid. But
+			// some mempool implementations may insert invalid txs, so we check again.
 			_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 			if err != nil {
 				err := app.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)
 				}
+
 				iterator = iterator.Next()
 				continue
 			} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
@@ -903,6 +922,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 
 			iterator = iterator.Next()
 		}
+
 		return abci.ResponsePrepareProposal{Txs: txsBytes}
 	}
 }
@@ -929,6 +949,22 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 		}
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	}
+}
+
+// NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
+// return the transactions sent by the client's request.
+func NoOpPrepareProposal() sdk.PrepareProposalHandler {
+	return func(_ sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		return abci.ResponsePrepareProposal{Txs: req.Txs}
+	}
+}
+
+// NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
+// return ACCEPT.
+func NoOpProcessProposal() sdk.ProcessProposalHandler {
+	return func(_ sdk.Context, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }

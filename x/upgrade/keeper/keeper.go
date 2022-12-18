@@ -35,6 +35,7 @@ type Keeper struct {
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
+	initVersionMap     module.VersionMap               // the module version map at init genesis
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -43,8 +44,8 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
-	return Keeper{
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+	return &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
@@ -60,8 +61,21 @@ func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
 	k.versionSetter = vs
 }
 
+// GetVersionSetter gets the protocol version field of baseapp
 func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
 	return k.versionSetter
+}
+
+// SetInitVersionMap sets the initial version map.
+// This is only used in app wiring and should not be used in any other context.
+func (k *Keeper) SetInitVersionMap(vm module.VersionMap) {
+	k.initVersionMap = vm
+}
+
+// GetInitVersionMap gets the initial version map
+// This is only used in upgrade InitGenesis and should not be used in any other context.
+func (k *Keeper) GetInitVersionMap() module.VersionMap {
+	return k.initVersionMap
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
@@ -156,7 +170,7 @@ func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 	return mv
 }
 
-// gets the version for a given module, and returns true if it exists, false otherwise
+// getModuleVersion gets the version for a given module, and returns true if it exists, false otherwise
 func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 	store := ctx.KVStore(k.storeKey)
 	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
@@ -223,7 +237,7 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) 
 	return bz, true
 }
 
-// SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+// SetUpgradedConsensusState sets the expected upgraded consensus state for the next version of this chain
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
 	store := ctx.KVStore(k.storeKey)
@@ -231,7 +245,7 @@ func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz 
 	return nil
 }
 
-// GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain
 func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UpgradedConsStateKey(lastHeight))

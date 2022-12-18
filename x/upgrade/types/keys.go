@@ -16,7 +16,8 @@ const (
 const (
 	// PlanByte specifies the Byte under which a pending upgrade plan is stored in the store
 	PlanByte = 0x0
-	// DoneByte is a prefix for to look up completed upgrade plan by name
+
+	// DoneByte is a prefix to look up completed upgrade plan by name
 	DoneByte = 0x1
 
 	// VersionMapByte is a prefix to look up module names (key) and versions (value)

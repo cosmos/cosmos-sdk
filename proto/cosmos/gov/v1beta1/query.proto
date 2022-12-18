@@ -85,6 +85,7 @@ message QueryProposalsRequest {
 // QueryProposalsResponse is the response type for the Query/Proposals RPC
 // method.
 message QueryProposalsResponse {
+  // proposals defines all the requested governance proposals.
   repeated Proposal proposals = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
@@ -105,7 +106,7 @@ message QueryVoteRequest {
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 message QueryVoteResponse {
-  // vote defined the queried vote.
+  // vote defines the queried vote.
   Vote vote = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -120,7 +121,7 @@ message QueryVotesRequest {
 
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 message QueryVotesResponse {
-  // votes defined the queried votes.
+  // votes defines the queried votes.
   repeated Vote votes = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.
@@ -173,6 +174,7 @@ message QueryDepositsRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 message QueryDepositsResponse {
+  // deposits defines the requested deposits.
   repeated Deposit deposits = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // pagination defines the pagination in the response.

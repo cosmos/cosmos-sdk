@@ -7,9 +7,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/internal/kv"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type Store interface {
@@ -362,6 +362,19 @@ func NewKVStoreKey(name string) *KVStoreKey {
 	return &KVStoreKey{
 		name: name,
 	}
+}
+
+// NewKVStoreKeys returns a map of new  pointers to KVStoreKey's.
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewKVStoreKeys(names ...string) map[string]*KVStoreKey {
+	assertNoCommonPrefix(names)
+	keys := make(map[string]*KVStoreKey, len(names))
+	for _, n := range names {
+		keys[n] = NewKVStoreKey(n)
+	}
+
+	return keys
 }
 
 func (key *KVStoreKey) Name() string {

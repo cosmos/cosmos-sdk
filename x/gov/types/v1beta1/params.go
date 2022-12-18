@@ -27,7 +27,7 @@ func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) Depo
 	}
 }
 
-// DefaultDepositParams default parameters for deposits
+// DefaultDepositParams returns the default parameters for deposits
 func DefaultDepositParams() DepositParams {
 	return NewDepositParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
@@ -49,7 +49,7 @@ func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	}
 }
 
-// DefaultTallyParams default parameters for tallying
+// DefaultTallyParams returns default parameters for tallying
 func DefaultTallyParams() TallyParams {
 	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
 }
@@ -83,6 +83,7 @@ type Params struct {
 	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
 }
 
+// String implements stringer interface
 func (gp Params) String() string {
 	return gp.VotingParams.String() + "\n" +
 		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
@@ -97,7 +98,7 @@ func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
 	}
 }
 
-// DefaultParams default governance params
+// DefaultParams returns the default governance params
 func DefaultParams() Params {
 	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
 }

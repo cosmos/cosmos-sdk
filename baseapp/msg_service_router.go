@@ -165,7 +165,7 @@ func (msr *MsgServiceRouter) RegisterModuleNames(msgUrl string) {
 	if _, ok := msr.moduleNames[msgUrl]; !ok {
 		for k := range msr.names {
 			if strings.Contains(msgUrl, k) {
-				if !strings.Contains(k, ":") {
+				if !strings.Contains(k, ":") { // avoid setting moduleurl to storekeys like transient:params
 					msr.moduleNames[msgUrl] = k // put the module name on the message url
 				}
 			}

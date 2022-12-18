@@ -184,8 +184,6 @@ func NewBaseApp(
 		app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
-	// Set module names on the message server router
-
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
 
 	return app

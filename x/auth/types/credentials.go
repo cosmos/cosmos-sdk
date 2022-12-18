@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -34,14 +35,19 @@ var _ cryptotypes.PubKey = &ModuleCredential{}
 
 // NewModuleCredential creates new module credential key.
 // At least one derivation key must be provided. Panics otherwise.
-func NewModuleCredential(moduleName string, derivationKeys [][]byte) *ModuleCredential {
+func NewModuleCredential(moduleName string, derivationKeys [][]byte) (*ModuleCredential, error) {
 	if len(derivationKeys) == 0 {
-		panic("can't create ModuleCredential without derivation key")
+		return nil, errors.New("module credential requires non empty derlivation key slice")
+	}
+	for i := range derivationKeys {
+		if len(derivationKeys[i]) == 0 {
+			return nil, fmt.Errorf("module credential derlivation keys at index %d is empty", i)
+		}
 	}
 	return &ModuleCredential{
 		ModuleName:     moduleName,
 		DerivationKeys: derivationKeys,
-	}
+	}, nil
 }
 
 func (m *ModuleCredential) Address() cryptotypes.Address {

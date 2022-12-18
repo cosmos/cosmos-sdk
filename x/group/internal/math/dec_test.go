@@ -28,7 +28,7 @@ func TestDec(t *testing.T) {
 	t.Run("TestSubAdd", rapid.MakeCheck(testSubAdd))
 	t.Run("TestAddSub", rapid.MakeCheck(testAddSub))
 
-	// Properties about comparision and equality
+	// Properties about comparison and equality
 	t.Run("TestCmpInverse", rapid.MakeCheck(testCmpInverse))
 	t.Run("TestEqualCommutative", rapid.MakeCheck(testEqualCommutative))
 
@@ -258,7 +258,7 @@ func testIsNegative(t *rapid.T) {
 	require.Equal(t, f < 0, dec.IsNegative())
 }
 
-func floatDecimalPlaces(t *rapid.T, f float64) uint32 {
+func floatDecimalPlaces(t *rapid.T, f float64) uint32 { //nolint:unused
 	reScientific := regexp.MustCompile(`^\-?(?:[[:digit:]]+(?:\.([[:digit:]]+))?|\.([[:digit:]]+))(?:e?(?:\+?([[:digit:]]+)|(-[[:digit:]]+)))?$`)
 	fStr := fmt.Sprintf("%g", f)
 	matches := reScientific.FindAllStringSubmatch(fStr, 1)
@@ -291,7 +291,7 @@ func floatDecimalPlaces(t *rapid.T, f float64) uint32 {
 	// Subtract exponent from base and check if negative
 	if res := basePlaces - exp; res <= 0 {
 		return 0
-	} else {
+	} else { //nolint:revive
 		return uint32(res)
 	}
 }

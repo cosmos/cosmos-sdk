@@ -10,7 +10,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/core/appmodule"
-
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	"cosmossdk.io/depinject"
 

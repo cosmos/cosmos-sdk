@@ -49,14 +49,14 @@ func (bt *BTree) Delete(key []byte) {
 	bt.tree.Delete(newItem(key, nil))
 }
 
-func (bt *BTree) Iterator(start, end []byte) (*MemIterator, error) {
+func (bt *BTree) Iterator(start, end []byte) (*memIterator, error) { //nolint:revive
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
 	return NewMemIterator(start, end, bt, make(map[string]struct{}), true), nil
 }
 
-func (bt *BTree) ReverseIterator(start, end []byte) (*MemIterator, error) {
+func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) { //nolint:revive
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}

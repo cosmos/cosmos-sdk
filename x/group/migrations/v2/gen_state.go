@@ -33,7 +33,7 @@ func MigrateGenState(oldState *authtypes.GenesisState) *authtypes.GenesisState {
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, groupPolicyAccountCounter)
 
-		cred, err := authtypes.NewModuleCredential(ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey})
+		cred, err := authtypes.NewModuleCredential(ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
 		if err != nil {
 			panic(err)
 		}

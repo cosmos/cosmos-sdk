@@ -52,14 +52,13 @@ func TestMigrateGenState(t *testing.T) {
 						AccountNumber: 8,
 					}
 
-					derivationKey := make([]byte, 8)
-					binary.BigEndian.PutUint64(derivationKey, 0)
-
-					cred, err := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{v2.GroupPolicyTablePrefix}, derivationKey})
+					k := make([]byte, 8)
+					binary.BigEndian.PutUint64(k, 0)
+					c, err := authtypes.NewModuleCredential(group.ModuleName, []byte{v2.GroupPolicyTablePrefix}, k)
 					if err != nil {
 						panic(err)
 					}
-					err = baseAccount.SetPubKey(cred)
+					err = baseAccount.SetPubKey(c)
 					if err != nil {
 						panic(err)
 					}

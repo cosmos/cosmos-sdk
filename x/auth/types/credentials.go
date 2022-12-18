@@ -34,8 +34,8 @@ const ModuleCredentialType = "ModuleCredential"
 var _ cryptotypes.PubKey = &ModuleCredential{}
 
 // NewModuleCredential creates new module credential key.
-// At least one derivation key must be provided. Panics otherwise.
-func NewModuleCredential(moduleName string, derivationKeys [][]byte) (*ModuleCredential, error) {
+// At least one derivation key must be provided and all derivation keys must be not empty.
+func NewModuleCredential(moduleName string, derivationKeys ...[]byte) (*ModuleCredential, error) {
 	if len(derivationKeys) == 0 {
 		return nil, errors.New("module credential requires non empty derlivation key slice")
 	}

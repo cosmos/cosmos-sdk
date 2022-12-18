@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
@@ -27,7 +26,7 @@ func useUpgradeLoader(height int64, upgrades *storetypes.StoreUpgrades) func(*ba
 }
 
 func defaultLogger() log.Logger {
-	return tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	return log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 }
 
 func initStore(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
@@ -78,7 +77,7 @@ func TestSetLoader(t *testing.T) {
 	data, err := json.Marshal(upgradeInfo)
 	require.NoError(t, err)
 
-	err = os.WriteFile(upgradeInfoFilePath, data, 0o644)
+	err = os.WriteFile(upgradeInfoFilePath, data, 0o644) //nolint:gosec
 	require.NoError(t, err)
 
 	// make sure it exists before running everything

@@ -19,8 +19,10 @@ import (
 type MsgServiceRouter struct {
 	interfaceRegistry codectypes.InterfaceRegistry
 	routes            map[string]MsgServiceHandler
-	moduleNames       map[string]string // map of module names associated with each Msg service msgURL/moduleName
-	mn                map[string]struct{}
+
+	// map of module names associated with each Msg service msgURL/moduleName, to be used for events and error wrapping
+	moduleNames map[string]string   // map of module names associated with each Msg service msgURL/moduleName
+	names       map[string]struct{} // map of module names set when keys are set in the store. Assumption is module name == storekey and the message url contains the module name
 }
 
 var _ gogogrpc.Server = &MsgServiceRouter{}
@@ -37,13 +39,12 @@ func NewMsgServiceRouter() *MsgServiceRouter {
 type MsgServiceHandler = func(ctx sdk.Context, req sdk.Msg) (*sdk.Result, error)
 
 // SetModuleName sets a module name used
-func (msr MsgServiceRouter) SetModuleName(names []storetypes.StoreKey) {
-	msr.mn = make(map[string]struct{})
+func (msr *MsgServiceRouter) SetModuleName(names []storetypes.StoreKey) {
+	msr.names = make(map[string]struct{})
 
 	for _, e := range names {
-		msr.mn[e.Name()] = struct{}{}
+		msr.names[e.Name()] = struct{}{}
 	}
-
 }
 
 // Handler returns the MsgServiceHandler for a given msg or nil if not found.
@@ -71,20 +72,6 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 		methodHandler := method.Handler
 		var requestTypeName string
 
-		// assign a module name to the message url
-		if _, ok := msr.moduleNames[sd.ServiceName]; !ok {
-			for k := range msr.mn {
-				fmt.Println(k, sd.ServiceName)
-				if strings.Contains(k, sd.ServiceName) {
-					fmt.Println("test")
-					if strings.Contains(k, ":") {
-
-					}
-					msr.moduleNames[sd.ServiceName] = k // put the module name on the message url
-				}
-			}
-		}
-
 		// check if the new map contains the service name, if not add it
 		// add the module name from the moduleNames map associated with the service name
 
@@ -106,6 +93,7 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			return nil
 		}, noopInterceptor)
 
+		msr.RegisterModuleNames(requestTypeName)
 		// Check that the service Msg fully-qualified method name has already
 		// been registered (via RegisterInterfaces). If the user registers a
 		// service without registering according service Msg type, there might be
@@ -169,6 +157,20 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 // SetInterfaceRegistry sets the interface registry for the router.
 func (msr *MsgServiceRouter) SetInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) {
 	msr.interfaceRegistry = interfaceRegistry
+}
+
+// RegisterModuleNames adds the module name to the message url
+func (msr *MsgServiceRouter) RegisterModuleNames(msgUrl string) {
+	// assign a module name to the message url
+	if _, ok := msr.moduleNames[msgUrl]; !ok {
+		for k := range msr.names {
+			if strings.Contains(msgUrl, k) {
+				if !strings.Contains(k, ":") {
+					msr.moduleNames[msgUrl] = k // put the module name on the message url
+				}
+			}
+		}
+	}
 }
 
 func noopDecoder(_ interface{}) error { return nil }

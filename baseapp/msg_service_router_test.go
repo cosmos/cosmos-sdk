@@ -11,10 +11,12 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -142,4 +144,15 @@ func TestMsgService(t *testing.T) {
 	require.NoError(t, err)
 	res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, abci.CodeTypeOK, res.Code, "res=%+v", res)
+}
+
+func TestSetModuleName(t *testing.T) {
+	modules := []storetypes.StoreKey{storetypes.NewKVStoreKey("staking"), storetypes.NewKVStoreKey("transient:staking")}
+
+	msgServer := baseapp.NewMsgServiceRouter()
+	msgServer.SetModuleName(modules)
+	msgUrls := []string{"/cosmos.slashing.v1beta1.MsgUnjail", "/cosmos.slashing.v1beta1.MsgUpdateParams", "/cosmos.staking.v1beta1.MsgCreateValidator", "/cosmos.staking.v1beta1.MsgEditValidator", "/cosmos.staking.v1beta1.MsgDelegate", "/cosmos.staking.v1beta1.MsgBeginRedelegate", "/cosmos.staking.v1beta1.MsgUndelegate", "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation", "/cosmos.staking.v1beta1.MsgUpdateParams"}
+	for _, url := range msgUrls {
+		msgServer.RegisterModuleNames(url)
+	}
 }

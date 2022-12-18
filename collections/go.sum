@@ -1,5 +1,5 @@
-cosmossdk.io/core v0.3.3 h1:RqzZRJfouuu/DknuYuUFrCPXv9fqaaSAoSWAdlEeh+g=
-cosmossdk.io/core v0.3.3/go.mod h1:EWcchwSGt5WQph4UXRusSKIOXNbAGMKcQsIJh3OeLRo=
+cosmossdk.io/core v0.3.4 h1:/VRNMvX0EX04tGYcxnrZeAYWJ63KpDW+aiu9bXLg6BI=
+cosmossdk.io/core v0.3.4/go.mod h1:EWcchwSGt5WQph4UXRusSKIOXNbAGMKcQsIJh3OeLRo=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=

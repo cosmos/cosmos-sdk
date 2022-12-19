@@ -45,6 +45,8 @@ func (s *eventsTestSuite) TestGetAttributes() {
 	attr, found := e.GetAttribute("recipient")
 	s.Require().True(found)
 	s.Require().Equal(attr, sdk.NewAttribute("recipient", "bar"))
+	_, found = e.GetAttribute("foo")
+	s.Require().False(found)
 
 	events := sdk.Events{e}.AppendEvent(sdk.NewEvent("message", sdk.NewAttribute("sender", "bar")))
 	attrs, found := events.GetAttributes("sender")
@@ -52,6 +54,8 @@ func (s *eventsTestSuite) TestGetAttributes() {
 	s.Require().Len(attrs, 2)
 	s.Require().Equal(attrs[0], sdk.NewAttribute("sender", "foo"))
 	s.Require().Equal(attrs[1], sdk.NewAttribute("sender", "bar"))
+	_, found = events.GetAttributes("foo")
+	s.Require().False(found)
 }
 
 func (s *eventsTestSuite) TestEmptyEvents() {

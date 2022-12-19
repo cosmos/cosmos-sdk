@@ -52,8 +52,6 @@ type AppModuleBasic interface {
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
 	RegisterInterfaces(codectypes.InterfaceRegistry)
 
-	HasGenesisBasics
-
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
 	GetTxCmd() *cobra.Command
@@ -103,7 +101,9 @@ func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry)
 func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 	genesis := make(map[string]json.RawMessage)
 	for _, b := range bm {
-		genesis[b.Name()] = b.DefaultGenesis(cdc)
+		if mod, ok := b.(HasGenesisBasics); ok {
+			genesis[b.Name()] = mod.DefaultGenesis(cdc)
+		}
 	}
 
 	return genesis
@@ -112,8 +112,10 @@ func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMe
 // ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if err := b.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
-			return err
+		if mod, ok := b.(HasGenesisBasics); ok {
+			if err := mod.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
+				return err
+			}
 		}
 	}
 

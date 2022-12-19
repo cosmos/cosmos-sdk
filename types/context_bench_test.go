@@ -27,3 +27,14 @@ func BenchmarkContext_TransientStore(b *testing.B) {
 		_ = ctx.TransientStore(key)
 	}
 }
+
+func BenchmarkContext_CacheContext(b *testing.B) {
+	key := types.NewKVStoreKey(b.Name() + "_TestCacheContext")
+
+	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+b.Name()))
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = ctx.CacheContext()
+	}
+}

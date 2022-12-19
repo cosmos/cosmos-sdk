@@ -278,8 +278,7 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key storetypes.StoreKey) KVStore {
-	kv := c.ms.GetKVStore(key)
-	return gaskv.NewStore(kv, c.gasMeter, c.kvGasConfig)
+	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.

@@ -42,14 +42,12 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-// this requires the fee non-negative
 func validateParams(i interface{}) error {
 	return nil
 }
 
 // Validate checks that no strings are set too long or too short
 
-// func (coins DecCoins) Validate() error {
 func (params Params) Validate() error {
 	for _, p := range params.Other {
 		if p.Id == "" {

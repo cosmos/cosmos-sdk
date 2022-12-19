@@ -228,8 +228,8 @@ type GasConfig struct {
 }
 
 // KVGasConfig returns a default gas config for KVStores.
-func KVGasConfig() *GasConfig {
-	return &GasConfig{
+func KVGasConfig() GasConfig {
+	return GasConfig{
 		HasCost:          1000,
 		DeleteCost:       1000,
 		ReadCostFlat:     1000,
@@ -241,8 +241,8 @@ func KVGasConfig() *GasConfig {
 }
 
 // TransientGasConfig returns a default gas config for TransientStores.
-func TransientGasConfig() *GasConfig {
-	return &GasConfig{
+func TransientGasConfig() GasConfig {
+	return GasConfig{
 		HasCost:          100,
 		DeleteCost:       100,
 		ReadCostFlat:     100,

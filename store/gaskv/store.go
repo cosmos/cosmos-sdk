@@ -12,12 +12,12 @@ var _ types.KVStore = &Store{}
 // KVStore interface.
 type Store struct {
 	gasMeter  types.GasMeter
-	gasConfig *types.GasConfig
+	gasConfig types.GasConfig
 	parent    types.KVStore
 }
 
 // NewStore returns a reference to a new GasKVStore.
-func NewStore(parent types.KVStore, gasMeter types.GasMeter, gasConfig *types.GasConfig) *Store {
+func NewStore(parent types.KVStore, gasMeter types.GasMeter, gasConfig types.GasConfig) *Store {
 	kvs := &Store{
 		gasMeter:  gasMeter,
 		gasConfig: gasConfig,
@@ -108,11 +108,11 @@ func (gs *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 
 type gasIterator struct {
 	gasMeter  types.GasMeter
-	gasConfig *types.GasConfig
+	gasConfig types.GasConfig
 	parent    types.Iterator
 }
 
-func newGasIterator(gasMeter types.GasMeter, gasConfig *types.GasConfig, parent types.Iterator) types.Iterator {
+func newGasIterator(gasMeter types.GasMeter, gasConfig types.GasConfig, parent types.Iterator) types.Iterator {
 	return &gasIterator{
 		gasMeter:  gasMeter,
 		gasConfig: gasConfig,

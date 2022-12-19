@@ -10,6 +10,7 @@ import (
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,9 +63,33 @@ func TestConvertToLegacyProposal(t *testing.T) {
 				require.Equal(t, v1beta1Proposal.FinalTallyResult.No, sdk.NewInt(0))
 				require.Equal(t, v1beta1Proposal.FinalTallyResult.NoWithVeto, sdk.NewInt(0))
 				require.Equal(t, v1beta1Proposal.FinalTallyResult.Abstain, sdk.NewInt(0))
+				tp, ok := v1beta1Proposal.Content.GetCachedValue().(*v1beta1.TextProposal)
+				require.Truef(t, ok, "expected *TextProposal, got %T", v1beta1Proposal.Content.GetCachedValue())
+				require.Equal(t, tp.Title, "title")
+				require.Equal(t, tp.Description, "description")
 			}
 		})
 	}
+}
+
+func TestConvertToLegacyProposalContent(t *testing.T) {
+	msg := upgradetypes.MsgSoftwareUpgrade{Authority: "gov module", Plan: upgradetypes.Plan{Name: "test upgrade"}}
+	msgsAny, err := tx.SetMsgs([]sdk.Msg{&msg})
+	require.NoError(t, err)
+	tallyResult := v1.EmptyTallyResult()
+	proposal := v1.Proposal{
+		Id:               1,
+		Status:           v1.StatusDepositPeriod,
+		Messages:         msgsAny,
+		Metadata:         "proposal metadata",
+		FinalTallyResult: &tallyResult,
+	}
+
+	legacyP, err := v3.ConvertToLegacyProposal(proposal)
+	require.NoError(t, err)
+	tp, ok := legacyP.Content.GetCachedValue().(*upgradetypes.MsgSoftwareUpgrade)
+	require.Truef(t, ok, "expected *MsgSoftwareUpgrade, got %T", legacyP.Content.GetCachedValue())
+	require.Equal(t, &msg, tp)
 }
 
 func TestConvertToLegacyTallyResult(t *testing.T) {

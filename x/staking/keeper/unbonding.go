@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Increments and returns a unique ID for an unbonding operation
+// IncrementUnbondingID increments and returns a unique ID for an unbonding operation
 func (k Keeper) IncrementUnbondingID(ctx sdk.Context) (unbondingID uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UnbondingIDKey)
@@ -27,7 +27,7 @@ func (k Keeper) IncrementUnbondingID(ctx sdk.Context) (unbondingID uint64) {
 	return unbondingID
 }
 
-// Remove a mapping from UnbondingId to unbonding operation
+// DeleteUnbondingIndex removes a mapping from UnbondingId to unbonding operation
 func (k Keeper) DeleteUnbondingIndex(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetUnbondingIndexKey(id))

@@ -11,8 +11,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
@@ -248,7 +246,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	values := 0
 	for ; iterator.Valid(); iterator.Next() {
-		values += 1
+		values++
 	}
 	require.Zero(t, values)
 
@@ -406,7 +404,8 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
-	cid := multi.Commit()
+	// Commit the multistore.
+	_ = multi.Commit()
 
 	// Make sure we can get by name.
 	garbage := multi.GetStoreByName("bad-name")
@@ -421,7 +420,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
-	cid = multi.Commit()
+	cid := multi.Commit()
 	ver := cid.Version
 
 	// Reload multistore from database
@@ -535,7 +534,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		require.Error(t, err, "expected error when loading pruned height: %d", v)
 	}
 
-	for v := int64(numVersions - int64(keepRecent)); v < numVersions; v++ {
+	for v := (numVersions - int64(keepRecent)); v < numVersions; v++ {
 		err := ms.LoadVersion(v)
 		require.NoError(t, err, "expected no error when loading height: %d", v)
 	}
@@ -646,12 +645,11 @@ func TestAddListenersAndListeningEnabled(t *testing.T) {
 }
 
 var (
-	interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
-	testKey1          = []byte{1, 2, 3, 4, 5}
-	testValue1        = []byte{5, 4, 3, 2, 1}
-	testKey2          = []byte{2, 3, 4, 5, 6}
-	testValue2        = []byte{6, 5, 4, 3, 2}
+	testMarshaller = types.NewTestCodec()
+	testKey1       = []byte{1, 2, 3, 4, 5}
+	testValue1     = []byte{5, 4, 3, 2, 1}
+	testKey2       = []byte{2, 3, 4, 5, 6}
+	testValue2     = []byte{6, 5, 4, 3, 2}
 )
 
 func TestGetListenWrappedKVStore(t *testing.T) {
@@ -965,7 +963,7 @@ type commitKVStoreStub struct {
 
 func (stub *commitKVStoreStub) Commit() types.CommitID {
 	commitID := stub.CommitKVStore.Commit()
-	stub.Committed += 1
+	stub.Committed++
 	return commitID
 }
 

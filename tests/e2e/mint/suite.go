@@ -14,19 +14,19 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	genesisState := s.cfg.GenesisState
 
@@ -49,12 +49,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
+func (s *E2ETestSuite) TestGetCmdQueryParams() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -93,7 +93,7 @@ mint_denom: stake`,
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
+func (s *E2ETestSuite) TestGetCmdQueryInflation() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -127,7 +127,7 @@ func (s *IntegrationTestSuite) TestGetCmdQueryInflation() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCmdQueryAnnualProvisions() {
+func (s *E2ETestSuite) TestGetCmdQueryAnnualProvisions() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {

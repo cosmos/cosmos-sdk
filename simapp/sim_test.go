@@ -17,10 +17,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -95,7 +95,7 @@ func TestFullAppSimulation(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		ModuleAccountAddrs(),
+		BlockedAddresses(),
 		config,
 		app.AppCodec(),
 	)
@@ -140,7 +140,7 @@ func TestAppImportExport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		ModuleAccountAddrs(),
+		BlockedAddresses(),
 		config,
 		app.AppCodec(),
 	)
@@ -222,6 +222,7 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
+
 		require.Equal(t, 0, len(failedKVAs), simtestutil.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
 }
@@ -256,7 +257,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(app, app.AppCodec(), config),
-		ModuleAccountAddrs(),
+		BlockedAddresses(),
 		config,
 		app.AppCodec(),
 	)
@@ -304,7 +305,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		AppStateFn(app.AppCodec(), app.SimulationManager()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
-		ModuleAccountAddrs(),
+		BlockedAddresses(),
 		config,
 		app.AppCodec(),
 	)
@@ -359,7 +360,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				AppStateFn(app.AppCodec(), app.SimulationManager()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
 				simtestutil.SimulationOperations(app, app.AppCodec(), config),
-				ModuleAccountAddrs(),
+				BlockedAddresses(),
 				config,
 				app.AppCodec(),
 			)

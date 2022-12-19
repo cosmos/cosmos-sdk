@@ -62,7 +62,7 @@ func TestMsgDeposit(t *testing.T) {
 
 // test ValidateBasic for MsgVote
 func TestMsgVote(t *testing.T) {
-	metadata := "metadata"
+	metadata := "metadata" //nolint:goconst
 	tests := []struct {
 		proposalID uint64
 		voterAddr  sdk.AccAddress

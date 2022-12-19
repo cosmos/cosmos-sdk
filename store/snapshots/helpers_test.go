@@ -258,7 +258,7 @@ func (s *extSnapshotter) SupportedFormats() []uint32 {
 
 func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshottypes.ExtensionPayloadWriter) error {
 	for _, i := range s.state {
-		if err := payloadWriter(types.Uint64ToBigEndian(uint64(i))); err != nil {
+		if err := payloadWriter(types.Uint64ToBigEndian(i)); err != nil {
 			return err
 		}
 	}

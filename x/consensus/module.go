@@ -137,6 +137,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type ConsensusInputs struct {
 	depinject.In
 
@@ -145,6 +146,7 @@ type ConsensusInputs struct {
 	Key    *store.KVStoreKey
 }
 
+//nolint:revive
 type ConsensusOutputs struct {
 	depinject.Out
 

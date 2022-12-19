@@ -112,7 +112,7 @@ ctx.EventManager().EmitEvent(
 ```
 
 The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
-In case a module does not follow the standard message path, (e.g. IBC), it is adviced to keep emit the module name event.
+In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
 `Baseapp` only emits that event if the module have not already done so.
 
 #### `x/gov`

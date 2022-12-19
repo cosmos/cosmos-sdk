@@ -215,6 +215,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type MintInputs struct {
 	depinject.In
 
@@ -232,6 +233,7 @@ type MintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
+//nolint:revive
 type MintOutputs struct {
 	depinject.Out
 

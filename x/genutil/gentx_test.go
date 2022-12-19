@@ -90,9 +90,7 @@ func (suite *GenTxTestSuite) setAccountBalance(balances []banktypes.Balance) jso
 		},
 		Supply: sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 	}
-	for _, balance := range balances {
-		bankGenesisState.Balances = append(bankGenesisState.Balances, balance)
-	}
+	bankGenesisState.Balances = append(bankGenesisState.Balances, balances...)
 	for _, balance := range bankGenesisState.Balances {
 		bankGenesisState.Supply.Add(balance.Coins...)
 	}

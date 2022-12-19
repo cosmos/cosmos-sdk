@@ -14,7 +14,8 @@ type AccountKeeper interface {
 
 	// SetAccount sets an account in the store.
 	SetAccount(sdk.Context, authtypes.AccountI)
-	// RemoveAccount removes an account in the store.
+
+	// RemoveAccount Remove an account in the store.
 	RemoveAccount(ctx sdk.Context, acc authtypes.AccountI)
 }
 

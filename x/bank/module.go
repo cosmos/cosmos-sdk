@@ -205,6 +205,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type BankInputs struct {
 	depinject.In
 
@@ -218,6 +219,7 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
+//nolint:revive
 type BankOutputs struct {
 	depinject.Out
 

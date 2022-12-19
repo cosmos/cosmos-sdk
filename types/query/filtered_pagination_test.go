@@ -56,7 +56,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	s.Require().NotNil(res)
 	s.Require().Equal(2, len(balances))
 	s.Require().NotNil(res.NextKey)
-	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test2denom"))
+	s.Require().Equal(string(res.NextKey), "test2denom")
 	s.Require().Equal(uint64(4), res.Total)
 
 	s.T().Log("verify both key and offset can't be given")
@@ -152,7 +152,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().NotNil(res)
 	s.Require().Equal(2, len(balns))
 	s.Require().NotNil(res.NextKey)
-	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test5denom"))
+	s.Require().Equal(string(res.NextKey), "test5denom")
 
 	s.T().Log("verify last page records, nextKey for query and reverse true")
 	pageReq = &query.PageRequest{Key: res.NextKey, Reverse: true}

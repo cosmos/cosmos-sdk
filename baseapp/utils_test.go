@@ -30,9 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-var (
-	ParamStoreKey = []byte("paramstore")
-)
+var ParamStoreKey = []byte("paramstore")
 
 func defaultLogger() log.Logger {
 	if testing.Verbose() {

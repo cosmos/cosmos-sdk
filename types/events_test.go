@@ -76,8 +76,8 @@ func (s *eventsTestSuite) TestEmitTypedEvent() {
 			s.Require().Len(em.Events(), 1)
 			attrs := em.Events()[0].Attributes
 			s.Require().Len(attrs, 2)
-			s.Require().Equal(string(attrs[0].Key), "amount")
-			s.Require().Equal(string(attrs[1].Key), "denom")
+			s.Require().Equal(attrs[0].Key, "amount")
+			s.Require().Equal(attrs[1].Key, "denom")
 		}
 	})
 }

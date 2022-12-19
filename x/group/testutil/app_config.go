@@ -5,16 +5,16 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/authz"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/authz"          // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/group/module"   // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/mint"           // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // blank import for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // blank import for app wiring
 
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

@@ -5,24 +5,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
-
-func initTestStores(t *testing.T) (types.KVStore, types.KVStore) {
-	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db, log.NewNopLogger())
-
-	key1 := types.NewKVStoreKey("store1")
-	key2 := types.NewKVStoreKey("store2")
-	require.NotPanics(t, func() { ms.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
-	require.NotPanics(t, func() { ms.MountStoreWithDB(key2, types.StoreTypeIAVL, db) })
-	require.NoError(t, ms.LoadLatestVersion())
-	return ms.GetKVStore(key1), ms.GetKVStore(key2)
-}
 
 func TestPrefixEndBytes(t *testing.T) {
 	t.Parallel()

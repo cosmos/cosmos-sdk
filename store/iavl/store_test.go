@@ -116,14 +116,14 @@ func TestLoadStore(t *testing.T) {
 
 func TestGetImmutable(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, cID := newAlohaTree(t, db)
+	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
 
 	updated, err := tree.Set([]byte("hello"), []byte("adios"))
 	require.NoError(t, err)
 	require.True(t, updated)
 	hash, ver, err := tree.SaveVersion()
-	cID = types.CommitID{Version: ver, Hash: hash}
+	cID := types.CommitID{Version: ver, Hash: hash}
 	require.Nil(t, err)
 
 	_, err = store.GetImmutable(cID.Version + 1)

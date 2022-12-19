@@ -19,9 +19,9 @@ import (
 
 const FlagAppDBBackend = "app-db-backend"
 
-// PruningCmd prunes the sdk root multi store history versions based on the pruning options
+// Cmd prunes the sdk root multi store history versions based on the pruning options
 // specified by command flags.
-func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
+func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",

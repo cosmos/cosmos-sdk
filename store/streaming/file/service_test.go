@@ -296,6 +296,7 @@ func testListenBlock(t *testing.T) {
 	metaFileName := fmt.Sprintf("%s-block-%d-meta", testPrefix, testBeginBlockReq.GetHeader().Height)
 	dataFileName := fmt.Sprintf("%s-block-%d-data", testPrefix, testBeginBlockReq.GetHeader().Height)
 	metaFileBytes, err := readInFile(metaFileName)
+	require.Nil(t, err)
 	dataFileBytes, err := readInFile(dataFileName)
 	require.Nil(t, err)
 

@@ -55,7 +55,7 @@ func (suite *SubspaceTestSuite) TestKeyTable() {
 	})
 	suite.Require().NotPanics(func() {
 		ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace2")
-		ss = ss.WithKeyTable(paramKeyTable())
+		_ = ss.WithKeyTable(paramKeyTable())
 	})
 }
 
@@ -154,7 +154,7 @@ func (suite *SubspaceTestSuite) TestModified() {
 
 func (suite *SubspaceTestSuite) TestUpdate() {
 	suite.Require().Panics(func() {
-		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) // nolint:errcheck
+		suite.ss.Update(suite.ctx, []byte("invalid_key"), nil) //nolint:errcheck
 	})
 
 	t := time.Hour * 48

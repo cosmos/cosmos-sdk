@@ -24,7 +24,7 @@ type memIterator struct {
 	valid     bool
 }
 
-func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator {
+func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator { //nolint:revive
 	iter := items.tree.Iter()
 	var valid bool
 	if ascending {

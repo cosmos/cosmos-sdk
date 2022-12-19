@@ -1,0 +1,29 @@
+// Since: cosmos-sdk 0.47
+syntax = "proto3";
+
+package cosmos.metadata.v1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/metadata";
+
+import "cosmos/metadata/v1/genesis.proto";
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params returns the chaisn metadata paramaters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/metadata/v1/params";
+  }
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}

@@ -3,14 +3,15 @@ package cli
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/metadata/types"
+	query "github.com/cosmos/cosmos-sdk/x/metadata/querier"
+	"github.com/cosmos/cosmos-sdk/x/metadata/types"
 	"github.com/spf13/cobra"
 )
 
-func GetQueryCmd() *cobra.Command {
+func QueryTxCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the global fee module",
+		Short:                      "Querying commands for the metadata module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -23,10 +24,10 @@ func GetQueryCmd() *cobra.Command {
 
 func GetCmdShowMetadata() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "metadata",
+		Use:     "params",
 		Short:   "",
 		Long:    "",
-		Aliases: []string{"meta"},
+		Aliases: []string{"p"},
 		Args:    cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -34,8 +35,8 @@ func GetCmdShowMetadata() *cobra.Command {
 				return err
 			}
 
-			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.ParamRequests(cmd.Context(), &types.QueryMetadataRequest{})
+			queryClient := query.NewQueryClient(clientCtx)
+			res, err := queryClient.Params(cmd.Context(), &query.QueryParamsRequest{})
 			if err != nil {
 				return err
 			}

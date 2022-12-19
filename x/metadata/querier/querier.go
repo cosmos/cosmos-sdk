@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/metadata/types"
 )
 
-var _ types.QueryServer = &GrpcQuerier{}
+var _ QueryServer = &GrpcQuerier{}
 
 // ParamSource is a read only subset of paramtypes.Subspace
 type ParamSource interface {
@@ -25,13 +25,13 @@ func NewGrpcQuerier(paramSource ParamSource) GrpcQuerier {
 }
 
 // MetadataParams return metadata params
-func (g GrpcQuerier) MetadataParams(stdCtx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (g GrpcQuerier) Params(stdCtx context.Context, _ *QueryParamsRequest) (*QueryParamsResponse, error) {
 	var params types.Params
 	ctx := sdk.UnwrapSDKContext(stdCtx)
 	if g.paramSource.Has(ctx, types.ParamStoreKeyMinGasPrices) {
 		g.paramSource.Get(ctx, types.ParamStoreKeyMinGasPrices, &params)
 	}
-	return &types.QueryParamsResponse{
-		MinimumGasPrices: params,
+	return &QueryParamsResponse{
+		Params: params,
 	}, nil
 }

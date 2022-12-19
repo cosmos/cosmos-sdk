@@ -17,6 +17,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/x/metadata/client/cli"
+	querier "github.com/cosmos/cosmos-sdk/x/metadata/querier"
 	"github.com/cosmos/cosmos-sdk/x/metadata/types"
 )
 
@@ -56,7 +57,7 @@ func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.R
 }
 
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	_ = querier.RegisterQueryHandlerClient(context.Background(), mux, querier.NewQueryClient(clientCtx))
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -64,7 +65,7 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 }
 
 func (a AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
+	return cli.QueryTxCmd()
 }
 
 func (a AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
@@ -100,20 +101,12 @@ func (a AppModule) ExportGenesis(ctx sdk.Context, marshaler codec.JSONCodec) jso
 func (a AppModule) RegisterInvariants(registry sdk.InvariantRegistry) {
 }
 
-func (a AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
 func (a AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
-func (a AppModule) LegacyQuerierHandler(amino *codec.LegacyAmino) sdk.Querier {
-	return nil
-}
-
 func (a AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterQueryServer(cfg.QueryServer(), NewGrpcQuerier(a.paramSpace))
+	querier.RegisterQueryServer(cfg.QueryServer(), querier.NewGrpcQuerier(a.paramSpace))
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {

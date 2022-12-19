@@ -33,6 +33,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	metadatacmd "github.com/cosmos/cosmos-sdk/x/metadata/client/cli"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the
@@ -217,6 +218,7 @@ func queryCommand() *cobra.Command {
 		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		metadatacmd.QueryTxCmd(),
 	)
 
 	simapp.ModuleBasics.AddQueryCommands(cmd)

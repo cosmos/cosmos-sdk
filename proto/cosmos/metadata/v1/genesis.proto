@@ -19,7 +19,6 @@ message ChainSpecific {
 
 // Params defines the set of module parameters.
 message Params {
-  // This does XYZ
   string twitter = 1;
   string telegram = 2;
   string discord = 3;

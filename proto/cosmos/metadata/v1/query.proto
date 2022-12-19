@@ -13,7 +13,7 @@ import "google/api/annotations.proto";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Params returns the chaisn metadata paramaters.
+  // Params returns the chains metadata paramaters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/metadata/v1/params";
   }

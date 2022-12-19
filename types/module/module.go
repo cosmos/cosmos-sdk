@@ -385,14 +385,9 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 // ExportGenesisForModules performs export genesis functionality for modules
 func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	if len(modulesToExport) == 0 {
-		for _, moduleName := range m.OrderExportGenesis {
-			if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-				genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
-			}
-		}
 
-		return genesisData
+	if len(modulesToExport) == 0 {
+		modulesToExport = m.OrderExportGenesis
 	}
 
 	// verify modules exists in app, so that we don't panic in the middle of an export
@@ -400,10 +395,22 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		panic(err)
 	}
 
-	for _, moduleName := range modulesToExport {
+	channels := make([]chan json.RawMessage, len(modulesToExport))
+	modulesWithGenesis := make([]string, 0, len(modulesToExport))
+
+	for i, moduleName := range modulesToExport {
 		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-			genesisData[moduleName] = module.ExportGenesis(ctx, cdc)
+			channels[i] = make(chan json.RawMessage)
+			modulesWithGenesis = append(modulesWithGenesis, moduleName)
+
+			go func(module HasGenesis, ch chan json.RawMessage) {
+				ch <- module.ExportGenesis(ctx, cdc)
+			}(module, channels[i])
 		}
+	}
+
+	for i, moduleName := range modulesWithGenesis {
+		genesisData[moduleName] = <-channels[i]
 	}
 
 	return genesisData

@@ -158,17 +158,17 @@ message PubKey {
 
 ```go
 func (multisig PubKey) Address() {
-  // first gather all nested pub keys
-  var keys []address.Addressable  // cryptotypes.PubKey implements Addressable
-  for _, _key := range multisig.Pubkeys {
-    keys = append(keys, key.GetCachedValue().(cryptotypes.PubKey))
-  }
+	// first gather all nested pub keys
+	var keys []address.Addressable  // cryptotypes.PubKey implements Addressable
+	for _, _key := range multisig.Pubkeys {
+		keys = append(keys, key.GetCachedValue().(cryptotypes.PubKey))
+	}
 
-  // form the type from the message name (cosmos.crypto.multisig.PubKey) and the threshold joined together
-  prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
+	// form the type from the message name (cosmos.crypto.multisig.PubKey) and the threshold joined together
+	prefix := fmt.Sprintf("%s/%d", proto.MessageName(multisig), multisig.Threshold)
 
-  // use the Composed function defined above
-  return address.Composed(prefix, keys)
+	// use the Composed function defined above
+	return address.Composed(prefix, keys)
 }
 ```
 
@@ -179,7 +179,7 @@ We must be able to cryptographically derive one address from another one. The de
 
 ```go
 func Derive(address, derivationKey []byte) []byte {
-    return Hash(addres, derivationKey)
+	return Hash(addres, derivationKey)
 }
 ```
 
@@ -206,11 +206,11 @@ For backward compatibility with the existing `authtypes.NewModuleAddress`, we ad
 
 ```go
 func Module(moduleName string, derivationKeys ...[]byte) []byte{
-  if len(derivationKeys) == 0 {
-    return authtypes.NewModuleAddress(modulenName)  // legacy case
-  }
+	if len(derivationKeys) == 0 {
+		return authtypes.NewModuleAddress(modulenName)  // legacy case
+	}
 	submoduleAddress := Hash("module", []byte(moduleName) + 0 + key)
-  return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)
+	return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)
 }
 ```
 
@@ -248,7 +248,7 @@ Example: all public key types have a unique protobuf message type similar to:
 package cosmos.crypto.sr25519;
 
 message PubKey {
-  bytes key = 1;
+	bytes key = 1;
 }
 ```
 

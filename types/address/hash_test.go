@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 )
 
 func TestAddressSuite(t *testing.T) {
@@ -64,8 +65,15 @@ func (suite *AddressSuite) TestComposed() {
 func (suite *AddressSuite) TestModule() {
 	assert := suite.Assert()
 	modName, key := "myModule", []byte{1, 2}
+
+	addrLegacy := Module(modName)
+	assert.Equal(tmhash.SumTruncated([]byte(modName)), addrLegacy,
+		"when no derivation keys, we fall back to the legacy module address using sha256 of the module name")
+
 	addr := Module(modName, key)
-	assert.Len(addr, Len, "must have address length")
+	assert.Len(addr, Len, "must have correct address length")
+	assert.NotEqual(addrLegacy, addr,
+		"when derivation key is specified, it must generate non legacy module address")
 
 	addr2 := Module("myModule2", key)
 	assert.NotEqual(addr, addr2, "changing module name must change address")

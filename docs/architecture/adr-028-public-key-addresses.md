@@ -202,8 +202,13 @@ The `address.Module` function is using `address.Hash` with `"module"` as the typ
 We use a null byte (`'\x00'`) to separate module name from the submodule key. This works, because null byte is not a part of a valid module name. Finally, the sub-submodule accounts are created by applying the `Derive` function recursively.
 We could use `Derive` function also in the first step (rather than concatenating module name with zero byte and the submodule key). We decided to do concatenation to avoid one level of derivation and speed up computation.
 
+For backward compatibility with the existing `authtypes.NewModuleAddress`, we add a special case in `Module` function: when no derivation key is provided, we fallback to the "legacy" implementation. 
+
 ```go
-func Module(moduleName string, key []byte, subsubKeys ...[]byte) []byte{
+func Module(moduleName string, derivationKeys ...[]byte) []byte{
+  if len(derivationKeys) == 0 {
+    return authtypes.NewModuleAddress(modulenName)  // legacy case
+  }
 	submoduleAddress := Hash("module", []byte(moduleName) + 0 + key)
   return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)
 }

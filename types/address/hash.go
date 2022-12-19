@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -67,10 +69,14 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 // a x/dao module, and a new DAO object, it's address would be:
 //
 //	address.Module(dao.ModuleName, newDAO.ID)
-func Module(moduleName string, derivationKey []byte, derivationKeys ...[]byte) []byte {
-	mKey := append([]byte(moduleName), 0)
-	addr := Hash("module", append(mKey, derivationKey...))
-	for _, k := range derivationKeys {
+func Module(moduleName string, derivationKeys ...[]byte) []byte {
+	moduleNameBz := []byte(moduleName)
+	if len(derivationKeys) == 0 {
+		return crypto.AddressHash([]byte(moduleNameBz))
+	}
+	mKey := append(moduleNameBz, 0)
+	addr := Hash("module", append(mKey, derivationKeys[0]...))
+	for _, k := range derivationKeys[1:] {
 		addr = Derive(addr, k)
 	}
 	return addr

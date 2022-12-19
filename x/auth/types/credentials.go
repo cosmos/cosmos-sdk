@@ -51,7 +51,7 @@ func NewModuleCredential(moduleName string, derivationKeys ...[]byte) (*ModuleCr
 }
 
 func (m *ModuleCredential) Address() cryptotypes.Address {
-	return address.Module(m.ModuleName, m.DerivationKeys[0], m.DerivationKeys[1:]...)
+	return address.Module(m.ModuleName, m.DerivationKeys...)
 }
 
 func (m *ModuleCredential) Bytes() []byte {

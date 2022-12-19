@@ -172,6 +172,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type UpgradeInputs struct {
 	depinject.In
 
@@ -182,6 +183,7 @@ type UpgradeInputs struct {
 	AppOpts servertypes.AppOptions `optional:"true"`
 }
 
+//nolint:revive
 type UpgradeOutputs struct {
 	depinject.Out
 

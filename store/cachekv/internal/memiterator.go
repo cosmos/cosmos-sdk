@@ -14,7 +14,7 @@ var _ types.Iterator = (*memIterator)(nil)
 // if key is nil, means it was deleted.
 // Implements Iterator.
 type memIterator struct {
-	iter btree.GenericIter[item]
+	iter btree.IterG[item]
 
 	start     []byte
 	end       []byte
@@ -24,7 +24,7 @@ type memIterator struct {
 	valid     bool
 }
 
-func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator {
+func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator { //nolint:revive
 	iter := items.tree.Iter()
 	var valid bool
 	if ascending {

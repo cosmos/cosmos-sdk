@@ -7,7 +7,7 @@ test-integration-cov:
 test-e2e: test-e2e-server
 	go test ./e2e/... -mod=readonly -timeout 30m -tags='e2e'
 
-test-e2e-cov:
+test-e2e-cov: test-e2e-server
 	go test ./e2e/... -mod=readonly -timeout 30m -race -tags='e2e' -coverpkg=../... -coverprofile=e2e-profile.out -covermode=atomic
 
 test-e2e-server:

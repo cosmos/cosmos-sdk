@@ -11,12 +11,12 @@ import (
 // It can be used, for example, in an allow list.
 type KeySet[K any] Map[K, noValue]
 
-// NewKeySet returns a KeySet given a
+// NewKeySet returns a KeySet given a Schema, Prefix a human name for the collection and a KeyCodec for the key K.
 func NewKeySet[K any](schema Schema, prefix Prefix, name string, keyCodec KeyCodec[K]) KeySet[K] {
 	return (KeySet[K])(NewMap(schema, prefix, name, keyCodec, noValueCodec))
 }
 
-// Set adds the key to the KeySet.
+// Set adds the key to the KeySet. Errors on encoding problems.
 func (k KeySet[K]) Set(ctx context.Context, key K) error {
 	return (Map[K, noValue])(k).Set(ctx, key, noValue{})
 }

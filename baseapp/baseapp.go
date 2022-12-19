@@ -796,7 +796,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		// create message events
-		msgEvents := createEvents(msg).AppendEvents(msgResult.GetEvents())
+		msgEvents := createEvents(msgResult.GetEvents(), msg)
 
 		// append message events, data and logs
 		//
@@ -838,7 +838,7 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(msg sdk.Msg) sdk.Events {
+func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
@@ -847,14 +847,30 @@ func createEvents(msg sdk.Msg) sdk.Events {
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
 	}
 
-	// here we assume that routes module name is the second element of the route
-	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
-	moduleName := strings.Split(eventMsgName, ".")
-	if len(moduleName) > 1 {
-		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
+	// we verify the no module name events have been emitted
+	hasModuleEvent := false
+	for _, event := range events {
+		if event.Type != sdk.EventTypeMessage {
+			continue
+		}
+
+		for _, attr := range event.Attributes {
+			if attr.Key == sdk.AttributeKeyModule {
+				hasModuleEvent = true
+			}
+		}
 	}
 
-	return sdk.Events{msgEvent}
+	if !hasModuleEvent {
+		// here we assume that routes module name is the second element of the route
+		// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+		moduleName := strings.Split(eventMsgName, ".")
+		if len(moduleName) > 1 {
+			msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
+		}
+	}
+
+	return sdk.Events{msgEvent}.AppendEvents(events)
 }
 
 // DefaultPrepareProposal returns the default implementation for processing an

@@ -153,7 +153,7 @@ func TestStrategies(t *testing.T) {
 }
 
 func TestHandleHeight_Inputs(t *testing.T) {
-	var keepRecent int64 = int64(types.NewPruningOptions(types.PruningEverything).KeepRecent)
+	keepRecent := int64(types.NewPruningOptions(types.PruningEverything).KeepRecent)
 
 	testcases := map[string]struct {
 		height          int64
@@ -284,7 +284,7 @@ func TestHandleHeight_FlushLoadFromDisk(t *testing.T) {
 			require.NotNil(t, manager)
 
 			manager.SetSnapshotInterval(tc.snapshotInterval)
-			manager.SetOptions(types.NewCustomPruningOptions(uint64(tc.keepRecent), uint64(10)))
+			manager.SetOptions(types.NewCustomPruningOptions(tc.keepRecent, uint64(10)))
 
 			for _, snapshotHeight := range tc.movedSnapshotHeights {
 				manager.HandleHeightSnapshot(snapshotHeight)

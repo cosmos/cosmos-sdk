@@ -214,7 +214,7 @@ func createTestTx(txConfig client.TxConfig, txBuilder client.TxBuilder, privs []
 			Sequence:      accSeqs[i],
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			nil, txConfig.SignModeHandler().DefaultMode(), signerData,
+			nil, txConfig.SignModeHandler().DefaultMode(), signerData, //nolint:staticcheck
 			txBuilder, priv, txConfig, accSeqs[i])
 		if err != nil {
 			return nil, nil, err

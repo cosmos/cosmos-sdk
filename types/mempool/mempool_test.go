@@ -84,15 +84,15 @@ type sigErrTx struct {
 	getSigs func() ([]txsigning.SignatureV2, error)
 }
 
-func (_ sigErrTx) Size() int64 { return 0 }
+func (sigErrTx) Size() int64 { return 0 }
 
-func (_ sigErrTx) GetMsgs() []sdk.Msg { return nil }
+func (sigErrTx) GetMsgs() []sdk.Msg { return nil }
 
-func (_ sigErrTx) ValidateBasic() error { return nil }
+func (sigErrTx) ValidateBasic() error { return nil }
 
-func (_ sigErrTx) GetSigners() []sdk.AccAddress { return nil }
+func (sigErrTx) GetSigners() []sdk.AccAddress { return nil }
 
-func (_ sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
+func (sigErrTx) GetPubKeys() ([]cryptotypes.PubKey, error) { return nil, nil }
 
 func (t sigErrTx) GetSignaturesV2() ([]txsigning.SignatureV2, error) { return t.getSigs() }
 

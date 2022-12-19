@@ -847,21 +847,8 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
 	}
 
-	// we verify the the events have no module attribute
-	hasModuleNameEvent := false
-	for _, event := range events {
-		if event.Type != sdk.EventTypeMessage {
-			continue
-		}
-
-		for _, attr := range event.Attributes {
-			if attr.Key == sdk.AttributeKeyModule {
-				hasModuleNameEvent = true
-			}
-		}
-	}
-
-	if !hasModuleNameEvent {
+	// verify that events have no module attribute set
+	if _, found := events.GetAttributes(sdk.AttributeKeyModule); !found {
 		// here we assume that routes module name is the second element of the route
 		// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
 		moduleName := strings.Split(eventMsgName, ".")

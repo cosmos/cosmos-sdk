@@ -847,7 +847,7 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
 	}
 
-	// we verify the no module name events have been emitted
+	// we verify the the events have no module attribute
 	hasModuleEvent := false
 	for _, event := range events {
 		if event.Type != sdk.EventTypeMessage {

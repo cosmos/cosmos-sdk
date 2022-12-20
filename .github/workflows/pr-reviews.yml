@@ -1,7 +1,8 @@
-# Request review on PRs without changing our codeowners file (which is stricter that review team)
+# Request review on PRs without changing our codeowners file (which is stricter than review team)
 name: Request review on PRs
 
 on:
+  push: # for testing
   pull_request:
     types:
       - opened
@@ -17,4 +18,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PRBOT_PAT }}
         run: |
-          gh pr edit ${{ github.event.pull_request.html_url }} --add-reviewer cosmos/sdk-core-review
+          gh pr edit ${{ github.event.pull_request.html_url }} --add-reviewer @cosmos/sdk-core-review

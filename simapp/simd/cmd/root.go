@@ -41,13 +41,7 @@ func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
 	// note, this is not necessary when using app wiring, as depinject can be directly used.
 	// for consistency between app-v1 and app-v2, we do it the same way via methods on simapp
-	dir, err := os.MkdirTemp("", "simapp")
-	if err != nil {
-		dir = simapp.DefaultNodeHome
-	}
-	defer os.RemoveAll(dir)
-
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: tempApp.InterfaceRegistry(),
 		Codec:             tempApp.AppCodec(),
@@ -96,7 +90,7 @@ func NewRootCmd() *cobra.Command {
 
 	initRootCmd(rootCmd, encodingConfig)
 
-	if err = tempApp.AutoCliOpts().EnhanceRootCommand(rootCmd); err != nil {
+	if err := tempApp.AutoCliOpts().EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
@@ -319,4 +313,14 @@ func appExport(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var tempDir = func() string {
+	dir, err := os.MkdirTemp("", "simapp")
+	if err != nil {
+		dir = simapp.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }

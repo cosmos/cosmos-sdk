@@ -5,10 +5,6 @@ import (
 	"io"
 	"os"
 
-	"cosmossdk.io/depinject"
-
-	"cosmossdk.io/client/v2/autocli"
-
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
 	"github.com/spf13/cobra"
@@ -30,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -42,17 +39,20 @@ import (
 // main function.
 func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	encodingConfig := params.EncodingConfig{}
-	var autoCliOpts autocli.AppOptions
-	err := depinject.Inject(simapp.AppConfig,
-		&encodingConfig.InterfaceRegistry,
-		&encodingConfig.Codec,
-		&encodingConfig.TxConfig,
-		&encodingConfig.Amino,
-		&autoCliOpts,
-	)
+	// note, this is not necessary when using app wiring, as depinject can be directly used.
+	// for consistency between app-v1 and app-v2, we do it the same way via methods on simapp
+	dir, err := os.MkdirTemp("", "simapp")
 	if err != nil {
-		panic(err)
+		dir = simapp.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+	encodingConfig := params.EncodingConfig{
+		InterfaceRegistry: tempApp.InterfaceRegistry(),
+		Codec:             tempApp.AppCodec(),
+		TxConfig:          tempApp.TxConfig(),
+		Amino:             tempApp.LegacyAmino(),
 	}
 
 	initClientCtx := client.Context{}.
@@ -96,8 +96,7 @@ func NewRootCmd() *cobra.Command {
 
 	initRootCmd(rootCmd, encodingConfig)
 
-	err = autoCliOpts.EnhanceRootCommand(rootCmd)
-	if err != nil {
+	if err = tempApp.AutoCliOpts().EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 

@@ -1,8 +1,13 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
@@ -202,6 +207,75 @@ func (s *KeeperTestSuite) TestCommunityPoolSpend() {
 
 				b := s.bankKeeper.GetAllBalances(s.ctx, r)
 				s.Require().False(b.IsZero())
+			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
+	tstaking := stakingtestutil.NewHelper(s.T(), s.ctx, s.stakingKeeper)
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
+	tstaking.CreateValidator(s.valAddrs[1], valConsPk0, sdk.NewInt(100), true)
+
+	// mint a non-staking token and send to an account
+	amt := sdk.NewCoins(sdk.NewInt64Coin("foo", 500))
+	s.bankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt)
+	s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, s.addrs[0], amt)
+
+	testCases := []struct {
+		name      string
+		input     *types.MsgDepositValidatorRewardsPool
+		expErr    bool
+		expErrMsg string
+	}{
+		{
+			name: "happy path (staking token)",
+			input: &types.MsgDepositValidatorRewardsPool{
+				Authority:        s.addrs[0].String(),
+				ValidatorAddress: s.valAddrs[1].String(),
+				Amount:           sdk.NewCoins(sdk.NewCoin(s.stakingKeeper.BondDenom(s.ctx), sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "happy path (non-staking token)",
+			input: &types.MsgDepositValidatorRewardsPool{
+				Authority:        s.addrs[0].String(),
+				ValidatorAddress: s.valAddrs[1].String(),
+				Amount:           amt,
+			},
+		},
+		{
+			name: "invalid validator",
+			input: &types.MsgDepositValidatorRewardsPool{
+				Authority:        s.addrs[0].String(),
+				ValidatorAddress: sdk.ValAddress([]byte("addr1_______________")).String(),
+				Amount:           sdk.NewCoins(sdk.NewCoin(s.stakingKeeper.BondDenom(s.ctx), sdk.NewInt(100))),
+			},
+			expErr:    true,
+			expErrMsg: "validator does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			_, err := s.msgServer.DepositValidatorRewardsPool(s.ctx, tc.input)
+
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+			} else {
+				s.Require().NoError(err)
+
+				valAddr, err := sdk.ValAddressFromBech32(tc.input.ValidatorAddress)
+				s.Require().NoError(err)
+
+				// check validator outstanding rewards
+				outstandingRewards := s.distrKeeper.GetValidatorOutstandingRewards(s.ctx, valAddr)
+				for _, c := range tc.input.Amount {
+					x := outstandingRewards.Rewards.AmountOf(c.Denom)
+					s.Require().Equal(x, sdk.NewDecFromInt(c.Amount))
+				}
 			}
 		})
 	}

@@ -148,7 +148,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
 	}
 
-	genesisState, err := GenesisStateWithValSet(codec, appBuilder.DefaultGenesis(), valSet, genAccounts, balances...)
+	genesisState, err := GenesisStateWithValSet(codec, app.DefaultGenesis(), valSet, genAccounts, balances...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create genesis state: %w", err)
 	}

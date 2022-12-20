@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -146,7 +147,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		keeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
+		keeper.SetHistoricalInfo(ctx, int64(10+i), &hi) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 	}
 
 	infos := keeper.GetAllHistoricalInfo(ctx)

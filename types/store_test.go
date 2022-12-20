@@ -39,7 +39,7 @@ func (s *storeTestSuite) TestPrefixEndBytes() {
 	}
 
 	for _, test := range testCases {
-		end := sdk.PrefixEndBytes(test.prefix)
+		end := types.PrefixEndBytes(test.prefix)
 		s.Require().Equal(test.expected, end)
 	}
 }
@@ -63,7 +63,7 @@ func (s *storeTestSuite) TestNewTransientStoreKeys() {
 func (s *storeTestSuite) TestNewInfiniteGasMeter() {
 	gm := sdk.NewInfiniteGasMeter()
 	s.Require().NotNil(gm)
-	_, ok := gm.(types.GasMeter)
+	_, ok := gm.(types.GasMeter) //nolint:gosimple
 	s.Require().True(ok)
 }
 
@@ -101,7 +101,7 @@ func (s *storeTestSuite) TestDiffKVStores() {
 
 	// Same keys, different value. Comparisons will be nil as prefixes are skipped.
 	prefix := []byte("prefix:")
-	k1Prefixed := append(prefix, k1...)
+	k1Prefixed := append(prefix, k1...) //nolint:gocritic // append is fine here
 	store1.Set(k1Prefixed, v1)
 	store2.Set(k1Prefixed, v2)
 	s.checkDiffResults(store1, store2)
@@ -121,7 +121,7 @@ func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 
 func (s *storeTestSuite) checkDiffResults(store1, store2 types.KVStore) {
 	kvAs1, kvBs1 := sdk.DiffKVStores(store1, store2, nil)
-	kvAs2, kvBs2 := types.DiffKVStores(store1, store2, nil)
+	kvAs2, kvBs2 := sdk.DiffKVStores(store1, store2, nil)
 	s.Require().Equal(kvAs1, kvAs2)
 	s.Require().Equal(kvBs1, kvBs2)
 }

@@ -78,6 +78,7 @@ func (m *QueryProposalRequest) GetProposalId() uint64 {
 
 // QueryProposalResponse is the response type for the Query/Proposal RPC method.
 type QueryProposalResponse struct {
+	// proposal is the requested governance proposal.
 	Proposal *Proposal `protobuf:"bytes,1,opt,name=proposal,proto3" json:"proposal,omitempty"`
 }
 
@@ -197,6 +198,7 @@ func (m *QueryProposalsRequest) GetPagination() *query.PageRequest {
 // QueryProposalsResponse is the response type for the Query/Proposals RPC
 // method.
 type QueryProposalsResponse struct {
+	// proposals defines all the requested governance proposals.
 	Proposals []*Proposal `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -306,7 +308,7 @@ func (m *QueryVoteRequest) GetVoter() string {
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 type QueryVoteResponse struct {
-	// vote defined the queried vote.
+	// vote defines the queried vote.
 	Vote *Vote `protobuf:"bytes,1,opt,name=vote,proto3" json:"vote,omitempty"`
 }
 
@@ -407,7 +409,7 @@ func (m *QueryVotesRequest) GetPagination() *query.PageRequest {
 
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 type QueryVotesResponse struct {
-	// votes defined the queried votes.
+	// votes defines the queried votes.
 	Votes []*Vote `protobuf:"bytes,1,rep,name=votes,proto3" json:"votes,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -746,6 +748,7 @@ func (m *QueryDepositsRequest) GetPagination() *query.PageRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 type QueryDepositsResponse struct {
+	// deposits defines the requested deposits.
 	Deposits []*Deposit `protobuf:"bytes,1,rep,name=deposits,proto3" json:"deposits,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

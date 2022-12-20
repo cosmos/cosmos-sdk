@@ -150,7 +150,7 @@ function GetStoreCache(
 }
 ```
 
-`Unwrap` returns the underlying CommitKVStore for a given StoreKey.
+`Unwrap` returns the underlying CommitKVStore for a given store key.
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |

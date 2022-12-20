@@ -8,8 +8,7 @@ import (
 // DefaultSequenceStart defines the default starting number of a sequence.
 const DefaultSequenceStart uint64 = 1
 
-// Sequence builds on top of an Item, and represents
-// an ever-increasing number.
+// Sequence builds on top of an Item, and represents a monotonically increasing value.
 type Sequence Item[uint64]
 
 // NewSequence instantiates a new sequence given

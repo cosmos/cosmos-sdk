@@ -13,7 +13,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 // Query defines the gRPC querier service for gov module
 service Query {
   // Constitution queries the chain's constitution.
-  rpc Constitution (QueryConstitutionRequest) returns (QueryConstitutionResponse) {
+  rpc Constitution(QueryConstitutionRequest) returns (QueryConstitutionResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/constitution";
   }
 
@@ -59,8 +59,7 @@ service Query {
 }
 
 // QueryConstitutionRequest is the request type for the Query/Constitution RPC method
-message QueryConstitutionRequest {
-}
+message QueryConstitutionRequest {}
 
 // QueryConstitutionResponse is the response type for the Query/Constitution RPC method
 message QueryConstitutionResponse {
@@ -118,8 +117,6 @@ message QueryVoteResponse {
   // vote defines the queried vote.
   Vote vote = 1;
 }
-
-
 
 // QueryVotesRequest is the request type for the Query/Votes RPC method.
 message QueryVotesRequest {
@@ -207,5 +204,3 @@ message QueryTallyResultResponse {
   // tally defines the requested tally.
   TallyResult tally = 1;
 }
-
-

@@ -1261,6 +1261,7 @@ type GenesisState struct {
 	// The constitution allows builders to lay a foundation and define purpose.
 	// This is an immutable string set in genesis.
 	// There are no amendments, to go outside of scope, just fork.
+	// constitution is an immutable string in genesis for a chain builder to lay out their vision, ideas and ideals.
 	Constitution string `protobuf:"bytes,9,opt,name=constitution,proto3" json:"constitution,omitempty"`
 }
 

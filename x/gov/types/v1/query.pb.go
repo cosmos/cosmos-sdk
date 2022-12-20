@@ -1078,6 +1078,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Constitution queries the chain's constitution.
 	Constitution(ctx context.Context, in *QueryConstitutionRequest, opts ...grpc.CallOption) (*QueryConstitutionResponse, error)
 	// Proposal queries proposal details based on ProposalID.
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
@@ -1188,6 +1189,7 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Constitution queries the chain's constitution.
 	Constitution(context.Context, *QueryConstitutionRequest) (*QueryConstitutionResponse, error)
 	// Proposal queries proposal details based on ProposalID.
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)

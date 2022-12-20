@@ -8,7 +8,7 @@ import (
 // DefaultSequenceStart defines the default starting number of a sequence.
 const DefaultSequenceStart uint64 = 1
 
-// Sequence builds on top of an Item, and represents a monotonically increasing value.
+// Sequence builds on top of an Item, and represents a monotonically increasing number.
 type Sequence Item[uint64]
 
 // NewSequence instantiates a new sequence given
@@ -22,14 +22,13 @@ func NewSequence(schema Schema, prefix Prefix, name string) Sequence {
 // Errors on encoding issues.
 func (s Sequence) Peek(ctx context.Context) (uint64, error) {
 	n, err := (Item[uint64])(s).Get(ctx)
-	if err == nil {
+	switch {
+	case err == nil:
 		return n, nil
-	} else {
-		if errors.Is(err, ErrNotFound) {
-			return DefaultSequenceStart, nil
-		} else {
-			return 0, err
-		}
+	case errors.Is(err, ErrNotFound):
+		return DefaultSequenceStart, nil
+	default:
+		return 0, err
 	}
 }
 

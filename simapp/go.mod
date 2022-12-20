@@ -164,6 +164,7 @@ require (
 )
 
 replace (
+	// todo remove at next tag of client/v2
 	cosmossdk.io/client/v2 => ../client/v2
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

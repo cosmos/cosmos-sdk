@@ -1,21 +1,23 @@
-- [Synopsis](#synopsis)
-- [Overview and basic concepts](#overview-and-basic-concepts)
-  - [Motivation](#motivation)
-  - [Definitions](#definitions)
-- [System model and properties](#system-model-and-properties)
-  - [Assumptions](#assumptions)
-  - [Properties](#properties)
-    - [Thread safety](#thread-safety)
-    - [Crash recovery](#crash-recovery)
-    - [Iteration](#iteration)
-- [Technical specification](#technical-specification)
-  - [General design](#general-design)
-  - [API](#api)
-    - [CommitKVCacheManager](#commitkvcachemanager)
-    - [CommitKVStoreCache](#commitkvstorecache)
-  - [Immplementation details](#immplementation-details)
-- [History](#history)
-- [Copyright](#copyright)
+# Inter-block cache
+- [Inter-block cache](#inter-block-cache)
+  - [Synopsis](#synopsis)
+  - [Overview and basic concepts](#overview-and-basic-concepts)
+    - [Motivation](#motivation)
+    - [Definitions](#definitions)
+  - [System model and properties](#system-model-and-properties)
+    - [Assumptions](#assumptions)
+    - [Properties](#properties)
+      - [Thread safety](#thread-safety)
+      - [Crash recovery](#crash-recovery)
+      - [Iteration](#iteration)
+  - [Technical specification](#technical-specification)
+    - [General design](#general-design)
+    - [API](#api)
+      - [CommitKVCacheManager](#commitkvcachemanager)
+      - [CommitKVStoreCache](#commitkvstorecache)
+    - [Implementation details](#implementation-details)
+  - [History](#history)
+  - [Copyright](#copyright)
 
 
 ## Synopsis
@@ -92,7 +94,7 @@ interface CommitKVStoreCacheManager{
 }
 ```
 
-`CommitKVStoreCache` implements a `KVStore`: a write-through, cache that wraps a `CommitKVStore`. This means that deletes and writes always happen to both the cache and the underlying `CommitKVStore`. Reads on the other hand first hit the internal cache. During a cache miss, the read is delegated to the underlying `CommitKVStore` and cached.
+`CommitKVStoreCache` implements a `KVStore`: a write-through cache that wraps a `CommitKVStore`. This means that deletes and writes always happen to both the cache and the underlying `CommitKVStore`. Reads on the other hand first hit the internal cache. During a cache miss, the read is delegated to the underlying `CommitKVStore` and cached.
 
 ```typescript
 interface CommitKVStoreCache{
@@ -100,6 +102,8 @@ interface CommitKVStoreCache{
     cache: Cache
 }
 ```
+
+To enable inter-block cache on `rootmulti`, one needs to instantiate a `CommitKVCacheManager` and set it by calling `SetInterBlockCache()` before calling one of `LoadLatestVersion()`, `LoadLatestVersionAndUpgrade(...)`, `LoadVersionAndUpgrade(...)` and `LoadVersion(version)`.
 
 ### API
 
@@ -124,9 +128,9 @@ function NewCommitKVStoreCacheManager(
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| manager  | CommitKVStoreCacheManager | The cache manager |
+| manager  | `CommitKVStoreCacheManager` | The cache manager |
 | storeKey  | string | The store key of the store being retrieved |
-| store  | CommitKVStore | The store that it is cached in case the manager does not have any in its map of caches |
+| store  | `CommitKVStore` | The store that it is cached in case the manager does not have any in its map of caches |
 
 ```typescript
 function GetStoreCache(
@@ -148,7 +152,7 @@ function GetStoreCache(
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| manager  | CommitKVStoreCacheManager | The cache manager |
+| manager  | `CommitKVStoreCacheManager` | The cache manager |
 | storeKey  | string | The store key of the store being unwrapped |
 
 ```typescript
@@ -169,7 +173,7 @@ function Unwrap(
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| manager  | CommitKVStoreCacheManager | The cache manager |
+| manager  | `CommitKVStoreCacheManager` | The cache manager |
 
 ```typescript
 function Reset(
@@ -199,11 +203,11 @@ function NewCommitKVStoreCache(
 }
 ```
 
-`Get` retrieves a value by key. It first looks in the cache. If the key is not in the cache, the query is delegated to the underlying CommitKVStore. In the latter case, the key/value pair is cached. The method returns the value.
+`Get` retrieves a value by key. It first looks in the cache. If the key is not in the cache, the query is delegated to the underlying `CommitKVStore`. In the latter case, the key/value pair is cached. The method returns the value.
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| KVCache  | CommitKVStoreCache | The CommitKVStoreCache from which the key/value pair is inserted  |
+| KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` from which the key/value pair is retrieved  |
 | key  | string | Key of the key/value pair being retrieved |
 
 ```typescript
@@ -223,11 +227,11 @@ function Get(
 }
 ```
 
-`Set` inserts a key/value pair into both the write-through cache and the underlying CommitKVStore.
+`Set` inserts a key/value pair into both the write-through cache and the underlying `CommitKVStore`.
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| KVCache  | CommitKVStoreCache | The CommitKVStoreCache to which the key/value pair is inserted |
+| KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` to which the key/value pair is inserted |
 | key  | string | Key of the key/value pair being inserted |
 | value  | []byte | Value of the key/value pair being inserted |
 
@@ -246,7 +250,7 @@ function Set(
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| KVCache  | CommitKVStoreCache | The CommitKVStoreCache from which the key/value pair is deleted |
+| KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` from which the key/value pair is deleted |
 | key  | string | Key of the key/value pair being deleted |
 
 ```typescript
@@ -261,11 +265,11 @@ function Delete(
 
 `CacheWrap` wraps a `CommitKVStoreCache` with another caching layer (`CacheKV`). 
 
-> It is unclear whether this methods is needed or not.
+> It is unclear whether there is a use case for `CacheWrap`. 
 
 | Name  | Type | Description |
 | ------------- | ---------|------- |
-| KVCache  | CommitKVStoreCache | The CommitKVStoreCache being wrapped |
+| KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` being wrapped |
 
 ```typescript
 function CacheWrap(
@@ -275,7 +279,7 @@ function CacheWrap(
 }
 ```
 
-### Immplementation details
+### Implementation details
 
 The inter-block cache implementation uses a fixed-sized adaptive replacement cache (ARC) as cache. [The ARC implementation](https://github.com/hashicorp/golang-lru/blob/master/arc.go) is thread-safe. ARC is an enhancement over the standard LRU cache in that tracks both frequency and recency of use. This avoids a burst in access to new entries from evicting the frequently used older entries. It adds some additional tracking overhead to a standard LRU cache, computationally it is roughly `2x` the cost, and the extra memory overhead is linear with the size of the cache. The default cache size is `1000`.
 

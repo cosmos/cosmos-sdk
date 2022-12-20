@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -14,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	v4 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 type mockSubspace struct {

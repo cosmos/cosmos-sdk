@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
+	"cosmossdk.io/client/v2/internal/strcase"
 	"cosmossdk.io/client/v2/internal/util"
 )
 

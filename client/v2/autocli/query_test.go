@@ -143,9 +143,9 @@ func TestEverything(t *testing.T) {
 		"--a-message", `{"bar":"abc", "baz":-3}`,
 		"--duration", "4h3s",
 		"--uint32", "27",
-		"--u-64", "3267246890",
-		"--i-32", "-253",
-		"--i-64", "-234602347",
+		"--u64", "3267246890",
+		"--i32", "-253",
+		"--i64", "-234602347",
 		"--str", "def",
 		"--timestamp", "2019-01-02T00:01:02Z",
 		"--a-coin", `{"denom":"foo","amount":"100000"}`,
@@ -181,7 +181,7 @@ func TestOptions(t *testing.T) {
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-u", "27", // shorthand
-		"--u-64", // no opt default value
+		"--u64", // no opt default value
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
 	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set

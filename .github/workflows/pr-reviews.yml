@@ -14,10 +14,9 @@ jobs:
   request:
     name: Request reviews on opened PRs
     runs-on: ubuntu-latest
-
     steps:
       - name: Create PR review request
+        run: gh pr edit $PR_URL --add-reviewer @cosmos/sdk-core-review
         env:
           GH_TOKEN: ${{ secrets.PRBOT_PAT }}
-        run: |
-          gh pr edit ${{ github.event.pull_request.html_url }} --add-reviewer @cosmos/sdk-core-review
+          PR_URL: ${{ github.event.pull_request.html_url }}

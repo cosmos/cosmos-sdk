@@ -54,13 +54,13 @@ message SoftwareUpgradeProposal {
   option (gogoproto.equal)                   = true;
 
   // title of the proposal
-  string title       = 1;
+  string title = 1;
 
   // description of the proposal
   string description = 2;
 
   // plan of the proposal
-  Plan   plan        = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  Plan plan = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // CancelSoftwareUpgradeProposal is a gov Content type for cancelling a software
@@ -74,7 +74,7 @@ message CancelSoftwareUpgradeProposal {
   option (gogoproto.equal)                   = true;
 
   // title of the proposal
-  string title       = 1;
+  string title = 1;
 
   // description of the proposal
   string description = 2;

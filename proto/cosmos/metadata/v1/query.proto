@@ -3,19 +3,20 @@ syntax = "proto3";
 
 package cosmos.metadata.v1;
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/metadata";
-
-import "cosmos/metadata/v1/genesis.proto";
-
 import "gogoproto/gogo.proto";
+import "cosmos/query/v1/query.proto";
 import "google/api/annotations.proto";
+import "amino/amino.proto";
+import "cosmos/metadata/v1/metadata.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/metadata/types";
 
 // Query defines the gRPC querier service.
 service Query {
   // Params returns the chains metadata paramaters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/cosmos/metadata/v1/params";
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/metadata/v1/params";
   }
 }
 

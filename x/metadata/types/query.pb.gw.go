@@ -2,11 +2,11 @@
 // source: cosmos/metadata/v1/query.proto
 
 /*
-Package metadata is a reverse proxy.
+Package types is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package metadata
+package types
 
 import (
 	"context"

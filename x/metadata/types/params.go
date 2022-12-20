@@ -6,8 +6,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// ParamStoreKeyMinGasPrices store key
-var ParamStoreKeyMinGasPrices = []byte("MetadataParam")
+// ParamStoreKeyMetadataPrices store key
+var ParamStoreKeyMetadataPrices = []byte("MetadataParam")
 
 // DefaultParams returns default parameters
 func DefaultParams() Params {
@@ -36,9 +36,7 @@ func (p Params) ValidateBasic() error {
 // ParamSetPairs returns the parameter set pairs.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(
-			ParamStoreKeyMinGasPrices, &p, validateParams,
-		),
+		paramtypes.NewParamSetPair(ParamStoreKeyMetadataPrices, &p, validateParams),
 	}
 }
 
@@ -49,6 +47,18 @@ func validateParams(i interface{}) error {
 // Validate checks that no strings are set too long or too short
 
 func (params Params) Validate() error {
+
+	if len(params.Twitter) > 15 {
+		return fmt.Errorf("Twitter handle too long")
+	}
+
+	// check that links start with http
+	for _, link := range []string{params.Telegram, params.Discord, params.Github, params.Website} {
+		if len(link) > 0 && (link[:4] != "http" || link[:3] != "www") {
+			return fmt.Errorf("link %s does not start with http(s) or www", link)
+		}
+	}
+
 	for _, p := range params.Other {
 		if p.Id == "" {
 			return fmt.Errorf("empty id for value %s", p.Value)

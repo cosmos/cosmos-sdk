@@ -4,19 +4,21 @@ import (
 	"encoding/json"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// NewGenesisState - Create a new genesis state
+// // NewGenesisState - Create a new genesis state
 func NewGenesisState(params Params) *GenesisState {
 	return &GenesisState{
-		Params: &params,
+		Params: params,
 	}
 }
 
-// DefaultGenesisState - Return a default genesis state
+// // DefaultGenesisState - Return a default genesis state
 func DefaultGenesisState() *GenesisState {
-	return NewGenesisState(DefaultParams())
+	// return NewGenesisState(DefaultParams())
+	return &GenesisState{
+		Params: DefaultParams(),
+	}
 }
 
 // GetGenesisStateFromAppState returns x/auth GenesisState given raw application
@@ -33,7 +35,7 @@ func GetGenesisStateFromAppState(cdc codec.Codec, appState map[string]json.RawMe
 
 func ValidateGenesis(data GenesisState) error {
 	if err := data.Params.ValidateBasic(); err != nil {
-		return sdkerrors.Wrap(err, "metadata params")
+		return err
 	}
 
 	return nil

@@ -1,0 +1,31 @@
+syntax = "proto3";
+package cosmos.metadata.v1;
+
+import "amino/amino.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/metadata/types";
+
+// create a other object which has an id and a string value
+message ChainSpecific {
+  string id    = 1;
+  string value = 2;
+}
+
+// Params defines the set of module parameters.
+message Params {
+  option (amino.name) = "cosmos-sdk/x/metadata/Params";
+
+  // social media
+  string twitter  = 1;
+  string telegram = 2;
+  string discord  = 3;
+  // project
+  string github  = 4;
+  string website = 5;
+  // token
+  string coingecko_id    = 6;
+  string coin_image_link = 7;
+  // other
+  string                 constitution = 8;
+  repeated ChainSpecific other        = 9;
+}

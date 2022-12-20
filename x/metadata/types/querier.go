@@ -1,11 +1,14 @@
-package metadata
+package types
 
 import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
-	"github.com/cosmos/cosmos-sdk/x/metadata/types"
+// query endpoints supported by the auth Querier
+const (
+	QueryParams = "params"
 )
 
 var _ QueryServer = &GrpcQuerier{}
@@ -26,10 +29,12 @@ func NewGrpcQuerier(paramSource ParamSource) GrpcQuerier {
 
 // MetadataParams return metadata params
 func (g GrpcQuerier) Params(stdCtx context.Context, _ *QueryParamsRequest) (*QueryParamsResponse, error) {
-	var params types.Params
+	var params Params
 	ctx := sdk.UnwrapSDKContext(stdCtx)
-	if g.paramSource.Has(ctx, types.ParamStoreKeyMinGasPrices) {
-		g.paramSource.Get(ctx, types.ParamStoreKeyMinGasPrices, &params)
+	if g.paramSource.Has(ctx, ParamStoreKeyMetadataPrices) {
+		g.paramSource.Get(ctx, ParamStoreKeyMetadataPrices, &params)
+	} else {
+		params = DefaultParams()
 	}
 	return &QueryParamsResponse{
 		Params: params,

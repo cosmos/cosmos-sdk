@@ -17,7 +17,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/x/metadata/client/cli"
-	querier "github.com/cosmos/cosmos-sdk/x/metadata/querier"
 	"github.com/cosmos/cosmos-sdk/x/metadata/types"
 )
 
@@ -57,7 +56,9 @@ func (a AppModuleBasic) RegisterRESTRoutes(context client.Context, router *mux.R
 }
 
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	_ = querier.RegisterQueryHandlerClient(context.Background(), mux, querier.NewQueryClient(clientCtx))
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 func (a AppModuleBasic) GetTxCmd() *cobra.Command {
@@ -88,13 +89,13 @@ func NewAppModule(paramSpace paramstypes.Subspace) *AppModule {
 func (a AppModule) InitGenesis(ctx sdk.Context, marshaler codec.JSONCodec, message json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState types.GenesisState
 	marshaler.MustUnmarshalJSON(message, &genesisState)
-	a.paramSpace.SetParamSet(ctx, genesisState.Params)
+	a.paramSpace.SetParamSet(ctx, &genesisState.Params)
 	return nil
 }
 
 func (a AppModule) ExportGenesis(ctx sdk.Context, marshaler codec.JSONCodec) json.RawMessage {
 	var genState types.GenesisState
-	a.paramSpace.GetParamSet(ctx, genState.Params)
+	a.paramSpace.GetParamSet(ctx, &genState.Params)
 	return marshaler.MustMarshalJSON(&genState)
 }
 
@@ -106,7 +107,7 @@ func (a AppModule) QuerierRoute() string {
 }
 
 func (a AppModule) RegisterServices(cfg module.Configurator) {
-	querier.RegisterQueryServer(cfg.QueryServer(), querier.NewGrpcQuerier(a.paramSpace))
+	types.RegisterQueryServer(cfg.QueryServer(), types.NewGrpcQuerier(a.paramSpace))
 }
 
 func (a AppModule) BeginBlock(context sdk.Context, block abci.RequestBeginBlock) {

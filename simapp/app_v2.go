@@ -55,6 +55,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	metadatamodule "github.com/cosmos/cosmos-sdk/x/metadata/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
@@ -105,6 +106,7 @@ var (
 		vesting.AppModuleBasic{},
 		nftmodule.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		metadatamodule.AppModuleBasic{},
 	)
 )
 

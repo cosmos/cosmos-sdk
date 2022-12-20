@@ -1,31 +1,14 @@
 syntax = "proto3";
 package cosmos.metadata.v1;
 
+import "cosmos/metadata/v1/metadata.proto";
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/metadata/types";
 
 // GenesisState - initial state of module
 message GenesisState {
   // Params of this module
-  Params params = 1;
-}
-
-// create a other object which has an id and a string value
-message ChainSpecific {
-  string id = 1;
-  string value = 2;
-}
-
-// Params defines the set of module parameters.
-message Params {
-  string twitter = 1;
-  string telegram = 2;
-  string discord = 3;
-  string github = 4;
-  string website = 5;
-  string coingecko_id = 6;
-  string coin_image_link = 7;
-  string constitution = 8;
-  repeated ChainSpecific other = 9;
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

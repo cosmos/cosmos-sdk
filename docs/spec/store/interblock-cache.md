@@ -73,7 +73,9 @@ Note that this is true even if the cache implementation is thread-safe.
 #### Crash recovery
 
 The inter-block cache transparently delegates `Commit()` to its aggregate `CommitKVStore`. If the 
-aggregate `CommitKVStore` supports atomic writes and use them to guarantee that the store is always in a consistent state in disk, the inter-block cache can be transparently moved to a consistent state when a failure occurs. Note that this is the case for `IAVLStore`, the preferred `CommitKVStore`.
+aggregate `CommitKVStore` supports atomic writes and use them to guarantee that the store is always in a consistent state in disk, the inter-block cache can be transparently moved to a consistent state when a failure occurs.
+
+> Note that this is the case for `IAVLStore`, the preferred `CommitKVStore`. On commit, it calls `SaveVersion()` on the underlying `MutableTree`. `SaveVersion` writes to disk are atomic via batching. This means that only consistent versions of the store (the tree) are written to the disk. Thus, in case of a failure during a `SaveVersion` call, on recovery from disk, the version of the store will be consistent.
 
 #### Iteration
 

@@ -46,8 +46,6 @@ service Query {
   //
   // When called from another module, this query might consume a high amount of
   // gas if the pagination field is incorrectly set.
-  //
-  // Since: cosmos-sdk 0.47
   rpc SpendableBalanceByDenom(QuerySpendableBalanceByDenomRequest) returns (QuerySpendableBalanceByDenomResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get               = "/cosmos/bank/v1beta1/spendable_balances/{address}/by_denom";
@@ -192,8 +190,6 @@ message QuerySpendableBalancesResponse {
 
 // QuerySpendableBalanceByDenomRequest defines the gRPC request structure for
 // querying an account's spendable balance for a specific denom.
-//
-// Since: cosmos-sdk 0.47
 message QuerySpendableBalanceByDenomRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
@@ -207,8 +203,6 @@ message QuerySpendableBalanceByDenomRequest {
 
 // QuerySpendableBalanceByDenomResponse defines the gRPC response structure for
 // querying an account's spendable balance for a specific denom.
-//
-// Since: cosmos-sdk 0.47
 message QuerySpendableBalanceByDenomResponse {
   // balance is the balance of the coin.
   cosmos.base.v1beta1.Coin balance = 1;

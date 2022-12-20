@@ -42,8 +42,6 @@ type QueryClient interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.47
 	SpendableBalanceByDenom(ctx context.Context, in *QuerySpendableBalanceByDenomRequest, opts ...grpc.CallOption) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//
@@ -211,8 +209,6 @@ type QueryServer interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
-	//
-	// Since: cosmos-sdk 0.47
 	SpendableBalanceByDenom(context.Context, *QuerySpendableBalanceByDenomRequest) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//

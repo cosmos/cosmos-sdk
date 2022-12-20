@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import bank as a blank for app wiring
@@ -45,6 +46,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
+					runtime.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
@@ -54,6 +56,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
+					runtime.ModuleName,
 				},
 				InitGenesis: []string{
 					capabilitytypes.ModuleName,
@@ -63,6 +66,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
+					runtime.ModuleName,
 				},
 			}),
 		},

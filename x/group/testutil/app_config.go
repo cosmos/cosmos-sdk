@@ -5,6 +5,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // blank import for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // blank import for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/authz"          // blank import for app wiring
@@ -53,6 +54,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					group.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
+					runtime.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
@@ -63,6 +65,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					group.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
+					runtime.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
@@ -73,6 +76,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					group.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
+					runtime.ModuleName,
 				},
 			}),
 		},

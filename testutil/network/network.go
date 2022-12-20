@@ -142,7 +142,8 @@ func MinimumAppConfig() depinject.Config {
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
-		configurator.TxModule())
+		configurator.TxModule(),
+	)
 }
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {

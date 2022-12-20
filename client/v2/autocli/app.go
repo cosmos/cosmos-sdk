@@ -87,8 +87,7 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 
 	// if we have an existing query command, enhance it or build a custom one
 	if queryCmd := findSubCommand(rootCmd, "query"); queryCmd != nil {
-		err := builder.EnhanceQueryCommand(queryCmd, moduleOptions, customQueryCmds)
-		if err != nil {
+		if err := builder.EnhanceQueryCommand(queryCmd, moduleOptions, customQueryCmds); err != nil {
 			return err
 		}
 	} else {

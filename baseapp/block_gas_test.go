@@ -22,6 +22,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,9 +81,14 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			err               error
 		)
 
-		appConfig := depinject.Configs(makeTestConfig())
-
-		err = depinject.Inject(appConfig,
+		err = depinject.Inject(configurator.NewAppConfig(
+			configurator.AuthModule(),
+			configurator.TxModule(),
+			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
+			configurator.BankModule(),
+			configurator.StakingModule(),
+		),
 			&bankKeeper,
 			&accountKeeper,
 			&interfaceRegistry,

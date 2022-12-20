@@ -27,7 +27,7 @@ func (k KeySet[K]) Has(ctx context.Context, key K) (bool, error) {
 	return (Map[K, noValue])(k).Has(ctx, key)
 }
 
-// Remove removes the key for the KeySet an error is
+// Remove removes the key for the KeySet. An error is
 // returned in case of encoding error, it won't report
 // through the error if the key was removed or not.
 func (k KeySet[K]) Remove(ctx context.Context, key K) error {

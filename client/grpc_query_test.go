@@ -26,7 +26,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type IntegrationTestSuite struct {
@@ -65,12 +64,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.genesisAccountBalance = 100000000000000
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{
+	balance := types.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(s.genesisAccountBalance))),
 	}
 
-	genesisState, err := sims.GenesisStateWithValSet(cdc, appBuilder.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState, err := sims.GenesisStateWithValSet(cdc, app.DefaultGenesis(), valSet, []authtypes.GenesisAccount{acc}, balance)
 	s.NoError(err)
 
 	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
@@ -120,7 +119,7 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 	var header metadata.MD
 	res, err := s.bankClient.Balance(
 		context.Background(),
-		&banktypes.QueryBalanceRequest{Address: s.genesisAccount.GetAddress().String(), Denom: denom},
+		&types.QueryBalanceRequest{Address: s.genesisAccount.GetAddress().String(), Denom: denom},
 		grpc.Header(&header), // Also fetch grpc header
 	)
 	s.Require().NoError(err)

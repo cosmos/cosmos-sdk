@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -25,37 +26,37 @@ const (
 	TallyParamsVeto            = "tally_params_veto"
 )
 
-// GenDepositParamsDepositPeriod randomized DepositParamsDepositPeriod
+// GenDepositParamsDepositPeriod returns randomized DepositParamsDepositPeriod
 func GenDepositParamsDepositPeriod(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 }
 
-// GenDepositParamsMinDeposit randomized DepositParamsMinDeposit
+// GenDepositParamsMinDeposit returns randomized DepositParamsMinDeposit
 func GenDepositParamsMinDeposit(r *rand.Rand) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, int64(simulation.RandIntBetween(r, 1, 1e3))))
 }
 
-// GenDepositMinInitialRatio randomized DepositMinInitialRatio
+// GenDepositMinInitialRatio returns randomized DepositMinInitialRatio
 func GenDepositMinInitialDepositRatio(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdk.NewDec(100))
 }
 
-// GenVotingParamsVotingPeriod randomized VotingParamsVotingPeriod
+// GenVotingParamsVotingPeriod returns randomized VotingParamsVotingPeriod
 func GenVotingParamsVotingPeriod(r *rand.Rand) time.Duration {
 	return time.Duration(simulation.RandIntBetween(r, 1, 2*60*60*24*2)) * time.Second
 }
 
-// GenTallyParamsQuorum randomized TallyParamsQuorum
+// GenTallyParamsQuorum returns randomized TallyParamsQuorum
 func GenTallyParamsQuorum(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 334, 500)), 3)
 }
 
-// GenTallyParamsThreshold randomized TallyParamsThreshold
+// GenTallyParamsThreshold returns randomized TallyParamsThreshold
 func GenTallyParamsThreshold(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 450, 550)), 3)
 }
 
-// GenTallyParamsVeto randomized TallyParamsVeto
+// GenTallyParamsVeto returns randomized TallyParamsVeto
 func GenTallyParamsVeto(r *rand.Rand) math.LegacyDec {
 	return sdk.NewDecWithPrec(int64(simulation.RandIntBetween(r, 250, 334)), 3)
 }

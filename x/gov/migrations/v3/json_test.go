@@ -20,15 +20,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
+var voter = sdk.MustAccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
+
 func TestMigrateJSON(t *testing.T) {
 	encodingConfig := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{})
 	clientCtx := client.Context{}.
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithCodec(encodingConfig.Codec)
-
-	voter, err := sdk.AccAddressFromBech32("cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
-	require.NoError(t, err)
 
 	govGenState := v1beta1.DefaultGenesisState()
 	propTime := time.Unix(1e9, 0)

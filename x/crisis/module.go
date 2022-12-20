@@ -191,6 +191,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type CrisisInputs struct {
 	depinject.In
 
@@ -205,6 +206,7 @@ type CrisisInputs struct {
 	LegacySubspace exported.Subspace
 }
 
+//nolint:revive
 type CrisisOutputs struct {
 	depinject.Out
 

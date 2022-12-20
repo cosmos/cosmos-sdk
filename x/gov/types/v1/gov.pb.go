@@ -123,8 +123,10 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 
 // WeightedVoteOption defines a unit of vote for vote split.
 type WeightedVoteOption struct {
+	// option defines the valid vote options, it must not contain duplicate vote options.
 	Option VoteOption `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1.VoteOption" json:"option,omitempty"`
-	Weight string     `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
+	// weight is the vote weight associated with the vote option.
+	Weight string `protobuf:"bytes,2,opt,name=weight,proto3" json:"weight,omitempty"`
 }
 
 func (m *WeightedVoteOption) Reset()         { *m = WeightedVoteOption{} }
@@ -177,9 +179,12 @@ func (m *WeightedVoteOption) GetWeight() string {
 // Deposit defines an amount deposited by an account address to an active
 // proposal.
 type Deposit struct {
-	ProposalId uint64       `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Depositor  string       `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// amount to be deposited by depositor.
+	Amount []types.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *Deposit) Reset()         { *m = Deposit{} }
@@ -238,18 +243,26 @@ func (m *Deposit) GetAmount() []types.Coin {
 
 // Proposal defines the core field members of a governance proposal.
 type Proposal struct {
-	Id       uint64         `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Messages []*types1.Any  `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
-	Status   ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1.ProposalStatus" json:"status,omitempty"`
+	// id defines the unique id of the proposal.
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// messages are the arbitrary messages to be executed if the proposal passes.
+	Messages []*types1.Any `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
+	// status defines the proposal status.
+	Status ProposalStatus `protobuf:"varint,3,opt,name=status,proto3,enum=cosmos.gov.v1.ProposalStatus" json:"status,omitempty"`
 	// final_tally_result is the final tally result of the proposal. When
 	// querying a proposal via gRPC, this field is not populated until the
 	// proposal's voting period has ended.
 	FinalTallyResult *TallyResult `protobuf:"bytes,4,opt,name=final_tally_result,json=finalTallyResult,proto3" json:"final_tally_result,omitempty"`
-	SubmitTime       *time.Time   `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time,omitempty"`
-	DepositEndTime   *time.Time   `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time,omitempty"`
-	TotalDeposit     []types.Coin `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit"`
-	VotingStartTime  *time.Time   `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time,omitempty"`
-	VotingEndTime    *time.Time   `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time,omitempty"`
+	// submit_time is the time of proposal submission.
+	SubmitTime *time.Time `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time,omitempty"`
+	// deposit_end_time is the end time for deposition.
+	DepositEndTime *time.Time `protobuf:"bytes,6,opt,name=deposit_end_time,json=depositEndTime,proto3,stdtime" json:"deposit_end_time,omitempty"`
+	// total_deposit is the total deposit on the proposal.
+	TotalDeposit []types.Coin `protobuf:"bytes,7,rep,name=total_deposit,json=totalDeposit,proto3" json:"total_deposit"`
+	// voting_start_time is the starting time to vote on a proposal.
+	VotingStartTime *time.Time `protobuf:"bytes,8,opt,name=voting_start_time,json=votingStartTime,proto3,stdtime" json:"voting_start_time,omitempty"`
+	// voting_end_time is the end time of voting on a proposal.
+	VotingEndTime *time.Time `protobuf:"bytes,9,opt,name=voting_end_time,json=votingEndTime,proto3,stdtime" json:"voting_end_time,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
@@ -359,9 +372,13 @@ func (m *Proposal) GetMetadata() string {
 
 // TallyResult defines a standard tally for a governance proposal.
 type TallyResult struct {
-	YesCount        string `protobuf:"bytes,1,opt,name=yes_count,json=yesCount,proto3" json:"yes_count,omitempty"`
-	AbstainCount    string `protobuf:"bytes,2,opt,name=abstain_count,json=abstainCount,proto3" json:"abstain_count,omitempty"`
-	NoCount         string `protobuf:"bytes,3,opt,name=no_count,json=noCount,proto3" json:"no_count,omitempty"`
+	// yes_count is the number of yes votes on a proposal.
+	YesCount string `protobuf:"bytes,1,opt,name=yes_count,json=yesCount,proto3" json:"yes_count,omitempty"`
+	// abstain_count is the number of abstain votes on a proposal.
+	AbstainCount string `protobuf:"bytes,2,opt,name=abstain_count,json=abstainCount,proto3" json:"abstain_count,omitempty"`
+	// no_count is the number of no votes on a proposal.
+	NoCount string `protobuf:"bytes,3,opt,name=no_count,json=noCount,proto3" json:"no_count,omitempty"`
+	// no_with_veto_count is the number of no with veto votes on a proposal.
 	NoWithVetoCount string `protobuf:"bytes,4,opt,name=no_with_veto_count,json=noWithVetoCount,proto3" json:"no_with_veto_count,omitempty"`
 }
 
@@ -429,9 +446,12 @@ func (m *TallyResult) GetNoWithVetoCount() string {
 // Vote defines a vote on a governance proposal.
 // A Vote consists of a proposal ID, the voter, and the vote option.
 type Vote struct {
-	ProposalId uint64                `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Voter      string                `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Options    []*WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// voter is the voter address of the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// options is the weighted vote options.
+	Options []*WeightedVoteOption `protobuf:"bytes,4,rep,name=options,proto3" json:"options,omitempty"`
 	// metadata is any  arbitrary metadata to attached to the vote.
 	Metadata string `protobuf:"bytes,5,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
@@ -555,7 +575,7 @@ func (m *DepositParams) GetMaxDepositPeriod() *time.Duration {
 
 // VotingParams defines the params for voting on governance proposals.
 type VotingParams struct {
-	// Length of the voting period.
+	// Duration of the voting period.
 	VotingPeriod *time.Duration `protobuf:"bytes,1,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period,omitempty"`
 }
 
@@ -674,7 +694,7 @@ type Params struct {
 	// Maximum period for Atom holders to deposit on a proposal. Initial value: 2
 	// months.
 	MaxDepositPeriod *time.Duration `protobuf:"bytes,2,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period,omitempty"`
-	// Length of the voting period.
+	// Duration of the voting period.
 	VotingPeriod *time.Duration `protobuf:"bytes,3,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period,omitempty"`
 	// Minimum percentage of total stake needed to vote for a result to be
 	// considered valid.

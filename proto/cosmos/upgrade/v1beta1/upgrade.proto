@@ -12,9 +12,8 @@ option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.
 message Plan {
-  option (amino.name)                 = "cosmos-sdk/Plan";
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
+  option (amino.name)      = "cosmos-sdk/Plan";
+  option (gogoproto.equal) = true;
 
   // Sets the name for the upgrade. This name will be used by the upgraded
   // version of the software to apply any special "on-upgrade" commands during
@@ -32,7 +31,6 @@ message Plan {
       [deprecated = true, (gogoproto.stdtime) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // The height at which the upgrade must be performed.
-  // Only used if Time is not set.
   int64 height = 3;
 
   // Any application specific upgrade info to be included on-chain
@@ -54,10 +52,14 @@ message SoftwareUpgradeProposal {
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
   option (amino.name)                        = "cosmos-sdk/SoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
-  option (gogoproto.goproto_stringer)        = false;
 
+  // title of the proposal
   string title       = 1;
+
+  // description of the proposal
   string description = 2;
+
+  // plan of the proposal
   Plan   plan        = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
@@ -70,9 +72,11 @@ message CancelSoftwareUpgradeProposal {
   option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
   option (amino.name)                        = "cosmos-sdk/CancelSoftwareUpgradeProposal";
   option (gogoproto.equal)                   = true;
-  option (gogoproto.goproto_stringer)        = false;
 
+  // title of the proposal
   string title       = 1;
+
+  // description of the proposal
   string description = 2;
 }
 
@@ -80,8 +84,7 @@ message CancelSoftwareUpgradeProposal {
 //
 // Since: cosmos-sdk 0.43
 message ModuleVersion {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.equal) = true;
 
   // name of the app module
   string name = 1;

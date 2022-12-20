@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	// SubmitProposal defines a method to create new proposal given a content.
+	// SubmitProposal defines a method to create new proposal given the messages.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
 	// ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
 	// to execute a legacy content-based proposal.
@@ -106,7 +106,7 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	// SubmitProposal defines a method to create new proposal given a content.
+	// SubmitProposal defines a method to create new proposal given the messages.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 	// ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
 	// to execute a legacy content-based proposal.

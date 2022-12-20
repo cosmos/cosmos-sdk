@@ -24,12 +24,14 @@ type MemCache struct {
 	tree *btree.BTreeG[item]
 }
 
-// NewMemCache creates a wrapper around `btree.BTreeG`.
+// NewMemCache creates a wrapper around a btree.BTreeG object.
 func NewMemCache() MemCache {
-	return MemCache{tree: btree.NewBTreeGOptions(byKeys, btree.Options{
-		Degree:  bTreeDegree,
-		NoLocks: false,
-	})}
+	return MemCache{
+		tree: btree.NewBTreeGOptions(byKeys, btree.Options{
+			Degree:  bTreeDegree,
+			NoLocks: false,
+		}),
+	}
 }
 
 // Set set a cache entry, dirty means it's newly set,

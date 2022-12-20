@@ -111,20 +111,17 @@ Example:
 
 func GetSpendableBalancesCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "spendable-balances [address]",
-		Short: "Query for account spendable balances by address",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the spendable balances of an account.
-
-Example:
-  $ %s query %s spendable-balances [address]
-`,
-				version.AppName, types.ModuleName,
-			),
-		),
-		Args: cobra.ExactArgs(1),
+		Use:     "spendable-balances [address]",
+		Short:   "Query for account spendable balances by address",
+		Example: fmt.Sprintf("$ %s query %s spendable-balances [address]", version.AppName, types.ModuleName),
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
 			}
@@ -142,9 +139,21 @@ Example:
 			}
 
 			ctx := cmd.Context()
-			params := types.NewQuerySpendableBalancesRequest(addr, pageReq)
 
-			res, err := queryClient.SpendableBalances(ctx, params)
+			if denom == "" {
+				params := types.NewQuerySpendableBalancesRequest(addr, pageReq)
+
+				res, err := queryClient.SpendableBalances(ctx, params)
+				if err != nil {
+					return err
+				}
+
+				return clientCtx.PrintProto(res)
+			}
+
+			params := types.NewQuerySpendableBalanceByDenomRequest(addr, denom)
+
+			res, err := queryClient.SpendableBalanceByDenom(ctx, params)
 			if err != nil {
 				return err
 			}
@@ -153,6 +162,7 @@ Example:
 		},
 	}
 
+	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "spendable balances")
 

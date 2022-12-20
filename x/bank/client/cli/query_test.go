@@ -150,6 +150,23 @@ func (s *CLITestSuite) TestGetSpendableBalancesCmd() {
 			false,
 		},
 		{
+			"valid query with denom flag",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySpendableBalanceByDenomRequest{})
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			[]string{
+				accounts[0].Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				fmt.Sprintf("--%s=photon", cli.FlagDenom),
+			},
+			&types.QuerySpendableBalanceByDenomResponse{},
+			false,
+		},
+		{
 			"invalid Address",
 			func() client.Context {
 				return s.baseCtx

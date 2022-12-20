@@ -6,7 +6,6 @@ package cosmos.metadata.v1;
 import "gogoproto/gogo.proto";
 import "cosmos/query/v1/query.proto";
 import "google/api/annotations.proto";
-import "amino/amino.proto";
 import "cosmos/metadata/v1/metadata.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/metadata/types";

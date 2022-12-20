@@ -34,8 +34,10 @@ func (m appModule) RegisterServices(configurator module.Configurator) {
 func (m appModule) IsOnePerModuleType() {}
 func (m appModule) IsAppModule()        {}
 
-var _ appmodule.AppModule = appModule{}
-var _ module.HasServices = appModule{}
+var (
+	_ appmodule.AppModule = appModule{}
+	_ module.HasServices  = appModule{}
+)
 
 // BaseAppOption is a depinject.AutoGroupType which can be used to pass
 // BaseApp options into the depinject. It should be used carefully.

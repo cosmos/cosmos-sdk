@@ -18,6 +18,6 @@ jobs:
     steps:
       - name: Create PR review request
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PRBOT_PAT }}
         run: |
           gh pr edit ${{ github.event.pull_request.html_url }} --add-reviewer @cosmos/sdk-core-review

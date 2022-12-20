@@ -45,7 +45,8 @@ func TestDistributionTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
 		&suite.interfaceRegistry,
 		&suite.bankKeeper,
 		&suite.distrKeeper,

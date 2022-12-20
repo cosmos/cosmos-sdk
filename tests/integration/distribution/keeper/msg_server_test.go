@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -216,6 +217,11 @@ func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), math.LegacyNewDec(0))
 	tstaking.CreateValidator(s.valAddrs[1], valConsPk0, sdk.NewInt(100), true)
 
+	// mint a non-staking token and send to an account
+	amt := sdk.NewCoins(sdk.NewInt64Coin("foo", 500))
+	s.bankKeeper.MintCoins(s.ctx, minttypes.ModuleName, amt)
+	s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.ModuleName, s.addrs[0], amt)
+
 	testCases := []struct {
 		name      string
 		input     *types.MsgDepositValidatorRewardsPool
@@ -223,11 +229,19 @@ func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
 		expErrMsg string
 	}{
 		{
-			name: "happy path",
+			name: "happy path (staking token)",
 			input: &types.MsgDepositValidatorRewardsPool{
 				Authority:        s.addrs[0].String(),
 				ValidatorAddress: s.valAddrs[1].String(),
 				Amount:           sdk.NewCoins(sdk.NewCoin(s.stakingKeeper.BondDenom(s.ctx), sdk.NewInt(100))),
+			},
+		},
+		{
+			name: "happy path (non-staking token)",
+			input: &types.MsgDepositValidatorRewardsPool{
+				Authority:        s.addrs[0].String(),
+				ValidatorAddress: s.valAddrs[1].String(),
+				Amount:           amt,
 			},
 		},
 		{
@@ -258,7 +272,10 @@ func (s *KeeperTestSuite) TestMsgDepositValidatorRewardsPool() {
 
 				// check validator outstanding rewards
 				outstandingRewards := s.distrKeeper.GetValidatorOutstandingRewards(s.ctx, valAddr)
-				s.Require().Equal(outstandingRewards.Rewards, sdk.NewDecCoinsFromCoins(tc.input.Amount...))
+				for _, c := range tc.input.Amount {
+					x := outstandingRewards.Rewards.AmountOf(c.Denom)
+					s.Require().Equal(x, sdk.NewDecFromInt(c.Amount))
+				}
 			}
 		})
 	}

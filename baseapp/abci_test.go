@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -1451,4 +1452,26 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	}
 	res := suite.baseApp.PrepareProposal(req)
 	require.Equal(t, 1, len(res.Txs))
+}
+
+func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
+	prepareOpt := func(app *baseapp.BaseApp) {
+		app.SetPrepareProposal(func(ctx sdk.Context, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+			panic(errors.New("test"))
+		})
+	}
+	suite := NewBaseAppSuite(t, prepareOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+
+	require.NotPanics(t, func() {
+		res := suite.baseApp.PrepareProposal(req)
+		require.Equal(t, req.Txs, res.Txs)
+	})
 }

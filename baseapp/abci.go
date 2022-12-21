@@ -247,12 +247,21 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
-	return app.prepareProposal(ctx, req)
+
+	defer func() {
+		if err := recover(); err != nil {
+			app.logger.Error("panic recovered in PrepareProposal", "height", req.Height, "time", req.Time, "panic", err)
+			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
+		}
+	}()
+
+	resp = app.prepareProposal(ctx, req)
+	return resp
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a

@@ -52,10 +52,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// initialize states with a correct header
-	app.setState(runTxModeDeliver, initHeader)
-	app.setState(runTxModeCheck, initHeader)
-	app.setState(runTxPrepareProposal, initHeader)
-	app.setState(runTxProcessProposal, initHeader)
+	app.setDeliverState(initHeader)
+	app.setCheckState(initHeader)
+	app.setPrepareProposalState(initHeader)
+	app.setProcessProposalState(initHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
@@ -162,7 +162,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
 	if app.deliverState == nil {
-		app.setState(runTxModeDeliver, req.Header)
+		app.setDeliverState(req.Header)
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
@@ -392,9 +392,9 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	//
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
-	app.setState(runTxModeCheck, header)
-	app.setState(runTxPrepareProposal, header)
-	app.setState(runTxProcessProposal, header)
+	app.setCheckState(header)
+	app.setPrepareProposalState(header)
+	app.setProcessProposalState(header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil

@@ -32,7 +32,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 		srcRowID     RowID
 		srcModelType reflect.Type
 		expObj       interface{}
-		expErr       *sdkerrors.Error
+		expErr       *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"happy path": {
 			srcRowID:     EncodeSequence(1),

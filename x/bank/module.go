@@ -12,7 +12,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -206,6 +205,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type BankInputs struct {
 	depinject.In
 
@@ -219,6 +219,7 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
+//nolint:revive
 type BankOutputs struct {
 	depinject.Out
 
@@ -237,8 +238,7 @@ func ProvideModule(in BankInputs) BankOutputs {
 			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
 		}
 	} else {
-		permissions := maps.Values(in.AccountKeeper.GetModulePermissions())
-		for _, permission := range permissions {
+		for _, permission := range in.AccountKeeper.GetModulePermissions() {
 			blockedAddresses[permission.GetAddress().String()] = true
 		}
 	}

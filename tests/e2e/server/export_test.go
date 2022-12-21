@@ -1,5 +1,5 @@
-//go:build e2e
-// +build e2e
+//go:build !race
+// +build !race
 
 package server_test
 

@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -108,7 +107,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delegator := accounts[1]
 	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares)
 	suite.stakingKeeper.SetDelegation(suite.ctx, delegation)
-	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
+	suite.distrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, types.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
 
@@ -306,10 +305,10 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
-	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
+	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
 	suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
 	// setup current revards
-	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
+	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
 }
 

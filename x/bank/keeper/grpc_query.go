@@ -46,9 +46,11 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+
 	if req.Address == "" {
 		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
+
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())

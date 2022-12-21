@@ -279,6 +279,9 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 // to implement optimizations such as executing the entire proposed block
 // immediately. It may even execute the block in parallel.
 //
+// If a panic is detected during execution of an application's ProcessProposal
+// handler, it will be recovered and we will reject the proposal.
+//
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {

@@ -247,12 +247,26 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
-	return app.prepareProposal(ctx, req)
+
+	defer func() {
+		if err := recover(); err != nil {
+			app.logger.Error(
+				"panic recovered in PrepareProposal",
+				"height", req.Height,
+				"time", req.Time,
+				"panic", err,
+			)
+			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
+		}
+	}()
+
+	resp = app.prepareProposal(ctx, req)
+	return resp
 }
 
 // ProcessProposal implements the ProcessProposal ABCI method and returns a
@@ -265,9 +279,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // to implement optimizations such as executing the entire proposed block
 // immediately.
 //
+// If a panic is detected during execution of an application's ProcessProposal
+// handler, it will be recovered and we will reject the proposal.
+//
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
 	}
@@ -280,7 +297,21 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.Respon
 		WithProposer(req.ProposerAddress).
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
 
-	return app.processProposal(ctx, req)
+	defer func() {
+		if err := recover(); err != nil {
+			app.logger.Error(
+				"panic recovered in ProcessProposal",
+				"height", req.Height,
+				"time", req.Time,
+				"hash", fmt.Sprintf("%X", req.Hash),
+				"panic", err,
+			)
+			resp = abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+		}
+	}()
+
+	resp = app.processProposal(ctx, req)
+	return resp
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

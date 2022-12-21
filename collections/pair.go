@@ -10,6 +10,20 @@ type Pair[K1, K2 any] struct {
 	key2 *K2
 }
 
+func (p Pair[K1, K2]) K1() (k1 K1) {
+	if p.key1 == nil {
+		return
+	}
+	return *p.key1
+}
+
+func (p Pair[K1, K2]) K2() (k2 K2) {
+	if p.key2 == nil {
+		return
+	}
+	return *p.key2
+}
+
 func Join[K1, K2 any](key1 K1, key2 K2) Pair[K1, K2] {
 	return Pair[K1, K2]{
 		key1: &key1,

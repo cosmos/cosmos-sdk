@@ -173,14 +173,20 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	store.dirtyItems(start, end)
 	isoSortedCache := store.sortedCache.Copy()
 
-	var parent, cache types.Iterator
+	var (
+		err           error
+		parent, cache types.Iterator
+	)
 
 	if ascending {
 		parent = store.parent.Iterator(start, end)
-		cache = isoSortedCache.Iterator(start, end)
+		cache, err = isoSortedCache.Iterator(start, end)
 	} else {
 		parent = store.parent.ReverseIterator(start, end)
-		cache = isoSortedCache.ReverseIterator(start, end)
+		cache, err = isoSortedCache.ReverseIterator(start, end)
+	}
+	if err != nil {
+		panic(err)
 	}
 
 	return internal.NewCacheMergeIterator(parent, cache, ascending)

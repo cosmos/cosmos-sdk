@@ -17,9 +17,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+type EventManagerI interface {
+	Events() Events
+	ABCIEvents() []abci.Event
+	EmitTypedEvent(tev proto.Message) error
+	EmitTypedEvents(tevs ...proto.Message) error
+
+	// Deprecated: Use EmitTypedEvent
+	EmitEvent(event Event)
+	// Deprecated: Use EmitTypedEvents
+	EmitEvents(events Events)
+}
+
 // ----------------------------------------------------------------------------
 // Event Manager
 // ----------------------------------------------------------------------------
+
+var _ EventManagerI = (*EventManager)(nil)
 
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.

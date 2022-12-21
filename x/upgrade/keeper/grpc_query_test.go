@@ -23,7 +23,7 @@ import (
 type UpgradeTestSuite struct {
 	suite.Suite
 
-	upgradeKeeper keeper.Keeper
+	upgradeKeeper *keeper.Keeper
 	ctx           sdk.Context
 	queryClient   types.QueryClient
 	encCfg        moduletestutil.TestEncodingConfig

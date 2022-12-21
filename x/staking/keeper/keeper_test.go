@@ -3,23 +3,23 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
 
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var (

@@ -263,7 +263,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) abci.Respon
 // that all transactions are valid. If all transactions are valid, then we inform
 // Tendermint that the Status is ACCEPT. However, the application is also able
 // to implement optimizations such as executing the entire proposed block
-// immediately. It may even execute the block in parallel.
+// immediately.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md

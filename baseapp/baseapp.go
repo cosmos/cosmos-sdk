@@ -552,7 +552,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 }
 
 // Returns the application's deliverState if app is in runTxModeDeliver,
-// otherwise it returns the application's checkstate.
+// prepareProposalState if app is in runTxPrepareProposal, processProposalState
+// if app is in runTxProcessProposal, and checkState otherwise.
 func (app *BaseApp) getState(mode runTxMode) *state {
 	switch mode {
 	case runTxModeDeliver:

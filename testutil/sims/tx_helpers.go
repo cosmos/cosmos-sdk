@@ -61,6 +61,8 @@ func GenSignedMockTx(r *rand.Rand, txConfig client.TxConfig, msgs []sdk.Msg, fee
 			Sequence:      accSeqs[i],
 			PubKey:        p.PubKey(),
 		}
+		// When Textual is wired up, use GetSignBytesWithContext
+		// ref: https://github.com/cosmos/cosmos-sdk/issues/13747
 		signBytes, err := txConfig.SignModeHandler().GetSignBytes(signMode, signerData, tx.GetTx())
 		if err != nil {
 			panic(err)

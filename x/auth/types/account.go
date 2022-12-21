@@ -8,11 +8,8 @@ import (
 	"strings"
 
 	"github.com/tendermint/tendermint/crypto"
-	"sigs.k8s.io/yaml"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -137,18 +134,6 @@ func (acc BaseAccount) Validate() error {
 	return nil
 }
 
-// MarshalYAML returns the YAML representation of an account.
-func (acc BaseAccount) MarshalYAML() (interface{}, error) {
-	registry := codectypes.NewInterfaceRegistry()
-	cryptocodec.RegisterInterfaces(registry)
-
-	bz, err := codec.MarshalYAML(codec.NewProtoCodec(registry), &acc)
-	if err != nil {
-		return nil, err
-	}
-	return string(bz), err
-}
-
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	if acc.PubKey == nil {
@@ -248,37 +233,6 @@ type moduleAccountPretty struct {
 	Sequence      uint64         `json:"sequence"`
 	Name          string         `json:"name"`
 	Permissions   []string       `json:"permissions"`
-}
-
-func (ma ModuleAccount) String() string {
-	out, err := ma.MarshalYAML()
-	if err != nil {
-		panic(err)
-	}
-
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of a ModuleAccount.
-func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
-	accAddr, err := sdk.AccAddressFromBech32(ma.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	bs, err := yaml.Marshal(moduleAccountPretty{
-		Address:       accAddr,
-		PubKey:        "",
-		AccountNumber: ma.AccountNumber,
-		Sequence:      ma.Sequence,
-		Name:          ma.Name,
-		Permissions:   ma.Permissions,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return string(bs), nil
 }
 
 // MarshalJSON returns the JSON representation of a ModuleAccount.

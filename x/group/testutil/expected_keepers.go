@@ -8,13 +8,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
-// extends `AccountKeeper` from expected_keepers.
+// AccountKeeper extends `AccountKeeper` from expected_keepers.
 type AccountKeeper interface {
 	group.AccountKeeper
 }
 
-// extends `BankKeeper` from expected_keepers.
-// extends bank `MsgServer` to mock `Send` and to register handlers in MsgServiceRouter
+// BankKeeper extends bank `MsgServer` to mock `Send` and to register handlers in MsgServiceRouter
 type BankKeeper interface {
 	group.BankKeeper
 	bank.MsgServer

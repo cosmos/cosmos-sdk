@@ -4,6 +4,8 @@
 package secp256k1
 
 import (
+	"errors"
+
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 
@@ -32,17 +34,9 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
 	if err != nil {
 		return false
 	}
-	// parse the signature:
-	signature := signatureFromBytes(sigStr)
-	// Reject malleable signatures. libsecp256k1 does this check but btcec doesn't.
-	// see: https://github.com/ethereum/go-ethereum/blob/f9401ae011ddf7f8d2d95020b7446c17f8d98dc1/crypto/signature_nocgo.go#L90-L93
-	// Serialize() would negate S value if it is over half order.
-	// Hence, if the signature is different after Serialize() if should be rejected.
-	modifiedSignature, parseErr := ecdsa.ParseDERSignature(signature.Serialize())
-	if parseErr != nil {
-		return false
-	}
-	if !signature.IsEqual(modifiedSignature) {
+	// parse the signature, will return error if it is not in lower-S form
+	signature, err := signatureFromBytes(sigStr)
+	if err != nil {
 		return false
 	}
 	return signature.Verify(crypto.Sha256(msg), pub)
@@ -50,10 +44,15 @@ func (pubKey *PubKey) VerifySignature(msg []byte, sigStr []byte) bool {
 
 // Read Signature struct from R || S. Caller needs to ensure
 // that len(sigStr) == 64.
-func signatureFromBytes(sigStr []byte) *ecdsa.Signature {
+// Rejects malleable signatures (if S value if it is over half order).
+func signatureFromBytes(sigStr []byte) (*ecdsa.Signature, error) {
 	var r secp256k1.ModNScalar
 	r.SetByteSlice(sigStr[:32])
 	var s secp256k1.ModNScalar
 	s.SetByteSlice(sigStr[32:64])
-	return ecdsa.NewSignature(&r, &s)
+	if s.IsOverHalfOrder() {
+		return nil, errors.New("signature is not in lower-S form")
+	}
+
+	return ecdsa.NewSignature(&r, &s), nil
 }

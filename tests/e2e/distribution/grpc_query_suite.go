@@ -3,6 +3,7 @@ package distribution
 import (
 	"fmt"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -11,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -23,13 +23,13 @@ type GRPCQueryTestSuite struct {
 }
 
 func (s *GRPCQueryTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+	s.T().Log("setting up e2e test suite")
 
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	s.Require().NoError(err)
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	s.cfg = cfg
 
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), cfg)
 	s.Require().NoError(err)
 
@@ -38,7 +38,7 @@ func (s *GRPCQueryTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *GRPCQueryTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite1")
+	s.T().Log("tearing down e2e test suite1")
 	s.network.Cleanup()
 }
 

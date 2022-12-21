@@ -171,6 +171,7 @@ var xxx_messageInfo_QueryProposalsRequest proto.InternalMessageInfo
 // QueryProposalsResponse is the response type for the Query/Proposals RPC
 // method.
 type QueryProposalsResponse struct {
+	// proposals defines all the requested governance proposals.
 	Proposals []Proposal `protobuf:"bytes,1,rep,name=proposals,proto3" json:"proposals"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -266,7 +267,7 @@ var xxx_messageInfo_QueryVoteRequest proto.InternalMessageInfo
 
 // QueryVoteResponse is the response type for the Query/Vote RPC method.
 type QueryVoteResponse struct {
-	// vote defined the queried vote.
+	// vote defines the queried vote.
 	Vote Vote `protobuf:"bytes,1,opt,name=vote,proto3" json:"vote"`
 }
 
@@ -367,7 +368,7 @@ func (m *QueryVotesRequest) GetPagination() *query.PageRequest {
 
 // QueryVotesResponse is the response type for the Query/Votes RPC method.
 type QueryVotesResponse struct {
-	// votes defined the queried votes.
+	// votes defines the queried votes.
 	Votes []Vote `protobuf:"bytes,1,rep,name=votes,proto3" json:"votes"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -675,6 +676,7 @@ func (m *QueryDepositsRequest) GetPagination() *query.PageRequest {
 
 // QueryDepositsResponse is the response type for the Query/Deposits RPC method.
 type QueryDepositsResponse struct {
+	// deposits defines the requested deposits.
 	Deposits []Deposit `protobuf:"bytes,1,rep,name=deposits,proto3" json:"deposits"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

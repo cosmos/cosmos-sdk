@@ -18,11 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// nolint:deadcode,unused,varcheck
+//nolint:deadcode,varcheck
 var (
 	delPk1    = ed25519.GenPrivKey().PubKey()
 	delAddr1  = sdk.AccAddress(delPk1.Address())
-	valAddr1  = sdk.ValAddress(delPk1.Address())
 	consAddr1 = sdk.ConsAddress(delPk1.Address().Bytes())
 )
 

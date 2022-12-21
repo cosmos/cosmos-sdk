@@ -147,12 +147,12 @@ func (s *coinTestSuite) TestCoinsDenoms() {
 		if len(expectedOutput) == len(tc.testOutput) {
 			for k := range tc.testOutput {
 				if tc.testOutput[k] != expectedOutput[k] {
-					count += 1
+					count++
 					break
 				}
 			}
 		} else {
-			count += 1
+			count++
 		}
 		s.Require().Equal(count == 0, tc.expectPass, "unexpected result for coins.Denoms, tc #%d", i)
 	}
@@ -779,6 +779,15 @@ func (s *coinTestSuite) TestCoins_Validate() {
 			false,
 		},
 		{
+			"bad sort (3)",
+			sdk.Coins{
+				{"gas", math.OneInt()},
+				{"tree", math.OneInt()},
+				{"gas", math.OneInt()},
+			},
+			false,
+		},
+		{
 			"non-positive amount (1)",
 			sdk.Coins{
 				{"gas", math.OneInt()},
@@ -797,11 +806,29 @@ func (s *coinTestSuite) TestCoins_Validate() {
 			false,
 		},
 		{
-			"duplicate denomination",
+			"duplicate denomination (1)",
 			sdk.Coins{
 				{"gas", math.OneInt()},
 				{"gas", math.OneInt()},
 				{"mineral", math.OneInt()},
+			},
+			false,
+		},
+		{
+			"duplicate denomination (2)",
+			sdk.Coins{
+				{"gold", math.OneInt()},
+				{"gold", math.OneInt()},
+			},
+			false,
+		},
+		{
+			"duplicate denomination (3)",
+			sdk.Coins{
+				{"gas", math.OneInt()},
+				{"mineral", math.OneInt()},
+				{"silver", math.OneInt()},
+				{"silver", math.OneInt()},
 			},
 			false,
 		},

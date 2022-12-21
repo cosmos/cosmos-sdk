@@ -47,7 +47,7 @@ ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
 endif
 
 ifeq (legacy,$(findstring legacy,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += legacy_simapp
+  build_tags += app_v1
 endif
 
 whitespace :=
@@ -109,7 +109,7 @@ ifeq (debug,$(findstring debug,$(COSMOS_BUILD_OPTIONS)))
   BUILD_FLAGS += -gcflags "all=-N -l"
 endif
 
-all: tools build lint test
+all: tools build lint test vulncheck
 
 # The below include contains the tools and runsim targets.
 include contrib/devtools/Makefile
@@ -137,13 +137,21 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor
+rosetta:
+	$(MAKE) -C tools/rosetta rosetta
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
 
 
 mocks: $(MOCKS_DIR)
 	@go install github.com/golang/mock/mockgen@v1.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
+
+
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
 
 $(MOCKS_DIR):
 	mkdir -p $(MOCKS_DIR)
@@ -196,9 +204,13 @@ build-docs:
 test: test-unit
 test-e2e:
 	$(MAKE) -C tests test-e2e
+test-e2e-cov:
+	$(MAKE) -C tests test-e2e-cov
 test-integration:
 	$(MAKE) -C tests test-integration
-test-all: test-unit test-e2e test-integration test-ledger-mock test-race test-cover
+test-integration-cov:
+	$(MAKE) -C tests test-integration-cov
+test-all: test-unit test-e2e test-integration test-ledger-mock test-race
 
 TEST_PACKAGES=./...
 TEST_TARGETS := test-unit test-unit-amino test-unit-proto test-ledger-mock test-race test-ledger test-race
@@ -317,13 +329,6 @@ test-sim-profile:
 
 .PHONY: test-sim-profile test-sim-benchmark
 
-test-cover:
-	@export VERSION=$(VERSION); bash -x contrib/test_cover.sh
-.PHONY: test-cover
-
-test-rosetta-unit:
-	$(MAKE) -C tools/rosetta test
-
 test-rosetta:
 	docker build -t rosetta-ci:latest -f contrib/rosetta/rosetta-ci/Dockerfile .
 	docker-compose -f contrib/rosetta/docker-compose.yaml up --abort-on-container-exit --exit-code-from test_rosetta --build
@@ -387,7 +392,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.2
+protoVer=0.11.3
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -410,7 +415,7 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-rc1/proto/tendermint
+TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-rc2/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci

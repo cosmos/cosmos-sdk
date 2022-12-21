@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
@@ -21,6 +22,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/auth/Params", nil)
+	cdc.RegisterConcrete(&ModuleCredential{}, "cosmos-sdk/GroupAccountCredential", nil)
 
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams")
 
@@ -42,6 +44,12 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*GenesisAccount)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
+	)
+
+	registry.RegisterInterface(
+		"cosmos.auth.v1.ModuleCredential",
+		(*cryptotypes.PubKey)(nil),
+		&ModuleCredential{},
 	)
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),

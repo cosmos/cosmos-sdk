@@ -32,7 +32,7 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	return v3.MigrateStore(ctx, m.keeper.storeKey, m.keeper.cdc)
 }
 
-// Migrate2to3 migrates from version 2 to 3.
+// Migrate3to4 migrates from version 3 to 4.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.MigrateStore(ctx, m.keeper.storeKey, m.legacySubspace, m.keeper.cdc)
 }

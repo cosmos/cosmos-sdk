@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewTable(t *testing.T) {
@@ -20,7 +22,7 @@ func TestNewTable(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		model       codec.ProtoMarshaler
+		model       proto.Message
 		expectErr   bool
 		expectedErr string
 	}{
@@ -54,8 +56,8 @@ func TestNewTable(t *testing.T) {
 func TestCreate(t *testing.T) {
 	specs := map[string]struct {
 		rowID  RowID
-		src    codec.ProtoMarshaler
-		expErr *sdkerrors.Error
+		src    proto.Message
+		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"empty rowID": {
 			rowID: []byte{},
@@ -122,8 +124,8 @@ func TestCreate(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	specs := map[string]struct {
-		src    codec.ProtoMarshaler
-		expErr *sdkerrors.Error
+		src    proto.Message
+		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"happy path": {
 			src: &testdata.TableModel{
@@ -184,14 +186,14 @@ func TestUpdate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	specs := map[string]struct {
-		rowId  []byte
-		expErr *sdkerrors.Error
+		rowID  []byte
+		expErr *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 	}{
 		"happy path": {
-			rowId: EncodeSequence(1),
+			rowID: EncodeSequence(1),
 		},
 		"not found": {
-			rowId:  []byte("not-found"),
+			rowID:  []byte("not-found"),
 			expErr: sdkerrors.ErrNotFound,
 		},
 	}
@@ -216,7 +218,7 @@ func TestDelete(t *testing.T) {
 			require.NoError(t, err)
 
 			// when
-			err = myTable.Delete(store, spec.rowId)
+			err = myTable.Delete(store, spec.rowID)
 			require.True(t, spec.expErr.Is(err), "got ", err)
 
 			// then

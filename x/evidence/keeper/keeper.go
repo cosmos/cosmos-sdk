@@ -26,6 +26,7 @@ type Keeper struct {
 	slashingKeeper types.SlashingKeeper
 }
 
+// NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,

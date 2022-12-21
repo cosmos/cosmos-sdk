@@ -1475,3 +1475,21 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 		require.Equal(t, req.Txs, res.Txs)
 	})
 }
+
+func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
+	processOpt := func(app *baseapp.BaseApp) {
+		app.SetProcessProposal(func(ctx sdk.Context, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
+			panic(errors.New("test"))
+		})
+	}
+	suite := NewBaseAppSuite(t, processOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	require.NotPanics(t, func() {
+		res := suite.baseApp.ProcessProposal(abci.RequestProcessProposal{})
+		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
+	})
+}

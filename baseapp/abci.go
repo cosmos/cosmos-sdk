@@ -255,7 +255,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 
 	defer func() {
 		if err := recover(); err != nil {
-			app.logger.Error("panic recovered in PrepareProposal", "height", req.Height, "time", req.Time, "panic", err)
+			app.logger.Error(
+				"panic recovered in PrepareProposal",
+				"height", req.Height,
+				"time", req.Time,
+				"panic", err,
+			)
 			resp = abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 	}()
@@ -276,7 +281,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
-func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
 	}
@@ -289,7 +294,21 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) abci.Respon
 		WithProposer(req.ProposerAddress).
 		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
 
-	return app.processProposal(ctx, req)
+	defer func() {
+		if err := recover(); err != nil {
+			app.logger.Error(
+				"panic recovered in ProcessProposal",
+				"height", req.Height,
+				"time", req.Time,
+				"hash", fmt.Sprintf("%X", req.Hash),
+				"panic", err,
+			)
+			resp = abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+		}
+	}()
+
+	resp = app.processProposal(ctx, req)
+	return resp
 }
 
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In

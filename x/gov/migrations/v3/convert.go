@@ -57,9 +57,10 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 			return legacyProposal, nil
 		}
 	}
-  // hack to fill up the content with the first message
-  // this is for supporting clients that have not yet (properly) using gov v1 endpoints
-  // https://github.com/cosmos/cosmos-sdk/issues/14334
+	// hack to fill up the content with the first message
+	// this is to support clients that have not yet (properly) use gov/v1 endpoints
+	// https://github.com/cosmos/cosmos-sdk/issues/14334
+	// VerifyBasic assures that we have at least one message.
 	legacyProposal.Content, err = codectypes.NewAnyWithValue(msgs[0])
 
 	return legacyProposal, err

@@ -350,11 +350,11 @@ func (app *BaseApp) Init() error {
 	emptyHeader := tmproto.Header{}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(emptyHeader)
+	app.setState(runTxModeCheck, emptyHeader)
 
 	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
-	app.setPrepareProposalState(emptyHeader)
-	app.setProcessProposalState(emptyHeader)
+	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(runTxProcessProposal, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -402,49 +402,32 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-// setCheckState sets the BaseApp's checkState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// provided header, and minimum gas prices set. It is set on InitChain and reset
-// on Commit.
-func (app *BaseApp) setCheckState(header tmproto.Header) {
+// setState sets the BaseApp's state for the corresponding mode with a branched
+// multi-store (i.e. a CacheMultiStore) and a new Context with the same
+// multi-store branch, and provided header.
+func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
-	app.checkState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
-	}
-}
-
-// setDeliverState sets the BaseApp's deliverState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
-func (app *BaseApp) setDeliverState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.deliverState = &state{
-		ms:  ms,
+	baseState := &state{
+		ms:  app.cms.CacheMultiStore(),
 		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
-}
 
-// setPrepareProposalState sets the BaseApp's prepareProposalState with a
-// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
-// same multi-store branch, and provided header. It is set on InitChain and Commit.
-func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.prepareProposalState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
-	}
-}
-
-// setProcessProposalState sets the BaseApp's processProposalState with a
-// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
-// same multi-store branch, and provided header. It is set on InitChain and Commit.
-func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.processProposalState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+	switch mode {
+	case runTxModeCheck:
+		// Minimum gas prices are also set. It is set on InitChain and reset on Commit.
+		baseState.ctx = baseState.ctx.WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices)
+		app.checkState = baseState
+	case runTxModeDeliver:
+		// It is set on InitChain and BeginBlock and set to nil on Commit.
+		app.deliverState = baseState
+	case runTxPrepareProposal:
+		// It is set on InitChain and Commit.
+		app.prepareProposalState = baseState
+	case runTxProcessProposal:
+		// It is set on InitChain and Commit.
+		app.processProposalState = baseState
+	default:
+		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
 }
 

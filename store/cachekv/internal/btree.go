@@ -27,10 +27,12 @@ type BTree struct {
 
 // NewBTree creates a wrapper around `btree.BTreeG`.
 func NewBTree() BTree {
-	return BTree{tree: btree.NewBTreeGOptions(byKeys, btree.Options{
-		Degree:  bTreeDegree,
-		NoLocks: false,
-	})}
+	return BTree{
+		tree: btree.NewBTreeGOptions(byKeys, btree.Options{
+			Degree:  bTreeDegree,
+			NoLocks: false,
+		}),
+	}
 }
 
 func (bt BTree) Set(key, value []byte) {

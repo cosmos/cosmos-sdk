@@ -408,7 +408,7 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
 	baseState := &state{
-		ms:  app.cms.CacheMultiStore(),
+		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
 

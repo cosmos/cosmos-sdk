@@ -187,6 +187,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type CapabilityInputs struct {
 	depinject.In
 
@@ -197,6 +198,7 @@ type CapabilityInputs struct {
 	Cdc         codec.Codec
 }
 
+//nolint:revive
 type CapabilityOutputs struct {
 	depinject.Out
 

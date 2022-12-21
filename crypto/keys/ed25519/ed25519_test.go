@@ -31,7 +31,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 
 	// ----
 	// Test cross packages verification
-	stdPrivKey := stded25519.PrivateKey(privKey.Key)
+	stdPrivKey := privKey.Key
 	stdPubKey := stdPrivKey.Public().(stded25519.PublicKey)
 
 	assert.Equal(t, stdPubKey, pubKey.(*ed25519.PubKey).Key)

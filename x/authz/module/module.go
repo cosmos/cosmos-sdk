@@ -171,6 +171,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type AuthzInputs struct {
 	depinject.In
 
@@ -182,6 +183,7 @@ type AuthzInputs struct {
 	MsgServiceRouter *baseapp.MsgServiceRouter
 }
 
+//nolint:revive
 type AuthzOutputs struct {
 	depinject.Out
 

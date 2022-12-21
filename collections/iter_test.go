@@ -8,7 +8,8 @@ import (
 
 func TestIteratorBasic(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("some super amazing prefix"), StringKey, Uint64Value)
+	schema := NewSchema(sk)
+	m := NewMap(schema, NewPrefix("some super amazing prefix"), "m", StringKey, Uint64Value)
 
 	for i := uint64(1); i <= 2; i++ {
 		require.NoError(t, m.Set(ctx, fmt.Sprintf("%d", i), i))
@@ -54,7 +55,8 @@ func TestIteratorBasic(t *testing.T) {
 
 func TestIteratorKeyValues(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("some super amazing prefix"), StringKey, Uint64Value)
+	schema := NewSchema(sk)
+	m := NewMap(schema, NewPrefix("some super amazing prefix"), "m", StringKey, Uint64Value)
 
 	for i := uint64(0); i <= 5; i++ {
 		require.NoError(t, m.Set(ctx, fmt.Sprintf("%d", i), i))
@@ -100,7 +102,8 @@ func TestIteratorKeyValues(t *testing.T) {
 
 func TestIteratorPrefixing(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("cool"), StringKey, Uint64Value)
+	schema := NewSchema(sk)
+	m := NewMap(schema, NewPrefix("cool"), "cool", StringKey, Uint64Value)
 
 	require.NoError(t, m.Set(ctx, "A1", 11))
 	require.NoError(t, m.Set(ctx, "A2", 12))
@@ -115,7 +118,8 @@ func TestIteratorPrefixing(t *testing.T) {
 
 func TestIteratorRanging(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("cool"), Uint64Key, Uint64Value)
+	schema := NewSchema(sk)
+	m := NewMap(schema, NewPrefix("cool"), "cool", Uint64Key, Uint64Value)
 
 	for i := uint64(0); i <= 7; i++ {
 		require.NoError(t, m.Set(ctx, i, i))

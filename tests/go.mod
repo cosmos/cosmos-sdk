@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
+	github.com/cosmos/cosmos-sdk v0.47.0-alpha2.0.20221213010017-b27353d3116b
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/iam v0.7.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
-	cosmossdk.io/core v0.3.2 // indirect
+	cosmossdk.io/core v0.3.4 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -135,6 +135,7 @@ require (
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
+	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.0 // indirect

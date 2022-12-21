@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-func (s *EndToEndTestSuite) TestTotalSupplyGRPCHandler() {
+func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -100,7 +100,7 @@ func (s *EndToEndTestSuite) TestTotalSupplyGRPCHandler() {
 	}
 }
 
-func (s *EndToEndTestSuite) TestDenomMetadataGRPCHandler() {
+func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 
@@ -225,7 +225,7 @@ func (s *EndToEndTestSuite) TestDenomMetadataGRPCHandler() {
 	}
 }
 
-func (s *EndToEndTestSuite) TestBalancesGRPCHandler() {
+func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 	val := s.network.Validators[0]
 	baseURL := val.APIAddress
 

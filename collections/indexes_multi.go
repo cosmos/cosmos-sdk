@@ -59,6 +59,7 @@ func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Contex
 	return (MultiIndexIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
+// ExactMatch returns a MultiIndexIterator containing all the primary keys referenced by the provided reference key.
 func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Context, refKey ReferenceKey) (MultiIndexIterator[ReferenceKey, PrimaryKey], error) {
 	return m.Iterate(ctx, new(PairRange[ReferenceKey, PrimaryKey]).Prefix(refKey))
 }
@@ -66,13 +67,46 @@ func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Con
 // MultiIndexIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].
 type MultiIndexIterator[ReferenceKey, PrimaryKey any] KeySetIterator[Pair[ReferenceKey, PrimaryKey]]
 
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKey() PrimaryKey {
+// PrimaryKey returns the iterator's current primary key.
+func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKey() (PrimaryKey, error) {
+	fullKey, err := i.FullKey()
+	return fullKey.K2(), err
+}
+
+// PrimaryKeys fully consumes the iterator and returns the list of primary keys.
+func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, error) {
+	fullKeys, err := i.FullKeys()
+	if err != nil {
+		return nil, err
+	}
+	pks := make([]PrimaryKey, len(fullKeys))
+	for i, fullKey := range fullKeys {
+		pks[i] = fullKey.K2()
+	}
+	return pks, nil
+}
+
+// FullKey returns the current full reference key as Pair[ReferenceKey, PrimaryKey].
+func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) FullKey() (Pair[ReferenceKey, PrimaryKey], error) {
 	return (KeySetIterator[Pair[ReferenceKey, PrimaryKey]])(i).Key()
 }
 
+// FullKeys fully consumes the iterator and returns all the list of full reference keys.
+func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]Pair[ReferenceKey, PrimaryKey], error) {
+	return (KeySetIterator[Pair[ReferenceKey, PrimaryKey]])(i).Keys()
+}
+
+// Next advances the iterator.
 func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) Next() {
 	(KeySetIterator[Pair[ReferenceKey, PrimaryKey]])(i).Next()
 }
+
+// Valid asserts if the iterator is still valid or not.
 func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) Valid() bool {
 	return (KeySetIterator[Pair[ReferenceKey, PrimaryKey]])(i).Valid()
+}
+
+// Close closes the iterator.
+func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) Close() error {
+	return (KeySetIterator[Pair[ReferenceKey, PrimaryKey]])(i).Close()
 }

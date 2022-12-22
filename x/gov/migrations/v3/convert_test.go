@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -90,6 +91,17 @@ func TestConvertToLegacyProposalContent(t *testing.T) {
 	tp, ok := legacyP.Content.GetCachedValue().(*upgradetypes.MsgSoftwareUpgrade)
 	require.Truef(t, ok, "expected *MsgSoftwareUpgrade, got %T", legacyP.Content.GetCachedValue())
 	require.Equal(t, &msg, tp)
+
+	// more than one message is not supported
+	proposal.Messages, err = tx.SetMsgs([]sdk.Msg{&msg, &msg})
+	require.NoError(t, err)
+	_, err = v3.ConvertToLegacyProposal(proposal)
+	require.ErrorIs(t, sdkerrors.ErrInvalidType, err)
+
+	// zero messages is not supported
+	proposal.Messages = nil
+	_, err = v3.ConvertToLegacyProposal(proposal)
+	require.ErrorIs(t, sdkerrors.ErrInvalidType, err)
 }
 
 func TestConvertToLegacyTallyResult(t *testing.T) {

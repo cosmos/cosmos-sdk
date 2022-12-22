@@ -49,7 +49,7 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 		return v1beta1.Proposal{}, err
 	}
 	if len(msgs) != 1 {
-		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages is different than one")
+		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages is more than one")
 	}
 	for _, msg := range msgs {
 		if legacyMsg, ok := msg.(*v1.MsgExecLegacyContent); ok {

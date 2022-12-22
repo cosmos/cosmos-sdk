@@ -230,6 +230,10 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	for key := range rs.storesParams {
 		storesKeys = append(storesKeys, key)
 	}
+	sort.Slice(storesKeys, func(i, j int) bool {
+		return storesKeys[i].String() < storesKeys[j].String()
+	})
+
 	if upgrades != nil {
 		// deterministic iteration order for upgrades
 		// (as the underlying store may change and

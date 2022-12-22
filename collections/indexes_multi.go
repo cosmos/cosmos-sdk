@@ -6,7 +6,7 @@ import (
 
 // MultiIndex is an Index that can map the same ReferenceKey to multiple PrimaryKey.
 type MultiIndex[ReferenceKey, PrimaryKey, Value any] struct {
-	getRefKey func(value Value) (ReferenceKey, error)
+	getRefKey func(pk PrimaryKey, value Value) (ReferenceKey, error)
 	refs      KeySet[Pair[ReferenceKey, PrimaryKey]]
 }
 
@@ -17,7 +17,7 @@ func NewMultiIndex[ReferenceKey, PrimaryKey, Value any](
 	name string,
 	refCodec KeyCodec[ReferenceKey],
 	pkCodec KeyCodec[PrimaryKey],
-	getRefKeyFunc func(value Value) (ReferenceKey, error),
+	getRefKeyFunc func(pk PrimaryKey, value Value) (ReferenceKey, error),
 ) *MultiIndex[ReferenceKey, PrimaryKey, Value] {
 	return &MultiIndex[ReferenceKey, PrimaryKey, Value]{
 		getRefKey: getRefKeyFunc,
@@ -35,7 +35,7 @@ func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Cont
 	}
 
 	// ref the new value
-	refKey, err := m.getRefKey(newValue)
+	refKey, err := m.getRefKey(pk, newValue)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Cont
 }
 
 func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, value Value) error {
-	refKey, err := m.getRefKey(value)
+	refKey, err := m.getRefKey(pk, value)
 	if err != nil {
 		return err
 	}

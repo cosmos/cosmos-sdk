@@ -25,7 +25,7 @@ func TestIndexedMap(t *testing.T) {
 
 	im := NewIndexedMap(schema, NewPrefix(0), "companies", StringKey, newTestValueCodec[company](),
 		companyIndexes{
-			City: NewMultiIndex(schema, NewPrefix(1), "companies_by_city", StringKey, StringKey, func(value company) (string, error) {
+			City: NewMultiIndex(schema, NewPrefix(1), "companies_by_city", StringKey, StringKey, func(_ string, value company) (string, error) {
 				return value.City, nil
 			}),
 			Vat: NewUniqueIndex(schema, NewPrefix(2), "companies_by_vat", Uint64Key, StringKey, func(_ string, v company) (uint64, error) {

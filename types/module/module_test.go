@@ -30,7 +30,7 @@ func TestBasicManager(t *testing.T) {
 
 	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
 
-	mockAppModuleBasic1 := mock.NewMockAppModuleBasic(mockCtrl)
+	mockAppModuleBasic1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))

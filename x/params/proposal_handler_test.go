@@ -95,7 +95,7 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 		//		}, depositParams)
 		//	},
 		//	false,
-		//},
+		// },
 	}
 
 	for _, tc := range testCases {

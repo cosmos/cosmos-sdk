@@ -172,7 +172,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction)
 
 	// read updated state
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -203,7 +203,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
 
 	// read updated state
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -243,7 +243,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
@@ -273,7 +273,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// slash validator again
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -299,7 +299,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -325,7 +325,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -383,7 +383,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	require.NotPanics(t, func() {
-		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
 	})
 	burnAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 
@@ -416,7 +416,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	require.NotPanics(t, func() {
-		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec(), types.Infraction_INFRACTION_UNSPECIFIED)
+		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec())
 	})
 	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 7)
 
@@ -452,7 +452,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	require.NotPanics(t, func() {
-		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec(), types.Infraction_INFRACTION_UNSPECIFIED)
+		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec())
 	})
 
 	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(math.LegacyOneDec()).TruncateInt()
@@ -487,7 +487,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, validator.GetStatus(), types.Unbonding)
 
 	require.NotPanics(t, func() {
-		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec(), types.Infraction_INFRACTION_UNSPECIFIED)
+		app.StakingKeeper.Slash(ctx, consAddr, 10, 10, math.LegacyOneDec())
 	})
 
 	// read updated pool
@@ -552,7 +552,7 @@ func TestSlashBoth(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction)
 
 	burnedNotBondedAmount := fraction.MulInt(ubdATokens).TruncateInt()
 	burnedBondAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
@@ -583,11 +583,11 @@ func TestSlashAmount(t *testing.T) {
 	app, ctx, _, _ := bootstrapSlashTest(t, 10)
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
-	burnedCoins := app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	burnedCoins := app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
 	require.True(t, burnedCoins.GT(math.ZeroInt()))
 
 	// test the case where the validator was not found, which should return no coins
 	_, addrVals := generateAddresses(app, ctx, 100)
-	noBurned := app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction, types.Infraction_INFRACTION_UNSPECIFIED)
+	noBurned := app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction)
 	require.True(t, sdk.NewInt(0).Equal(noBurned))
 }

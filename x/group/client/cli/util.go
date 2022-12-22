@@ -57,7 +57,7 @@ func execFromString(execStr string) group.Exec {
 	return exec
 }
 
-// CLIProposal defines a Msg-based group proposal for CLI purposes.
+// Proposal defines a Msg-based group proposal for CLI purposes.
 type Proposal struct {
 	GroupPolicyAddress string `json:"group_policy_address"`
 	// Messages defines an array of sdk.Msgs proto-JSON-encoded as Anys.

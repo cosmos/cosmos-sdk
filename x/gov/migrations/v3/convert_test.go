@@ -46,6 +46,7 @@ func TestConvertToLegacyProposal(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			tc := tc
 			proposal.FinalTallyResult = &tc.tallyResult
 			v1beta1Proposal, err := v3.ConvertToLegacyProposal(proposal)
 			if tc.expErr {

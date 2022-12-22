@@ -5,6 +5,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -13,6 +14,7 @@ import (
 // ConvertToLegacyProposal takes a new proposal and attempts to convert it to the
 // legacy proposal format. This conversion is best effort. New proposal types that
 // don't have a legacy message will return a "nil" content.
+// Returns error when the amount of messages in `proposal` is different than one.
 func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 	var err error
 	legacyProposal := v1beta1.Proposal{
@@ -45,6 +47,9 @@ func ConvertToLegacyProposal(proposal v1.Proposal) (v1beta1.Proposal, error) {
 	msgs, err := proposal.GetMsgs()
 	if err != nil {
 		return v1beta1.Proposal{}, err
+	}
+	if len(msgs) != 1 {
+		return v1beta1.Proposal{}, sdkerrors.ErrInvalidType.Wrap("can't convert a gov/v1 Proposal to gov/v1beta1 Proposal when amount of proposal messages is different than one")
 	}
 	for _, msg := range msgs {
 		if legacyMsg, ok := msg.(*v1.MsgExecLegacyContent); ok {

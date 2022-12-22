@@ -22,10 +22,7 @@ type EventManagerI interface {
 	ABCIEvents() []abci.Event
 	EmitTypedEvent(tev proto.Message) error
 	EmitTypedEvents(tevs ...proto.Message) error
-
-	// Deprecated: Use EmitTypedEvent
 	EmitEvent(event Event)
-	// Deprecated: Use EmitTypedEvents
 	EmitEvents(events Events)
 }
 

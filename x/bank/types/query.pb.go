@@ -322,6 +322,8 @@ func (m *QuerySpendableBalancesResponse) GetPagination() *query.PageResponse {
 
 // QuerySpendableBalanceByDenomRequest defines the gRPC request structure for
 // querying an account's spendable balance for a specific denom.
+//
+// Since: cosmos-sdk 0.47
 type QuerySpendableBalanceByDenomRequest struct {
 	// address is the address to query balances for.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
@@ -364,6 +366,8 @@ var xxx_messageInfo_QuerySpendableBalanceByDenomRequest proto.InternalMessageInf
 
 // QuerySpendableBalanceByDenomResponse defines the gRPC response structure for
 // querying an account's spendable balance for a specific denom.
+//
+// Since: cosmos-sdk 0.47
 type QuerySpendableBalanceByDenomResponse struct {
 	// balance is the balance of the coin.
 	Balance *types.Coin `protobuf:"bytes,1,opt,name=balance,proto3" json:"balance,omitempty"`
@@ -1304,6 +1308,8 @@ type QueryClient interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
+	//
+	// Since: cosmos-sdk 0.47
 	SpendableBalanceByDenom(ctx context.Context, in *QuerySpendableBalanceByDenomRequest, opts ...grpc.CallOption) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//
@@ -1469,6 +1475,8 @@ type QueryServer interface {
 	//
 	// When called from another module, this query might consume a high amount of
 	// gas if the pagination field is incorrectly set.
+	//
+	// Since: cosmos-sdk 0.47
 	SpendableBalanceByDenom(context.Context, *QuerySpendableBalanceByDenomRequest) (*QuerySpendableBalanceByDenomResponse, error)
 	// TotalSupply queries the total supply of all coins.
 	//

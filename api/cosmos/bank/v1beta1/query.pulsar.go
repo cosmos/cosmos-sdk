@@ -11514,6 +11514,8 @@ func (x *QuerySpendableBalancesResponse) GetPagination() *v1beta11.PageResponse 
 
 // QuerySpendableBalanceByDenomRequest defines the gRPC request structure for
 // querying an account's spendable balance for a specific denom.
+//
+// Since: cosmos-sdk 0.47
 type QuerySpendableBalanceByDenomRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11561,6 +11563,8 @@ func (x *QuerySpendableBalanceByDenomRequest) GetDenom() string {
 
 // QuerySpendableBalanceByDenomResponse defines the gRPC response structure for
 // querying an account's spendable balance for a specific denom.
+//
+// Since: cosmos-sdk 0.47
 type QuerySpendableBalanceByDenomResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

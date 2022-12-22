@@ -37,7 +37,7 @@ type Context struct {
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
 	minGasPrice          DecCoins
 	consParams           *tmproto.ConsensusParams
-	eventManager         *EventManager
+	eventManager         EventManagerI
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
@@ -60,7 +60,7 @@ func (c Context) BlockGasMeter() GasMeter                    { return c.blockGas
 func (c Context) IsCheckTx() bool                            { return c.checkTx }
 func (c Context) IsReCheckTx() bool                          { return c.recheckTx }
 func (c Context) MinGasPrices() DecCoins                     { return c.minGasPrice }
-func (c Context) EventManager() *EventManager                { return c.eventManager }
+func (c Context) EventManager() EventManagerI                { return c.eventManager }
 func (c Context) Priority() int64                            { return c.priority }
 func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }

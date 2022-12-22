@@ -6,7 +6,7 @@ import (
 )
 
 type UniqueIndex[ReferenceKey, PrimaryKey, Value any] struct {
-	getRefKey func(value Value) (ReferenceKey, error)
+	getRefKey func(pk PrimaryKey, value Value) (ReferenceKey, error)
 	refs      Map[ReferenceKey, PrimaryKey]
 }
 
@@ -16,7 +16,7 @@ func NewUniqueIndex[ReferenceKey, PrimaryKey, Value any](
 	name string,
 	refCodec KeyCodec[ReferenceKey],
 	pkCodec KeyCodec[PrimaryKey],
-	getRefKeyFunc func(v Value) (ReferenceKey, error),
+	getRefKeyFunc func(pk PrimaryKey, v Value) (ReferenceKey, error),
 ) *UniqueIndex[ReferenceKey, PrimaryKey, Value] {
 	return &UniqueIndex[ReferenceKey, PrimaryKey, Value]{
 		getRefKey: getRefKeyFunc,
@@ -31,7 +31,7 @@ func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Con
 			return err
 		}
 	}
-	refKey, err := i.getRefKey(newValue)
+	refKey, err := i.getRefKey(pk, newValue)
 	if err != nil {
 		return err
 	}
@@ -46,8 +46,8 @@ func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Con
 	return i.refs.Set(ctx, refKey, pk)
 }
 
-func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, _ PrimaryKey, value Value) error {
-	refKey, err := i.getRefKey(value)
+func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, value Value) error {
+	refKey, err := i.getRefKey(pk, value)
 	if err != nil {
 		return err
 	}

@@ -230,9 +230,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	for key := range rs.storesParams {
 		storesKeys = append(storesKeys, key)
 	}
-	sort.Slice(storesKeys, func(i, j int) bool {
-		return storesKeys[i].String() < storesKeys[j].String()
-	})
 
 	if upgrades != nil {
 		// deterministic iteration order for upgrades
@@ -1053,8 +1050,9 @@ func GetLatestVersion(db dbm.DB) int64 {
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
-
-	for key, store := range storeMap {
+	storeKeys := keysForStoreKeyMap(storeMap)
+	for _, key := range storeKeys {
+		store := storeMap[key]
 		last := store.LastCommitID()
 
 		// If a commit event execution is interrupted, a new iavl store's version will be larger than the rootmulti's metadata, when the block is replayed, we should avoid committing that iavl store again.

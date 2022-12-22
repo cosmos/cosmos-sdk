@@ -54,10 +54,48 @@ func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.C
 	return i.refs.Remove(ctx, refKey)
 }
 
-func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Find(ctx context.Context, ref ReferenceKey) (PrimaryKey, error) {
+func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Context, ref ReferenceKey) (PrimaryKey, error) {
 	return i.refs.Get(ctx, ref)
 }
 
+func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger Ranger[ReferenceKey]) (UniqueIndexIterator[ReferenceKey, PrimaryKey], error) {
+	iter, err := i.refs.Iterate(ctx, ranger)
+	return (UniqueIndexIterator[ReferenceKey, PrimaryKey])(iter), err
+}
+
+// UniqueIndexIterator is an Iterator wrapper, that exposes only the functionality needed to work with UniqueIndex keys.
+type UniqueIndexIterator[ReferenceKey, PrimaryKey any] Iterator[ReferenceKey, PrimaryKey]
+
+// PrimaryKey returns the iterator's current primary key.
+func (i UniqueIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKey() (PrimaryKey, error) {
+	return (Iterator[ReferenceKey, PrimaryKey])(i).Value()
+}
+
+// PrimaryKeys fully consumes the iterator, and returns all the primary keys.
+func (i UniqueIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, error) {
+	return (Iterator[ReferenceKey, PrimaryKey])(i).Values()
+}
+
+// FullKey returns the iterator's current full reference key as Pair[ReferenceKey, PrimaryKey].
+func (i UniqueIndexIterator[ReferenceKey, PrimaryKey]) FullKey() (Pair[ReferenceKey, PrimaryKey], error) {
+	kv, err := (Iterator[ReferenceKey, PrimaryKey])(i).KeyValue()
+	return Join(kv.Key, kv.Value), err
+}
+
+func (i UniqueIndexIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]Pair[ReferenceKey, PrimaryKey], error) {
+	kvs, err := (Iterator[ReferenceKey, PrimaryKey])(i).KeyValues()
+	if err != nil {
+		return nil, err
+	}
+	pairKeys := make([]Pair[ReferenceKey, PrimaryKey], len(kvs))
+	for index := range kvs {
+		kv := kvs[index]
+		pairKeys[index] = Join(kv.Key, kv.Value)
+	}
+	return pairKeys, nil
+}
+
+// keyToValueCodec is a ValueCodec that wraps a KeyCodec to make it behave like a ValueCodec.
 type keyToValueCodec[K any] struct {
 	kc KeyCodec[K]
 }

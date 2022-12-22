@@ -53,7 +53,7 @@ func TestIndexedMap(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pk, err := im.Indexes.Vat.Find(ctx, 1)
+	pk, err := im.Indexes.Vat.ExactMatch(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, "2", pk)
 
@@ -64,17 +64,17 @@ func TestIndexedMap(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pk, err = im.Indexes.Vat.Find(ctx, 2)
+	pk, err = im.Indexes.Vat.ExactMatch(ctx, 2)
 	require.NoError(t, err)
 	require.Equal(t, "2", pk)
 
-	pk, err = im.Indexes.Vat.Find(ctx, 1)
+	pk, err = im.Indexes.Vat.ExactMatch(ctx, 1)
 	require.ErrorIs(t, err, ErrNotFound)
 
 	// test removal
 	err = im.Remove(ctx, "2")
 	require.NoError(t, err)
-	_, err = im.Indexes.Vat.Find(ctx, 2)
+	_, err = im.Indexes.Vat.ExactMatch(ctx, 2)
 	require.ErrorIs(t, err, ErrNotFound)
 
 	// test iteration

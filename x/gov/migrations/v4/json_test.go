@@ -41,6 +41,7 @@ func TestMigrateJSON(t *testing.T) {
 
 	migrated, err := v4.MigrateJSON(oldGovState)
 	require.NoError(t, err)
+	require.Equal(t, migrated, govGenState)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)
 	require.NoError(t, err)

@@ -101,7 +101,7 @@ NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
 	inflationRateChange = inflationRateChangePerYear/blocksPerYr
 
-	// increase the new annual inflation for this next cycle
+	// increase the new annual inflation for this next block
 	inflation += inflationRateChange
 	if inflation > params.InflationMax {
 		inflation = params.InflationMax

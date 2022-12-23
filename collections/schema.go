@@ -70,6 +70,34 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 	return schema, nil
 }
 
+func (s *SchemaBuilder) addCollection(collection collection) {
+	prefix := collection.getPrefix()
+	name := collection.getName()
+
+	if _, ok := s.schema.collectionsByPrefix[string(prefix)]; ok {
+		s.err = multierror.Append(s.err, fmt.Errorf("prefix %v already taken within schema", prefix))
+		return
+	}
+
+	if _, ok := s.schema.collectionsByName[name]; ok {
+		s.err = multierror.Append(s.err, fmt.Errorf("name %s already taken within schema", name))
+		return
+	}
+
+	if !nameRegex.MatchString(name) {
+		s.err = multierror.Append(s.err, fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
+		return
+	}
+
+	s.schema.collectionsByPrefix[string(prefix)] = collection
+	s.schema.collectionsByName[name] = collection
+}
+
+// NameRegex is the regular expression that all valid collection names must match.
+const NameRegex = "[A-Za-z][A-Za-z0-9_]*"
+
+var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
+
 // Schema specifies a group of collections stored within the storage specified
 // by a single store key. All the collections within the schema must have a
 // unique binary prefix and human-readable name. Schema will eventually include
@@ -110,31 +138,3 @@ func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema 
 		collectionsByPrefix: map[string]collection{},
 	}
 }
-
-func (s SchemaBuilder) addCollection(collection collection) {
-	prefix := collection.getPrefix()
-	name := collection.getName()
-
-	if _, ok := s.schema.collectionsByPrefix[string(prefix)]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("prefix %v already taken within schema", prefix))
-		return
-	}
-
-	if _, ok := s.schema.collectionsByName[name]; ok {
-		s.err = multierror.Append(s.err, fmt.Errorf("name %s already taken within schema", name))
-		return
-	}
-
-	if !nameRegex.MatchString(name) {
-		s.err = multierror.Append(s.err, fmt.Errorf("name must match regex %s, got %s", NameRegex, name))
-		return
-	}
-
-	s.schema.collectionsByPrefix[string(prefix)] = collection
-	s.schema.collectionsByName[name] = collection
-}
-
-// NameRegex is the regular expression that all valid collection names must match.
-const NameRegex = "[A-Za-z][A-Za-z0-9_]*"
-
-var nameRegex = regexp.MustCompile("^" + NameRegex + "$")

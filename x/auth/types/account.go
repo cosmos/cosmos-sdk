@@ -15,6 +15,8 @@ import (
 )
 
 var (
+	_ sdk.AccountI = AccountIWrapper{}
+
 	_ sdk.AccountI                       = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
@@ -264,6 +266,60 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	ma.Permissions = alias.Permissions
 
 	return nil
+}
+
+// AccountIWrapper is a wrapper struct around sdk.AccountI to support the interface for users.
+type AccountIWrapper struct {
+	AccountI sdk.AccountI
+}
+
+// ProtoMessage implements types.AccountI
+func (AccountIWrapper) ProtoMessage() {}
+
+// Reset implements types.AccountI
+func (AccountIWrapper) Reset() {}
+
+// String implements types.AccountI
+func (AccountIWrapper) String() string { return "" }
+
+// GetAddress implements types.AccountI
+func (acc AccountIWrapper) GetAddress() sdk.AccAddress {
+	return acc.AccountI.GetAddress()
+}
+
+// SetAddress implements types.AccountI
+func (acc AccountIWrapper) SetAddress(addr sdk.AccAddress) error {
+	return acc.AccountI.SetAddress(addr)
+}
+
+// GetPubKey implements types.AccountI
+func (acc AccountIWrapper) GetPubKey() (pk cryptotypes.PubKey) {
+	return acc.AccountI.GetPubKey()
+}
+
+// SetPubKey implements types.AccountI
+func (acc AccountIWrapper) SetPubKey(pubkey cryptotypes.PubKey) error {
+	return acc.AccountI.SetPubKey(pubkey)
+}
+
+// GetAccountNumber implements types.AccountI
+func (acc AccountIWrapper) GetAccountNumber() uint64 {
+	return acc.AccountI.GetAccountNumber()
+}
+
+// SetAccountNumber implements types.AccountI
+func (acc AccountIWrapper) SetAccountNumber(accNumber uint64) error {
+	return acc.AccountI.SetAccountNumber(accNumber)
+}
+
+// GetSequence implements types.AccountI
+func (acc AccountIWrapper) GetSequence() uint64 {
+	return acc.AccountI.GetSequence()
+}
+
+// SetSequence implements types.AccountI
+func (acc AccountIWrapper) SetSequence(seq uint64) error {
+	return acc.AccountI.SetSequence(seq)
 }
 
 // ModuleAccountI defines an account interface for modules that hold tokens in

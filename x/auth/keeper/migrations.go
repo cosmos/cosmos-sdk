@@ -27,7 +27,7 @@ func NewMigrator(keeper AccountKeeper, queryServer grpc.Server, ss exported.Subs
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	var iterErr error
 
-	m.keeper.IterateAccounts(ctx, func(account sdk.AccountI) (stop bool) {
+	m.keeper.IterateAccounts(ctx, func(account types.BaseAccount) (stop bool) {
 		wb, err := v2.MigrateAccount(ctx, account, m.queryServer)
 		if err != nil {
 			iterErr = err

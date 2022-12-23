@@ -62,7 +62,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
 		key,
-		types.ProtoBaseAccount,
+		types.BaseAccount{},
 		maccPerms,
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
@@ -77,8 +77,8 @@ func (suite *DeterministicTestSuite) SetupTest() {
 }
 
 // createAndSetAccount creates a random account and sets to the keeper store.
-func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []sdk.AccountI {
-	accs := make([]sdk.AccountI, 0, count)
+func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []types.BaseAccount {
+	accs := make([]types.BaseAccount, 0, count)
 
 	// We need all generated account-numbers unique
 	accNums := rapid.SliceOfNDistinct(rapid.Uint64(), count, count, func(i uint64) uint64 { return i }).Draw(t, "acc-numss")
@@ -90,8 +90,8 @@ func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int)
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-		suite.accountKeeper.SetAccount(suite.ctx, acc1)
-		accs = append(accs, acc1)
+		suite.accountKeeper.SetAccount(suite.ctx, *acc1)
+		accs = append(accs, *acc1)
 	}
 
 	return accs
@@ -110,7 +110,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccount() {
 	seq := uint64(98)
 
 	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	suite.accountKeeper.SetAccount(suite.ctx, *acc1)
 
 	req := &types.QueryAccountRequest{Address: acc1.GetAddress().String()}
 
@@ -152,8 +152,8 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccounts() {
 	acc1 := types.NewBaseAccount(addr1, &secp256k1.PubKey{Key: pub1}, accNum1, seq1)
 	acc2 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum2, seq2)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
-	suite.accountKeeper.SetAccount(suite.ctx, acc2)
+	suite.accountKeeper.SetAccount(suite.ctx, *acc1)
+	suite.accountKeeper.SetAccount(suite.ctx, *acc2)
 
 	req := &types.QueryAccountsRequest{}
 	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Accounts, 1716, false)
@@ -168,7 +168,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 		seq := rapid.Uint64().Draw(t, "sequence")
 
 		acc1 := types.NewBaseAccount(addr, &pub, accNum, seq)
-		suite.accountKeeper.SetAccount(suite.ctx, acc1)
+		suite.accountKeeper.SetAccount(suite.ctx, *acc1)
 
 		req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
 		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AccountAddressByID, 0, true)
@@ -180,7 +180,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountAddressByID() {
 
 	acc1 := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc1)
+	suite.accountKeeper.SetAccount(suite.ctx, *acc1)
 	req := &types.QueryAccountAddressByIDRequest{AccountId: accNum}
 	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AccountAddressByID, 1123, false)
 }
@@ -226,7 +226,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAccountInfo() {
 
 	acc := types.NewBaseAccount(addr, &secp256k1.PubKey{Key: pub}, accNum, seq)
 
-	suite.accountKeeper.SetAccount(suite.ctx, acc)
+	suite.accountKeeper.SetAccount(suite.ctx, *acc)
 	req := &types.QueryAccountInfoRequest{Address: acc.GetAddress().String()}
 	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AccountInfo, 1543, false)
 }
@@ -281,7 +281,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
 			suite.key,
-			types.ProtoBaseAccount,
+			types.BaseAccount{},
 			maccPerms,
 			"cosmos",
 			types.NewModuleAddress("gov").String(),
@@ -327,7 +327,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 		ak := keeper.NewAccountKeeper(
 			suite.encCfg.Codec,
 			suite.key,
-			types.ProtoBaseAccount,
+			types.BaseAccount{},
 			maccPerms,
 			"cosmos",
 			types.NewModuleAddress("gov").String(),

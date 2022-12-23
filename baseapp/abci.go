@@ -52,10 +52,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// initialize states with a correct header
-	app.setDeliverState(initHeader)
-	app.setCheckState(initHeader)
-	app.setPrepareProposalState(initHeader)
-	app.setProcessProposalState(initHeader)
+	app.setState(runTxModeDeliver, initHeader)
+	app.setState(runTxModeCheck, initHeader)
+	app.setState(runTxPrepareProposal, initHeader)
+	app.setState(runTxProcessProposal, initHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
@@ -162,7 +162,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// already be initialized in InitChain. Otherwise app.deliverState will be
 	// nil, since it is reset on Commit.
 	if app.deliverState == nil {
-		app.setDeliverState(req.Header)
+		app.setState(runTxModeDeliver, req.Header)
 	} else {
 		// In the first block, app.deliverState.ctx will already be initialized
 		// by InitChain. Context is now updated with Header information.
@@ -277,7 +277,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 // that all transactions are valid. If all transactions are valid, then we inform
 // Tendermint that the Status is ACCEPT. However, the application is also able
 // to implement optimizations such as executing the entire proposed block
-// immediately. It may even execute the block in parallel.
+// immediately.
 //
 // If a panic is detected during execution of an application's ProcessProposal
 // handler, it will be recovered and we will reject the proposal.
@@ -423,9 +423,9 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	//
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
-	app.setCheckState(header)
-	app.setPrepareProposalState(header)
-	app.setProcessProposalState(header)
+	app.setState(runTxModeCheck, header)
+	app.setState(runTxPrepareProposal, header)
+	app.setState(runTxProcessProposal, header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil

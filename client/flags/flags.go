@@ -48,6 +48,8 @@ const (
 	FlagUseLedger        = "ledger"
 	FlagChainID          = "chain-id"
 	FlagNode             = "node"
+	FlagGRPC             = "grpc-addr"
+	FlagGRPCInsecure     = "grpc-insecure"
 	FlagHeight           = "height"
 	FlagGasAdjustment    = "gas-adjustment"
 	FlagFrom             = "from"
@@ -92,6 +94,8 @@ var LineBreak = &cobra.Command{Run: func(*cobra.Command, []string) {}}
 // AddQueryFlagsToCmd adds common flags to a module query command.
 func AddQueryFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
+	cmd.Flags().String(FlagGRPC, "", "the gRPC endpoint to use for this chain")
+	cmd.Flags().Bool(FlagGRPCInsecure, false, "allow gRPC over insecure channels, if not TLS the server must use TLS")
 	cmd.Flags().Int64(FlagHeight, 0, "Use a specific height to query state at (this can error if the node is pruning state)")
 	cmd.Flags().StringP(tmcli.OutputFlag, "o", "text", "Output format (text|json)")
 

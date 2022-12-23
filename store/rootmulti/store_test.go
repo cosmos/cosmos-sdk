@@ -605,6 +605,33 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	}
 }
 
+func TestUnevenStoresHeightCheck(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	err := store.LoadLatestVersion()
+	require.Nil(t, err)
+
+	// commit to increment store's height
+	store.Commit()
+
+	// mount store4 to root store
+	store.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
+
+	// load the stores without upgrades
+	err = store.LoadLatestVersion()
+	require.Error(t, err)
+
+	// now, let's load with upgrades...
+	upgrades := &types.StoreUpgrades{
+		Added: []string{"store4"},
+	}
+	err = store.LoadLatestVersionAndUpgrade(upgrades)
+	require.Nil(t, err)
+
+	err = store.LoadVersion(0)
+	require.Nil(t, err)
+}
+
 func TestSetInitialVersion(t *testing.T) {
 	db := dbm.NewMemDB()
 	multi := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))

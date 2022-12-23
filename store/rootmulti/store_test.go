@@ -627,9 +627,6 @@ func TestUnevenStoresHeightCheck(t *testing.T) {
 	}
 	err = store.LoadLatestVersionAndUpgrade(upgrades)
 	require.Nil(t, err)
-
-	err = store.LoadVersion(0)
-	require.Nil(t, err)
 }
 
 func TestSetInitialVersion(t *testing.T) {

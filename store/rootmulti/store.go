@@ -1050,11 +1050,7 @@ func GetLatestVersion(db dbm.DB) int64 {
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
-<<<<<<< HEAD
 	storeKeys := keysFromStoreKeyMap(storeMap)
-=======
-	storeKeys := keysForStoreKeyMap(storeMap)
->>>>>>> accca1a68 (correct sort logic)
 	for _, key := range storeKeys {
 		store := storeMap[key]
 		last := store.LastCommitID()

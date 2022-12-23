@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -290,6 +289,6 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 //
 // We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
-func MigrateAccount(ctx sdk.Context, account types.BaseAccount, queryServer grpc.Server) (sdk.AccountI, error) {
+func MigrateAccount(ctx sdk.Context, account sdk.AccountI, queryServer grpc.Server) (sdk.AccountI, error) {
 	return migrateVestingAccounts(ctx, account, queryServer)
 }

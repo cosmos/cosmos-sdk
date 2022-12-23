@@ -28,8 +28,7 @@ func (ak AccountKeeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 			n := ak.NextAccountNumber(ctx)
 			lastAccNum = &n
 		}
-		baseAcc := types.NewBaseAccount(acc.GetAddress(), acc.GetPubKey(), acc.GetAccountNumber(), acc.GetSequence())
-		ak.SetAccount(ctx, *baseAcc)
+		ak.SetAccount(ctx, acc)
 	}
 
 	ak.GetModuleAccount(ctx, types.FeeCollectorName)
@@ -40,9 +39,9 @@ func (ak AccountKeeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := ak.GetParams(ctx)
 
 	var genAccounts types.GenesisAccounts
-	ak.IterateAccounts(ctx, func(account types.BaseAccount) bool {
-		// genAccount := account.(types.GenesisAccount)
-		genAccounts = append(genAccounts, &account)
+	ak.IterateAccounts(ctx, func(account sdk.AccountI) bool {
+		genAccount := account.(types.GenesisAccount)
+		genAccounts = append(genAccounts, genAccount)
 		return false
 	})
 

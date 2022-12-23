@@ -4,15 +4,14 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.BaseAccount
-	IterateAccounts(ctx sdk.Context, process func(types.BaseAccount) (stop bool))
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
+	IterateAccounts(ctx sdk.Context, process func(sdk.AccountI) (stop bool))
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

@@ -59,7 +59,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
 		key,
-		types.BaseAccount{},
+		types.ProtoBaseAccount,
 		maccPerms,
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(len(keeperAccts), len(accts)+1, "number of accounts in the keeper vs in genesis state")
 	for i, genAcct := range accts {
 		genAcctAddr := genAcct.GetAddress()
-		var keeperAcct types.BaseAccount
+		var keeperAcct sdk.AccountI
 		for _, kacct := range keeperAccts {
 			if genAcctAddr.Equals(kacct.GetAddress()) {
 				keeperAcct = kacct

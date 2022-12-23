@@ -20,8 +20,26 @@ func TestMigrateJSON(t *testing.T) {
 		WithCodec(encodingConfig.Codec)
 
 	govGenState := v1.DefaultGenesisState()
+	oldGovState := &v1.GenesisState{
+		StartingProposalId: govGenState.StartingProposalId,
+		Deposits:           govGenState.Deposits,
+		Votes:              govGenState.Votes,
+		Proposals:          govGenState.Proposals,
+		DepositParams: &v1.DepositParams{
+			MinDeposit:       govGenState.Params.MinDeposit,
+			MaxDepositPeriod: govGenState.Params.MaxDepositPeriod,
+		},
+		VotingParams: &v1.VotingParams{
+			VotingPeriod: govGenState.Params.VotingPeriod,
+		},
+		TallyParams: &v1.TallyParams{
+			Quorum:        govGenState.Params.Quorum,
+			Threshold:     govGenState.Params.Threshold,
+			VetoThreshold: govGenState.Params.VetoThreshold,
+		},
+	}
 
-	migrated, err := v4.MigrateJSON(govGenState)
+	migrated, err := v4.MigrateJSON(oldGovState)
 	require.NoError(t, err)
 
 	bz, err := clientCtx.Codec.MarshalJSON(migrated)

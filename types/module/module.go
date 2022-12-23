@@ -395,22 +395,23 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		panic(err)
 	}
 
-	channels := make([]chan json.RawMessage, len(modulesToExport))
+	channels := make(map[string]chan json.RawMessage)
 	modulesWithGenesis := make([]string, 0, len(modulesToExport))
 
-	for i, moduleName := range modulesToExport {
+	for _, moduleName := range modulesToExport {
 		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
-			channels[i] = make(chan json.RawMessage)
+			channels[moduleName] = make(chan json.RawMessage)
 			modulesWithGenesis = append(modulesWithGenesis, moduleName)
 
 			go func(module HasGenesis, ch chan json.RawMessage) {
+				ctx := ctx.WithGasMeter(sdk.NewInfiniteGasMeter()) // avoid race conditions
 				ch <- module.ExportGenesis(ctx, cdc)
-			}(module, channels[i])
+			}(module, channels[moduleName])
 		}
 	}
 
-	for i, moduleName := range modulesWithGenesis {
-		genesisData[moduleName] = <-channels[i]
+	for _, moduleName := range modulesWithGenesis {
+		genesisData[moduleName] = <-channels[moduleName]
 	}
 
 	return genesisData

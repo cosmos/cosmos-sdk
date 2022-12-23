@@ -2,10 +2,10 @@ package collections
 
 import (
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"regexp"
 	"strings"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -56,7 +56,13 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 		}
 	}
 
+	if s.schema == nil {
+		// explicit panic to avoid nil pointer dereference
+		panic("schema is nil")
+	}
+
 	schema := *s.schema
+
 	s.schema = nil // this makes the builder unusable
 
 	return schema, nil

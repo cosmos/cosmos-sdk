@@ -39,7 +39,7 @@ specifications for modules. The following list is nonbinding and all sections ar
 
 ### Notation for key-value mapping
 
-Within `state.md` the following notation `->` should be used to describe key to
+Within `## State` the following notation `->` should be used to describe key to
 value mapping:
 
 ```text

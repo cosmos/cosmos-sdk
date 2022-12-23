@@ -17,7 +17,7 @@ func NewItem[V any](
 	name string,
 	valueCodec ValueCodec[V],
 ) Item[V] {
-	item := (Item[V])(newMap[noKey, V](schema, prefix, name, noKey{}, valueCodec))
+	item := (Item[V])(newMap[noKey](schema, prefix, name, noKey{}, valueCodec))
 	schema.addCollection(item)
 	return item
 }

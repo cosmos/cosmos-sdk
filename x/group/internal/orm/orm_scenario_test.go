@@ -273,7 +273,9 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	for i, m := range tms {
 		gCtx.ResetGasMeter()
 
+		m := m
 		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m)
+
 		require.NoError(t, err)
 		t.Logf("%d: gas consumed on delete: %d", i, gCtx.GasConsumed())
 	}

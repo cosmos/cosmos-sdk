@@ -89,7 +89,8 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 			panic(err)
 		}
 
-		// Apply the viper config value to the flag when the flag is not set and viper has a value
+		// Apply the viper config value to the flag when the flag is not set and
+		// viper has a value.
 		if !f.Changed && v.IsSet(f.Name) {
 			val := v.Get(f.Name)
 			err = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
@@ -117,7 +118,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	// Get the executable name and configure the viper instance so that environmental
 	// variables are checked based off that name. The underscore character is used
-	// as a separator
+	// as a separator.
 	executableName, err := os.Executable()
 	if err != nil {
 		return err
@@ -125,13 +126,14 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	basename := path.Base(executableName)
 
-	// Configure the viper instance
+	// configure the viper instance
 	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
 		return err
 	}
 	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
 		return err
 	}
+
 	serverCtx.Viper.SetEnvPrefix(basename)
 	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	serverCtx.Viper.AutomaticEnv()
@@ -147,19 +149,20 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
 		return err
 	}
+
 	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
 	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
 	if err != nil {
 		return err
 	}
 
-	// Check if the tendermint flag for trace logging is set
-	// if it is then setup a tracing logger in this app as well
+	// Check if the tendermint flag for trace logging is set if it is then setup
+	// a tracing logger in this app as well.
 	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
 		logger = tmlog.NewTracingLogger(logger)
 	}
 
-	serverCtx.Logger = logger.With("module", "main")
+	serverCtx.Logger = logger.With("module", "server")
 
 	return SetCmdServerContext(cmd, serverCtx)
 }
@@ -362,13 +365,13 @@ func WaitForQuitSignals() ErrorCode {
 // GetAppDBBackend gets the backend type to use for the application DBs.
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
-
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
 	if len(rv) != 0 {
 		return dbm.BackendType(rv)
 	}
+
 	return dbm.GoLevelDBBackend
 }
 
@@ -452,7 +455,10 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
-		baseapp.SetMempool(mempool.NewSenderNonceMempool(
-			mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))))),
+		baseapp.SetMempool(
+			mempool.NewSenderNonceMempool(
+				mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))),
+			),
+		),
 	}
 }

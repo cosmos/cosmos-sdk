@@ -1,16 +1,16 @@
 package testutil
 
 import (
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/gov"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/authz/module"   // import authz as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import bank as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import consensus as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import genutil as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/gov"            // import gov as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import mint as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import params as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import staking as a blank for app wiring
 
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appconfig"

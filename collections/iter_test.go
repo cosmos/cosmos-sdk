@@ -2,8 +2,9 @@ package collections
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestIteratorBasic(t *testing.T) {

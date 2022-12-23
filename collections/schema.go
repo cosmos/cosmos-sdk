@@ -1,11 +1,13 @@
 package collections
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/core/store"
+
 	"github.com/hashicorp/go-multierror"
 )
 
@@ -20,10 +22,10 @@ type SchemaBuilder struct {
 // NewSchemaBuilder creates a new schema builder from the provided store key.
 // Callers should always call the SchemaBuilder.Build method when they are
 // done adding collections to the schema.
-func NewSchemaBuilder(storeKey storetypes.StoreKey) *SchemaBuilder {
+func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
 	return &SchemaBuilder{
 		schema: &Schema{
-			storeKey:            storeKey,
+			storeAccessor:       service.OpenKVStore,
 			collectionsByName:   map[string]collection{},
 			collectionsByPrefix: map[string]collection{},
 		},
@@ -74,12 +76,42 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 // methods for importing/exporting genesis data and for schema reflection for
 // clients.
 type Schema struct {
-	storeKey            storetypes.StoreKey
+	storeAccessor       func(context.Context) store.KVStore
 	collectionsByPrefix map[string]collection
 	collectionsByName   map[string]collection
 }
 
-func (s *SchemaBuilder) addCollection(collection collection) {
+// NewSchema creates a new schema for the provided KVStoreService.
+func NewSchema(service store.KVStoreService) Schema {
+	return NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+		return service.OpenKVStore(ctx)
+	})
+}
+
+// NewMemoryStoreSchema creates a new schema for the provided MemoryStoreService.
+func NewMemoryStoreSchema(service store.MemoryStoreService) Schema {
+	return NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+		return service.OpenMemoryStore(ctx)
+	})
+}
+
+// NewSchemaFromAccessor creates a new schema for the provided store accessor
+// function. Modules built against versions of the SDK which do not support
+// the cosmossdk.io/core/appmodule APIs should use this method.
+// Ex:
+
+//	NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
+//			return sdk.UnwrapSDKContext(ctx).KVStore(kvStoreKey)
+//	}
+func NewSchemaFromAccessor(accessor func(context.Context) store.KVStore) Schema {
+	return Schema{
+		storeAccessor:       accessor,
+		collectionsByName:   map[string]collection{},
+		collectionsByPrefix: map[string]collection{},
+	}
+}
+
+func (s SchemaBuilder) addCollection(collection collection) {
 	prefix := collection.getPrefix()
 	name := collection.getName()
 

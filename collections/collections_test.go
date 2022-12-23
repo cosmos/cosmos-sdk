@@ -5,26 +5,71 @@ import (
 	"math"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/mem"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/core/store"
+	db "github.com/tendermint/tm-db"
+
 	"github.com/stretchr/testify/require"
 )
 
-var _ StorageProvider = (*mockStorageProvider)(nil)
-
-type mockStorageProvider struct {
-	context.Context
-	store types.KVStore
+type testStore struct {
+	db db.DB
 }
 
-func (m mockStorageProvider) KVStore(key types.StoreKey) types.KVStore {
-	return m.store
+func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
+	return t
 }
 
-func deps() (types.StoreKey, context.Context) {
-	kv := mem.NewStore()
-	key := types.NewKVStoreKey("test")
-	return key, mockStorageProvider{store: kv}
+func (t testStore) Get(key []byte) []byte {
+	res, err := t.db.Get(key)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func (t testStore) Has(key []byte) bool {
+	res, err := t.db.Has(key)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func (t testStore) Set(key, value []byte) {
+	err := t.db.Set(key, value)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (t testStore) Delete(key []byte) {
+	err := t.db.Delete(key)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (t testStore) Iterator(start, end []byte) store.Iterator {
+	res, err := t.db.Iterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func (t testStore) ReverseIterator(start, end []byte) store.Iterator {
+	res, err := t.db.ReverseIterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+var _ store.KVStore = testStore{}
+
+func deps() (store.KVStoreService, context.Context) {
+	kv := db.NewMemDB()
+	return &testStore{kv}, context.Background()
 }
 
 // checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.

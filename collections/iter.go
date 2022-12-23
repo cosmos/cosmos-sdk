@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
+	"cosmossdk.io/core/store"
 )
 
 // ErrInvalidIterator is returned when an Iterate call resulted in an invalid iterator.
@@ -103,8 +104,10 @@ func (r *Range[K]) Descending() *Range[K] {
 }
 
 // test sentinel error
-var errRange = errors.New("collections: range error")
-var errOrder = errors.New("collections: invalid order")
+var (
+	errRange = errors.New("collections: range error")
+	errOrder = errors.New("collections: invalid order")
+)
 
 func (r *Range[K]) RangeValues() (prefix *K, start *Bound[K], end *Bound[K], order Order, err error) {
 	if r.prefix != nil && (r.end != nil || r.start != nil) {
@@ -148,18 +151,15 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	}
 
 	// get store
-	store, err := m.getStore(ctx)
-	if err != nil {
-		return iter, err
-	}
+	kv := m.sa(ctx)
 
 	// create iter
-	var storeIter storetypes.Iterator
+	var storeIter store.Iterator
 	switch order {
 	case OrderAscending:
-		storeIter = store.Iterator(startBytes, endBytes)
+		storeIter = kv.Iterator(startBytes, endBytes)
 	case OrderDescending:
-		storeIter = store.ReverseIterator(startBytes, endBytes)
+		storeIter = kv.ReverseIterator(startBytes, endBytes)
 	default:
 		return iter, fmt.Errorf("%w: %d", errOrder, order)
 	}
@@ -207,7 +207,7 @@ func rangeStartEndBytes[K, V any](m Map[K, V], start, end *Bound[K]) (startBytes
 		// if end is not specified then we simply are
 		// inclusive up to the last key of the Prefix
 		// of the collection.
-		endBytes = storetypes.PrefixEndBytes(m.prefix)
+		endBytes = prefixEndBytes(m.prefix)
 	}
 
 	return startBytes, endBytes, nil
@@ -220,7 +220,7 @@ func prefixStartEndBytes[K, V any](m Map[K, V], prefix K) (startBytes, endBytes 
 	if err != nil {
 		return
 	}
-	return startBytes, storetypes.PrefixEndBytes(startBytes), nil
+	return startBytes, prefixEndBytes(startBytes), nil
 }
 
 // Iterator defines a generic wrapper around an sdk.Iterator.
@@ -231,7 +231,7 @@ type Iterator[K, V any] struct {
 	kc KeyCodec[K]
 	vc ValueCodec[V]
 
-	iter storetypes.Iterator
+	iter store.Iterator
 
 	prefixLength int // prefixLength refers to the bytes provided by Prefix.Bytes, not Ranger.RangeValues() prefix.
 }
@@ -330,4 +330,32 @@ type KeyValue[K, V any] struct {
 
 func extendOneByte(b []byte) []byte {
 	return append(b, 0)
+}
+
+// prefixEndBytes returns the []byte that would end a
+// range query for all []byte with a certain prefix
+// Deals with last byte of prefix being FF without overflowing
+func prefixEndBytes(prefix []byte) []byte {
+	if len(prefix) == 0 {
+		return nil
+	}
+
+	end := make([]byte, len(prefix))
+	copy(end, prefix)
+
+	for {
+		if end[len(end)-1] != byte(255) {
+			end[len(end)-1]++
+			break
+		}
+
+		end = end[:len(end)-1]
+
+		if len(end) == 0 {
+			end = nil
+			break
+		}
+	}
+
+	return end
 }

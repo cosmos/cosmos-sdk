@@ -11,6 +11,7 @@ import (
 )
 
 func TestMarshalAndUnmarshalFeegrantKey(t *testing.T) {
+	t.Parallel()
 	grantee, err := sdk.AccAddressFromBech32("cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x")
 	require.NoError(t, err)
 	granter, err := sdk.AccAddressFromBech32("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")
@@ -26,6 +27,7 @@ func TestMarshalAndUnmarshalFeegrantKey(t *testing.T) {
 }
 
 func TestMarshalAndUnmarshalFeegrantKeyQueueKey(t *testing.T) {
+	t.Parallel()
 	grantee, err := sdk.AccAddressFromBech32("cosmos1qk93t4j0yyzgqgt6k5qf8deh8fq6smpn3ntu3x")
 	require.NoError(t, err)
 	granter, err := sdk.AccAddressFromBech32("cosmos1p9qh4ldfd6n0qehujsal4k7g0e37kel90rc4ts")

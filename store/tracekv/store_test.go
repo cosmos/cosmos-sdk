@@ -45,6 +45,7 @@ func newEmptyTraceKVStore(w io.Writer) *tracekv.Store {
 }
 
 func TestTraceKVStoreGet(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		key           []byte
 		expectedValue []byte
@@ -75,6 +76,7 @@ func TestTraceKVStoreGet(t *testing.T) {
 }
 
 func TestTraceKVStoreSet(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		key         []byte
 		value       []byte
@@ -114,6 +116,7 @@ func TestTraceKVStoreSet(t *testing.T) {
 }
 
 func TestTraceKVStoreDelete(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		key         []byte
 		expectedOut string
@@ -136,6 +139,7 @@ func TestTraceKVStoreDelete(t *testing.T) {
 }
 
 func TestTraceKVStoreHas(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		key      []byte
 		expected bool
@@ -158,6 +162,7 @@ func TestTraceKVStoreHas(t *testing.T) {
 }
 
 func TestTestTraceKVStoreIterator(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	store := newTraceKVStore(&buf)
@@ -214,6 +219,7 @@ func TestTestTraceKVStoreIterator(t *testing.T) {
 }
 
 func TestTestTraceKVStoreReverseIterator(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	store := newTraceKVStore(&buf)
@@ -270,23 +276,27 @@ func TestTestTraceKVStoreReverseIterator(t *testing.T) {
 }
 
 func TestTraceKVStorePrefix(t *testing.T) {
+	t.Parallel()
 	store := newEmptyTraceKVStore(nil)
 	pStore := prefix.NewStore(store, []byte("trace_prefix"))
 	require.IsType(t, prefix.Store{}, pStore)
 }
 
 func TestTraceKVStoreGetStoreType(t *testing.T) {
+	t.Parallel()
 	memDB := dbadapter.Store{DB: dbm.NewMemDB()}
 	store := newEmptyTraceKVStore(nil)
 	require.Equal(t, memDB.GetStoreType(), store.GetStoreType())
 }
 
 func TestTraceKVStoreCacheWrap(t *testing.T) {
+	t.Parallel()
 	store := newEmptyTraceKVStore(nil)
 	require.Panics(t, func() { store.CacheWrap() })
 }
 
 func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {
+	t.Parallel()
 	store := newEmptyTraceKVStore(nil)
 	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
 }

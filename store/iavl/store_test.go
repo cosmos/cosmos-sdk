@@ -53,6 +53,7 @@ func newAlohaTree(t *testing.T, db dbm.DB) (*iavl.MutableTree, types.CommitID) {
 }
 
 func TestLoadStore(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
@@ -115,6 +116,7 @@ func TestLoadStore(t *testing.T) {
 }
 
 func TestGetImmutable(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
@@ -147,6 +149,7 @@ func TestGetImmutable(t *testing.T) {
 }
 
 func TestTestGetImmutableIterator(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, cID := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)
@@ -170,6 +173,7 @@ func TestTestGetImmutableIterator(t *testing.T) {
 }
 
 func TestIAVLStoreGetSetHasDelete(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
@@ -195,6 +199,7 @@ func TestIAVLStoreGetSetHasDelete(t *testing.T) {
 }
 
 func TestIAVLStoreNoNilSet(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
@@ -206,6 +211,7 @@ func TestIAVLStoreNoNilSet(t *testing.T) {
 }
 
 func TestIAVLIterator(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	iavlStore := UnsafeNewStore(tree)
@@ -279,6 +285,7 @@ func TestIAVLIterator(t *testing.T) {
 }
 
 func TestIAVLReverseIterator(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 
 	tree, err := iavl.NewMutableTree(db, cacheSize, false)
@@ -313,6 +320,7 @@ func TestIAVLReverseIterator(t *testing.T) {
 }
 
 func TestIAVLPrefixIterator(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, cacheSize, false)
 	require.NoError(t, err)
@@ -377,6 +385,7 @@ func TestIAVLPrefixIterator(t *testing.T) {
 }
 
 func TestIAVLReversePrefixIterator(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, cacheSize, false)
 	require.NoError(t, err)
@@ -445,6 +454,7 @@ func nextVersion(iavl *Store) {
 }
 
 func TestIAVLNoPrune(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, cacheSize, false)
 	require.NoError(t, err)
@@ -464,6 +474,7 @@ func TestIAVLNoPrune(t *testing.T) {
 }
 
 func TestIAVLStoreQuery(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, err := iavl.NewMutableTree(db, cacheSize, false)
 	require.NoError(t, err)
@@ -595,6 +606,7 @@ func BenchmarkIAVLIteratorNext(b *testing.B) {
 }
 
 func TestSetInitialVersion(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		storeFn  func(db *dbm.MemDB) *Store
@@ -631,6 +643,7 @@ func TestSetInitialVersion(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			db := dbm.NewMemDB()
 			store := tc.storeFn(db)
 
@@ -646,6 +659,7 @@ func TestSetInitialVersion(t *testing.T) {
 }
 
 func TestCacheWraps(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	tree, _ := newAlohaTree(t, db)
 	store := UnsafeNewStore(tree)

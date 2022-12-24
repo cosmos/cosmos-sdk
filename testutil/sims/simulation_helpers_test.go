@@ -13,6 +13,7 @@ import (
 )
 
 func TestGetSimulationLog(t *testing.T) {
+	t.Parallel()
 	legacyAmino := codec.NewLegacyAmino()
 	decoders := make(sdk.StoreDecoderRegistry)
 	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
@@ -42,6 +43,7 @@ func TestGetSimulationLog(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.store, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.expectedLog, GetSimulationLog(tt.store, decoders, tt.kvPairs, tt.kvPairs), tt.store)
 		})
 	}

@@ -5,7 +5,10 @@ run:
   sort-results: true
   allow-parallel-runners: true
   concurrency: 4
-  exclude-dir: testutil/testdata_pulsar
+  exclude-dir:
+    - testutil/testdata_pulsar
+    - tests/e2e
+    - crypto/keys/secp256k1
 
 linters:
   disable-all: true

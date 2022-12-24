@@ -273,5 +273,6 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder { //nolint:govet
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(IntegrationTestSuite))
 }

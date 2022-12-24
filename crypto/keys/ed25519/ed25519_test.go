@@ -19,6 +19,7 @@ import (
 )
 
 func TestSignAndValidateEd25519(t *testing.T) {
+	t.Parallel()
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey()
 
@@ -48,6 +49,7 @@ func TestSignAndValidateEd25519(t *testing.T) {
 }
 
 func TestPubKeyEquals(t *testing.T) {
+	t.Parallel()
 	ed25519PubKey := ed25519.GenPrivKey().PubKey().(*ed25519.PubKey)
 
 	testCases := []struct {
@@ -79,7 +81,9 @@ func TestPubKeyEquals(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
+			t.Parallel()
 			eq := tc.pubKey.Equals(tc.other)
 			require.Equal(t, eq, tc.expectEq)
 		})
@@ -87,12 +91,14 @@ func TestPubKeyEquals(t *testing.T) {
 }
 
 func TestAddressEd25519(t *testing.T) {
+	t.Parallel()
 	pk := ed25519.PubKey{[]byte{125, 80, 29, 208, 159, 53, 119, 198, 73, 53, 187, 33, 199, 144, 62, 255, 1, 235, 117, 96, 128, 211, 17, 45, 34, 64, 189, 165, 33, 182, 54, 206}}
 	addr := pk.Address()
 	require.Len(t, addr, 20, "Address must be 20 bytes long")
 }
 
 func TestPrivKeyEquals(t *testing.T) {
+	t.Parallel()
 	ed25519PrivKey := ed25519.GenPrivKey()
 
 	testCases := []struct {
@@ -124,7 +130,9 @@ func TestPrivKeyEquals(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
+			t.Parallel()
 			eq := tc.privKey.Equals(tc.other)
 			require.Equal(t, eq, tc.expectEq)
 		})
@@ -132,6 +140,7 @@ func TestPrivKeyEquals(t *testing.T) {
 }
 
 func TestMarshalAmino(t *testing.T) {
+	t.Parallel()
 	aminoCdc := codec.NewLegacyAmino()
 	privKey := ed25519.GenPrivKey()
 	pubKey := privKey.PubKey().(*ed25519.PubKey)
@@ -160,7 +169,9 @@ func TestMarshalAmino(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
 			// Do a round trip of encoding/decoding binary.
 			bz, err := aminoCdc.Marshal(tc.msg)
 			require.NoError(t, err)
@@ -185,6 +196,7 @@ func TestMarshalAmino(t *testing.T) {
 }
 
 func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
+	t.Parallel()
 	aminoCdc := codec.NewLegacyAmino()
 	// Create Tendermint keys.
 	tmPrivKey := tmed25519.GenPrivKey()
@@ -226,7 +238,9 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
 			// Make sure Amino encoding override is not breaking backwards compatibility.
 			bz1, err := tc.marshalFn(tc.tmKey)
 			require.NoError(t, err)
@@ -238,6 +252,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 }
 
 func TestMarshalJSON(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	privKey := ed25519.GenPrivKey()
 	pk := privKey.PubKey()

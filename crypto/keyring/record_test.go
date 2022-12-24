@@ -134,5 +134,6 @@ func (s *RecordTestSuite) TestExtractPrivKeyFromOfflineRecord() {
 }
 
 func TestRecordTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(RecordTestSuite))
 }

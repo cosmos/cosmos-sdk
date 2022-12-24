@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewSigningAlgoByString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		algoStr      string
@@ -37,6 +38,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			algorithm, err := NewSigningAlgoFromString(tt.algoStr, list)
 			if tt.isSupported {
 				require.Equal(t, hd.Secp256k1, algorithm)
@@ -48,6 +50,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 }
 
 func TestAltSigningAlgoList_Contains(t *testing.T) {
+	t.Parallel()
 	list := SigningAlgoList{hd.Secp256k1}
 
 	require.True(t, list.Contains(hd.Secp256k1))
@@ -55,6 +58,7 @@ func TestAltSigningAlgoList_Contains(t *testing.T) {
 }
 
 func TestAltSigningAlgoList_String(t *testing.T) {
+	t.Parallel()
 	list := SigningAlgoList{hd.Secp256k1, notSupportedAlgo{}}
 	require.Equal(t, fmt.Sprintf("%s,notSupported", hd.Secp256k1Type), list.String())
 }

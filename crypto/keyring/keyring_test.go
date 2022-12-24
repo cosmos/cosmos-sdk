@@ -41,6 +41,7 @@ func getCodec() codec.Codec {
 }
 
 func TestNewKeyring(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	mockIn := strings.NewReader("")
 	cdc := getCodec()
@@ -60,6 +61,7 @@ func TestNewKeyring(t *testing.T) {
 }
 
 func TestKeyManagementKeyRing(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	tempDir := t.TempDir()
 	kb, err := New("keybasename", "test", tempDir, nil, cdc)
@@ -169,6 +171,7 @@ func TestKeyManagementKeyRing(t *testing.T) {
 }
 
 func TestSignVerifyKeyRing(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	cdc := getCodec()
 
@@ -256,6 +259,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 }
 
 func TestExportImportKeyRing(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -301,6 +305,7 @@ func TestExportImportKeyRing(t *testing.T) {
 }
 
 func TestExportImportPubKeyKeyRing(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -347,6 +352,7 @@ func TestExportImportPubKeyKeyRing(t *testing.T) {
 }
 
 func TestAdvancedKeyManagementKeyRing(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	cdc := getCodec()
 
@@ -383,6 +389,7 @@ func TestAdvancedKeyManagementKeyRing(t *testing.T) {
 }
 
 func TestSeedPhraseKeyRing(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	cdc := getCodec()
 
@@ -419,6 +426,7 @@ func TestSeedPhraseKeyRing(t *testing.T) {
 }
 
 func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb, err := New("keybasename", "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -449,6 +457,7 @@ func TestKeyringKeybaseExportImportPrivKey(t *testing.T) {
 }
 
 func TestInMemoryLanguage(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb := NewInMemory(cdc)
 	_, _, err := kb.NewMnemonic("something", Japanese, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
@@ -485,15 +494,18 @@ func TestInMemoryWithKeyring(t *testing.T) {
 	}), cdc)
 
 	t.Run("key exists", func(t *testing.T) {
+		t.Parallel()
 		_, err := kb.Key(appName)
 		require.NoError(t, err)
 	})
 
 	t.Run("key deleted", func(t *testing.T) {
+		t.Parallel()
 		err := kb.Delete(appName)
 		require.NoError(t, err)
 
 		t.Run("key is gone", func(t *testing.T) {
+			t.Parallel()
 			_, err := kb.Key(appName)
 			require.Error(t, err)
 		})
@@ -501,6 +513,7 @@ func TestInMemoryWithKeyring(t *testing.T) {
 }
 
 func TestInMemoryCreateMultisig(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb, err := New("keybasename", "memory", "", nil, cdc)
 	require.NoError(t, err)
@@ -514,6 +527,7 @@ func TestInMemoryCreateMultisig(t *testing.T) {
 }
 
 func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb := NewInMemory(cdc)
 	_, err := kb.NewAccount(
@@ -526,6 +540,7 @@ func TestInMemoryCreateAccountInvalidMnemonic(t *testing.T) {
 
 // TestInMemoryKeyManagement makes sure we can manipulate these keys well
 func TestInMemoryKeyManagement(t *testing.T) {
+	t.Parallel()
 	// make the storage with reasonable defaults
 	cdc := getCodec()
 	cstore := NewInMemory(cdc)
@@ -623,6 +638,7 @@ func TestInMemoryKeyManagement(t *testing.T) {
 // TestInMemorySignVerify does some detailed checks on how we sign and validate
 // signatures
 func TestInMemorySignVerify(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	cstore := NewInMemory(cdc)
 	algo := hd.Secp256k1
@@ -705,6 +721,7 @@ func TestInMemorySignVerify(t *testing.T) {
 
 // TestInMemoryExportImport tests exporting and importing
 func TestInMemoryExportImport(t *testing.T) {
+	t.Parallel()
 	// make the storage with reasonable defaults
 	cdc := getCodec()
 	cstore := NewInMemory(cdc)
@@ -746,6 +763,7 @@ func TestInMemoryExportImport(t *testing.T) {
 }
 
 func TestInMemoryExportImportPrivKey(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kb := NewInMemory(cdc)
 
@@ -777,6 +795,7 @@ func TestInMemoryExportImportPrivKey(t *testing.T) {
 }
 
 func TestInMemoryExportImportPubKey(t *testing.T) {
+	t.Parallel()
 	// make the storage with reasonable defaults
 	cdc := getCodec()
 	cstore := NewInMemory(cdc)
@@ -820,6 +839,7 @@ func TestInMemoryExportImportPubKey(t *testing.T) {
 
 // TestInMemoryAdvancedKeyManagement verifies update, import, export functionality
 func TestInMemoryAdvancedKeyManagement(t *testing.T) {
+	t.Parallel()
 	// make the storage with reasonable defaults
 	cdc := getCodec()
 	cstore := NewInMemory(cdc)
@@ -856,6 +876,7 @@ func TestInMemoryAdvancedKeyManagement(t *testing.T) {
 
 // TestInMemorySeedPhrase verifies restoring from a seed phrase
 func TestInMemorySeedPhrase(t *testing.T) {
+	t.Parallel()
 	// make the storage with reasonable defaults
 	cdc := getCodec()
 	cstore := NewInMemory(cdc)
@@ -889,6 +910,7 @@ func TestInMemorySeedPhrase(t *testing.T) {
 }
 
 func TestKeyChain_ShouldFailWhenAddingSameGeneratedAccount(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -962,6 +984,7 @@ func ExampleNew() {
 }
 
 func TestAltKeyring_List(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	cdc := getCodec()
 
@@ -996,6 +1019,7 @@ func TestAltKeyring_List(t *testing.T) {
 }
 
 func TestAltKeyring_NewAccount(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1023,6 +1047,7 @@ func TestAltKeyring_NewAccount(t *testing.T) {
 }
 
 func TestAltKeyring_Get(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1037,6 +1062,7 @@ func TestAltKeyring_Get(t *testing.T) {
 }
 
 func TestAltKeyring_KeyByAddress(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1053,6 +1079,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_Delete(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1074,6 +1101,7 @@ func TestAltKeyring_Delete(t *testing.T) {
 }
 
 func TestAltKeyring_DeleteByAddress(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1097,6 +1125,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_SaveOfflineKey(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1122,6 +1151,7 @@ func TestAltKeyring_SaveOfflineKey(t *testing.T) {
 }
 
 func TestNonConsistentKeyring_SavePubKey(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1159,6 +1189,7 @@ func TestNonConsistentKeyring_SavePubKey(t *testing.T) {
 }
 
 func TestAltKeyring_SaveMultisig(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1194,6 +1225,7 @@ func TestAltKeyring_SaveMultisig(t *testing.T) {
 }
 
 func TestAltKeyring_Sign(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1211,6 +1243,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 }
 
 func TestAltKeyring_SignByAddress(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1230,6 +1263,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1257,6 +1291,7 @@ func TestAltKeyring_ImportExportPrivKey(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1287,6 +1322,7 @@ func TestAltKeyring_ImportExportPrivKey_ByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPubKey(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1310,6 +1346,7 @@ func TestAltKeyring_ImportExportPubKey(t *testing.T) {
 }
 
 func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1335,6 +1372,7 @@ func TestAltKeyring_ImportExportPubKey_ByAddress(t *testing.T) {
 }
 
 func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1355,6 +1393,7 @@ func TestAltKeyring_UnsafeExportPrivKeyHex(t *testing.T) {
 }
 
 func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
+	t.Parallel()
 	cdc := getCodec()
 	kr, err := New(t.Name(), BackendTest, t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -1381,6 +1420,7 @@ func TestAltKeyring_ConstructorSupportedAlgos(t *testing.T) {
 }
 
 func TestBackendConfigConstructors(t *testing.T) {
+	t.Parallel()
 	backend := newKWalletBackendKeyringConfig("test", "", nil)
 	require.Equal(t, []keyring.BackendType{keyring.KWalletBackend}, backend.AllowedBackends)
 	require.Equal(t, "kdewallet", backend.ServiceName)
@@ -1393,6 +1433,7 @@ func TestBackendConfigConstructors(t *testing.T) {
 }
 
 func TestRenameKey(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name string
 		run  func(Keyring)
@@ -1445,6 +1486,7 @@ func TestRenameKey(t *testing.T) {
 		tc := tc
 		kr := newKeyring(t, "testKeyring")
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			tc.run(kr)
 		})
 	}

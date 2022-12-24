@@ -1,3 +1,4 @@
+//nolint:paralleltest
 package snapshots_test
 
 import (

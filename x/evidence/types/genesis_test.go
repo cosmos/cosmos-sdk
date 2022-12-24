@@ -1,3 +1,4 @@
+//nolint:paralleltest
 package types_test
 
 import (

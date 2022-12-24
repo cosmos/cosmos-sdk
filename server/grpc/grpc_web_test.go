@@ -319,5 +319,6 @@ func (t trailer) Get(key string) string {
 }
 
 func TestGRPCWebTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(GRPCWebTestSuite))
 }

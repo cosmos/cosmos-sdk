@@ -30,6 +30,7 @@ func TestLeafOp(t *testing.T) {
 }
 
 func TestBuildPath(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		idx      int64
 		total    int64
@@ -83,6 +84,7 @@ func TestBuildPath(t *testing.T) {
 }
 
 func TestConvertProof(t *testing.T) {
+	t.Parallel()
 	for i := 0; i < 100; i++ {
 		t.Run(fmt.Sprintf("Run %d", i), func(t *testing.T) {
 			proof := GenerateRangeProof(57, Left)

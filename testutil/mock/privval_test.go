@@ -8,6 +8,7 @@ import (
 )
 
 func TestGetPubKey(t *testing.T) {
+	t.Parallel()
 	pv := NewPV()
 	pb, err := pv.GetPubKey()
 	require.NoError(t, err)
@@ -15,6 +16,7 @@ func TestGetPubKey(t *testing.T) {
 }
 
 func TestSignVote(t *testing.T) {
+	t.Parallel()
 	pv := NewPV()
 	v := tmproto.Vote{}
 	err := pv.SignVote("chain-id", &v)
@@ -23,6 +25,7 @@ func TestSignVote(t *testing.T) {
 }
 
 func TestSignProposal(t *testing.T) {
+	t.Parallel()
 	pv := NewPV()
 	p := tmproto.Proposal{}
 	err := pv.SignProposal("chain-id", &p)

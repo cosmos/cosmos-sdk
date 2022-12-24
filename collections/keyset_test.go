@@ -1,13 +1,14 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestKeySet(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
+	schema := NewSchemaBuilder(sk)
 	ks := NewKeySet(schema, NewPrefix("keyset"), "keyset", StringKey)
 
 	// set
@@ -65,5 +66,4 @@ func Test_noValue(t *testing.T) {
 
 	_, err = noValueCodec.Decode([]byte("bad"))
 	require.ErrorIs(t, err, ErrEncoding)
-
 }

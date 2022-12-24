@@ -10,6 +10,7 @@ import (
 )
 
 func TestServiceServer_Config(t *testing.T) {
+	t.Parallel()
 	svr := NewQueryServer(client.Context{})
 	ctx := sdk.Context{}.WithMinGasPrices(sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 15)))
 

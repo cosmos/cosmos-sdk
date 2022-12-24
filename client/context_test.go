@@ -26,6 +26,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestContext_PrintProto(t *testing.T) {
+	t.Parallel()
 	ctx := client.Context{}
 
 	animal := &testdata.Dog{
@@ -69,6 +70,7 @@ x: "10"
 }
 
 func TestContext_PrintObjectLegacy(t *testing.T) {
+	t.Parallel()
 	ctx := client.Context{}
 
 	animal := &testdata.Dog{
@@ -115,6 +117,7 @@ value:
 }
 
 func TestContext_PrintRaw(t *testing.T) {
+	t.Parallel()
 	ctx := client.Context{}
 	hasAnimal := json.RawMessage(`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}`)
 
@@ -144,6 +147,7 @@ x: "10"
 }
 
 func TestGetFromFields(t *testing.T) {
+	t.Parallel()
 	cfg := testutil.MakeTestEncodingConfig()
 	path := hd.CreateHDPath(118, 0, 0).String()
 

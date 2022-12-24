@@ -128,5 +128,6 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(IntegrationTestSuite))
 }

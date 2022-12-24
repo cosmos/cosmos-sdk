@@ -27,6 +27,7 @@ import (
 )
 
 func TestABCI_Info(t *testing.T) {
+	t.Parallel()
 	suite := NewBaseAppSuite(t)
 
 	reqInfo := abci.RequestInfo{}
@@ -40,6 +41,7 @@ func TestABCI_Info(t *testing.T) {
 }
 
 func TestABCI_InitChain(t *testing.T) {
+	t.Parallel()
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
@@ -120,6 +122,7 @@ func TestABCI_InitChain(t *testing.T) {
 }
 
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
+	t.Parallel()
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
@@ -136,6 +139,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 }
 
 func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
+	t.Parallel()
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := defaultLogger()
@@ -166,6 +170,7 @@ func TestABCI_BeginBlock_WithInitialHeight(t *testing.T) {
 }
 
 func TestABCI_GRPCQuery(t *testing.T) {
+	t.Parallel()
 	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
@@ -201,6 +206,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 }
 
 func TestABCI_P2PQuery(t *testing.T) {
+	t.Parallel()
 	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAddrPeerFilter(func(addrport string) abci.ResponseQuery {
 			require.Equal(t, "1.1.1.1:8000", addrport)
@@ -231,6 +237,7 @@ func TestABCI_P2PQuery(t *testing.T) {
 }
 
 func TestABCI_ListSnapshots(t *testing.T) {
+	t.Parallel()
 	ssCfg := SnapshotsConfig{
 		blocks:             5,
 		blockTxs:           4,
@@ -257,6 +264,7 @@ func TestABCI_ListSnapshots(t *testing.T) {
 }
 
 func TestABCI_SnapshotWithPruning(t *testing.T) {
+	t.Parallel()
 	testCases := map[string]struct {
 		ssCfg             SnapshotsConfig
 		expectedSnapshots []*abci.Snapshot
@@ -336,7 +344,9 @@ func TestABCI_SnapshotWithPruning(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			suite := NewBaseAppSuiteWithSnapshots(t, tc.ssCfg)
 
 			resp := suite.baseApp.ListSnapshots(abci.RequestListSnapshots{})
@@ -383,6 +393,7 @@ func TestABCI_SnapshotWithPruning(t *testing.T) {
 }
 
 func TestABCI_LoadSnapshotChunk(t *testing.T) {
+	t.Parallel()
 	ssCfg := SnapshotsConfig{
 		blocks:             2,
 		blockTxs:           5,
@@ -408,7 +419,9 @@ func TestABCI_LoadSnapshotChunk(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			resp := suite.baseApp.LoadSnapshotChunk(abci.RequestLoadSnapshotChunk{
 				Height: tc.height,
 				Format: tc.format,
@@ -425,6 +438,7 @@ func TestABCI_LoadSnapshotChunk(t *testing.T) {
 }
 
 func TestABCI_OfferSnapshot_Errors(t *testing.T) {
+	t.Parallel()
 	ssCfg := SnapshotsConfig{
 		blocks:             0,
 		blockTxs:           0,
@@ -461,6 +475,7 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			resp := suite.baseApp.OfferSnapshot(abci.RequestOfferSnapshot{Snapshot: tc.snapshot})
 			require.Equal(t, tc.result, resp.Result)
 		})
@@ -487,6 +502,7 @@ func TestABCI_OfferSnapshot_Errors(t *testing.T) {
 }
 
 func TestABCI_ApplySnapshotChunk(t *testing.T) {
+	t.Parallel()
 	srcCfg := SnapshotsConfig{
 		blocks:             4,
 		blockTxs:           10,
@@ -553,6 +569,7 @@ func TestABCI_ApplySnapshotChunk(t *testing.T) {
 }
 
 func TestABCI_EndBlock(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	name := t.Name()
 	logger := defaultLogger()
@@ -585,6 +602,7 @@ func TestABCI_EndBlock(t *testing.T) {
 }
 
 func TestABCI_CheckTx(t *testing.T) {
+	t.Parallel()
 	// This ante handler reads the key and checks that the value matches the
 	// current counter. This ensures changes to the KVStore persist across
 	// successive CheckTx runs.
@@ -632,6 +650,7 @@ func TestABCI_CheckTx(t *testing.T) {
 }
 
 func TestABCI_DeliverTx(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -672,6 +691,7 @@ func TestABCI_DeliverTx(t *testing.T) {
 }
 
 func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -742,6 +762,7 @@ func TestABCI_DeliverTx_MultiMsg(t *testing.T) {
 }
 
 func TestABCI_Query_SimulateTx(t *testing.T) {
+	t.Parallel()
 	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -802,6 +823,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 }
 
 func TestABCI_InvalidTransaction(t *testing.T) {
+	t.Parallel()
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return
@@ -907,6 +929,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 }
 
 func TestABCI_TxGasLimits(t *testing.T) {
+	t.Parallel()
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -990,6 +1013,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 }
 
 func TestABCI_MaxBlockGasLimits(t *testing.T) {
+	t.Parallel()
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -1085,6 +1109,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 }
 
 func TestABCI_GasConsumptionBadTx(t *testing.T) {
+	t.Parallel()
 	gasWanted := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -1144,6 +1169,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 }
 
 func TestABCI_Query(t *testing.T) {
+	t.Parallel()
 	key, value := []byte("hello"), []byte("goodbye")
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -1200,6 +1226,7 @@ func TestABCI_Query(t *testing.T) {
 }
 
 func TestABCI_GetBlockRetentionHeight(t *testing.T) {
+	t.Parallel()
 	logger := defaultLogger()
 	db := dbm.NewMemDB()
 	name := t.Name()
@@ -1303,12 +1330,14 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 		})
 
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tc.expected, tc.bapp.GetBlockRetentionHeight(tc.commitHeight))
 		})
 	}
 }
 
 func TestABCI_Proposal_HappyPath(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -1370,6 +1399,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -1395,6 +1425,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -1418,6 +1449,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_Failures(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool()
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -1455,6 +1487,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
+	t.Parallel()
 	prepareOpt := func(app *baseapp.BaseApp) {
 		app.SetPrepareProposal(func(ctx sdk.Context, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 			panic(errors.New("test"))
@@ -1477,6 +1510,7 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 }
 
 func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
+	t.Parallel()
 	processOpt := func(app *baseapp.BaseApp) {
 		app.SetProcessProposal(func(ctx sdk.Context, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
 			panic(errors.New("test"))

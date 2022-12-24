@@ -22,6 +22,7 @@ import (
 )
 
 func TestRegisterMsgService(t *testing.T) {
+	t.Parallel()
 	// Setup baseapp.
 	var (
 		appBuilder *runtime.AppBuilder
@@ -50,6 +51,7 @@ func TestRegisterMsgService(t *testing.T) {
 }
 
 func TestRegisterMsgServiceTwice(t *testing.T) {
+	t.Parallel()
 	// Setup baseapp.
 	var (
 		appBuilder *runtime.AppBuilder
@@ -79,6 +81,7 @@ func TestRegisterMsgServiceTwice(t *testing.T) {
 }
 
 func TestMsgService(t *testing.T) {
+	t.Parallel()
 	priv, _, _ := testdata.KeyTestPubAddr()
 
 	var (

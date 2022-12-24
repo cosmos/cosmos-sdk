@@ -158,6 +158,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 }
 
 func TestLoadVersion(t *testing.T) {
+	t.Parallel()
 	logger := defaultLogger()
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
@@ -212,6 +213,7 @@ func TestLoadVersion(t *testing.T) {
 }
 
 func TestSetLoader(t *testing.T) {
+	t.Parallel()
 	useDefaultLoader := func(app *baseapp.BaseApp) {
 		app.SetStoreLoader(baseapp.DefaultStoreLoader)
 	}
@@ -273,7 +275,9 @@ func TestSetLoader(t *testing.T) {
 	v := []byte("value")
 
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// prepare a db with some data
 			db := dbm.NewMemDB()
 			initStore(t, db, tc.origStoreKey, k, v)
@@ -301,6 +305,7 @@ func TestSetLoader(t *testing.T) {
 }
 
 func TestVersionSetterGetter(t *testing.T) {
+	t.Parallel()
 	logger := defaultLogger()
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 	db := dbm.NewMemDB()
@@ -322,6 +327,7 @@ func TestVersionSetterGetter(t *testing.T) {
 }
 
 func TestLoadVersionInvalid(t *testing.T) {
+	t.Parallel()
 	logger := log.NewNopLogger()
 	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 	db := dbm.NewMemDB()
@@ -354,6 +360,7 @@ func TestLoadVersionInvalid(t *testing.T) {
 }
 
 func TestOptionFunction(t *testing.T) {
+	t.Parallel()
 	testChangeNameHelper := func(name string) func(*baseapp.BaseApp) {
 		return func(bap *baseapp.BaseApp) {
 			bap.SetName(name)
@@ -367,6 +374,7 @@ func TestOptionFunction(t *testing.T) {
 }
 
 func TestBaseAppOptionSeal(t *testing.T) {
+	t.Parallel()
 	suite := NewBaseAppSuite(t)
 
 	require.Panics(t, func() {
@@ -405,6 +413,7 @@ func TestBaseAppOptionSeal(t *testing.T) {
 }
 
 func TestTxDecoder(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
@@ -424,6 +433,7 @@ func TestTxDecoder(t *testing.T) {
 }
 
 func TestCustomRunTxPanicHandler(t *testing.T) {
+	t.Parallel()
 	customPanicMsg := "test panic"
 	anteErr := sdkerrors.Register("fakeModule", 100500, "fakeError")
 	anteOpt := func(bapp *baseapp.BaseApp) {
@@ -464,6 +474,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 }
 
 func TestBaseAppAnteHandler(t *testing.T) {
+	t.Parallel()
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
@@ -566,7 +577,9 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			_, err := app.CreateQueryContext(tc.height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
@@ -578,6 +591,7 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 }
 
 func TestSetMinGasPrices(t *testing.T) {
+	t.Parallel()
 	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
 	suite := NewBaseAppSuite(t, baseapp.SetMinGasPrices(minGasPrices.String()))
 
@@ -586,6 +600,7 @@ func TestSetMinGasPrices(t *testing.T) {
 }
 
 func TestGetMaximumBlockGas(t *testing.T) {
+	t.Parallel()
 	suite := NewBaseAppSuite(t)
 	suite.baseApp.InitChain(abci.RequestInitChain{})
 	ctx := suite.baseApp.NewContext(true, tmproto.Header{})
@@ -604,6 +619,7 @@ func TestGetMaximumBlockGas(t *testing.T) {
 }
 
 func TestLoadVersionPruning(t *testing.T) {
+	t.Parallel()
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
 	pruningOpt := baseapp.SetPruning(pruningOptions)

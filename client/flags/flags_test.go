@@ -9,6 +9,7 @@ import (
 )
 
 func TestParseGasSetting(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name      string
 		input     string
@@ -25,6 +26,7 @@ func TestParseGasSetting(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			gs, err := flags.ParseGasSetting(tc.input)
 
 			if tc.expectErr {

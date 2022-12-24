@@ -46,6 +46,7 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 }
 
 func TestConfigCmd(t *testing.T) {
+	t.Parallel()
 	clientCtx, cleanup := initClientContext(t, testNode1)
 	defer func() {
 		_ = os.Unsetenv(nodeEnv)
@@ -69,6 +70,7 @@ func TestConfigCmd(t *testing.T) {
 }
 
 func TestConfigCmdEnvFlag(t *testing.T) {
+	t.Parallel()
 	const (
 		defaultNode = "http://localhost:26657"
 	)
@@ -88,6 +90,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				if tc.envVar != "" {

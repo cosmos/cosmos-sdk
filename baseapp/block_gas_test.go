@@ -54,6 +54,7 @@ func (m BlockGasImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue)
 }
 
 func TestBaseApp_BlockGas(t *testing.T) {
+	t.Parallel()
 	testcases := []struct {
 		name         string
 		gasToConsume uint64 // gas to consume in the msg execution
@@ -69,6 +70,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
+		tc := tc
 		var (
 			bankKeeper        bankkeeper.Keeper
 			accountKeeper     authkeeper.AccountKeeper
@@ -97,6 +99,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 		require.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			baseapptestutil.RegisterInterfaces(interfaceRegistry)
 			baseapptestutil.RegisterKeyValueServer(bapp.MsgServiceRouter(), BlockGasImpl{
 				panicTx:      tc.panicTx,

@@ -122,6 +122,7 @@ func Test_runAddCmdBasic(t *testing.T) {
 }
 
 func Test_runAddCmdDryRun(t *testing.T) {
+	t.Parallel()
 	pubkey1 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AtObiFVE4s+9+RX5SP8TN9r2mxpoaT4eGj9CJfK7VRzN"}`
 	pubkey2 := `{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"A/se1vkqgdQ7VJQCM4mxN+L+ciGhnnJ4XYsQCRBMrdRi"}`
 	cdc := clienttestutil.MakeTestCodec(t)
@@ -187,6 +188,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 	for _, tt := range testData {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 
@@ -233,6 +235,7 @@ func Test_runAddCmdDryRun(t *testing.T) {
 }
 
 func TestAddRecoverFileBackend(t *testing.T) {
+	t.Parallel()
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	cdc := clienttestutil.MakeTestCodec(t)

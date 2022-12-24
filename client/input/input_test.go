@@ -23,6 +23,7 @@ func TestReadLineFromBuf(t *testing.T) {
 	var fr fakeReader
 
 	t.Run("it correctly returns the password when reader returns EOF", func(t *testing.T) {
+		t.Parallel()
 		fr.fnc = func(p []byte) (int, error) {
 			return copy(p, []byte("hello")), io.EOF
 		}
@@ -34,6 +35,7 @@ func TestReadLineFromBuf(t *testing.T) {
 	})
 
 	t.Run("it returns EOF if reader has been exhausted", func(t *testing.T) {
+		t.Parallel()
 		fr.fnc = func(p []byte) (int, error) {
 			return 0, io.EOF
 		}
@@ -44,6 +46,7 @@ func TestReadLineFromBuf(t *testing.T) {
 	})
 
 	t.Run("it returns the error if it's not EOF regardles if it read something or not", func(t *testing.T) {
+		t.Parallel()
 		expectedErr := errors.New("oh no")
 		fr.fnc = func(p []byte) (int, error) {
 			return copy(p, []byte("hello")), expectedErr

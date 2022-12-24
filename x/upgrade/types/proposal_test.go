@@ -17,6 +17,7 @@ type ProposalWrapper struct {
 }
 
 func TestContentAccessors(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		p     gov.Content
 		title string
@@ -51,6 +52,7 @@ func TestContentAccessors(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tc.title, tc.p.GetTitle())
 			assert.Equal(t, tc.desc, tc.p.GetDescription())
 			assert.Equal(t, tc.typ, tc.p.ProposalType())
@@ -78,6 +80,7 @@ func TestContentAccessors(t *testing.T) {
 
 // tests a software update proposal can be marshaled and unmarshaled
 func TestMarshalSoftwareUpdateProposal(t *testing.T) {
+	t.Parallel()
 	// create proposal
 	plan := types.Plan{
 		Name:   "upgrade",

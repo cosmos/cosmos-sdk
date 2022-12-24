@@ -20,6 +20,7 @@ import (
 )
 
 func TestGRPCQueryRouter(t *testing.T) {
+	t.Parallel()
 	qr := baseapp.NewGRPCQueryRouter()
 	interfaceRegistry := testdata.NewTestInterfaceRegistry()
 	qr.SetInterfaceRegistry(interfaceRegistry)
@@ -54,6 +55,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 }
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
+	t.Parallel()
 	// Setup baseapp.
 	var appBuilder *runtime.AppBuilder
 	err := depinject.Inject(makeMinimalConfig(), &appBuilder)
@@ -82,6 +84,7 @@ func TestRegisterQueryServiceTwice(t *testing.T) {
 // https://github.com/cosmos/cosmos-sdk/issues/10324
 // but with the same client connection being used concurrently.
 func TestQueryDataRaces_sameConnectionToSameHandler(t *testing.T) {
+	t.Parallel()
 	var mu sync.Mutex
 	var helper *baseapp.QueryServiceTestHelper
 	makeClientConn := func(qr *baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper {
@@ -103,6 +106,7 @@ func TestQueryDataRaces_sameConnectionToSameHandler(t *testing.T) {
 // https://github.com/cosmos/cosmos-sdk/issues/10324
 // but with unique client connections requesting from the same handler concurrently.
 func TestQueryDataRaces_uniqueConnectionsToSameHandler(t *testing.T) {
+	t.Parallel()
 	// Return a new handler for every single call.
 	testQueryDataRacesSameHandler(t, func(qr *baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper {
 		return &baseapp.QueryServiceTestHelper{

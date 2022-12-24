@@ -7,6 +7,7 @@ import (
 )
 
 func TestFailingInterfaceRegistry(t *testing.T) {
+	t.Parallel()
 	reg := failingInterfaceRegistry{}
 
 	require.Error(t, reg.UnpackAny(nil, nil))

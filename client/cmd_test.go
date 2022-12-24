@@ -14,6 +14,7 @@ import (
 )
 
 func TestValidateCmd(t *testing.T) {
+	t.Parallel()
 	// setup root and subcommands
 	rootCmd := &cobra.Command{
 		Use: "root",
@@ -56,6 +57,7 @@ func TestValidateCmd(t *testing.T) {
 }
 
 func TestSetCmdClientContextHandler(t *testing.T) {
+	t.Parallel()
 	initClientCtx := client.Context{}.WithHomeDir("/foo/bar").WithChainID("test-chain").WithKeyringDir("/foo/bar")
 
 	newCmd := func() *cobra.Command {
@@ -106,6 +108,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ctx := context.WithValue(context.Background(), client.ClientContextKey, &client.Context{})
 
 			cmd := newCmd()

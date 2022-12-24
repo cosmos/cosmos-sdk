@@ -9,6 +9,7 @@ import (
 
 // Test that recovery chain produces expected error at specific middleware layer
 func TestRecoveryChain(t *testing.T) {
+	t.Parallel()
 	createError := func(id int) error {
 		return fmt.Errorf("error from id: %d", id)
 	}

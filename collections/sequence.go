@@ -13,7 +13,7 @@ type Sequence Item[uint64]
 
 // NewSequence instantiates a new sequence given
 // a Schema, a Prefix and humanised name for the sequence.
-func NewSequence(schema Schema, prefix Prefix, name string) Sequence {
+func NewSequence(schema *SchemaBuilder, prefix Prefix, name string) Sequence {
 	return (Sequence)(NewItem(schema, prefix, name, Uint64Value))
 }
 

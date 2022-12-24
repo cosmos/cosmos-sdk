@@ -150,12 +150,12 @@ func TestParseSubmitProposal(t *testing.T) {
 				"@type": "/cosmos.gov.v1beta1.TextProposal",
 				"title": "My awesome title",
 				"description": "My awesome description"
-			},
-			title: "My awesome title",
-			"summary": "My awesome summary"
+			}
 		}
   	],
 	"metadata": "%s",
+	"title": "My awesome title",
+	"summary": "My awesome summary",
 	"deposit": "1000test"
 }
 `, addr, addr, addr, addr, addr, base64.StdEncoding.EncodeToString(expectedMetadata)))

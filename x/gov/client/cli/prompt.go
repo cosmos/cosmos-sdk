@@ -155,6 +155,10 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadat
 		return nil, metadata, fmt.Errorf("failed to set proposal deposit: %w", err)
 	}
 
+	// set title and summary from metadata in the proposal
+	proposal.Title = metadata.Title
+	proposal.Summary = metadata.Summary
+
 	if p.Msg == nil {
 		return proposal, metadata, nil
 	}

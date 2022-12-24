@@ -9,11 +9,13 @@ import (
 )
 
 func TestEmptyKeyMerkleMap(t *testing.T) {
+	t.Parallel()
 	db := newMerkleMap()
 	require.Panics(t, func() { db.set("", []byte("value")) }, "setting an empty key should panic")
 }
 
 func TestMerkleMap(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		keys   []string
 		values []string // each string gets converted to []byte in test
@@ -57,11 +59,13 @@ func TestMerkleMap(t *testing.T) {
 }
 
 func TestEmptyKeySimpleMap(t *testing.T) {
+	t.Parallel()
 	db := newSimpleMap()
 	require.Panics(t, func() { db.Set("", []byte("value")) }, "setting an empty key should panic")
 }
 
 func TestSimpleMap(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		keys   []string
 		values []string // each string gets converted to []byte in test

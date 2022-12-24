@@ -12,17 +12,20 @@ import (
 )
 
 func TestDefaultConfig(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	require.True(t, cfg.GetMinGasPrices().IsZero())
 }
 
 func TestSetMinimumFees(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	cfg.SetMinGasPrices(sdk.DecCoins{sdk.NewInt64DecCoin("foo", 5)})
 	require.Equal(t, "5.000000000000000000foo", cfg.MinGasPrices)
 }
 
 func TestIndexEventsMarshalling(t *testing.T) {
+	t.Parallel()
 	expectedIn := `index-events = ["key1", "key2", ]` + "\n"
 	cfg := DefaultConfig()
 	cfg.IndexEvents = []string{"key1", "key2"}
@@ -35,6 +38,7 @@ func TestIndexEventsMarshalling(t *testing.T) {
 }
 
 func TestParseStoreStreaming(t *testing.T) {
+	t.Parallel()
 	expectedContents := `[store]
 streamers = ["file", ]
 
@@ -55,6 +59,7 @@ prefix = ""`
 }
 
 func TestReadConfig(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 	tmpFile := filepath.Join(t.TempDir(), "config")
 	WriteConfigFile(tmpFile, cfg)
@@ -67,6 +72,7 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestIndexEventsWriteRead(t *testing.T) {
+	t.Parallel()
 	expected := []string{"key3", "key4"}
 
 	// Create config with two IndexEvents entries, and write it to a file.
@@ -96,6 +102,7 @@ func TestIndexEventsWriteRead(t *testing.T) {
 }
 
 func TestGlobalLabelsEventsMarshalling(t *testing.T) {
+	t.Parallel()
 	expectedIn := `global-labels = [
   ["labelname1", "labelvalue1"],
   ["labelname2", "labelvalue2"],
@@ -111,6 +118,7 @@ func TestGlobalLabelsEventsMarshalling(t *testing.T) {
 }
 
 func TestGlobalLabelsWriteRead(t *testing.T) {
+	t.Parallel()
 	expected := [][]string{{"labelname3", "labelvalue3"}, {"labelname4", "labelvalue4"}}
 	expectedRaw := make([]interface{}, len(expected))
 	for i, exp := range expected {
@@ -143,6 +151,7 @@ func TestGlobalLabelsWriteRead(t *testing.T) {
 }
 
 func TestSetConfigTemplate(t *testing.T) {
+	t.Parallel()
 	conf := DefaultConfig()
 	var initBuffer, setBuffer bytes.Buffer
 

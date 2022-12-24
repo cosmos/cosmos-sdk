@@ -13,6 +13,7 @@ import (
 )
 
 func TestStore(t *testing.T) {
+	t.Parallel()
 	db := mem.NewStore()
 	require.Equal(t, types.StoreTypeMemory, db.GetStoreType())
 
@@ -37,6 +38,7 @@ func TestStore(t *testing.T) {
 }
 
 func TestCommit(t *testing.T) {
+	t.Parallel()
 	db := mem.NewStore()
 	key, value := []byte("key"), []byte("value")
 
@@ -48,6 +50,7 @@ func TestCommit(t *testing.T) {
 }
 
 func TestStorePrunningOptions(t *testing.T) {
+	t.Parallel()
 	// this is a no-op
 	db := mem.NewStore()
 	require.Equal(t, pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined), db.GetPruning())

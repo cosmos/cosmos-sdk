@@ -16,6 +16,7 @@ import (
 )
 
 func TestDirectModeHandler(t *testing.T) {
+	t.Parallel()
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
@@ -132,13 +133,16 @@ func TestDirectModeHandler(t *testing.T) {
 }
 
 func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
+	t.Parallel()
 	invalidModes := []signingtypes.SignMode{
 		signingtypes.SignMode_SIGN_MODE_TEXTUAL,
 		signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
 		signingtypes.SignMode_SIGN_MODE_UNSPECIFIED,
 	}
 	for _, invalidMode := range invalidModes {
+		invalidMode := invalidMode
 		t.Run(invalidMode.String(), func(t *testing.T) {
+			t.Parallel()
 			var dh signModeDirectHandler
 			var signingData signing.SignerData
 			_, err := dh.GetSignBytes(invalidMode, signingData, nil)
@@ -157,6 +161,7 @@ func (npt *nonProtoTx) ValidateBasic() error { return nil }
 var _ sdk.Tx = (*nonProtoTx)(nil)
 
 func TestDirectModeHandler_nonProtoTx(t *testing.T) {
+	t.Parallel()
 	var dh signModeDirectHandler
 	var signingData signing.SignerData
 	tx := new(nonProtoTx)

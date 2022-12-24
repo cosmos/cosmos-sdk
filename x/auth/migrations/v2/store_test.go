@@ -1,3 +1,4 @@
+//nolint:paralleltest
 package v2_test
 
 import (

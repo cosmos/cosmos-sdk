@@ -14,6 +14,7 @@ import (
 )
 
 func TestInitApp(t *testing.T) {
+	t.Parallel()
 	app, closer, err := SetupApp()
 	// closer may need to be run, even when error in later stage
 	if closer != nil {
@@ -42,6 +43,7 @@ func TestInitApp(t *testing.T) {
 }
 
 func TestDeliverTx(t *testing.T) {
+	t.Parallel()
 	app, closer, err := SetupApp()
 	// closer may need to be run, even when error in later stage
 	if closer != nil {

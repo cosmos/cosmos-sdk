@@ -3,6 +3,7 @@ package cachekv
 import "testing"
 
 func TestFindStartIndex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		sortedL []string
@@ -62,6 +63,7 @@ func TestFindStartIndex(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			body := tt.sortedL
 			got := findStartIndex(body, tt.query)
 			if got != tt.want {
@@ -72,6 +74,7 @@ func TestFindStartIndex(t *testing.T) {
 }
 
 func TestFindEndIndex(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		sortedL []string
@@ -131,6 +134,7 @@ func TestFindEndIndex(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			body := tt.sortedL
 			got := findEndIndex(body, tt.query)
 			if got != tt.want {

@@ -297,6 +297,7 @@ func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(fmt.Sprintf("%d", tt.in), func(t *testing.T) {
+			t.Parallel()
 			got := NewCompactBitArray(tt.in)
 			if g := got != nil; g != tt.mustPass {
 				t.Fatalf("got!=nil=%t, want=%t", g, tt.mustPass)

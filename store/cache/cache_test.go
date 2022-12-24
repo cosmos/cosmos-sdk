@@ -15,6 +15,7 @@ import (
 )
 
 func TestGetOrSetStoreCache(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
@@ -29,6 +30,7 @@ func TestGetOrSetStoreCache(t *testing.T) {
 }
 
 func TestUnwrap(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
@@ -43,6 +45,7 @@ func TestUnwrap(t *testing.T) {
 }
 
 func TestStoreCache(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
@@ -70,6 +73,7 @@ func TestStoreCache(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 
@@ -91,6 +95,7 @@ func TestReset(t *testing.T) {
 }
 
 func TestCacheWrap(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	mngr := cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 

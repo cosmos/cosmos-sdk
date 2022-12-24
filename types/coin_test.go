@@ -1,3 +1,4 @@
+//nolint:paralleltest // Test suite is not thread safe
 package types_test
 
 import (

@@ -12,6 +12,7 @@ import (
 )
 
 func TestApplyMockIO(t *testing.T) {
+	t.Parallel()
 	cmd := &cobra.Command{}
 	oldStdin := cmd.InOrStdin()
 	oldStdout := cmd.OutOrStdout()
@@ -26,6 +27,7 @@ func TestApplyMockIO(t *testing.T) {
 }
 
 func TestWriteToNewTempFile(t *testing.T) {
+	t.Parallel()
 	tempfile := testutil.WriteToNewTempFile(t, "test string")
 	require.NoError(t, tempfile.Close())
 
@@ -35,6 +37,7 @@ func TestWriteToNewTempFile(t *testing.T) {
 }
 
 func TestApplyMockIODiscardOutErr(t *testing.T) {
+	t.Parallel()
 	cmd := &cobra.Command{}
 	oldStdin := cmd.InOrStdin()
 

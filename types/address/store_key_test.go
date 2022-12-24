@@ -9,6 +9,7 @@ import (
 )
 
 func TestStoreKeySuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(StoreKeySuite))
 }
 

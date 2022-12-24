@@ -13,6 +13,7 @@ import (
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
+	t.Parallel()
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
 	iStore, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize, false)
@@ -56,6 +57,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 }
 
 func TestVerifyMultiStoreQueryProof(t *testing.T) {
+	t.Parallel()
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger())
@@ -111,6 +113,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 }
 
 func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
+	t.Parallel()
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger())

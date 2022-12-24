@@ -22,7 +22,7 @@ type resultTestSuite struct {
 	suite.Suite
 }
 
-func TestResultTestSuite(t *testing.T) {
+func TestResultTestSuite(t *testing.T) { //nolint:paralleltest // suite tests are not parallel
 	suite.Run(t, new(resultTestSuite))
 }
 
@@ -136,6 +136,7 @@ txhash: "74657374"
 }
 
 func TestWrapServiceResult(t *testing.T) {
+	t.Parallel()
 	ctx := sdk.Context{}
 
 	res, err := sdk.WrapServiceResult(ctx, nil, fmt.Errorf("test"))

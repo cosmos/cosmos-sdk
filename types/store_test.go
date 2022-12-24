@@ -16,7 +16,7 @@ type storeTestSuite struct {
 	suite.Suite
 }
 
-func TestStoreTestSuite(t *testing.T) {
+func TestStoreTestSuite(t *testing.T) { //nolint:paralleltest // Test suite is not thread safe
 	suite.Run(t, new(storeTestSuite))
 }
 

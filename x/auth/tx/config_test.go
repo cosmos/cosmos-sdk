@@ -14,6 +14,7 @@ import (
 )
 
 func TestGenerator(t *testing.T) {
+	t.Parallel()
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	std.RegisterInterfaces(interfaceRegistry)
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})

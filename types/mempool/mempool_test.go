@@ -214,6 +214,7 @@ func (s *MempoolTestSuite) SetupTest() {
 }
 
 func TestMempoolTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(MempoolTestSuite))
 }
 

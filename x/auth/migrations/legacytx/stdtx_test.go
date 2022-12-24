@@ -56,6 +56,7 @@ func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []cryptotypes.PrivKey, acc
 }
 
 func TestStdTx(t *testing.T) {
+	t.Parallel()
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	fee := NewTestStdFee()
 	sigs := []StdSignature{}
@@ -72,6 +73,7 @@ func TestStdTx(t *testing.T) {
 }
 
 func TestStdSignBytes(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		chainID       string
 		accnum        uint64
@@ -142,7 +144,9 @@ func TestStdSignBytes(t *testing.T) {
 	}
 	for i, tc := range tests {
 		tc := tc
+		i := i
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			got := string(StdSignBytes(tc.args.chainID, tc.args.accnum, tc.args.sequence, tc.args.timeoutHeight, tc.args.fee, tc.args.msgs, tc.args.memo, tc.args.tip))
 			require.Equal(t, tc.want, got, "Got unexpected result on test case i: %d", i)
 		})
@@ -150,6 +154,7 @@ func TestStdSignBytes(t *testing.T) {
 }
 
 func TestTxValidateBasic(t *testing.T) {
+	t.Parallel()
 	ctx := sdk.NewContext(nil, tmproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
@@ -209,6 +214,7 @@ func TestTxValidateBasic(t *testing.T) {
 }
 
 func TestDefaultTxEncoder(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cdc.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
@@ -230,6 +236,7 @@ func TestDefaultTxEncoder(t *testing.T) {
 }
 
 func TestSignatureV2Conversions(t *testing.T) {
+	t.Parallel()
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
@@ -284,6 +291,7 @@ func TestSignatureV2Conversions(t *testing.T) {
 }
 
 func TestGetSignaturesV2(t *testing.T) {
+	t.Parallel()
 	_, pubKey, _ := testdata.KeyTestPubAddr()
 	dummy := []byte("dummySig")
 

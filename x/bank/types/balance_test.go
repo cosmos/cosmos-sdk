@@ -13,6 +13,7 @@ import (
 )
 
 func TestBalanceValidate(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name    string
 		balance bank.Balance
@@ -105,6 +106,7 @@ func TestBalanceValidate(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := tc.balance.Validate()
 
 			if tc.expErr {
@@ -117,6 +119,7 @@ func TestBalanceValidate(t *testing.T) {
 }
 
 func TestBalance_GetAddress(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		Address   string
@@ -129,6 +132,7 @@ func TestBalance_GetAddress(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			b := bank.Balance{Address: tt.Address}
 			if tt.wantPanic {
 				require.Panics(t, func() { b.GetAddress() })
@@ -140,6 +144,7 @@ func TestBalance_GetAddress(t *testing.T) {
 }
 
 func TestSanitizeBalances(t *testing.T) {
+	t.Parallel()
 	// 1. Generate balances
 	tokens := sdk.TokensFromConsensusPower(81, sdk.DefaultPowerReduction)
 	coin := sdk.NewCoin("benchcoin", tokens)

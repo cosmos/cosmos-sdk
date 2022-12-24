@@ -8,6 +8,7 @@ import (
 )
 
 func TestNewStoreKVPairWriteListener(t *testing.T) {
+	t.Parallel()
 	testWriter := new(bytes.Buffer)
 	testMarshaller := NewTestCodec()
 
@@ -19,6 +20,7 @@ func TestNewStoreKVPairWriteListener(t *testing.T) {
 }
 
 func TestOnWrite(t *testing.T) {
+	t.Parallel()
 	testWriter := new(bytes.Buffer)
 	testMarshaller := NewTestCodec()
 

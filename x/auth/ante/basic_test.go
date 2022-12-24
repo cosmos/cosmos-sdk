@@ -15,6 +15,7 @@ import (
 )
 
 func TestValidateBasic(t *testing.T) {
+	t.Parallel()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -56,6 +57,7 @@ func TestValidateBasic(t *testing.T) {
 }
 
 func TestValidateMemo(t *testing.T) {
+	t.Parallel()
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -92,6 +94,7 @@ func TestValidateMemo(t *testing.T) {
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {
+	t.Parallel()
 	suite := SetupTestSuite(t, true)
 
 	// keys and addresses
@@ -115,6 +118,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			require.NoError(t, suite.txBuilder.SetMsgs(msg))
 			suite.txBuilder.SetFeeAmount(feeAmount)
@@ -176,6 +180,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 }
 
 func TestTxHeightTimeoutDecorator(t *testing.T) {
+	t.Parallel()
 	suite := SetupTestSuite(t, true)
 
 	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())
@@ -204,6 +209,7 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 			require.NoError(t, suite.txBuilder.SetMsgs(msg))

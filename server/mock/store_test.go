@@ -11,6 +11,7 @@ import (
 )
 
 func TestStore(t *testing.T) {
+	t.Parallel()
 	db := dbm.NewMemDB()
 	cms := NewCommitMultiStore()
 

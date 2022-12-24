@@ -137,7 +137,10 @@ $(BUILDDIR)/:
 cosmovisor:
 	$(MAKE) -C tools/cosmovisor cosmovisor
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor
+rosetta:
+	$(MAKE) -C tools/rosetta rosetta
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
 
 
 mocks: $(MOCKS_DIR)
@@ -389,7 +392,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.2
+protoVer=0.11.4
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

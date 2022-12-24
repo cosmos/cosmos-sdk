@@ -203,6 +203,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type AuthInputs struct {
 	depinject.In
 
@@ -217,6 +218,7 @@ type AuthInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
+//nolint:revive
 type AuthOutputs struct {
 	depinject.Out
 

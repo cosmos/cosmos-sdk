@@ -46,7 +46,7 @@ type Keeper struct {
 	authority string
 }
 
-// GetAuthority returns the x/distribution module's authority.
+// GetAuthority returns the x/gov module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
@@ -90,79 +90,80 @@ func NewKeeper(
 }
 
 // Hooks gets the hooks for governance *Keeper {
-func (keeper *Keeper) Hooks() types.GovHooks {
-	if keeper.hooks == nil {
+func (k *Keeper) Hooks() types.GovHooks {
+	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set
 		return types.MultiGovHooks{}
 	}
 
-	return keeper.hooks
+	return k.hooks
 }
 
 // SetHooks sets the hooks for governance
-func (keeper *Keeper) SetHooks(gh types.GovHooks) *Keeper {
-	if keeper.hooks != nil {
+func (k *Keeper) SetHooks(gh types.GovHooks) *Keeper {
+	if k.hooks != nil {
 		panic("cannot set governance hooks twice")
 	}
 
-	keeper.hooks = gh
+	k.hooks = gh
 
-	return keeper
+	return k
 }
 
-func (keeper *Keeper) SetLegacyRouter(router v1beta1.Router) {
+// SetLegacyRouter sets the legacy router for governance
+func (k *Keeper) SetLegacyRouter(router v1beta1.Router) {
 	// It is vital to seal the governance proposal router here as to not allow
 	// further handlers to be registered after the keeper is created since this
 	// could create invalid or non-deterministic behavior.
 	router.Seal()
-	keeper.legacyRouter = router
+	k.legacyRouter = router
 }
 
 // Logger returns a module-specific logger.
-func (keeper Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
 // Router returns the gov keeper's router
-func (keeper Keeper) Router() *baseapp.MsgServiceRouter {
-	return keeper.router
+func (k Keeper) Router() *baseapp.MsgServiceRouter {
+	return k.router
 }
 
 // LegacyRouter returns the gov keeper's legacy router
-func (keeper Keeper) LegacyRouter() v1beta1.Router {
-	return keeper.legacyRouter
+func (k Keeper) LegacyRouter() v1beta1.Router {
+	return k.legacyRouter
 }
 
 // GetGovernanceAccount returns the governance ModuleAccount
-func (keeper Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccountI {
-	return keeper.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+func (k Keeper) GetGovernanceAccount(ctx sdk.Context) authtypes.ModuleAccountI {
+	return k.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
 // ProposalQueues
 
-// InsertActiveProposalQueue inserts a ProposalID into the active proposal queue at endTime
-func (keeper Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
+// InsertActiveProposalQueue inserts a proposalID into the active proposal queue at endTime
+func (k Keeper) InsertActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.ActiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromActiveProposalQueue removes a proposalID from the Active Proposal Queue
-func (keeper Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
+func (k Keeper) RemoveFromActiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.ActiveProposalQueueKey(proposalID, endTime))
 }
 
-// InsertInactiveProposalQueue Inserts a ProposalID into the inactive proposal queue at endTime
-func (keeper Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
+// InsertInactiveProposalQueue inserts a proposalID into the inactive proposal queue at endTime
+func (k Keeper) InsertInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
 	bz := types.GetProposalIDBytes(proposalID)
 	store.Set(types.InactiveProposalQueueKey(proposalID, endTime), bz)
 }
 
 // RemoveFromInactiveProposalQueue removes a proposalID from the Inactive Proposal Queue
-func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
-	store := ctx.KVStore(keeper.storeKey)
+func (k Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID uint64, endTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.InactiveProposalQueueKey(proposalID, endTime))
 }
 
@@ -170,13 +171,13 @@ func (keeper Keeper) RemoveFromInactiveProposalQueue(ctx sdk.Context, proposalID
 
 // IterateActiveProposalsQueue iterates over the proposals in the active proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
-	iterator := keeper.ActiveProposalQueueIterator(ctx, endTime)
+func (k Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
+	iterator := k.ActiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitActiveProposalQueueKey(iterator.Key())
-		proposal, found := keeper.GetProposal(ctx, proposalID)
+		proposal, found := k.GetProposal(ctx, proposalID)
 		if !found {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
@@ -189,13 +190,13 @@ func (keeper Keeper) IterateActiveProposalsQueue(ctx sdk.Context, endTime time.T
 
 // IterateInactiveProposalsQueue iterates over the proposals in the inactive proposal queue
 // and performs a callback function
-func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
-	iterator := keeper.InactiveProposalQueueIterator(ctx, endTime)
+func (k Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time.Time, cb func(proposal v1.Proposal) (stop bool)) {
+	iterator := k.InactiveProposalQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		proposalID, _ := types.SplitInactiveProposalQueueKey(iterator.Key())
-		proposal, found := keeper.GetProposal(ctx, proposalID)
+		proposal, found := k.GetProposal(ctx, proposalID)
 		if !found {
 			panic(fmt.Sprintf("proposal %d does not exist", proposalID))
 		}
@@ -207,21 +208,21 @@ func (keeper Keeper) IterateInactiveProposalsQueue(ctx sdk.Context, endTime time
 }
 
 // ActiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Active Queue that expire by endTime
-func (keeper Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(keeper.storeKey)
+func (k Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.ActiveProposalQueuePrefix, sdk.PrefixEndBytes(types.ActiveProposalByTimeKey(endTime)))
 }
 
 // InactiveProposalQueueIterator returns an sdk.Iterator for all the proposals in the Inactive Queue that expire by endTime
-func (keeper Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(keeper.storeKey)
+func (k Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.InactiveProposalQueuePrefix, sdk.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
 }
 
 // assertMetadataLength returns an error if given metadata length
-// is greater than a pre-defined maxMetadataLen.
-func (keeper Keeper) assertMetadataLength(metadata string) error {
-	if metadata != "" && uint64(len(metadata)) > keeper.config.MaxMetadataLen {
+// is greater than a pre-defined MaxMetadataLen.
+func (k Keeper) assertMetadataLength(metadata string) error {
+	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
 		return types.ErrMetadataTooLong.Wrapf("got metadata with length %d", len(metadata))
 	}
 	return nil

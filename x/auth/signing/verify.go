@@ -33,9 +33,8 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 			handlerWithContext, ok := handler.(SignModeHandlerWithContext)
 			if ok {
 				return handlerWithContext.GetSignBytesWithContext(ctx, mode, signerData, tx)
-			} else {
-				return handler.GetSignBytes(mode, signerData, tx)
 			}
+			return handler.GetSignBytes(mode, signerData, tx)
 		}, data)
 		if err != nil {
 			return err
@@ -50,11 +49,10 @@ func VerifySignature(ctx context.Context, pubKey cryptotypes.PubKey, signerData 
 // checks if the sign mode handler supports SignModeHandlerWithContext, in
 // which case it passes the context.Context argument. Otherwise, it fallbacks
 // to GetSignBytes.
-func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) {
+func GetSignBytesWithContext(h SignModeHandler, ctx context.Context, mode signing.SignMode, data SignerData, tx sdk.Tx) ([]byte, error) { //nolint:revive
 	hWithCtx, ok := h.(SignModeHandlerWithContext)
 	if ok {
 		return hWithCtx.GetSignBytesWithContext(ctx, mode, data, tx)
-	} else {
-		return h.GetSignBytes(mode, data, tx)
 	}
+	return h.GetSignBytes(mode, data, tx)
 }

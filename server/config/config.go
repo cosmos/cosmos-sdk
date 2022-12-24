@@ -166,7 +166,8 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
-// MempoolConfig defines the configurations for the appside mempool
+// MempoolConfig defines the configurations for the SDK built-in app-side mempool
+// implementations.
 type MempoolConfig struct {
 	// MaxTxs defines the behavior of the mempool. A negative value indicates
 	// the mempool is disabled entirely, zero indicates that the mempool is
@@ -295,10 +296,10 @@ func DefaultConfig() *Config {
 		Streamers: StreamersConfig{
 			File: FileStreamerConfig{
 				Keys:            []string{"*"},
-				WriteDir:        "data/file_streamer",
+				WriteDir:        "",
 				OutputMetadata:  true,
 				StopNodeOnError: true,
-				// NOTICE: the default config don't protect the streamer data integrity
+				// NOTICE: The default config doesn't protect the streamer data integrity
 				// in face of system crash.
 				Fsync: false,
 			},

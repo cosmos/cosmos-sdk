@@ -15,15 +15,11 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
-	interfaceRegistry            = codecTypes.NewInterfaceRegistry()
-	testMarshaller               = codec.NewProtoCodec(interfaceRegistry)
+	testMarshaller               = types.NewTestCodec()
 	testStreamingService         *StreamingService
 	testListener1, testListener2 types.WriteListener
 	emptyContext                 = context.TODO()
@@ -115,20 +111,24 @@ func TestFileStreamingService(t *testing.T) {
 	if os.Getenv("CI") != "" {
 		t.Skip("Skipping TestFileStreamingService in CI environment")
 	}
-	err := os.Mkdir(testDir, 0o700)
-	require.Nil(t, err)
+
+	require.Nil(t, os.Mkdir(testDir, 0o700))
 	defer os.RemoveAll(testDir)
 
 	testKeys := []types.StoreKey{mockStoreKey1, mockStoreKey2}
+	var err error
 	testStreamingService, err = NewStreamingService(testDir, testPrefix, testKeys, testMarshaller, log.NewNopLogger(), true, false, false)
 	require.Nil(t, err)
 	require.IsType(t, &StreamingService{}, testStreamingService)
 	require.Equal(t, testPrefix, testStreamingService.filePrefix)
 	require.Equal(t, testDir, testStreamingService.writeDir)
 	require.Equal(t, testMarshaller, testStreamingService.codec)
+
 	testListener1 = testStreamingService.storeListeners[0]
 	testListener2 = testStreamingService.storeListeners[1]
+
 	wg := new(sync.WaitGroup)
+
 	testStreamingService.Stream(wg)
 	testListenBlock(t)
 	testStreamingService.Close()
@@ -136,7 +136,10 @@ func TestFileStreamingService(t *testing.T) {
 }
 
 func testListenBlock(t *testing.T) {
-	var expectKVPairsStore1, expectKVPairsStore2 [][]byte
+	var (
+		expectKVPairsStore1 [][]byte
+		expectKVPairsStore2 [][]byte
+	)
 
 	// write state changes
 	testListener1.OnWrite(mockStoreKey1, mockKey1, mockValue1, false)
@@ -151,6 +154,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
@@ -158,6 +162,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err := testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey3,
@@ -165,6 +170,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1, expectedKVPair3)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2)
 
@@ -185,6 +191,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey2,
@@ -192,6 +199,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -199,6 +207,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair1)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair2, expectedKVPair3)
 
@@ -219,6 +228,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
@@ -226,6 +236,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -233,6 +244,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectKVPairsStore1 = append(expectKVPairsStore1, expectedKVPair2)
 	expectKVPairsStore2 = append(expectKVPairsStore2, expectedKVPair1, expectedKVPair3)
 
@@ -253,6 +265,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair2, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey1.Name(),
 		Key:      mockKey2,
@@ -260,6 +273,7 @@ func testListenBlock(t *testing.T) {
 		Delete:   false,
 	})
 	require.Nil(t, err)
+
 	expectedKVPair3, err = testMarshaller.Marshal(&types.StoreKVPair{
 		StoreKey: mockStoreKey2.Name(),
 		Key:      mockKey3,
@@ -282,6 +296,7 @@ func testListenBlock(t *testing.T) {
 	metaFileName := fmt.Sprintf("%s-block-%d-meta", testPrefix, testBeginBlockReq.GetHeader().Height)
 	dataFileName := fmt.Sprintf("%s-block-%d-data", testPrefix, testBeginBlockReq.GetHeader().Height)
 	metaFileBytes, err := readInFile(metaFileName)
+	require.Nil(t, err)
 	dataFileBytes, err := readInFile(dataFileName)
 	require.Nil(t, err)
 
@@ -314,37 +329,45 @@ func readInFile(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	size := sdk.BigEndianToUint64(bz[:8])
+	size := types.BigEndianToUint64(bz[:8])
 	if len(bz) != int(size)+8 {
 		return nil, errors.New("incomplete file ")
 	}
+
 	return bz[8:], nil
 }
 
-// segmentBytes returns all of the protobuf messages contained in the byte array as an array of byte arrays
-// The messages have their length prefix removed
+// segmentBytes returns all of the protobuf messages contained in the byte array
+// as an array of byte arrays. The messages have their length prefix removed.
 func segmentBytes(bz []byte) ([][]byte, error) {
 	var err error
+
 	segments := make([][]byte, 0)
 	for len(bz) > 0 {
 		var segment []byte
+
 		segment, bz, err = getHeadSegment(bz)
 		if err != nil {
 			return nil, err
 		}
+
 		segments = append(segments, segment)
 	}
+
 	return segments, nil
 }
 
-// getHeadSegment returns the bytes for the leading protobuf object in the byte array (removing the length prefix) and returns the remainder of the byte array
+// getHeadSegment returns the bytes for the leading protobuf object in the byte
+// array (removing the length prefix) and returns the remainder of the byte array.
 func getHeadSegment(bz []byte) ([]byte, []byte, error) {
 	size, prefixSize := binary.Uvarint(bz)
 	if prefixSize < 0 {
 		return nil, nil, fmt.Errorf("invalid number of bytes read from length-prefixed encoding: %d", prefixSize)
 	}
+
 	if size > uint64(len(bz)-prefixSize) {
 		return nil, nil, fmt.Errorf("not enough bytes to read; want: %v, got: %v", size, len(bz)-prefixSize)
 	}
+
 	return bz[prefixSize:(uint64(prefixSize) + size)], bz[uint64(prefixSize)+size:], nil
 }

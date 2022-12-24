@@ -11,6 +11,7 @@ import (
 )
 
 func TestSimple(t *testing.T) {
+	t.Parallel()
 	plaintext := []byte("sometext")
 	secret := []byte("somesecretoflengththirtytwo===32")
 	ciphertext := EncryptSymmetric(plaintext, secret)
@@ -21,6 +22,7 @@ func TestSimple(t *testing.T) {
 }
 
 func TestSimpleWithKDF(t *testing.T) {
+	t.Parallel()
 	plaintext := []byte("sometext")
 	secretPass := []byte("somesecret")
 	secret, err := bcrypt.GenerateFromPassword(secretPass, 12)

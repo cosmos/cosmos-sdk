@@ -28,6 +28,7 @@ func cleanupKeys(t *testing.T, kb keyring.Keyring, keys ...string) func() {
 }
 
 func Test_runListCmd(t *testing.T) {
+	t.Parallel()
 	cmd := ListKeysCmd()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 

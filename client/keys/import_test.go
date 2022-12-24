@@ -18,6 +18,7 @@ import (
 )
 
 func Test_runImportCmd(t *testing.T) {
+	t.Parallel()
 	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
@@ -74,7 +75,9 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 `
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			cmd := ImportKeyCommand()
 			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 			mockIn := testutil.ApplyMockIODiscardOutErr(cmd)

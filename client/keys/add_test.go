@@ -22,6 +22,7 @@ import (
 )
 
 func Test_runAddCmdBasic(t *testing.T) {
+	t.Parallel()
 	cmd := AddKeyCommand()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 

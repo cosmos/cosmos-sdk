@@ -20,6 +20,7 @@ import (
 )
 
 func Test_runExportCmd(t *testing.T) {
+	t.Parallel()
 	cdc := clienttestutil.MakeTestCodec(t)
 	testCases := []struct {
 		name           string
@@ -69,7 +70,9 @@ func Test_runExportCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			kbHome := t.TempDir()
 			defaultArgs := []string{
 				"keyname1",

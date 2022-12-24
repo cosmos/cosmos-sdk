@@ -18,6 +18,7 @@ import (
 )
 
 func Test_runDeleteCmd(t *testing.T) {
+	t.Parallel()
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
 	cmd := DeleteKeyCommand()

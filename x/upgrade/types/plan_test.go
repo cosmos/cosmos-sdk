@@ -23,6 +23,7 @@ func mustParseTime(s string) time.Time {
 }
 
 func TestPlanString(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		p      types.Plan
 		expect string
@@ -46,6 +47,7 @@ func TestPlanString(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			s := tc.p.String()
 			require.Equal(t, tc.expect, s)
 		})
@@ -53,6 +55,7 @@ func TestPlanString(t *testing.T) {
 }
 
 func TestPlanValid(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		p     types.Plan
 		valid bool
@@ -97,6 +100,7 @@ func TestPlanValid(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			err := tc.p.ValidateBasic()
 			if tc.valid {
 				assert.NoError(t, err)
@@ -108,6 +112,7 @@ func TestPlanValid(t *testing.T) {
 }
 
 func TestShouldExecute(t *testing.T) {
+	t.Parallel()
 	cases := map[string]struct {
 		p         types.Plan
 		ctxTime   time.Time
@@ -146,6 +151,7 @@ func TestShouldExecute(t *testing.T) {
 	for name, tc := range cases {
 		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			ctx := sdk.NewContext(nil, tmproto.Header{Height: tc.ctxHeight, Time: tc.ctxTime}, false, log.NewNopLogger())
 			should := tc.p.ShouldExecute(ctx)
 			assert.Equal(t, tc.expected, should)

@@ -12878,7 +12878,7 @@ type QueryGroupInfoResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// info is the GroupInfo for the group.
+	// info is the GroupInfo of the group.
 	Info *GroupInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 }
 
@@ -12952,7 +12952,7 @@ type QueryGroupPolicyInfoResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// info is the GroupPolicyInfo for the group policy.
+	// info is the GroupPolicyInfo of the group policy.
 	Info *GroupPolicyInfo `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"`
 }
 

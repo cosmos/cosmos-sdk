@@ -15,6 +15,7 @@ func GenSecp256r1() (PrivKey, error) {
 }
 
 func TestPKSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(PKSuite))
 }
 

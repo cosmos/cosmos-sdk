@@ -22,6 +22,7 @@ import (
 )
 
 func TestNewMultiSig(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	pk1 := secp256k1.GenPrivKey().PubKey()
 	pks := []cryptotypes.PubKey{pk1, pk1}
@@ -31,6 +32,7 @@ func TestNewMultiSig(t *testing.T) {
 }
 
 func TestAddress(t *testing.T) {
+	t.Parallel()
 	pubKeys := generatePubKeys(5)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
 
@@ -38,6 +40,7 @@ func TestAddress(t *testing.T) {
 }
 
 func TestEquals(t *testing.T) {
+	t.Parallel()
 	pubKey1 := secp256k1.GenPrivKey().PubKey()
 	pubKey2 := secp256k1.GenPrivKey().PubKey()
 
@@ -82,7 +85,9 @@ func TestEquals(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
+			t.Parallel()
 			eq := multisigKey.Equals(tc.other)
 			require.Equal(t, eq, tc.expectEq)
 		})
@@ -90,6 +95,7 @@ func TestEquals(t *testing.T) {
 }
 
 func TestVerifyMultisignature(t *testing.T) {
+	t.Parallel()
 	var (
 		pk  multisig.PubKey
 		sig *signing.MultiSignatureData
@@ -221,7 +227,9 @@ func TestVerifyMultisignature(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
+			t.Parallel()
 			tc.malleate(require.New(t))
 			err := pk.VerifyMultisignature(signBytesFn, sig)
 			if tc.expectPass {
@@ -234,6 +242,7 @@ func TestVerifyMultisignature(t *testing.T) {
 }
 
 func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
+	t.Parallel()
 	pkSet, sigs := generatePubKeysAndSignatures(5, []byte{1, 2, 3, 4})
 	multisignature := multisig.NewMultisig(5)
 
@@ -255,6 +264,7 @@ func TestAddSignatureFromPubKeyNilCheck(t *testing.T) {
 }
 
 func TestMultiSigMigration(t *testing.T) {
+	t.Parallel()
 	msg := []byte{1, 2, 3, 4}
 	pkSet, sigs := generatePubKeysAndSignatures(2, msg)
 	multisignature := multisig.NewMultisig(2)
@@ -278,6 +288,7 @@ func TestMultiSigMigration(t *testing.T) {
 }
 
 func TestPubKeyMultisigThresholdAminoToIface(t *testing.T) {
+	t.Parallel()
 	pubkeys := generatePubKeys(5)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
@@ -348,6 +359,7 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 }
 
 func TestDisplay(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	pubKeys := generatePubKeys(3)
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubKeys)
@@ -365,6 +377,7 @@ func TestDisplay(t *testing.T) {
 }
 
 func TestAminoBinary(t *testing.T) {
+	t.Parallel()
 	pubkeys := generatePubKeys(2)
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 
@@ -378,6 +391,7 @@ func TestAminoBinary(t *testing.T) {
 }
 
 func TestAminoMarshalJSON(t *testing.T) {
+	t.Parallel()
 	pubkeys := generatePubKeys(2)
 	multisigKey := kmultisig.NewLegacyAminoPubKey(2, pubkeys)
 	bz, err := legacy.Cdc.MarshalJSON(multisigKey)
@@ -390,6 +404,7 @@ func TestAminoMarshalJSON(t *testing.T) {
 }
 
 func TestAminoUnmarshalJSON(t *testing.T) {
+	t.Parallel()
 	// This is a real multisig from the Akash chain. It has been exported from
 	// v0.39, hence the `threshold` field as a string.
 	// We are testing that when unmarshaling this JSON into a LegacyAminoPubKey

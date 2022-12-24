@@ -9,6 +9,7 @@ import (
 )
 
 func TestGetSetDelete(t *testing.T) {
+	t.Parallel()
 	db := NewBTree()
 
 	// A nonexistent key should return nil.
@@ -40,6 +41,7 @@ func TestGetSetDelete(t *testing.T) {
 }
 
 func TestDBIterator(t *testing.T) {
+	t.Parallel()
 	db := NewBTree()
 
 	for i := 0; i < 10; i++ {

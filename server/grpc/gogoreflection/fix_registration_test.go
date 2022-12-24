@@ -7,6 +7,7 @@ import (
 )
 
 func TestRegistrationFix(t *testing.T) {
+	t.Parallel()
 	res := getFileDescriptor("gogoproto/gogo.proto")
 	rawDesc, err := decompress(res)
 	if err != nil {

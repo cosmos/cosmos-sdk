@@ -10,6 +10,7 @@ import (
 )
 
 func TestStringSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(StringSuite))
 }
 

@@ -31,6 +31,7 @@ func randCompactBitArray(bits int) (*CompactBitArray, []byte) {
 }
 
 func TestNewBitArrayNeverCrashesOnNegatives(t *testing.T) {
+	t.Parallel()
 	bitList := []int{-127, -128, -1 << 31}
 	for _, bits := range bitList {
 		bA := NewCompactBitArray(bits)
@@ -39,6 +40,7 @@ func TestNewBitArrayNeverCrashesOnNegatives(t *testing.T) {
 }
 
 func TestBitArrayEqual(t *testing.T) {
+	t.Parallel()
 	empty := new(CompactBitArray)
 	big1, _ := randCompactBitArray(1000)
 	big1Cpy := *big1
@@ -60,6 +62,7 @@ func TestBitArrayEqual(t *testing.T) {
 	for _, tc := range cases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			eq := tc.b1.Equal(tc.b2)
 			require.Equal(t, tc.eq, eq)
 		})
@@ -67,6 +70,7 @@ func TestBitArrayEqual(t *testing.T) {
 }
 
 func TestJSONMarshalUnmarshal(t *testing.T) {
+	t.Parallel()
 	bA1 := NewCompactBitArray(0)
 	bA2 := NewCompactBitArray(1)
 
@@ -104,6 +108,7 @@ func TestJSONMarshalUnmarshal(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.bA.String(), func(t *testing.T) {
+			t.Parallel()
 			bz, err := json.Marshal(tc.bA)
 			require.NoError(t, err)
 
@@ -127,6 +132,7 @@ func TestJSONMarshalUnmarshal(t *testing.T) {
 }
 
 func TestCompactMarshalUnmarshal(t *testing.T) {
+	t.Parallel()
 	bA1 := NewCompactBitArray(0)
 	bA2 := NewCompactBitArray(1)
 
@@ -164,6 +170,7 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.bA.String(), func(t *testing.T) {
+			t.Parallel()
 			bz := tc.bA.CompactMarshal()
 
 			assert.Equal(t, tc.marshalledBA, bz)
@@ -187,6 +194,7 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 // a negative/out of bounds index of size returned from binary.Uvarint.
 // See issue https://github.com/cosmos/cosmos-sdk/issues/9165
 func TestCompactMarshalUnmarshalReturnsErrorOnInvalidSize(t *testing.T) {
+	t.Parallel()
 	malicious := []byte{0xd7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x24, 0x28}
 	cba, err := CompactUnmarshal(malicious)
 	require.Error(t, err)
@@ -195,6 +203,7 @@ func TestCompactMarshalUnmarshalReturnsErrorOnInvalidSize(t *testing.T) {
 }
 
 func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		marshalledBA   string
 		bAIndex        []int
@@ -212,6 +221,7 @@ func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 		tc := tc
 		tcIndex := tcIndex
 		t.Run(tc.marshalledBA, func(t *testing.T) {
+			t.Parallel()
 			var bA *CompactBitArray
 			err := json.Unmarshal([]byte(tc.marshalledBA), &bA)
 			require.NoError(t, err)
@@ -224,6 +234,7 @@ func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 }
 
 func TestCompactBitArrayGetSetIndex(t *testing.T) {
+	t.Parallel()
 	r := rand.New(rand.NewSource(100))
 	numTests := 10
 	numBitsPerArr := 100
@@ -262,6 +273,7 @@ func BenchmarkNumTrueBitsBefore(b *testing.B) {
 }
 
 func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
+	t.Parallel()
 	if testing.Short() {
 		t.Skip("This test can be expensive in memory")
 	}

@@ -1,3 +1,4 @@
+//nolint:paralleltest
 package upgrade_test
 
 import (

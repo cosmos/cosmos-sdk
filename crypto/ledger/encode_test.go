@@ -39,6 +39,7 @@ func ExamplePrintRegisteredTypes() { //nolint:govet
 }
 
 func TestNilEncodings(t *testing.T) {
+	t.Parallel()
 	// Check nil Signature.
 	var a, b []byte
 	checkAminoJSON(t, &a, &b, true)

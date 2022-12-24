@@ -12,6 +12,7 @@ import (
 )
 
 func TestSKSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(SKSuite))
 }
 

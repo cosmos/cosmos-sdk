@@ -10,6 +10,7 @@ import (
 )
 
 func TestParamsEqual(t *testing.T) {
+	t.Parallel()
 	p1 := types.DefaultParams()
 	p2 := types.DefaultParams()
 
@@ -24,6 +25,7 @@ func TestParamsEqual(t *testing.T) {
 }
 
 func TestValidateParams(t *testing.T) {
+	t.Parallel()
 	params := types.DefaultParams()
 
 	// default params have no error

@@ -10,6 +10,7 @@ import (
 )
 
 func Test_genPrivKey(t *testing.T) {
+	t.Parallel()
 	empty := make([]byte, 32)
 	oneB := big.NewInt(1).Bytes()
 	onePadded := make([]byte, 32)
@@ -29,6 +30,7 @@ func Test_genPrivKey(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if tt.shouldPanic {
 				require.Panics(t, func() {
 					genPrivKey(bytes.NewReader(tt.notSoRand))

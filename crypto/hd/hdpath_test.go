@@ -20,6 +20,7 @@ func mnemonicToSeed(mnemonic string) []byte {
 }
 
 func TestStringifyFundraiserPathParams(t *testing.T) {
+	t.Parallel()
 	path := hd.NewFundraiserParams(4, types.CoinType, 22)
 	require.Equal(t, "m/44'/118'/4'/0/22", path.String())
 
@@ -31,6 +32,7 @@ func TestStringifyFundraiserPathParams(t *testing.T) {
 }
 
 func TestPathToArray(t *testing.T) {
+	t.Parallel()
 	path := hd.NewParams(44, 118, 1, false, 4)
 	require.Equal(t, "[44 118 1 0 4]", fmt.Sprintf("%v", path.DerivationPath()))
 
@@ -39,6 +41,7 @@ func TestPathToArray(t *testing.T) {
 }
 
 func TestParamsFromPath(t *testing.T) {
+	t.Parallel()
 	goodCases := []struct {
 		params *hd.BIP44Params
 		path   string
@@ -92,6 +95,7 @@ func TestParamsFromPath(t *testing.T) {
 }
 
 func TestCreateHDPath(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		coinType uint32
 		account  uint32
@@ -109,6 +113,7 @@ func TestCreateHDPath(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt := tt
 			require.Equal(t, tt.want, *hd.CreateHDPath(tt.args.coinType, tt.args.account, tt.args.index))
 		})
@@ -121,6 +126,7 @@ func TestCreateHDPath(t *testing.T) {
 // increase its value as deriveKeyPath already augments.
 // See issue https://github.com/cosmos/cosmos-sdk/issues/7627.
 func TestDeriveHDPathRange(t *testing.T) {
+	t.Parallel()
 	seed := mnemonicToSeed("I am become Death, the destroyer of worlds!")
 
 	tests := []struct {
@@ -172,6 +178,7 @@ func TestDeriveHDPathRange(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.path, func(t *testing.T) {
+			t.Parallel()
 			master, ch := hd.ComputeMastersFromSeed(seed)
 			_, err := hd.DerivePrivateKeyForPath(master, ch, tt.path)
 
@@ -284,6 +291,7 @@ func ExampleSomeBIP32TestVecs() { //nolint:govet
 // Ensuring that we don't crash if values have trailing slashes
 // See issue https://github.com/cosmos/cosmos-sdk/issues/8557.
 func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
+	t.Parallel()
 	paths := []string{
 		"m/5/",
 		"m/5",
@@ -299,6 +307,7 @@ func TestDerivePrivateKeyForPathDoNotCrash(t *testing.T) {
 	for _, path := range paths {
 		path := path
 		t.Run(path, func(t *testing.T) {
+			t.Parallel()
 			_, _ = hd.DerivePrivateKeyForPath([32]byte{}, [32]byte{}, path)
 		})
 	}

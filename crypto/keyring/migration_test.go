@@ -232,6 +232,7 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 }
 
 func TestMigrationTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(MigrationTestSuite))
 }
 

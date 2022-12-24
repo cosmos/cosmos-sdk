@@ -15,6 +15,7 @@ import (
 var opts = types.NewSnapshotOptions(1500, 2)
 
 func TestManager_List(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	snapshotter := &mockSnapshotter{}
 	snapshotter.SetSnapshotInterval(opts.Interval)
@@ -37,6 +38,7 @@ func TestManager_List(t *testing.T) {
 }
 
 func TestManager_LoadChunk(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	manager := snapshots.NewManager(store, opts, &mockSnapshotter{}, nil, log.NewNopLogger())
 
@@ -58,6 +60,7 @@ func TestManager_LoadChunk(t *testing.T) {
 }
 
 func TestManager_Take(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	items := [][]byte{
 		{1, 2, 3},
@@ -113,6 +116,7 @@ func TestManager_Take(t *testing.T) {
 }
 
 func TestManager_Prune(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	snapshotter := &mockSnapshotter{}
 	snapshotter.SetSnapshotInterval(opts.Interval)
@@ -133,6 +137,7 @@ func TestManager_Prune(t *testing.T) {
 }
 
 func TestManager_Restore(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	target := &mockSnapshotter{
 		prunedHeights: make(map[int64]struct{}),

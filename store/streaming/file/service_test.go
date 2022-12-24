@@ -108,6 +108,7 @@ var (
 )
 
 func TestFileStreamingService(t *testing.T) {
+	t.Parallel()
 	if os.Getenv("CI") != "" {
 		t.Skip("Skipping TestFileStreamingService in CI environment")
 	}

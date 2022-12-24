@@ -7,6 +7,7 @@ import (
 )
 
 func TestLeafOp(t *testing.T) {
+	t.Parallel()
 	proof := GenerateRangeProof(20, Middle)
 
 	converted, err := ConvertExistenceProof(proof.Proof, proof.Key, proof.Value)
@@ -69,7 +70,9 @@ func TestBuildPath(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			path := buildPath(tc.idx, tc.total)
 			if len(path) != len(tc.expected) {
 				t.Fatalf("Got %v\nExpected %v", path, tc.expected)

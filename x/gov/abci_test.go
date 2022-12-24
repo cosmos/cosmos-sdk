@@ -42,6 +42,8 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -96,6 +98,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -120,6 +124,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -179,6 +185,8 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -232,7 +240,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
-	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "")
+	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal")
 	require.NoError(t, err)
 
 	res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)

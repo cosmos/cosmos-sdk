@@ -59,6 +59,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 }
 
 func TestGetVestedCoinsContVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -83,6 +84,7 @@ func TestGetVestedCoinsContVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsContVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -103,6 +105,7 @@ func TestGetVestingCoinsContVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsContVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -124,6 +127,7 @@ func TestSpendableCoinsContVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationContVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -161,6 +165,7 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationContVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -207,6 +212,7 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -223,6 +229,7 @@ func TestGetVestedCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -239,6 +246,7 @@ func TestGetVestingCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsDelVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -268,6 +276,7 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationDelVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -303,6 +312,7 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationDelVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 
@@ -349,6 +359,7 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
@@ -393,6 +404,7 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
@@ -430,6 +442,7 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
@@ -457,6 +470,7 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
@@ -513,6 +527,7 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(24 * time.Hour)
 	periods := types.Periods{
@@ -571,6 +586,7 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 }
 
 func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
@@ -587,6 +603,7 @@ func TestGetVestedCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
@@ -603,6 +620,7 @@ func TestGetVestingCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
@@ -627,6 +645,7 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
@@ -655,6 +674,7 @@ func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
+	t.Parallel()
 	now := tmtime.Now()
 	endTime := now.Add(1000 * 24 * time.Hour)
 
@@ -700,6 +720,7 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 }
 
 func TestGenesisAccountValidate(t *testing.T) {
+	t.Parallel()
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := authtypes.NewBaseAccount(addr, pubkey, 0, 0)
@@ -770,6 +791,7 @@ func TestGenesisAccountValidate(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
 	}
@@ -857,5 +879,6 @@ func initBaseAccount() (*authtypes.BaseAccount, sdk.Coins) {
 }
 
 func TestVestingAccountTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(VestingAccountTestSuite))
 }

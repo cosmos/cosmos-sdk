@@ -13,6 +13,7 @@ import (
 )
 
 func TestRejectUnknownFieldsRepeated(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                     string
 		in                       proto.Message
@@ -226,6 +227,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			protoBlob, err := proto.Marshal(tt.in)
 			if err != nil {
 				t.Fatal(err)
@@ -238,6 +240,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 }
 
 func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                     string
 		in                       proto.Message
@@ -283,6 +286,7 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			blob, err := proto.Marshal(tt.in)
 			if err != nil {
 				t.Fatalf("Failed to marshal input: %v", err)
@@ -298,6 +302,7 @@ func TestRejectUnknownFields_allowUnknownNonCriticals(t *testing.T) {
 }
 
 func TestRejectUnknownFieldsNested(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -486,6 +491,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			protoBlob, err := proto.Marshal(tt.in)
 			if err != nil {
 				t.Fatal(err)
@@ -499,6 +505,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 }
 
 func TestRejectUnknownFieldsFlat(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		in      proto.Message
@@ -637,6 +644,7 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			blob, err := proto.Marshal(tt.in)
 			if err != nil {
 				t.Fatalf("Failed to marshal input: %v", err)
@@ -654,6 +662,7 @@ func TestRejectUnknownFieldsFlat(t *testing.T) {
 // Issue https://github.com/cosmos/cosmos-sdk/issues/7222, we need to ensure that repeated
 // uint64 are recognized as packed.
 func TestPackedEncoding(t *testing.T) {
+	t.Parallel()
 	data := testdata.TestRepeatedUints{Nums: []uint64{12, 13}}
 
 	marshalled, err := data.Marshal()

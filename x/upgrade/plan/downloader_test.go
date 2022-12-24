@@ -29,6 +29,7 @@ func (s *DownloaderTestSuite) SetupTest() {
 }
 
 func TestDownloaderTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(DownloaderTestSuite))
 }
 

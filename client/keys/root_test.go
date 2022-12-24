@@ -7,6 +7,7 @@ import (
 )
 
 func TestCommands(t *testing.T) {
+	t.Parallel()
 	rootCommands := Commands("home")
 	assert.NotNil(t, rootCommands)
 

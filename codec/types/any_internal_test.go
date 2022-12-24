@@ -29,6 +29,7 @@ var (
 )
 
 func TestAnyPackUnpack(t *testing.T) {
+	t.Parallel()
 	registry := NewInterfaceRegistry()
 	registry.RegisterInterface("Animal", (*Animal)(nil))
 	registry.RegisterImplementations(
@@ -55,6 +56,7 @@ func TestAnyPackUnpack(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	spot := &Dog{Name: "Spot"}
 	any, err := NewAnyWithValue(spot)

@@ -20,6 +20,7 @@ import (
 )
 
 func TestGetCurrentPlanCmd(t *testing.T) {
+	t.Parallel()
 	encCfg := testutilmod.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	baseCtx := client.Context{}.
@@ -49,7 +50,9 @@ func TestGetCurrentPlanCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd := upgradecli.GetCurrentPlanCmd()
@@ -68,6 +71,7 @@ func TestGetCurrentPlanCmd(t *testing.T) {
 }
 
 func TestGetAppliedPlanCmd(t *testing.T) {
+	t.Parallel()
 	encCfg := testutilmod.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	baseCtx := client.Context{}.
@@ -97,7 +101,9 @@ func TestGetAppliedPlanCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd := upgradecli.GetAppliedPlanCmd()
@@ -116,6 +122,7 @@ func TestGetAppliedPlanCmd(t *testing.T) {
 }
 
 func TestGetModuleVersionsCmd(t *testing.T) {
+	t.Parallel()
 	encCfg := testutilmod.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
 	baseCtx := client.Context{}.
@@ -158,6 +165,7 @@ func TestGetModuleVersionsCmd(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.msg, func(t *testing.T) {
+			t.Parallel()
 			ctx := svrcmd.CreateExecuteContext(context.Background())
 
 			cmd := upgradecli.GetModuleVersionsCmd()

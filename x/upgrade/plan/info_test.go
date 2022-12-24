@@ -21,6 +21,7 @@ func (s *InfoTestSuite) SetupTest() {
 }
 
 func TestInfoTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(InfoTestSuite))
 }
 

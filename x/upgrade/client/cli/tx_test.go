@@ -1,3 +1,4 @@
+//nolint:paralleltest
 package cli_test
 
 import (

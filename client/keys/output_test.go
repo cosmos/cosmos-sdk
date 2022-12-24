@@ -26,6 +26,7 @@ func generatePubKeys(n int) []types.PubKey {
 }
 
 func TestBech32KeysOutput(t *testing.T) {
+	t.Parallel()
 	sk := secp256k1.PrivKey{Key: []byte{154, 49, 3, 117, 55, 232, 249, 20, 205, 216, 102, 7, 136, 72, 177, 2, 131, 202, 234, 81, 31, 208, 46, 244, 179, 192, 167, 163, 142, 117, 246, 13}}
 	tmpKey := sk.PubKey()
 	multisigPk := kmultisig.NewLegacyAminoPubKey(1, []types.PubKey{tmpKey})
@@ -46,6 +47,7 @@ func TestBech32KeysOutput(t *testing.T) {
 }
 
 func TestProtoMarshalJSON(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	pubkeys := generatePubKeys(3)
 	msig := kmultisig.NewLegacyAminoPubKey(2, pubkeys)

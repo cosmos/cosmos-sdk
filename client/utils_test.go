@@ -9,6 +9,7 @@ import (
 )
 
 func TestPaginate(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name                           string
 		numObjs, page, limit, defLimit int
@@ -69,6 +70,7 @@ func TestPaginate(t *testing.T) {
 	for i, tc := range testCases {
 		i, tc := i, tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			start, end := client.Paginate(tc.numObjs, tc.page, tc.limit, tc.defLimit)
 			require.Equal(t, tc.expectedStart, start, "invalid result; test case #%d", i)
 			require.Equal(t, tc.expectedEnd, end, "invalid result; test case #%d", i)

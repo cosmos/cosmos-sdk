@@ -12,6 +12,7 @@ import (
 var authority = sdk.AccAddress("authority")
 
 func TestMsgSoftwareUpgrade(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name   string
 		msg    *types.MsgSoftwareUpgrade
@@ -56,7 +57,9 @@ func TestMsgSoftwareUpgrade(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := tc.msg.ValidateBasic()
 			if tc.expErr {
 				require.Error(t, err)
@@ -70,6 +73,7 @@ func TestMsgSoftwareUpgrade(t *testing.T) {
 }
 
 func TestMsgCancelUpgrade(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name   string
 		msg    *types.MsgCancelUpgrade
@@ -95,7 +99,9 @@ func TestMsgCancelUpgrade(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			err := tc.msg.ValidateBasic()
 			if tc.expErr {
 				require.Error(t, err)

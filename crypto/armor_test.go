@@ -27,6 +27,7 @@ import (
 )
 
 func TestArmorUnarmorPrivKey(t *testing.T) {
+	t.Parallel()
 	priv := secp256k1.GenPrivKey()
 	armored := crypto.EncryptArmorPrivKey(priv, "passphrase", "")
 	_, _, err := crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
@@ -73,6 +74,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 }
 
 func TestArmorUnarmorPubKey(t *testing.T) {
+	t.Parallel()
 	// Select the encryption and storage for your cryptostore
 	var cdc codec.Codec
 	err := depinject.Inject(configurator.NewAppConfig(), &cdc)
@@ -143,6 +145,7 @@ func TestArmorUnarmorPubKey(t *testing.T) {
 }
 
 func TestArmorInfoBytes(t *testing.T) {
+	t.Parallel()
 	bs := []byte("test")
 	armoredString := crypto.ArmorInfoBytes(bs)
 	unarmoredBytes, err := crypto.UnarmorInfoBytes(armoredString)
@@ -151,6 +154,7 @@ func TestArmorInfoBytes(t *testing.T) {
 }
 
 func TestUnarmorInfoBytesErrors(t *testing.T) {
+	t.Parallel()
 	unarmoredBytes, err := crypto.UnarmorInfoBytes("")
 	require.Error(t, err)
 	require.True(t, errors.Is(io.EOF, err))
@@ -184,6 +188,7 @@ func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
 }
 
 func TestArmor(t *testing.T) {
+	t.Parallel()
 	blockType := "MINT TEST"
 	data := []byte("somedata")
 	armorStr := crypto.EncodeArmor(blockType, nil, data)

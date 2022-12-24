@@ -22,6 +22,7 @@ import (
 var errFoo = errors.New("dummy")
 
 func TestBasicManager(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	legacyAmino := codec.NewLegacyAmino()
@@ -63,6 +64,7 @@ func TestBasicManager(t *testing.T) {
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -75,6 +77,7 @@ func TestGenesisOnlyAppModule(t *testing.T) {
 }
 
 func TestManagerOrderSetters(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
@@ -104,6 +107,7 @@ func TestManagerOrderSetters(t *testing.T) {
 }
 
 func TestManager_RegisterInvariants(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -123,6 +127,7 @@ func TestManager_RegisterInvariants(t *testing.T) {
 }
 
 func TestManager_RegisterQueryServices(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -146,6 +151,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 }
 
 func TestManager_InitGenesis(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -177,6 +183,7 @@ func TestManager_InitGenesis(t *testing.T) {
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -207,6 +214,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 }
 
 func TestManager_BeginBlock(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 
@@ -226,6 +234,7 @@ func TestManager_BeginBlock(t *testing.T) {
 }
 
 func TestManager_EndBlock(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
 

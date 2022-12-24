@@ -13,6 +13,7 @@ import (
 )
 
 func TestAnyPackUnpack(t *testing.T) {
+	t.Parallel()
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
@@ -48,6 +49,7 @@ func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata
 func (dog FakeDog) Greet() string           { return "fakedog" }
 
 func TestRegister(t *testing.T) {
+	t.Parallel()
 	registry := types.NewInterfaceRegistry()
 	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
 	registry.RegisterInterface("TestI", (*TestI)(nil))
@@ -89,6 +91,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestUnpackInterfaces(t *testing.T) {
+	t.Parallel()
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
@@ -113,6 +116,7 @@ func TestUnpackInterfaces(t *testing.T) {
 }
 
 func TestNested(t *testing.T) {
+	t.Parallel()
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
@@ -144,6 +148,7 @@ func TestNested(t *testing.T) {
 }
 
 func TestAny_ProtoJSON(t *testing.T) {
+	t.Parallel()
 	spot := &testdata.Dog{Name: "Spot"}
 	any, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)

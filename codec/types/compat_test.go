@@ -128,5 +128,6 @@ func (s *Suite) TestNested() {
 }
 
 func TestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, &Suite{})
 }

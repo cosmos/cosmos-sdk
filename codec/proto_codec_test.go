@@ -29,6 +29,7 @@ func createTestInterfaceRegistry() types.InterfaceRegistry {
 }
 
 func TestProtoMarsharlInterface(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, false)
@@ -37,11 +38,13 @@ func TestProtoMarsharlInterface(t *testing.T) {
 }
 
 func TestProtoCodec(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewProtoCodec(createTestInterfaceRegistry())
 	testMarshaling(t, cdc)
 }
 
 func TestEnsureRegistered(t *testing.T) {
+	t.Parallel()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cat := &testdata.Cat{Moniker: "Garfield"}
 
@@ -60,6 +63,7 @@ func TestEnsureRegistered(t *testing.T) {
 }
 
 func TestProtoCodecMarshal(t *testing.T) {
+	t.Parallel()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	interfaceRegistry.RegisterInterface("testdata.Animal",
 		(*testdata.Animal)(nil),

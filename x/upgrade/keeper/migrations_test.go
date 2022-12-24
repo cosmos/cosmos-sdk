@@ -20,6 +20,7 @@ func encodeOldDoneKey(upgrade storedUpgrade) []byte {
 }
 
 func TestMigrateDoneUpgradeKeys(t *testing.T) {
+	t.Parallel()
 	upgradeKey := sdk.NewKVStoreKey("upgrade")
 	ctx := testutil.DefaultContext(upgradeKey, sdk.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(upgradeKey)

@@ -160,5 +160,6 @@ func (s *TestSuite) TestConvertTxToStdTx() {
 }
 
 func TestTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(TestSuite))
 }

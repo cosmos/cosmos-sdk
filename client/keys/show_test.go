@@ -21,6 +21,7 @@ import (
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
+	t.Parallel()
 	tmpKey1 := secp256k1.GenPrivKeyFromSecret([]byte("mySecret"))
 	pk := multisig.NewLegacyAminoPubKey(
 		1,
@@ -41,6 +42,7 @@ func Test_multiSigKey_Properties(t *testing.T) {
 }
 
 func Test_showKeysCmd(t *testing.T) {
+	t.Parallel()
 	cmd := ShowKeysCmd()
 	require.NotNil(t, cmd)
 	require.Equal(t, "false", cmd.Flag(FlagAddress).DefValue)
@@ -48,6 +50,7 @@ func Test_showKeysCmd(t *testing.T) {
 }
 
 func Test_runShowCmd(t *testing.T) {
+	t.Parallel()
 	cmd := ShowKeysCmd()
 	cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
@@ -170,6 +173,7 @@ func Test_runShowCmd(t *testing.T) {
 }
 
 func Test_validateMultisigThreshold(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		k     int
 		nKeys int
@@ -188,6 +192,7 @@ func Test_validateMultisigThreshold(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if err := validateMultisigThreshold(tt.args.k, tt.args.nKeys); (err != nil) != tt.wantErr {
 				t.Errorf("validateMultisigThreshold() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -196,6 +201,7 @@ func Test_validateMultisigThreshold(t *testing.T) {
 }
 
 func Test_getBechKeyOut(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		bechPrefix string
 	}
@@ -214,6 +220,7 @@ func Test_getBechKeyOut(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := getBechKeyOut(tt.args.bechPrefix)
 			if tt.wantErr {
 				require.Error(t, err)

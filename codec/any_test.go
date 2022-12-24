@@ -25,6 +25,7 @@ func NewTestInterfaceRegistry() codectypes.InterfaceRegistry {
 }
 
 func TestMarshalAny(t *testing.T) {
+	t.Parallel()
 	catRegistry := codectypes.NewInterfaceRegistry()
 	catRegistry.RegisterImplementations((*testdata.Animal)(nil), &testdata.Cat{})
 
@@ -70,6 +71,7 @@ func TestMarshalAny(t *testing.T) {
 }
 
 func TestMarshalProtoPubKey(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	ccfg := testutil.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()
@@ -110,6 +112,7 @@ func TestMarshalProtoPubKey(t *testing.T) {
 // TestMarshalProtoInterfacePubKey tests PubKey marshaling using (Un)marshalInterface
 // helper functions
 func TestMarshalProtoInterfacePubKey(t *testing.T) {
+	t.Parallel()
 	require := require.New(t)
 	ccfg := testutil.MakeTestEncodingConfig()
 	privKey := ed25519.GenPrivKey()

@@ -11,6 +11,7 @@ import (
 )
 
 func TestRegisterAminoMsg(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewLegacyAmino()
 
 	testCases := map[string]struct {
@@ -26,7 +27,9 @@ func TestRegisterAminoMsg(t *testing.T) {
 		},
 	}
 	for name, tc := range testCases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			fn := func() { legacy.RegisterAminoMsg(cdc, &testdata.TestMsg{}, tc.msgName) }
 			if tc.expPanic {
 				require.Panics(t, fn)

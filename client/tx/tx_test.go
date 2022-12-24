@@ -1,3 +1,4 @@
+//nolint:paralleltest
 package tx_test
 
 import (

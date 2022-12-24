@@ -18,6 +18,7 @@ import (
 )
 
 func Test_runRenameCmd(t *testing.T) {
+	t.Parallel()
 	// temp keybase
 	kbHome := t.TempDir()
 	cmd := RenameKeyCommand()

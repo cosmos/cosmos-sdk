@@ -9,6 +9,7 @@ import (
 )
 
 func TestDefaults(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, hd.PubKeyType("multi"), hd.MultiType)
 	require.Equal(t, hd.PubKeyType("secp256k1"), hd.Secp256k1Type)
 	require.Equal(t, hd.PubKeyType("ed25519"), hd.Ed25519Type)

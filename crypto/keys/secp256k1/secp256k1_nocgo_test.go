@@ -14,6 +14,7 @@ import (
 // non-canonical signatures fail.
 // Note: run with CGO_ENABLED=0 or go test -tags !cgo.
 func TestSignatureVerificationAndRejectUpperS(t *testing.T) {
+	t.Parallel()
 	msg := []byte("We have lingered long enough on the shores of the cosmic ocean.")
 	for i := 0; i < 500; i++ {
 		priv := GenPrivKey()

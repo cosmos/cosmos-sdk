@@ -225,5 +225,6 @@ func (suite *UpgradeTestSuite) TestAuthority() {
 }
 
 func TestUpgradeTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(UpgradeTestSuite))
 }

@@ -12,6 +12,7 @@ import (
 )
 
 func TestMarshalYAML(t *testing.T) {
+	t.Parallel()
 	dog := &testdata.Dog{
 		Size_: "small",
 		Name:  "Spot",

@@ -25,6 +25,7 @@ type addrData struct {
 }
 
 func TestFullFundraiserPath(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, "m/44'/118'/0'/0/0", hd.NewFundraiserParams(0, 118, 0).String())
 }
 
@@ -46,6 +47,7 @@ func initFundraiserTestVectors(t *testing.T) []addrData {
 }
 
 func TestFundraiserCompatibility(t *testing.T) {
+	t.Parallel()
 	hdToAddrTable := initFundraiserTestVectors(t)
 
 	for i, d := range hdToAddrTable {

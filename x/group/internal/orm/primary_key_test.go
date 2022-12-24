@@ -204,6 +204,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 }
 
 func TestContains(t *testing.T) {
+	t.Parallel()
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
@@ -245,7 +246,9 @@ func TestContains(t *testing.T) {
 		},
 	}
 	for msg, spec := range specs {
+		spec := spec
 		t.Run(msg, func(t *testing.T) {
+			t.Parallel()
 			got := tb.Contains(store, spec.src)
 			assert.Equal(t, spec.exp, got)
 		})

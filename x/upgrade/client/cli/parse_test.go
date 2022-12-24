@@ -10,6 +10,7 @@ import (
 )
 
 func TestParseArgsToContent(t *testing.T) {
+	t.Parallel()
 	fs := NewCmdSubmitLegacyUpgradeProposal().Flags()
 
 	proposal := types.SoftwareUpgradeProposal{ //nolint:staticcheck // SA1019: types.SoftwareUpgradeProposal is deprecated: use types.Content instead

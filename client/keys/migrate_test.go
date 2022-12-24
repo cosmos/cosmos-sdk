@@ -149,5 +149,6 @@ func (s *MigrateTestSuite) Test_runMigrateCmdLegacyMultiInfo() {
 }
 
 func TestMigrateTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(MigrateTestSuite))
 }

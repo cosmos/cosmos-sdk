@@ -9,6 +9,7 @@ import (
 )
 
 func TestConstructors(t *testing.T) {
+	t.Parallel()
 	require.Equal(t, keys.AddNewKey{
 		Name:     "name",
 		Password: "password",

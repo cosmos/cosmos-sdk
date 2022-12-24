@@ -30,6 +30,7 @@ func createTestCodec() *codec.LegacyAmino {
 }
 
 func TestAminoMarsharlInterface(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewAminoCodec(createTestCodec())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, true)
@@ -39,10 +40,12 @@ func TestAminoMarsharlInterface(t *testing.T) {
 }
 
 func TestAminoCodec(t *testing.T) {
+	t.Parallel()
 	testMarshaling(t, codec.NewAminoCodec(createTestCodec()))
 }
 
 func TestAminoCodecMarshalJSONIndent(t *testing.T) {
+	t.Parallel()
 	any, err := types.NewAnyWithValue(&testdata.Dog{Name: "rufus"})
 	require.NoError(t, err)
 
@@ -80,6 +83,7 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			cdc := codec.NewAminoCodec(createTestCodec())
 			bz, err := cdc.MarshalJSONIndent(tc.input, "", "  ")
 
@@ -101,6 +105,7 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 }
 
 func TestAminoCodecPrintTypes(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewAminoCodec(createTestCodec())
 	buf := new(bytes.Buffer)
 	require.NoError(t, cdc.PrintTypes(buf))
@@ -115,6 +120,7 @@ func TestAminoCodecPrintTypes(t *testing.T) {
 }
 
 func TestAminoCodecUnpackAnyFails(t *testing.T) {
+	t.Parallel()
 	cdc := codec.NewAminoCodec(createTestCodec())
 	err := cdc.UnpackAny(new(types.Any), &testdata.Cat{})
 	require.Error(t, err)
@@ -122,6 +128,7 @@ func TestAminoCodecUnpackAnyFails(t *testing.T) {
 }
 
 func TestAminoCodecFullDecodeAndEncode(t *testing.T) {
+	t.Parallel()
 	// This tx comes from https://github.com/cosmos/cosmos-sdk/issues/8117.
 	txSigned := `{"type":"cosmos-sdk/StdTx","value":{"msg":[{"type":"cosmos-sdk/MsgCreateValidator","value":{"description":{"moniker":"fulltest","identity":"satoshi","website":"example.com","details":"example inc"},"commission":{"rate":"0.500000000000000000","max_rate":"1.000000000000000000","max_change_rate":"0.200000000000000000"},"min_self_delegation":"1000000","delegator_address":"cosmos14pt0q5cwf38zt08uu0n6yrstf3rndzr5057jys","validator_address":"cosmosvaloper14pt0q5cwf38zt08uu0n6yrstf3rndzr52q28gr","pubkey":{"type":"tendermint/PubKeyEd25519","value":"CYrOiM3HtS7uv1B1OAkknZnFYSRpQYSYII8AtMMtev0="},"value":{"denom":"umuon","amount":"700000000"}}}],"fee":{"amount":[{"denom":"umuon","amount":"6000"}],"gas":"160000"},"signatures":[{"pub_key":{"type":"tendermint/PubKeySecp256k1","value":"AwAOXeWgNf1FjMaayrSnrOOKz+Fivr6DiI/i0x0sZCHw"},"signature":"RcnfS/u2yl7uIShTrSUlDWvsXo2p2dYu6WJC8VDVHMBLEQZWc8bsINSCjOnlsIVkUNNe1q/WCA9n3Gy1+0zhYA=="}],"memo":"","timeout_height":"0"}}`
 	legacyCdc := testutil.MakeTestEncodingConfig(staking.AppModuleBasic{}, auth.AppModuleBasic{}).Amino

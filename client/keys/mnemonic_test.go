@@ -11,6 +11,7 @@ import (
 )
 
 func Test_RunMnemonicCmdNormal(t *testing.T) {
+	t.Parallel()
 	cmd := MnemonicKeyCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 	cmd.SetArgs([]string{})
@@ -18,6 +19,7 @@ func Test_RunMnemonicCmdNormal(t *testing.T) {
 }
 
 func Test_RunMnemonicCmdUser(t *testing.T) {
+	t.Parallel()
 	cmd := MnemonicKeyCommand()
 	_ = testutil.ApplyMockIODiscardOutErr(cmd)
 

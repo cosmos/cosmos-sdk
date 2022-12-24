@@ -117,6 +117,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
@@ -179,8 +180,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 	}
 }
 
-func TestTxHeightTimeoutDecorator(t *testing.T) {
-	t.Parallel()
+func TestTxHeightTimeoutDecorator(t *testing.T) { //nolint:paralleltest
 	suite := SetupTestSuite(t, true)
 
 	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())
@@ -205,11 +205,10 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 		{"timeout (smaller height)", 9, 10, sdkerrors.ErrTxTimeoutHeight},
 	}
 
-	for _, tc := range testCases {
+	for _, tc := range testCases { //nolint:paralleltest
 		tc := tc
 
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 			require.NoError(t, suite.txBuilder.SetMsgs(msg))

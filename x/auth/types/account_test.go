@@ -19,6 +19,7 @@ import (
 )
 
 func TestBaseAddressPubKey(t *testing.T) {
+	t.Parallel()
 	_, pub1, addr1 := testdata.KeyTestPubAddr()
 	_, pub2, addr2 := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr1)
@@ -56,6 +57,7 @@ func TestBaseAddressPubKey(t *testing.T) {
 }
 
 func TestBaseSequence(t *testing.T) {
+	t.Parallel()
 	_, _, addr := testdata.KeyTestPubAddr()
 	acc := types.NewBaseAccountWithAddress(addr)
 	seq := uint64(7)
@@ -66,6 +68,7 @@ func TestBaseSequence(t *testing.T) {
 }
 
 func TestBaseAccountMarshal(t *testing.T) {
+	t.Parallel()
 	var accountKeeper authkeeper.AccountKeeper
 
 	err := depinject.Inject(testutil.AppConfig, &accountKeeper)
@@ -93,6 +96,7 @@ func TestBaseAccountMarshal(t *testing.T) {
 }
 
 func TestGenesisAccountValidate(t *testing.T) {
+	t.Parallel()
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := types.NewBaseAccount(addr, pubkey, 0, 0)
@@ -118,12 +122,14 @@ func TestGenesisAccountValidate(t *testing.T) {
 		tt := tt
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
 	}
 }
 
 func TestModuleAccountString(t *testing.T) {
+	t.Parallel()
 	name := "test"
 	moduleAcc := types.NewEmptyModuleAccount(name, types.Minter, types.Burner, types.Staking)
 	want := `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
@@ -134,6 +140,7 @@ func TestModuleAccountString(t *testing.T) {
 }
 
 func TestHasPermissions(t *testing.T) {
+	t.Parallel()
 	name := "test"
 	macc := types.NewEmptyModuleAccount(name, types.Staking, types.Minter, types.Burner)
 	cases := []struct {
@@ -157,6 +164,7 @@ func TestHasPermissions(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
+	t.Parallel()
 	addr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	baseAcc := types.NewBaseAccount(addr, nil, 0, 0)
 	tests := []struct {
@@ -183,6 +191,7 @@ func TestValidate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := tt.acc.Validate()
 			require.Equal(t, tt.expErr, err)
 		})
@@ -190,6 +199,7 @@ func TestValidate(t *testing.T) {
 }
 
 func TestModuleAccountJSON(t *testing.T) {
+	t.Parallel()
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	baseAcc := types.NewBaseAccount(addr, nil, 10, 50)
@@ -208,6 +218,7 @@ func TestModuleAccountJSON(t *testing.T) {
 }
 
 func TestGenesisAccountsContains(t *testing.T) {
+	t.Parallel()
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
 	acc := types.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
@@ -220,6 +231,7 @@ func TestGenesisAccountsContains(t *testing.T) {
 }
 
 func TestNewModuleAddressOrBech32Address(t *testing.T) {
+	t.Parallel()
 	input := "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv"
 	require.Equal(t, input, types.NewModuleAddressOrBech32Address(input).String())
 	require.Equal(t, "cosmos1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88lyufl", types.NewModuleAddressOrBech32Address("distribution").String())

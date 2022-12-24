@@ -22,6 +22,7 @@ func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
 func TestCacheKVStore(t *testing.T) {
+	t.Parallel()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	st := cachekv.NewStore(mem)
 
@@ -65,6 +66,7 @@ func TestCacheKVStore(t *testing.T) {
 }
 
 func TestCacheKVStoreNoNilSet(t *testing.T) {
+	t.Parallel()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	st := cachekv.NewStore(mem)
 	require.Panics(t, func() { st.Set([]byte("key"), nil) }, "setting a nil value should panic")
@@ -73,6 +75,7 @@ func TestCacheKVStoreNoNilSet(t *testing.T) {
 }
 
 func TestCacheKVStoreNested(t *testing.T) {
+	t.Parallel()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	st := cachekv.NewStore(mem)
 
@@ -102,6 +105,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 }
 
 func TestCacheKVIteratorBounds(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 
 	// set some items
@@ -157,6 +161,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 }
 
 func TestCacheKVReverseIteratorBounds(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 
 	// set some items
@@ -214,6 +219,7 @@ func TestCacheKVReverseIteratorBounds(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 
 	// set and delete an item in the cache, iterator should be empty
@@ -262,6 +268,7 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 
 	// set some items and write them
@@ -288,6 +295,7 @@ func TestCacheKVMergeIteratorDeleteLast(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorDeletes(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()
 
@@ -322,6 +330,7 @@ func TestCacheKVMergeIteratorDeletes(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorChunks(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 
 	// Use the truth to check values on the merge iterator
@@ -353,6 +362,7 @@ func TestCacheKVMergeIteratorChunks(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorDomain(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 
 	itr := st.Iterator(nil, nil)
@@ -372,6 +382,7 @@ func TestCacheKVMergeIteratorDomain(t *testing.T) {
 }
 
 func TestCacheKVMergeIteratorRandom(t *testing.T) {
+	t.Parallel()
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()
 
@@ -387,6 +398,7 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 }
 
 func TestNilEndIterator(t *testing.T) {
+	t.Parallel()
 	const SIZE = 3000
 
 	tests := []struct {
@@ -402,7 +414,9 @@ func TestNilEndIterator(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			st := newCacheKVStore()
 
 			for i := 0; i < SIZE; i++ {
@@ -433,6 +447,7 @@ func TestNilEndIterator(t *testing.T) {
 
 // TestIteratorDeadlock demonstrate the deadlock issue in cache store.
 func TestIteratorDeadlock(t *testing.T) {
+	t.Parallel()
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	store := cachekv.NewStore(mem)
 	// the channel buffer is 64 and received once, so put at least 66 elements.

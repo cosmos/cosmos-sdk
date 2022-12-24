@@ -28,6 +28,7 @@ var (
 )
 
 func TestParseQueryResponse(t *testing.T) {
+	t.Parallel()
 	simRes := &sdk.SimulationResponse{
 		GasInfo: sdk.GasInfo{GasUsed: 10, GasWanted: 20},
 		Result:  &sdk.Result{Data: []byte("tx data"), Log: "log"},
@@ -47,6 +48,7 @@ func TestParseQueryResponse(t *testing.T) {
 
 // TODO: remove this and authclient.GetTxEncoder after the proto tx migration is complete
 func TestDefaultTxEncoder(t *testing.T) {
+	t.Parallel()
 	cdc := makeCodec()
 
 	defaultEncoder := legacytx.DefaultTxEncoder(cdc)
@@ -139,6 +141,7 @@ func TestBatchScanner_Scan(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			scanner, i := authclient.NewBatchScanner(clientCtx.TxConfig, strings.NewReader(tt.batch)), 0
 			for scanner.Scan() {
 				_ = scanner.Tx()

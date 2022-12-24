@@ -40,6 +40,7 @@ func setupStore(t *testing.T) *snapshots.Store {
 }
 
 func TestNewStore(t *testing.T) {
+	t.Parallel()
 	tempdir := GetTempDir(t)
 	_, err := snapshots.NewStore(db.NewMemDB(), tempdir)
 
@@ -47,11 +48,13 @@ func TestNewStore(t *testing.T) {
 }
 
 func TestNewStore_ErrNoDir(t *testing.T) {
+	t.Parallel()
 	_, err := snapshots.NewStore(db.NewMemDB(), "")
 	require.Error(t, err)
 }
 
 func TestStore_Delete(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Deleting a snapshot should remove it
 	err := store.Delete(2, 2)
@@ -88,6 +91,7 @@ func TestStore_Delete(t *testing.T) {
 }
 
 func TestStore_Get(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 
 	// Loading a missing snapshot should return nil
@@ -112,6 +116,7 @@ func TestStore_Get(t *testing.T) {
 }
 
 func TestStore_GetLatest(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Loading a missing snapshot should return nil
 	snapshot, err := store.GetLatest()
@@ -136,6 +141,7 @@ func TestStore_GetLatest(t *testing.T) {
 }
 
 func TestStore_List(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	snapshots, err := store.List()
 	require.NoError(t, err)
@@ -161,6 +167,7 @@ func TestStore_List(t *testing.T) {
 }
 
 func TestStore_Load(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Loading a missing snapshot should return nil
 	snapshot, chunks, err := store.Load(9, 9)
@@ -196,6 +203,7 @@ func TestStore_Load(t *testing.T) {
 }
 
 func TestStore_LoadChunk(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Loading a missing snapshot should return nil
 	chunk, err := store.LoadChunk(9, 9, 0)
@@ -219,6 +227,7 @@ func TestStore_LoadChunk(t *testing.T) {
 }
 
 func TestStore_Prune(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Pruning too many snapshots should be fine
 	pruned, err := store.Prune(4)
@@ -262,6 +271,7 @@ func TestStore_Prune(t *testing.T) {
 }
 
 func TestStore_Save(t *testing.T) {
+	t.Parallel()
 	store := setupStore(t)
 	// Saving a snapshot should work
 	snapshot, err := store.Save(4, 1, makeChunks([][]byte{{1}, {2}}))

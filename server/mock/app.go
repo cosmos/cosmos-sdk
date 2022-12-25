@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"path/filepath"
 
+	db "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/types"
-	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"

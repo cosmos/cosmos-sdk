@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/store"
-	db "github.com/tendermint/tm-db"
+	db "github.com/cosmos/cosmos-db"
 
 	"github.com/stretchr/testify/require"
 )

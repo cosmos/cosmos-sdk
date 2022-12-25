@@ -9,12 +9,12 @@ import (
 	"strings"
 	"sync"
 
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
@@ -787,7 +787,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 
 			for {
 				node, err := exporter.Next()
-				if err == iavltree.ExportDone {
+				if err == iavltree.ErrorExportDone {
 					break
 				} else if err != nil {
 					return err

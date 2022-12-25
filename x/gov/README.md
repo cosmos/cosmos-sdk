@@ -277,6 +277,30 @@ Validators and full nodes can use an automation tool, such as [Cosmovisor](https
 * set expectations for validators
 * define the chain's relationship to "meatspace" entities, like a foundation or corporation
 
+Since this is more of a social feature than a technical feature, we'll now get into some items that may have been useful to have in a genesis constitution:
+
+* What limitations on governance exist, if any?
+  * is it okay for the community to slash the wallet of a whale that they no longer feel that they want around? (viz: Juno Proposal 4 and 16)
+  * can governance "socially slash" a validator who is using unapproved MEV? (viz: commonwealth.im/osmosis)
+  * In the event of an economic emergency, what should validators do?
+    * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing. 
+* What is the purpose of the chain, specifically?
+  * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+  
+This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively. 
+
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that. 
+
+**Ideal use scenario for a cosmos chain constitution**
+
+As a chain developer, you decide that you'd like to provide clarity to your key user groups:
+
+* validators
+* token holders
+* developers (yourself)
+
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
+
 
 ### Proposals
 

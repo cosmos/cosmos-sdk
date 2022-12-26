@@ -135,15 +135,17 @@ type proposalType struct {
 
 // Prompt the proposal type values and return the proposal and its metadata
 func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadata, error) {
-	proposal := &proposal{}
-
 	// set metadata
 	metadata, err := Prompt(types.ProposalMetadata{}, "proposal")
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
-	// the metadata must be saved on IPFS, set placeholder
-	proposal.Metadata = "ipfs://CID"
+
+	proposal := &proposal{
+		Metadata: "ipfs://CID",
+		Title:    metadata.Title,
+		Summary:  metadata.Summary,
+	}
 
 	// set deposit
 	depositPrompt := promptui.Prompt{
@@ -154,10 +156,6 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadat
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal deposit: %w", err)
 	}
-
-	// set title and summary from metadata in the proposal
-	proposal.Title = metadata.Title
-	proposal.Summary = metadata.Summary
 
 	if p.Msg == nil {
 		return proposal, metadata, nil

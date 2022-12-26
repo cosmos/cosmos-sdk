@@ -263,10 +263,14 @@ func NewSimApp(
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
 	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, logger, keys); err != nil {
+	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, logger, keys)
+	if err != nil {
 		logger.Error("failed to load state streaming", "err", err)
 		os.Exit(1)
 	}
+
+	// register the streaming service with the BaseApp
+	bApp.SetStreamingService(streamers)
 
 	app := &SimApp{
 		BaseApp:           bApp,

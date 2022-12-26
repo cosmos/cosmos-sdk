@@ -246,10 +246,13 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.kvStoreKeys()); err != nil {
+	streamers, _, err := streaming.LoadStreamingServices(appOpts, app.appCodec, logger, app.kvStoreKeys())
+	if err != nil {
 		logger.Error("failed to load state streaming", "err", err)
 		os.Exit(1)
 	}
+
+	app.App.BaseApp.SetStreamingService(streamers)
 
 	/****  Module Options ****/
 

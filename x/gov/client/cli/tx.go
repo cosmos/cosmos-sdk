@@ -106,8 +106,8 @@ Where proposal.json contains:
   ],
   "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
   "deposit": "10stake"
-	"title: "My proposal"
-	"summary": "A short summary of my proposal"
+  "title: "My proposal"
+  "summary": "A short summary of my proposal"
 }
 `,
 				version.AppName,

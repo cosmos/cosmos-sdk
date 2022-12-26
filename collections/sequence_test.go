@@ -1,13 +1,14 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestSequence(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
+	schema := NewSchemaBuilder(sk)
 	seq := NewSequence(schema, NewPrefix(0), "sequence")
 	// initially the first available number is DefaultSequenceStart
 	n, err := seq.Peek(ctx)

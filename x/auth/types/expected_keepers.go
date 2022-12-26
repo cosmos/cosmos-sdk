@@ -12,10 +12,12 @@ type AccountI interface {
 	GetPubKey(sdk.Context) cryptotypes.PubKey // can return nil.
 	SetPubKey(sdk.Context, cryptotypes.PubKey) error
 
-	GetAccountNumber(sdk.Context) uint64
+	// GetAccountNumber(sdk.Context) uint64
+	GetAccountNumber() uint64
 	SetAccountNumber(sdk.Context, uint64) error
 
-	GetSequence(sdk.Context) uint64
+	// GetSequence(sdk.Context) uint64
+	GetSequence() uint64
 	SetSequence(sdk.Context, uint64) error
 
 	// Ensure that account implements stringer

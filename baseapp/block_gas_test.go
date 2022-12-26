@@ -5,14 +5,14 @@ import (
 	"math"
 	"testing"
 
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
-
-	"cosmossdk.io/depinject"
 
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -116,7 +116,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			ctx := bapp.NewContext(false, tmproto.Header{})
 
 			// tx fee
-			feeCoin := sdk.NewCoin("atom", sdk.NewInt(150))
+			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
 			feeAmount := sdk.NewCoins(feeCoin)
 
 			// test account and fund

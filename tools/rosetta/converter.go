@@ -7,6 +7,9 @@ import (
 	"reflect"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
+	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,8 +17,6 @@ import (
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
-	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -413,7 +414,7 @@ func (c converter) Amounts(ownedCoins []sdk.Coin, availableCoins sdk.Coins) []*r
 		value, owned := ownedCoinsMap[coin.Denom]
 		if !owned {
 			amounts[i] = &rosettatypes.Amount{
-				Value: sdk.NewInt(0).String(),
+				Value: sdkmath.NewInt(0).String(),
 				Currency: &rosettatypes.Currency{
 					Symbol: coin.Denom,
 				},

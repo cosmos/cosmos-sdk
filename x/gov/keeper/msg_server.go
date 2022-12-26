@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	goerrors "errors"
 	"fmt"
 	"strconv"
 
@@ -46,13 +45,6 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 	proposer, err := sdk.AccAddressFromBech32(msg.GetProposer())
 	if err != nil {
 		return nil, err
-	}
-
-	if msg.Title == "" {
-		return nil, goerrors.New("proposal title cannot be empty")
-	}
-	if msg.Summary == "" {
-		return nil, goerrors.New("proposal summary cannot be empty")
 	}
 
 	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer)

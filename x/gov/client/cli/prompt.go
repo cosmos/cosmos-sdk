@@ -142,7 +142,7 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadat
 	}
 
 	proposal := &proposal{
-		Metadata: "ipfs://CID",
+		Metadata: "ipfs://CID", // the metadata must be saved on IPFS, set placeholder
 		Title:    metadata.Title,
 		Summary:  metadata.Summary,
 	}

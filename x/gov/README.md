@@ -1155,7 +1155,9 @@ where `proposal.json` contains:
 }
 ```
 
-> Note: By default the metadata and the proposal are both limited by 255 characters, this can be overridden by the application developer
+:::note
+By default the metadata and the proposal are both limited by 255 characters, this can be overridden by the application developer.
+:::
 
 ##### submit-legacy-proposal
 

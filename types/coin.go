@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 //-----------------------------------------------------------------------------
@@ -13,7 +15,7 @@ import (
 
 // NewCoin returns a new coin with a denomination and amount. It will panic if
 // the amount is negative or if the denomination is invalid.
-func NewCoin(denom string, amount Int) Coin {
+func NewCoin(denom string, amount sdkmath.Int) Coin {
 	coin := Coin{
 		Denom:  denom,
 		Amount: amount,

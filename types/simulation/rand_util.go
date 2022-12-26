@@ -8,6 +8,7 @@ import (
 	"unsafe"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,7 +49,7 @@ func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
 
 	max = max.Sub(math.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(math.OneInt()), nil
+	return math.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(math.OneInt()), nil
 }
 
 // RandomAmount generates a random amount
@@ -65,12 +66,12 @@ func RandomAmount(r *rand.Rand, max math.Int) math.Int {
 		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
 
-	return sdk.NewIntFromBigInt(randInt)
+	return math.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) math.LegacyDec {
+func RandomDecAmount(r *rand.Rand, max math.LegacyDec) math.LegacyDec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -82,7 +83,7 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) math.LegacyDec {
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return math.LegacyNewDecFromBigIntWithPrec(randInt, math.LegacyPrecision)
 }
 
 // RandTimestamp generates a random timestamp

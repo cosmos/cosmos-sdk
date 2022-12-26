@@ -89,10 +89,10 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types0.AccountAliasI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountAliasI)
 	return ret0
 }
 
@@ -131,7 +131,7 @@ func (mr *MockAccountKeeperMockRecorder) GetModuleAddress(name interface{}) *gom
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types0.AccountAliasI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }

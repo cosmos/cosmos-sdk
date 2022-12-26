@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	_ client.Account          = sdk.AccountI(nil)
+	_ client.Account          = AccountAliasI(nil)
 	_ client.AccountRetriever = AccountRetriever{}
 )
 
@@ -51,7 +51,7 @@ func (ar AccountRetriever) GetAccountWithHeight(clientCtx client.Context, addr s
 		return nil, 0, fmt.Errorf("failed to parse block height: %w", err)
 	}
 
-	var acc sdk.AccountI
+	var acc AccountAliasI
 	if err := clientCtx.InterfaceRegistry.UnpackAny(res.Account, &acc); err != nil {
 		return nil, 0, err
 	}

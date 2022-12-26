@@ -8,15 +8,15 @@ import (
 // AccountKeeper defines the account contract that must be fulfilled when
 // creating a x/bank keeper.
 type AccountKeeper interface {
-	NewAccount(sdk.Context, sdk.AccountI) sdk.AccountI
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
+	NewAccount(sdk.Context, types.AccountAliasI) types.AccountAliasI
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountAliasI
 
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
-	GetAllAccounts(ctx sdk.Context) []sdk.AccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountAliasI
+	GetAllAccounts(ctx sdk.Context) []types.AccountAliasI
 	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	SetAccount(ctx sdk.Context, acc sdk.AccountI)
+	SetAccount(ctx sdk.Context, acc types.AccountAliasI)
 
-	IterateAccounts(ctx sdk.Context, process func(sdk.AccountI) bool)
+	IterateAccounts(ctx sdk.Context, process func(types.AccountAliasI) bool)
 
 	ValidatePermissions(macc types.ModuleAccountI) error
 

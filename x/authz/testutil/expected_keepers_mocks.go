@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,10 +36,10 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types0.AccountAliasI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountAliasI)
 	return ret0
 }
 
@@ -49,10 +50,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx types.Context, addr types.AccAddress) types0.AccountAliasI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountAliasI)
 	return ret0
 }
 
@@ -63,7 +64,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr interfa
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx types.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx types.Context, acc types0.AccountAliasI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }

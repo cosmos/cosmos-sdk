@@ -2,13 +2,14 @@ package authz
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
-	SetAccount(ctx sdk.Context, acc sdk.AccountI)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountAliasI
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountAliasI
+	SetAccount(ctx sdk.Context, acc authtypes.AccountAliasI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

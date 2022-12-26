@@ -26,7 +26,7 @@ import (
 
 // TestAccount represents an account used in the tests in x/auth/ante.
 type TestAccount struct {
-	acc  sdk.AccountI
+	acc  types.AccountAliasI
 	priv cryptotypes.PrivKey
 }
 

@@ -234,7 +234,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
-		a, ok := acc.GetCachedValue().(sdk.AccountI)
+		a, ok := acc.GetCachedValue().(authtypes.AccountAliasI)
 		if !ok {
 			panic("expected account")
 		}

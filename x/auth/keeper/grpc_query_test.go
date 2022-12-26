@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 			func(res *types.QueryAccountsResponse) {
 				addresses := make([]sdk.AccAddress, len(res.Accounts))
 				for i, acc := range res.Accounts {
-					var account sdk.AccountI
+					var account types.AccountAliasI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 					addresses[i] = account.GetAddress()
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			},
 			true,
 			func(res *types.QueryAccountResponse) {
-				var newAccount sdk.AccountI
+				var newAccount types.AccountAliasI
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &newAccount)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newAccount)
@@ -280,7 +280,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			func(res *types.QueryModuleAccountsResponse) {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
-					var account sdk.AccountI
+					var account types.AccountAliasI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
@@ -303,7 +303,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			func(res *types.QueryModuleAccountsResponse) {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
-					var account sdk.AccountI
+					var account types.AccountAliasI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				// Make sure output is sorted alphabetically.
 				var moduleNames []string
 				for _, any := range res.Accounts {
-					var account sdk.AccountI
+					var account types.AccountAliasI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(any, &account)
 					suite.Require().NoError(err)
 					moduleAccount, ok := account.(types.ModuleAccountI)
@@ -366,7 +366,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
 			},
 			true,
 			func(res *types.QueryModuleAccountByNameResponse) {
-				var account sdk.AccountI
+				var account types.AccountAliasI
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &account)
 				suite.Require().NoError(err)
 

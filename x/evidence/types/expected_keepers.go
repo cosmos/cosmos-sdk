@@ -5,6 +5,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -32,7 +33,7 @@ type (
 
 	// AccountKeeper define the account keeper interface contracted needed by the evidence module
 	AccountKeeper interface {
-		SetAccount(ctx sdk.Context, acc sdk.AccountI)
+		SetAccount(ctx sdk.Context, acc types.AccountAliasI)
 	}
 
 	// BankKeeper define the account keeper interface contracted needed by the evidence module

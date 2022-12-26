@@ -1,12 +1,9 @@
 package types
 
-import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-)
+import codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 func (m *QueryAccountResponse) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var account sdk.AccountI
+	var account AccountAliasI
 	return unpacker.UnpackAny(m.Account, &account)
 }
 

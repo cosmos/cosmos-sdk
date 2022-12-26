@@ -9,7 +9,8 @@ import (
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/bank/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -37,10 +38,10 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(arg0 types.Context, arg1 types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(arg0 types.Context, arg1 types.AccAddress) types0.AccountAliasI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", arg0, arg1)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountAliasI)
 	return ret0
 }
 
@@ -51,10 +52,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 interface{}) *gom
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types.AccountI) types.AccountI {
+func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types0.AccountAliasI) types0.AccountAliasI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountAliasI)
 	return ret0
 }
 
@@ -65,7 +66,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // RemoveAccount mocks base method.
-func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) RemoveAccount(ctx types.Context, acc types0.AccountAliasI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RemoveAccount", ctx, acc)
 }
@@ -77,7 +78,7 @@ func (mr *MockAccountKeeperMockRecorder) RemoveAccount(ctx, acc interface{}) *go
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountAliasI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", arg0, arg1)
 }
@@ -140,10 +141,10 @@ func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt interface{}
 }
 
 // MultiSend mocks base method.
-func (m *MockBankKeeper) MultiSend(arg0 context.Context, arg1 *types0.MsgMultiSend) (*types0.MsgMultiSendResponse, error) {
+func (m *MockBankKeeper) MultiSend(arg0 context.Context, arg1 *types1.MsgMultiSend) (*types1.MsgMultiSendResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MultiSend", arg0, arg1)
-	ret0, _ := ret[0].(*types0.MsgMultiSendResponse)
+	ret0, _ := ret[0].(*types1.MsgMultiSendResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -155,10 +156,10 @@ func (mr *MockBankKeeperMockRecorder) MultiSend(arg0, arg1 interface{}) *gomock.
 }
 
 // Send mocks base method.
-func (m *MockBankKeeper) Send(arg0 context.Context, arg1 *types0.MsgSend) (*types0.MsgSendResponse, error) {
+func (m *MockBankKeeper) Send(arg0 context.Context, arg1 *types1.MsgSend) (*types1.MsgSendResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Send", arg0, arg1)
-	ret0, _ := ret[0].(*types0.MsgSendResponse)
+	ret0, _ := ret[0].(*types1.MsgSendResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -184,10 +185,10 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 }
 
 // SetSendEnabled mocks base method.
-func (m *MockBankKeeper) SetSendEnabled(arg0 context.Context, arg1 *types0.MsgSetSendEnabled) (*types0.MsgSetSendEnabledResponse, error) {
+func (m *MockBankKeeper) SetSendEnabled(arg0 context.Context, arg1 *types1.MsgSetSendEnabled) (*types1.MsgSetSendEnabledResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetSendEnabled", arg0, arg1)
-	ret0, _ := ret[0].(*types0.MsgSetSendEnabledResponse)
+	ret0, _ := ret[0].(*types1.MsgSetSendEnabledResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -213,10 +214,10 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gom
 }
 
 // UpdateParams mocks base method.
-func (m *MockBankKeeper) UpdateParams(arg0 context.Context, arg1 *types0.MsgUpdateParams) (*types0.MsgUpdateParamsResponse, error) {
+func (m *MockBankKeeper) UpdateParams(arg0 context.Context, arg1 *types1.MsgUpdateParams) (*types1.MsgUpdateParamsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateParams", arg0, arg1)
-	ret0, _ := ret[0].(*types0.MsgUpdateParamsResponse)
+	ret0, _ := ret[0].(*types1.MsgUpdateParamsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

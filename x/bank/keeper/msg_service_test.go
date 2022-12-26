@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -158,7 +159,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			suite.mockMintCoins(minterAcc)
 			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
 			if !tc.expErr {
-				suite.mockInputOutputCoins([]sdk.AccountI{minterAcc}, accAddrs[:2])
+				suite.mockInputOutputCoins([]authtypes.AccountAliasI{minterAcc}, accAddrs[:2])
 			}
 			_, err := suite.msgServer.MultiSend(suite.ctx, tc.input)
 			if tc.expErr {

@@ -77,8 +77,8 @@ func (suite *DeterministicTestSuite) SetupTest() {
 }
 
 // createAndSetAccount creates a random account and sets to the keeper store.
-func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []sdk.AccountI {
-	accs := make([]sdk.AccountI, 0, count)
+func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []types.AccountAliasI {
+	accs := make([]types.AccountAliasI, 0, count)
 
 	// We need all generated account-numbers unique
 	accNums := rapid.SliceOfNDistinct(rapid.Uint64(), count, count, func(i uint64) uint64 { return i }).Draw(t, "acc-numss")
@@ -239,12 +239,12 @@ func (suite *DeterministicTestSuite) createAndReturnQueryClient(ak keeper.Accoun
 
 func (suite *DeterministicTestSuite) setModuleAccounts(
 	ctx sdk.Context, ak keeper.AccountKeeper, maccs []string,
-) []sdk.AccountI {
+) []types.AccountAliasI {
 	sort.Strings(maccs)
-	moduleAccounts := make([]sdk.AccountI, 0, len(maccs))
+	moduleAccounts := make([]types.AccountAliasI, 0, len(maccs))
 	for _, m := range maccs {
 		acc, _ := ak.GetModuleAccountAndPermissions(ctx, m)
-		acc1, ok := acc.(sdk.AccountI)
+		acc1, ok := acc.(types.AccountAliasI)
 		suite.Require().True(ok)
 		moduleAccounts = append(moduleAccounts, acc1)
 	}

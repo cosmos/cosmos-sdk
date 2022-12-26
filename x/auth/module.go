@@ -212,7 +212,7 @@ type AuthInputs struct {
 	Cdc    codec.Codec
 
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
-	AccountI                func() sdk.AccountI           `optional:"true"`
+	AccountI                func() types.AccountAliasI    `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`

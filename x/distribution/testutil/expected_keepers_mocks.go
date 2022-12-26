@@ -37,10 +37,10 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types0.AccountAliasI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountAliasI)
 	return ret0
 }
 

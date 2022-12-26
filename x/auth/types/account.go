@@ -9,6 +9,8 @@ import (
 
 	"github.com/tendermint/tendermint/crypto"
 
+	proto "github.com/cosmos/gogoproto/proto"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +18,7 @@ import (
 
 var (
 	_ sdk.AccountI                       = (*BaseAccount)(nil)
+	_ AccountAliasI                      = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
@@ -41,7 +44,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNu
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() sdk.AccountI {
+func ProtoBaseAccount() AccountAliasI {
 	return &BaseAccount{}
 }
 
@@ -266,10 +269,37 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 	return nil
 }
 
+// AccountI is an interface used to store coins at a given address within state.
+// It presumes a notion of sequence numbers for replay protection,
+// a notion of account numbers for replay protection for previously pruned accounts,
+// and a pubkey for authentication purposes.
+//
+// Many complex conditions can be used in the concrete struct which implements AccountI.
+//
+// Deprecated
+type AccountI interface {
+	proto.Message
+
+	GetAddress() sdk.AccAddress
+	SetAddress(sdk.AccAddress) error // errors if already set.
+
+	GetPubKey() cryptotypes.PubKey // can return nil.
+	SetPubKey(cryptotypes.PubKey) error
+
+	GetAccountNumber() uint64
+	SetAccountNumber(uint64) error
+
+	GetSequence() uint64
+	SetSequence(uint64) error
+
+	// Ensure that account implements stringer
+	String() string
+}
+
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 type ModuleAccountI interface {
-	sdk.AccountI
+	AccountAliasI
 
 	GetName() string
 	GetPermissions() []string
@@ -293,7 +323,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
 type GenesisAccount interface {
-	sdk.AccountI
+	AccountAliasI
 
 	Validate() error
 }

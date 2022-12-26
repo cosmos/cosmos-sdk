@@ -30,7 +30,7 @@ type StakingKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountAliasI
 
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI

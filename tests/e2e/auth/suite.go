@@ -310,6 +310,7 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// fetch the sequence after a tx, should be incremented.
 	_, seq1, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)

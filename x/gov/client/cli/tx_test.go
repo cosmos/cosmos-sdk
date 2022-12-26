@@ -120,6 +120,8 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 				}
 			}
 		],
+		"title": "My awesome title",
+		"summary": "My awesome description",
 		"metadata": "%s",
 		"deposit": "%s"
 	}`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("stake", sdk.NewInt(5431)))

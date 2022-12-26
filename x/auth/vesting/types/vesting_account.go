@@ -13,7 +13,7 @@ import (
 
 // Compile-time type assertions
 var (
-	_ authtypes.AccountAliasI     = (*BaseVestingAccount)(nil)
+	_ authtypes.AccountI          = (*BaseVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)

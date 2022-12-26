@@ -18,25 +18,25 @@ import (
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
-	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountAliasI
+	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI
 
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(sdk.Context, types.AccountAliasI) types.AccountAliasI
+	NewAccount(sdk.Context, types.AccountI) types.AccountI
 
 	// Check if an account exists in the store.
 	HasAccount(sdk.Context, sdk.AccAddress) bool
 
 	// Retrieve an account from the store.
-	GetAccount(sdk.Context, sdk.AccAddress) types.AccountAliasI
+	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
 
 	// Set an account in the store.
-	SetAccount(sdk.Context, types.AccountAliasI)
+	SetAccount(sdk.Context, types.AccountI)
 
 	// Remove an account from the store.
-	RemoveAccount(sdk.Context, types.AccountAliasI)
+	RemoveAccount(sdk.Context, types.AccountI)
 
 	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(sdk.Context, func(types.AccountAliasI) bool)
+	IterateAccounts(sdk.Context, func(types.AccountI) bool)
 
 	// Fetch the public key of an account at a specified address
 	GetPubKey(sdk.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
@@ -59,7 +59,7 @@ type AccountKeeper struct {
 	permAddrs map[string]types.PermissionsForAddress
 
 	// The prototypical AccountI constructor.
-	proto      func() types.AccountAliasI
+	proto      func() types.AccountI
 	addressCdc address.Codec
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -76,7 +76,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // and don't have to fit into any predefined structure. This auth module does not use account permissions internally, though other modules
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
-	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() types.AccountAliasI,
+	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, proto func() types.AccountI,
 	maccPerms map[string][]string, bech32Prefix string, authority string,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
@@ -228,7 +228,7 @@ func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccou
 	ak.SetAccount(ctx, macc)
 }
 
-func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountAliasI {
+func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountI {
 	acc, err := ak.UnmarshalAccount(bz)
 	if err != nil {
 		panic(err)
@@ -238,14 +238,14 @@ func (ak AccountKeeper) decodeAccount(bz []byte) types.AccountAliasI {
 }
 
 // MarshalAccount protobuf serializes an Account interface
-func (ak AccountKeeper) MarshalAccount(accountI types.AccountAliasI) ([]byte, error) { //nolint:interfacer
+func (ak AccountKeeper) MarshalAccount(accountI types.AccountI) ([]byte, error) { //nolint:interfacer
 	return ak.cdc.MarshalInterface(accountI)
 }
 
 // UnmarshalAccount returns an Account interface from raw encoded account
 // bytes of a Proto-based Account type
-func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountAliasI, error) {
-	var acc types.AccountAliasI
+func (ak AccountKeeper) UnmarshalAccount(bz []byte) (types.AccountI, error) {
+	var acc types.AccountI
 	return acc, ak.cdc.UnmarshalInterface(bz, &acc)
 }
 

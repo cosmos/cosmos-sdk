@@ -6,7 +6,7 @@ import (
 )
 
 // NewAccountWithAddress implements AccountKeeperI.
-func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountAliasI {
+func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	acc := ak.proto()
 	err := acc.SetAddress(addr)
 	if err != nil {
@@ -17,7 +17,7 @@ func (ak AccountKeeper) NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddre
 }
 
 // NewAccount sets the next account number to a given account interface
-func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountAliasI) types.AccountAliasI {
+func (ak AccountKeeper) NewAccount(ctx sdk.Context, acc types.AccountI) types.AccountI {
 	if err := acc.SetAccountNumber(ak.NextAccountNumber(ctx)); err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func (ak AccountKeeper) HasAccountAddressByID(ctx sdk.Context, id uint64) bool {
 }
 
 // GetAccount implements AccountKeeperI.
-func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountAliasI {
+func (ak AccountKeeper) GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI {
 	store := ctx.KVStore(ak.storeKey)
 	bz := store.Get(types.AddressStoreKey(addr))
 	if bz == nil {
@@ -59,8 +59,8 @@ func (ak AccountKeeper) GetAccountAddressByID(ctx sdk.Context, id uint64) string
 }
 
 // GetAllAccounts returns all accounts in the accountKeeper.
-func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.AccountAliasI) {
-	ak.IterateAccounts(ctx, func(acc types.AccountAliasI) (stop bool) {
+func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.AccountI) {
+	ak.IterateAccounts(ctx, func(acc types.AccountI) (stop bool) {
 		accounts = append(accounts, acc)
 		return false
 	})
@@ -69,7 +69,7 @@ func (ak AccountKeeper) GetAllAccounts(ctx sdk.Context) (accounts []types.Accoun
 }
 
 // SetAccount implements AccountKeeperI.
-func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountAliasI) {
+func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.storeKey)
 
@@ -84,7 +84,7 @@ func (ak AccountKeeper) SetAccount(ctx sdk.Context, acc types.AccountAliasI) {
 
 // RemoveAccount removes an account for the account mapper store.
 // NOTE: this will cause supply invariant violation if called
-func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountAliasI) {
+func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 	addr := acc.GetAddress()
 	store := ctx.KVStore(ak.storeKey)
 	store.Delete(types.AddressStoreKey(addr))
@@ -93,7 +93,7 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountAliasI) 
 
 // IterateAccounts iterates over all the stored accounts and performs a callback function.
 // Stops iteration when callback returns true.
-func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountAliasI) (stop bool)) {
+func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
 	store := ctx.KVStore(ak.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 

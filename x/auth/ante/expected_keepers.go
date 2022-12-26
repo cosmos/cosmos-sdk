@@ -9,8 +9,8 @@ import (
 // Interface provides support to use non-sdk AccountKeeper for AnteHandler's decorators.
 type AccountKeeper interface {
 	GetParams(ctx sdk.Context) (params types.Params)
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountAliasI
-	SetAccount(ctx sdk.Context, acc types.AccountAliasI)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	SetAccount(ctx sdk.Context, acc types.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
 }
 

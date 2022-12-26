@@ -78,7 +78,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types0.AccountAliasI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types0.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }
@@ -90,10 +90,10 @@ func (mr *MockAccountKeeperMockRecorder) IterateAccounts(ctx, process interface{
 }
 
 // NewAccount mocks base method.
-func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types0.AccountAliasI) types0.AccountAliasI {
+func (m *MockAccountKeeper) NewAccount(arg0 types.Context, arg1 types0.AccountI) types0.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccount", arg0, arg1)
-	ret0, _ := ret[0].(types0.AccountAliasI)
+	ret0, _ := ret[0].(types0.AccountI)
 	return ret0
 }
 
@@ -104,7 +104,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccount(arg0, arg1 interface{}) *gom
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountAliasI) {
+func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", arg0, arg1)
 }
@@ -139,7 +139,7 @@ func (m *MockGenesisAccountsIterator) EXPECT() *MockGenesisAccountsIteratorMockR
 }
 
 // IterateGenesisAccounts mocks base method.
-func (m *MockGenesisAccountsIterator) IterateGenesisAccounts(cdc *codec.LegacyAmino, appGenesis map[string]json.RawMessage, cb func(types0.AccountAliasI) bool) {
+func (m *MockGenesisAccountsIterator) IterateGenesisAccounts(cdc *codec.LegacyAmino, appGenesis map[string]json.RawMessage, cb func(types0.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateGenesisAccounts", cdc, appGenesis, cb)
 }

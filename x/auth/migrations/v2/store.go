@@ -46,7 +46,7 @@ const (
 
 // We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
-func migrateVestingAccounts(ctx sdk.Context, account types.AccountAliasI, queryServer grpc.Server) (types.AccountAliasI, error) {
+func migrateVestingAccounts(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
 	bondDenom, err := getBondDenom(ctx, queryServer)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func migrateVestingAccounts(ctx sdk.Context, account types.AccountAliasI, queryS
 
 	asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
 
-	return asVesting.(types.AccountAliasI), nil
+	return asVesting.(types.AccountI), nil
 }
 
 func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.VestingAccount, bool) {
@@ -290,6 +290,6 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 //
 // We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
-func MigrateAccount(ctx sdk.Context, account types.AccountAliasI, queryServer grpc.Server) (types.AccountAliasI, error) {
+func MigrateAccount(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
 	return migrateVestingAccounts(ctx, account, queryServer)
 }

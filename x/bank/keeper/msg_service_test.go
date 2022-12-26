@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSend() {
 			suite.mockMintCoins(minterAcc)
 			suite.bankKeeper.MintCoins(suite.ctx, minterAcc.Name, origCoins)
 			if !tc.expErr {
-				suite.mockInputOutputCoins([]authtypes.AccountAliasI{minterAcc}, accAddrs[:2])
+				suite.mockInputOutputCoins([]authtypes.AccountI{minterAcc}, accAddrs[:2])
 			}
 			_, err := suite.msgServer.MultiSend(suite.ctx, tc.input)
 			if tc.expErr {

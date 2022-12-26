@@ -397,7 +397,7 @@ func (s *E2ETestSuite) TestCLISignAminoJSON() {
 	// query account info
 	queryResJSON, err := authclitestutil.QueryAccountExec(val1.ClientCtx, val1.Address)
 	require.NoError(err)
-	var account authtypes.AccountAliasI
+	var account authtypes.AccountI
 	require.NoError(val1.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	/****  test signature-only  ****/
@@ -1327,7 +1327,7 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 
 	queryResJSON, err := authclitestutil.QueryAccountExec(val.ClientCtx, addr)
 	s.Require().NoError(err)
-	var account authtypes.AccountAliasI
+	var account authtypes.AccountI
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(queryResJSON.Bytes(), &account))
 
 	// sign-batch file
@@ -1398,7 +1398,7 @@ func (s *E2ETestSuite) TestGetAccountCmd() {
 				s.Require().Error(err)
 				s.Require().NotEqual("internal", err.Error())
 			} else {
-				var acc authtypes.AccountAliasI
+				var acc authtypes.AccountI
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &acc))
 				s.Require().Equal(val.Address, acc.GetAddress())
 			}
@@ -1456,7 +1456,7 @@ func (s *E2ETestSuite) TestQueryModuleAccountByNameCmd() {
 				var res authtypes.QueryModuleAccountByNameResponse
 				s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
 
-				var account authtypes.AccountAliasI
+				var account authtypes.AccountI
 				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
 				s.Require().NoError(err)
 

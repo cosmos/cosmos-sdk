@@ -17,7 +17,6 @@ import (
 
 var (
 	_ sdk.AccountI                       = (*BaseAccount)(nil)
-	_ AccountAliasI                      = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
@@ -43,7 +42,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNu
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() AccountAliasI {
+func ProtoBaseAccount() AccountI {
 	return &BaseAccount{}
 }
 
@@ -298,7 +297,7 @@ type AccountI interface {
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 type ModuleAccountI interface {
-	AccountAliasI
+	AccountI
 
 	GetName() string
 	GetPermissions() []string
@@ -322,7 +321,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
 type GenesisAccount interface {
-	AccountAliasI
+	AccountI
 
 	Validate() error
 }

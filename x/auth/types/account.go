@@ -274,7 +274,7 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 //
 // Many complex conditions can be used in the concrete struct which implements AccountI.
 //
-// Deprecated
+// Deprecated: Use `AccountI` from types package instead.
 type AccountI interface {
 	proto.Message
 

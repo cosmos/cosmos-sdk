@@ -293,32 +293,42 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames, nil)
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames)
+	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames, nil)
 	m.OrderExportGenesis = moduleNames
 }
 
 // SetOrderBeginBlockers sets the order of set begin-blocker calls
 func (m *Manager) SetOrderBeginBlockers(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderBeginBlockers", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasBeginBlock := module.(BeginBlockAppModule)
+			return !hasBeginBlock
+		})
 	m.OrderBeginBlockers = moduleNames
 }
 
 // SetOrderEndBlockers sets the order of set end-blocker calls
 func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames)
+	m.assertNoForgottenModules("SetOrderEndBlockers", moduleNames,
+		func(moduleName string) bool {
+			module := m.Modules[moduleName]
+			_, hasEndBlock := module.(EndBlockAppModule)
+			return !hasEndBlock
+		})
 	m.OrderEndBlockers = moduleNames
 }
 
 // SetOrderMigrations sets the order of migrations to be run. If not set
 // then migrations will be run with an order defined in `DefaultMigrationsOrder`.
 func (m *Manager) SetOrderMigrations(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderMigrations", moduleNames)
+	m.assertNoForgottenModules("SetOrderMigrations", moduleNames, nil)
 	m.OrderMigrations = moduleNames
 }
 
@@ -429,13 +439,17 @@ func (m *Manager) checkModulesExists(moduleName []string) error {
 
 // assertNoForgottenModules checks that we didn't forget any modules in the
 // SetOrder* functions.
-func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string) {
+func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(string) bool) {
 	ms := make(map[string]bool)
 	for _, m := range moduleNames {
 		ms[m] = true
 	}
 	var missing []string
 	for m := range m.Modules {
+		if pass != nil && pass(m) {
+			continue
+		}
+
 		if !ms[m] {
 			missing = append(missing, m)
 		}

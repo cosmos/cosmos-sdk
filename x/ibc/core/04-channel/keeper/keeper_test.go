@@ -63,7 +63,7 @@ func (suite *KeeperTestSuite) TestSetChannel() {
 
 // TestGetAllChannels creates multiple channels on chain A through various connections
 // and tests their retrieval. 2 channels are on connA0 and 1 channel is on connA1
-func (suite KeeperTestSuite) TestGetAllChannels() {
+func (suite KeeperTestSuite) TestGetAllChannels() { //nolint:govet // this is a test and we're ok with copying locks.
 	clientA, clientB, connA0, connB0, testchannel0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 	// channel0 on first connection on chainA
 	counterparty0 := types.Counterparty{
@@ -118,7 +118,7 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 
 // TestGetAllSequences sets all packet sequences for two different channels on chain A and
 // tests their retrieval.
-func (suite KeeperTestSuite) TestGetAllSequences() {
+func (suite KeeperTestSuite) TestGetAllSequences() { //nolint:govet // this is a test and we're ok with copying locks.
 	_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 	channelA1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 
@@ -151,7 +151,7 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 
 // TestGetAllPacketState creates a set of acks, packet commitments, and receipts on two different
 // channels on chain A and tests their retrieval.
-func (suite KeeperTestSuite) TestGetAllPacketState() {
+func (suite KeeperTestSuite) TestGetAllPacketState() { //nolint:govet // this is a test and we're ok with copying locks.
 	_, _, connA, connB, channelA0, _ := suite.coordinator.Setup(suite.chainA, suite.chainB, types.UNORDERED)
 	channelA1, _ := suite.coordinator.CreateMockChannels(suite.chainA, suite.chainB, connA, connB, types.UNORDERED)
 

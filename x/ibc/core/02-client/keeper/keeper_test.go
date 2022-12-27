@@ -231,7 +231,7 @@ func (suite *KeeperTestSuite) TestValidateSelfClient() {
 	}
 }
 
-func (suite KeeperTestSuite) TestGetAllGenesisClients() {
+func (suite KeeperTestSuite) TestGetAllGenesisClients() { //nolint:govet // this is a test and we're ok with copying locks.
 	clientIDs := []string{
 		testClientID2, testClientID3, testClientID,
 	}
@@ -258,7 +258,7 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	suite.Require().Equal(expGenClients.Sort(), genClients)
 }
 
-func (suite KeeperTestSuite) TestGetAllGenesisMetadata() {
+func (suite KeeperTestSuite) TestGetAllGenesisMetadata() { //nolint:govet // this is a test and we're ok with copying locks.
 	expectedGenMetadata := []types.IdentifiedGenesisMetadata{
 		types.NewIdentifiedGenesisMetadata(
 			"clientA",
@@ -289,7 +289,7 @@ func (suite KeeperTestSuite) TestGetAllGenesisMetadata() {
 	suite.Require().Equal(expectedGenMetadata, actualGenMetadata, "retrieved metadata is unexpected")
 }
 
-func (suite KeeperTestSuite) TestGetConsensusState() {
+func (suite KeeperTestSuite) TestGetConsensusState() { //nolint:govet // this is a test and we're ok with copying locks.
 	suite.ctx = suite.ctx.WithBlockHeight(10)
 	cases := []struct {
 		name    string
@@ -315,7 +315,7 @@ func (suite KeeperTestSuite) TestGetConsensusState() {
 	}
 }
 
-func (suite KeeperTestSuite) TestConsensusStateHelpers() {
+func (suite KeeperTestSuite) TestConsensusStateHelpers() { //nolint:govet // this is a test and we're ok with copying locks.
 	// initial setup
 	clientState := ibctmtypes.NewClientState(testChainID, ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod, maxClockDrift, testClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 
@@ -341,7 +341,7 @@ func (suite KeeperTestSuite) TestConsensusStateHelpers() {
 
 // 2 clients in total are created on chainA. The first client is updated so it contains an initial consensus state
 // and a consensus state at the update height.
-func (suite KeeperTestSuite) TestGetAllConsensusStates() {
+func (suite KeeperTestSuite) TestGetAllConsensusStates() { //nolint:govet // this is a test and we're ok with copying locks.
 	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
 
 	clientState := suite.chainA.GetClientState(clientA)

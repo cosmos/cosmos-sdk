@@ -57,10 +57,8 @@ func TestParams(t *testing.T) {
 
 	expParams := types.DefaultParams()
 
-
 	resParams := app.StakingKeeper.GetParams(ctx)
 	require.True(t, expParams.Equal(resParams))
-
 
 	expParams.MaxValidators = 777
 	app.StakingKeeper.SetParams(ctx, expParams)

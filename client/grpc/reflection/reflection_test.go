@@ -27,7 +27,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.queryClient = queryClient
 }
 
-func (s IntegrationTestSuite) TestSimulateService() {
+func (s IntegrationTestSuite) TestSimulateService() { //nolint:govet // this is a test and we're ok with copying locks.
 	// We will test the following interface for testing.
 	iface := "cosmos.evidence.v1beta1.Evidence"
 

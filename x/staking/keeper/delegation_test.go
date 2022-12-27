@@ -21,7 +21,6 @@ func TestDelegation(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
-
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
@@ -313,7 +312,6 @@ func TestUndelegateSelfDelegationBelowMinSelfDelegation(t *testing.T) {
 	delTokens := sdk.TokensFromConsensusPower(10)
 	delCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens))
 
-
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 
 	validator.MinSelfDelegation = delTokens
@@ -378,7 +376,6 @@ func TestUndelegateFromUnbondingValidator(t *testing.T) {
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
-
 
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
@@ -562,7 +559,6 @@ func TestUnbondingAllDelegationFromValidator(t *testing.T) {
 	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(delCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-
 
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
@@ -819,7 +815,6 @@ func TestRedelegateSelfDelegation(t *testing.T) {
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
@@ -877,7 +872,6 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
-
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 
@@ -924,7 +918,6 @@ func TestRedelegateFromUnbondingValidator(t *testing.T) {
 	params := app.StakingKeeper.GetParams(ctx)
 	require.True(t, blockTime.Add(params.UnbondingTime).Equal(validator.UnbondingTime))
 
-
 	header = ctx.BlockHeader()
 	blockHeight2 := int64(20)
 	header.Height = blockHeight2
@@ -960,7 +953,6 @@ func TestRedelegateFromUnbondedValidator(t *testing.T) {
 	err := app.BankKeeper.SetBalances(ctx, notBondedPool.GetAddress(), oldNotBonded.Add(startCoins...))
 	require.NoError(t, err)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-
 
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)

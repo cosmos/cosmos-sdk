@@ -24,7 +24,6 @@ func TestInitApp(t *testing.T) {
 	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
 	require.NoError(t, err)
 
-
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}

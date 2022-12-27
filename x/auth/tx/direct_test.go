@@ -136,6 +136,7 @@ func TestDirectModeHandler_nonDIRECT_MODE(t *testing.T) {
 		signingtypes.SignMode_SIGN_MODE_UNSPECIFIED,
 	}
 	for _, invalidMode := range invalidModes {
+		invalidMode := invalidMode
 		t.Run(invalidMode.String(), func(t *testing.T) {
 			var dh signModeDirectHandler
 			var signingData signing.SignerData

@@ -1064,9 +1064,9 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 		{
 			Description: "The native staking token of the Token Hub.",
 			DenomUnits: []*types.DenomUnit{
-				{"1token", uint32(5), []string{"decitoken"}},
-				{"2token", uint32(4), []string{"centitoken"}},
-				{"3token", uint32(7), []string{"dekatoken"}},
+				{Denom: "1token", Exponent: uint32(5), Aliases: []string{"decitoken"}},
+				{Denom: "2token", Exponent: uint32(4), Aliases: []string{"centitoken"}},
+				{Denom: "3token", Exponent: uint32(7), Aliases: []string{"dekatoken"}},
 			},
 			Base:    "utoken",
 			Display: "token",

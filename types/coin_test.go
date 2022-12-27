@@ -880,6 +880,7 @@ func (s *coinTestSuite) TestNewCoins() {
 		{"panic on invalid coin", []sdk.Coin{invalidCoin, tenatom}, sdk.Coins{}, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		if tt.wantPanic {
 			s.Require().Panics(func() { sdk.NewCoins(tt.coins...) })
 			continue

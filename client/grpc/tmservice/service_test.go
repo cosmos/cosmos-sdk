@@ -47,7 +47,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s IntegrationTestSuite) TestQueryNodeInfo() {
+func (s IntegrationTestSuite) TestQueryNodeInfo() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 
 	res, err := s.queryClient.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
@@ -61,7 +61,7 @@ func (s IntegrationTestSuite) TestQueryNodeInfo() {
 	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
 
-func (s IntegrationTestSuite) TestQuerySyncing() {
+func (s IntegrationTestSuite) TestQuerySyncing() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 
 	_, err := s.queryClient.GetSyncing(context.Background(), &tmservice.GetSyncingRequest{})
@@ -73,7 +73,7 @@ func (s IntegrationTestSuite) TestQuerySyncing() {
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &syncingRes))
 }
 
-func (s IntegrationTestSuite) TestQueryLatestBlock() {
+func (s IntegrationTestSuite) TestQueryLatestBlock() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 
 	_, err := s.queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
@@ -85,7 +85,7 @@ func (s IntegrationTestSuite) TestQueryLatestBlock() {
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
-func (s IntegrationTestSuite) TestQueryBlockByHeight() {
+func (s IntegrationTestSuite) TestQueryBlockByHeight() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	_, err := s.queryClient.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
@@ -96,7 +96,7 @@ func (s IntegrationTestSuite) TestQueryBlockByHeight() {
 	s.Require().NoError(val.ClientCtx.JSONMarshaler.UnmarshalJSON(restRes, &blockInfoRes))
 }
 
-func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
+func (s IntegrationTestSuite) TestQueryLatestValidatorSet() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 
 	// nil pagination
@@ -108,7 +108,6 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	content, ok := res.Validators[0].PubKey.GetCachedValue().(cryptotypes.PubKey)
 	s.Require().Equal(true, ok)
 	s.Require().Equal(content, val.PubKey)
-
 
 	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
 		Offset: 0,
@@ -131,7 +130,7 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	s.Require().Equal(validatorSetRes.Validators[0].PubKey, anyPub)
 }
 
-func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() {
+func (s IntegrationTestSuite) TestQueryValidatorSetByHeight() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 
 	// nil pagination

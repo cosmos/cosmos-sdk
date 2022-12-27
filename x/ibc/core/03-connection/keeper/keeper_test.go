@@ -55,7 +55,7 @@ func (suite *KeeperTestSuite) TestSetAndGetClientConnectionPaths() {
 }
 
 // create 2 connections: A0 - B0, A1 - B1
-func (suite KeeperTestSuite) TestGetAllConnections() {
+func (suite KeeperTestSuite) TestGetAllConnections() { //nolint:govet // this is a test and we're ok with copying locks.
 	clientA, clientB, connA0, connB0 := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 	connA1, connB1 := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA, clientB)
 
@@ -77,7 +77,7 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 // the test creates 2 clients clientA0 and clientA1. clientA0 has a single
 // connection and clientA1 has 2 connections.
-func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
+func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() { //nolint:govet // this is a test and we're ok with copying locks.
 	clientA0, _, connA0, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 	clientA1, clientB1, connA1, _ := suite.coordinator.SetupClientConnections(suite.chainA, suite.chainB, exported.Tendermint)
 	connA2, _ := suite.coordinator.CreateConnection(suite.chainA, suite.chainB, clientA1, clientB1)
@@ -113,6 +113,7 @@ func (suite *KeeperTestSuite) TestGetTimestampAtHeight() {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

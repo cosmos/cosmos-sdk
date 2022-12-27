@@ -88,6 +88,7 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 
@@ -133,6 +134,7 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 

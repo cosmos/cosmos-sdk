@@ -170,6 +170,7 @@ func TestPubKeyEquals(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
 			eq := tc.pubKey.Equals(tc.other)
 			require.Equal(t, eq, tc.expectEq)
@@ -209,6 +210,7 @@ func TestPrivKeyEquals(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
 			eq := tc.privKey.Equals(tc.other)
 			require.Equal(t, eq, tc.expectEq)
@@ -245,6 +247,7 @@ func TestMarshalAmino(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			// Do a round trip of encoding/decoding binary.
 			bz, err := aminoCdc.MarshalBinaryBare(tc.msg)
@@ -311,6 +314,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			// Make sure Amino encoding override is not breaking backwards compatibility.
 			bz1, err := tc.marshalFn(tc.tmKey)

@@ -111,6 +111,7 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(tc.name, func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			suite.Require().NoError(suite.txBuilder.SetMsgs(msg))

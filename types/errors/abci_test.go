@@ -85,7 +85,7 @@ func (s *abciTestSuite) TestABCInfo() {
 		//	debug:    true,
 		//	wantLog:  "cannot read file: EOF",
 		//	wantCode: 1,
-		//},
+		// },
 		"custom error": {
 			err:       customErr{},
 			debug:     false,

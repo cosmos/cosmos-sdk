@@ -22,6 +22,7 @@ func TestCreateMembership(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			data := BuildMap(tc.size)
 			allkeys := SortedKeys(data)
@@ -63,6 +64,7 @@ func TestCreateNonMembership(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			data := BuildMap(tc.size)
 			allkeys := SortedKeys(data)
@@ -104,6 +106,7 @@ func TestInvalidKey(t *testing.T) {
 		{"CreateNonMembershipProof empty key in data", CreateNonMembershipProof, map[string][]byte{"": nil}, []byte(" "), ErrEmptyKeyInData},
 	}
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := tc.f(tc.data, tc.key)
 			assert.True(t, errors.Is(err, tc.err))

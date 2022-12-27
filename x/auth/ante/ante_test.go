@@ -65,6 +65,7 @@ func (suite *AnteTestSuite) TestSimulateGasCost() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -147,6 +148,7 @@ func (suite *AnteTestSuite) TestAnteHandlerSigErrors() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -228,6 +230,8 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbers() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -312,6 +316,8 @@ func (suite *AnteTestSuite) TestAnteHandlerAccountNumbersAtBlockHeightZero() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -424,6 +430,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSequences() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -501,6 +509,8 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -572,6 +582,8 @@ func (suite *AnteTestSuite) TestAnteHandlerMemoGas() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -645,6 +657,7 @@ func (suite *AnteTestSuite) TestAnteHandlerMultiSigner() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -771,6 +784,8 @@ func (suite *AnteTestSuite) TestAnteHandlerBadSignBytes() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -879,6 +894,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSetPubKey() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -892,15 +909,14 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 	pubkeys = make([]cryptotypes.PubKey, n)
 	signatures = make([][]byte, n)
 	for i := 0; i < n; i++ {
-		var privkey cryptotypes.PrivKey
-		privkey = secp256k1.GenPrivKey()
+		privkey := secp256k1.GenPrivKey()
 
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
 		// for now this fails:
 		// if rand.Int63()%2 == 0 {
 		//	privkey = ed25519.GenPrivKey()
-		//} else {
+		// } else {
 		//	privkey = secp256k1.GenPrivKey()
 		//}
 
@@ -954,6 +970,8 @@ func TestCountSubkeys(t *testing.T) {
 		{"multi level multikey", args{multiLevelMultiKey}, 11},
 	}
 	for _, tc := range testCases {
+		tc := tc
+
 		t.Run(tc.name, func(T *testing.T) {
 			require.Equal(t, tc.want, ante.CountSubKeys(tc.args.pub))
 		})
@@ -987,6 +1005,8 @@ func (suite *AnteTestSuite) TestAnteHandlerSigLimitExceeded() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
@@ -1038,6 +1058,8 @@ func (suite *AnteTestSuite) TestCustomSignatureVerificationGasConsumer() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()

@@ -110,6 +110,8 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 			cdc := suite.encodingConfig.Marshaler
@@ -177,6 +179,8 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 			cdc := suite.encodingConfig.Marshaler
@@ -256,6 +260,8 @@ func (suite *GenTxTestSuite) TestDeliverGenTxs() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 

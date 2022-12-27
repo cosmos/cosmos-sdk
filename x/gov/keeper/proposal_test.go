@@ -130,6 +130,8 @@ func TestGetProposalsFiltered(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
+		i := i
+		tc := tc
 		t.Run(fmt.Sprintf("Test Case %d", i), func(t *testing.T) {
 			proposals := app.GovKeeper.GetProposalsFiltered(ctx, tc.params)
 			require.Len(t, proposals, tc.expectedNumResults)

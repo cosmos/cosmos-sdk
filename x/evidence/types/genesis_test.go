@@ -39,6 +39,8 @@ func TestNewGenesisState(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 
@@ -111,6 +113,8 @@ func TestGenesisStateValidate(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			tc.malleate()
 
@@ -146,6 +150,8 @@ func TestUnpackInterfaces(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		t.Run(fmt.Sprintf("Case %s", tc.msg), func(t *testing.T) {
 			if tc.expPass {
 				require.NoError(t, gs.UnpackInterfaces(tc.unpacker))

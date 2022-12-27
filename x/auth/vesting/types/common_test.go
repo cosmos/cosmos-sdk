@@ -4,7 +4,4 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 )
 
-var (
-	app         = simapp.Setup(false)
-	appCodec, _ = simapp.MakeCodecs()
-)
+var app = simapp.Setup(false)

@@ -104,6 +104,8 @@ func (suite *HandlerTestSuite) TestMsgSubmitEvidence() {
 	}
 
 	for i, tc := range testCases {
+		i := i
+		tc := tc
 		ctx := suite.app.BaseApp.NewContext(false, tmproto.Header{Height: suite.app.LastBlockHeight() + 1})
 
 		res, err := suite.handler(ctx, tc.msg)

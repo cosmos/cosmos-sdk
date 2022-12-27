@@ -28,6 +28,7 @@ func TestNormalizeProposalStatus(t *testing.T) {
 		{"rejected", args{"rejected"}, "PROPOSAL_STATUS_REJECTED"},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, utils.NormalizeProposalStatus(tt.args.status))
 		})

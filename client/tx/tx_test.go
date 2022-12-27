@@ -240,6 +240,7 @@ func TestSign(t *testing.T) {
 	}
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			err = tx.Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
 			if len(tc.expectedPKs) == 0 {

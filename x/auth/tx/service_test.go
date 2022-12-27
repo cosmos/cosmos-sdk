@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
+func (s IntegrationTestSuite) TestSimulateTx_GRPC() { //nolint:govet // this is a test and we're ok with copying locks.
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
 	protoTx, err := txBuilderToProtoTx(txBuilder)
@@ -113,7 +113,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
+func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -131,6 +131,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		s.Run(tc.name, func() {
 			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
 			s.Require().NoError(err)
@@ -150,7 +151,7 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
+func (s IntegrationTestSuite) TestGetTxEvents_GRPC() { //nolint:govet // this is a test and we're ok with copying locks.
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxsEventRequest
@@ -208,6 +209,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		s.Run(tc.name, func() {
 			// Query the tx via gRPC.
 			grpcRes, err := s.queryClient.GetTxsEvent(context.Background(), tc.req)
@@ -229,7 +231,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
+func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -287,6 +289,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		s.Run(tc.name, func() {
 			res, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -304,7 +307,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTx_GRPC() {
+func (s IntegrationTestSuite) TestGetTx_GRPC() { //nolint:govet // this is a test and we're ok with copying locks.
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxRequest
@@ -317,6 +320,8 @@ func (s IntegrationTestSuite) TestGetTx_GRPC() {
 		{"good request", &tx.GetTxRequest{Hash: s.txRes.TxHash}, false, ""},
 	}
 	for _, tc := range testCases {
+		tc := tc
+
 		s.Run(tc.name, func() {
 			// Query the tx via gRPC.
 			grpcRes, err := s.queryClient.GetTx(context.Background(), tc.req)
@@ -331,7 +336,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
+func (s IntegrationTestSuite) TestGetTx_GRPCGateway() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -356,6 +361,8 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
+
 		s.Run(tc.name, func() {
 			res, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
@@ -378,7 +385,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
+func (s IntegrationTestSuite) TestBroadcastTx_GRPC() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -418,7 +425,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
+func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -439,6 +446,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		s.Run(tc.name, func() {
 			req, err := val.ClientCtx.JSONMarshaler.MarshalJSON(tc.req)
 			s.Require().NoError(err)
@@ -460,7 +468,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
 
-func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder { //nolint:govet // this is a test and we're ok with copying locks.
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 

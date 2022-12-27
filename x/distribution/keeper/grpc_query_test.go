@@ -85,6 +85,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -136,6 +137,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorOutstandingRewards() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -183,6 +185,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorCommission() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -322,6 +325,7 @@ func (suite *KeeperTestSuite) TestGRPCValidatorSlashes() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -423,6 +427,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -476,6 +481,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -536,6 +542,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -582,6 +589,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -636,6 +644,7 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 

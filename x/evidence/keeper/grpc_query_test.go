@@ -58,6 +58,8 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 
@@ -119,6 +121,8 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
+
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
 

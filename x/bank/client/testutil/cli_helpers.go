@@ -74,7 +74,7 @@ func newSendTxMsgServiceCmd() *cobra.Command {
 ignored as it is implied from [from_key_or_address].`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Flags().Set(flags.FlagFrom, args[0])
+			cmd.Flags().Set(flags.FlagFrom, args[0]) //nolint:errcheck
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

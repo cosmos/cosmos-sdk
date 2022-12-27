@@ -114,6 +114,7 @@ func TestPackAccountsAny(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.msg, func(t *testing.T) {
 			tc.malleate()
 

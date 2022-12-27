@@ -368,6 +368,7 @@ func (s *intTestSuite) TestIntMod() {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		if tt.wantPanic {
 			s.Require().Panics(func() { sdk.NewInt(tt.x).Mod(sdk.NewInt(tt.y)) })
 			s.Require().Panics(func() { sdk.NewInt(tt.x).ModRaw(tt.y) })

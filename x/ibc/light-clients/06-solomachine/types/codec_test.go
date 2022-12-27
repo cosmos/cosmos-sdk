@@ -8,7 +8,7 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-func (suite SoloMachineTestSuite) TestUnmarshalDataByType() {
+func (suite SoloMachineTestSuite) TestUnmarshalDataByType() { //nolint:govet // this is a test and we're ok with copying locks.
 	var (
 		data []byte
 		err  error

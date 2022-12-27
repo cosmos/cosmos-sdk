@@ -40,8 +40,7 @@ func TestTxBuilder(t *testing.T) {
 		Sequence: accSeq,
 	})
 
-	var sig signing.SignatureV2
-	sig = signing.SignatureV2{
+	sig := signing.SignatureV2{
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
@@ -272,6 +271,7 @@ func TestBuilderFeePayer(t *testing.T) {
 	}
 
 	for name, tc := range cases {
+		tc := tc
 		t.Run(name, func(t *testing.T) {
 			// setup basic tx
 			txBuilder := newBuilder()

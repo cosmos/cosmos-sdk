@@ -55,6 +55,7 @@ func (suite *KeeperTestSuite) TestQueryDenomTrace() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -115,6 +116,7 @@ func (suite *KeeperTestSuite) TestQueryDenomTraces() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

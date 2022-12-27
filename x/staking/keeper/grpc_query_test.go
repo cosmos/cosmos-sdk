@@ -67,6 +67,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 		},
 	}
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			valsResp, err := queryClient.Validators(gocontext.Background(), req)
@@ -115,6 +116,7 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.Validator(gocontext.Background(), req)
@@ -159,6 +161,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorValidators(gocontext.Background(), req)
@@ -215,6 +218,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorValidator(gocontext.Background(), req)
@@ -271,6 +275,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.Delegation(gocontext.Background(), req)
@@ -328,6 +333,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorDelegations(gocontext.Background(), req)
@@ -458,6 +464,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.UnbondingDelegation(gocontext.Background(), req)

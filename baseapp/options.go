@@ -3,12 +3,11 @@ package baseapp
 import (
 	"fmt"
 	"io"
-	"os"
 
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
@@ -237,13 +236,12 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
 func (app *BaseApp) SetStreamingService(
-	appOpts serverTypes.AppOptions,
+	appOpts servertypes.AppOptions,
 	appCodec storetypes.Codec,
-	keys map[string]*storetypes.KVStoreKey) {
+	keys map[string]*storetypes.KVStoreKey) error {
 	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys)
 	if err != nil {
-		app.logger.Error("failed to load state streaming", "err", err)
-		os.Exit(1)
+		return err
 	}
 	// add the listeners for each StoreKey
 	for _, streamer := range streamers {
@@ -254,6 +252,7 @@ func (app *BaseApp) SetStreamingService(
 		// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
 		app.abciListeners = append(app.abciListeners, streamer)
 	}
+	return nil
 }
 
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.

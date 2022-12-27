@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/tendermint/tendermint/crypto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -42,7 +42,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNu
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() AccountI {
+func ProtoBaseAccount() sdk.AccountI {
 	return &BaseAccount{}
 }
 
@@ -276,28 +276,13 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 //
 // Deprecated: Use `AccountI` from types package instead.
 type AccountI interface {
-	proto.Message
-
-	GetAddress() sdk.AccAddress
-	SetAddress(sdk.AccAddress) error // errors if already set.
-
-	GetPubKey() cryptotypes.PubKey // can return nil.
-	SetPubKey(cryptotypes.PubKey) error
-
-	GetAccountNumber() uint64
-	SetAccountNumber(uint64) error
-
-	GetSequence() uint64
-	SetSequence(uint64) error
-
-	// Ensure that account implements stringer
-	String() string
+	types.AccountI
 }
 
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 type ModuleAccountI interface {
-	AccountI
+	types.AccountI
 
 	GetName() string
 	GetPermissions() []string
@@ -321,7 +306,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
 type GenesisAccount interface {
-	AccountI
+	types.AccountI
 
 	Validate() error
 }

@@ -1,6 +1,6 @@
 package store
 
-import dbm "github.com/tendermint/tm-db"
+import dbm "github.com/cosmos/cosmos-db"
 
 // KVStore describes the basic interface for interacting with key-value stores.
 type KVStore interface {

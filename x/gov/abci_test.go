@@ -42,6 +42,8 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -96,6 +98,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -120,6 +124,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -179,6 +185,8 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -232,7 +240,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
-	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "")
+	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal")
 	require.NoError(t, err)
 
 	res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
@@ -299,7 +307,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", addrs[0])
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
@@ -348,7 +356,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	staking.EndBlocker(ctx, suite.StakingKeeper)
 
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "")
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "Bank Msg Send", "send message", addrs[0])
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

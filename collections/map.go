@@ -24,25 +24,25 @@ type Map[K, V any] struct {
 // Name and prefix must be unique within the schema and name must match the format specified by NameRegex, or
 // else this method will panic.
 func NewMap[K, V any](
-	schema Schema,
+	schemaBuilder *SchemaBuilder,
 	prefix Prefix,
 	name string,
 	keyCodec KeyCodec[K],
 	valueCodec ValueCodec[V],
 ) Map[K, V] {
-	m := newMap(schema, prefix, name, keyCodec, valueCodec)
-	schema.addCollection(m)
+	m := newMap(schemaBuilder, prefix, name, keyCodec, valueCodec)
+	schemaBuilder.addCollection(m)
 	return m
 }
 
 func newMap[K, V any](
-	schema Schema, prefix Prefix, name string,
+	schemaBuilder *SchemaBuilder, prefix Prefix, name string,
 	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
 ) Map[K, V] {
 	return Map[K, V]{
 		kc:     keyCodec,
 		vc:     valueCodec,
-		sa:     schema.storeAccessor,
+		sa:     schemaBuilder.schema.storeAccessor,
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
@@ -60,7 +60,6 @@ func (m Map[K, V]) getPrefix() []byte {
 // Errors with ErrEncoding if key or value encoding fails.
 func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
-
 	if err != nil {
 		return err
 	}

@@ -3,14 +3,17 @@ package baseapp
 import (
 	"fmt"
 	"io"
+	"os"
 
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -233,9 +236,17 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 }
 
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
-func (app *BaseApp) SetStreamingService(s []storetypes.StreamingService) {
+func (app *BaseApp) SetStreamingService(
+	appOpts serverTypes.AppOptions,
+	appCodec storetypes.Codec,
+	keys map[string]*storetypes.KVStoreKey) {
+	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys)
+	if err != nil {
+		app.logger.Error("failed to load state streaming", "err", err)
+		os.Exit(1)
+	}
 	// add the listeners for each StoreKey
-	for _, streamer := range s {
+	for _, streamer := range streamers {
 		for key, lis := range streamer.Listeners() {
 			app.cms.AddListeners(key, lis)
 		}

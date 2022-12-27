@@ -31,7 +31,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -262,15 +261,8 @@ func NewSimApp(
 	// not include this key.
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
-	// load state streaming if enabled
-	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, logger, keys)
-	if err != nil {
-		logger.Error("failed to load state streaming", "err", err)
-		os.Exit(1)
-	}
-
 	// register the streaming service with the BaseApp
-	bApp.SetStreamingService(streamers)
+	bApp.SetStreamingService(appOpts, appCodec, keys)
 
 	app := &SimApp{
 		BaseApp:           bApp,

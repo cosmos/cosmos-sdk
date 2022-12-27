@@ -3,6 +3,9 @@ package config_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/viperutils"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"io"
 	"os"
 	"testing"
@@ -24,21 +27,29 @@ const (
 )
 
 // initClientContext initiates client Context for tests
-func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
+func initClientContext(t *testing.T, cmd *cobra.Command, envVar string) (client.Context, func()) {
 	home := t.TempDir()
 	chainId := "test-chain" //nolint:revive
-	clientCtx := client.Context{}.
+	v := viper.New()
+	clientCtx := client.NewContext(v).
 		WithHomeDir(home).
-		WithViper("").
 		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
 		WithChainID(chainId)
 
-	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
+	require.NoError(t, v.BindEnv(nodeEnv))
 	if envVar != "" {
 		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
 
-	clientCtx, err := config.ReadFromClientConfig(clientCtx)
+	configFileConfig := config.GetClientConfigFileConfig(home)
+	defaultConfig := configFileConfig.DefaultValues.(config.ClientConfig)
+	defaultConfig.ChainID = chainId
+	configFileConfig.DefaultValues = defaultConfig
+
+	err := viperutils.InitiateViper(v, cmd, envVar, configFileConfig)
+	require.NoError(t, err)
+
+	clientCtx, err = config.ReadFromClientConfig(clientCtx)
 	require.NoError(t, err)
 	require.Equal(t, clientCtx.ChainID, chainId)
 
@@ -46,14 +57,14 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 }
 
 func TestConfigCmd(t *testing.T) {
-	clientCtx, cleanup := initClientContext(t, testNode1)
+	// NODE=http://localhost:1 ./build/simd config node http://localhost:2
+	cmd := config.Cmd()
+	clientCtx, cleanup := initClientContext(t, cmd, testNode1)
 	defer func() {
 		_ = os.Unsetenv(nodeEnv)
 		cleanup()
 	}()
 
-	// NODE=http://localhost:1 ./build/simd config node http://localhost:2
-	cmd := config.Cmd()
 	args := []string{"node", testNode2}
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(t, err)
@@ -88,7 +99,8 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 	for _, tc := range tt {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			clientCtx, cleanup := initClientContext(t, tc.envVar)
+			cmd := cli.GetQueryCmd()
+			clientCtx, cleanup := initClientContext(t, cmd, tc.envVar)
 			defer func() {
 				if tc.envVar != "" {
 					_ = os.Unsetenv(nodeEnv)
@@ -103,7 +115,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 
 				We dial http://localhost:2 cause a flag has the higher priority than env variable.
 			*/
-			cmd := cli.GetQueryCmd()
+
 			_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), tc.expNode, "Output does not contain expected Node")

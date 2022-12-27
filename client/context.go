@@ -63,6 +63,12 @@ type Context struct {
 	LegacyAmino *codec.LegacyAmino
 }
 
+func NewContext(v *viper.Viper) Context {
+	return Context{
+		Viper: v,
+	}
+}
+
 // WithKeyring returns a copy of the context with an updated keyring.
 func (ctx Context) WithKeyring(k keyring.Keyring) Context {
 	ctx.Keyring = k
@@ -248,16 +254,6 @@ func (ctx Context) WithAccountRetriever(retriever AccountRetriever) Context {
 // WithInterfaceRegistry returns the context with an updated InterfaceRegistry
 func (ctx Context) WithInterfaceRegistry(interfaceRegistry codectypes.InterfaceRegistry) Context {
 	ctx.InterfaceRegistry = interfaceRegistry
-	return ctx
-}
-
-// WithViper returns the context with Viper field. This Viper instance is used to read
-// client-side config from the config file.
-func (ctx Context) WithViper(prefix string) Context {
-	v := viper.New()
-	v.SetEnvPrefix(prefix)
-	v.AutomaticEnv()
-	ctx.Viper = v
 	return ctx
 }
 

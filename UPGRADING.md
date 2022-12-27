@@ -13,6 +13,22 @@ The SDK is in the process of removing all `gogoproto` annotations.
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
 [Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
 
+### CLI Configuration
+
+The SDK is consolidating CLI config to use a single Viper instance. You need to do two things for the cli to function as normal:
+1. Instantiate a single Viper instance and set it with the new `client.NewClientContext` function, rather than instantiating with a struct literal.
+2. Initiate viper with the new `viperutils.InitiateViper` function in the root commands pre-run function.
+
+It is important to keep in mind that the `viperutils.InitiateViper` needs to know about any config files that should be read. 
+For instance, the `$ binary config` command requires the ClientConfig to have been read in properly to Viper.
+
+```go
+clientConfig := config.GetClientConfigFileConfig(initClientCtx.HomeDir)
+if err := viperutils.InitiateViper(v, cmd, "", clientConfig); err != nil {
+    return err
+}
+```
+
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation

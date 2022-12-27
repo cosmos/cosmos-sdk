@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/viperutils"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 	clientCtx := client.GetClientContextFromCmd(cmd)
 	configPath := filepath.Join(clientCtx.HomeDir, "config")
 
-	conf, err := getClientConfig(configPath, clientCtx.Viper)
+	conf, err := viperutils.GetConfig[ClientConfig](clientCtx.Viper)
 	if err != nil {
 		return fmt.Errorf("couldn't get client config: %v", err)
 	}
@@ -81,12 +82,12 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		}
 
 		confFile := filepath.Join(configPath, "client.toml")
-		if err := writeConfigToFile(confFile, conf); err != nil {
+		if err := viperutils.WriteConfigToFile(confFile, defaultConfigTemplate, conf); err != nil {
 			return fmt.Errorf("could not write client config to the file: %v", err)
 		}
 
 	default:
-		panic("cound not execute config command")
+		panic("could not execute config command")
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/client/viperutils"
 	"io"
 	"os"
 
@@ -47,15 +48,16 @@ func NewRootCmd() *cobra.Command {
 		Amino:             tempApp.LegacyAmino(),
 	}
 
-	initClientCtx := client.Context{}.
+	v := viper.New()
+
+	initClientCtx := client.NewContext(v).
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(simapp.DefaultNodeHome).
-		WithViper("") // In simapp, we don't use any prefix for env variables.
+		WithHomeDir(simapp.DefaultNodeHome)
 
 	rootCmd := &cobra.Command{
 		Use:   "simd",
@@ -64,6 +66,11 @@ func NewRootCmd() *cobra.Command {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
+
+			clientConfig := config.GetClientConfigFileConfig(initClientCtx.HomeDir)
+			if err := viperutils.InitiateViper(v, cmd, "", clientConfig); err != nil {
+				return err
+			}
 
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {

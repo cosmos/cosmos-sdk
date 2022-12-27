@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -195,9 +194,9 @@ func verifyIterator(t *testing.T, itr types.Iterator, expected []int64, msg stri
 }
 
 func int642Bytes(i int64) []byte {
-	return sdk.Uint64ToBigEndian(uint64(i))
+	return types.Uint64ToBigEndian(uint64(i))
 }
 
 func bytes2Int64(buf []byte) int64 {
-	return int64(sdk.BigEndianToUint64(buf))
+	return int64(types.BigEndianToUint64(buf))
 }

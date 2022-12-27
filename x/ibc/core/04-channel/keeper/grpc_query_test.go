@@ -80,6 +80,7 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -168,6 +169,7 @@ func (suite *KeeperTestSuite) TestQueryChannels() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -276,6 +278,7 @@ func (suite *KeeperTestSuite) TestQueryConnectionChannels() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -396,6 +399,7 @@ func (suite *KeeperTestSuite) TestQueryChannelClientState() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -532,6 +536,7 @@ func (suite *KeeperTestSuite) TestQueryChannelConsensusState() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -638,6 +643,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -730,6 +736,7 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitments() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -833,6 +840,7 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -932,6 +940,7 @@ func (suite *KeeperTestSuite) TestQueryPacketAcknowledgement() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -1024,6 +1033,7 @@ func (suite *KeeperTestSuite) TestQueryPacketAcknowledgements() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -1153,6 +1163,7 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedPackets() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -1279,6 +1290,7 @@ func (suite *KeeperTestSuite) TestQueryUnreceivedAcks() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -1363,6 +1375,8 @@ func (suite *KeeperTestSuite) TestQueryNextSequenceReceive() {
 	}
 
 	for _, tc := range testCases {
+
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

@@ -16,6 +16,7 @@ func (suite SoloMachineTestSuite) TestUnmarshalDataByType() { //nolint:govet // 
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+		solomachine := solomachine
 
 		cdc := suite.chainA.App.AppCodec()
 		cases := []struct {

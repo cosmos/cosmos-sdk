@@ -61,6 +61,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposal() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -198,6 +199,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryProposals() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -317,6 +319,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVote() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -395,8 +398,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 				app.GovKeeper.SetProposal(ctx, proposal)
 
 				votes = []types.Vote{
-					{proposal.ProposalId, addrs[0].String(), types.OptionAbstain},
-					{proposal.ProposalId, addrs[1].String(), types.OptionYes},
+					{ProposalId: proposal.ProposalId, Voter: addrs[0].String(), Option: types.OptionAbstain},
+					{ProposalId: proposal.ProposalId, Voter: addrs[1].String(), Option: types.OptionYes},
 				}
 				accAddr1, err1 := sdk.AccAddressFromBech32(votes[0].Voter)
 				accAddr2, err2 := sdk.AccAddressFromBech32(votes[1].Voter)
@@ -418,6 +421,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryVotes() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -497,6 +501,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryParams() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -600,6 +605,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposit() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -694,6 +700,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDeposits() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 
@@ -801,6 +808,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
 			testCase.malleate()
 

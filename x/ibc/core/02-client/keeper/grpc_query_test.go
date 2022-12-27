@@ -140,7 +140,9 @@ func (suite *KeeperTestSuite) TestQueryClientStates() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
+
 			suite.SetupTest() // reset
 			expClientStates = nil
 
@@ -250,6 +252,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusState() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 
@@ -349,6 +352,7 @@ func (suite *KeeperTestSuite) TestQueryConsensusStates() {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest() // reset
 

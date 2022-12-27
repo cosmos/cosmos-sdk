@@ -137,6 +137,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+		solomachine := solomachine
 
 		value, err := types.ClientStateSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path, clientState)
 		suite.Require().NoError(err)
@@ -265,6 +266,7 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+		solomachine := solomachine
 
 		value, err := types.ConsensusStateSignBytes(suite.chainA.Codec, solomachine.Sequence, solomachine.Time, solomachine.Diversifier, path, consensusState)
 		suite.Require().NoError(err)

@@ -18,6 +18,7 @@ func (suite *SoloMachineTestSuite) TestMisbehaviour() {
 func (suite *SoloMachineTestSuite) TestMisbehaviourValidateBasic() {
 	// test singlesig and multisig public keys
 	for _, solomachine := range []*ibctesting.Solomachine{suite.solomachine, suite.solomachineMulti} {
+		solomachine := solomachine
 
 		testCases := []struct {
 			name                 string

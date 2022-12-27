@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestSendTransfer() {
 				cap := suite.chainA.GetChannelCapability(channelA.PortID, channelA.ID)
 
 				// Release channel capability
-				suite.chainA.App.ScopedTransferKeeper.ReleaseCapability(suite.chainA.GetContext(), cap)
+				suite.chainA.App.ScopedTransferKeeper.ReleaseCapability(suite.chainA.GetContext(), cap) //nolint:errcheck
 				amount = sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
 			}, true, false,
 		},

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
-	github.com/cosmos/cosmos-db v0.0.0-20221224071843-97e1443c3226
+	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.51.0

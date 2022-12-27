@@ -123,7 +123,6 @@ func TestParseChainID(t *testing.T) {
 		revision := types.ParseChainID(tc.chainID)
 		require.Equal(t, tc.revision, revision, "case %d returns incorrect revision", i)
 	}
-
 }
 
 func TestSetRevisionNumber(t *testing.T) {

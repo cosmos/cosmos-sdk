@@ -81,7 +81,7 @@ func queryTx(goCtx context.Context, clientCtx client.Context, hashHexStr string)
 		return nil, err
 	}
 
-	//TODO: this may not always need to be proven
+	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
 	resTx, err := node.Tx(goCtx, hash, true)
 	if err != nil {

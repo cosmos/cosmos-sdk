@@ -14,8 +14,9 @@ import (
 
 // CheckProposedHeaderAndUpdateState will try to update the client with the new header if and
 // only if the proposal passes and one of the following two conditions is satisfied:
-// 		1) AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
-// 		2) AllowUpdateAfterMisbehaviour and IsFrozen() = true
+//  1. AllowUpdateAfterExpiry=true and Expire(ctx.BlockTime) = true
+//  2. AllowUpdateAfterMisbehaviour and IsFrozen() = true
+//
 // In case 2) before trying to update the client, the client will be unfrozen by resetting
 // the FrozenHeight to the zero Height. If AllowUpdateAfterMisbehaviour is set to true,
 // expired clients will also be updated even if AllowUpdateAfterExpiry is set to false.
@@ -66,7 +67,6 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	default:
 		return nil, nil, sdkerrors.Wrap(clienttypes.ErrUpdateClientFailed, "client cannot be updated with proposal")
 	}
-
 }
 
 // unexpireClient checks if the proposed header is sufficient to update an expired client.
@@ -74,7 +74,6 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 func (cs ClientState) unexpireClient(
 	ctx sdk.Context, clientStore sdk.KVStore, consensusState *ConsensusState, header *Header, currentTimestamp time.Time,
 ) (exported.ClientState, exported.ConsensusState, error) {
-
 	// the client is expired and either AllowUpdateAfterMisbehaviour or AllowUpdateAfterExpiry
 	// is set to true so light validation of the header is executed
 	if err := cs.checkProposedHeader(consensusState, header, currentTimestamp); err != nil {

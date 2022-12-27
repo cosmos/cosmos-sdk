@@ -3,7 +3,7 @@ package config_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -53,12 +53,12 @@ func TestConfigCmd(t *testing.T) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(t, err)
 
-	//./build/simd config node //http://localhost:1
+	// ./build/simd config node //http://localhost:1
 	b := bytes.NewBufferString("")
 	cmd.SetOut(b)
 	cmd.SetArgs([]string{"node"})
 	cmd.Execute()
-	out, err := ioutil.ReadAll(b)
+	out, err := io.ReadAll(b)
 	require.NoError(t, err)
 	require.Equal(t, string(out), testNode1+"\n")
 }

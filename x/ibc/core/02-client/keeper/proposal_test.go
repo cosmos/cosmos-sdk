@@ -89,5 +89,4 @@ func (suite *KeeperTestSuite) TestClientUpdateProposal() {
 			}
 		})
 	}
-
 }

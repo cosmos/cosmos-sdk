@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -47,7 +47,7 @@ func NewCreateClientCmd() *cobra.Command {
 			if err := cdc.UnmarshalJSON([]byte(args[1]), consensusState); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := os.ReadFile(args[1])
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for consensus state were provided")
 				}
@@ -100,7 +100,7 @@ func NewUpdateClientCmd() *cobra.Command {
 			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := os.ReadFile(args[1])
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for header were provided")
 				}
@@ -144,7 +144,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			if err := cdc.UnmarshalJSON([]byte(args[0]), m); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[0])
+				contents, err := os.ReadFile(args[0])
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for misbehaviour were provided")
 				}

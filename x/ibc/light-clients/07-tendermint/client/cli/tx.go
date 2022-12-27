@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -54,7 +54,7 @@ func NewCreateClientCmd() *cobra.Command {
 			var header *types.Header
 			if err := cdc.UnmarshalJSON([]byte(args[0]), header); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[0])
+				contents, err := os.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided for consensus header")
 				}
@@ -101,7 +101,7 @@ func NewCreateClientCmd() *cobra.Command {
 				// or wrap lists of proto.Message in some other message)
 			} else if err := legacyAmino.UnmarshalJSON([]byte(spc), &specs); err != nil {
 				// check for file path if JSON input not provided
-				contents, err := ioutil.ReadFile(spc)
+				contents, err := os.ReadFile(spc)
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file was provided for proof specs flag")
 				}
@@ -180,7 +180,7 @@ func NewUpdateClientCmd() *cobra.Command {
 			var header *types.Header
 			if err := cdc.UnmarshalJSON([]byte(args[1]), header); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[1])
+				contents, err := os.ReadFile(args[1])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
@@ -230,7 +230,7 @@ func NewSubmitMisbehaviourCmd() *cobra.Command {
 			var m *types.Misbehaviour
 			if err := cdc.UnmarshalJSON([]byte(args[0]), m); err != nil {
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[0])
+				contents, err := os.ReadFile(args[0])
 				if err != nil {
 					return errors.New("neither JSON input nor path to .json file were provided")
 				}
@@ -277,5 +277,4 @@ func parseFraction(fraction string) (types.Fraction, error) {
 		Numerator:   numerator,
 		Denominator: denominator,
 	}, nil
-
 }

@@ -9,6 +9,7 @@ import (
 )
 
 // NewVote creates a new Vote instance
+//
 //nolint:interfacer
 func NewVote(proposalID uint64, voter sdk.AccAddress, option VoteOption) Vote {
 	return Vote{proposalID, voter.String(), option}

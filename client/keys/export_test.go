@@ -66,6 +66,7 @@ func Test_runExportCmd(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			kbHome := t.TempDir()
 			defaultArgs := []string{
@@ -87,7 +88,7 @@ func Test_runExportCmd(t *testing.T) {
 			kb, err := keyring.New(sdk.KeyringServiceName(), tc.keyringBackend, kbHome, bufio.NewReader(mockInBuf))
 			require.NoError(t, err)
 			t.Cleanup(func() {
-				kb.Delete("keyname1") // nolint:errcheck
+				kb.Delete("keyname1") //nolint:errcheck
 			})
 
 			path := sdk.GetConfig().GetFullFundraiserPath()

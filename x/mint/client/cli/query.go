@@ -46,7 +46,6 @@ func GetCmdQueryParams() *cobra.Command {
 
 			params := &types.QueryParamsRequest{}
 			res, err := queryClient.Params(context.Background(), params)
-
 			if err != nil {
 				return err
 			}
@@ -76,7 +75,6 @@ func GetCmdQueryInflation() *cobra.Command {
 
 			params := &types.QueryInflationRequest{}
 			res, err := queryClient.Inflation(context.Background(), params)
-
 			if err != nil {
 				return err
 			}
@@ -106,7 +104,6 @@ func GetCmdQueryAnnualProvisions() *cobra.Command {
 
 			params := &types.QueryAnnualProvisionsRequest{}
 			res, err := queryClient.AnnualProvisions(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

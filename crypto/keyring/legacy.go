@@ -26,7 +26,7 @@ type LegacyKeybase interface {
 
 // NewLegacy creates a new instance of a legacy keybase.
 func NewLegacy(name, dir string, opts ...KeybaseOption) (LegacyKeybase, error) {
-	if err := tmos.EnsureDir(dir, 0700); err != nil {
+	if err := tmos.EnsureDir(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("failed to create Keybase directory: %s", err)
 	}
 
@@ -167,7 +167,8 @@ func (kb dbKeybase) ExportPubKey(name string) (armor string, err error) {
 // It returns an error if the key does not exist or a wrong encryption passphrase
 // is supplied.
 func (kb dbKeybase) ExportPrivKey(name string, decryptPassphrase string,
-	encryptPassphrase string) (armor string, err error) {
+	encryptPassphrase string,
+) (armor string, err error) {
 	priv, err := kb.ExportPrivateKeyObject(name, decryptPassphrase)
 	if err != nil {
 		return "", err
@@ -232,5 +233,4 @@ func (m keyringMigrator) Import(uid string, armor string) error {
 // KeybaseOption overrides options for the db.
 type KeybaseOption func(*kbOptions)
 
-type kbOptions struct {
-}
+type kbOptions struct{}

@@ -7,7 +7,7 @@ Without software support for upgrades, upgrading a live chain is risky because a
 their state machines at exactly the same point in the process. If this is not done correctly, there can be state
 inconsistencies which are hard to recover from.
 
-General Workflow
+# General Workflow
 
 Let's assume we are running v0.38.0 of our software in our testnet and want to upgrade to v0.40.0.
 How would this look in practice? First of all, we want to finalize the v0.40.0 release candidate
@@ -40,25 +40,27 @@ the rest of the block as normal. Once 2/3 of the voting power has upgraded, the 
 resume the consensus mechanism. If the majority of operators add a custom `do-upgrade` script, this should
 be a matter of minutes and not even require them to be awake at that time.
 
-Integrating With An App
+# Integrating With An App
 
 Setup an upgrade Keeper for the app and then define a BeginBlocker that calls the upgrade
 keeper's BeginBlocker method:
-    func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-    	app.upgradeKeeper.BeginBlocker(ctx, req)
-    	return abci.ResponseBeginBlock{}
-    }
+
+	func (app *myApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+		app.upgradeKeeper.BeginBlocker(ctx, req)
+		return abci.ResponseBeginBlock{}
+	}
 
 The app must then integrate the upgrade keeper with its governance module as appropriate. The governance module
 should call ScheduleUpgrade to schedule an upgrade and ClearUpgradePlan to cancel a pending upgrade.
 
-Performing Upgrades
+# Performing Upgrades
 
 Upgrades can be scheduled at either a predefined block height or time. Once this block height or time is reached, the
 existing software will cease to process ABCI messages and a new version with code that handles the upgrade must be deployed.
 All upgrades are coordinated by a unique upgrade name that cannot be reused on the same blockchain. In order for the upgrade
 module to know that the upgrade has been safely applied, a handler with the name of the upgrade must be installed.
 Here is an example handler for an upgrade named "my-fancy-upgrade":
+
 	app.upgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx sdk.Context, plan upgrade.Plan) {
 		// Perform any migrations of the state store needed for this upgrade
 	})
@@ -93,18 +95,20 @@ Here is a sample code to set store migrations with an upgrade:
 		app.SetStoreLoader(upgrade.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 
-Halt Behavior
+# Halt Behavior
 
 Before halting the ABCI state machine in the BeginBlocker method, the upgrade module will log an error
 that looks like:
+
 	UPGRADE "<Name>" NEEDED at height <NNNN>: <Info>
+
 where Name are Info are the values of the respective fields on the upgrade Plan.
 
 To perform the actual halt of the blockchain, the upgrade keeper simply panics which prevents the ABCI state machine
 from proceeding but doesn't actually exit the process. Exiting the process can cause issues for other nodes that start
 to lose connectivity with the exiting nodes, thus this module prefers to just halt but not exit.
 
-Automation and Plan.Info
+# Automation and Plan.Info
 
 We have deprecated calling out to scripts, instead with propose https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor
 as a model for a watcher daemon that can launch simd as a subprocess and then read the upgrade log message
@@ -113,7 +117,7 @@ specified here https://github.com/cosmos/cosmos-sdk/tree/v0.40.0-rc5/cosmovisor/
 This will allow a properly configured cosmsod daemon to auto-download new binaries and auto-upgrade.
 As noted there, this is intended more for full nodes than validators.
 
-Cancelling Upgrades
+# Cancelling Upgrades
 
 There are two ways to cancel a planned upgrade - with on-chain governance or off-chain social consensus.
 For the first one, there is a CancelSoftwareUpgrade proposal type, which can be voted on and will
@@ -134,6 +138,7 @@ If over two-thirds run their nodes with this flag on the old binary, it will all
 the upgrade with a manual override. (This must be well-documented for anyone syncing from genesis later on).
 
 Example:
+
 	simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
 
 NOTE: Here simd is used as an example binary, replace it with original binary

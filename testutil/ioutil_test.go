@@ -2,6 +2,7 @@ package testutil_test
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -28,7 +29,7 @@ func TestWriteToNewTempFile(t *testing.T) {
 	tempfile := testutil.WriteToNewTempFile(t, "test string")
 	tempfile.Close()
 
-	bs, err := ioutil.ReadFile(tempfile.Name())
+	bs, err := os.ReadFile(tempfile.Name())
 	require.NoError(t, err)
 	require.Equal(t, "test string", string(bs))
 }

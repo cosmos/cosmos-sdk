@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -297,11 +298,11 @@ func (suite *KeeperTestSuite) TestModelBasedRelay() {
 		panic(fmt.Errorf("Failed to read model-based test files: %w", err))
 	}
 	for _, file_info := range files {
-		var tlaTestCases = []TlaOnRecvPacketTestCase{}
+		tlaTestCases := []TlaOnRecvPacketTestCase{}
 		if !strings.HasSuffix(file_info.Name(), ".json") {
 			continue
 		}
-		jsonBlob, err := ioutil.ReadFile(dirname + file_info.Name())
+		jsonBlob, err := os.ReadFile(dirname + file_info.Name())
 		if err != nil {
 			panic(fmt.Errorf("Failed to read JSON test fixture: %w", err))
 		}

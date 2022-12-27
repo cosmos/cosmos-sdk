@@ -3,7 +3,6 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -251,7 +250,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, name string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(upgradeInfoFilePath, info, 0600)
+	return os.WriteFile(upgradeInfoFilePath, info, 0o600)
 }
 
 // GetUpgradeInfoPath returns the upgrade info file path
@@ -282,7 +281,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (store.UpgradeInfo, error) {
 		return upgradeInfo, err
 	}
 
-	data, err := ioutil.ReadFile(upgradeInfoPath)
+	data, err := os.ReadFile(upgradeInfoPath)
 	if err != nil {
 		// if file does not exist, assume there are no upgrades
 		if os.IsNotExist(err) {

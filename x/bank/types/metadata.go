@@ -9,11 +9,11 @@ import (
 )
 
 // Validate performs a basic validation of the coin metadata fields. It checks:
-//  - Base and Display denominations are valid coin denominations
-//  - Base and Display denominations are present in the DenomUnit slice
-//  - Base denomination has exponent 0
-//  - Denomination units are sorted in ascending order
-//  - Denomination units not duplicated
+//   - Base and Display denominations are valid coin denominations
+//   - Base and Display denominations are present in the DenomUnit slice
+//   - Base denomination has exponent 0
+//   - Denomination units are sorted in ascending order
+//   - Denomination units not duplicated
 func (m Metadata) Validate() error {
 	if err := sdk.ValidateDenom(m.Base); err != nil {
 		return fmt.Errorf("invalid metadata base denom: %w", err)

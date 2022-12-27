@@ -115,5 +115,4 @@ func (suite TypesTestSuite) TestAcknowledgement() {
 			})
 		})
 	}
-
 }

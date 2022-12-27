@@ -40,7 +40,6 @@ func (suite *IntegrationTestSuite) getTestBalances() []types.Balance {
 		{Address: addr2.String(), Coins: sdk.Coins{sdk.NewInt64Coin("testcoin1", 32), sdk.NewInt64Coin("testcoin2", 34)}},
 		{Address: addr1.String(), Coins: sdk.Coins{sdk.NewInt64Coin("testcoin3", 10)}},
 	}
-
 }
 
 func (suite *IntegrationTestSuite) TestInitGenesis() {

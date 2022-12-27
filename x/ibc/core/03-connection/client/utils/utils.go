@@ -3,7 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 
@@ -105,7 +105,6 @@ func queryClientConnectionsABCI(clientCtx client.Context, clientID string) (*typ
 func QueryConnectionClientState(
 	clientCtx client.Context, connectionID string, prove bool,
 ) (*types.QueryConnectionClientStateResponse, error) {
-
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionClientStateRequest{
 		ConnectionId: connectionID,
@@ -140,7 +139,6 @@ func QueryConnectionClientState(
 func QueryConnectionConsensusState(
 	clientCtx client.Context, connectionID string, height clienttypes.Height, prove bool,
 ) (*types.QueryConnectionConsensusStateResponse, error) {
-
 	queryClient := types.NewQueryClient(clientCtx)
 	req := &types.QueryConnectionConsensusStateRequest{
 		ConnectionId:   connectionID,
@@ -171,7 +169,7 @@ func ParseClientState(cdc *codec.LegacyAmino, arg string) (exported.ClientState,
 	var clientState exported.ClientState
 	if err := cdc.UnmarshalJSON([]byte(arg), &clientState); err != nil {
 		// check for file path if JSON input is not provided
-		contents, err := ioutil.ReadFile(arg)
+		contents, err := os.ReadFile(arg)
 		if err != nil {
 			return nil, errors.New("either JSON input nor path to .json file were provided")
 		}
@@ -188,7 +186,7 @@ func ParsePrefix(cdc *codec.LegacyAmino, arg string) (commitmenttypes.MerklePref
 	var prefix commitmenttypes.MerklePrefix
 	if err := cdc.UnmarshalJSON([]byte(arg), &prefix); err != nil {
 		// check for file path if JSON input is not provided
-		contents, err := ioutil.ReadFile(arg)
+		contents, err := os.ReadFile(arg)
 		if err != nil {
 			return commitmenttypes.MerklePrefix{}, errors.New("neither JSON input nor path to .json file were provided")
 		}
@@ -206,7 +204,7 @@ func ParseProof(cdc *codec.LegacyAmino, arg string) ([]byte, error) {
 	var merkleProof commitmenttypes.MerkleProof
 	if err := cdc.UnmarshalJSON([]byte(arg), &merkleProof); err != nil {
 		// check for file path if JSON input is not provided
-		contents, err := ioutil.ReadFile(arg)
+		contents, err := os.ReadFile(arg)
 		if err != nil {
 			return nil, errors.New("neither JSON input nor path to .json file were provided")
 		}

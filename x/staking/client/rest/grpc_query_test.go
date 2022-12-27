@@ -1,10 +1,11 @@
+//go:build norace
 // +build norace
 
 package rest_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -422,7 +423,7 @@ func (s *IntegrationTestSuite) TestQueryDelegationsResponseCode() {
 
 func getRequest(url string) ([]byte, int, error) {
 	res, err := http.Get(url) // nolint:gosec
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, res.StatusCode, err
 	}

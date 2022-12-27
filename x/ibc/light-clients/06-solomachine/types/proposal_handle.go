@@ -18,7 +18,6 @@ func (cs ClientState) CheckProposedHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
 	header exported.Header,
 ) (exported.ClientState, exported.ConsensusState, error) {
-
 	if !cs.AllowUpdateAfterProposal {
 		return nil, nil, sdkerrors.Wrapf(
 			clienttypes.ErrUpdateClientFailed,

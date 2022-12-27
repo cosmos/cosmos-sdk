@@ -47,10 +47,8 @@ func mockWeightedProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
 	for i := 0; i < n; i++ {
 		wpc[i] = MockWeightedProposalContent{i}
-
 	}
 	return wpc
-
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -205,7 +203,6 @@ func TestSimulateMsgVote(t *testing.T) {
 	require.Equal(t, types.OptionYes, msg.Option)
 	require.Equal(t, "gov", msg.Route())
 	require.Equal(t, types.TypeMsgVote, msg.Type())
-
 }
 
 // returns context and an app with updated mint keeper

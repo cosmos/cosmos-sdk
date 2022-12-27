@@ -130,7 +130,6 @@ func NewBaseAccountWithAddress(addr sdk.AccAddress) BaseAccount {
 func NewBaseAccount(
 	address sdk.AccAddress, coins sdk.Coins, pk cryptotypes.PubKey, accountNumber, sequence uint64,
 ) *BaseAccount {
-
 	return &BaseAccount{
 		Address:       address,
 		Coins:         coins,
@@ -213,7 +212,6 @@ func (acc *BaseAccount) UnmarshalJSON(bz []byte) error {
 func NewBaseVestingAccount(
 	baseAccount *BaseAccount, originalVesting, delegatedFree, delegatedVesting sdk.Coins, endTime int64,
 ) *BaseVestingAccount {
-
 	return &BaseVestingAccount{
 		BaseAccount:      baseAccount,
 		OriginalVesting:  originalVesting,

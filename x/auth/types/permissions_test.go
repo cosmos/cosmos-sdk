@@ -26,7 +26,6 @@ func TestHasPermission(t *testing.T) {
 		has = permAddr.HasPermission(tc.permission)
 		require.Equal(t, tc.expectHas, has, "test case #%d", i)
 	}
-
 }
 
 func TestValidatePermissions(t *testing.T) {

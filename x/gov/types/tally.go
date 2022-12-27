@@ -17,8 +17,8 @@ type ValidatorGovInfo struct {
 
 // NewValidatorGovInfo creates a ValidatorGovInfo instance
 func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens sdk.Int, delegatorShares,
-	delegatorDeductions sdk.Dec, vote VoteOption) ValidatorGovInfo {
-
+	delegatorDeductions sdk.Dec, vote VoteOption,
+) ValidatorGovInfo {
 	return ValidatorGovInfo{
 		Address:             address,
 		BondedTokens:        bondedTokens,

@@ -160,15 +160,15 @@ func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
 	authKeeper.SetAccount(ctx, baseAcc)
 
 	suite.Require().Panics(func() {
-		keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) // nolint:errcheck
+		keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) //nolint:errcheck
 	})
 
 	suite.Require().Panics(func() {
-		keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) // nolint:errcheck
+		keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) //nolint:errcheck
 	})
 
 	suite.Require().Panics(func() {
-		keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) // nolint:errcheck
+		keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) //nolint:errcheck
 	})
 
 	suite.Require().Error(
@@ -221,13 +221,13 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 
 	initialSupply := keeper.GetSupply(ctx)
 
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")                // nolint:errcheck
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") // nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")                //nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") //nolint:errcheck
 
 	err := keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
 	suite.Require().Error(err, "insufficient coins")
 
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) //nolint:errcheck
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, initCoins)
 	suite.Require().NoError(err)
@@ -243,7 +243,7 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 
 	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
 	suite.Require().Equal(initialSupply.GetTotal().Add(initCoins...), keeper.GetSupply(ctx).GetTotal())
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) // nolint:errcheck
+	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) //nolint:errcheck
 }
 
 func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
@@ -276,9 +276,9 @@ func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
 	initialSupply.Inflate(initCoins)
 	keeper.SetSupply(ctx, initialSupply)
 
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                        // nolint:errcheck
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")         // nolint:errcheck
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.GetTotal()) }, "random permission") // nolint:errcheck
+	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                        //nolint:errcheck
+	suite.Require().Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")         //nolint:errcheck
+	suite.Require().Panics(func() { keeper.BurnCoins(ctx, randomPerm, initialSupply.GetTotal()) }, "random permission") //nolint:errcheck
 	err := keeper.BurnCoins(ctx, authtypes.Burner, initialSupply.GetTotal())
 	suite.Require().Error(err, "insufficient coins")
 
@@ -1050,16 +1050,17 @@ func (suite *IntegrationTestSuite) TestIterateAllDenomMetaData() {
 }
 
 func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
-	return []types.Metadata{{
-		Description: "The native staking token of the Cosmos Hub.",
-		DenomUnits: []*types.DenomUnit{
-			{"uatom", uint32(0), []string{"microatom"}},
-			{"matom", uint32(3), []string{"milliatom"}},
-			{"atom", uint32(6), nil},
+	return []types.Metadata{
+		{
+			Description: "The native staking token of the Cosmos Hub.",
+			DenomUnits: []*types.DenomUnit{
+				{"uatom", uint32(0), []string{"microatom"}},
+				{"matom", uint32(3), []string{"milliatom"}},
+				{"atom", uint32(6), nil},
+			},
+			Base:    "uatom",
+			Display: "atom",
 		},
-		Base:    "uatom",
-		Display: "atom",
-	},
 		{
 			Description: "The native staking token of the Token Hub.",
 			DenomUnits: []*types.DenomUnit{

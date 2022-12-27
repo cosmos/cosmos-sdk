@@ -18,7 +18,7 @@ type testCases struct {
 
 func getTestCases() testCases {
 	return testCases{
-		// nolint:govet
+		//nolint:govet
 		[]keyring.KeyOutput{
 			{"A", "B", "C", "D", "E", 0, nil},
 			{"A", "B", "C", "D", "", 0, nil},

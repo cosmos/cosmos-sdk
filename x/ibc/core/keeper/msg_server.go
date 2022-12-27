@@ -16,9 +16,11 @@ import (
 	coretypes "github.com/cosmos/cosmos-sdk/x/ibc/core/types"
 )
 
-var _ clienttypes.MsgServer = Keeper{}
-var _ connectiontypes.MsgServer = Keeper{}
-var _ channeltypes.MsgServer = Keeper{}
+var (
+	_ clienttypes.MsgServer     = Keeper{}
+	_ connectiontypes.MsgServer = Keeper{}
+	_ channeltypes.MsgServer    = Keeper{}
+)
 
 // CreateClient defines a rpc handler method for MsgCreateClient.
 func (k Keeper) CreateClient(goCtx context.Context, msg *clienttypes.MsgCreateClient) (*clienttypes.MsgCreateClientResponse, error) {

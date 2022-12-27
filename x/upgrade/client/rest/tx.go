@@ -19,7 +19,8 @@ import (
 
 func registerTxHandlers(
 	clientCtx client.Context,
-	r *mux.Router) {
+	r *mux.Router,
+) {
 	r.HandleFunc("/upgrade/plan", newPostPlanHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/upgrade/cancel", newCancelPlanHandler(clientCtx)).Methods("POST")
 }

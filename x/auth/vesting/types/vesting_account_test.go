@@ -378,7 +378,8 @@ func TestGetVestedCoinsPeriodicVestingAcc(t *testing.T) {
 	vestedCoins = pva.GetVestedCoins(now.Add(18 * time.Hour))
 	require.Equal(t,
 		sdk.Coins{
-			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75)}, vestedCoins)
+			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75),
+		}, vestedCoins)
 
 	// require 100% of coins vested
 	vestedCoins = pva.GetVestedCoins(now.Add(48 * time.Hour))
@@ -396,7 +397,8 @@ func TestGetVestingCoinsPeriodicVestingAcc(t *testing.T) {
 
 	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{
-		sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
+		sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100),
+	}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 
@@ -436,7 +438,8 @@ func TestSpendableCoinsPeriodicVestingAcc(t *testing.T) {
 
 	_, _, addr := testdata.KeyTestPubAddr()
 	origCoins := sdk.Coins{
-		sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100)}
+		sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100),
+	}
 	bacc := authtypes.NewBaseAccountWithAddress(addr)
 	pva := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 

@@ -48,7 +48,7 @@ func makeChunks(chunks [][]byte) <-chan io.ReadCloser {
 func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	bodies := [][]byte{}
 	for chunk := range chunks {
-		body, err := ioutil.ReadAll(chunk)
+		body, err := io.ReadAll(chunk)
 		if err != nil {
 			panic(err)
 		}
@@ -76,7 +76,7 @@ func (m *mockSnapshotter) Restore(
 
 	m.chunks = [][]byte{}
 	for reader := range chunks {
-		chunk, err := ioutil.ReadAll(reader)
+		chunk, err := io.ReadAll(reader)
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (m *mockSnapshotter) Snapshot(height uint64, format uint32) (<-chan io.Read
 // setupBusyManager creates a manager with an empty store that is busy creating a snapshot at height 1.
 // The snapshot will complete when the returned closer is called.
 func setupBusyManager(t *testing.T) *snapshots.Manager {
-	tempdir, err := ioutil.TempDir("", "")
+	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
 

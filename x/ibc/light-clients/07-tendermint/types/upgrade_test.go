@@ -25,7 +25,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "successful upgrade",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -86,7 +85,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: upgrade height revision height is more than the current client revision height",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -116,7 +114,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: chain-specified parameters do not match committed client",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -147,7 +144,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: client-specified parameters do not match previous client",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, lastHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -175,7 +171,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: relayer-submitted consensus state does not match counterparty-committed consensus state",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -291,7 +286,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: upgrade path is empty",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -325,7 +319,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: upgraded height is not greater than current height",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, height, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -354,7 +347,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: consensus state for upgrade height cannot be found",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -383,7 +375,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: client is expired",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, lastHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -412,7 +403,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: updated unbonding period is equal to trusting period",
 			setup: func() {
-
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -441,7 +431,6 @@ func (suite *TendermintTestSuite) TestVerifyUpgrade() {
 		{
 			name: "unsuccessful upgrade: final client is not valid",
 			setup: func() {
-
 				// new client has smaller unbonding period such that old trusting period is no longer valid
 				upgradedClient = types.NewClientState("newChainId", types.DefaultTrustLevel, trustingPeriod, trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), upgradePath, false, false)
 				upgradedConsState = &types.ConsensusState{

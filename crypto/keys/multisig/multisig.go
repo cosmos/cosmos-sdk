@@ -11,8 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-var _ multisigtypes.PubKey = &LegacyAminoPubKey{}
-var _ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+var (
+	_ multisigtypes.PubKey          = &LegacyAminoPubKey{}
+	_ types.UnpackInterfacesMessage = &LegacyAminoPubKey{}
+)
 
 // NewLegacyAminoPubKey returns a new LegacyAminoPubKey.
 // Panics if len(pubKeys) < k or 0 >= k.

@@ -3,7 +3,6 @@ package keys
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -73,6 +72,7 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 `
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := ImportKeyCommand()
 			cmd.Flags().AddFlagSet(Commands("home").PersistentFlags())
@@ -90,12 +90,12 @@ HbP+c6JmeJy9JXe2rbbF1QtCX1gLqGcDQPBXiCtFvP7/8wTZtVOPj8vREzhZ9ElO
 
 			require.NoError(t, err)
 			t.Cleanup(func() {
-				kb.Delete("keyname1") // nolint:errcheck
+				kb.Delete("keyname1") //nolint:errcheck
 			})
 
 			keyfile := filepath.Join(kbHome, "key.asc")
 
-			require.NoError(t, ioutil.WriteFile(keyfile, []byte(armoredKey), 0644))
+			require.NoError(t, os.WriteFile(keyfile, []byte(armoredKey), 0o600))
 
 			defer func() {
 				_ = os.RemoveAll(kbHome)

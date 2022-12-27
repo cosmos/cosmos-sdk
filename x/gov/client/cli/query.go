@@ -233,7 +233,6 @@ $ %s query gov vote 1 cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk
 			if vote.Empty() {
 				params := types.NewQueryVoteParams(proposalID, voterAddr)
 				resByTxQuery, err := gcutils.QueryVoteByTxQuery(clientCtx, params)
-
 				if err != nil {
 					return err
 				}
@@ -318,13 +317,11 @@ $ %[1]s query gov votes 1 --page=2 --limit=100
 				context.Background(),
 				&types.QueryVotesRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
-
 			if err != nil {
 				return err
 			}
 
 			return clientCtx.PrintProto(res)
-
 		},
 	}
 
@@ -470,7 +467,6 @@ $ %s query gov deposits 1
 				context.Background(),
 				&types.QueryDepositsRequest{ProposalId: proposalID, Pagination: pageReq},
 			)
-
 			if err != nil {
 				return err
 			}

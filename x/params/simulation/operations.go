@@ -13,7 +13,6 @@ import (
 // the total amount of defined parameters changes, all of which have random valid values.
 func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) simulation.ContentSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content {
-
 		lenParamChange := len(paramChangePool)
 		if lenParamChange == 0 {
 			panic("param changes array is empty")

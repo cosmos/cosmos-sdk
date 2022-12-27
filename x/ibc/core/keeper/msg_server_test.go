@@ -55,9 +55,7 @@ func TestIBCTestSuite(t *testing.T) {
 // rigorous testing of 'RecvPacket' can be found in the
 // 04-channel/keeper/packet_test.go.
 func (suite *KeeperTestSuite) TestHandleRecvPacket() {
-	var (
-		packet channeltypes.Packet
-	)
+	var packet channeltypes.Packet
 
 	testCases := []struct {
 		name     string
@@ -173,9 +171,7 @@ func (suite *KeeperTestSuite) TestHandleRecvPacket() {
 // checks. More rigorous testing of 'AcknowledgePacket'
 // can be found in the 04-channel/keeper/packet_test.go.
 func (suite *KeeperTestSuite) TestHandleAcknowledgePacket() {
-	var (
-		packet channeltypes.Packet
-	)
+	var packet channeltypes.Packet
 
 	testCases := []struct {
 		name     string
@@ -379,7 +375,6 @@ func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 
 			suite.coordinator.UpdateClient(suite.chainA, suite.chainB, clientA, exported.Tendermint)
 			packetKey = host.NextSequenceRecvKey(packet.GetDestPort(), packet.GetDestChannel())
-
 		}, true},
 		{"channel does not exist", func() {
 			// any non-nil value of packet is valid
@@ -430,7 +425,7 @@ func (suite *KeeperTestSuite) TestHandleTimeoutPacket() {
 // and unordered channels. It verifies that the deletion of a packet
 // commitment occurs. It tests high level properties like ordering and basic
 // sanity checks. More rigorous testing of 'TimeoutOnClose' and
-//'TimeoutExecuted' can be found in the 04-channel/keeper/timeout_test.go.
+// 'TimeoutExecuted' can be found in the 04-channel/keeper/timeout_test.go.
 func (suite *KeeperTestSuite) TestHandleTimeoutOnClosePacket() {
 	var (
 		packet              channeltypes.Packet
@@ -627,7 +622,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "successful upgrade",
 			setup: func() {
-
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				// Call ZeroCustomFields on upgraded clients to clear any client-chosen parameters in test-case upgradedClient
 				upgradedClient = upgradedClient.ZeroCustomFields()
@@ -664,7 +658,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "VerifyUpgrade fails",
 			setup: func() {
-
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, ibctesting.TrustingPeriod, ibctesting.UnbondingPeriod+ibctesting.TrustingPeriod, ibctesting.MaxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				// Call ZeroCustomFields on upgraded clients to clear any client-chosen parameters in test-case upgradedClient
 				upgradedClient = upgradedClient.ZeroCustomFields()

@@ -76,6 +76,7 @@ func TestSendToModuleAccount(t *testing.T) {
 	handler := bank.NewHandler(app.BankKeeper)
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := handler(ctx, tc.msg)
 			if tc.expectedError != nil {

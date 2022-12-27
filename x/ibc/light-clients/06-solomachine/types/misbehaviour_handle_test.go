@@ -237,7 +237,6 @@ func (suite *SoloMachineTestSuite) TestCheckMisbehaviourAndUpdateState() {
 					m.SignatureTwo.Data = msg
 
 					misbehaviour = m
-
 				},
 				false,
 			},

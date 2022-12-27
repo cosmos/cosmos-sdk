@@ -14,42 +14,52 @@ func (suite *TendermintTestSuite) TestConsensusStateValidateBasic() {
 		consensusState *types.ConsensusState
 		expectPass     bool
 	}{
-		{"success",
+		{
+			"success",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: suite.valsHash,
 			},
-			true},
-		{"root is nil",
+			true,
+		},
+		{
+			"root is nil",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
 				Root:               commitmenttypes.MerkleRoot{},
 				NextValidatorsHash: suite.valsHash,
 			},
-			false},
-		{"root is empty",
+			false,
+		},
+		{
+			"root is empty",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
 				Root:               commitmenttypes.MerkleRoot{},
 				NextValidatorsHash: suite.valsHash,
 			},
-			false},
-		{"nextvalshash is invalid",
+			false,
+		},
+		{
+			"nextvalshash is invalid",
 			&types.ConsensusState{
 				Timestamp:          suite.now,
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: []byte("hi"),
 			},
-			false},
+			false,
+		},
 
-		{"timestamp is zero",
+		{
+			"timestamp is zero",
 			&types.ConsensusState{
 				Timestamp:          time.Time{},
 				Root:               commitmenttypes.NewMerkleRoot([]byte("app_hash")),
 				NextValidatorsHash: suite.valsHash,
 			},
-			false},
+			false,
+		},
 	}
 
 	for i, tc := range testCases {

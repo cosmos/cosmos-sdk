@@ -311,7 +311,8 @@ func (k Keeper) ChanOpenAck(
 }
 
 // ChanOpenConfirm is called by the counterparty module to close their end of the
-//  channel, since the other end has been closed.
+//
+//	channel, since the other end has been closed.
 func (k Keeper) ChanOpenConfirm(
 	ctx sdk.Context,
 	portID,

@@ -15,6 +15,7 @@ const (
 )
 
 // NewMsgTransfer creates a new MsgTransfer instance
+//
 //nolint:interfacer
 func NewMsgTransfer(
 	sourcePort, sourceChannel string,

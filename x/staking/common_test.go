@@ -18,7 +18,7 @@ func init() {
 	sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 }
 
-// nolint:deadcode,unused,varcheck
+//nolint:deadcode,unused,varcheck
 var (
 	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())

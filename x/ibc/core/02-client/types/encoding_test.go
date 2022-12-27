@@ -6,7 +6,6 @@ import (
 )
 
 func (suite *TypesTestSuite) TestMarshalHeader() {
-
 	cdc := suite.chainA.App.AppCodec()
 	h := &ibctmtypes.Header{
 		TrustedHeight: types.NewHeight(4, 100),
@@ -26,5 +25,4 @@ func (suite *TypesTestSuite) TestMarshalHeader() {
 	invalidHeader, err := types.UnmarshalHeader(cdc, []byte("invalid bytes"))
 	suite.Require().Error(err)
 	suite.Require().Nil(invalidHeader)
-
 }

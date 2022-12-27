@@ -189,7 +189,6 @@ func (suite *KeeperTestSuite) TestSendPacket() {
 			}
 		})
 	}
-
 }
 
 // TestRecvPacket test RecvPacket on chainB. Since packet commitment verification will always
@@ -388,7 +387,6 @@ func (suite *KeeperTestSuite) TestRecvPacket() {
 			}
 		})
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestWriteAcknowledgement() {

@@ -8,6 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -18,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 func Test_multiSigKey_Properties(t *testing.T) {
@@ -279,7 +280,7 @@ func Test_getBechKeyOut(t *testing.T) {
 
 			// TODO: Still not possible to compare functions
 			// Maybe in next release: https://github.com/stretchr/testify/issues/182
-			//if &got != &tt.want {
+			// if &got != &tt.want {
 			//	t.Errorf("getBechKeyOut() = %v, want %v", got, tt.want)
 			//}
 		})

@@ -149,8 +149,7 @@ func (s *errorsTestSuite) TestErrorIs() {
 	}
 }
 
-type customError struct {
-}
+type customError struct{}
 
 func (customError) Error() string {
 	return "custom error"
@@ -182,35 +181,35 @@ func (s *errorsTestSuite) TestWrappedIs() {
 }
 
 func (s *errorsTestSuite) TestWrappedIsMultiple() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().True(stdlib.Is(err, errTest2))
 }
 
 func (s *errorsTestSuite) TestWrappedIsFail() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().False(stdlib.Is(err, errTest))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrap() {
-	var errTest = errors.New("test error")
+	errTest := errors.New("test error")
 	err := Wrap(errTest, "some random description")
 	s.Require().Equal(errTest, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrapMultiple() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().Equal(errTest2, stdlib.Unwrap(err))
 }
 
 func (s *errorsTestSuite) TestWrappedUnwrapFail() {
-	var errTest = errors.New("test error")
-	var errTest2 = errors.New("test error 2")
+	errTest := errors.New("test error")
+	errTest2 := errors.New("test error 2")
 	err := Wrap(errTest2, Wrap(errTest, "some random description").Error())
 	s.Require().NotEqual(errTest, stdlib.Unwrap(err))
 }

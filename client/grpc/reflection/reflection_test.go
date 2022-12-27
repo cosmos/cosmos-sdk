@@ -29,7 +29,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 func (s IntegrationTestSuite) TestSimulateService() {
 	// We will test the following interface for testing.
-	var iface = "cosmos.evidence.v1beta1.Evidence"
+	iface := "cosmos.evidence.v1beta1.Evidence"
 
 	// Test that "cosmos.evidence.v1beta1.Evidence" is included in the
 	// interfaces.

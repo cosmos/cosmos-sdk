@@ -9,13 +9,14 @@ import (
 
 	"github.com/tendermint/tendermint/libs/cli"
 
+	bip39 "github.com/cosmos/go-bip39"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bip39 "github.com/cosmos/go-bip39"
 )
 
 func Test_runAddCmdBasic(t *testing.T) {

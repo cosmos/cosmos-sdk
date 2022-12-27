@@ -88,7 +88,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 			votes: []types.Vote{
 				types.NewVote(0, acc1, types.OptionYes),
-				types.NewVote(0, acc2, types.OptionYes)},
+				types.NewVote(0, acc2, types.OptionYes),
+			},
 		},
 		{
 			description: "2MsgPerTx1Chunk",
@@ -100,7 +101,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 			votes: []types.Vote{
 				types.NewVote(0, acc1, types.OptionYes),
-				types.NewVote(0, acc1, types.OptionYes)},
+				types.NewVote(0, acc1, types.OptionYes),
+			},
 		},
 		{
 			description: "2MsgPerTx2Chunk",
@@ -112,7 +114,8 @@ func TestGetPaginatedVotes(t *testing.T) {
 			},
 			votes: []types.Vote{
 				types.NewVote(0, acc2, types.OptionYes),
-				types.NewVote(0, acc2, types.OptionYes)},
+				types.NewVote(0, acc2, types.OptionYes),
+			},
 		},
 		{
 			description: "IncompleteSearchTx",

@@ -25,7 +25,6 @@ func (ak AccountKeeper) Account(c context.Context, req *types.QueryAccountReques
 
 	ctx := sdk.UnwrapSDKContext(c)
 	addr, err := sdk.AccAddressFromBech32(req.Address)
-
 	if err != nil {
 		return nil, err
 	}

@@ -23,9 +23,7 @@ const (
 	testSequence     = 1
 )
 
-var (
-	invalidProof = []byte("invalid proof")
-)
+var invalidProof = []byte("invalid proof")
 
 func (suite *TendermintTestSuite) TestValidate() {
 	testCases := []struct {
@@ -101,7 +99,6 @@ func (suite *TendermintTestSuite) TestValidate() {
 }
 
 func (suite *TendermintTestSuite) TestInitialize() {
-
 	testCases := []struct {
 		name           string
 		consensusState exported.ConsensusState

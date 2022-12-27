@@ -26,13 +26,15 @@ func (suite *KeeperTestSuite) TestQueryClientState() {
 		malleate func()
 		expPass  bool
 	}{
-		{"invalid clientID",
+		{
+			"invalid clientID",
 			func() {
 				req = &types.QueryClientStateRequest{}
 			},
 			false,
 		},
-		{"client not found",
+		{
+			"client not found",
 			func() {
 				req = &types.QueryClientStateRequest{
 					ClientId: testClientID,

@@ -76,7 +76,6 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 func checkMisbehaviourHeader(
 	clientState *ClientState, consState *ConsensusState, header *Header, currentTimestamp time.Time,
 ) error {
-
 	tmTrustedValset, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
 		return sdkerrors.Wrap(err, "trusted validator set is not tendermint validator set type")

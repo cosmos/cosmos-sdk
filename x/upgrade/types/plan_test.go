@@ -147,7 +147,6 @@ func TestPlanValid(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestShouldExecute(t *testing.T) {

@@ -37,7 +37,6 @@ func NewParams(
 	signedBlocksWindow int64, minSignedPerWindow sdk.Dec, downtimeJailDuration time.Duration,
 	slashFractionDoubleSign, slashFractionDowntime sdk.Dec,
 ) Params {
-
 	return Params{
 		SignedBlocksWindow:      signedBlocksWindow,
 		MinSignedPerWindow:      minSignedPerWindow,

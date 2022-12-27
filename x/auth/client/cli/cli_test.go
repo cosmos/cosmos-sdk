@@ -1,3 +1,4 @@
+//go:build norace
 // +build norace
 
 package cli_test
@@ -7,7 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -202,7 +203,7 @@ func (s *IntegrationTestSuite) TestCLISign_AminoJSON() {
 	fileFlag := fmt.Sprintf("--%s=%s", flags.FlagOutputDocument, filenameSigned)
 	_, err = authtest.TxSignExec(val1.ClientCtx, val1.Address, fileUnsigned.Name(), chainFlag, fileFlag, signModeAminoFlag)
 	require.NoError(err)
-	fContent, err := ioutil.ReadFile(filenameSigned)
+	fContent, err := os.ReadFile(filenameSigned)
 	require.NoError(err)
 	require.Equal(res.String(), string(fContent))
 

@@ -43,7 +43,6 @@ func TestRandomizedGenState(t *testing.T) {
 	require.True(t, ibcTransferGenesis.Params.SendEnabled)
 	require.True(t, ibcTransferGenesis.Params.ReceiveEnabled)
 	require.Len(t, ibcTransferGenesis.DenomTraces, 0)
-
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

@@ -132,7 +132,6 @@ func ExampleFilteredPaginate() {
 
 		return false, nil
 	})
-
 	if err != nil { // should return no error
 		fmt.Println(err)
 	}

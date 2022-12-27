@@ -35,7 +35,6 @@ func NewGenesisAccount(
 	vestingAmount, delFree, delVesting sdk.Coins, vestingStartTime, vestingEndTime int64,
 	module string, permissions []string,
 ) GenesisAccount {
-
 	return GenesisAccount{
 		Address:           address,
 		Coins:             coins,

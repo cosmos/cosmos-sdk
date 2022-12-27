@@ -661,7 +661,6 @@ $ %s query staking historical-info 5
 
 			params := &types.QueryHistoricalInfoRequest{Height: height}
 			res, err := queryClient.HistoricalInfo(context.Background(), params)
-
 			if err != nil {
 				return err
 			}

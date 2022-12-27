@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -142,7 +142,7 @@ func NewConnectionOpenTryCmd() *cobra.Command {
 				if err := cdc.UnmarshalJSON([]byte(ver), version); err != nil {
 
 					// check for file path if JSON input is not provided
-					contents, err := ioutil.ReadFile(ver)
+					contents, err := os.ReadFile(ver)
 					if err != nil {
 						return errors.Wrap(err, "neither JSON input nor path to .json file for version were provided")
 					}
@@ -261,7 +261,7 @@ func NewConnectionOpenAckCmd() *cobra.Command {
 			if err := cdc.UnmarshalJSON([]byte(args[8]), version); err != nil {
 
 				// check for file path if JSON input is not provided
-				contents, err := ioutil.ReadFile(args[8])
+				contents, err := os.ReadFile(args[8])
 				if err != nil {
 					return errors.Wrap(err, "neither JSON input nor path to .json file for version were provided")
 				}

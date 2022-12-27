@@ -76,7 +76,7 @@ func (suite *AnteTestSuite) TestRecoverPanic() {
 	suite.Require().Equal(gasLimit, newCtx.GasMeter().Limit())
 
 	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})
-	suite.Require().Panics(func() { antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") // nolint:errcheck
+	suite.Require().Panics(func() { antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") //nolint:errcheck
 }
 
 type OutOfGasDecorator struct{}

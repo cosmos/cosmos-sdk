@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type DepositTestSuite struct {
@@ -33,7 +34,6 @@ func (s *DepositTestSuite) SetupSuite() {
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 	s.fees = sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(20))).String()
-
 }
 
 func (s *DepositTestSuite) TearDownSuite() {
@@ -161,7 +161,6 @@ func (s *DepositTestSuite) TestRejectedProposalDeposits() {
 	s.Require().Equal(len(depositsRes), 1)
 	// verify initial deposit
 	s.Require().Equal(depositsRes[0].Amount.String(), initialDeposit.String())
-
 }
 
 func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool) types.Deposits {

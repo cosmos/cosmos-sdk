@@ -50,7 +50,8 @@ func (suite *KeeperTestSuite) TestQueryChannel() {
 			},
 			false,
 		},
-		{"channel not found",
+		{
+			"channel not found",
 			func() {
 				req = &types.QueryChannelRequest{
 					PortId:    "test-port-id",
@@ -597,7 +598,8 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 			},
 			false,
 		},
-		{"invalid sequence",
+		{
+			"invalid sequence",
 			func() {
 				req = &types.QueryPacketCommitmentRequest{
 					PortId:    "test-port-id",
@@ -607,7 +609,8 @@ func (suite *KeeperTestSuite) TestQueryPacketCommitment() {
 			},
 			false,
 		},
-		{"channel not found",
+		{
+			"channel not found",
 			func() {
 				req = &types.QueryPacketCommitmentRequest{
 					PortId:    "test-port-id",
@@ -786,7 +789,8 @@ func (suite *KeeperTestSuite) TestQueryPacketReceipt() {
 			},
 			false,
 		},
-		{"invalid sequence",
+		{
+			"invalid sequence",
 			func() {
 				req = &types.QueryPacketReceiptRequest{
 					PortId:    "test-port-id",
@@ -888,7 +892,8 @@ func (suite *KeeperTestSuite) TestQueryPacketAcknowledgement() {
 			},
 			false,
 		},
-		{"invalid sequence",
+		{
+			"invalid sequence",
 			func() {
 				req = &types.QueryPacketAcknowledgementRequest{
 					PortId:    "test-port-id",
@@ -898,7 +903,8 @@ func (suite *KeeperTestSuite) TestQueryPacketAcknowledgement() {
 			},
 			false,
 		},
-		{"channel not found",
+		{
+			"channel not found",
 			func() {
 				req = &types.QueryPacketAcknowledgementRequest{
 					PortId:    "test-port-id",
@@ -1330,7 +1336,8 @@ func (suite *KeeperTestSuite) TestQueryNextSequenceReceive() {
 			},
 			false,
 		},
-		{"channel not found",
+		{
+			"channel not found",
 			func() {
 				req = &types.QueryNextSequenceReceiveRequest{
 					PortId:    "test-port-id",

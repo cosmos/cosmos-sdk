@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -324,9 +323,7 @@ func VerifySet(t *testing.T, skipUpgradeHeights map[int64]bool) {
 }
 
 func TestContains(t *testing.T) {
-	var (
-		skipOne int64 = 11
-	)
+	var skipOne int64 = 11
 	s := setupTest(10, map[int64]bool{skipOne: true})
 
 	VerifySet(t, map[int64]bool{skipOne: true})
@@ -500,7 +497,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
 	require.Nil(t, err)
 
-	data, err := ioutil.ReadFile(upgradeInfoFilePath)
+	data, err := os.ReadFile(upgradeInfoFilePath)
 	require.NoError(t, err)
 
 	var upgradeInfo storetypes.UpgradeInfo

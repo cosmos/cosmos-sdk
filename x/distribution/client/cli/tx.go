@@ -53,7 +53,6 @@ func newSplitAndApply(
 	genOrBroadcastFn newGenerateOrBroadcastFunc, clientCtx client.Context,
 	fs *pflag.FlagSet, msgs []sdk.Msg, chunkSize int,
 ) error {
-
 	if chunkSize == 0 {
 		return genOrBroadcastFn(clientCtx, fs, msgs...)
 	}

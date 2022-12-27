@@ -141,7 +141,6 @@ func TestVerifyProposedVersion(t *testing.T) {
 			require.Error(t, err, "test case %d: %s", i, tc.name)
 		}
 	}
-
 }
 
 func TestVerifySupportedFeature(t *testing.T) {

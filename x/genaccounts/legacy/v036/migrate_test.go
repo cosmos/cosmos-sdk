@@ -61,7 +61,6 @@ var (
 )
 
 func TestMigrateEmptyRecord(t *testing.T) {
-
 	type args struct {
 		accounts v034accounts.GenesisState
 		deposits []v034gov.DepositWithMetadata

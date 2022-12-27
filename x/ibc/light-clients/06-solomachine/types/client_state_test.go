@@ -68,7 +68,6 @@ func (suite *SoloMachineTestSuite) TestClientStateValidateBasic() {
 			tc := tc
 
 			suite.Run(tc.name, func() {
-
 				err := tc.clientState.Validate()
 
 				if tc.expPass {
@@ -235,7 +234,6 @@ func (suite *SoloMachineTestSuite) TestVerifyClientState() {
 			tc := tc
 
 			suite.Run(tc.name, func() {
-
 				var expSeq uint64
 				if tc.clientState.ConsensusState != nil {
 					expSeq = tc.clientState.Sequence + 1
@@ -363,7 +361,6 @@ func (suite *SoloMachineTestSuite) TestVerifyClientConsensusState() {
 			tc := tc
 
 			suite.Run(tc.name, func() {
-
 				var expSeq uint64
 				if tc.clientState.ConsensusState != nil {
 					expSeq = tc.clientState.Sequence + 1

@@ -7,9 +7,7 @@ import (
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
-var (
-	frozenHeight = clienttypes.NewHeight(0, 1)
-)
+var frozenHeight = clienttypes.NewHeight(0, 1)
 
 // sanity checks
 func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
@@ -197,7 +195,6 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 		// a client are each tested to ensure that unexpiry headers cannot update
 		// a client when a unfreezing header is required.
 		suite.Run(tc.name, func() {
-
 			// start by testing unexpiring the client
 			suite.SetupTest() // reset
 
@@ -296,7 +293,6 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 				suite.Require().True(found)
 				clientState.LatestHeight = header.GetHeight().(clienttypes.Height)
 				suite.chainA.App.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), clientA, clientState.GetLatestHeight(), consensusState)
-
 			}, false,
 		},
 		{

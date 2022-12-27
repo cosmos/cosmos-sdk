@@ -35,7 +35,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			len(vals),
 			false,
 		},
-		{"empty status returns all the validators",
+		{
+			"empty status returns all the validators",
 			func() {
 				req = &types.QueryValidatorsRequest{Status: ""}
 			},
@@ -52,10 +53,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			0,
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
-				req = &types.QueryValidatorsRequest{Status: types.Bonded.String(),
-					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
+				req = &types.QueryValidatorsRequest{
+					Status:     types.Bonded.String(),
+					Pagination: &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 			1,
@@ -101,7 +105,8 @@ func (suite *KeeperTestSuite) TestGRPCValidator() {
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
 				req = &types.QueryValidatorRequest{ValidatorAddr: vals[0].OperatorAddress}
 			},
@@ -141,11 +146,13 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidators() {
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
 				req = &types.QueryDelegatorValidatorsRequest{
 					DelegatorAddr: addrs[0].String(),
-					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 		},
@@ -185,7 +192,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 			},
 			false,
 		},
-		{"invalid delegator, validator pair",
+		{
+			"invalid delegator, validator pair",
 			func() {
 				req = &types.QueryDelegatorValidatorRequest{
 					DelegatorAddr: addr.String(),
@@ -194,7 +202,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorValidator() {
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
 				req = &types.QueryDelegatorValidatorRequest{
 					DelegatorAddr: addr.String(),
@@ -235,13 +244,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 		malleate func()
 		expPass  bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryDelegationRequest{}
 			},
 			false,
 		},
-		{"invalid validator, delegator pair",
+		{
+			"invalid validator, delegator pair",
 			func() {
 				req = &types.QueryDelegationRequest{
 					DelegatorAddr: addrAcc1.String(),
@@ -250,7 +261,8 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegation() {
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
 				req = &types.QueryDelegationRequest{DelegatorAddr: addrAcc.String(), ValidatorAddr: addrVal}
 			},
@@ -289,21 +301,27 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorDelegations() {
 		malleate func()
 		expPass  bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{}
 			},
 			false,
-		}, {"invalid request",
+		},
+		{
+			"invalid request",
 			func() {
 				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrs[4].String()}
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
-				req = &types.QueryDelegatorDelegationsRequest{DelegatorAddr: addrAcc.String(),
-					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
+				req = &types.QueryDelegatorDelegationsRequest{
+					DelegatorAddr: addrAcc.String(),
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 		},
@@ -344,24 +362,29 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		expPass  bool
 		expErr   bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{}
 			},
 			false,
 			true,
 		},
-		{"invalid validator delegator pair",
+		{
+			"invalid validator delegator pair",
 			func() {
 				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal2.String()}
 			},
 			false,
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
-				req = &types.QueryValidatorDelegationsRequest{ValidatorAddr: addrVal1,
-					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
+				req = &types.QueryValidatorDelegationsRequest{
+					ValidatorAddr: addrVal1,
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 			false,
@@ -409,22 +432,26 @@ func (suite *KeeperTestSuite) TestGRPCQueryUnbondingDelegation() {
 		malleate func()
 		expPass  bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryUnbondingDelegationRequest{}
 			},
 			false,
 		},
-		{"invalid request",
+		{
+			"invalid request",
 			func() {
 				req = &types.QueryUnbondingDelegationRequest{}
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
 				req = &types.QueryUnbondingDelegationRequest{
-					DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal2}
+					DelegatorAddr: addrAcc2.String(), ValidatorAddr: addrVal2,
+				}
 			},
 			true,
 		},
@@ -469,24 +496,29 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		expPass  bool
 		expErr   bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryDelegatorUnbondingDelegationsRequest{}
 			},
 			false,
 			true,
 		},
-		{"invalid request",
+		{
+			"invalid request",
 			func() {
 				req = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc1.String()}
 			},
 			false,
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
-				req = &types.QueryDelegatorUnbondingDelegationsRequest{DelegatorAddr: addrAcc.String(),
-					Pagination: &query.PageRequest{Limit: 1, CountTotal: true}}
+				req = &types.QueryDelegatorUnbondingDelegationsRequest{
+					DelegatorAddr: addrAcc.String(),
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 			false,
@@ -544,25 +576,29 @@ func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {
 		malleate func()
 		expPass  bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryHistoricalInfoRequest{}
 			},
 			false,
 		},
-		{"invalid request with negative height",
+		{
+			"invalid request with negative height",
 			func() {
 				req = &types.QueryHistoricalInfoRequest{Height: -1}
 			},
 			false,
 		},
-		{"valid request with old height",
+		{
+			"valid request with old height",
 			func() {
 				req = &types.QueryHistoricalInfoRequest{Height: 4}
 			},
 			false,
 		},
-		{"valid request with current height",
+		{
+			"valid request with current height",
 			func() {
 				req = &types.QueryHistoricalInfoRequest{Height: 5}
 			},
@@ -612,44 +648,54 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegation() {
 		expPass  bool
 		expErr   bool
 	}{
-		{"request redelegations for non existent addr",
+		{
+			"request redelegations for non existent addr",
 			func() {
 				req = &types.QueryRedelegationsRequest{DelegatorAddr: addrAcc.String()}
 			},
 			false,
 			false,
 		},
-		{"request redelegations with non existent pairs",
+		{
+			"request redelegations with non existent pairs",
 			func() {
-				req = &types.QueryRedelegationsRequest{DelegatorAddr: addrAcc.String(), SrcValidatorAddr: val3.String(),
-					DstValidatorAddr: val4.String()}
+				req = &types.QueryRedelegationsRequest{
+					DelegatorAddr: addrAcc.String(), SrcValidatorAddr: val3.String(),
+					DstValidatorAddr: val4.String(),
+				}
 			},
 			false,
 			true,
 		},
-		{"request redelegations with delegatoraddr, sourceValAddr, destValAddr",
+		{
+			"request redelegations with delegatoraddr, sourceValAddr, destValAddr",
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					DelegatorAddr: addrAcc1.String(), SrcValidatorAddr: val1.OperatorAddress,
-					DstValidatorAddr: val2.OperatorAddress, Pagination: &query.PageRequest{}}
+					DstValidatorAddr: val2.OperatorAddress, Pagination: &query.PageRequest{},
+				}
 			},
 			true,
 			false,
 		},
-		{"request redelegations with delegatoraddr and sourceValAddr",
+		{
+			"request redelegations with delegatoraddr and sourceValAddr",
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					DelegatorAddr: addrAcc1.String(), SrcValidatorAddr: val1.OperatorAddress,
-					Pagination: &query.PageRequest{}}
+					Pagination: &query.PageRequest{},
+				}
 			},
 			true,
 			false,
 		},
-		{"query redelegations with sourceValAddr only",
+		{
+			"query redelegations with sourceValAddr only",
 			func() {
 				req = &types.QueryRedelegationsRequest{
 					SrcValidatorAddr: val1.GetOperator().String(),
-					Pagination:       &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:       &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 			false,
@@ -695,17 +741,20 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
 		malleate func()
 		expPass  bool
 	}{
-		{"empty request",
+		{
+			"empty request",
 			func() {
 				req = &types.QueryValidatorUnbondingDelegationsRequest{}
 			},
 			false,
 		},
-		{"valid request",
+		{
+			"valid request",
 			func() {
 				req = &types.QueryValidatorUnbondingDelegationsRequest{
 					ValidatorAddr: val1.GetOperator().String(),
-					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true}}
+					Pagination:    &query.PageRequest{Limit: 1, CountTotal: true},
+				}
 			},
 			true,
 		},

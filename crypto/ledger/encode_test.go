@@ -28,7 +28,7 @@ func checkAminoJSON(t *testing.T, src interface{}, dst interface{}, isNil bool) 
 	require.Nil(t, err, "%+v", err)
 }
 
-// nolint: govet
+//nolint: govet
 func ExamplePrintRegisteredTypes() {
 	cdc.PrintTypes(os.Stdout)
 	// | Type | Name | Prefix | Length | Notes |
@@ -44,7 +44,6 @@ func ExamplePrintRegisteredTypes() {
 }
 
 func TestNilEncodings(t *testing.T) {
-
 	// Check nil Signature.
 	var a, b []byte
 	checkAminoJSON(t, &a, &b, true)
@@ -59,5 +58,4 @@ func TestNilEncodings(t *testing.T) {
 	var e, f cryptotypes.PrivKey
 	checkAminoJSON(t, &e, &f, true)
 	require.EqualValues(t, e, f)
-
 }

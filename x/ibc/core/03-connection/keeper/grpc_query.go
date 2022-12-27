@@ -68,7 +68,6 @@ func (q Keeper) Connections(c context.Context, req *types.QueryConnectionsReques
 		connections = append(connections, &identifiedConnection)
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +136,6 @@ func (q Keeper) ConnectionClientState(c context.Context, req *types.QueryConnect
 
 	height := clienttypes.GetSelfHeight(ctx)
 	return types.NewQueryConnectionClientStateResponse(identifiedClientState, nil, height), nil
-
 }
 
 // ConnectionConsensusState implements the Query/ConnectionConsensusState gRPC method

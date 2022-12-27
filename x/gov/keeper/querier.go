@@ -72,7 +72,7 @@ func queryParams(ctx sdk.Context, path []string, req abci.RequestQuery, keeper K
 	}
 }
 
-// nolint: unparam
+//nolint: unparam
 func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryProposalParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -93,7 +93,7 @@ func queryProposal(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	return bz, nil
 }
 
-// nolint: unparam
+//nolint: unparam
 func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryDepositParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -110,7 +110,7 @@ func queryDeposit(ctx sdk.Context, path []string, req abci.RequestQuery, keeper 
 	return bz, nil
 }
 
-// nolint: unparam
+//nolint: unparam
 func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryVoteParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -127,7 +127,7 @@ func queryVote(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Kee
 	return bz, nil
 }
 
-// nolint: unparam
+//nolint: unparam
 func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryProposalParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -148,7 +148,7 @@ func queryDeposits(ctx sdk.Context, path []string, req abci.RequestQuery, keeper
 	return bz, nil
 }
 
-// nolint: unparam
+//nolint: unparam
 func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryProposalParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
@@ -185,7 +185,7 @@ func queryTally(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Ke
 	return bz, nil
 }
 
-// nolint: unparam
+//nolint: unparam
 func queryVotes(ctx sdk.Context, path []string, req abci.RequestQuery, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	var params types.QueryProposalVotesParams
 	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)

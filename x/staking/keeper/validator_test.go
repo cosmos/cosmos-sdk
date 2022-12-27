@@ -250,7 +250,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 func TestValidatorBasics(t *testing.T) {
 	app, ctx, _, addrVals := bootstrapValidatorTest(t, 1000, 20)
 
-	//construct the validators
+
 	var validators [3]types.Validator
 	powers := []int64{9, 8, 7}
 	for i, power := range powers {
@@ -355,7 +355,8 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 		sdk.PowerReduction.MulRaw(100),
 		sdk.PowerReduction,
 		sdk.PowerReduction.MulRaw(400),
-		sdk.PowerReduction.MulRaw(200)}
+		sdk.PowerReduction.MulRaw(200),
+	}
 	n := len(amts)
 	var validators [5]types.Validator
 	for i, amt := range amts {
@@ -451,7 +452,8 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 		sdk.PowerReduction.MulRaw(100),
 		sdk.PowerReduction,
 		sdk.PowerReduction.MulRaw(400),
-		sdk.PowerReduction.MulRaw(200)}
+		sdk.PowerReduction.MulRaw(200),
+	}
 
 	var validators [5]types.Validator
 	for i, amt := range amts {

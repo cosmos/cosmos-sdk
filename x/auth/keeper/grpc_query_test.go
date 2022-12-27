@@ -9,9 +9,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
-	var (
-		req *types.QueryAccountRequest
-	)
+	var req *types.QueryAccountRequest
 	_, _, addr := testdata.KeyTestPubAddr()
 
 	testCases := []struct {

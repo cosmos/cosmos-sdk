@@ -113,7 +113,7 @@ func (l *List) remove(e *Element) *Element {
 }
 
 // move moves e to next to at and returns e.
-// nolint: unparam
+//nolint: unparam
 func (l *List) move(e, at *Element) *Element {
 	if e == at {
 		return e

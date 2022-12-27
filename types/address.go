@@ -80,13 +80,17 @@ type Address interface {
 }
 
 // Ensure that different address types implement the interface
-var _ Address = AccAddress{}
-var _ Address = ValAddress{}
-var _ Address = ConsAddress{}
+var (
+	_ Address = AccAddress{}
+	_ Address = ValAddress{}
+	_ Address = ConsAddress{}
+)
 
-var _ yaml.Marshaler = AccAddress{}
-var _ yaml.Marshaler = ValAddress{}
-var _ yaml.Marshaler = ConsAddress{}
+var (
+	_ yaml.Marshaler = AccAddress{}
+	_ yaml.Marshaler = ValAddress{}
+	_ yaml.Marshaler = ConsAddress{}
+)
 
 // ----------------------------------------------------------------------------
 // account
@@ -183,7 +187,6 @@ func (aa AccAddress) MarshalYAML() (interface{}, error) {
 func (aa *AccAddress) UnmarshalJSON(data []byte) error {
 	var s string
 	err := json.Unmarshal(data, &s)
-
 	if err != nil {
 		return err
 	}

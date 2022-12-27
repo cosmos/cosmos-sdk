@@ -898,7 +898,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
 		// for now this fails:
-		//if rand.Int63()%2 == 0 {
+		// if rand.Int63()%2 == 0 {
 		//	privkey = ed25519.GenPrivKey()
 		//} else {
 		//	privkey = secp256k1.GenPrivKey()
@@ -939,7 +939,8 @@ func TestCountSubkeys(t *testing.T) {
 	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{
-		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
+		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey(),
+	})
 	type args struct {
 		pub cryptotypes.PubKey
 	}

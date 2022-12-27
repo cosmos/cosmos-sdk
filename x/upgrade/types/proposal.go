@@ -17,8 +17,10 @@ func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Conten
 }
 
 // Implements Proposal Interface
-var _ gov.Content = &SoftwareUpgradeProposal{}
-var _ codectypes.UnpackInterfacesMessage = SoftwareUpgradeProposal{}
+var (
+	_ gov.Content                        = &SoftwareUpgradeProposal{}
+	_ codectypes.UnpackInterfacesMessage = SoftwareUpgradeProposal{}
+)
 
 func init() {
 	gov.RegisterProposalType(ProposalTypeSoftwareUpgrade)
@@ -63,6 +65,7 @@ func (csup *CancelSoftwareUpgradeProposal) ProposalRoute() string  { return Rout
 func (csup *CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
+
 func (csup *CancelSoftwareUpgradeProposal) ValidateBasic() error {
 	return gov.ValidateAbstract(csup)
 }

@@ -195,7 +195,6 @@ func (gs GenesisState) Validate() error {
 			if err := gm.Validate(); err != nil {
 				return fmt.Errorf("invalid client metadata %v clientID %s index %d: %w", gm, clientMetadata.ClientId, i, err)
 			}
-
 		}
 
 	}

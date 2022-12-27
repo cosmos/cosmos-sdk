@@ -284,7 +284,6 @@ func queryInitialDepositByTxQuery(clientCtx client.Context, proposalID uint64) (
 		fmt.Sprintf("%s.%s='%s'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, []byte(fmt.Sprintf("%d", proposalID))),
 	}
 	searchResult, err := authclient.QueryTxsByEvents(clientCtx, events, defaultPage, defaultLimit, "")
-
 	if err != nil {
 		return types.Deposit{}, err
 	}

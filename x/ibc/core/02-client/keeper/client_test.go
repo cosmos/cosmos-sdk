@@ -241,7 +241,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "successful upgrade",
 			setup: func() {
-
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				upgradedConsState = &ibctmtypes.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -271,7 +270,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "client state not found",
 			setup: func() {
-
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				upgradedConsState = &ibctmtypes.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -303,7 +301,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "client state frozen",
 			setup: func() {
-
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				upgradedConsState = &ibctmtypes.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -339,7 +336,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 		{
 			name: "tendermint client VerifyUpgrade fails",
 			setup: func() {
-
 				upgradedClient = ibctmtypes.NewClientState("newChainId", ibctmtypes.DefaultTrustLevel, trustingPeriod, ubdPeriod+trustingPeriod, maxClockDrift, newClientHeight, commitmenttypes.GetSDKSpecs(), ibctesting.UpgradePath, false, false)
 				upgradedConsState = &ibctmtypes.ConsensusState{
 					NextValidatorsHash: []byte("nextValsHash"),
@@ -386,7 +382,6 @@ func (suite *KeeperTestSuite) TestUpgradeClient() {
 			suite.Require().Error(err, "verify upgrade passed on invalid case: %s", tc.name)
 		}
 	}
-
 }
 
 func (suite *KeeperTestSuite) TestCheckMisbehaviourAndUpdateState() {
@@ -633,8 +628,6 @@ func (suite *KeeperTestSuite) TestUpdateClientEventEmission() {
 			suite.Require().NoError(err)
 			suite.Require().Equal(header, emittedHeader)
 		}
-
 	}
 	suite.Require().True(contains)
-
 }

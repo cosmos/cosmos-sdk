@@ -63,7 +63,6 @@ func (coord *Coordinator) SetupClients(
 	chainA, chainB *TestChain,
 	clientType string,
 ) (string, string) {
-
 	clientA, err := coord.CreateClient(chainA, chainB, clientType)
 	require.NoError(coord.t, err)
 
@@ -80,7 +79,6 @@ func (coord *Coordinator) SetupClientConnections(
 	chainA, chainB *TestChain,
 	clientType string,
 ) (string, string, *TestConnection, *TestConnection) {
-
 	clientA, clientB := coord.SetupClients(chainA, chainB, clientType)
 
 	connA, connB := coord.CreateConnection(chainA, chainB, clientA, clientB)
@@ -147,7 +145,6 @@ func (coord *Coordinator) CreateConnection(
 	chainA, chainB *TestChain,
 	clientA, clientB string,
 ) (*TestConnection, *TestConnection) {
-
 	connA, connB, err := coord.ConnOpenInit(chainA, chainB, clientA, clientB)
 	require.NoError(coord.t, err)
 
@@ -195,7 +192,6 @@ func (coord *Coordinator) CreateChannel(
 	sourcePortID, counterpartyPortID string,
 	order channeltypes.Order,
 ) (TestChannel, TestChannel) {
-
 	channelA, channelB, err := coord.ChanOpenInit(chainA, chainB, connA, connB, sourcePortID, counterpartyPortID, order)
 	require.NoError(coord.t, err)
 
@@ -607,7 +603,6 @@ func (coord *Coordinator) ChanOpenTry(
 	connection *TestConnection,
 	order channeltypes.Order,
 ) error {
-
 	// initialize channel on source
 	if err := source.ChanOpenTry(counterparty, sourceChannel, counterpartyChannel, order, connection.ID); err != nil {
 		return err
@@ -627,7 +622,6 @@ func (coord *Coordinator) ChanOpenAck(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
 ) error {
-
 	if err := source.ChanOpenAck(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
@@ -646,7 +640,6 @@ func (coord *Coordinator) ChanOpenConfirm(
 	source, counterparty *TestChain,
 	sourceChannel, counterpartyChannel TestChannel,
 ) error {
-
 	if err := source.ChanOpenConfirm(counterparty, sourceChannel, counterpartyChannel); err != nil {
 		return err
 	}
@@ -667,7 +660,6 @@ func (coord *Coordinator) ChanCloseInit(
 	source, counterparty *TestChain,
 	channel TestChannel,
 ) error {
-
 	if err := source.ChanCloseInit(counterparty, channel); err != nil {
 		return err
 	}

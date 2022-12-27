@@ -37,7 +37,6 @@ func TestProposalKeys(t *testing.T) {
 }
 
 func TestDepositKeys(t *testing.T) {
-
 	key := DepositsKey(2)
 	proposalID := SplitProposalKey(key)
 	require.Equal(t, int(proposalID), 2)
@@ -54,7 +53,6 @@ func TestDepositKeys(t *testing.T) {
 }
 
 func TestVoteKeys(t *testing.T) {
-
 	key := VotesKey(2)
 	proposalID := SplitProposalKey(key)
 	require.Equal(t, int(proposalID), 2)

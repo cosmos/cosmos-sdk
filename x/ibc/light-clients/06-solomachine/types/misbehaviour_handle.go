@@ -20,7 +20,6 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 	clientStore sdk.KVStore,
 	misbehaviour exported.Misbehaviour,
 ) (exported.ClientState, error) {
-
 	soloMisbehaviour, ok := misbehaviour.(*Misbehaviour)
 	if !ok {
 		return nil, sdkerrors.Wrapf(
@@ -54,7 +53,6 @@ func (cs ClientState) CheckMisbehaviourAndUpdateState(
 // over the provided data and that the data is valid. The data is valid if it can be
 // unmarshaled into the specified data type.
 func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, misbehaviour *Misbehaviour, sigAndData *SignatureAndData) error {
-
 	// do not check misbehaviour timestamp since we want to allow processing of past misbehaviour
 
 	// ensure data can be unmarshaled to the specified data type
@@ -88,5 +86,4 @@ func verifySignatureAndData(cdc codec.BinaryMarshaler, clientState ClientState, 
 	}
 
 	return nil
-
 }

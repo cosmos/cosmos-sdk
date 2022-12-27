@@ -150,6 +150,7 @@ func (sup CancelSoftwareUpgradeProposal) ProposalRoute() string  { return Router
 func (sup CancelSoftwareUpgradeProposal) ProposalType() string {
 	return ProposalTypeCancelSoftwareUpgrade
 }
+
 func (sup CancelSoftwareUpgradeProposal) ValidateBasic() error {
 	return v036gov.ValidateAbstract(sup)
 }

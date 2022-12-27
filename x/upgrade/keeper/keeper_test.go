@@ -251,9 +251,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 }
 
 func (s *KeeperTestSuite) TestSetUpgradedClient() {
-	var (
-		clientState ibcexported.ClientState
-	)
+	var clientState ibcexported.ClientState
 	cases := []struct {
 		name   string
 		height int64
@@ -293,7 +291,6 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			s.Require().Error(err, "invalid case: %s did not return error", tc.name)
 		}
 	}
-
 }
 
 func TestKeeperTestSuite(t *testing.T) {

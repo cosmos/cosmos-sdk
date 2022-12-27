@@ -22,6 +22,7 @@ var (
 
 // NewMsgConnectionOpenInit creates a new MsgConnectionOpenInit instance. It sets the
 // counterparty connection identifier to be empty.
+//
 //nolint:interfacer
 func NewMsgConnectionOpenInit(
 	clientID, counterpartyClientID string,
@@ -87,6 +88,7 @@ func (msg MsgConnectionOpenInit) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgConnectionOpenTry creates a new MsgConnectionOpenTry instance
+//
 //nolint:interfacer
 func NewMsgConnectionOpenTry(
 	previousConnectionID, clientID, counterpartyConnectionID,
@@ -200,6 +202,7 @@ func (msg MsgConnectionOpenTry) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgConnectionOpenAck creates a new MsgConnectionOpenAck instance
+//
 //nolint:interfacer
 func NewMsgConnectionOpenAck(
 	connectionID, counterpartyConnectionID string, counterpartyClient exported.ClientState,
@@ -297,6 +300,7 @@ func (msg MsgConnectionOpenAck) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgConnectionOpenConfirm creates a new MsgConnectionOpenConfirm instance
+//
 //nolint:interfacer
 func NewMsgConnectionOpenConfirm(
 	connectionID string, proofAck []byte, proofHeight clienttypes.Height,

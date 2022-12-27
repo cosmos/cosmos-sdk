@@ -1183,9 +1183,15 @@ where `proposal.json` contains:
     }
   ],
   "metadata": "AQ==",
-  "deposit": "10stake"
+  "deposit": "10stake",
+  "title": "Proposal Title",
+  "summary": "Proposal Summary"
 }
 ```
+
+:::note
+By default the metadata and the proposal are both limited by 255 characters, this can be overridden by the application developer.
+:::
 
 ##### submit-legacy-proposal
 
@@ -1324,7 +1330,9 @@ Example Output:
       }
     ],
     "votingStartTime": "2021-09-16T19:40:08.712440474Z",
-    "votingEndTime": "2021-09-18T19:40:08.712440474Z"
+    "votingEndTime": "2021-09-18T19:40:08.712440474Z",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
   }
 }
 ```
@@ -1370,7 +1378,9 @@ Example Output:
     ],
     "votingStartTime": "2022-03-28T14:25:26.644857113Z",
     "votingEndTime": "2022-03-30T14:25:26.644857113Z",
-    "metadata": "AQ=="
+    "metadata": "AQ==",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
   }
 }
 ```

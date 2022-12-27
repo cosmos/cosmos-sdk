@@ -81,6 +81,14 @@ message Proposal {
 
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 10;
+
+  // title is the title of the proposal
+  string title = 11;
+
+  // summary is a short summary of the proposal
+  string summary = 12;
+
+  string proposer = 13 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.

@@ -11,7 +11,6 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -276,13 +275,13 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 //
 // Deprecated: Use `AccountI` from types package instead.
 type AccountI interface {
-	types.AccountI
+	sdk.AccountI
 }
 
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 type ModuleAccountI interface {
-	types.AccountI
+	sdk.AccountI
 
 	GetName() string
 	GetPermissions() []string
@@ -306,7 +305,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
 type GenesisAccount interface {
-	types.AccountI
+	sdk.AccountI
 
 	Validate() error
 }

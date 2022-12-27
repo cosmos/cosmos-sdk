@@ -446,6 +446,7 @@ func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []
 	}
 	var missing []string
 	for m := range m.Modules {
+		m := m
 		if pass != nil && pass(m) {
 			continue
 		}

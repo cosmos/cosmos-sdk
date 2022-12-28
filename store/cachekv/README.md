@@ -3,7 +3,8 @@
 A `CacheKVStore` is cache wrapper for a `KVStore`. It extends the operations of the `KVStore` to work with a write-back cache, allowing for reduced I/O operations and more efficient disposing of changes (e.g. after processing a failed transaction).
 
 The core goals the CacheKVStore seeks to solve are:
-Buffer all writes to the parent store, so they can be dropped if they need to be reverted
+
+* Buffer all writes to the parent store, so they can be dropped if they need to be reverted
 * Allow iteration over contiguous spans of keys
 * Act as a cache, improving access time for reads that have already been done (by replacing tree access with hashtable access, avoiding disk I/O)
   * Note: We actually fail to achieve this for iteration right now

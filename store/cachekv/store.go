@@ -9,8 +9,8 @@ import (
 	"github.com/tendermint/tendermint/libs/math"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
+	"github.com/cosmos/cosmos-sdk/store/internal/conv"
 	"github.com/cosmos/cosmos-sdk/store/internal/kv"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"

@@ -435,7 +435,10 @@ func (m *Manager) checkModulesExists(moduleName []string) error {
 
 // assertNoForgottenModules checks that we didn't forget any modules in the
 // SetOrder* functions.
-func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(string) bool) {
+// `pass`: a closure which allows one to omit modules from `moduleNames`.
+//         if you provide non-nil `pass` and it returns true, the module
+//         would not be subject of the assertion.
+func (m *Manager) assertNoForgottenModules(setOrderFnName string, moduleNames []string, pass func(moduleName string) bool) {
 	ms := make(map[string]bool)
 	for _, m := range moduleNames {
 		ms[m] = true

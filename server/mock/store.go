@@ -3,8 +3,8 @@ package mock
 import (
 	"io"
 
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
-	dbm "github.com/tendermint/tm-db"
 
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"

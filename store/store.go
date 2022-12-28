@@ -2,12 +2,14 @@ package store
 
 import (
 	"bytes"
+
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/store/cache"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func NewCommitMultiStore(db dbm.DB, logger log.Logger) types.CommitMultiStore {

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

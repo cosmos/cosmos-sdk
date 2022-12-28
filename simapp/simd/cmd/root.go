@@ -7,11 +7,11 @@ import (
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
@@ -257,7 +257,6 @@ func newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
 	return simapp.NewSimApp(

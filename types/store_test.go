@@ -5,9 +5,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"

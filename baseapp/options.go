@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -238,7 +238,8 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 func (app *BaseApp) SetStreamingService(
 	appOpts servertypes.AppOptions,
 	appCodec storetypes.Codec,
-	keys map[string]*storetypes.KVStoreKey) error {
+	keys map[string]*storetypes.KVStoreKey,
+) error {
 	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys)
 	if err != nil {
 		return err

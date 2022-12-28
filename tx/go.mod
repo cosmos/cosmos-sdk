@@ -24,6 +24,3 @@ require (
 	google.golang.org/grpc v1.51.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// temporary until we tag a new go module
-replace cosmossdk.io/core => ../core

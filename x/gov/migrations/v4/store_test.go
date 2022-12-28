@@ -75,13 +75,13 @@ func TestMigrateStore(t *testing.T) {
 	// Create 2 proposals
 	prop1Content, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), authtypes.NewModuleAddress("gov").String())
 	require.NoError(t, err)
-	proposal1, err := v1.NewProposal([]sdk.Msg{prop1Content}, sdk.AccAddress("accaddress"), 1, "some metadata for the legacy content", propTime, propTime)
+	proposal1, err := v1.NewProposal([]sdk.Msg{prop1Content}, 1, "some metadata for the legacy content", propTime, propTime, "Test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 	prop1Bz, err := cdc.Marshal(&proposal1)
 	require.NoError(t, err)
 	store.Set(v1gov.ProposalKey(proposal1.Id), prop1Bz)
 
-	proposal2, err := v1.NewProposal(getTestProposal(), sdk.AccAddress("accaddress"), 2, "some metadata for the legacy content", propTime, propTime)
+	proposal2, err := v1.NewProposal(getTestProposal(), 2, "some metadata for the legacy content", propTime, propTime, "Test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	proposal2.Status = v1.StatusVotingPeriod
 	require.NoError(t, err)
 	prop2Bz, err := cdc.Marshal(&proposal2)

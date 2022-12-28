@@ -22,11 +22,13 @@ var (
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer string, metadata string) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer, metadata, title, summary string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
 		Metadata:       metadata,
+		Title:          title,
+		Summary:        summary,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)
@@ -52,6 +54,13 @@ func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgSubmitProposal) ValidateBasic() error {
+	if m.Title == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal title cannot be empty")
+	}
+	if m.Summary == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "proposal summary cannot be empty")
+	}
+
 	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
 	}

@@ -32,7 +32,7 @@ func TestDecodeStore(t *testing.T) {
 	require.NoError(t, err)
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: []byte(keeper.GrantKey), Value: grantBz},
+			{Key: keeper.GrantKey, Value: grantBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

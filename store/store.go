@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
-func NewCommitMultiStore(db dbm.DB) types.CommitMultiStore {
-	return rootmulti.NewStore(db, log.NewNopLogger())
+func NewCommitMultiStore(db dbm.DB, logger log.Logger) types.CommitMultiStore {
+	return rootmulti.NewStore(db, logger)
 }
 
 func NewCommitKVStoreCacheManager() types.MultiStorePersistentCache {

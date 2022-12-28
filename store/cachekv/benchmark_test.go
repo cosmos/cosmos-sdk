@@ -18,7 +18,7 @@ func DoBenchmarkDeepContextStack(b *testing.B, depth int) {
 	key := storetypes.NewKVStoreKey("test")
 
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
@@ -53,6 +53,7 @@ func BenchmarkDeepContextStack1(b *testing.B) {
 func BenchmarkDeepContextStack3(b *testing.B) {
 	DoBenchmarkDeepContextStack(b, 3)
 }
+
 func BenchmarkDeepContextStack10(b *testing.B) {
 	DoBenchmarkDeepContextStack(b, 10)
 }

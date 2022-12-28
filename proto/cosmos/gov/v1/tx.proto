@@ -62,6 +62,12 @@ message MsgSubmitProposal {
 
   // metadata is any arbitrary metadata attached to the proposal.
   string metadata = 4;
+
+  // title is the title of the proposal.
+  string title = 5;
+
+  // summary is the summary of the proposal
+  string summary = 6;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

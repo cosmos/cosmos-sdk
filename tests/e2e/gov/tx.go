@@ -123,6 +123,8 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 			}
 		}
 	],
+	"title": "My awesome title",
+	"summary": "My awesome description",
 	"metadata": "%s",
 	"deposit": "%s"
 }`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))

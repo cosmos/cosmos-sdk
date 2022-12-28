@@ -180,6 +180,7 @@ func (s *internalDenomTestSuite) TestDecOperationOrder() {
 	s.Require().NoError(err)
 	s.Require().NoError(RegisterDenom("unit1", dec))
 	dec, err = NewDecFromStr("100000011")
+	s.Require().NoError(err)
 	s.Require().NoError(RegisterDenom("unit2", dec))
 
 	coin, err := ConvertCoin(NewCoin("unit1", NewInt(100000011)), "unit2")

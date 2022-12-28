@@ -18,7 +18,7 @@ import (
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
 	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], tp, "")
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 	suite.govKeeper.SetProposal(suite.ctx, proposal)
@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 		},
 	)
 	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], tp, "")
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 	suite.govKeeper.SetProposal(suite.ctx, proposal)
@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], tp, "")
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	suite.Require().NoError(err)
 
 	suite.Require().Nil(proposal.VotingStartTime)
@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	for i, tc := range testCases {
 		prop, err := v1.NewLegacyContent(tc.content, tc.authority)
 		suite.Require().NoError(err)
-		_, err = suite.govKeeper.SubmitProposal(suite.ctx, suite.addrs[0], []sdk.Msg{prop}, tc.metadata)
+		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := v1.NewProposal(TestProposal, suite.addrs[0], proposalID, "", time.Now(), time.Now())
+			p, err := v1.NewProposal(TestProposal, proposalID, "", time.Now(), time.Now(), "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 			suite.Require().NoError(err)
 
 			p.Status = s

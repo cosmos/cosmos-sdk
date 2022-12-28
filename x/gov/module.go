@@ -160,6 +160,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
+//nolint:revive
 type GovInputs struct {
 	depinject.In
 
@@ -178,6 +179,7 @@ type GovInputs struct {
 	LegacySubspace govtypes.ParamSubspace
 }
 
+//nolint:revive
 type GovOutputs struct {
 	depinject.Out
 
@@ -187,9 +189,9 @@ type GovOutputs struct {
 }
 
 func ProvideModule(in GovInputs) GovOutputs {
-	kConfig := govtypes.DefaultConfig()
+	defaultConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
-		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
+		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
 	// default to governance authority if not provided
@@ -206,7 +208,7 @@ func ProvideModule(in GovInputs) GovOutputs {
 		in.StakingKeeper,
 		in.DistributionKeeper,
 		in.MsgServiceRouter,
-		kConfig,
+		defaultConfig,
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)

@@ -298,7 +298,7 @@ func (m *MemberRequest) GetMetadata() string {
 
 // ThresholdDecisionPolicy is a decision policy where a proposal passes when it
 // satisfies the two following conditions:
-//  1. The sum of all `YES` voters' weights is greater or equal than the defined
+//  1. The sum of all `YES` voter's weights is greater or equal than the defined
 //     `threshold`.
 //  2. The voting and execution periods of the proposal respect the parameters
 //     given by `windows`.
@@ -364,7 +364,7 @@ func (m *ThresholdDecisionPolicy) GetWindows() *DecisionPolicyWindows {
 //  2. The voting and execution periods of the proposal respect the parameters
 //     given by `windows`.
 type PercentageDecisionPolicy struct {
-	// percentage is the minimum percentage the weighted sum of `YES` votes must
+	// percentage is the minimum percentage of the weighted sum of `YES` votes must
 	// meet for a proposal to succeed.
 	Percentage string `protobuf:"bytes,1,opt,name=percentage,proto3" json:"percentage,omitempty"`
 	// windows defines the different windows for voting and execution.
@@ -641,7 +641,7 @@ type GroupPolicyInfo struct {
 	GroupId uint64 `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// admin is the account address of the group admin.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-	// metadata is any arbitrary metadata to attached to the group policy.
+	// metadata is any arbitrary metadata attached to the group policy.
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's GroupPolicyInfo structure that
 	// would create a different result on a running proposal.
@@ -694,7 +694,7 @@ type Proposal struct {
 	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	// group_policy_address is the account address of group policy.
 	GroupPolicyAddress string `protobuf:"bytes,2,opt,name=group_policy_address,json=groupPolicyAddress,proto3" json:"group_policy_address,omitempty"`
-	// metadata is any arbitrary metadata to attached to the proposal.
+	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// proposers are the account addresses of the proposers.
 	Proposers []string `protobuf:"bytes,4,rep,name=proposers,proto3" json:"proposers,omitempty"`
@@ -813,7 +813,7 @@ type Vote struct {
 	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1.VoteOption" json:"option,omitempty"`
-	// metadata is any arbitrary metadata to attached to the vote.
+	// metadata is any arbitrary metadata attached to the vote.
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// submit_time is the timestamp when the vote was submitted.
 	SubmitTime time.Time `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3,stdtime" json:"submit_time"`

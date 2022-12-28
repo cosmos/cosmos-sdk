@@ -36,7 +36,8 @@ func TestOutOfOrder(t *testing.T) {
 			{priority: 21, nonce: 4, address: sa},
 			{priority: 8, nonce: 3, address: sa},
 			{priority: 6, nonce: 2, address: sa},
-		}}
+		},
+	}
 
 	for _, outOfOrder := range outOfOrders {
 		var mtxs []sdk.Tx
@@ -56,7 +57,6 @@ func TestOutOfOrder(t *testing.T) {
 	}
 
 	require.Error(t, validateOrder(rmtxs))
-
 }
 
 func (s *MempoolTestSuite) TestPriorityNonceTxOrder() {
@@ -347,22 +347,20 @@ func validateOrder(mtxs []sdk.Tx) error {
 					if a.n > b.n {
 						return fmt.Errorf("same sender tx have wrong nonce order\n%v\n%v", a, b)
 					}
-				} else {
-					// different sender
-					if a.p < b.p {
-						// find a tx with same sender as b and lower nonce
-						found := false
-						for _, c := range itxs {
-							iterations++
-							if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
-								found = true
-								break
-							}
-						}
-						if !found {
-							return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+				} else if a.p < b.p { // different sender
+					// find a tx with same sender as b and lower nonce
+					found := false
+					for _, c := range itxs {
+						iterations++
+						if c.a.Equals(b.a) && c.n < b.n && c.p <= a.p {
+							found = true
+							break
 						}
 					}
+					if !found {
+						return fmt.Errorf("different sender tx have wrong order\n%v\n%v", b, a)
+					}
+
 				}
 			}
 		}
@@ -477,7 +475,8 @@ func genRandomTxs(seed int64, countTx int, countAccount int) (res []testTx) {
 			priority: priority,
 			nonce:    nonce,
 			address:  addr,
-			id:       i})
+			id:       i,
+		})
 	}
 
 	return res

@@ -17,9 +17,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+type EventManagerI interface {
+	Events() Events
+	ABCIEvents() []abci.Event
+	EmitTypedEvent(tev proto.Message) error
+	EmitTypedEvents(tevs ...proto.Message) error
+	EmitEvent(event Event)
+	EmitEvents(events Events)
+}
+
 // ----------------------------------------------------------------------------
 // Event Manager
 // ----------------------------------------------------------------------------
+
+var _ EventManagerI = (*EventManager)(nil)
 
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
@@ -197,6 +208,17 @@ func (e Event) AppendAttributes(attrs ...Attribute) Event {
 	return e
 }
 
+// GetAttribute returns an attribute for a given key present in an event.
+// If the key is not found, the boolean value will be false.
+func (e Event) GetAttribute(key string) (Attribute, bool) {
+	for _, attr := range e.Attributes {
+		if attr.Key == key {
+			return Attribute{Key: attr.Key, Value: attr.Value}, true
+		}
+	}
+	return Attribute{}, false
+}
+
 // AppendEvent adds an Event to a slice of events.
 func (e Events) AppendEvent(event Event) Events {
 	return append(e, event)
@@ -216,6 +238,19 @@ func (e Events) ToABCIEvents() []abci.Event {
 	}
 
 	return res
+}
+
+// GetAttributes returns all attributes matching a given key present in events.
+// If the key is not found, the boolean value will be false.
+func (e Events) GetAttributes(key string) ([]Attribute, bool) {
+	attrs := make([]Attribute, 0)
+	for _, event := range e {
+		if attr, found := event.GetAttribute(key); found {
+			attrs = append(attrs, attr)
+		}
+	}
+
+	return attrs, len(attrs) > 0
 }
 
 // Common event types and attribute keys

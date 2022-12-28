@@ -36,7 +36,7 @@ func TestNestedAnys(t *testing.T) {
 	msgContent, err := v1.NewLegacyContent(testProposal, "cosmos1govacct")
 	proposerAddr := sdk.AccAddress("proposer")
 	require.NoError(t, err)
-	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, proposerAddr, 1, "", time.Now(), time.Now())
+	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now(), "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 
 	require.NotPanics(t, func() { _ = proposal.String() })

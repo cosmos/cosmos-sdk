@@ -25,7 +25,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -756,7 +755,7 @@ func (c converter) SigningComponents(tx authsigning.Tx, metadata *ConstructionMe
 
 // SignerData converts the given any account to signer data
 func (c converter) SignerData(anyAccount *codectypes.Any) (*SignerData, error) {
-	var acc auth.AccountI
+	var acc sdk.AccountI
 	err := c.ir.UnpackAny(anyAccount, &acc)
 	if err != nil {
 		return nil, crgerrs.WrapError(crgerrs.ErrCodec, err.Error())

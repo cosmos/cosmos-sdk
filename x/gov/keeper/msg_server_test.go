@@ -147,8 +147,8 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	msg, err := v1.NewMsgSubmitProposal(
 		[]sdk.Msg{bankMsg},
 		coins,
-		proposer.String(),
-		"",
+		proposer.String(), "",
+		"title", "summary",
 	)
 	suite.Require().NoError(err)
 

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
@@ -239,7 +239,7 @@ func BenchmarkManualInsertMemory(b *testing.B) {
 
 func BenchmarkManualInsertLevelDB(b *testing.B) {
 	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewGoLevelDB("test", b.TempDir())
+		return dbm.NewGoLevelDB("test", b.TempDir(), nil)
 	})
 }
 

@@ -144,7 +144,16 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
 		return err
 	}
-	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+
+	var logger tmlog.Logger
+	if config.LogFormat == tmcfg.LogFormatJSON {
+		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
+	} else if config.LogFormat == tmcfg.LogFormatPlain {
+		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	} else {
+		return errors.New("unsupported log format")
+	}
+
 	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
 	if err != nil {
 		return err

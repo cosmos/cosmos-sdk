@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -19,7 +21,7 @@ func NewMockContext() *MockContext {
 	db := dbm.NewMemDB()
 	return &MockContext{
 		db:    dbm.NewMemDB(),
-		store: store.NewCommitMultiStore(db),
+		store: store.NewCommitMultiStore(db, log.NewNopLogger()),
 	}
 }
 

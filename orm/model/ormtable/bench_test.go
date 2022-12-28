@@ -239,7 +239,7 @@ func BenchmarkManualInsertMemory(b *testing.B) {
 
 func BenchmarkManualInsertLevelDB(b *testing.B) {
 	benchManual(b, func() (dbm.DB, error) {
-		return dbm.NewGoLevelDB("test", b.TempDir())
+		return dbm.NewGoLevelDB("test", b.TempDir(), nil)
 	})
 }
 

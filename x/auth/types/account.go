@@ -281,7 +281,7 @@ type AccountI interface {
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
 //
-// Deprecate: Use `ModuleAccountI` from types package instead.
+// Deprecated: Use `ModuleAccountI` from types package instead.
 type ModuleAccountI interface {
 	sdk.ModuleAccountI
 }

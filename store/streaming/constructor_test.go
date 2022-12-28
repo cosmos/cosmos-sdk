@@ -3,7 +3,6 @@ package streaming_test
 import (
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -48,7 +47,6 @@ func TestStreamingServiceConstructor(t *testing.T) {
 }
 
 func TestLoadStreamingServices(t *testing.T) {
-
 	encCdc := types.NewTestCodec()
 	keys := types.NewKVStoreKeys("mockKey1", "mockKey2")
 

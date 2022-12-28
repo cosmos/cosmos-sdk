@@ -22,7 +22,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.3
-	github.com/cosmos/iavl v0.19.4
+	github.com/cosmos/iavl v0.20.0-alpha1
 	github.com/cosmos/ledger-cosmos-go v0.12.1
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -176,7 +176,6 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	github.com/cosmos/iavl => github.com/cosmos/iavl v0.19.2-0.20221214170454-7c04bc4b0490
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

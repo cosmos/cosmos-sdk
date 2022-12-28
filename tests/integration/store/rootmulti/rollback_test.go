@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims" // TODO figure out how to remove
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"

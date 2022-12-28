@@ -19,7 +19,6 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	// TODO figure out how to remove
 )
 
 const (

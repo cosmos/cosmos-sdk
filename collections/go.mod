@@ -4,11 +4,10 @@ go 1.19
 
 require (
 	cosmossdk.io/core v0.4.0
+	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	github.com/hashicorp/go-multierror v1.1.1 // TODO: remove with go 1.20 release
 	github.com/stretchr/testify v1.8.1
 )
-
-require github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect

@@ -160,7 +160,7 @@ func (ak AccountKeeper) GetModulePermissions() map[string]types.PermissionsForAd
 
 // ValidatePermissions validates that the module account has been granted
 // permissions within its set of allowed permissions.
-func (ak AccountKeeper) ValidatePermissions(macc types.ModuleAccountI) error {
+func (ak AccountKeeper) ValidatePermissions(macc sdk.ModuleAccountI) error {
 	permAddr := ak.permAddrs[macc.GetName()]
 	for _, perm := range macc.GetPermissions() {
 		if !permAddr.HasPermission(perm) {
@@ -193,7 +193,7 @@ func (ak AccountKeeper) GetModuleAddressAndPermissions(moduleName string) (addr 
 
 // GetModuleAccountAndPermissions gets the module account from the auth account store and its
 // registered permissions
-func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (types.ModuleAccountI, []string) {
+func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleName string) (sdk.ModuleAccountI, []string) {
 	addr, perms := ak.GetModuleAddressAndPermissions(moduleName)
 	if addr == nil {
 		return nil, []string{}
@@ -201,7 +201,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleNa
 
 	acc := ak.GetAccount(ctx, addr)
 	if acc != nil {
-		macc, ok := acc.(types.ModuleAccountI)
+		macc, ok := acc.(sdk.ModuleAccountI)
 		if !ok {
 			panic("account is not a module account")
 		}
@@ -210,7 +210,7 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleNa
 
 	// create a new module account
 	macc := types.NewEmptyModuleAccount(moduleName, perms...)
-	maccI := (ak.NewAccount(ctx, macc)).(types.ModuleAccountI) // set the account number
+	maccI := (ak.NewAccount(ctx, macc)).(sdk.ModuleAccountI) // set the account number
 	ak.SetModuleAccount(ctx, maccI)
 
 	return maccI, perms
@@ -218,13 +218,13 @@ func (ak AccountKeeper) GetModuleAccountAndPermissions(ctx sdk.Context, moduleNa
 
 // GetModuleAccount gets the module account from the auth account store, if the account does not
 // exist in the AccountKeeper, then it is created.
-func (ak AccountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI {
+func (ak AccountKeeper) GetModuleAccount(ctx sdk.Context, moduleName string) sdk.ModuleAccountI {
 	acc, _ := ak.GetModuleAccountAndPermissions(ctx, moduleName)
 	return acc
 }
 
 // SetModuleAccount sets the module account to the auth account store
-func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc types.ModuleAccountI) {
+func (ak AccountKeeper) SetModuleAccount(ctx sdk.Context, macc sdk.ModuleAccountI) {
 	ak.SetAccount(ctx, macc)
 }
 

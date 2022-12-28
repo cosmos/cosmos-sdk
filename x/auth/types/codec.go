@@ -16,7 +16,7 @@ import (
 // RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
+	cdc.RegisterInterface((*sdk.ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
 	cdc.RegisterInterface((*sdk.AccountI)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)

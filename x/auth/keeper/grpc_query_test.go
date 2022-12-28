@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
-					moduleAccount, ok := account.(types.ModuleAccountI)
+					moduleAccount, ok := account.(sdk.ModuleAccountI)
 
 					suite.Require().True(ok)
 					if moduleAccount.GetName() == "mint" {
@@ -307,7 +307,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
-					moduleAccount, ok := account.(types.ModuleAccountI)
+					moduleAccount, ok := account.(sdk.ModuleAccountI)
 
 					suite.Require().True(ok)
 					if moduleAccount.GetName() == "falseCase" {
@@ -335,7 +335,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 					var account sdk.AccountI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(any, &account)
 					suite.Require().NoError(err)
-					moduleAccount, ok := account.(types.ModuleAccountI)
+					moduleAccount, ok := account.(sdk.ModuleAccountI)
 					suite.Require().True(ok)
 					moduleNames = append(moduleNames, moduleAccount.GetName())
 				}
@@ -370,7 +370,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &account)
 				suite.Require().NoError(err)
 
-				moduleAccount, ok := account.(types.ModuleAccountI)
+				moduleAccount, ok := account.(sdk.ModuleAccountI)
 				suite.Require().True(ok)
 				suite.Require().Equal(moduleAccount.GetName(), "mint")
 			},

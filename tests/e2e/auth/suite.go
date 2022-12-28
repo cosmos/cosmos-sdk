@@ -1460,7 +1460,7 @@ func (s *E2ETestSuite) TestQueryModuleAccountByNameCmd() {
 				err := val.ClientCtx.InterfaceRegistry.UnpackAny(res.Account, &account)
 				s.Require().NoError(err)
 
-				moduleAccount, ok := account.(authtypes.ModuleAccountI)
+				moduleAccount, ok := account.(sdk.ModuleAccountI)
 				s.Require().True(ok)
 				s.Require().Equal(tc.moduleName, moduleAccount.GetName())
 			}

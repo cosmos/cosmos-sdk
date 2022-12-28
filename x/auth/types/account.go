@@ -19,7 +19,7 @@ var (
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
-	_ ModuleAccountI                     = (*ModuleAccount)(nil)
+	_ sdk.ModuleAccountI                 = (*ModuleAccount)(nil)
 )
 
 // NewBaseAccount creates a new BaseAccount object
@@ -280,12 +280,10 @@ type AccountI interface {
 
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
+//
+// Deprecate: Use `ModuleAccountI` from types package instead.
 type ModuleAccountI interface {
-	sdk.AccountI
-
-	GetName() string
-	GetPermissions() []string
-	HasPermission(string) bool
+	sdk.ModuleAccountI
 }
 
 // GenesisAccounts defines a slice of GenesisAccount objects

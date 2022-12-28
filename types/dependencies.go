@@ -30,3 +30,13 @@ type AccountI interface {
 	// Ensure that account implements stringer
 	String() string
 }
+
+// ModuleAccountI defines an account interface for modules that hold tokens in
+// an escrow.
+type ModuleAccountI interface {
+	AccountI
+
+	GetName() string
+	GetPermissions() []string
+	HasPermission(string) bool
+}

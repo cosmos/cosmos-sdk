@@ -3,11 +3,13 @@ package orm
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/libs/log"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/gaskv"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 type MockContext struct {
@@ -19,7 +21,7 @@ func NewMockContext() *MockContext {
 	db := dbm.NewMemDB()
 	return &MockContext{
 		db:    dbm.NewMemDB(),
-		store: store.NewCommitMultiStore(db),
+		store: store.NewCommitMultiStore(db, log.NewNopLogger()),
 	}
 }
 

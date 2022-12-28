@@ -222,8 +222,8 @@ func (k Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time
 }
 
 // ModuleAccountAddress returns gov module account address
-func (keeper Keeper) ModuleAccountAddress() sdk.AccAddress {
-	return keeper.authKeeper.GetModuleAddress(types.ModuleName)
+func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
+	return k.authKeeper.GetModuleAddress(types.ModuleName)
 }
 
 // assertMetadataLength returns an error if given metadata length

@@ -166,6 +166,7 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	prop, err := v1.NewLegacyContent(&tp, govAcct)
 	suite.Require().NoError(err)
 	proposalResp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0])
+	suite.Require().NoError(err)
 	proposalID := proposalResp.Id
 
 	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1])

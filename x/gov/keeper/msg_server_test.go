@@ -155,12 +155,12 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res.ProposalId)
-	pId := res.ProposalId
+	proposalID := res.ProposalId
 
 	cases := map[string]struct {
 		preRun     func() uint64
 		expErr     bool
-		proposalId uint64
+		proposalID uint64
 		depositor  sdk.AccAddress
 	}{
 		"wrong proposal id": {
@@ -172,14 +172,14 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 		},
 		"valid proposal but invalid proposer": {
 			preRun: func() uint64 {
-				return pId
+				return proposalID
 			},
 			depositor: addrs[1],
 			expErr:    true,
 		},
 		"all good": {
 			preRun: func() uint64 {
-				return pId
+				return proposalID
 			},
 			depositor: proposer,
 			expErr:    false,
@@ -188,8 +188,8 @@ func (suite *KeeperTestSuite) TestCancelProposalReq() {
 
 	for name, tc := range cases {
 		suite.Run(name, func() {
-			proposalId := tc.preRun()
-			cancelProposalReq := v1.NewMsgCancelProposal(proposalId, tc.depositor.String())
+			proposalID := tc.preRun()
+			cancelProposalReq := v1.NewMsgCancelProposal(proposalID, tc.depositor.String())
 			_, err := suite.msgSrvr.CancelProposal(suite.ctx, cancelProposalReq)
 			if tc.expErr {
 				suite.Require().Error(err)

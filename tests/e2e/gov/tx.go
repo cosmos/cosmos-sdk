@@ -371,8 +371,16 @@ func (s *E2ETestSuite) TestNewCmdCancelProposal() {
 					s.Require().NoError(err)
 					err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &newBalance)
 					s.Require().NoError(err)
+					remainingAmount := v1.DefaultMinDepositTokens.Mul(
+						v1.DefaultProposalCancelRatio.Mul(sdk.MustNewDecFromStr("100")).TruncateInt(),
+					).Quo(sdk.NewIntFromUint64(100))
+
+					// new balance = old balance + remaining amount from proposal deposit - txFee (cancel proposal)
+					txFee := sdk.NewInt(10)
 					s.Require().True(
-						newBalance.Balances.AmountOf(s.network.Config.BondDenom).GT(balRes.Balances.AmountOf(s.network.Config.BondDenom)),
+						newBalance.Balances.AmountOf(s.network.Config.BondDenom).Equal(
+							balRes.Balances.AmountOf(s.network.Config.BondDenom).Add(remainingAmount).Sub(txFee),
+						),
 					)
 				}
 			}

@@ -957,7 +957,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	// allocate some more rewards
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
-	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(addr), valAddr)
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, addr, valAddr)
 	require.NoError(t, err)
 
 	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}

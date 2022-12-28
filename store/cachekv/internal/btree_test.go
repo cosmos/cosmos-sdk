@@ -3,7 +3,7 @@ package internal
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -181,7 +181,7 @@ func TestDBIterator(t *testing.T) {
 	verifyIterator(t, ritr, nil, "reverse iterator with empty db")
 }
 
-func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string) {
+func verifyIterator(t *testing.T, itr types.Iterator, expected []int64, msg string) {
 	i := 0
 	for itr.Valid() {
 		key := itr.Key()
@@ -194,9 +194,9 @@ func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string
 }
 
 func int642Bytes(i int64) []byte {
-	return sdk.Uint64ToBigEndian(uint64(i))
+	return types.Uint64ToBigEndian(uint64(i))
 }
 
 func bytes2Int64(buf []byte) int64 {
-	return int64(sdk.BigEndianToUint64(buf))
+	return int64(types.BigEndianToUint64(buf))
 }

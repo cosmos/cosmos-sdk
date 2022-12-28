@@ -1,7 +1,10 @@
 run:
-  tests: false
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  timeout: 5m
+  tests: true
+  timeout: 10m
+  sort-results: true
+  allow-parallel-runners: true
+  exclude-dir: testutil/testdata_pulsar
+  concurrency: 4
 
 linters:
   disable-all: true
@@ -20,6 +23,7 @@ linters:
     - nakedret
     - nolintlint
     - staticcheck
+    - revive
     - stylecheck
     - typecheck
     - unconvert
@@ -42,6 +46,9 @@ issues:
       text: "SA1019:"
       linters:
         - staticcheck
+    - text: "leading space"
+      linters:
+        - nolintlint
 
   max-issues-per-linter: 10000
   max-same-issues: 10000

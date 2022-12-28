@@ -37,8 +37,8 @@ const (
 
 const iavlDisablefastNodeDefault = false
 
-// keysForStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
-func keysForStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
+// keysFromStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
+func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 	keys := make([]types.StoreKey, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
@@ -230,6 +230,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	for key := range rs.storesParams {
 		storesKeys = append(storesKeys, key)
 	}
+
 	if upgrades != nil {
 		// deterministic iteration order for upgrades
 		// (as the underlying store may change and
@@ -744,7 +745,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		name string
 	}
 	stores := []namedStore{}
-	keys := keysForStoreKeyMap(rs.stores)
+	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
 		case *iavl.Store:
@@ -962,7 +963,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 }
 
 func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
-	keys := keysForStoreKeyMap(rs.stores)
+	keys := keysFromStoreKeyMap(rs.stores)
 	storeInfos := []types.StoreInfo{}
 	for _, key := range keys {
 		store := rs.stores[key]
@@ -1049,8 +1050,9 @@ func GetLatestVersion(db dbm.DB) int64 {
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
-
-	for key, store := range storeMap {
+	storeKeys := keysFromStoreKeyMap(storeMap)
+	for _, key := range storeKeys {
+		store := storeMap[key]
 		last := store.LastCommitID()
 
 		// If a commit event execution is interrupted, a new iavl store's version will be larger than the rootmulti's metadata, when the block is replayed, we should avoid committing that iavl store again.

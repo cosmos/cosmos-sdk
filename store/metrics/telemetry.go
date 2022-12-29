@@ -27,7 +27,7 @@ func NewMetrics(labels [][]string) Metrics {
 	if numGlobalLables := len(labels); numGlobalLables > 0 {
 		parsedGlobalLabels := make([]metrics.Label, numGlobalLables)
 		for i, gl := range labels {
-			parsedGlobalLabels[i] = NewLabel(gl[0], gl[1])
+			parsedGlobalLabels[i] = metrics.Label{Name: gl[0], Value: gl[1]}
 		}
 
 		gatherer.Labels = parsedGlobalLabels

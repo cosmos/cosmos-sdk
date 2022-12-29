@@ -11,8 +11,8 @@ import (
 	"sync"
 
 	"cosmossdk.io/errors"
+	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"

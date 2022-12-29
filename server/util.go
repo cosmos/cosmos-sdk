@@ -150,7 +150,12 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		return err
 	}
 
-	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	var logger tmlog.Logger
+	if serverCtx.Viper.GetString(flags.FlagLogFormat) == tmcfg.LogFormatJSON {
+		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
+	} else {
+		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	}
 	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
 	if err != nil {
 		return err

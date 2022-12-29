@@ -111,6 +111,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#14390](https://github.com/cosmos/cosmos-sdk/pull/14390) Add title, proposer and summary to proposal struct
 * (baseapp) [#14417](https://github.com/cosmos/cosmos-sdk/pull/14417) `SetStreamingService` accepts appOptions, AppCodec and Storekeys needed to set streamers.  
   * Store pacakge no longer has a dependency on baseapp. 
+* (store) [#14438](https://github.com/cosmos/cosmos-sdk/pull/14438)  Pass logger from baseapp to store. 
 
 ### State Machine Breaking
 

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"sync"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/tendermint/tendermint/libs/math"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
 	"github.com/cosmos/cosmos-sdk/store/internal/conv"

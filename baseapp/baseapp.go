@@ -153,12 +153,11 @@ type BaseApp struct { //nolint: maligned
 func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
-
 	app := &BaseApp{
 		logger:           logger,
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()),
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),

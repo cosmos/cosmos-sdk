@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/mem"
-	storemetrics "github.com/cosmos/cosmos-sdk/store/metrics"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/pruning"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
@@ -76,7 +76,7 @@ type Store struct {
 
 	listeners map[types.StoreKey][]types.WriteListener
 
-	metrics storemetrics.StoreMetrics
+	metrics metrics.StoreMetrics
 }
 
 var (
@@ -88,8 +88,7 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger, metricGatherer storemetrics.StoreMetrics) *Store {
-
+func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,
@@ -115,6 +114,11 @@ func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
 func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
+}
+
+// SetMetrics sets the metrics gatherer for the store package
+func (rs *Store) SetMetrics(metrics metrics.StoreMetrics) {
+	rs.metrics = metrics
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.

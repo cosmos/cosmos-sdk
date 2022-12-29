@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +40,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	key := sdk.NewKVStoreKey(group.ModuleName)
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
 	sdkCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())

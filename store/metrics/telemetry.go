@@ -21,6 +21,7 @@ type Metrics struct {
 	Labels []metrics.Label
 }
 
+// NewMetrics returns a new instance of the Metrics with labels set by the node operator
 func NewMetrics(labels [][]string) Metrics {
 	gatherer := Metrics{}
 
@@ -46,6 +47,7 @@ func (m Metrics) MeasureSince(keys ...string) {
 // NoOpMetrics is a no-op implementation of the StoreMetrics interface
 type NoOpMetrics struct{}
 
+// NewNoOpMetrics returns a new instance of the NoOpMetrics
 func NewNoOpMetrics() NoOpMetrics {
 	return NoOpMetrics{}
 }

@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/testutil"
@@ -32,7 +33,7 @@ type SubspaceTestSuite struct {
 func (suite *SubspaceTestSuite) SetupTest() {
 	db := dbm.NewMemDB()
 
-	ms := store.NewCommitMultiStore(db, log.NewNopLogger())
+	ms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	ms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	suite.NoError(ms.LoadLatestVersion())

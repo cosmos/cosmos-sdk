@@ -244,7 +244,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		commitID := rs.getCommitID(infos, key.Name())
 
 		// If it has been added, set the initial version
-		if upgrades.IsAdded(key.Name()) {
+		if upgrades.IsAdded(key.Name()) || upgrades.RenamedFrom(key.Name()) != "" {
 			storeParams.initialVersion = uint64(ver) + 1
 		} else if commitID.Version != ver {
 			return fmt.Errorf("version of store %s mismatch root store's version", key.Name())
@@ -267,8 +267,9 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			// handle renames specially
 			// make an unregistered key to satisfy loadCommitStore params
 			oldKey := types.NewKVStoreKey(oldName)
-			oldParams := storeParams
-			oldParams.key = oldKey
+			oldParams := rs.storesParams[oldKey]
+			fmt.Println(oldParams)
+			fmt.Println(storeParams)
 
 			// load from the old name
 			oldStore, err := rs.loadCommitStoreFromParams(oldKey, rs.getCommitID(infos, oldName), oldParams)

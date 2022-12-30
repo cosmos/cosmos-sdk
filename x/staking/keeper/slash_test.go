@@ -46,5 +46,5 @@ func (s *KeeperTestSuite) TestSlashAtFutureHeight() {
 	require.NoError(err)
 
 	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction, 0) })
+	require.Panics(func() { keeper.Slash(ctx, consAddr, 1, 10, fraction) })
 }

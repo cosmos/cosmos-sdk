@@ -32,7 +32,7 @@ func TestMigrateStore(t *testing.T) {
 	)
 
 	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b)
+		bz, err := encCfg.Codec.Marshal(&b) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 		require.NoError(t, err)
 
 		prefixAccStore.Set([]byte(b.Denom), bz)
@@ -107,7 +107,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		newKey := denomMetadataIter.Key()
 
 		// make sure old entry is deleted
-		oldKey := append(newKey, newKey[0:]...)
+		oldKey := append(newKey, newKey[0:]...) //nolint:gocritic // append is ok here
 		bz := denomMetadataStore.Get(oldKey)
 		require.Nil(t, bz)
 

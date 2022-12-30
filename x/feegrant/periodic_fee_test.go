@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -14,8 +16,8 @@ import (
 )
 
 func TestPeriodicFeeValidAllow(t *testing.T) {
-	key := sdk.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now()})
 

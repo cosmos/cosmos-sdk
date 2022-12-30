@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -18,8 +20,8 @@ import (
 
 func TestParams(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
 

@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -26,8 +28,8 @@ type GenesisTestSuite struct {
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	key := sdk.NewKVStoreKey(feegrant.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	ctrl := gomock.NewController(suite.T())

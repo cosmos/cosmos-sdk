@@ -211,7 +211,7 @@ func (k Keeper) getGrant(ctx sdk.Context, granter sdk.AccAddress, grantee sdk.Ac
 // Calling this without pagination is very expensive and only designed for export genesis
 func (k Keeper) IterateAllFeeAllowances(ctx sdk.Context, cb func(grant feegrant.Grant) bool) error {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
+	iter := storetypes.KVStorePrefixIterator(store, feegrant.FeeAllowanceKeyPrefix)
 	defer iter.Close()
 
 	stop := false
@@ -327,7 +327,7 @@ func (k Keeper) addToFeeAllowanceQueue(ctx sdk.Context, grantKey []byte, exp *ti
 func (k Keeper) RemoveExpiredAllowances(ctx sdk.Context) {
 	exp := ctx.BlockTime()
 	store := ctx.KVStore(k.storeKey)
-	iterator := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, sdk.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
+	iterator := store.Iterator(feegrant.FeeAllowanceQueueKeyPrefix, storetypes.InclusiveEndBytes(feegrant.AllowanceByExpTimeKey(&exp)))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

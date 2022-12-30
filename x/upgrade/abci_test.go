@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -42,8 +44,8 @@ var s TestSuite
 
 func setupTest(t *testing.T, height int64, skip map[int64]bool) TestSuite {
 	s.encCfg = moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 
 	s.baseApp = baseapp.NewBaseApp(
 		"upgrade",
@@ -480,8 +482,8 @@ func TestDowngradeVerification(t *testing.T) {
 	// could not use setupTest() here, because we have to use the same key
 	// for the two keepers.
 	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: time.Now(), Height: 10})
 
 	skip := map[int64]bool{}

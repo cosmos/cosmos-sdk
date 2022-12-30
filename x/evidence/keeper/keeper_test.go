@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -82,8 +84,8 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	suite.ctx = testCtx.Ctx
 

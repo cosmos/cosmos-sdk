@@ -1,10 +1,10 @@
 package capability_test
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
@@ -37,7 +37,7 @@ func (suite *CapabilityTestSuite) TestGenesis() {
 
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)
 	newSk2 := newKeeper.ScopeToModule(stakingtypes.ModuleName)
-	deliverCtx, _ := newApp.BaseApp.NewUncachedContext(false, tmproto.Header{}).WithBlockGasMeter(sdk.NewInfiniteGasMeter()).CacheContext()
+	deliverCtx, _ := newApp.BaseApp.NewUncachedContext(false, tmproto.Header{}).WithBlockGasMeter(storetypes.NewInfiniteGasMeter()).CacheContext()
 
 	capability.InitGenesis(deliverCtx, *newKeeper, *genState)
 

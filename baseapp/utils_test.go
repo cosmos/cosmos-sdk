@@ -318,14 +318,14 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
-func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
 	return &sdk.Result{}, nil
 }
 
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 	bz := make([]byte, 8)
 	n := binary.PutVarint(bz, i)
 	store.Set(key, bz[:n])
@@ -435,7 +435,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	return builder.GetTx()
 }
 
-func getIntFromStore(t *testing.T, store sdk.KVStore, key []byte) int64 {
+func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0

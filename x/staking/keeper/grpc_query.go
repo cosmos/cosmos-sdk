@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -492,7 +494,7 @@ func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegations
 	return redels, err
 }
 
-func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryRedelegationsFromSrcValidator(store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	valAddr, err := sdk.ValAddressFromBech32(req.SrcValidatorAddr)
 	if err != nil {
 		return nil, nil, err
@@ -514,7 +516,7 @@ func queryRedelegationsFromSrcValidator(store sdk.KVStore, k Querier, req *types
 	return redels, res, err
 }
 
-func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
+func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, res *query.PageResponse, err error) {
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, nil, err

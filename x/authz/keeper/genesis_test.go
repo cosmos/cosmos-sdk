@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -31,8 +33,8 @@ type GenesisTestSuite struct {
 }
 
 func (suite *GenesisTestSuite) SetupTest() {
-	key := sdk.NewKVStoreKey(keeper.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(keeper.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(authzmodule.AppModuleBasic{})
 

@@ -3,6 +3,8 @@ package ante
 import (
 	"fmt"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -47,7 +49,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	defer func() {
 		if r := recover(); r != nil {
 			switch rType := r.(type) {
-			case sdk.ErrorOutOfGas:
+			case storetypes.ErrorOutOfGas:
 				log := fmt.Sprintf(
 					"out of gas in location: %v; gasWanted: %d, gasUsed: %d",
 					rType.Descriptor, gasTx.GetGas(), newCtx.GasMeter().GasConsumed())
@@ -67,8 +69,8 @@ func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	if simulate || ctx.BlockHeight() == 0 {
-		return ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+		return ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	}
 
-	return ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
+	return ctx.WithGasMeter(storetypes.NewGasMeter(gasLimit))
 }

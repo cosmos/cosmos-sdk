@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -30,8 +31,8 @@ func TestQueryGroupsByMember(t *testing.T) {
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	key := sdk.NewKVStoreKey(group.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(group.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	ctx := testCtx.Ctx

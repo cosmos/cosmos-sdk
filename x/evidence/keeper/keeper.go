@@ -124,7 +124,7 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Ev
 // will close and stop.
 func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

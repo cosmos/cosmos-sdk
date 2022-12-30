@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
@@ -183,7 +185,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 }
 
 // don't consume any gas
-func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
+func SigGasNoConsumer(meter storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
 	return nil
 }
 

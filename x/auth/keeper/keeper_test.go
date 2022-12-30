@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -43,8 +45,8 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
 
 	maccPerms := map[string][]string{

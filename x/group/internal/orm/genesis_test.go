@@ -3,10 +3,11 @@ package orm
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +19,7 @@ func TestImportExportTableData(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	tms := []*testdata.TableModel{
 		{

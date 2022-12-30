@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -95,7 +96,7 @@ func (ak AccountKeeper) RemoveAccount(ctx sdk.Context, acc types.AccountI) {
 // Stops iteration when callback returns true.
 func (ak AccountKeeper) IterateAccounts(ctx sdk.Context, cb func(account types.AccountI) (stop bool)) {
 	store := ctx.KVStore(ak.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

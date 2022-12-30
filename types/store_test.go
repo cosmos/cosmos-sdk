@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type storeTestSuite struct {
@@ -56,19 +55,19 @@ func (s *storeTestSuite) TestCommitID() {
 }
 
 func (s *storeTestSuite) TestNewTransientStoreKeys() {
-	s.Require().Equal(map[string]*types.TransientStoreKey{}, sdk.NewTransientStoreKeys())
-	s.Require().Equal(1, len(sdk.NewTransientStoreKeys("one")))
+	s.Require().Equal(map[string]*types.TransientStoreKey{}, types.NewTransientStoreKeys())
+	s.Require().Equal(1, len(types.NewTransientStoreKeys("one")))
 }
 
 func (s *storeTestSuite) TestNewInfiniteGasMeter() {
-	gm := sdk.NewInfiniteGasMeter()
+	gm := types.NewInfiniteGasMeter()
 	s.Require().NotNil(gm)
 	_, ok := gm.(types.GasMeter) //nolint:gosimple
 	s.Require().True(ok)
 }
 
 func (s *storeTestSuite) TestStoreTypes() {
-	s.Require().Equal(sdk.InclusiveEndBytes([]byte("endbytes")), types.InclusiveEndBytes([]byte("endbytes")))
+	s.Require().Equal(types.InclusiveEndBytes([]byte("endbytes")), types.InclusiveEndBytes([]byte("endbytes")))
 }
 
 func (s *storeTestSuite) TestDiffKVStores() {
@@ -120,8 +119,8 @@ func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 }
 
 func (s *storeTestSuite) checkDiffResults(store1, store2 types.KVStore) {
-	kvAs1, kvBs1 := sdk.DiffKVStores(store1, store2, nil)
-	kvAs2, kvBs2 := sdk.DiffKVStores(store1, store2, nil)
+	kvAs1, kvBs1 := types.DiffKVStores(store1, store2, nil)
+	kvAs2, kvBs2 := types.DiffKVStores(store1, store2, nil)
 	s.Require().Equal(kvAs1, kvAs2)
 	s.Require().Equal(kvBs1, kvBs2)
 }

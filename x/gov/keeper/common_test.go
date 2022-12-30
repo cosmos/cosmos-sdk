@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -52,8 +54,8 @@ func setupGovKeeper(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	v1.RegisterInterfaces(encCfg.InterfaceRegistry)

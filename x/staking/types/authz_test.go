@@ -3,6 +3,8 @@ package types_test
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -22,8 +24,8 @@ var (
 )
 
 func TestAuthzAuthorizations(t *testing.T) {
-	key := sdk.NewKVStoreKey(stakingtypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{})
 
 	// verify ValidateBasic returns error for the AUTHORIZATION_TYPE_UNSPECIFIED authorization type

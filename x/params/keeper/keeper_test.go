@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -29,8 +31,8 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("params_transient_test")
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 
 	suite.ctx = testutil.DefaultContext(key, tkey)
 	suite.paramsKeeper = keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)

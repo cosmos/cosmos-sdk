@@ -1,10 +1,10 @@
 package orm
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -63,7 +63,7 @@ func PrimaryKey(obj PrimaryKeyed) []byte {
 //
 // Create iterates through the registered callbacks that may add secondary
 // index keys.
-func (a PrimaryKeyTable) Create(store sdk.KVStore, obj PrimaryKeyed) error {
+func (a PrimaryKeyTable) Create(store storetypes.KVStore, obj PrimaryKeyed) error {
 	rowID := PrimaryKey(obj)
 	return a.table.Create(store, rowID, obj)
 }
@@ -75,7 +75,7 @@ func (a PrimaryKeyTable) Create(store sdk.KVStore, obj PrimaryKeyed) error {
 //
 // Update iterates through the registered callbacks that may add or remove
 // secondary index keys.
-func (a PrimaryKeyTable) Update(store sdk.KVStore, newValue PrimaryKeyed) error {
+func (a PrimaryKeyTable) Update(store storetypes.KVStore, newValue PrimaryKeyed) error {
 	return a.table.Update(store, PrimaryKey(newValue), newValue)
 }
 
@@ -84,7 +84,7 @@ func (a PrimaryKeyTable) Update(store sdk.KVStore, newValue PrimaryKeyed) error 
 //
 // Set iterates through the registered callbacks that may add secondary index
 // keys.
-func (a PrimaryKeyTable) Set(store sdk.KVStore, newValue PrimaryKeyed) error {
+func (a PrimaryKeyTable) Set(store storetypes.KVStore, newValue PrimaryKeyed) error {
 	return a.table.Set(store, PrimaryKey(newValue), newValue)
 }
 
@@ -94,17 +94,17 @@ func (a PrimaryKeyTable) Set(store sdk.KVStore, newValue PrimaryKeyed) error {
 //
 // Delete iterates through the registered callbacks that remove secondary index
 // keys.
-func (a PrimaryKeyTable) Delete(store sdk.KVStore, obj PrimaryKeyed) error {
+func (a PrimaryKeyTable) Delete(store storetypes.KVStore, obj PrimaryKeyed) error {
 	return a.table.Delete(store, PrimaryKey(obj))
 }
 
 // Has checks if a key exists. Always returns false on nil or empty key.
-func (a PrimaryKeyTable) Has(store sdk.KVStore, primaryKey RowID) bool {
+func (a PrimaryKeyTable) Has(store storetypes.KVStore, primaryKey RowID) bool {
 	return a.table.Has(store, primaryKey)
 }
 
 // Contains returns true when an object with same type and primary key is persisted in this table.
-func (a PrimaryKeyTable) Contains(store sdk.KVStore, obj PrimaryKeyed) bool {
+func (a PrimaryKeyTable) Contains(store storetypes.KVStore, obj PrimaryKeyed) bool {
 	if err := assertCorrectType(a.table.model, obj); err != nil {
 		return false
 	}
@@ -113,7 +113,7 @@ func (a PrimaryKeyTable) Contains(store sdk.KVStore, obj PrimaryKeyed) bool {
 
 // GetOne loads the object persisted for the given primary Key into the dest parameter.
 // If none exists `ErrNotFound` is returned instead. Parameters must not be nil.
-func (a PrimaryKeyTable) GetOne(store sdk.KVStore, primKey RowID, dest proto.Message) error {
+func (a PrimaryKeyTable) GetOne(store storetypes.KVStore, primKey RowID, dest proto.Message) error {
 	return a.table.GetOne(store, primKey, dest)
 }
 
@@ -134,7 +134,7 @@ func (a PrimaryKeyTable) GetOne(store sdk.KVStore, primKey RowID, dest proto.Mes
 //	it = LimitIterator(it, defaultLimit)
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (a PrimaryKeyTable) PrefixScan(store sdk.KVStore, start, end []byte) (Iterator, error) {
+func (a PrimaryKeyTable) PrefixScan(store storetypes.KVStore, start, end []byte) (Iterator, error) {
 	return a.table.PrefixScan(store, start, end)
 }
 
@@ -147,17 +147,17 @@ func (a PrimaryKeyTable) PrefixScan(store sdk.KVStore, start, end []byte) (Itera
 // this as an endpoint to the public without further limits. See `LimitIterator`
 //
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
-func (a PrimaryKeyTable) ReversePrefixScan(store sdk.KVStore, start, end []byte) (Iterator, error) {
+func (a PrimaryKeyTable) ReversePrefixScan(store storetypes.KVStore, start, end []byte) (Iterator, error) {
 	return a.table.ReversePrefixScan(store, start, end)
 }
 
 // Export stores all the values in the table in the passed ModelSlicePtr.
-func (a PrimaryKeyTable) Export(store sdk.KVStore, dest ModelSlicePtr) (uint64, error) {
+func (a PrimaryKeyTable) Export(store storetypes.KVStore, dest ModelSlicePtr) (uint64, error) {
 	return a.table.Export(store, dest)
 }
 
 // Import clears the table and initializes it from the given data interface{}.
 // data should be a slice of structs that implement PrimaryKeyed.
-func (a PrimaryKeyTable) Import(store sdk.KVStore, data interface{}, seqValue uint64) error {
+func (a PrimaryKeyTable) Import(store storetypes.KVStore, data interface{}, seqValue uint64) error {
 	return a.table.Import(store, data, seqValue)
 }

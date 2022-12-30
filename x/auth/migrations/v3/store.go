@@ -9,7 +9,7 @@ import (
 
 func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.AddressStoreKeyPrefix)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

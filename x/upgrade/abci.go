@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -80,7 +82,7 @@ func BeginBlocker(k *keeper.Keeper, ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 		// We have an upgrade handler for this upgrade name, so apply the upgrade
 		ctx.Logger().Info(fmt.Sprintf("applying upgrade \"%s\" at %s", plan.Name, plan.DueAt()))
-		ctx = ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+		ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 		k.ApplyUpgrade(ctx, plan)
 		return
 	}

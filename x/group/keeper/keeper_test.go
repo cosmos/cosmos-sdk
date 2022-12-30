@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
@@ -51,9 +53,9 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.blockTime = tmtime.Now()
-	key := sdk.NewKVStoreKey(group.StoreKey)
+	key := storetypes.NewKVStoreKey(group.StoreKey)
 
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 

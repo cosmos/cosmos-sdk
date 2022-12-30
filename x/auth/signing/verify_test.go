@@ -3,6 +3,8 @@ package signing_test
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/stretchr/testify/require"
 
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -32,7 +34,7 @@ func TestVerifySignature(t *testing.T) {
 	)
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -52,7 +54,7 @@ func TestVerifySignature(t *testing.T) {
 		types.NewModuleAddress("gov").String(),
 	)
 
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{})
 	encCfg.Amino.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 

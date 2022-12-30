@@ -36,7 +36,7 @@ func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 		custom: allow pruning options to be manually specified through 'pruning-keep-recent'.
 		besides pruning options, database home directory and database backend type should also be specified via flags
 		'--home' and '--app-db-backend'.
-		valid app-db-backend type includes 'goleveldb', 'cleveldb', 'rocksdb', 'boltdb', and 'badgerdb'.
+		valid app-db-backend type includes 'goleveldb', 'rocksdb', 'pebbledb'.
 		`,
 		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
 		RunE: func(cmd *cobra.Command, _ []string) error {

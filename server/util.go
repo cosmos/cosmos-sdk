@@ -373,6 +373,11 @@ func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
+
+	if rv == "cleveldb" || rv == "badgerdb" || rv == "boltdb" {
+		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend))
+	}
+
 	if len(rv) != 0 {
 		return dbm.BackendType(rv)
 	}

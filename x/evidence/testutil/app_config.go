@@ -1,15 +1,15 @@
 package testutil
 
 import (
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import bank as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import consensus as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/evidence"       // import evidence as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import genutil as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/params"         // import params as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/slashing"       // import slashing as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import staking as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/evidence"       // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/slashing"       // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -45,21 +45,11 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					slashingtypes.ModuleName,
 					evidencetypes.ModuleName,
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
-					slashingtypes.ModuleName,
 					genutiltypes.ModuleName,
-					evidencetypes.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,

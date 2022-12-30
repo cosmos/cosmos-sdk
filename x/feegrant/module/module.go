@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -215,7 +216,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for feegrant module's types
-func (am AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr store.DecoderRegistry) {
 	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

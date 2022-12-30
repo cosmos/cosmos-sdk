@@ -3,8 +3,9 @@ package capability
 import (
 	"encoding/json"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"time"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -169,7 +170,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for capability module's types
-func (am AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr store.DecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

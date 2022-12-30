@@ -1,9 +1,10 @@
 package ante_test
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"strings"
 	"testing"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"

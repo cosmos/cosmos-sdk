@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"time"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
@@ -189,7 +190,7 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (am AppModule) RegisterStoreDecoder(_ store.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ store.DecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {

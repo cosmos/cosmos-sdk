@@ -2,6 +2,7 @@ package keeper // noalias
 
 import (
 	"bytes"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

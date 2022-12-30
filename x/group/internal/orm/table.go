@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -296,7 +295,7 @@ func (a table) keys(store sdk.KVStore) [][]byte {
 
 // typeSafeIterator is initialized with a type safe RowGetter only.
 type typeSafeIterator struct {
-	store     storetypes.KVStore
+	store     types.KVStore
 	rowGetter RowGetter
 	it        types.Iterator
 }

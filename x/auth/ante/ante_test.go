@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"strings"
 	"testing"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"cosmossdk.io/math"
 	"github.com/golang/mock/gomock"

@@ -2,8 +2,9 @@ package sims
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/store"
 
 	"github.com/stretchr/testify/require"
 
@@ -14,7 +15,7 @@ import (
 
 func TestGetSimulationLog(t *testing.T) {
 	legacyAmino := codec.NewLegacyAmino()
-	decoders := make(store.StoreDecoderRegistry)
+	decoders := make(store.DecoderRegistry)
 	decoders[authtypes.StoreKey] = func(kvAs, kvBs kv.Pair) string { return "10" }
 
 	tests := []struct {

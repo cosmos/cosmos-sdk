@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -234,7 +233,7 @@ func NewUniqueIndex(tb Indexable, prefix byte, uniqueIndexerFunc UniqueIndexerFu
 
 // indexIterator uses rowGetter to lazy load new model values on request.
 type indexIterator struct {
-	store     storetypes.KVStore
+	store     types.KVStore
 	rowGetter RowGetter
 	it        types.Iterator
 	indexKey  interface{}

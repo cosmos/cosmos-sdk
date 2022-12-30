@@ -20,9 +20,9 @@ func NewCommitKVStoreCacheManager() types.MultiStorePersistentCache {
 	return cache.NewCommitKVStoreCacheManager(cache.DefaultCommitKVStoreCacheSize)
 }
 
-// StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
+// DecoderRegistry defines each of the modules store decoders. Used for ImportExport
 // simulation.
-type StoreDecoderRegistry map[string]func(kvA, kvB kv.Pair) string
+type DecoderRegistry map[string]func(kvA, kvB kv.Pair) string
 
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes.

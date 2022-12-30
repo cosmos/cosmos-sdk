@@ -3,6 +3,7 @@ package params
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
@@ -121,7 +122,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder doesn't register any type.
-func (AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {}
+func (AppModule) RegisterStoreDecoder(sdr store.DecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {

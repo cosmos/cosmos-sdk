@@ -6,13 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type storeTestSuite struct {
@@ -64,7 +63,7 @@ func (s *storeTestSuite) TestNewTransientStoreKeys() {
 }
 
 func (s *storeTestSuite) TestNewInfiniteGasMeter() {
-	gm := storetypes.NewInfiniteGasMeter()
+	gm := types.NewInfiniteGasMeter()
 	s.Require().NotNil(gm)
 	_, ok := gm.(types.GasMeter) //nolint:gosimple
 	s.Require().True(ok)

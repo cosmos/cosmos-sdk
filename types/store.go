@@ -2,11 +2,12 @@ package types
 
 import (
 	"bytes"
-	fmt "fmt"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type (

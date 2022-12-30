@@ -3,6 +3,7 @@ package capability_test
 import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"

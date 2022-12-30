@@ -3,8 +3,9 @@ package sims
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/store"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -105,7 +106,7 @@ func PrintStats(db dbm.DB) {
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
 // each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, sdr store.StoreDecoderRegistry, kvAs, kvBs []kv.Pair) (log string) {
+func GetSimulationLog(storeName string, sdr store.DecoderRegistry, kvAs, kvBs []kv.Pair) (log string) {
 	for i := 0; i < len(kvAs); i++ {
 		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
 			// skip if the value doesn't have any bytes

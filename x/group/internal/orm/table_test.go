@@ -2,8 +2,9 @@ package orm
 
 import (
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"testing"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"

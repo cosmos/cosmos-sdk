@@ -1,10 +1,11 @@
 package ante_test
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"math/rand"
 	"testing"
 	"time"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"

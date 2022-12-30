@@ -1,8 +1,9 @@
 package orm
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"testing"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"strings"
 	"testing"
 
@@ -1368,7 +1369,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 						BankKeeper:      suite.bankKeeper,
 						FeegrantKeeper:  suite.feeGrantKeeper,
 						SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
-						SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params authtypes.Params) error {
+						SigGasConsumer: func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error {
 							switch pubkey := sig.PubKey.(type) {
 							case *ed25519.PubKey:
 								meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")

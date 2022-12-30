@@ -3,6 +3,7 @@ package capability
 import (
 	"encoding/json"
 	"fmt"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -18,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -168,7 +169,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for capability module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -193,8 +194,8 @@ type CapabilityInputs struct {
 
 	Config *modulev1.Module
 
-	KvStoreKey  *store.KVStoreKey
-	MemStoreKey *store.MemoryStoreKey
+	KvStoreKey  *storetypes.KVStoreKey
+	MemStoreKey *storetypes.MemoryStoreKey
 	Cdc         codec.Codec
 }
 

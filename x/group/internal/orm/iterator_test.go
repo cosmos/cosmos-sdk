@@ -1,6 +1,7 @@
 package orm
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -208,7 +209,7 @@ func TestPaginate(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	metadata := []byte("metadata")
 	t1 := testdata.TableModel{

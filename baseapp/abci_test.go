@@ -18,6 +18,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,8 +46,8 @@ func TestABCI_InitChain(t *testing.T) {
 	logger := defaultLogger()
 	app := baseapp.NewBaseApp(name, logger, db, nil)
 
-	capKey := sdk.NewKVStoreKey("main")
-	capKey2 := sdk.NewKVStoreKey("key2")
+	capKey := storetypes.NewKVStoreKey("main")
+	capKey2 := storetypes.NewKVStoreKey("key2")
 	app.MountStores(capKey, capKey2)
 
 	// set a value in the store on init chain
@@ -745,7 +746,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasConsumed))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
 			return
 		})
 	}
@@ -910,7 +911,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
 			// AnteHandlers must have their own defer/recover in order for the BaseApp
 			// to know how much gas was used! This is because the GasMeter is created in
@@ -919,7 +920,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
+					case storetypes.ErrorOutOfGas:
 						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
@@ -993,12 +994,12 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasGranted))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
+					case storetypes.ErrorOutOfGas:
 						err = sdkerrors.Wrapf(sdkerrors.ErrOutOfGas, "out of gas in location: %v", rType.Descriptor)
 					default:
 						panic(r)
@@ -1088,12 +1089,12 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			newCtx = ctx.WithGasMeter(sdk.NewGasMeter(gasWanted))
+			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasWanted))
 
 			defer func() {
 				if r := recover(); r != nil {
 					switch rType := r.(type) {
-					case sdk.ErrorOutOfGas:
+					case storetypes.ErrorOutOfGas:
 						log := fmt.Sprintf("out of gas in location: %v", rType.Descriptor)
 						err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, log)
 					default:

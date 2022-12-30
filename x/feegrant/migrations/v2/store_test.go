@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -19,8 +21,8 @@ func TestMigration(t *testing.T) {
 	var cdc codec.Codec
 	depinject.Inject(feegranttestutil.AppConfig, &cdc)
 
-	feegrantKey := sdk.NewKVStoreKey(v2.ModuleName)
-	ctx := testutil.DefaultContext(feegrantKey, sdk.NewTransientStoreKey("transient_test"))
+	feegrantKey := storetypes.NewKVStoreKey(v2.ModuleName)
+	ctx := testutil.DefaultContext(feegrantKey, storetypes.NewTransientStoreKey("transient_test"))
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

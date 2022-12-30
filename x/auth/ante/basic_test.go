@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"strings"
 	"testing"
 
@@ -129,7 +130,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			require.Nil(t, err, "Cannot marshal tx: %v", err)
 
 			params := suite.accountKeeper.GetParams(suite.ctx)
-			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
+			expectedGas := storetypes.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
 			// Set suite.ctx with TxBytes manually
 			suite.ctx = suite.ctx.WithTxBytes(txBytes)

@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"math/rand"
 	"testing"
 	"time"
@@ -183,7 +184,7 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 }
 
 // don't consume any gas
-func SigGasNoConsumer(meter sdk.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
+func SigGasNoConsumer(meter storetypes.GasMeter, sig []byte, pubkey crypto.PubKey, params authtypes.Params) error {
 	return nil
 }
 

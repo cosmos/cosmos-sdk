@@ -37,7 +37,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	group.RegisterInterfaces(interfaceRegistry)
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	key := sdk.NewKVStoreKey(group.ModuleName)
+	key := storetypes.NewKVStoreKey(group.ModuleName)
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db)
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)

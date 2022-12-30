@@ -3,12 +3,15 @@ package types_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/store"
+
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -61,7 +64,7 @@ func (s *storeTestSuite) TestNewTransientStoreKeys() {
 }
 
 func (s *storeTestSuite) TestNewInfiniteGasMeter() {
-	gm := sdk.NewInfiniteGasMeter()
+	gm := storetypes.NewInfiniteGasMeter()
 	s.Require().NotNil(gm)
 	_, ok := gm.(types.GasMeter) //nolint:gosimple
 	s.Require().True(ok)
@@ -120,8 +123,8 @@ func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 }
 
 func (s *storeTestSuite) checkDiffResults(store1, store2 types.KVStore) {
-	kvAs1, kvBs1 := sdk.DiffKVStores(store1, store2, nil)
-	kvAs2, kvBs2 := sdk.DiffKVStores(store1, store2, nil)
+	kvAs1, kvBs1 := store.DiffKVStores(store1, store2, nil)
+	kvAs2, kvBs2 := store.DiffKVStores(store1, store2, nil)
 	s.Require().Equal(kvAs1, kvAs2)
 	s.Require().Equal(kvBs1, kvBs2)
 }

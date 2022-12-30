@@ -3,6 +3,8 @@ package params_test
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/golang/mock/gomock"
@@ -34,8 +36,8 @@ type HandlerTestSuite struct {
 
 func (suite *HandlerTestSuite) SetupTest() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(paramtypes.StoreKey)
-	tkey := sdk.NewTransientStoreKey("params_transient_test")
+	key := storetypes.NewKVStoreKey(paramtypes.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 
 	ctx := testutil.DefaultContext(key, tkey)
 	paramsKeeper := keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)

@@ -23,7 +23,7 @@ func NewMockContext() *MockContext {
 	}
 }
 
-func (m MockContext) KVStore(key storetypes.StoreKey) sdk.KVStore {
+func (m MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
 	if s := m.store.GetCommitKVStore(key); s != nil {
 		return s
 	}
@@ -76,16 +76,16 @@ func (d debuggingGasMeter) String() string {
 }
 
 type GasCountingMockContext struct {
-	GasMeter sdk.GasMeter
+	GasMeter storetypes.GasMeter
 }
 
 func NewGasCountingMockContext() *GasCountingMockContext {
 	return &GasCountingMockContext{
-		GasMeter: &debuggingGasMeter{sdk.NewInfiniteGasMeter()},
+		GasMeter: &debuggingGasMeter{storetypes.NewInfiniteGasMeter()},
 	}
 }
 
-func (g GasCountingMockContext) KVStore(store sdk.KVStore) sdk.KVStore {
+func (g GasCountingMockContext) KVStore(store sdk.KVStore) storetypes.KVStore {
 	return gaskv.NewStore(store, g.GasMeter, storetypes.KVGasConfig())
 }
 
@@ -98,5 +98,5 @@ func (g GasCountingMockContext) GasRemaining() storetypes.Gas {
 }
 
 func (g *GasCountingMockContext) ResetGasMeter() {
-	g.GasMeter = sdk.NewInfiniteGasMeter()
+	g.GasMeter = storetypes.NewInfiniteGasMeter()
 }

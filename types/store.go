@@ -3,11 +3,10 @@ package types
 import (
 	"bytes"
 	fmt "fmt"
-	"sort"
-	"strings"
-
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"sort"
+	"strings"
 )
 
 type (
@@ -130,13 +129,13 @@ func NewKVStoreKeys(names ...string) map[string]*types.KVStoreKey {
 	assertNoPrefix(names)
 	keys := make(map[string]*types.KVStoreKey, len(names))
 	for _, n := range names {
-		keys[n] = NewKVStoreKey(n)
+		keys[n] = types.NewKVStoreKey(n)
 	}
 
 	return keys
 }
 
-// Constructs new TransientStoreKey
+// NewTransientStoreKey Constructs new TransientStoreKey
 // Must return a pointer according to the ocap principle
 func NewTransientStoreKey(name string) *types.TransientStoreKey {
 	return types.NewTransientStoreKey(name)

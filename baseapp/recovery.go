@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"runtime/debug"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +48,7 @@ func newRecoveryMiddleware(handler RecoveryHandler, next recoveryMiddleware) rec
 // newOutOfGasRecoveryMiddleware creates a standard OutOfGas recovery middleware for app.runTx method.
 func newOutOfGasRecoveryMiddleware(gasWanted uint64, ctx sdk.Context, next recoveryMiddleware) recoveryMiddleware {
 	handler := func(recoveryObj interface{}) error {
-		err, ok := recoveryObj.(sdk.ErrorOutOfGas)
+		err, ok := recoveryObj.(storetypes.ErrorOutOfGas)
 		if !ok {
 			return nil
 		}

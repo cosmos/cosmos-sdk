@@ -4,7 +4,7 @@ package orm
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 )
@@ -16,7 +16,7 @@ func TestSequence(t *testing.T) {
 // sequenceMachine is a state machine model of Sequence. It simply uses a uint64
 // as the model of the sequence.
 type sequenceMachine struct {
-	store sdk.KVStore
+	store storetypes.KVStore
 	seq   *Sequence
 	state uint64
 }
@@ -26,7 +26,7 @@ type sequenceMachine struct {
 func (m *sequenceMachine) Init(t *rapid.T) {
 	// Create context and KV store
 	ctx := NewMockContext()
-	m.store = ctx.KVStore(sdk.NewKVStoreKey("test"))
+	m.store = ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	// Create primary key table
 	seq := NewSequence(0x1)

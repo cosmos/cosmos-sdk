@@ -24,7 +24,7 @@ and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
 	baseCtx              context.Context
-	ms                   MultiStore
+	ms                   storetypes.MultiStore
 	header               tmproto.Header
 	headerHash           tmbytes.HexBytes
 	chainID              string
@@ -48,7 +48,7 @@ type Request = Context
 
 // Read-only accessors
 func (c Context) Context() context.Context                   { return c.baseCtx }
-func (c Context) MultiStore() MultiStore                     { return c.ms }
+func (c Context) MultiStore() storetypes.MultiStore          { return c.ms }
 func (c Context) BlockHeight() int64                         { return c.header.Height }
 func (c Context) BlockTime() time.Time                       { return c.header.Time }
 func (c Context) ChainID() string                            { return c.chainID }
@@ -95,7 +95,7 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(ms storetypes.MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
@@ -120,7 +120,7 @@ func (c Context) WithContext(ctx context.Context) Context {
 }
 
 // WithMultiStore returns a Context with an updated MultiStore.
-func (c Context) WithMultiStore(ms MultiStore) Context {
+func (c Context) WithMultiStore(ms storetypes.MultiStore) Context {
 	c.ms = ms
 	return c
 }
@@ -189,13 +189,13 @@ func (c Context) WithVoteInfos(voteInfo []abci.VoteInfo) Context {
 }
 
 // WithGasMeter returns a Context with an updated transaction GasMeter.
-func (c Context) WithGasMeter(meter GasMeter) Context {
+func (c Context) WithGasMeter(meter storetypes.GasMeter) Context {
 	c.gasMeter = meter
 	return c
 }
 
 // WithBlockGasMeter returns a Context with an updated block GasMeter
-func (c Context) WithBlockGasMeter(meter GasMeter) Context {
+func (c Context) WithBlockGasMeter(meter storetypes.GasMeter) Context {
 	c.blockGasMeter = meter
 	return c
 }
@@ -277,12 +277,12 @@ func (c Context) Value(key interface{}) interface{} {
 // ----------------------------------------------------------------------------
 
 // KVStore fetches a KVStore from the MultiStore.
-func (c Context) KVStore(key storetypes.StoreKey) KVStore {
+func (c Context) KVStore(key storetypes.StoreKey) storetypes.KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
-func (c Context) TransientStore(key storetypes.StoreKey) KVStore {
+func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
 }
 

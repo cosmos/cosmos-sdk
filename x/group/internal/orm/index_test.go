@@ -1,12 +1,12 @@
 package orm
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
@@ -101,7 +101,7 @@ func TestIndexPrefixScan(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	g1 := testdata.TableModel{
 		Id:       1,
@@ -129,7 +129,7 @@ func TestIndexPrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package
-		method     func(store sdk.KVStore, start, end interface{}) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
 	}{
 		"exact match with a single result": {
 			start:     []byte("metadata-a"),
@@ -301,7 +301,7 @@ func TestUniqueIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	m := testdata.TableModel{
 		Id:       1,

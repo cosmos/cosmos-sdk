@@ -6,16 +6,17 @@ import (
 	"sort"
 	"strings"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	storemetrics "github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -141,7 +142,7 @@ type BaseApp struct { //nolint: maligned
 
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
-	abciListeners []ABCIListener
+	abciListeners []storetypes.ABCIListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -156,7 +157,7 @@ func NewBaseApp(
 		logger:           logger,
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db),
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),

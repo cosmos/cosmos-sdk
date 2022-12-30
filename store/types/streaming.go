@@ -1,4 +1,4 @@
-package baseapp
+package types
 
 import (
 	"context"
@@ -6,8 +6,6 @@ import (
 	"sync"
 
 	abci "github.com/tendermint/tendermint/abci/types"
-
-	store "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp.
@@ -29,7 +27,7 @@ type StreamingService interface {
 	// Stream is the streaming service loop, awaits kv pairs and writes them to some destination stream or file
 	Stream(wg *sync.WaitGroup) error
 	// Listeners returns the streaming service's listeners for the BaseApp to register
-	Listeners() map[store.StoreKey][]store.WriteListener
+	Listeners() map[StoreKey][]WriteListener
 	// ABCIListener interface for hooking into the ABCI messages from inside the BaseApp
 	ABCIListener
 	// Closer interface

@@ -4,12 +4,13 @@ import (
 	fmt "fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func DoBenchmarkDeepContextStack(b *testing.B, depth int) {
@@ -18,7 +19,7 @@ func DoBenchmarkDeepContextStack(b *testing.B, depth int) {
 	key := storetypes.NewKVStoreKey("test")
 
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
+	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.LoadLatestVersion()
 	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())

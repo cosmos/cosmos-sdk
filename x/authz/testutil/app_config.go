@@ -52,7 +52,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					authz.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
-					runtime.ModuleName,
 				},
 				EndBlockers: []string{
 					minttypes.ModuleName,
@@ -63,7 +62,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					authz.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
-					runtime.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,

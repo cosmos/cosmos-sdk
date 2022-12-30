@@ -121,7 +121,6 @@ var (
 						paramstypes.ModuleName,
 						vestingtypes.ModuleName,
 						consensustypes.ModuleName,
-						runtime.ModuleName,
 					},
 					EndBlockers: []string{
 						crisistypes.ModuleName,
@@ -143,7 +142,6 @@ var (
 						consensustypes.ModuleName,
 						upgradetypes.ModuleName,
 						vestingtypes.ModuleName,
-						runtime.ModuleName,
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{

@@ -54,7 +54,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					slashingtypes.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
-					runtime.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
@@ -66,7 +65,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					slashingtypes.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
-					runtime.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,

@@ -95,6 +95,10 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Remove(ctx context.Context, pk Prim
 	return m.m.Remove(ctx, pk)
 }
 
+func (m *IndexedMap[PrimaryKey, Value, Idx]) Has(ctx context.Context, pk PrimaryKey) (bool, error) {
+	return m.m.Has(ctx, pk)
+}
+
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {
 	for _, index := range m.Indexes.IndexesList() {
 		err := index.Reference(ctx, pk, value, oldValue)

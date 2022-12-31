@@ -403,17 +403,31 @@ func (mr *MockValidatorSetMockRecorder) MaxValidators(arg0 interface{}) *gomock.
 }
 
 // Slash mocks base method.
-func (m *MockValidatorSet) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types1.Infraction) math.Int {
+func (m *MockValidatorSet) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec) math.Int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 
 // Slash indicates an expected call of Slash.
-func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockValidatorSetMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockValidatorSet)(nil).Slash), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockValidatorSet)(nil).Slash), arg0, arg1, arg2, arg3, arg4)
+}
+
+// SlashWithInfractionReason mocks base method.
+func (m *MockValidatorSet) SlashWithInfractionReason(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types1.Infraction) math.Int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(math.Int)
+	return ret0
+}
+
+// SlashWithInfractionReason indicates an expected call of SlashWithInfractionReason.
+func (mr *MockValidatorSetMockRecorder) SlashWithInfractionReason(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SlashWithInfractionReason", reflect.TypeOf((*MockValidatorSet)(nil).SlashWithInfractionReason), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // StakingTokenSupply mocks base method.

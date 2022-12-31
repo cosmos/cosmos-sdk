@@ -119,8 +119,8 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 		out:        &bytes.Buffer{},
 	}
 	b := &Builder{
-		GetClientConn: func(ctx context.Context) grpc.ClientConnInterface {
-			return conn
+		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
+			return conn, nil
 		},
 	}
 	cmd, err := b.BuildModuleQueryCommand("test", testCmdDesc)

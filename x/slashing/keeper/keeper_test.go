@@ -19,7 +19,7 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtestutil "github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var consAddr = sdk.ConsAddress(sdk.AccAddress([]byte("addr1_______________")))
@@ -76,12 +76,12 @@ func (s *KeeperTestSuite) TestPubkey() {
 }
 
 func (s *KeeperTestSuite) TestJailAndSlash() {
-	s.stakingKeeper.EXPECT().Slash(s.ctx,
+	s.stakingKeeper.EXPECT().SlashWithInfractionReason(s.ctx,
 		consAddr,
 		s.ctx.BlockHeight(),
 		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
 		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
-		types.Infraction_INFRACTION_DOUBLE_SIGN,
+		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
 	).Return(sdk.NewInt(0))
 
 	s.slashingKeeper.Slash(
@@ -90,7 +90,28 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
 		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
-		types.Infraction_INFRACTION_DOUBLE_SIGN,
+	)
+
+	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return()
+	s.slashingKeeper.Jail(s.ctx, consAddr)
+}
+
+func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
+	s.stakingKeeper.EXPECT().SlashWithInfractionReason(s.ctx,
+		consAddr,
+		s.ctx.BlockHeight(),
+		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
+		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
+	).Return(sdk.NewInt(0))
+
+	s.slashingKeeper.SlashWithInfractionReason(
+		s.ctx,
+		consAddr,
+		s.slashingKeeper.SlashFractionDoubleSign(s.ctx),
+		sdk.TokensToConsensusPower(sdk.NewInt(1), sdk.DefaultPowerReduction),
+		s.ctx.BlockHeight(),
+		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	)
 
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return()

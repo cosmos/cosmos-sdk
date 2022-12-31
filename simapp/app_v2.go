@@ -11,6 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -121,6 +122,7 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
+	autoCliOpts       autocli.AppOptions
 
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -221,6 +223,7 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
+		&app.autoCliOpts,
 		&app.AccountKeeper,
 		&app.BankKeeper,
 		&app.CapabilityKeeper,
@@ -315,6 +318,11 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *SimApp) AutoCliOpts() autocli.AppOptions {
+	return app.autoCliOpts
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

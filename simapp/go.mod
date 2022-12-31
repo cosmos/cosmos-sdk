@@ -4,12 +4,13 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.2.6
+	cosmossdk.io/client/v2 v2.0.0-20221207142935-9bf027460bae
 	cosmossdk.io/core v0.4.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/tools/rosetta v0.2.0
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
-	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
+	github.com/cosmos/cosmos-sdk v0.47.0-alpha2.0.20221219231612-5ed4075ba219
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
@@ -175,6 +176,8 @@ require (
 )
 
 replace (
+	// todo remove at next tag of client/v2
+	cosmossdk.io/client/v2 => ../client/v2
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.

@@ -46,6 +46,11 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(ctx context.Context, in *MsgCommunityPoolSpend, opts ...grpc.CallOption) (*MsgCommunityPoolSpendResponse, error)
+	// DepositValidatorRewardsPool defines a method to provide additional rewards
+	// to delegators to a specific validator.
+	//
+	// Since: cosmos-sdk 0.48
+	DepositValidatorRewardsPool(ctx context.Context, in *MsgDepositValidatorRewardsPool, opts ...grpc.CallOption) (*MsgDepositValidatorRewardsPoolResponse, error)
 }
 
 type msgClient struct {
@@ -110,6 +115,15 @@ func (c *msgClient) CommunityPoolSpend(ctx context.Context, in *MsgCommunityPool
 	return out, nil
 }
 
+func (c *msgClient) DepositValidatorRewardsPool(ctx context.Context, in *MsgDepositValidatorRewardsPool, opts ...grpc.CallOption) (*MsgDepositValidatorRewardsPoolResponse, error) {
+	out := new(MsgDepositValidatorRewardsPoolResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.distribution.v1beta1.Msg/DepositValidatorRewardsPool", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -138,6 +152,11 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.47
 	CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error)
+	// DepositValidatorRewardsPool defines a method to provide additional rewards
+	// to delegators to a specific validator.
+	//
+	// Since: cosmos-sdk 0.48
+	DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -162,6 +181,9 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) CommunityPoolSpend(context.Context, *MsgCommunityPoolSpend) (*MsgCommunityPoolSpendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommunityPoolSpend not implemented")
+}
+func (UnimplementedMsgServer) DepositValidatorRewardsPool(context.Context, *MsgDepositValidatorRewardsPool) (*MsgDepositValidatorRewardsPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositValidatorRewardsPool not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -284,6 +306,24 @@ func _Msg_CommunityPoolSpend_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DepositValidatorRewardsPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositValidatorRewardsPool)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositValidatorRewardsPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.distribution.v1beta1.Msg/DepositValidatorRewardsPool",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositValidatorRewardsPool(ctx, req.(*MsgDepositValidatorRewardsPool))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +354,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CommunityPoolSpend",
 			Handler:    _Msg_CommunityPoolSpend_Handler,
+		},
+		{
+			MethodName: "DepositValidatorRewardsPool",
+			Handler:    _Msg_DepositValidatorRewardsPool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

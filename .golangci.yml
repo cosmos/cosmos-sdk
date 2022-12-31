@@ -1,10 +1,10 @@
 run:
   tests: true
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  timeout: 5m
+  timeout: 10m
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata_pulsar
+  concurrency: 4
 
 linters:
   disable-all: true

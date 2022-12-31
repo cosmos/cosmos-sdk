@@ -7,7 +7,7 @@ import (
 
 func TestPairRange(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
+	schema := NewSchemaBuilder(sk)
 	pc := PairKeyCodec(StringKey, Uint64Key)
 	m := NewMap(schema, NewPrefix(0), "pair", pc, Uint64Value)
 

@@ -96,8 +96,10 @@ func (r *Range[K]) Descending() *Range[K] {
 }
 
 // test sentinel error
-var errRange = errors.New("collections: range error")
-var errOrder = errors.New("collections: invalid order")
+var (
+	errRange = errors.New("collections: range error")
+	errOrder = errors.New("collections: invalid order")
+)
 
 func (r *Range[K]) RangeValues() (start *RangeBound[K], end *RangeBound[K], order Order, err error) {
 	return r.start, r.end, r.order, nil

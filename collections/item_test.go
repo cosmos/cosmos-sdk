@@ -8,10 +8,13 @@ import (
 
 func TestItem(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
-	item := NewItem(schema, NewPrefix("item"), "item", Uint64Value)
+	schemaBuilder := NewSchemaBuilder(sk)
+	item := NewItem(schemaBuilder, NewPrefix("item"), "item", Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.NoError(t, err)
+
 	// set
-	err := item.Set(ctx, 1000)
+	err = item.Set(ctx, 1000)
 	require.NoError(t, err)
 
 	// get

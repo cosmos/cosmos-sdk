@@ -2,22 +2,14 @@ package v1
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 // NewGenesisState creates a new genesis state for the governance module
 func NewGenesisState(startingProposalID uint64, params Params) *GenesisState {
-	dp := NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)
-	vp := NewVotingParams(params.VotingPeriod)
-	tp := NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
-
 	return &GenesisState{
 		StartingProposalId: startingProposalID,
-		DepositParams:      &dp,
-		VotingParams:       &vp,
-		TallyParams:        &tp,
 		Params:             &params,
 	}
 }
@@ -39,18 +31,6 @@ func (data GenesisState) Empty() bool {
 func ValidateGenesis(data *GenesisState) error {
 	if data.StartingProposalId == 0 {
 		return errors.New("starting proposal id must be greater than 0")
-	}
-
-	if err := validateTallyParams(*data.TallyParams); err != nil {
-		return fmt.Errorf("invalid tally params: %w", err)
-	}
-
-	if err := validateVotingParams(*data.VotingParams); err != nil {
-		return fmt.Errorf("invalid voting params: %w", err)
-	}
-
-	if err := validateDepositParams(*data.DepositParams); err != nil {
-		return fmt.Errorf("invalid deposit params: %w", err)
 	}
 
 	return data.Params.ValidateBasic()

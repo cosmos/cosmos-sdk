@@ -67,6 +67,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (server) [#14441](https://github.com/cosmos/cosmos-sdk/pull/14441) Fix `--log_format` flag not working.
+* (ante) [#14448](https://github.com/cosmos/cosmos-sdk/pull/14448) Return anteEvents when postHandler fail.
 
 ## [v0.47.0-alpha2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-alpha2) - 2022-12-06
 

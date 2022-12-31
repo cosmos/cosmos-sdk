@@ -1,15 +1,14 @@
 package testutil
 
 import (
-	"github.com/cosmos/cosmos-sdk/runtime"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import bank as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/capability"     // import capability as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import consensus as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import genutil as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/params"         // import params as a blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import staking as a blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/capability"     // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -41,20 +40,11 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				BeginBlockers: []string{
 					capabilitytypes.ModuleName,
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
-					capabilitytypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					capabilitytypes.ModuleName,

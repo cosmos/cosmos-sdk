@@ -21,7 +21,7 @@ func (c companyIndexes) IndexesList() []Index[string, company] {
 
 func TestIndexedMap(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
+	schema := NewSchemaBuilder(sk)
 
 	im := NewIndexedMap(schema, NewPrefix(0), "companies", StringKey, newTestValueCodec[company](),
 		companyIndexes{

@@ -7,7 +7,7 @@ import (
 
 func TestUniqueIndex(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
+	schema := NewSchemaBuilder(sk)
 	ui := NewUniqueIndex(schema, NewPrefix("unique_index"), "unique_index", Uint64Key, Uint64Key, func(_ uint64, v company) (uint64, error) {
 		return v.Vat, nil
 	})

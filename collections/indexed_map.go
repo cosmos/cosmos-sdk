@@ -36,7 +36,7 @@ type IndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]] struct {
 }
 
 func NewIndexedMap[PrimaryKey, Value any, Idx Indexes[PrimaryKey, Value]](
-	schema Schema,
+	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
 	pkCodec KeyCodec[PrimaryKey],

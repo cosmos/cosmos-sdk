@@ -11,7 +11,7 @@ type UniqueIndex[ReferenceKey, PrimaryKey, Value any] struct {
 }
 
 func NewUniqueIndex[ReferenceKey, PrimaryKey, Value any](
-	schema Schema,
+	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
 	refCodec KeyCodec[ReferenceKey],

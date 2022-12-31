@@ -12,7 +12,7 @@ type MultiIndex[ReferenceKey, PrimaryKey, Value any] struct {
 
 // NewMultiIndex instantiates a new MultiIndex instance.
 func NewMultiIndex[ReferenceKey, PrimaryKey, Value any](
-	schema Schema,
+	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
 	refCodec KeyCodec[ReferenceKey],

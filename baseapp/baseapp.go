@@ -729,7 +729,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate)
 			if err != nil {
-				return gInfo, nil, nil, priority, err
+				return gInfo, nil, anteEvents, priority, err
 			}
 
 			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)

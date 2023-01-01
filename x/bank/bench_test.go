@@ -14,7 +14,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -68,7 +67,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 	}
 
 	// construct genesis state
-	genAccs := []types.GenesisAccount{&acc}
+	genAccs := []authtypes.GenesisAccount{&acc}
 	s := createTestSuite(&testing.T{}, genAccs)
 	baseApp := s.App.BaseApp
 	ctx := baseApp.NewContext(false, tmproto.Header{})

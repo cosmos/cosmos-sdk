@@ -129,6 +129,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type VestingInputs struct {
 	depinject.In
 
@@ -136,6 +137,7 @@ type VestingInputs struct {
 	BankKeeper    types.BankKeeper
 }
 
+//nolint:revive
 type VestingOutputs struct {
 	depinject.Out
 

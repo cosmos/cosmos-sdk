@@ -126,6 +126,8 @@ var (
 	fd_MsgSubmitProposal_initial_deposit protoreflect.FieldDescriptor
 	fd_MsgSubmitProposal_proposer        protoreflect.FieldDescriptor
 	fd_MsgSubmitProposal_metadata        protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_title           protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_summary         protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -135,6 +137,8 @@ func init() {
 	fd_MsgSubmitProposal_initial_deposit = md_MsgSubmitProposal.Fields().ByName("initial_deposit")
 	fd_MsgSubmitProposal_proposer = md_MsgSubmitProposal.Fields().ByName("proposer")
 	fd_MsgSubmitProposal_metadata = md_MsgSubmitProposal.Fields().ByName("metadata")
+	fd_MsgSubmitProposal_title = md_MsgSubmitProposal.Fields().ByName("title")
+	fd_MsgSubmitProposal_summary = md_MsgSubmitProposal.Fields().ByName("summary")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgSubmitProposal)(nil)
@@ -226,6 +230,18 @@ func (x *fastReflection_MsgSubmitProposal) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
+	if x.Title != "" {
+		value := protoreflect.ValueOfString(x.Title)
+		if !f(fd_MsgSubmitProposal_title, value) {
+			return
+		}
+	}
+	if x.Summary != "" {
+		value := protoreflect.ValueOfString(x.Summary)
+		if !f(fd_MsgSubmitProposal_summary, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -249,6 +265,10 @@ func (x *fastReflection_MsgSubmitProposal) Has(fd protoreflect.FieldDescriptor) 
 		return x.Proposer != ""
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
 		return x.Metadata != ""
+	case "cosmos.gov.v1.MsgSubmitProposal.title":
+		return x.Title != ""
+	case "cosmos.gov.v1.MsgSubmitProposal.summary":
+		return x.Summary != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -273,6 +293,10 @@ func (x *fastReflection_MsgSubmitProposal) Clear(fd protoreflect.FieldDescriptor
 		x.Proposer = ""
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
 		x.Metadata = ""
+	case "cosmos.gov.v1.MsgSubmitProposal.title":
+		x.Title = ""
+	case "cosmos.gov.v1.MsgSubmitProposal.summary":
+		x.Summary = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -307,6 +331,12 @@ func (x *fastReflection_MsgSubmitProposal) Get(descriptor protoreflect.FieldDesc
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
 		value := x.Metadata
 		return protoreflect.ValueOfString(value)
+	case "cosmos.gov.v1.MsgSubmitProposal.title":
+		value := x.Title
+		return protoreflect.ValueOfString(value)
+	case "cosmos.gov.v1.MsgSubmitProposal.summary":
+		value := x.Summary
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -339,6 +369,10 @@ func (x *fastReflection_MsgSubmitProposal) Set(fd protoreflect.FieldDescriptor, 
 		x.Proposer = value.Interface().(string)
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
 		x.Metadata = value.Interface().(string)
+	case "cosmos.gov.v1.MsgSubmitProposal.title":
+		x.Title = value.Interface().(string)
+	case "cosmos.gov.v1.MsgSubmitProposal.summary":
+		x.Summary = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -375,6 +409,10 @@ func (x *fastReflection_MsgSubmitProposal) Mutable(fd protoreflect.FieldDescript
 		panic(fmt.Errorf("field proposer of message cosmos.gov.v1.MsgSubmitProposal is not mutable"))
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
 		panic(fmt.Errorf("field metadata of message cosmos.gov.v1.MsgSubmitProposal is not mutable"))
+	case "cosmos.gov.v1.MsgSubmitProposal.title":
+		panic(fmt.Errorf("field title of message cosmos.gov.v1.MsgSubmitProposal is not mutable"))
+	case "cosmos.gov.v1.MsgSubmitProposal.summary":
+		panic(fmt.Errorf("field summary of message cosmos.gov.v1.MsgSubmitProposal is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -397,6 +435,10 @@ func (x *fastReflection_MsgSubmitProposal) NewField(fd protoreflect.FieldDescrip
 	case "cosmos.gov.v1.MsgSubmitProposal.proposer":
 		return protoreflect.ValueOfString("")
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
+		return protoreflect.ValueOfString("")
+	case "cosmos.gov.v1.MsgSubmitProposal.title":
+		return protoreflect.ValueOfString("")
+	case "cosmos.gov.v1.MsgSubmitProposal.summary":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -487,6 +529,14 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.Title)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Summary)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -515,6 +565,20 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Summary) > 0 {
+			i -= len(x.Summary)
+			copy(dAtA[i:], x.Summary)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Summary)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Title) > 0 {
+			i -= len(x.Title)
+			copy(dAtA[i:], x.Title)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Title)))
+			i--
+			dAtA[i] = 0x2a
 		}
 		if len(x.Metadata) > 0 {
 			i -= len(x.Metadata)
@@ -742,6 +806,70 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.Metadata = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Title = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Summary", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Summary = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -5838,11 +5966,18 @@ type MsgSubmitProposal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Messages       []*anypb.Any    `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	// messages are the arbitrary messages to be executed if proposal passes.
+	Messages []*anypb.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	// initial_deposit is the deposit value that must be paid at proposal submission.
 	InitialDeposit []*v1beta1.Coin `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit,omitempty"`
-	Proposer       string          `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// proposer is the account address of the proposer.
+	Proposer string `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// title is the title of the proposal.
+	Title string `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
+	// summary is the summary of the proposal
+	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
 }
 
 func (x *MsgSubmitProposal) Reset() {
@@ -5893,12 +6028,27 @@ func (x *MsgSubmitProposal) GetMetadata() string {
 	return ""
 }
 
+func (x *MsgSubmitProposal) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *MsgSubmitProposal) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 type MsgSubmitProposalResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
@@ -6009,10 +6159,14 @@ type MsgVote struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProposalId uint64     `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Voter      string     `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Option     VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1.VoteOption" json:"option,omitempty"`
-	Metadata   string     `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// voter is the voter address for the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// option defines the vote option.
+	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1.VoteOption" json:"option,omitempty"`
+	// metadata is any arbitrary metadata attached to the Vote.
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgVote) Reset() {
@@ -6096,10 +6250,14 @@ type MsgVoteWeighted struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProposalId uint64                `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Voter      string                `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Options    []*WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty"`
-	Metadata   string                `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// voter is the voter address for the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// options defines the weighted vote options.
+	Options []*WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty"`
+	// metadata is any arbitrary metadata attached to the VoteWeighted.
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (x *MsgVoteWeighted) Reset() {
@@ -6183,9 +6341,12 @@ type MsgDeposit struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ProposalId uint64          `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
-	Depositor  string          `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// amount to be deposited by depositor.
+	Amount []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgDeposit) Reset() {
@@ -6352,7 +6513,7 @@ var file_cosmos_gov_v1_tx_proto_rawDesc = []byte{
 	0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x6d, 0x73, 0x67, 0x2f, 0x76, 0x31, 0x2f, 0x6d, 0x73, 0x67, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69,
-	0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x99, 0x02, 0x0a, 0x11, 0x4d, 0x73, 0x67,
+	0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc9, 0x02, 0x0a, 0x11, 0x4d, 0x73, 0x67,
 	0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x30,
 	0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
@@ -6367,7 +6528,10 @@ var file_cosmos_gov_v1_tx_proto_rawDesc = []byte{
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x70, 0x72, 0x6f,
 	0x70, 0x6f, 0x73, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
 	0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0x3a, 0x31, 0x82, 0xe7, 0xb0, 0x2a, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72,
+	0x61, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61,
+	0x72, 0x79, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72,
+	0x79, 0x3a, 0x31, 0x82, 0xe7, 0xb0, 0x2a, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72,
 	0x8a, 0xe7, 0xb0, 0x2a, 0x1f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f,
 	0x76, 0x31, 0x2f, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70,
 	0x6f, 0x73, 0x61, 0x6c, 0x22, 0x3c, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69,

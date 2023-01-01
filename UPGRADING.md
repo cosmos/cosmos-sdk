@@ -4,14 +4,20 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Database configuration
+
+Cleveldb, Boltdb and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool 
+
+<!-- TODO: write data base migration tool -->
+
 ### Protobuf
 
 The SDK is in the process of removing all `gogoproto` annotations.
 
 #### Stringer
 
-The `Stringer` implementation of some packages use `proto.CompactTextString` for _stringify_ a struct.
-Please [verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the `.String()` method in your application. An chain should not rely on it for any state-machine related operation.
+The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
+[Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -110,6 +116,10 @@ ctx.EventManager().EmitEvent(
 	),
 )
 ```
+
+The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
+In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
+`Baseapp` only emits that event if the module have not already done so.
 
 #### `x/gov`
 

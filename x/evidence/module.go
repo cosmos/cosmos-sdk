@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -20,9 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
-
 	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -45,7 +42,7 @@ type AppModuleBasic struct {
 	evidenceHandlers []eviclient.EvidenceHandler // eviclient evidence submission handlers
 }
 
-// NewAppModuleBasic crates a AppModuleBasic without the codec.
+// NewAppModuleBasic creates a AppModuleBasic without the codec.
 func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleBasic {
 	return AppModuleBasic{
 		evidenceHandlers: evidenceHandlers,
@@ -100,6 +97,7 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
 
+// RegisterInterfaces registers the evidence module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(registry)
 }
@@ -115,6 +113,7 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
+// NewAppModule creates a new AppModule object.
 func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
@@ -203,6 +202,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type EvidenceInputs struct {
 	depinject.In
 
@@ -213,6 +213,7 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
+//nolint:revive
 type EvidenceOutputs struct {
 	depinject.Out
 

@@ -3,8 +3,8 @@ package valuerenderer
 import (
 	"context"
 	"fmt"
-	"strings"
 
+	"github.com/cosmos/cosmos-proto/any"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -46,7 +46,7 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 	}
 
 	screens := make([]Screen, 1+len(subscreens))
-	screens[0].Text = "Object: " + anymsg.GetTypeUrl()
+	screens[0].Text = anymsg.GetTypeUrl()
 	for i, subscreen := range subscreens {
 		subscreen.Indent++
 		screens[i+1] = subscreen
@@ -64,13 +64,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		return nilValue, fmt.Errorf("bad indentation: want 0, got %d", screens[0].Indent)
 	}
 
-	prefix := "Object: "
-	if !strings.HasPrefix(screens[0].Text, prefix) {
-		return nilValue, fmt.Errorf("bad Any header: %s", screens[0].Text)
-	}
-	url := strings.TrimPrefix(screens[0].Text, prefix)
-
-	msgType, err := protoregistry.GlobalTypes.FindMessageByURL(url)
+	msgType, err := protoregistry.GlobalTypes.FindMessageByURL(screens[0].Text)
 	if err != nil {
 		return nilValue, err
 	}
@@ -93,7 +87,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		return nilValue, err
 	}
 
-	anyMsg, err := anypb.New(internalMsg.Message().Interface())
+	anyMsg, err := any.New(internalMsg.Message().Interface())
 	if err != nil {
 		return nilValue, err
 	}

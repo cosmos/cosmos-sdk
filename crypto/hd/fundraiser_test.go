@@ -75,7 +75,7 @@ func TestFundraiserCompatibility(t *testing.T) {
 
 		require.Equal(t, seedB, seed)
 		require.Equal(t, master[:], masterB, fmt.Sprintf("Expected masters to match for %d", i))
-		require.Equal(t, priv[:], privB, "Expected priv keys to match")
+		require.Equal(t, priv, privB, "Expected priv keys to match")
 		pubBFixed := make([]byte, secp256k1.PubKeySize)
 		copy(pubBFixed, pubB)
 		require.Equal(t, pub, &secp256k1.PubKey{Key: pubBFixed}, fmt.Sprintf("Expected pub keys to match for %d", i))

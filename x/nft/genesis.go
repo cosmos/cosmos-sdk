@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ValidateGenesis check the given genesis state has no integrity issues
+// ValidateGenesis checks that the given genesis state has no integrity issues
 func ValidateGenesis(data GenesisState) error {
 	for _, class := range data.Classes {
 		if len(class.Id) == 0 {
@@ -24,7 +24,7 @@ func ValidateGenesis(data GenesisState) error {
 	return nil
 }
 
-// DefaultGenesisState - Return a default genesis state
+// DefaultGenesisState - Returns a default genesis state
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{}
 }

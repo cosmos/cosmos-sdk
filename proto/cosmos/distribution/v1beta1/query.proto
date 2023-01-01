@@ -48,7 +48,7 @@ service Query {
                                    "{validator_address}";
   }
 
-  // DelegationTotalRewards queries the total rewards accrued by a each
+  // DelegationTotalRewards queries the total rewards accrued by each
   // validator.
   rpc DelegationTotalRewards(QueryDelegationTotalRewardsRequest) returns (QueryDelegationTotalRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards";
@@ -132,8 +132,7 @@ message QueryValidatorCommissionResponse {
 // QueryValidatorSlashesRequest is the request type for the
 // Query/ValidatorSlashes RPC method
 message QueryValidatorSlashesRequest {
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.goproto_stringer) = true;
+  option (gogoproto.goproto_getters) = false;
 
   // validator_address defines the validator address to query for.
   string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];

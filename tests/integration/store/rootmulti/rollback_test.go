@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
+	dbm "github.com/cosmos/cosmos-db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestRollback(t *testing.T) {
@@ -18,7 +18,7 @@ func TestRollback(t *testing.T) {
 	options := simapp.SetupOptions{
 		Logger:  log.NewNopLogger(),
 		DB:      db,
-		AppOpts: simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	}
 	app := simapp.NewSimappWithCustomOptions(t, false, options)
 	app.Commit()
@@ -46,7 +46,7 @@ func TestRollback(t *testing.T) {
 	require.Equal(t, target, app.LastBlockHeight())
 
 	// recreate app to have clean check state
-	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
 	require.Equal(t, []byte("value5"), store.Get([]byte("key")))
 

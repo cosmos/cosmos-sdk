@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -182,6 +184,11 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
+	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) ||
+		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) {
+		return errors.New("base and bonus proposer reward are deprecated fields and should not be used")
+	}
+
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}

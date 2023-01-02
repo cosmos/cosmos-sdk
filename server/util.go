@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -23,7 +24,6 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -150,7 +150,12 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 		return err
 	}
 
-	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	var logger tmlog.Logger
+	if serverCtx.Viper.GetString(flags.FlagLogFormat) == tmcfg.LogFormatJSON {
+		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
+	} else {
+		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	}
 	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
 	if err != nil {
 		return err
@@ -368,6 +373,12 @@ func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
+
+	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
+	if rv == "cleveldb" || rv == "badgerdb" || rv == "boltdb" {
+		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend))
+	}
+
 	if len(rv) != 0 {
 		return dbm.BackendType(rv)
 	}

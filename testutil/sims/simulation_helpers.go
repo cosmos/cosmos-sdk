@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.

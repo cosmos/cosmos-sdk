@@ -10,10 +10,12 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	simappparams "cosmossdk.io/simapp/params"
 
@@ -415,19 +417,23 @@ func NewSimApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.ModuleManager.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		evidencetypes.ModuleName, stakingtypes.ModuleName,
-		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
-		authz.ModuleName, feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-		paramstypes.ModuleName, vestingtypes.ModuleName, consensusparamtypes.ModuleName,
+		upgradetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		minttypes.ModuleName,
+		distrtypes.ModuleName,
+		slashingtypes.ModuleName,
+		evidencetypes.ModuleName,
+		stakingtypes.ModuleName,
+		genutiltypes.ModuleName,
+		authz.ModuleName,
 	)
 	app.ModuleManager.SetOrderEndBlockers(
-		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
-		slashingtypes.ModuleName, minttypes.ModuleName,
-		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
-		feegrant.ModuleName, nft.ModuleName, group.ModuleName,
-		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName, consensusparamtypes.ModuleName,
+		crisistypes.ModuleName,
+		govtypes.ModuleName,
+		stakingtypes.ModuleName,
+		genutiltypes.ModuleName,
+		feegrant.ModuleName,
+		group.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -604,6 +610,21 @@ func (app *SimApp) InterfaceRegistry() types.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *SimApp) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.ModuleManager.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{Modules: modules}
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.

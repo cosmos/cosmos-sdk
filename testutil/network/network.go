@@ -15,11 +15,11 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
-	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
@@ -142,7 +142,8 @@ func MinimumAppConfig() depinject.Config {
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
-		configurator.TxModule())
+		configurator.TxModule(),
+	)
 }
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {

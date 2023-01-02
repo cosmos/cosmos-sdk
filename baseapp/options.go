@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
@@ -238,7 +239,8 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 func (app *BaseApp) SetStreamingService(
 	appOpts servertypes.AppOptions,
 	appCodec storetypes.Codec,
-	keys map[string]*storetypes.KVStoreKey) error {
+	keys map[string]*storetypes.KVStoreKey,
+) error {
 	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys)
 	if err != nil {
 		return err
@@ -295,4 +297,13 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	}
 
 	app.prepareProposal = handler
+}
+
+// SetStoreMetrics sets the prepare proposal function for the BaseApp.
+func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
+	if app.sealed {
+		panic("SetStoreMetrics() on sealed BaseApp")
+	}
+
+	app.cms.SetMetrics(gatherer)
 }

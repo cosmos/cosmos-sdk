@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
-	db "github.com/tendermint/tm-db"
 
 	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"

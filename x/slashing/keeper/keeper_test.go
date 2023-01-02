@@ -3,8 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
@@ -12,6 +10,7 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

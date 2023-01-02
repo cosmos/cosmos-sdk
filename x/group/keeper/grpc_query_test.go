@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,14 +15,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/golang/mock/gomock"
-	"github.com/tendermint/tendermint/libs/log"
-
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
+	"github.com/golang/mock/gomock"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 func TestQueryGroupsByMember(t *testing.T) {

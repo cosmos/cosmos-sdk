@@ -33,8 +33,6 @@ import (
 	"fmt"
 	"sort"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"cosmossdk.io/core/appmodule"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -44,6 +42,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -410,7 +409,6 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 		if module, ok := m.Modules[moduleName].(HasGenesis); ok {
 			channels[moduleName] = make(chan json.RawMessage)
 			go func(module HasGenesis, ch chan json.RawMessage) {
-
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
 
 				ch <- module.ExportGenesis(ctx, cdc)

@@ -6,11 +6,9 @@ import (
 	"sort"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 

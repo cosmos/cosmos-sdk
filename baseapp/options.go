@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	dbm "github.com/cosmos/cosmos-db"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -16,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
-
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )

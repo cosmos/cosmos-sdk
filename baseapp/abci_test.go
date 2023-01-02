@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/gogoproto/jsonpb"
@@ -21,6 +19,7 @@ import (
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -14,8 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/spf13/cast"
@@ -35,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"

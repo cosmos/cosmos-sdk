@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 )

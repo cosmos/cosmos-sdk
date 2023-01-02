@@ -5,8 +5,6 @@ import (
 	"io"
 	"time"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/gogoproto/grpc"
@@ -19,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // ServerStartTime defines the time duration that the server need to stay running after startup

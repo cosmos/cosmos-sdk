@@ -78,11 +78,6 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	// register runtime module services
-	if err := a.registerRuntimeServices(); err != nil {
-		return err
-	}
-
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
 		if a.initChainer == nil {

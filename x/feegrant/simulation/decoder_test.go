@@ -38,7 +38,7 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: []byte(feegrant.FeeAllowanceKeyPrefix), Value: grantBz},
+			{Key: feegrant.FeeAllowanceKeyPrefix, Value: grantBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

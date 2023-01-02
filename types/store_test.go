@@ -3,10 +3,11 @@ package types_test
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,7 +64,7 @@ func (s *storeTestSuite) TestNewTransientStoreKeys() {
 func (s *storeTestSuite) TestNewInfiniteGasMeter() {
 	gm := sdk.NewInfiniteGasMeter()
 	s.Require().NotNil(gm)
-	_, ok := gm.(types.GasMeter)
+	_, ok := gm.(types.GasMeter) //nolint:gosimple
 	s.Require().True(ok)
 }
 
@@ -101,7 +102,7 @@ func (s *storeTestSuite) TestDiffKVStores() {
 
 	// Same keys, different value. Comparisons will be nil as prefixes are skipped.
 	prefix := []byte("prefix:")
-	k1Prefixed := append(prefix, k1...)
+	k1Prefixed := append(prefix, k1...) //nolint:gocritic // append is fine here
 	store1.Set(k1Prefixed, v1)
 	store2.Set(k1Prefixed, v2)
 	s.checkDiffResults(store1, store2)
@@ -109,7 +110,7 @@ func (s *storeTestSuite) TestDiffKVStores() {
 
 func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 	db := dbm.NewMemDB()
-	ms := rootmulti.NewStore(db, log.NewNopLogger())
+	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")

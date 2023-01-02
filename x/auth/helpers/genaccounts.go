@@ -24,7 +24,7 @@ func AddGenesisAccount(
 	cdc codec.Codec,
 	accAddr sdk.AccAddress,
 	appendAcct bool,
-	genesisFileUrl, amountStr, vestingAmtStr string,
+	genesisFileURL, amountStr, vestingAmtStr string,
 	vestingStart, vestingEnd int64,
 ) error {
 	coins, err := sdk.ParseCoinsNormalized(amountStr)
@@ -69,7 +69,7 @@ func AddGenesisAccount(
 		return fmt.Errorf("failed to validate new genesis account: %w", err)
 	}
 
-	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genesisFileUrl)
+	appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genesisFileURL)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 	}
@@ -133,5 +133,5 @@ func AddGenesisAccount(
 	}
 
 	genDoc.AppState = appStateJSON
-	return genutil.ExportGenesisFile(genDoc, genesisFileUrl)
+	return genutil.ExportGenesisFile(genDoc, genesisFileURL)
 }

@@ -36,10 +36,10 @@ var tooLongMetadata = strings.Repeat("A", 256)
 type CLITestSuite struct {
 	suite.Suite
 
-	kr      keyring.Keyring
-	encCfg  testutilmod.TestEncodingConfig
-	baseCtx client.Context
-
+	kr          keyring.Keyring
+	encCfg      testutilmod.TestEncodingConfig
+	baseCtx     client.Context
+	clientCtx   client.Context
 	group       *group.GroupInfo
 	commonFlags []string
 }
@@ -77,10 +77,10 @@ func (s *CLITestSuite) SetupSuite() {
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	clientCtx := ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen().WithOutput(&outBuf)
 
 	// create a new account
-	info, _, err := clientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := s.clientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	pk, err := info.GetPubKey()
@@ -88,7 +88,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	account := sdk.AccAddress(pk.Address())
 	_, err = clitestutil.MsgSendExec(
-		clientCtx,
+		s.clientCtx,
 		val.Address,
 		account,
 		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -110,7 +110,7 @@ func (s *CLITestSuite) SetupSuite() {
 		]
 	}`, val.Address.String(), memberWeight, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, groupcli.MsgCreateGroupCmd(),
+	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, groupcli.MsgCreateGroupCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -123,7 +123,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	s.Require().NoError(err, out.String())
 	txResp := sdk.TxResponse{}
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
 	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}

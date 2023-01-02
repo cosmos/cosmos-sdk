@@ -7,9 +7,7 @@ import (
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
 	// default params
-	communityTax := sdk.NewDecWithPrec(2, 2)        // 2%
-	baseProposerReward := sdk.NewDecWithPrec(1, 2)  // 1%
-	bonusProposerReward := sdk.NewDecWithPrec(4, 2) // 4%
+	communityTax := sdk.NewDecWithPrec(2, 2) // 2%
 	withdrawAddrEnabled := true
 
 	testCases := []struct {
@@ -24,9 +22,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: "invalid",
 				Params: types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(2, 0),
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.ZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -38,9 +36,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: s.distrKeeper.GetAuthority(),
 				Params: types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(2, 0),
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.ZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -52,69 +50,41 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: s.distrKeeper.GetAuthority(),
 				Params: types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(-2, 1),
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.ZeroDec(),
 				},
 			},
 			expErr:    true,
 			expErrMsg: "community tax should be non-negative and less than one",
 		},
 		{
-			name: "base proposer reward > 1",
+			name: "base proposer reward set",
 			input: &types.MsgUpdateParams{
 				Authority: s.distrKeeper.GetAuthority(),
 				Params: types.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.NewDecWithPrec(2, 0),
-					BonusProposerReward: bonusProposerReward,
+					BaseProposerReward:  sdk.NewDecWithPrec(1, 2),
+					BonusProposerReward: sdk.ZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},
 			expErr:    true,
-			expErrMsg: "sum of base, bonus proposer rewards, and community tax cannot be greater than one",
+			expErrMsg: "cannot update base or bonus proposer reward because these are deprecated fields: invalid request",
 		},
 		{
-			name: "negative base proposer reward",
+			name: "bonus proposer reward set",
 			input: &types.MsgUpdateParams{
 				Authority: s.distrKeeper.GetAuthority(),
 				Params: types.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  sdk.NewDecWithPrec(-2, 0),
-					BonusProposerReward: bonusProposerReward,
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.NewDecWithPrec(1, 2),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},
 			expErr:    true,
-			expErrMsg: "base proposer reward should be positive",
-		},
-		{
-			name: "bonus proposer reward > 1",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: sdk.NewDecWithPrec(2, 0),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "sum of base, bonus proposer rewards, and community tax cannot be greater than one",
-		},
-		{
-			name: "negative bonus proposer reward",
-			input: &types.MsgUpdateParams{
-				Authority: s.distrKeeper.GetAuthority(),
-				Params: types.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: sdk.NewDecWithPrec(-2, 0),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "bonus proposer reward should be positive",
+			expErrMsg: "cannot update base or bonus proposer reward because these are deprecated fields: invalid request",
 		},
 		{
 			name: "all good",
@@ -122,8 +92,8 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Authority: s.distrKeeper.GetAuthority(),
 				Params: types.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  baseProposerReward,
-					BonusProposerReward: bonusProposerReward,
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.ZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},

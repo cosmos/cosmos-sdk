@@ -616,6 +616,10 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 		return nil, nil, err
 	}
 
+	if !pub.VerifySignature(msg, sig) {
+		return nil, nil, errors.New("Ledger generated an invalid signature. Perhaps have multiple ledgers and need to try another one")
+	}
+
 	return sig, priv.PubKey(), nil
 }
 

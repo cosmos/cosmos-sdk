@@ -17,7 +17,18 @@ type AutoCLIQueryService struct {
 	moduleOptions map[string]*autocliv1.ModuleOptions
 }
 
+// NewAutoCLIQueryService returns a AutoCLIQueryService for the provided modules.
 func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryService {
+	return &AutoCLIQueryService{
+		moduleOptions: ExtractAutoCLIOptions(appModules),
+	}
+}
+
+// ExtractAutoCLIOptions extracts autocli ModuleOptions from the provided app modules.
+// Example Usage:
+//
+//	ExtractAutoCLIOptions(ModuleManager.Modules)
+func ExtractAutoCLIOptions(appModules map[string]interface{}) map[string]*autocliv1.ModuleOptions {
 	moduleOptions := map[string]*autocliv1.ModuleOptions{}
 	for modName, mod := range appModules {
 		if autoCliMod, ok := mod.(interface {
@@ -51,9 +62,7 @@ func NewAutoCLIQueryService(appModules map[string]interface{}) *AutoCLIQueryServ
 			}
 		}
 	}
-	return &AutoCLIQueryService{
-		moduleOptions: moduleOptions,
-	}
+	return moduleOptions
 }
 
 func (a AutoCLIQueryService) AppOptions(context.Context, *autocliv1.AppOptionsRequest) (*autocliv1.AppOptionsResponse, error) {

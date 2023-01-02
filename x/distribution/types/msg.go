@@ -187,7 +187,7 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
 	if (!msg.Params.BaseProposerReward.IsNil() && !msg.Params.BaseProposerReward.IsZero()) ||
-		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) { // nolint:staticcheck
+		(!msg.Params.BonusProposerReward.IsNil() && !msg.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck
 		return errors.New("base and bonus proposer reward are deprecated fields and should not be used")
 	}
 

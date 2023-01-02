@@ -19,7 +19,7 @@ message Params {
     (gogoproto.nullable)   = false
   ];
 
-  // Deprecated: The base_proposer_reward fields is deprecated and is no longer used
+  // Deprecated: The base_proposer_reward field is deprecated and is no longer used
   // in the x/distribution module's reward mechanism.
   string base_proposer_reward = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
@@ -28,7 +28,7 @@ message Params {
     deprecated             = true
   ];
 
-  // Deprecated: The bonus_proposer_reward fields is deprecated and is no longer used
+  // Deprecated: The bonus_proposer_reward field is deprecated and is no longer used
   // in the x/distribution module's reward mechanism.
   string bonus_proposer_reward = 3 [
     (cosmos_proto.scalar)  = "cosmos.Dec",

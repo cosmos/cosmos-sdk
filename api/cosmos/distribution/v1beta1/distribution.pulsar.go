@@ -6602,12 +6602,12 @@ type Params struct {
 	unknownFields protoimpl.UnknownFields
 
 	CommunityTax string `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3" json:"community_tax,omitempty"`
-	// Deprecated: The base_proposer_reward fields is deprecated and is no longer used
+	// Deprecated: The base_proposer_reward field is deprecated and is no longer used
 	// in the x/distribution module's reward mechanism.
 	//
 	// Deprecated: Do not use.
 	BaseProposerReward string `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3" json:"base_proposer_reward,omitempty"`
-	// Deprecated: The bonus_proposer_reward fields is deprecated and is no longer used
+	// Deprecated: The bonus_proposer_reward field is deprecated and is no longer used
 	// in the x/distribution module's reward mechanism.
 	//
 	// Deprecated: Do not use.

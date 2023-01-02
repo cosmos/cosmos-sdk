@@ -11,8 +11,8 @@ import (
 // Reset of the deprecated rewards to zero.
 func MigrateJSON(oldState *types.GenesisState) *types.GenesisState {
 	// reset deprecated rewards to zero
-	oldState.Params.BaseProposerReward = sdk.ZeroDec()  //nolint:staticcheck
-	oldState.Params.BonusProposerReward = sdk.ZeroDec() //nolint:staticcheck
+	oldState.Params.BaseProposerReward = sdk.ZeroDec()
+	oldState.Params.BonusProposerReward = sdk.ZeroDec()
 
 	return oldState
 }

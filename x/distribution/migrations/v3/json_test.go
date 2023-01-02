@@ -24,8 +24,8 @@ func TestMigrateJSON(t *testing.T) {
 	distrGenState := types.DefaultGenesisState()
 
 	oldDistrState := distrGenState
-	oldDistrState.Params.BaseProposerReward = sdk.NewDecWithPrec(1, 2)  //nolint:staticcheck
-	oldDistrState.Params.BonusProposerReward = sdk.NewDecWithPrec(4, 2) //nolint:staticcheck
+	oldDistrState.Params.BaseProposerReward = sdk.NewDecWithPrec(1, 2)
+	oldDistrState.Params.BonusProposerReward = sdk.NewDecWithPrec(4, 2)
 
 	migrated := v3.MigrateJSON(oldDistrState)
 	require.Equal(t, migrated, distrGenState)

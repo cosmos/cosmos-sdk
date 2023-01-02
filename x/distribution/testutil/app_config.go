@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"github.com/cosmos/cosmos-sdk/runtime"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
@@ -60,7 +59,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 					genutiltypes.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
-					runtime.ModuleName,
 				},
 			}),
 		},

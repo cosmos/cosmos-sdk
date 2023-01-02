@@ -4,6 +4,12 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Database configuration
+
+Cleveldb, Boltdb and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool 
+
+<!-- TODO: write data base migration tool -->
+
 ### Protobuf
 
 The SDK is in the process of removing all `gogoproto` annotations.

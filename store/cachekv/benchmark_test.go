@@ -5,158 +5,130 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/stretchr/testify/require"
 )
 
-func DoBenchmarkDeepContextStack(b *testing.B, depth int) {
-	begin := []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-	end := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
-	key := storetypes.NewKVStoreKey("test")
-
+func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger())
-	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	cms.LoadLatestVersion()
-	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+	initialStore := cachekv.NewStore(dbadapter.Store{DB: db})
 
-	var stack ContextStack
-	stack.Reset(ctx)
+	nItems := 20
+	for i := 0; i < nItems; i++ {
+		initialStore.Set([]byte(fmt.Sprintf("hello%03d", i)), []byte{0})
+	}
+
+	var stack CacheStack
+	stack.Reset(initialStore)
 
 	for i := 0; i < depth; i++ {
 		stack.Snapshot()
 
-		store := stack.CurrentContext().KVStore(key)
-		store.Set(begin, []byte("value"))
+		store := stack.CurrentStore()
+		store.Set([]byte(fmt.Sprintf("hello%03d", i)), []byte{byte(i)})
 	}
 
-	store := stack.CurrentContext().KVStore(key)
+	store := stack.CurrentStore()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		it := store.Iterator(begin, end)
-		it.Valid()
-		it.Key()
-		it.Value()
-		it.Next()
+		it := store.Iterator(nil, nil)
+		items := make([][]byte, 0, nItems)
+		for ; it.Valid(); it.Next() {
+			items = append(items, it.Key())
+			it.Value()
+		}
 		it.Close()
+		require.Equal(b, nItems, len(items))
 	}
 }
 
-func BenchmarkDeepContextStack1(b *testing.B) {
-	DoBenchmarkDeepContextStack(b, 1)
+func BenchmarkDeepCacheStack1(b *testing.B) {
+	DoBenchmarkDeepCacheStack(b, 1)
 }
 
-func BenchmarkDeepContextStack3(b *testing.B) {
-	DoBenchmarkDeepContextStack(b, 3)
+func BenchmarkDeepCacheStack3(b *testing.B) {
+	DoBenchmarkDeepCacheStack(b, 3)
 }
 
-func BenchmarkDeepContextStack10(b *testing.B) {
-	DoBenchmarkDeepContextStack(b, 10)
+func BenchmarkDeepCacheStack10(b *testing.B) {
+	DoBenchmarkDeepCacheStack(b, 10)
 }
 
-func BenchmarkDeepContextStack13(b *testing.B) {
-	DoBenchmarkDeepContextStack(b, 13)
+func BenchmarkDeepCacheStack13(b *testing.B) {
+	DoBenchmarkDeepCacheStack(b, 13)
 }
 
-// cachedContext is a pair of cache context and its corresponding commit method.
-// They are obtained from the return value of `context.CacheContext()`.
-type cachedContext struct {
-	ctx    sdk.Context
-	commit func()
-}
-
-// ContextStack manages the initial context and a stack of cached contexts,
-// to support the `StateDB.Snapshot` and `StateDB.RevertToSnapshot` methods.
-//
-// Copied from an old version of ethermint
-type ContextStack struct {
+// CacheStack manages a stack of nested cache store to
+// support the evm `StateDB`'s `Snapshot` and `RevertToSnapshot` methods.
+type CacheStack struct {
+	initialStore types.CacheKVStore
 	// Context of the initial state before transaction execution.
 	// It's the context used by `StateDB.CommitedState`.
-	initialCtx     sdk.Context
-	cachedContexts []cachedContext
+	cacheStores []types.CacheKVStore
 }
 
 // CurrentContext returns the top context of cached stack,
 // if the stack is empty, returns the initial context.
-func (cs *ContextStack) CurrentContext() sdk.Context {
-	l := len(cs.cachedContexts)
+func (cs *CacheStack) CurrentStore() types.CacheKVStore {
+	l := len(cs.cacheStores)
 	if l == 0 {
-		return cs.initialCtx
+		return cs.initialStore
 	}
-	return cs.cachedContexts[l-1].ctx
+	return cs.cacheStores[l-1]
 }
 
 // Reset sets the initial context and clear the cache context stack.
-func (cs *ContextStack) Reset(ctx sdk.Context) {
-	cs.initialCtx = ctx
-	if len(cs.cachedContexts) > 0 {
-		cs.cachedContexts = []cachedContext{}
-	}
+func (cs *CacheStack) Reset(initialStore types.CacheKVStore) {
+	cs.initialStore = initialStore
+	cs.cacheStores = nil
 }
 
 // IsEmpty returns true if the cache context stack is empty.
-func (cs *ContextStack) IsEmpty() bool {
-	return len(cs.cachedContexts) == 0
+func (cs *CacheStack) IsEmpty() bool {
+	return len(cs.cacheStores) == 0
 }
 
 // Commit commits all the cached contexts from top to bottom in order and clears the stack by setting an empty slice of cache contexts.
-func (cs *ContextStack) Commit() {
+func (cs *CacheStack) Commit() {
 	// commit in order from top to bottom
-	for i := len(cs.cachedContexts) - 1; i >= 0; i-- {
-		if cs.cachedContexts[i].commit == nil {
-			panic(fmt.Sprintf("commit function at index %d should not be nil", i))
-		} else {
-			cs.cachedContexts[i].commit()
-		}
+	for i := len(cs.cacheStores) - 1; i >= 0; i-- {
+		cs.cacheStores[i].Write()
 	}
-	cs.cachedContexts = []cachedContext{}
+	cs.cacheStores = nil
 }
 
 // CommitToRevision commit the cache after the target revision,
 // to improve efficiency of db operations.
-func (cs *ContextStack) CommitToRevision(target int) error {
-	if target < 0 || target >= len(cs.cachedContexts) {
-		return fmt.Errorf("snapshot index %d out of bound [%d..%d)", target, 0, len(cs.cachedContexts))
+func (cs *CacheStack) CommitToRevision(target int) error {
+	if target < 0 || target >= len(cs.cacheStores) {
+		return fmt.Errorf("snapshot index %d out of bound [%d..%d)", target, 0, len(cs.cacheStores))
 	}
 
 	// commit in order from top to bottom
-	for i := len(cs.cachedContexts) - 1; i > target; i-- {
-		if cs.cachedContexts[i].commit == nil {
-			return fmt.Errorf("commit function at index %d should not be nil", i)
-		}
-		cs.cachedContexts[i].commit()
+	for i := len(cs.cacheStores) - 1; i > target; i-- {
+		cs.cacheStores[i].Write()
 	}
-	cs.cachedContexts = cs.cachedContexts[0 : target+1]
+	cs.cacheStores = cs.cacheStores[0 : target+1]
 
 	return nil
 }
 
 // Snapshot pushes a new cached context to the stack,
 // and returns the index of it.
-func (cs *ContextStack) Snapshot() int {
-	i := len(cs.cachedContexts)
-	ctx, commit := cs.CurrentContext().CacheContext()
-	cs.cachedContexts = append(cs.cachedContexts, cachedContext{ctx: ctx, commit: commit})
-	return i
+func (cs *CacheStack) Snapshot() int {
+	cs.cacheStores = append(cs.cacheStores, cachekv.NewStore(cs.CurrentStore()))
+	return len(cs.cacheStores) - 1
 }
 
 // RevertToSnapshot pops all the cached contexts after the target index (inclusive).
 // the target should be snapshot index returned by `Snapshot`.
 // This function panics if the index is out of bounds.
-func (cs *ContextStack) RevertToSnapshot(target int) {
-	if target < 0 || target >= len(cs.cachedContexts) {
-		panic(fmt.Errorf("snapshot index %d out of bound [%d..%d)", target, 0, len(cs.cachedContexts)))
+func (cs *CacheStack) RevertToSnapshot(target int) {
+	if target < 0 || target >= len(cs.cacheStores) {
+		panic(fmt.Errorf("snapshot index %d out of bound [%d..%d)", target, 0, len(cs.cacheStores)))
 	}
-	cs.cachedContexts = cs.cachedContexts[:target]
-}
-
-// RevertAll discards all the cache contexts.
-func (cs *ContextStack) RevertAll() {
-	if len(cs.cachedContexts) > 0 {
-		cs.RevertToSnapshot(0)
-	}
+	cs.cacheStores = cs.cacheStores[:target]
 }

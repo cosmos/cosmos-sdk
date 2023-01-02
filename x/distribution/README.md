@@ -592,6 +592,8 @@ simd query distribution params
 Example Output:
 
 ```yml
+base_proposer_reward: "0.000000000000000000"
+bonus_proposer_reward: "0.000000000000000000"
 community_tax: "0.020000000000000000"
 withdraw_addr_enabled: true
 ```
@@ -777,6 +779,8 @@ Example Output:
 {
   "params": {
     "communityTax": "20000000000000000",
+    "baseProposerReward": "00000000000000000",
+    "bonusProposerReward": "00000000000000000",
     "withdrawAddrEnabled": true
   }
 }

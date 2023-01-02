@@ -512,12 +512,10 @@ The distribution module contains the following parameters:
 | Key                 | Type         | Example                    |
 | ------------------- | ------------ | -------------------------- |
 | communitytax        | string (dec) | "0.020000000000000000" [0] |
-| baseproposerreward  | string (dec) | "0.010000000000000000" [0] |
-| bonusproposerreward | string (dec) | "0.040000000000000000" [0] |
 | withdrawaddrenabled | bool         | true                       |
 
-* [0] `communitytax`, `baseproposerreward` and `bonusproposerreward` must be
-  positive and their sum cannot exceed 1.00.
+* [0] `communitytax` must be positive and cannot exceed 1.00.
+* `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
 
 ## Client
 
@@ -594,8 +592,6 @@ simd query distribution params
 Example Output:
 
 ```yml
-base_proposer_reward: "0.010000000000000000"
-bonus_proposer_reward: "0.040000000000000000"
 community_tax: "0.020000000000000000"
 withdraw_addr_enabled: true
 ```
@@ -781,8 +777,6 @@ Example Output:
 {
   "params": {
     "communityTax": "20000000000000000",
-    "baseProposerReward": "10000000000000000",
-    "bonusProposerReward": "40000000000000000",
     "withdrawAddrEnabled": true
   }
 }

@@ -30,9 +30,11 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Params defines the set of params for the distribution module.
 type Params struct {
 	CommunityTax github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_tax"`
-	// The base_proposer_reward and bonus_proposer_reward fields are deprecated
-	// and are no longer used in the x/distribution module's reward mechanism.
-	BaseProposerReward  github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_proposer_reward"`    // Deprecated: Do not use.
+	// Deprecated: The base_proposer_reward fields is deprecated and is no longer used
+	// in the x/distribution module's reward mechanism.
+	BaseProposerReward github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"base_proposer_reward"` // Deprecated: Do not use.
+	// Deprecated: The bonus_proposer_reward fields is deprecated and is no longer used
+	// in the x/distribution module's reward mechanism.
 	BonusProposerReward github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"bonus_proposer_reward"` // Deprecated: Do not use.
 	WithdrawAddrEnabled bool                                   `protobuf:"varint,4,opt,name=withdraw_addr_enabled,json=withdrawAddrEnabled,proto3" json:"withdraw_addr_enabled,omitempty"`
 }

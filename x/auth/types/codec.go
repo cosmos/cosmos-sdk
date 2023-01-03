@@ -16,9 +16,9 @@ import (
 // RegisterLegacyAminoCodec registers the account interfaces and concrete types on the
 // provided LegacyAmino codec. These types are used for Amino JSON serialization
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterInterface((*ModuleAccountI)(nil), nil)
+	cdc.RegisterInterface((*sdk.ModuleAccountI)(nil), nil)
 	cdc.RegisterInterface((*GenesisAccount)(nil), nil)
-	cdc.RegisterInterface((*AccountI)(nil), nil)
+	cdc.RegisterInterface((*sdk.AccountI)(nil), nil)
 	cdc.RegisterConcrete(&BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
 	cdc.RegisterConcrete(&ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/auth/Params", nil)
@@ -35,6 +35,13 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterInterface(
 		"cosmos.auth.v1beta1.AccountI",
 		(*AccountI)(nil),
+		&BaseAccount{},
+		&ModuleAccount{},
+	)
+
+	registry.RegisterInterface(
+		"cosmos.auth.v1beta1.AccountI",
+		(*sdk.AccountI)(nil),
 		&BaseAccount{},
 		&ModuleAccount{},
 	)

@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -29,7 +30,7 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	bz := v.Bytes()
 
 	if len(bz) <= maxByteLen {
-		text := strings.ToUpper(hex.EncodeToString(v.Bytes()))
+		text := toHex(bz)
 		return []Screen{{Text: text}}, nil
 	}
 
@@ -41,7 +42,7 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	}
 	h := hasher.Sum(nil)
 
-	text := fmt.Sprintf("%s%s", hashPrefix, strings.ToUpper(hex.EncodeToString(h)))
+	text := fmt.Sprintf("%s%s", hashPrefix, toHex(h))
 	return []Screen{{Text: text}}, nil
 }
 
@@ -57,10 +58,25 @@ func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protore
 		return nilValue, fmt.Errorf("cannot parse bytes hash")
 	}
 
-	data, err := hex.DecodeString(formatted)
+	// Remove all spaces between every 4th char, then we can decode hex.
+	data, err := hex.DecodeString(strings.ReplaceAll(formatted, " ", ""))
 	if err != nil {
 		return nilValue, err
 	}
 
 	return protoreflect.ValueOfBytes(data), nil
+}
+
+// toHex converts bytes to hex, and inserts a space every 4th character.
+func toHex(bz []byte) string {
+	text := strings.ToUpper(hex.EncodeToString(bz))
+
+	var buffer bytes.Buffer
+	for i, r := range text {
+		buffer.WriteRune(r)
+		if i < len(text)-1 && i%4 == 3 {
+			buffer.WriteRune(' ')
+		}
+	}
+	return buffer.String()
 }

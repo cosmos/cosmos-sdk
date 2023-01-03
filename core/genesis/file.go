@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/core/appmodule"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -182,6 +183,41 @@ func (f *FileGenesisSource) ReadRawJSON() (rawBz json.RawMessage, rerr error) {
 	return f.moduleRootJson, nil
 }
 
+// SourceFromFile opens the source field reading from the given parameters,
+// and returns appmodule.GenesisSource.
+// It will try to open the field in order following by:
+// <sourceDir>/<module>/<field>.json
+// app_state.<module>.<field> key from moduleRootJson
+func SourceFromFile(sourceDir, moduleName string, moduleRootJson json.RawMessage) (appmodule.GenesisSource, error) {
+	var fieldState map[string]json.RawMessage
+	err := json.Unmarshal(moduleRootJson, &fieldState)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal fields from module state %s, err: %w", moduleName, err)
+	}
+
+	return func(field string) (io.ReadCloser, error) {
+		// try reading module state from <sourceDir>/<module>/<field>.json
+		fName := fmt.Sprintf("%s.json", field)
+		fPath := filepath.Join(sourceDir, moduleName)
+		fp, err := os.Open(filepath.Clean(filepath.Join(fPath, fName)))
+		if err == nil {
+			return fp, nil
+		}
+
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("unexpected error: %w", err)
+		}
+
+		fieldRawData := fieldState[field]
+		if fieldRawData == nil {
+			return nil, fmt.Errorf("failed to retrieve module field %s/%s from genesis.json", moduleName, field)
+		}
+
+		// wrap raw field data to a ReadCloser
+		return io.NopCloser(bytes.NewReader(fieldRawData)), nil
+	}, nil
+}
+
 type FileGenesisTarget struct {
 	targetDir  string
 	moduleName string
@@ -293,4 +329,18 @@ func (f *FileGenesisTarget) WriteRawJSON(rawBz json.RawMessage) (rerr error) {
 // WriteMessage is an unsupported op.
 func (f *FileGenesisTarget) WriteMessage(proto.Message) error {
 	return errors.New("unsupported op")
+}
+
+// TargetToFile create a file for writing the genesus state to the file.
+// It will try to create a file <targetDir>/<module>/<field>.json
+func TargetToFile(targetDir, moduleName string) appmodule.GenesisTarget {
+	return func(field string) (io.WriteCloser, error) {
+		fPath := filepath.Join(targetDir, moduleName)
+		if err := os.MkdirAll(fPath, dirCreateMode); err != nil {
+			return nil, fmt.Errorf("failed to create target directory %s: %w", fPath, err)
+		}
+
+		fileName := fmt.Sprintf("%s.json", field)
+		return os.OpenFile(filepath.Clean(filepath.Join(targetDir, moduleName, fileName)), fileOpenflag, flieOpenMode)
+	}
 }

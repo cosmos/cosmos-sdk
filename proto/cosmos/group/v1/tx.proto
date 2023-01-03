@@ -304,9 +304,13 @@ message MsgSubmitProposal {
   Exec exec = 5;
 
   // title is the title of the proposal.
+  //
+  // since: cosmos-sdk 0.47
   string title = 6;
 
   // summary is the summary of the proposal.
+  //
+  // since: cosmos-sdk 0.47
   string summary = 7;
 }
 

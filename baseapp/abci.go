@@ -248,10 +248,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
+
+	ctx := app.getContextForTx(runTxPrepareProposal, []byte{}).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithProposer(req.ProposerAddress)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -289,13 +293,11 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.processProposalState.ctx.
-		WithVoteInfos(app.voteInfos).
+	ctx := app.getContextForTx(runTxProcessProposal, []byte{}).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+		WithProposer(req.ProposerAddress)
 
 	defer func() {
 		if err := recover(); err != nil {

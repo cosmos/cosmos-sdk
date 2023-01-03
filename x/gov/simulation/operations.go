@@ -401,7 +401,7 @@ func SimulateMsgCancelProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount := accs[0]
 		proposal := randomProposal(r, k, ctx)
-		if proposal.SubmitTime == nil {
+		if proposal == nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "no proposals found"), nil, nil
 		}
 
@@ -489,10 +489,13 @@ func randomDeposit(
 }
 
 // randomProposal
-func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) v1.Proposal {
+func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposal {
 	proposals := k.GetProposals(ctx)
+	if len(proposals) <= 0 {
+		return nil
+	}
 	randomIndex := r.Intn(len(proposals))
-	return *proposals[randomIndex]
+	return proposals[randomIndex]
 }
 
 // Pick a random proposal ID between the initial proposal ID

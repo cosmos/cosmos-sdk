@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -72,12 +72,12 @@ func TestListenKVStoreSet(t *testing.T) {
 	testCases := []struct {
 		key         []byte
 		value       []byte
-		expectedOut types.StoreKVPair
+		expectedOut *types.StoreKVPair
 	}{
 		{
 			key:   kvPairs[0].Key,
 			value: kvPairs[0].Value,
-			expectedOut: types.StoreKVPair{
+			expectedOut: &types.StoreKVPair{
 				Key:      kvPairs[0].Key,
 				Value:    kvPairs[0].Value,
 				StoreKey: testStoreKey.Name(),
@@ -87,7 +87,7 @@ func TestListenKVStoreSet(t *testing.T) {
 		{
 			key:   kvPairs[1].Key,
 			value: kvPairs[1].Value,
-			expectedOut: types.StoreKVPair{
+			expectedOut: &types.StoreKVPair{
 				Key:      kvPairs[1].Key,
 				Value:    kvPairs[1].Value,
 				StoreKey: testStoreKey.Name(),
@@ -97,7 +97,7 @@ func TestListenKVStoreSet(t *testing.T) {
 		{
 			key:   kvPairs[2].Key,
 			value: kvPairs[2].Value,
-			expectedOut: types.StoreKVPair{
+			expectedOut: &types.StoreKVPair{
 				Key:      kvPairs[2].Key,
 				Value:    kvPairs[2].Value,
 				StoreKey: testStoreKey.Name(),
@@ -125,11 +125,11 @@ func TestListenKVStoreSet(t *testing.T) {
 func TestListenKVStoreDelete(t *testing.T) {
 	testCases := []struct {
 		key         []byte
-		expectedOut types.StoreKVPair
+		expectedOut *types.StoreKVPair
 	}{
 		{
 			key: kvPairs[0].Key,
-			expectedOut: types.StoreKVPair{
+			expectedOut: &types.StoreKVPair{
 				Key:      kvPairs[0].Key,
 				Value:    nil,
 				StoreKey: testStoreKey.Name(),

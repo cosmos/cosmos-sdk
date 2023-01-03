@@ -3,21 +3,22 @@ package baseapp
 import (
 	"errors"
 	"fmt"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"sort"
 	"strings"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	storemetrics "github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -163,7 +164,7 @@ func NewBaseApp(
 		logger:           logger,
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db),
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -736,7 +737,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate)
 			if err != nil {
-				return gInfo, nil, nil, priority, err
+				return gInfo, nil, anteEvents, priority, err
 			}
 
 			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)

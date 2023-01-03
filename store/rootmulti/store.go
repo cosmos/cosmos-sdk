@@ -9,12 +9,12 @@ import (
 	"strings"
 	"sync"
 
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/mem"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/pruning"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
@@ -37,8 +38,8 @@ const (
 
 const iavlDisablefastNodeDefault = false
 
-// keysForStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
-func keysForStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
+// keysFromStoreKeyMap returns a slice of keys for the provided map lexically sorted by StoreKey.Name()
+func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 	keys := make([]types.StoreKey, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
@@ -74,6 +75,8 @@ type Store struct {
 	interBlockCache types.MultiStorePersistentCache
 
 	listeners map[types.StoreKey]*types.MemoryListener
+
+	metrics metrics.StoreMetrics
 }
 
 var (
@@ -85,7 +88,7 @@ var (
 // store will be created with a PruneNothing pruning strategy by default. After
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
-func NewStore(db dbm.DB, logger log.Logger) *Store {
+func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
 	return &Store{
 		db:                  db,
 		logger:              logger,
@@ -97,6 +100,7 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		listeners:           make(map[types.StoreKey]*types.MemoryListener),
 		removalMap:          make(map[types.StoreKey]bool),
 		pruningManager:      pruning.NewManager(db, logger),
+		metrics:             metricGatherer,
 	}
 }
 
@@ -110,6 +114,11 @@ func (rs *Store) GetPruning() pruningtypes.PruningOptions {
 // LoadLatestVersion performs a no-op as the stores aren't mounted yet.
 func (rs *Store) SetPruning(pruningOpts pruningtypes.PruningOptions) {
 	rs.pruningManager.SetOptions(pruningOpts)
+}
+
+// SetMetrics sets the metrics gatherer for the store package
+func (rs *Store) SetMetrics(metrics metrics.StoreMetrics) {
+	rs.metrics = metrics
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
@@ -230,6 +239,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 	for key := range rs.storesParams {
 		storesKeys = append(storesKeys, key)
 	}
+
 	if upgrades != nil {
 		// deterministic iteration order for upgrades
 		// (as the underlying store may change and
@@ -757,7 +767,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 		name string
 	}
 	stores := []namedStore{}
-	keys := keysForStoreKeyMap(rs.stores)
+	keys := keysFromStoreKeyMap(rs.stores)
 	for _, key := range keys {
 		switch store := rs.GetCommitKVStore(key).(type) {
 		case *iavl.Store:
@@ -800,7 +810,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 
 			for {
 				node, err := exporter.Next()
-				if err == iavltree.ExportDone {
+				if err == iavltree.ErrorExportDone {
 					break
 				} else if err != nil {
 					return err
@@ -933,9 +943,9 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		var err error
 
 		if params.initialVersion == 0 {
-			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode)
+			store, err = iavl.LoadStore(db, rs.logger, key, id, rs.lazyLoading, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics)
 		} else {
-			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode)
+			store, err = iavl.LoadStoreWithInitialVersion(db, rs.logger, key, id, rs.lazyLoading, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics)
 		}
 
 		if err != nil {
@@ -975,7 +985,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 }
 
 func (rs *Store) buildCommitInfo(version int64) *types.CommitInfo {
-	keys := keysForStoreKeyMap(rs.stores)
+	keys := keysFromStoreKeyMap(rs.stores)
 	storeInfos := []types.StoreInfo{}
 	for _, key := range keys {
 		store := rs.stores[key]
@@ -1062,8 +1072,9 @@ func GetLatestVersion(db dbm.DB) int64 {
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
-
-	for key, store := range storeMap {
+	storeKeys := keysFromStoreKeyMap(storeMap)
+	for _, key := range storeKeys {
+		store := storeMap[key]
 		last := store.LastCommitID()
 
 		// If a commit event execution is interrupted, a new iavl store's version will be larger than the rootmulti's metadata, when the block is replayed, we should avoid committing that iavl store again.

@@ -13,7 +13,7 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeKey storetypes.StoreKey,
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var acc types.AccountI
+		var acc sdk.AccountI
 		if err := cdc.UnmarshalInterface(iterator.Value(), &acc); err != nil {
 			return err
 		}

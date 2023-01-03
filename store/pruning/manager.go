@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"sync"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/pruning/types"
 )

@@ -119,8 +119,8 @@ func testExec(t *testing.T, args ...string) *testClientConn {
 		out:        &bytes.Buffer{},
 	}
 	b := &Builder{
-		GetClientConn: func(ctx context.Context) grpc.ClientConnInterface {
-			return conn
+		GetClientConn: func(*cobra.Command) (grpc.ClientConnInterface, error) {
+			return conn, nil
 		},
 	}
 	cmd, err := b.BuildModuleQueryCommand("test", testCmdDesc)
@@ -245,7 +245,7 @@ func TestNotFoundErrors(t *testing.T) {
 		Service:           testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "bar"}},
 	})
-	assert.ErrorContains(t, err, "rpc method bar not found")
+	assert.ErrorContains(t, err, "rpc method \"bar\" not found")
 
 	// bad positional field
 	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{

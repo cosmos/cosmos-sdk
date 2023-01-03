@@ -21,7 +21,7 @@ func TestOnWrite(t *testing.T) {
 	// test set
 	listener.OnWrite(testStoreKey, testKey, testValue, false)
 	outputKVPair := listener.PopStateCache()[0]
-	expectedOutputKVPair := StoreKVPair{
+	expectedOutputKVPair := &StoreKVPair{
 		Key:      testKey,
 		Value:    testValue,
 		StoreKey: testStoreKey.Name(),
@@ -32,7 +32,7 @@ func TestOnWrite(t *testing.T) {
 	// test delete
 	listener.OnWrite(testStoreKey, testKey, testValue, true)
 	outputKVPair = listener.PopStateCache()[0]
-	expectedOutputKVPair = StoreKVPair{
+	expectedOutputKVPair = &StoreKVPair{
 		Key:      testKey,
 		Value:    testValue,
 		StoreKey: testStoreKey.Name(),

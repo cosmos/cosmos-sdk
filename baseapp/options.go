@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
@@ -278,4 +279,13 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 	}
 
 	app.prepareProposal = handler
+}
+
+// SetStoreMetrics sets the prepare proposal function for the BaseApp.
+func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
+	if app.sealed {
+		panic("SetStoreMetrics() on sealed BaseApp")
+	}
+
+	app.cms.SetMetrics(gatherer)
 }

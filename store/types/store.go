@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"io"
 
+	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/internal/kv"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 )
@@ -199,6 +200,9 @@ type CommitMultiStore interface {
 
 	// PopStateCache returns the accumulated state change messages from MemoryListener
 	PopStateCache() []*StoreKVPair
+
+	// SetMetrics sets the metrics for the KVStore
+	SetMetrics(metrics metrics.StoreMetrics)
 }
 
 //---------subsp-------------------------------

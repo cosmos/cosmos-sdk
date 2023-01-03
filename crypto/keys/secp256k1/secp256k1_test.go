@@ -134,7 +134,7 @@ func TestGenPrivKeyFromSecret(t *testing.T) {
 			gotPrivKey := secp256k1.GenPrivKeyFromSecret(tt.secret)
 			require.NotNil(t, gotPrivKey)
 			// interpret as a big.Int and make sure it is a valid field element:
-			fe := new(big.Int).SetBytes(gotPrivKey.Key[:])
+			fe := new(big.Int).SetBytes(gotPrivKey.Key)
 			require.True(t, fe.Cmp(N) < 0)
 			require.True(t, fe.Sign() > 0)
 		})

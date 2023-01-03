@@ -3,10 +3,11 @@ package cli
 import (
 	"strconv"
 
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/spf13/cobra"
 )
 
 // QueryCmd returns the cli query commands for the group module.
@@ -434,7 +435,7 @@ func QueryVotesByProposalCmd() *cobra.Command {
 	return cmd
 }
 
-// QueryVotesByProposalCmd creates a CLI command for Query/TallyResult.
+// QueryTallyResultCmd creates a CLI command for Query/TallyResult.
 func QueryTallyResultCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tally-result [proposal-id]",

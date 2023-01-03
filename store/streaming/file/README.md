@@ -1,6 +1,6 @@
 # File Streaming Service
 
-This pkg contains an implementation of the [StreamingService](../../../baseapp/streaming.go) that writes
+This pkg contains an implementation of the [StreamingService](../../types/streaming.go) that writes
 the data stream out to files on the local filesystem. This process is performed synchronously with the message processing
 of the state machine.
 

@@ -4,6 +4,12 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Database configuration
+
+Cleveldb, Boltdb and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool 
+
+<!-- TODO: write data base migration tool -->
+
 ### Protobuf
 
 The SDK is in the process of removing all `gogoproto` annotations.
@@ -110,6 +116,10 @@ ctx.EventManager().EmitEvent(
 	),
 )
 ```
+
+The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
+In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
+`Baseapp` only emits that event if the module have not already done so.
 
 #### `x/gov`
 

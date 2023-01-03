@@ -147,6 +147,7 @@ func init() {
 		))
 }
 
+//nolint:revive
 type ParamsInputs struct {
 	depinject.In
 
@@ -156,6 +157,7 @@ type ParamsInputs struct {
 	LegacyAmino       *codec.LegacyAmino
 }
 
+//nolint:revive
 type ParamsOutputs struct {
 	depinject.Out
 
@@ -186,7 +188,6 @@ func ProvideSubspace(in SubspaceInputs) types.Subspace {
 	kt, exists := in.KeyTables[moduleName]
 	if !exists {
 		return in.Keeper.Subspace(moduleName)
-	} else {
-		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 	}
+	return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 }

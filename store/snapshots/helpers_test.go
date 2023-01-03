@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
+	db "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
-	db "github.com/tendermint/tm-db"
 
 	sdkerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
@@ -258,7 +258,7 @@ func (s *extSnapshotter) SupportedFormats() []uint32 {
 
 func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshottypes.ExtensionPayloadWriter) error {
 	for _, i := range s.state {
-		if err := payloadWriter(types.Uint64ToBigEndian(uint64(i))); err != nil {
+		if err := payloadWriter(types.Uint64ToBigEndian(i)); err != nil {
 			return err
 		}
 	}

@@ -1,4 +1,5 @@
-# Inter-block cache
+# Inter-block Cache
+
 - [Inter-block cache](#inter-block-cache)
   - [Synopsis](#synopsis)
   - [Overview and basic concepts](#overview-and-basic-concepts)
@@ -28,15 +29,13 @@ The inter-block cache is an in-memory cache storing (in-most-cases) immutable st
 
 ### Motivation
 
-The goal of the inter-block cache is to allow SDK modules to have fast access to data that it is typically queried during the execution of every block. This is data that do not change often, e.g., configuration parameters. The inter-block cache wraps each `CommitKVStore` of a multi store such as `rootmulti` with a fixed size, write-through cache. Caches are not cleared after a block is committed, as opposed to other caching layers such as `cachekv`.
+The goal of the inter-block cache is to allow SDK modules to have fast access to data that it is typically queried during the execution of every block. This is data that do not change often, e.g. module parameters. The inter-block cache wraps each `CommitKVStore` of a multi store such as `rootmulti` with a fixed size, write-through cache. Caches are not cleared after a block is committed, as opposed to other caching layers such as `cachekv`.
 
 ### Definitions
 
-`Store key` uniquely identifies a store.
-
-`KVCache` is a `CommitKVStore` wrapped with a cache.
-
-`Cache manager` is a key component of the inter-block cache responsible for maintaining a map from `store keys` to `KVCaches`.
+- `Store key` uniquely identifies a store.
+- `KVCache` is a `CommitKVStore` wrapped with a cache.
+- `Cache manager` is a key component of the inter-block cache responsible for maintaining a map from `store keys` to `KVCaches`.
 
 ## System model and properties
 

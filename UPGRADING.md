@@ -19,8 +19,10 @@ The SDK is in the process of removing all `gogoproto` annotations.
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
 [Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
 
-
 ### Types
+
+#### Store
+
 References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate  store/types, hence the `types/store.go` file is no longer needed and has been removed.
 
 ### SimApp
@@ -29,7 +31,6 @@ References to `types/store.go` which contained aliases for store types have been
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
-
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 

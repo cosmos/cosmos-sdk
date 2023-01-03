@@ -491,8 +491,8 @@ type StoreWithInitialVersion interface {
 
 // NewTransientStoreKeys constructs a new map of TransientStoreKey's
 // Must return pointers according to the ocap principle
-// The function will panic if there is a potential conflict in names (see `assertNoCommonPrefix`
-// function for more details).
+// The function will panic if there is a potential conflict in names
+// see `assertNoCommonPrefix` function for more details.
 func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 	assertNoCommonPrefix(names)
 	keys := make(map[string]*TransientStoreKey)

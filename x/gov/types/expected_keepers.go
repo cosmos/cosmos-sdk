@@ -2,8 +2,8 @@ package types
 
 import (
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -34,13 +34,13 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
 
 	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, name string) sdk.ModuleAccountI
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	SetModuleAccount(sdk.Context, types.ModuleAccountI)
+	SetModuleAccount(sdk.Context, sdk.ModuleAccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

@@ -503,6 +503,20 @@ func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
 	return keys
 }
 
+// NewMemoryStoreKeys constructs a new map matching store key names to their
+// respective MemoryStoreKey references.
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
+	assertNoCommonPrefix(names)
+	keys := make(map[string]*MemoryStoreKey)
+	for _, n := range names {
+		keys[n] = NewMemoryStoreKey(n)
+	}
+
+	return keys
+}
+
 // DiffKVStores compares two KVstores and returns all the key/value pairs
 // that differ from one another. It also skips value comparison for a set of provided prefixes.
 func DiffKVStores(a KVStore, b KVStore, prefixesToSkip [][]byte) (kvAs, kvBs []kv.Pair) {

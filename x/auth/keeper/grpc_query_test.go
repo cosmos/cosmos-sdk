@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccounts() {
 			func(res *types.QueryAccountsResponse) {
 				addresses := make([]sdk.AccAddress, len(res.Accounts))
 				for i, acc := range res.Accounts {
-					var account types.AccountI
+					var account sdk.AccountI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 					addresses[i] = account.GetAddress()
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryAccount() {
 			},
 			true,
 			func(res *types.QueryAccountResponse) {
-				var newAccount types.AccountI
+				var newAccount sdk.AccountI
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &newAccount)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(newAccount)
@@ -280,11 +280,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			func(res *types.QueryModuleAccountsResponse) {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
-					var account types.AccountI
+					var account sdk.AccountI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
-					moduleAccount, ok := account.(types.ModuleAccountI)
+					moduleAccount, ok := account.(sdk.ModuleAccountI)
 
 					suite.Require().True(ok)
 					if moduleAccount.GetName() == "mint" {
@@ -303,11 +303,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 			func(res *types.QueryModuleAccountsResponse) {
 				mintModuleExists := false
 				for _, acc := range res.Accounts {
-					var account types.AccountI
+					var account sdk.AccountI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(acc, &account)
 					suite.Require().NoError(err)
 
-					moduleAccount, ok := account.(types.ModuleAccountI)
+					moduleAccount, ok := account.(sdk.ModuleAccountI)
 
 					suite.Require().True(ok)
 					if moduleAccount.GetName() == "falseCase" {
@@ -332,10 +332,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccounts() {
 				// Make sure output is sorted alphabetically.
 				var moduleNames []string
 				for _, any := range res.Accounts {
-					var account types.AccountI
+					var account sdk.AccountI
 					err := suite.encCfg.InterfaceRegistry.UnpackAny(any, &account)
 					suite.Require().NoError(err)
-					moduleAccount, ok := account.(types.ModuleAccountI)
+					moduleAccount, ok := account.(sdk.ModuleAccountI)
 					suite.Require().True(ok)
 					moduleNames = append(moduleNames, moduleAccount.GetName())
 				}
@@ -366,11 +366,11 @@ func (suite *KeeperTestSuite) TestGRPCQueryModuleAccountByName() {
 			},
 			true,
 			func(res *types.QueryModuleAccountByNameResponse) {
-				var account types.AccountI
+				var account sdk.AccountI
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Account, &account)
 				suite.Require().NoError(err)
 
-				moduleAccount, ok := account.(types.ModuleAccountI)
+				moduleAccount, ok := account.(sdk.ModuleAccountI)
 				suite.Require().True(ok)
 				suite.Require().Equal(moduleAccount.GetName(), "mint")
 			},

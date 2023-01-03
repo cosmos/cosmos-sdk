@@ -10,8 +10,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/auth/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -39,10 +38,10 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // GetParams mocks base method.
-func (m *MockStakingKeeper) GetParams(ctx types0.Context) types2.Params {
+func (m *MockStakingKeeper) GetParams(ctx types0.Context) types1.Params {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParams", ctx)
-	ret0, _ := ret[0].(types2.Params)
+	ret0, _ := ret[0].(types1.Params)
 	return ret0
 }
 
@@ -53,10 +52,10 @@ func (mr *MockStakingKeeperMockRecorder) GetParams(ctx interface{}) *gomock.Call
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0.ConsAddress) types2.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types0.Context, arg1 types0.ConsAddress) types1.ValidatorI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types2.ValidatorI)
+	ret0, _ := ret[0].(types1.ValidatorI)
 	return ret0
 }
 
@@ -183,7 +182,7 @@ func (mr *MockSlashingKeeperMockRecorder) SlashFractionDoubleSign(arg0 interface
 }
 
 // SlashWithInfractionReason mocks base method.
-func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 types0.Context, arg1 types0.ConsAddress, arg2 types0.Dec, arg3, arg4 int64, arg5 types2.Infraction) {
+func (m *MockSlashingKeeper) SlashWithInfractionReason(arg0 types0.Context, arg1 types0.ConsAddress, arg2 types0.Dec, arg3, arg4 int64, arg5 types1.Infraction) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
 }
@@ -230,7 +229,7 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx types0.Context, acc types1.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx types0.Context, acc types0.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }

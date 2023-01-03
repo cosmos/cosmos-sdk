@@ -15,7 +15,6 @@ import "amino/amino.proto";
 // Member represents a group member with an account address,
 // non-zero weight, metadata and added_at timestamp.
 message Member {
-
   // address is the member's account address.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -34,7 +33,6 @@ message Member {
 // Contrary to `Member`, it doesn't have any `added_at` field
 // since this field cannot be set as part of requests.
 message MemberRequest {
-
   // address is the member's account address.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
@@ -126,7 +124,6 @@ enum VoteOption {
 
 // GroupInfo represents the high-level on-chain information for a group.
 message GroupInfo {
-
   // id is the unique ID of the group.
   uint64 id = 1;
 
@@ -152,7 +149,6 @@ message GroupInfo {
 
 // GroupMember represents the relationship between a group and a member.
 message GroupMember {
-
   // group_id is the unique ID of the group.
   uint64 group_id = 1;
 
@@ -244,6 +240,12 @@ message Proposal {
 
   // messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
   repeated google.protobuf.Any messages = 12;
+
+  // title is the title of the proposal
+  string title = 13;
+
+  // summary is a short summary of the proposal
+  string summary = 14;
 }
 
 // ProposalStatus defines proposal statuses.
@@ -309,7 +311,6 @@ message TallyResult {
 
 // Vote represents a vote for a proposal.
 message Vote {
-
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
 

@@ -386,7 +386,7 @@ jobs:
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
       - name: sonarcloud
         if: |
-          env.GIT_DIFF && 
+          env.GIT_DIFF || 
           ${{ !github.event.pull_request.draft }}
         uses: SonarSource/sonarcloud-github-action@master
         env:

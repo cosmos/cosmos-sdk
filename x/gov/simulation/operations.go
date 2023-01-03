@@ -491,7 +491,7 @@ func randomDeposit(
 // randomProposal
 func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposal {
 	proposals := k.GetProposals(ctx)
-	if len(proposals) <= 0 {
+	if len(proposals) == 0 {
 		return nil
 	}
 	randomIndex := r.Intn(len(proposals))

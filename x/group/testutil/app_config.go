@@ -5,16 +5,16 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/authz"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/authz"          // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/group/module"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -47,22 +47,12 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				BeginBlockers: []string{
 					minttypes.ModuleName,
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
-					group.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
-					minttypes.ModuleName,
 					genutiltypes.ModuleName,
 					group.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,

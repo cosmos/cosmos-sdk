@@ -28,10 +28,10 @@ func (ak AccountKeeper) AccountAddressByID(c context.Context, req *types.QueryAc
 		return nil, status.Error(codes.InvalidArgument, "requesting with id isn't supported, try to request using account-id")
 	}
 
-	accId := req.AccountId
+	accID := req.AccountId
 
 	ctx := sdk.UnwrapSDKContext(c)
-	address := ak.GetAccountAddressByID(ctx, accId)
+	address := ak.GetAccountAddressByID(ctx, accID)
 	if len(address) == 0 {
 		return nil, status.Errorf(codes.NotFound, "account address not found with account number %d", req.Id)
 	}

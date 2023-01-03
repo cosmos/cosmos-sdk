@@ -13,15 +13,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func NewIntegrationTestSuite(cfg network.Config, keeper *keeper.Keeper, ctx sdk.Context) *IntegrationTestSuite {
-	return &IntegrationTestSuite{
+func NewE2ETestSuite(cfg network.Config, keeper *keeper.Keeper, ctx sdk.Context) *E2ETestSuite {
+	return &E2ETestSuite{
 		cfg:           cfg,
 		upgradeKeeper: keeper,
 		ctx:           ctx,
 	}
 }
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	upgradeKeeper *keeper.Keeper
@@ -30,20 +30,20 @@ type IntegrationTestSuite struct {
 	ctx           sdk.Context
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestModuleVersionsCLI() {
+func (s *E2ETestSuite) TestModuleVersionsCLI() {
 	testCases := []struct {
 		msg     string
 		req     types.QueryModuleVersionsRequest

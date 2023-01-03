@@ -106,6 +106,8 @@ Where proposal.json contains:
   ],
   "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
   "deposit": "10stake"
+  "title: "My proposal"
+  "summary": "A short summary of my proposal"
 }
 `,
 				version.AppName,
@@ -117,12 +119,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

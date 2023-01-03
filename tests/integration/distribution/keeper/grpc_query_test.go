@@ -40,8 +40,13 @@ type KeeperTestSuite struct {
 	msgServer         types.MsgServer
 }
 
+func TestDistributionTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
+
 func (suite *KeeperTestSuite) SetupTest() {
-	app, err := simtestutil.Setup(testutil.AppConfig,
+	app, err := simtestutil.Setup(
+		testutil.AppConfig,
 		&suite.interfaceRegistry,
 		&suite.bankKeeper,
 		&suite.distrKeeper,
@@ -90,8 +95,8 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 			func() {
 				params = types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(3, 1),
-					BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
-					BonusProposerReward: sdk.NewDecWithPrec(1, 1),
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.ZeroDec(),
 					WithdrawAddrEnabled: true,
 				}
 
@@ -112,7 +117,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 			if testCase.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(paramsRes)
-				suite.Require().Equal(paramsRes.Params, expParams)
+				suite.Require().Equal(expParams, paramsRes.Params)
 			} else {
 				suite.Require().Error(err)
 			}
@@ -671,8 +676,4 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 			}
 		})
 	}
-}
-
-func TestDistributionTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
 }

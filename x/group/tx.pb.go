@@ -976,8 +976,12 @@ type MsgSubmitProposal struct {
 	// If so, proposers signatures are considered as Yes votes.
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1.Exec" json:"exec,omitempty"`
 	// title is the title of the proposal.
+	//
+	// Since: cosmos-sdk 0.47
 	Title string `protobuf:"bytes,6,opt,name=title,proto3" json:"title,omitempty"`
 	// summary is the summary of the proposal.
+	//
+	// Since: cosmos-sdk 0.47
 	Summary string `protobuf:"bytes,7,opt,name=summary,proto3" json:"summary,omitempty"`
 }
 

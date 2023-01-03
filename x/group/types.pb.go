@@ -726,8 +726,12 @@ type Proposal struct {
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
 	Messages []*types.Any `protobuf:"bytes,12,rep,name=messages,proto3" json:"messages,omitempty"`
 	// title is the title of the proposal
+	//
+	// Since: cosmos-sdk 0.47
 	Title string `protobuf:"bytes,13,opt,name=title,proto3" json:"title,omitempty"`
 	// summary is a short summary of the proposal
+	//
+	// Since: cosmos-sdk 0.47
 	Summary string `protobuf:"bytes,14,opt,name=summary,proto3" json:"summary,omitempty"`
 }
 

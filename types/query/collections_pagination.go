@@ -2,8 +2,9 @@ package query
 
 import (
 	"context"
-	"cosmossdk.io/collections"
 	"fmt"
+
+	"cosmossdk.io/collections"
 )
 
 // Collection defines the minimum required API of a collection
@@ -27,7 +28,6 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 	ctx context.Context, coll C, pageReq *PageRequest,
 	predicateFunc func(key K, value V) (include bool),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
-
 	if pageReq == nil {
 		pageReq = &PageRequest{}
 	}
@@ -57,7 +57,8 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 // collFilteredPaginateNoKey applies the provided pagination on the collection when the starting key is not set.
 // If predicateFunc is nil no filtering is applied.
 func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](ctx context.Context, coll C, reverse bool, offset, limit uint64, countTotal bool, predicateFunc func(K, V) bool) (
-	[]collections.KeyValue[K, V], *PageResponse, error) {
+	[]collections.KeyValue[K, V], *PageResponse, error,
+) {
 	iterator, err := getCollIter[K, V](ctx, coll, nil, reverse)
 	if err != nil {
 		return nil, nil, err
@@ -125,7 +126,8 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](ctx context.Context
 func advanceIter[I interface {
 	Next()
 	Valid() bool
-}](iter I, offset uint64) bool {
+}](iter I, offset uint64,
+) bool {
 	for i := uint64(0); i < offset; i++ {
 		if !iter.Valid() {
 			return false
@@ -140,7 +142,8 @@ func advanceIter[I interface {
 func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 	ctx context.Context, coll C,
 	key []byte, reverse bool, limit uint64,
-	predicateFunc func(K, V) bool) ([]collections.KeyValue[K, V], *PageResponse, error) {
+	predicateFunc func(K, V) bool,
+) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, key, reverse)
 	if err != nil {
 		return nil, nil, err

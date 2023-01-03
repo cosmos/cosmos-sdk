@@ -2,11 +2,12 @@ package query
 
 import (
 	"context"
+	"testing"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCollectionPagination(t *testing.T) {

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package cosmos.circuit.v1;
 
+// option go_package = "github.com/cosmos/cosmos-sdk/x/circuit/types"; // uncomment when module is created
+
 import "cosmos/msg/v1/msg.proto";
 
 // Msg defines the crisis Msg service.

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.crisis.v1;
+package cosmos.circuit.v1;
 
 import "cosmos/msg/v1/msg.proto";
 

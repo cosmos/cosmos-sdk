@@ -257,6 +257,7 @@ Examples:
 
 * Bytes of length shorter or equal to 32 are rendered in hexadecimal, all capital letters, without the `0x` prefix.
 * Bytes of length greater than 32 are hashed using SHA256. The rendered text is `SHA-256=`, followed by the 32-byte hash, in hexadecimal, all capital letters, without the `0x` prefix.
+* The hexadecimal string is finally separated into groups of 4 digits, with a space `' '` as separator. If the bytes length is odd, the 2 remaining hexadecimal characters are at the end.
 
 Note: Data longer than 32 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertability](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.
 
@@ -265,8 +266,9 @@ Note: Data longer than 32 bytes are not rendered in a way that can be inverted. 
 Inputs are displayed as byte arrays.
 
 * `[0]`: `00`
-* `[0,1,2,..,31]`: `000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F` 
-* `[0,1,2,..,32]`: `SHA-256=5D8FCFEFA9AEEB711FB8ED1E4B7D5C8A9BAFA46E8E76E68AA18ADCE5A10DF6AB`
+* `[0,1,2]`: `0001 02`
+* `[0,1,2,..,31]`: `0001 0203 0405 0607 0809 0A0B 0C0D 0E0F 1011 1213 1415 1617 1819 1A1B 1C1D 1E1F` 
+* `[0,1,2,..,32]`: `SHA-256=5D8F CFEF A9AE EB71 1FB8 ED1E 4B7D 5C8A 9BAF A46E 8E76 E68A A18A DCE5 A10D F6AB`
 
 ### address bytes
 

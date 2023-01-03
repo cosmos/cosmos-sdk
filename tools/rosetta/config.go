@@ -36,6 +36,7 @@ const (
 	DefaultEnableFeeSuggestion = false
 	// DenomToSuggest defines the default denom for fee suggestion
 	DenomToSuggest = "uatom"
+
 	// DefaultPrices defines the default list of prices to suggest
 	DefaultPrices = "1uatom,1stake"
 )

@@ -243,12 +243,12 @@ message Proposal {
 
   // title is the title of the proposal
   //
-  // since: cosmos-sdk 0.47
+  // Since: cosmos-sdk 0.47
   string title = 13;
 
   // summary is a short summary of the proposal
   //
-  // since: cosmos-sdk 0.47
+  // Since: cosmos-sdk 0.47
   string summary = 14;
 }
 

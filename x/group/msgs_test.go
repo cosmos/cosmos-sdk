@@ -936,6 +936,8 @@ func TestMsgSubmitProposal(t *testing.T) {
 			"proposers required",
 			&group.MsgSubmitProposal{
 				GroupPolicyAddress: admin.String(),
+				Title:              "Title",
+				Summary:            "Summary",
 			},
 			true,
 			"proposers: value is empty",
@@ -945,6 +947,8 @@ func TestMsgSubmitProposal(t *testing.T) {
 			&group.MsgSubmitProposal{
 				GroupPolicyAddress: admin.String(),
 				Proposers:          []string{member1.String(), member2.String()},
+				Title:              "Title",
+				Summary:            "Summary",
 			},
 			false,
 			"",

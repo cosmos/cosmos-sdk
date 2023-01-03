@@ -455,6 +455,8 @@ func SimulateMsgSubmitProposal(cdc *codec.ProtoCodec, ak group.AccountKeeper, bk
 			GroupPolicyAddress: groupPolicyAddr,
 			Proposers:          []string{acc.Address.String()},
 			Metadata:           simtypes.RandStringOfLength(r, 10),
+			Title:              "Test Proposal",
+			Summary:            "Summary of the proposal",
 		}
 
 		txGen := tx.NewTxConfig(cdc, tx.DefaultSignModes)

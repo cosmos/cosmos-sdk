@@ -79,7 +79,7 @@ aggregate `CommitKVStore` supports atomic writes and use them to guarantee that 
 
 #### Iteration
 
-Iteration is not supported.
+Iteration over each wrapped store is supported via the embedded `CommitKVStore` interface.
 
 ## Technical specification
 

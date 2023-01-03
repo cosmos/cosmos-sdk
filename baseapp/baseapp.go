@@ -3,11 +3,11 @@ package baseapp
 import (
 	"errors"
 	"fmt"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"sort"
 	"strings"
 
 	dbm "github.com/cosmos/cosmos-db"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"

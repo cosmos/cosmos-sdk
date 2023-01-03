@@ -53,7 +53,7 @@ func (m GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit,
 	return err
 }
 
-//var _ ABCIListenerServiceServer = (*GRPCServer)(nil)
+var _ ABCIListenerServiceServer = (*GRPCServer)(nil)
 
 // GRPCServer is the gRPC server that GRPCClient talks to.
 type GRPCServer struct {

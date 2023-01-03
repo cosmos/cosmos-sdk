@@ -83,11 +83,18 @@ message Proposal {
   string metadata = 10;
 
   // title is the title of the proposal
+  //
+  // since: cosmos-sdk 0.47
   string title = 11;
 
   // summary is a short summary of the proposal
+  //
+  // since: cosmos-sdk 0.47
   string summary = 12;
 
+  // Proposer is the address of the proposal sumbitter
+  //
+  // since: cosmos-sdk 0.47
   string proposer = 13 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 

@@ -177,7 +177,7 @@ jobs:
           name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
       - name: sonarcloud
-        if: env.GIT_DIFF && ${{ !github.event.pull_request.draft }}
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

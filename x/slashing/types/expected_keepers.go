@@ -2,16 +2,16 @@ package types
 
 import (
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // AccountKeeper expected account keeper
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) auth.AccountI
-	IterateAccounts(ctx sdk.Context, process func(auth.AccountI) (stop bool))
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI
+	IterateAccounts(ctx sdk.Context, process func(sdk.AccountI) (stop bool))
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -41,7 +41,8 @@ type StakingKeeper interface {
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) stakingtypes.ValidatorI // get a particular validator by consensus address
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec, stakingtypes.Infraction) math.Int
+	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
+	SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec, stakingtypes.Infraction) math.Int
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 

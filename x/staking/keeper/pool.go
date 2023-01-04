@@ -2,18 +2,18 @@ package keeper
 
 import (
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // GetBondedPool returns the bonded tokens pool's module account
-func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool authtypes.ModuleAccountI) {
+func (k Keeper) GetBondedPool(ctx sdk.Context) (bondedPool sdk.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.BondedPoolName)
 }
 
 // GetNotBondedPool returns the not bonded tokens pool's module account
-func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool authtypes.ModuleAccountI) {
+func (k Keeper) GetNotBondedPool(ctx sdk.Context) (notBondedPool sdk.ModuleAccountI) {
 	return k.authKeeper.GetModuleAccount(ctx, types.NotBondedPoolName)
 }
 

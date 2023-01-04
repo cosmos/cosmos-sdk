@@ -63,12 +63,11 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	}
 
 	for i := 0; i < v.NumField(); i++ {
+		// if the field is a struct skip or not slice of string or int then skip
+		// TODO in the future we can add a recursive call to Prompt
 		if v.Field(i).Kind() == reflect.Struct ||
 			(v.Field(i).Kind() == reflect.Slice &&
-				(v.Field(i).Type().Elem().Kind() != reflect.String || v.Field(i).Type().Elem().Kind() != reflect.Int)) {
-			// if the field is a struct skip
-			// if the field is not slice of strings skip
-			// in a future we can add a recursive call to Prompt
+				(v.Field(i).Type().Elem().Kind() != reflect.String && v.Field(i).Type().Elem().Kind() != reflect.Int)) {
 			continue
 		}
 
@@ -133,8 +132,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 				v.Field(i).Set(reflect.ValueOf([]int{int(resultInt)}))
 			}
 		default:
-			// skip other types
-			// possibly in the future we can add more types (like custom slices)
+			// skip any other types
 			continue
 		}
 	}
@@ -187,6 +185,7 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*proposal, types.ProposalMetadat
 		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
 	}
 	proposal.Messages = append(proposal.Messages, message)
+
 	return proposal, metadata, nil
 }
 

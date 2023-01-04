@@ -2117,6 +2117,11 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 }
 ```
 
+:::note
+The `authors` fields is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` fields is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+:::
+
 ### Vote
 
 Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README.md#metadata))

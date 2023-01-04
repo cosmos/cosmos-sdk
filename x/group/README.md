@@ -2099,7 +2099,7 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",

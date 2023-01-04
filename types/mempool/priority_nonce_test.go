@@ -647,8 +647,8 @@ func TestTxReplacement(t *testing.T) {
 	txs := []testTx{
 		{priority: 20, nonce: 1, address: sa},
 		{priority: 15, nonce: 1, address: sa}, // priority is less than the first Tx, failed tx replacement when the option enabled.
-		{priority: 39, nonce: 1, address: sa}, // priority is not twice than the first Tx, failed tx replacement when the option enabled.
-		{priority: 40, nonce: 1, address: sa}, // priority is twice than the first Tx, the first tx will be replaced.
+		{priority: 23, nonce: 1, address: sa}, // priority is not 20% more than the first Tx, failed tx replacement when the option enabled.
+		{priority: 24, nonce: 1, address: sa}, // priority is 20% more than the first Tx, the first tx will be replaced.
 	}
 
 	// test Priority with default mempool
@@ -663,10 +663,12 @@ func TestTxReplacement(t *testing.T) {
 	}
 
 	// test Priority with TxReplacement
-	// we set a TestTxReplacement rule which the priority of the new Tx must be twice than the priority of the old Tx
+	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
 	// otherwise, the Insert will return error
+	feeBump := 20
 	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithTxReplacement(func(oldTxPriority, newTxPriority int64) bool {
-		return newTxPriority >= oldTxPriority*2
+		threshold := int64(100 + feeBump)
+		return newTxPriority >= oldTxPriority*threshold/100
 	}))
 
 	c := ctx.WithPriority(txs[0].priority)

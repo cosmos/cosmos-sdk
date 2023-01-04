@@ -10,7 +10,6 @@ import (
 )
 
 func TestNewModuleCrendentials(t *testing.T) {
-
 	// wrong derivation keys
 	_, err := authtypes.NewModuleCredential("group")
 	require.Error(t, err)

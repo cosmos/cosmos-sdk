@@ -89,7 +89,6 @@ func (suite *AddressSuite) TestModule() {
 	k2 := []byte{0, 0, 7}
 	addr5 := Module(modName, k1, k1, k2)
 	assert.Equal(Derive(addr4, k2), addr5)
-
 }
 
 func (suite *AddressSuite) TestDerive() {

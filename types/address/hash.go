@@ -70,11 +70,13 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 //
 //	address.Module(dao.ModuleName, newDAO.ID)
 func Module(moduleName string, derivationKeys ...[]byte) []byte {
-	moduleNameBz := []byte(moduleName)
-	if len(derivationKeys) == 0 {
-		return crypto.AddressHash([]byte(moduleNameBz))
+	mKey := []byte(moduleName)
+	if len(derivationKeys) == 0 { // fallback to the "traditional" ModuleAddress
+		return crypto.AddressHash(mKey)
 	}
-	mKey := append(moduleNameBz, 0)
+	// need to append zero byte to avoid potential clash between the module name and the first
+	// derivation key
+	mKey = append(mKey, 0)
 	addr := Hash("module", append(mKey, derivationKeys[0]...))
 	for _, k := range derivationKeys[1:] {
 		addr = Derive(addr, k)

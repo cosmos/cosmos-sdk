@@ -81,7 +81,7 @@ message MsgExecLegacyContent {
   option (amino.name)           = "cosmos-sdk/v1/MsgExecLegacyContent";
 
   // content is the proposal's content.
-  google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "Content"];
+  google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"];
   // authority must be the gov module address.
   string authority = 2;
 }

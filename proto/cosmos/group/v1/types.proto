@@ -50,7 +50,7 @@ message MemberRequest {
 // 2. The voting and execution periods of the proposal respect the parameters
 //    given by `windows`.
 message ThresholdDecisionPolicy {
-  option (cosmos_proto.implements_interface) = "DecisionPolicy";
+  option (cosmos_proto.implements_interface) = "cosmos.group.v1.DecisionPolicy";
   option (amino.name)                        = "cosmos-sdk/ThresholdDecisionPolicy";
 
   // threshold is the minimum weighted sum of `YES` votes that must be met or
@@ -68,7 +68,7 @@ message ThresholdDecisionPolicy {
 // 2. The voting and execution periods of the proposal respect the parameters
 //    given by `windows`.
 message PercentageDecisionPolicy {
-  option (cosmos_proto.implements_interface) = "DecisionPolicy";
+  option (cosmos_proto.implements_interface) = "cosmos.group.v1.DecisionPolicy";
   option (amino.name)                        = "cosmos-sdk/PercentageDecisionPolicy";
 
   // percentage is the minimum percentage of the weighted sum of `YES` votes must

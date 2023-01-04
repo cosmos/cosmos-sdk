@@ -31,7 +31,6 @@ type proposalType struct {
 
 // Prompt the proposal type values and return the proposal and its metadata.
 func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
-
 	// set metadata
 	metadata, err := govcli.Prompt(govtypes.ProposalMetadata{}, "proposal")
 	if err != nil {

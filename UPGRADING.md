@@ -315,6 +315,31 @@ message MsgSetWithdrawAddress {
 }
 ```
 
+#### `{accepts,implements}_interface` proto annotations
+
+The SDK is normalizing the strings inside the Protobuf `accepts_interface` and `implements_interface` annotations. We require them to be fully-scoped names. They will soon be used by code generators like Pulsar and Telescope to match which messages can or cannot be packed inside `Any`s.
+
+Here are the following replacements that you need to perform on your proto files:
+
+```diff
+- "Content"
++ "cosmos.gov.v1beta1.Content"
+- "Authorization"
++ "cosmos.authz.v1beta1.Authorization"
+- "Content"
++ "cosmos.base.v1beta1.Msg"
+- "AccountI"
++ "cosmos.auth.v1beta1.AccountI"
+- "ModuleAccountI"
++ "cosmos.auth.v1beta1.ModuleAccountI"
+- "FeeAllowanceI"
++ "cosmos.feegrant.v1beta1.FeeAllowanceI"
+```
+
+Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
+
+For more information, see the [encoding guide](./docs/docs/core/05-encoding.md).
+
 <!-- todo: cosmos.scalar types -->
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).

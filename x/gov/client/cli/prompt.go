@@ -63,8 +63,11 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	}
 
 	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Kind() == reflect.Struct || v.Field(i).Kind() == reflect.Slice {
+		if v.Field(i).Kind() == reflect.Struct ||
+			(v.Field(i).Kind() == reflect.Slice &&
+				(v.Field(i).Type().Elem().Kind() != reflect.String || v.Field(i).Type().Elem().Kind() != reflect.Int)) {
 			// if the field is a struct skip
+			// if the field is not slice of strings skip
 			// in a future we can add a recursive call to Prompt
 			continue
 		}
@@ -117,9 +120,21 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 			// of which on 64-bit machines, which are most common,
 			// int==int64
 			v.Field(i).SetInt(resultInt)
+		case reflect.Slice:
+			switch v.Field(i).Type().Elem().Kind() {
+			case reflect.String:
+				v.Field(i).Set(reflect.ValueOf([]string{result}))
+			case reflect.Int:
+				resultInt, err := strconv.ParseInt(result, 10, 0)
+				if err != nil {
+					return data, fmt.Errorf("invalid value for int: %w", err)
+				}
+
+				v.Field(i).Set(reflect.ValueOf([]int{int(resultInt)}))
+			}
 		default:
 			// skip other types
-			// possibly in the future we can add more types (like slices)
+			// possibly in the future we can add more types (like custom slices)
 			continue
 		}
 	}

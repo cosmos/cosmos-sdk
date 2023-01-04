@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -581,6 +582,9 @@ Parameters:
 
 			// Since the --from flag is not required on this CLI command, we
 			// ignore it, and just use the 1st proposer in the JSON file.
+			if prop.Proposers == nil || len(prop.Proposers) == 0 {
+				return errors.New("no proposers specified in proposal")
+			}
 			cmd.Flags().Set(flags.FlagFrom, prop.Proposers[0])
 
 			clientCtx, err := client.GetClientTxContext(cmd)

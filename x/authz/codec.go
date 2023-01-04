@@ -31,7 +31,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterInterface(
-		"cosmos.v1beta1.Authorization",
+		"cosmos.authz.v1beta1.Authorization",
 		(*Authorization)(nil),
 		&GenericAuthorization{},
 	)

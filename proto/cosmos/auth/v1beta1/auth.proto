@@ -28,12 +28,7 @@ message BaseAccount {
 message ModuleAccount {
   option (amino.name)                        = "cosmos-sdk/ModuleAccount";
   option (gogoproto.goproto_getters)         = false;
-<<<<<<< HEAD
-  option (gogoproto.goproto_stringer)        = false;
-  option (cosmos_proto.implements_interface) = "ModuleAccountI";
-=======
   option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.ModuleAccountI";
->>>>>>> b244ffb4d (chore: Clean up `{accept,implement}_interface` (#14476))
 
   BaseAccount     base_account = 1 [(gogoproto.embed) = true];
   string          name         = 2;

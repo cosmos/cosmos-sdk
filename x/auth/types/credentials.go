@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -36,9 +35,6 @@ var _ cryptotypes.PubKey = &ModuleCredential{}
 // NewModuleCredential creates new module credential key.
 // At least one derivation key must be provided and all derivation keys must be not empty.
 func NewModuleCredential(moduleName string, derivationKeys ...[]byte) (*ModuleCredential, error) {
-	if len(derivationKeys) == 0 {
-		return nil, errors.New("module credential requires non empty derivation key slice")
-	}
 	for i := range derivationKeys {
 		if len(derivationKeys[i]) == 0 {
 			return nil, fmt.Errorf("module credential derivation keys at index %d is empty", i)

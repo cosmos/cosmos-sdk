@@ -49,7 +49,7 @@ message WeightedVoteOption {
 // TextProposal defines a standard text proposal whose changes need to be
 // manually updated in case of approval.
 message TextProposal {
-  option (cosmos_proto.implements_interface) = "Content";
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
   option (amino.name)                        = "cosmos-sdk/TextProposal";
 
   option (gogoproto.equal) = true;
@@ -89,8 +89,13 @@ message Proposal {
   uint64              proposal_id = 1;
 
   // content is the proposal's content.
+<<<<<<< HEAD
   google.protobuf.Any content     = 2 [(cosmos_proto.accepts_interface) = "Content"];
   
+=======
+  google.protobuf.Any content = 2 [(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"];
+
+>>>>>>> b244ffb4d (chore: Clean up `{accept,implement}_interface` (#14476))
   // status defines the proposal status.
   ProposalStatus      status      = 3;
   

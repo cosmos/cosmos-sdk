@@ -32,7 +32,11 @@ message MsgSubmitEvidence {
   string              submitter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   
   // evidence defines the evidence of misbehavior.
+<<<<<<< HEAD
   google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "Evidence"];
+=======
+  google.protobuf.Any evidence = 2 [(cosmos_proto.accepts_interface) = "cosmos.evidence.v1beta1.Evidence"];
+>>>>>>> b244ffb4d (chore: Clean up `{accept,implement}_interface` (#14476))
 }
 
 // MsgSubmitEvidenceResponse defines the Msg/SubmitEvidence response type.

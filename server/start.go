@@ -4,13 +4,14 @@ package server
 
 import (
 	"fmt"
-	"google.golang.org/grpc/encoding"
-	"google.golang.org/grpc/encoding/proto"
 	"net"
 	"net/http"
 	"os"
 	"runtime/pprof"
 	"time"
+
+	"google.golang.org/grpc/encoding"
+	"google.golang.org/grpc/encoding/proto"
 
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
@@ -329,7 +330,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		clientCtx := clientCtx.WithHomeDir(home).WithChainID(genDoc.ChainID)
 
 		if config.GRPC.Enable {
-			_, port, err := net.SplitHostPort(config.GRPC.Address)
+			host, port, err := net.SplitHostPort(config.GRPC.Address)
 			if err != nil {
 				return err
 			}
@@ -344,7 +345,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 				maxRecvMsgSize = serverconfig.DefaultGRPCMaxRecvMsgSize
 			}
 
-			grpcAddress := fmt.Sprintf("127.0.0.1:%s", port)
+			grpcAddress := fmt.Sprintf("%s:%s", host, port)
 
 			// If grpc is enabled, configure grpc client for grpc gateway.
 			grpcClient, err := grpc.Dial(

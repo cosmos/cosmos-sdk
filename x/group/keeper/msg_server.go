@@ -475,6 +475,10 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	if err := k.assertMetadataLength(req.Title, "proposal Title"); err != nil {
+		return nil, err
+	}
+
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")

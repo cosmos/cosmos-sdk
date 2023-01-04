@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const (
@@ -39,6 +40,9 @@ const (
 
 // BaseConfig defines the server's basic configuration
 type BaseConfig struct {
+	// The Cosmos SDK version
+	Version string `mapstructure:"version"`
+
 	// The minimum gas prices a validator is willing to accept for processing a
 	// transaction. A transaction's fees must meet the minimum of any denomination
 	// specified in this config (e.g. 0.25token1;0.0001token2).
@@ -253,6 +257,7 @@ func (c *Config) GetMinGasPrices() sdk.DecCoins {
 func DefaultConfig() *Config {
 	return &Config{
 		BaseConfig: BaseConfig{
+			Version:             version.Version,
 			MinGasPrices:        defaultMinGasPrices,
 			InterBlockCache:     true,
 			Pruning:             pruningtypes.PruningOptionDefault,

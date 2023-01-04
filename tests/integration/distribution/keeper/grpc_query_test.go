@@ -95,8 +95,8 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 			func() {
 				params = types.Params{
 					CommunityTax:        sdk.NewDecWithPrec(3, 1),
-					BaseProposerReward:  sdk.NewDecWithPrec(2, 1),
-					BonusProposerReward: sdk.NewDecWithPrec(1, 1),
+					BaseProposerReward:  sdk.ZeroDec(),
+					BonusProposerReward: sdk.ZeroDec(),
 					WithdrawAddrEnabled: true,
 				}
 
@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) TestGRPCParams() {
 			if testCase.expPass {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(paramsRes)
-				suite.Require().Equal(paramsRes.Params, expParams)
+				suite.Require().Equal(expParams, paramsRes.Params)
 			} else {
 				suite.Require().Error(err)
 			}

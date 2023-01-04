@@ -259,10 +259,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		app.setState(runTxModeDeliver, initHeader)
 	}
 
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{}).
+	ctx := app.deliverState.ctx.
+		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -311,11 +313,13 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		app.setState(runTxModeDeliver, initHeader)
 	}
 
-	ctx := app.getContextForTx(runTxProcessProposal, []byte{}).
+	ctx := app.deliverState.ctx.
+		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
-		WithProposer(req.ProposerAddress)
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
 
 	defer func() {
 		if err := recover(); err != nil {

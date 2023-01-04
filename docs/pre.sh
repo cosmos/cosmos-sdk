@@ -19,8 +19,8 @@ cat ../x/README.md | sed 's/\.\.\/docs\/building-modules\/README\.md/\/building-
 
 ## Add tooling documentation
 cp ../tools/cosmovisor/README.md ./docs/tooling/01-cosmovisor.md
-cp ../depinject/README.md ./docs/tooling/02-depinject.md
 cp ../tools/confix/README.md ./docs/tooling/03-confix.md
+cp ../depinject/README.md ./docs/tooling/02-depinject.md
 
 ## Add rosetta documentation
 cp ../tools/rosetta/README.md ./docs/run-node/04-rosetta.md

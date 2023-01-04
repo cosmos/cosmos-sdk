@@ -16,10 +16,6 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 ###                           Base Configuration                            ###
 ###############################################################################
 
-# The Cosmos SDK version that this config file is compatible with.
-# The configuration file is updated automatically when the SDK is upgraded.
-version = "{{ .BaseConfig.Version }}"
-
 # The minimum gas prices a validator is willing to accept for processing a
 # transaction. A transaction's fees must meet the minimum of any denomination
 # specified in this config (e.g. 0.25token1;0.0001token2).

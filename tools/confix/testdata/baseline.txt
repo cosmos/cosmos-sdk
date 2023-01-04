@@ -10,7 +10,6 @@
 +M pruning-interval
 +M pruning-keep-every
 +M pruning-keep-recent
-+M version
 +S api
 +M api.enable
 +M api.swagger

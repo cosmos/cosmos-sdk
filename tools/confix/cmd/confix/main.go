@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	if err := confixcmd.ConfixCommand().Execute(); err != nil {
+	if err := confixcmd.ConfigCommand().Execute(); err != nil {
 		os.Exit(1)
 	}
 }

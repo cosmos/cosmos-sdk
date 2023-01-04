@@ -18,42 +18,20 @@ func mustParseConfig(t *testing.T, path string) *tomledit.Document {
 	return doc
 }
 
-func TestExtractVersion(t *testing.T) {
-	tests := []struct {
-		path, want string
-		force      bool
-	}{
-		{path: "testdata/non-app.toml", want: ""},
-		{path: "testdata/unknown-app.toml", want: ""},
-		{path: "testdata/v45-app.toml", want: "0.45"},
-		{path: "testdata/v46-app.toml", want: "0.46"},
-		{path: "testdata/v47-app.toml", want: "0.47"},
-		{path: "testdata/unknown-app.toml", want: "next", force: true},
-	}
-	for _, test := range tests {
-		t.Run(test.path, func(t *testing.T) {
-			got := confix.ExtractVersion(mustParseConfig(t, test.path), test.force)
-			if got != test.want {
-				t.Errorf("Wrong version: got %q, want %q", got, test.want)
-			}
-		})
-	}
-}
-
 func TestApplyFixes(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Unknown", func(t *testing.T) {
-		err := confix.ApplyFixes(ctx, mustParseConfig(t, "testdata/unknown-app.toml"), false)
+		err := confix.ApplyFixes(ctx, mustParseConfig(t, "testdata/unknown-app.toml"))
 		assert.ErrorContains(t, err, "unknown SDK version")
 	})
 	t.Run("Unknown Overrride", func(t *testing.T) {
-		err := confix.ApplyFixes(ctx, mustParseConfig(t, "testdata/unknown-app.toml"), true)
+		err := confix.ApplyFixes(ctx, mustParseConfig(t, "testdata/unknown-app.toml"))
 		assert.NilError(t, err)
 	})
 	t.Run("OK", func(t *testing.T) {
 		doc := mustParseConfig(t, "testdata/v45-config.toml")
-		err := confix.ApplyFixes(ctx, doc, false)
+		err := confix.ApplyFixes(ctx, doc)
 		assert.NilError(t, err)
 
 		// TODO

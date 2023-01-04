@@ -54,8 +54,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// initialize states with a correct header
 	app.setState(runTxModeDeliver, initHeader)
 	app.setState(runTxModeCheck, initHeader)
-	app.setState(runTxPrepareProposal, initHeader)
-	app.setState(runTxProcessProposal, initHeader)
 
 	// Store the consensus params in the BaseApp's paramstore. Note, this must be
 	// done after the deliver state and context have been set as it's persisted
@@ -252,6 +250,15 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal method not set")
 	}
 
+	if app.deliverState == nil {
+		initHeader := tmproto.Header{
+			Time:            req.Time,
+			Height:          req.Height,
+			ProposerAddress: req.ProposerAddress,
+		}
+		app.setState(runTxModeDeliver, initHeader)
+	}
+
 	ctx := app.getContextForTx(runTxPrepareProposal, []byte{}).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
@@ -291,6 +298,17 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
+	}
+
+	if app.deliverState == nil {
+		initHeader := tmproto.Header{
+			Time:            req.Time,
+			Height:          req.Height,
+			ProposerAddress: req.ProposerAddress,
+			// LastResultsHash:    req.Hash,
+			NextValidatorsHash: req.NextValidatorsHash,
+		}
+		app.setState(runTxModeDeliver, initHeader)
 	}
 
 	ctx := app.getContextForTx(runTxProcessProposal, []byte{}).
@@ -398,6 +416,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
+
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -426,8 +445,6 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	// NOTE: This is safe because Tendermint holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
-	app.setState(runTxPrepareProposal, header)
-	app.setState(runTxProcessProposal, header)
 
 	// empty/reset the deliver state
 	app.deliverState = nil

@@ -80,10 +80,10 @@ type BaseApp struct { //nolint: maligned
 	//
 	// checkState is set on InitChain and reset on Commit
 	// deliverState is set on InitChain and BeginBlock and set to nil on Commit
-	checkState           *state // for CheckTx
-	deliverState         *state // for DeliverTx
-	processProposalState *state // for ProcessProposal
-	prepareProposalState *state // for PrepareProposal
+	checkState   *state // for CheckTx
+	deliverState *state // for DeliverTx
+	// processProposalState *state // for ProcessProposal
+	// prepareProposalState *state // for PrepareProposal
 
 	// an inter-block write-through cache provided to the context during deliverState
 	interBlockCache sdk.MultiStorePersistentCache
@@ -354,8 +354,8 @@ func (app *BaseApp) Init() error {
 	app.setState(runTxModeCheck, emptyHeader)
 
 	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
-	app.setState(runTxPrepareProposal, emptyHeader)
-	app.setState(runTxProcessProposal, emptyHeader)
+	// app.setState(runTxPrepareProposal, emptyHeader)
+	// app.setState(runTxProcessProposal, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -421,12 +421,12 @@ func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 	case runTxModeDeliver:
 		// It is set on InitChain and BeginBlock and set to nil on Commit.
 		app.deliverState = baseState
-	case runTxPrepareProposal:
-		// It is set on InitChain and Commit.
-		app.prepareProposalState = baseState
-	case runTxProcessProposal:
-		// It is set on InitChain and Commit.
-		app.processProposalState = baseState
+	// case runTxPrepareProposal:
+	// 	// It is set on InitChain and Commit.
+	// 	app.prepareProposalState = baseState
+	// case runTxProcessProposal:
+	// 	// It is set on InitChain and Commit.
+	// 	app.processProposalState = baseState
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
@@ -543,9 +543,9 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 	case runTxModeDeliver:
 		return app.deliverState
 	case runTxPrepareProposal:
-		return app.prepareProposalState
+		return app.deliverState
 	case runTxProcessProposal:
-		return app.processProposalState
+		return app.deliverState
 	default:
 		return app.checkState
 	}

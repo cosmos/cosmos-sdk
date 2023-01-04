@@ -953,6 +953,26 @@ func TestMsgSubmitProposal(t *testing.T) {
 			false,
 			"",
 		},
+		{
+			"missing title",
+			&group.MsgSubmitProposal{
+				GroupPolicyAddress: admin.String(),
+				Proposers:          []string{member1.String(), member2.String()},
+				Summary:            "Summary",
+			},
+			true,
+			"title: value is empty",
+		},
+		{
+			"missing title",
+			&group.MsgSubmitProposal{
+				GroupPolicyAddress: admin.String(),
+				Proposers:          []string{member1.String(), member2.String()},
+				Title:              "title",
+			},
+			true,
+			"summary: value is empty",
+		},
 	}
 
 	for _, tc := range testCases {

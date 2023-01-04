@@ -2177,7 +2177,7 @@ Example Output:
       "voting_start_time": null,
       "voting_end_time": null,
       "metadata": "AQ==",
-        "title": "Proposal Title",
+      "title": "Proposal Title",
       "summary": "Proposal Summary"
     }
   ],

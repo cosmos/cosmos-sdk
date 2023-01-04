@@ -186,7 +186,7 @@ Given the following Protobuf message:
 
 ```protobuf
 message Grant {
-  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "cosmos.authz.v1beta1.Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 

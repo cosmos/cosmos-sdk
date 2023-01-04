@@ -251,15 +251,6 @@ type moduleAccountPretty struct {
 	Permissions   []string       `json:"permissions"`
 }
 
-func (ma ModuleAccount) String() string {
-	out, err := ma.MarshalYAML()
-	if err != nil {
-		panic(err)
-	}
-
-	return out.(string)
-}
-
 // MarshalYAML returns the YAML representation of a ModuleAccount.
 func (ma ModuleAccount) MarshalYAML() (interface{}, error) {
 	accAddr, err := sdk.AccAddressFromBech32(ma.Address)

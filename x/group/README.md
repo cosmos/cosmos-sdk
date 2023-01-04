@@ -2118,8 +2118,8 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 ```
 
 :::note
-The `authors` fields is an array of strings, this is to allow for multiple authors to be listed in the metadata.
-In v0.46, the `authors` fields is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
 :::
 
 ### Vote

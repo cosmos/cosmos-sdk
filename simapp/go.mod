@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.2.6
-	cosmossdk.io/client/v2 v2.0.0-20221207142935-9bf027460bae
+	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58
 	cosmossdk.io/core v0.4.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
@@ -176,8 +176,6 @@ require (
 )
 
 replace (
-	// todo remove at next tag of client/v2
-	cosmossdk.io/client/v2 => ../client/v2
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.

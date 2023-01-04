@@ -781,7 +781,7 @@ func (s *E2ETestSuite) TestTallyResult() {
 				s.createCLIProposal(
 					s.groupPolicies[0].Address, val.Address.String(),
 					s.groupPolicies[0].Address, val.Address.String(),
-					""),
+					"", "title", "summary"),
 			},
 			commonFlags...,
 		),

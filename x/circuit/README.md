@@ -11,7 +11,7 @@ Circuit Breaker works with the idea that an address or set of addresses have the
 
 ### Accounts
 
-* AccountPermissions `0x1 | account_address  -> ProtocolBuffer(Access)`
+* AccountPermissions `0x1 | account_address  -> ProtocolBuffer(CircuitBreakerPermissions)`
 
 ```go
 type level int32
@@ -39,21 +39,12 @@ type Access struct {
 }
 ```
 
-### Params
-
-* Params `0x2  -> Params`
-
-```go
-type params struct {
-	authority string // account which has permissions to disable/enable all messages and give permissions to other accounts
-}
-```
 
 ### Disable List
 
 List of type urls that are disabled.
 
-* DisableList `0x3  -> []string` <!--- should this be stored in json to skip encoding and decoding each block, does it matter?-->
+* DisableList `0x3  msg_type_url -> []byte{}` <!--- should this be stored in json to skip encoding and decoding each block, does it matter?-->
 
 
 
@@ -61,7 +52,7 @@ List of type urls that are disabled.
 
 ### Authorize 
 
-Authorize, is called by the module authority (default governance module account) to give permission to disable/enable messages to another account. There are three levels of permissions that can be granted. `LEVEL_SOME_MSGS` limits the number of messages that can be disabled. `LEVEL_ALL_MSGS` permits all messages to be disabled. `LEVEL_SUPER_ADMIN` allows an account to take all circuit breaker actions given to the authority of module. 
+Authorize, is called by the module authority  (default governance module account) or any account with `LEVEL_SUPER_ADMIN` to give permission to disable/enable messages to another account. There are three levels of permissions that can be granted. `LEVEL_SOME_MSGS` limits the number of messages that can be disabled. `LEVEL_ALL_MSGS` permits all messages to be disabled. `LEVEL_SUPER_ADMIN` allows an account to take all circuit breaker actions including authorizing and deauthorizing other accounts.
 
 ```proto
   // AuthorizeCircuitBreaker allows a super-admin to grant (or revoke) another

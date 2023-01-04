@@ -565,6 +565,8 @@ Parameters:
 		"from_address": "cosmos1...",
 		"to_address": "cosmos1...",
 		"amount":[{"denom": "stake","amount": "10"}]
+		"title": "My proposal",
+		"summary": "This is a proposal to send 10 stake to cosmos1...",
 	}
 	],
 	"metadata": "4pIMOgIGx1vZGU=", // base64-encoded metadata
@@ -599,6 +601,8 @@ Parameters:
 				msgs,
 				prop.Metadata,
 				execFromString(execStr),
+				prop.Title,
+				prop.Summary,
 			)
 			if err != nil {
 				return err

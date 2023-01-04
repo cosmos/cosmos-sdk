@@ -8,8 +8,10 @@ import (
 
 func TestMap(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
-	m := NewMap(schema, NewPrefix("hi"), "m", Uint64Key, Uint64Value)
+	schemaBuilder := NewSchemaBuilder(sk)
+	m := NewMap(schemaBuilder, NewPrefix("hi"), "m", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.NoError(t, err)
 
 	// test not has
 	has, err := m.Has(ctx, 1)

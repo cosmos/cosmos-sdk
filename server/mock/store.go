@@ -3,9 +3,10 @@ package mock
 import (
 	"io"
 
+	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
-	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -51,6 +52,10 @@ func (ms multiStore) SetTracer(w io.Writer) sdk.MultiStore {
 }
 
 func (ms multiStore) AddListeners(key storetypes.StoreKey, listeners []storetypes.WriteListener) {
+	panic("not implemented")
+}
+
+func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
 	panic("not implemented")
 }
 

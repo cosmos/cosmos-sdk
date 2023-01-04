@@ -1,5 +1,7 @@
 syntax = "proto3";
-package cosmos.crisis.v1;
+package cosmos.circuit.v1;
+
+// option go_package = "github.com/cosmos/cosmos-sdk/x/circuit/types"; // uncomment when module is created
 
 import "cosmos/msg/v1/msg.proto";
 

@@ -48,7 +48,7 @@ service Query {
                                    "{validator_address}";
   }
 
-  // DelegationTotalRewards queries the total rewards accrued by a each
+  // DelegationTotalRewards queries the total rewards accrued by each
   // validator.
   rpc DelegationTotalRewards(QueryDelegationTotalRewardsRequest) returns (QueryDelegationTotalRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards";

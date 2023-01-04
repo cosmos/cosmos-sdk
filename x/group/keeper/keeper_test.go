@@ -106,6 +106,9 @@ func (s *TestSuite) SetupTest() {
 	s.Require().NoError(err)
 	s.setNextAccount()
 
+	groupSeq := s.groupKeeper.GetGroupSequence(s.sdkCtx)
+	s.Require().Equal(groupSeq, uint64(1))
+
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(s.ctx, policyReq)
 	s.Require().NoError(err)
 	s.policy = policy
@@ -119,7 +122,7 @@ func (s *TestSuite) SetupTest() {
 	s.bankKeeper.SendCoinsFromModuleToAccount(s.sdkCtx, minttypes.ModuleName, s.groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10000)})
 }
 
-func (s TestSuite) setNextAccount() {
+func (s TestSuite) setNextAccount() { //nolint:govet // this is a test and we're okay with copying locks here.
 	nextAccVal := s.groupKeeper.GetGroupPolicySeq(s.sdkCtx) + 1
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
@@ -135,7 +138,7 @@ func (s TestSuite) setNextAccount() {
 
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(accountCredentials.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
-	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), authtypes.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
+	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -1405,12 +1408,12 @@ func (s *TestSuite) TestUpdateGroupPolicyDecisionPolicy() {
 		err := spec.expGroupPolicy.SetDecisionPolicy(spec.policy)
 		s.Require().NoError(err)
 		if spec.preRun != nil {
-			policyAddr1, groupId := spec.preRun(admin)
+			policyAddr1, groupID := spec.preRun(admin)
 			policyAddr = policyAddr1
 
 			// update the expected info with new group policy details
 			spec.expGroupPolicy.Address = policyAddr1
-			spec.expGroupPolicy.GroupId = groupId
+			spec.expGroupPolicy.GroupId = groupID
 
 			// update req with new group policy addr
 			spec.req.GroupPolicyAddress = policyAddr1
@@ -1815,7 +1818,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64
+		proposalID uint64
 		admin      string
 		expErrMsg  string
 	}{
@@ -1837,20 +1840,20 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			proposalId: proposalID,
+			proposalID: proposalID,
 			admin:      proposers[0],
 		},
 		"already closed proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				pID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-					ProposalId: pId,
+					ProposalId: pID,
 					Address:    proposers[0],
 				})
 				s.Require().NoError(err)
-				return pId
+				return pID
 			},
-			proposalId: proposalID,
+			proposalID: proposalID,
 			admin:      proposers[0],
 			expErrMsg:  "cannot withdraw a proposal with the status of PROPOSAL_STATUS_WITHDRAWN",
 		},
@@ -1858,17 +1861,17 @@ func (s *TestSuite) TestWithdrawProposal() {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				return submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 			},
-			proposalId: proposalID,
+			proposalID: proposalID,
 			admin:      proposers[0],
 		},
 	}
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			pId := spec.preRun(s.sdkCtx)
+			pID := spec.preRun(s.sdkCtx)
 
 			_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-				ProposalId: pId,
+				ProposalId: pID,
 				Address:    spec.admin,
 			})
 
@@ -1879,7 +1882,7 @@ func (s *TestSuite) TestWithdrawProposal() {
 			}
 
 			s.Require().NoError(err)
-			resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pId})
+			resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: pID})
 			s.Require().NoError(err)
 			s.Require().Equal(resp.GetProposal().Status, group.PROPOSAL_STATUS_WITHDRAWN)
 		})
@@ -2795,7 +2798,7 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 
 	specs := map[string]struct {
 		preRun     func(sdkCtx sdk.Context) uint64
-		proposalId uint64
+		proposalID uint64
 		admin      string
 		expErrMsg  string
 		newCtx     sdk.Context
@@ -2860,14 +2863,14 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		},
 		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pId := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
+				pID := submitProposal(s.ctx, s, []sdk.Msg{msgSend}, proposers)
 				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-					ProposalId: pId,
+					ProposalId: pID,
 					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)
-				return pId
+				return pID
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
@@ -2876,14 +2879,14 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 		},
 		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pId := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
+				pID := submitProposalAndVote(s.ctx, s, []sdk.Msg{msgSend}, proposers, group.VOTE_OPTION_YES)
 				_, err := s.groupKeeper.WithdrawProposal(s.ctx, &group.MsgWithdrawProposal{
-					ProposalId: pId,
+					ProposalId: pID,
 					Address:    proposers[0],
 				})
 
 				s.Require().NoError(err)
-				return pId
+				return pID
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
@@ -2895,11 +2898,11 @@ func (s *TestSuite) TestProposalsByVPEnd() {
 	for msg, spec := range specs {
 		spec := spec
 		s.Run(msg, func() {
-			pId := spec.preRun(s.sdkCtx)
+			pID := spec.preRun(s.sdkCtx)
 
 			module.EndBlocker(spec.newCtx, s.groupKeeper)
 			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
-				ProposalId: pId,
+				ProposalId: pID,
 			})
 
 			if spec.expErrMsg != "" {
@@ -3212,7 +3215,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd() {
 	addrs := s.addrs
 	addr1 := addrs[0]
 	addr2 := addrs[1]
-	votingPeriod := time.Duration(4 * time.Minute)
+	votingPeriod := 4 * time.Minute
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{
@@ -3271,7 +3274,7 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	addr1 := addrs[0]
 	addr2 := addrs[1]
 	addr3 := addrs[2]
-	votingPeriod := time.Duration(4 * time.Minute)
+	votingPeriod := 4 * time.Minute
 	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
 
 	groupMsg := &group.MsgCreateGroupWithPolicy{

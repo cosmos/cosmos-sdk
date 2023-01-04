@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -131,7 +131,7 @@ func TestMsgService(t *testing.T) {
 		Sequence:      0,
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		nil, txConfig.SignModeHandler().DefaultMode(), signerData,
+		nil, txConfig.SignModeHandler().DefaultMode(), signerData, //nolint:staticcheck // SA1019: txConfig.SignModeHandler().DefaultMode() is deprecated: use txConfig.SignModeHandler().DefaultMode() instead.
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

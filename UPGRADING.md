@@ -326,7 +326,7 @@ Here are the following replacements that you need to perform on your proto files
 + "cosmos.gov.v1beta1.Content"
 - "Authorization"
 + "cosmos.authz.v1beta1.Authorization"
-- "Content"
+- "sdk.Msg"
 + "cosmos.base.v1beta1.Msg"
 - "AccountI"
 + "cosmos.auth.v1beta1.AccountI"

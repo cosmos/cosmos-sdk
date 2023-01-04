@@ -964,7 +964,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 			"title: value is empty",
 		},
 		{
-			"missing title",
+			"missing summary",
 			&group.MsgSubmitProposal{
 				GroupPolicyAddress: admin.String(),
 				Proposers:          []string{member1.String(), member2.String()},

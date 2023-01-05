@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,7 +31,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 		&distrKeeper,
 		&stakingKeeper,
 	)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -38,18 +39,18 @@ func TestSetWithdrawAddr(t *testing.T) {
 
 	params := distrKeeper.GetParams(ctx)
 	params.WithdrawAddrEnabled = false
-	require.NoError(t, distrKeeper.SetParams(ctx, params))
+	assert.NilError(t, distrKeeper.SetParams(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
-	require.NotNil(t, err)
+	assert.Assert(t, err != nil)
 
 	params.WithdrawAddrEnabled = true
-	require.NoError(t, distrKeeper.SetParams(ctx, params))
+	assert.NilError(t, distrKeeper.SetParams(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
-	require.Nil(t, err)
+	assert.NilError(t, err)
 
-	require.Error(t, distrKeeper.SetWithdrawAddr(ctx, addr[0], distrAcc.GetAddress()))
+	assert.ErrorContains(t, distrKeeper.SetWithdrawAddr(ctx, addr[0], distrAcc.GetAddress()), fmt.Sprintf("%s is not allowed to receive external funds: unauthorized", distrAcc.GetAddress()))
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {
@@ -66,7 +67,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		&distrKeeper,
 		&stakingKeeper,
 	)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -81,7 +82,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// set module account coins
 	distrAcc := distrKeeper.GetDistributionAccount(ctx)
 	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
-	require.NoError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, distrAcc.GetName(), coins))
+	assert.NilError(t, banktestutil.FundModuleAccount(bankKeeper, ctx, distrAcc.GetName(), coins))
 
 	accountKeeper.SetModuleAccount(ctx, distrAcc)
 
@@ -89,7 +90,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	balance := bankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
 	expTokens := stakingKeeper.TokensFromConsensusPower(ctx, 1000)
 	expCoins := sdk.NewCoins(sdk.NewCoin("stake", expTokens))
-	require.Equal(t, expCoins, balance)
+	assert.DeepEqual(t, expCoins, balance)
 
 	// set outstanding rewards
 	distrKeeper.SetValidatorOutstandingRewards(ctx, valAddrs[0], types.ValidatorOutstandingRewards{Rewards: valCommission})
@@ -99,23 +100,21 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 
 	// withdraw commission
 	_, err = distrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// check balance increase
 	balance = bankKeeper.GetAllBalances(ctx, sdk.AccAddress(valAddrs[0]))
-	require.Equal(t, sdk.NewCoins(
+	assert.DeepEqual(t, sdk.NewCoins(
 		sdk.NewCoin("mytoken", sdk.NewInt(1)),
 		sdk.NewCoin("stake", expTokens.AddRaw(1)),
 	), balance)
 
 	// check remainder
 	remainder := distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission
-	require.Equal(t, sdk.DecCoins{
+	assert.DeepEqual(t, sdk.DecCoins{
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(1).Quo(math.LegacyNewDec(4))),
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(2))),
 	}, remainder)
-
-	require.True(t, true)
 }
 
 func TestGetTotalRewards(t *testing.T) {
@@ -130,7 +129,7 @@ func TestGetTotalRewards(t *testing.T) {
 		&distrKeeper,
 		&stakingKeeper,
 	)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -148,7 +147,7 @@ func TestGetTotalRewards(t *testing.T) {
 	expectedRewards := valCommission.MulDec(math.LegacyNewDec(2))
 	totalRewards := distrKeeper.GetTotalRewards(ctx)
 
-	require.Equal(t, expectedRewards, totalRewards)
+	assert.DeepEqual(t, expectedRewards, totalRewards)
 }
 
 func TestFundCommunityPool(t *testing.T) {
@@ -163,7 +162,7 @@ func TestFundCommunityPool(t *testing.T) {
 		&distrKeeper,
 		&stakingKeeper,
 	)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -173,14 +172,14 @@ func TestFundCommunityPool(t *testing.T) {
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, math.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	require.NoError(t, banktestutil.FundAccount(bankKeeper, ctx, addr[0], amount))
+	assert.NilError(t, banktestutil.FundAccount(bankKeeper, ctx, addr[0], amount))
 
 	initPool := distrKeeper.GetFeePool(ctx)
-	require.Empty(t, initPool.CommunityPool)
+	assert.Assert(t, initPool.CommunityPool.Empty())
 
 	err = distrKeeper.FundCommunityPool(ctx, amount, addr[0])
-	require.Nil(t, err)
+	assert.NilError(t, err)
 
-	require.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), distrKeeper.GetFeePool(ctx).CommunityPool)
-	require.Empty(t, bankKeeper.GetAllBalances(ctx, addr[0]))
+	assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), distrKeeper.GetFeePool(ctx).CommunityPool)
+	assert.Assert(t, bankKeeper.GetAllBalances(ctx, addr[0]).Empty())
 }

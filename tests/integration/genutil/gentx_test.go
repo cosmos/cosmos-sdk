@@ -91,9 +91,7 @@ func initFixture(t assert.TestingT) *fixture {
 	return f
 }
 
-func setAccountBalance(t *testing.T, addr sdk.AccAddress, amount int64) json.RawMessage {
-	f := initFixture(t)
-
+func setAccountBalance(t *testing.T, f *fixture, addr sdk.AccAddress, amount int64) json.RawMessage {
 	acc := f.accountKeeper.NewAccountWithAddress(f.ctx, addr)
 	f.accountKeeper.SetAccount(f.ctx, acc)
 
@@ -191,7 +189,7 @@ func TestValidateAccountInGenesis(t *testing.T) {
 			"account without enough funds of default bond denom",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)}
-				appGenesisState[banktypes.ModuleName] = setAccountBalance(t, addr1, 25)
+				appGenesisState[banktypes.ModuleName] = setAccountBalance(t, f, addr1, 25)
 			},
 			false,
 			fmt.Sprintf("account %s has a balance in genesis, but it only has 25stake available to stake, not 50stake", addr1),
@@ -200,7 +198,7 @@ func TestValidateAccountInGenesis(t *testing.T) {
 			"account with enough funds of default bond denom",
 			func() {
 				coins = sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 10)}
-				appGenesisState[banktypes.ModuleName] = setAccountBalance(t, addr1, 25)
+				appGenesisState[banktypes.ModuleName] = setAccountBalance(t, f, addr1, 25)
 			},
 			true,
 			"",
@@ -266,8 +264,8 @@ func TestDeliverGenTxs(t *testing.T) {
 		{
 			"success",
 			func() {
-				_ = setAccountBalance(t, addr1, 50)
-				_ = setAccountBalance(t, addr2, 1)
+				_ = setAccountBalance(t, f, addr1, 50)
+				_ = setAccountBalance(t, f, addr2, 1)
 
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				msg := banktypes.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 1)})
@@ -314,7 +312,6 @@ func TestDeliverGenTxs(t *testing.T) {
 				)
 
 				assert.ErrorContains(t, err, tc.expErrMsg)
-				// suite.Require().Error(err)
 			}
 		})
 	}

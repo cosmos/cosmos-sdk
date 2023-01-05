@@ -63,12 +63,6 @@ func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) {
 	return NewMemIterator(start, end, bt, make(map[string]struct{}), false), nil
 }
 
-func (bt *BTree) Copy() *BTree {
-	return &BTree{
-		tree: *bt.tree.Copy(),
-	}
-}
-
 // item is a btree item with byte slices as keys and values
 type item struct {
 	key   []byte

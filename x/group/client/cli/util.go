@@ -66,6 +66,8 @@ type Proposal struct {
 	Messages  []json.RawMessage `json:"messages,omitempty"`
 	Metadata  string            `json:"metadata"`
 	Proposers []string          `json:"proposers,omitempty"`
+	Title     string            `json:"title"`
+	Summary   string            `json:"summary"`
 }
 
 func getCLIProposal(path string) (Proposal, error) {

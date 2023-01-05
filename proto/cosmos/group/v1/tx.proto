@@ -81,7 +81,6 @@ message MsgCreateGroup {
 
 // MsgCreateGroupResponse is the Msg/CreateGroup response type.
 message MsgCreateGroupResponse {
-
   // group_id is the unique ID of the newly created group.
   uint64 group_id = 1;
 }
@@ -167,7 +166,6 @@ message MsgCreateGroupPolicy {
 
 // MsgCreateGroupPolicyResponse is the Msg/CreateGroupPolicy response type.
 message MsgCreateGroupPolicyResponse {
-
   // address is the account address of the newly created group policy.
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
@@ -218,7 +216,6 @@ message MsgCreateGroupWithPolicy {
 
 // MsgCreateGroupWithPolicyResponse is the Msg/CreateGroupWithPolicy response type.
 message MsgCreateGroupWithPolicyResponse {
-
   // group_id is the unique ID of the newly created group with policy.
   uint64 group_id = 1;
 
@@ -270,7 +267,6 @@ message MsgUpdateGroupPolicyMetadataResponse {}
 
 // Exec defines modes of execution of a proposal on creation or on new vote.
 enum Exec {
-
   // An empty value means that there should be a separate
   // MsgExec request for the proposal to execute.
   EXEC_UNSPECIFIED = 0;
@@ -306,11 +302,20 @@ message MsgSubmitProposal {
   // whether it should be executed immediately on creation or not.
   // If so, proposers signatures are considered as Yes votes.
   Exec exec = 5;
+
+  // title is the title of the proposal.
+  //
+  // Since: cosmos-sdk 0.47
+  string title = 6;
+
+  // summary is the summary of the proposal.
+  //
+  // Since: cosmos-sdk 0.47
+  string summary = 7;
 }
 
 // MsgSubmitProposalResponse is the Msg/SubmitProposal response type.
 message MsgSubmitProposalResponse {
-
   // proposal is the unique ID of the proposal.
   uint64 proposal_id = 1;
 }

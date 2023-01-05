@@ -4,11 +4,14 @@ package simapp
 
 import (
 	_ "embed"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -25,6 +28,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -244,6 +249,64 @@ func NewSimApp(
 	); err != nil {
 		panic(err)
 	}
+
+	nonceMempool := mempool.NewSenderNonceMempool()
+	mempoolOpt := baseapp.SetMempool(nonceMempool)
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+			fmt.Println("prepare proposal!!!! height:", ctx.BlockHeight())
+			balances := app.BankKeeper.GetAccountsBalances(ctx)
+			fmt.Println("all balances!!!!!", balances)
+			err := app.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000000000000))))
+			fmt.Println("mint coins err:", err)
+			totalPower := app.StakingKeeper.GetLastTotalPower(ctx)
+			fmt.Println("total power!!!!!", totalPower)
+			bankParams := app.StakingKeeper.GetParams(ctx)
+			fmt.Println("staking params!!!!!", bankParams)
+			var (
+				txsBytes  [][]byte
+				byteCount int64
+			)
+
+			iterator := nonceMempool.Select(ctx, req.Txs)
+			for iterator != nil {
+				memTx := iterator.Tx()
+
+				bz, err := app.txConfig.TxEncoder()(memTx)
+				if err != nil {
+					panic(err)
+				}
+
+				txSize := int64(len(bz))
+
+				// NOTE: Since runTx was already executed in CheckTx, which calls
+				// mempool.Insert, ideally everything in the pool should be valid. But
+				// some mempool implementations may insert invalid txs, so we check again.
+				res := app.CheckTx(types.RequestCheckTx{
+					Tx:   bz,
+					Type: types.CheckTxType_Recheck,
+				})
+				if res.IsErr() {
+					err := nonceMempool.Remove(memTx)
+					if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+						panic(err)
+					}
+
+					iterator = iterator.Next()
+					continue
+				} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+					txsBytes = append(txsBytes, bz)
+				} else {
+					break
+				}
+
+				iterator = iterator.Next()
+			}
+
+			return types.ResponsePrepareProposal{Txs: txsBytes}
+		})
+	}
+	baseAppOptions = append(baseAppOptions, prepareOpt, mempoolOpt)
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 

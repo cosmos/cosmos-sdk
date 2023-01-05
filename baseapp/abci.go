@@ -252,6 +252,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal method not set")
 	}
 
+	// Tendermint must never call PrepareProposal with a height of 0.
+	// TODO: Link to a doc stating this.
+	if req.Height < 1 {
+		panic("PrepareProposal called with invalid height")
+	}
+
 	ctx := app.prepareProposalState.ctx
 	// Here we use deliverState on the first block given that we want to be able
 	// to access any state changes made in InitChain.

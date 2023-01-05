@@ -4824,6 +4824,8 @@ var (
 	fd_Proposal_voting_period_end    protoreflect.FieldDescriptor
 	fd_Proposal_executor_result      protoreflect.FieldDescriptor
 	fd_Proposal_messages             protoreflect.FieldDescriptor
+	fd_Proposal_title                protoreflect.FieldDescriptor
+	fd_Proposal_summary              protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -4841,6 +4843,8 @@ func init() {
 	fd_Proposal_voting_period_end = md_Proposal.Fields().ByName("voting_period_end")
 	fd_Proposal_executor_result = md_Proposal.Fields().ByName("executor_result")
 	fd_Proposal_messages = md_Proposal.Fields().ByName("messages")
+	fd_Proposal_title = md_Proposal.Fields().ByName("title")
+	fd_Proposal_summary = md_Proposal.Fields().ByName("summary")
 }
 
 var _ protoreflect.Message = (*fastReflection_Proposal)(nil)
@@ -4980,6 +4984,18 @@ func (x *fastReflection_Proposal) Range(f func(protoreflect.FieldDescriptor, pro
 			return
 		}
 	}
+	if x.Title != "" {
+		value := protoreflect.ValueOfString(x.Title)
+		if !f(fd_Proposal_title, value) {
+			return
+		}
+	}
+	if x.Summary != "" {
+		value := protoreflect.ValueOfString(x.Summary)
+		if !f(fd_Proposal_summary, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -5019,6 +5035,10 @@ func (x *fastReflection_Proposal) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.ExecutorResult != 0
 	case "cosmos.group.v1.Proposal.messages":
 		return len(x.Messages) != 0
+	case "cosmos.group.v1.Proposal.title":
+		return x.Title != ""
+	case "cosmos.group.v1.Proposal.summary":
+		return x.Summary != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.Proposal"))
@@ -5059,6 +5079,10 @@ func (x *fastReflection_Proposal) Clear(fd protoreflect.FieldDescriptor) {
 		x.ExecutorResult = 0
 	case "cosmos.group.v1.Proposal.messages":
 		x.Messages = nil
+	case "cosmos.group.v1.Proposal.title":
+		x.Title = ""
+	case "cosmos.group.v1.Proposal.summary":
+		x.Summary = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.Proposal"))
@@ -5117,6 +5141,12 @@ func (x *fastReflection_Proposal) Get(descriptor protoreflect.FieldDescriptor) p
 		}
 		listValue := &_Proposal_12_list{list: &x.Messages}
 		return protoreflect.ValueOfList(listValue)
+	case "cosmos.group.v1.Proposal.title":
+		value := x.Title
+		return protoreflect.ValueOfString(value)
+	case "cosmos.group.v1.Proposal.summary":
+		value := x.Summary
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.Proposal"))
@@ -5165,6 +5195,10 @@ func (x *fastReflection_Proposal) Set(fd protoreflect.FieldDescriptor, value pro
 		lv := value.List()
 		clv := lv.(*_Proposal_12_list)
 		x.Messages = *clv.list
+	case "cosmos.group.v1.Proposal.title":
+		x.Title = value.Interface().(string)
+	case "cosmos.group.v1.Proposal.summary":
+		x.Summary = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.Proposal"))
@@ -5226,6 +5260,10 @@ func (x *fastReflection_Proposal) Mutable(fd protoreflect.FieldDescriptor) proto
 		panic(fmt.Errorf("field status of message cosmos.group.v1.Proposal is not mutable"))
 	case "cosmos.group.v1.Proposal.executor_result":
 		panic(fmt.Errorf("field executor_result of message cosmos.group.v1.Proposal is not mutable"))
+	case "cosmos.group.v1.Proposal.title":
+		panic(fmt.Errorf("field title of message cosmos.group.v1.Proposal is not mutable"))
+	case "cosmos.group.v1.Proposal.summary":
+		panic(fmt.Errorf("field summary of message cosmos.group.v1.Proposal is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.Proposal"))
@@ -5268,6 +5306,10 @@ func (x *fastReflection_Proposal) NewField(fd protoreflect.FieldDescriptor) prot
 	case "cosmos.group.v1.Proposal.messages":
 		list := []*anypb.Any{}
 		return protoreflect.ValueOfList(&_Proposal_12_list{list: &list})
+	case "cosmos.group.v1.Proposal.title":
+		return protoreflect.ValueOfString("")
+	case "cosmos.group.v1.Proposal.summary":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.group.v1.Proposal"))
@@ -5384,6 +5426,14 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		l = len(x.Title)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Summary)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -5412,6 +5462,20 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Summary) > 0 {
+			i -= len(x.Summary)
+			copy(dAtA[i:], x.Summary)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Summary)))
+			i--
+			dAtA[i] = 0x72
+		}
+		if len(x.Title) > 0 {
+			i -= len(x.Title)
+			copy(dAtA[i:], x.Title)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Title)))
+			i--
+			dAtA[i] = 0x6a
 		}
 		if len(x.Messages) > 0 {
 			for iNdEx := len(x.Messages) - 1; iNdEx >= 0; iNdEx-- {
@@ -5900,6 +5964,70 @@ func (x *fastReflection_Proposal) ProtoMethods() *protoiface.Methods {
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Messages[len(x.Messages)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
+				iNdEx = postIndex
+			case 13:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Title = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 14:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Summary", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Summary = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -7960,6 +8088,14 @@ type Proposal struct {
 	ExecutorResult ProposalExecutorResult `protobuf:"varint,11,opt,name=executor_result,json=executorResult,proto3,enum=cosmos.group.v1.ProposalExecutorResult" json:"executor_result,omitempty"`
 	// messages is a list of `sdk.Msg`s that will be executed if the proposal passes.
 	Messages []*anypb.Any `protobuf:"bytes,12,rep,name=messages,proto3" json:"messages,omitempty"`
+	// title is the title of the proposal
+	//
+	// Since: cosmos-sdk 0.47
+	Title string `protobuf:"bytes,13,opt,name=title,proto3" json:"title,omitempty"`
+	// summary is a short summary of the proposal
+	//
+	// Since: cosmos-sdk 0.47
+	Summary string `protobuf:"bytes,14,opt,name=summary,proto3" json:"summary,omitempty"`
 }
 
 func (x *Proposal) Reset() {
@@ -8064,6 +8200,20 @@ func (x *Proposal) GetMessages() []*anypb.Any {
 		return x.Messages
 	}
 	return nil
+}
+
+func (x *Proposal) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Proposal) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
 }
 
 // TallyResult represents the sum of weighted votes for each vote option.
@@ -8320,7 +8470,7 @@ var file_cosmos_group_v1_types_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42,
 	0x0d, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x09,
 	0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8,
-	0xa0, 0x1f, 0x01, 0x22, 0xce, 0x05, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
+	0xa0, 0x1f, 0x01, 0x22, 0xfe, 0x05, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
 	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64,
 	0x12, 0x4a, 0x0a, 0x14, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x5f, 0x70, 0x6f, 0x6c, 0x69, 0x63, 0x79,
 	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
@@ -8364,7 +8514,10 @@ var file_cosmos_group_v1_types_proto_rawDesc = []byte{
 	0x65, 0x63, 0x75, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x30, 0x0a, 0x08,
 	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x0c, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14,
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x3a, 0x04,
+	0x2e, 0x41, 0x6e, 0x79, 0x52, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x12, 0x14,
+	0x0a, 0x05, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74,
+	0x69, 0x74, 0x6c, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x18,
+	0x0e, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x3a, 0x04,
 	0x88, 0xa0, 0x1f, 0x00, 0x22, 0x9d, 0x01, 0x0a, 0x0b, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65,
 	0x73, 0x75, 0x6c, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x79, 0x65, 0x73, 0x5f, 0x63, 0x6f, 0x75, 0x6e,
 	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x79, 0x65, 0x73, 0x43, 0x6f, 0x75, 0x6e,

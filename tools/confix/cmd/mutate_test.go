@@ -1,6 +1,7 @@
 package cmd_test
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -35,7 +36,17 @@ func TestSetCmd(t *testing.T) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.SetCommand(), []string{"unexisting", "foo", "foo"})
 	assert.ErrorContains(t, err, "no such file or directory")
 
-	// TODO add more test cases
+	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.GetCommand(), []string{"client", "chain-id"})
+	assert.NilError(t, err)
+	assert.Equal(t, strings.TrimSpace(out.String()), `"test-chain"`)
+
+	newValue := "new-chain"
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.SetCommand(), []string{"client", "chain-id", newValue})
+	assert.NilError(t, err)
+
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.GetCommand(), []string{"client", "chain-id"})
+	assert.NilError(t, err)
+	assert.Equal(t, strings.TrimSpace(out.String()), fmt.Sprintf(`"%s"`, newValue))
 }
 
 func TestGetCmd(t *testing.T) {

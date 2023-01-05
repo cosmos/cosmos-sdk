@@ -9,7 +9,7 @@ import (
 func ConfigCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Update an application config value",
+		Short: "Utilities for managing application configuration",
 	}
 
 	// add subcommands
@@ -17,6 +17,7 @@ func ConfigCommand() *cobra.Command {
 		MigrateCommand(),
 		GetCommand(),
 		SetCommand(),
+		DiffCommand(),
 	)
 
 	return cmd

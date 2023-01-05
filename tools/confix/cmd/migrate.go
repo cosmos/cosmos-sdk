@@ -20,7 +20,7 @@ var (
 func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "migrate [target-version] [config-file] (options)",
-		Short: "Update Cosmos SDK configuration files",
+		Short: "Migrate Cosmos SDK configuration files",
 		Long: `Modify the contents of the specified config TOML file to update the names,
 locations, and values of configuration settings to the current configuration
 layout. The output is written in-place unless --stdout is provided.

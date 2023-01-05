@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -14,10 +14,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var condiffCmd = cobra.Command{
-	Use:   "condiff f1 f2",
-	Short: "Diff the keyspaces of the TOML documents in files f1 and f2",
-	Long: `Diff the keyspaces of the TOML documents in files f1 and f2.
+func DiffCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "diff f1 f2",
+		Short: "Diff the keyspaces of the TOML documents in files f1 and f2",
+		Long: `Diff the keyspaces of the TOML documents in files f1 and f2.
 The output prints one line per key that differs:
 
    -S name    -- section exists in f1 but not f2
@@ -26,17 +27,12 @@ The output prints one line per key that differs:
    +M name    -- mapping exists in f2 but not f1
 
 Comments, order, and values are ignored for comparison purposes.`,
-	Args: cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
-		lhs := mustParse(args[0])
-		rhs := mustParse(args[1])
-		diffDocs(os.Stdout, lhs, rhs)
-	},
-}
-
-func main() {
-	if err := condiffCmd.Execute(); err != nil {
-		os.Exit(1)
+		Args: cobra.ExactArgs(2),
+		Run: func(cmd *cobra.Command, args []string) {
+			lhs := mustParse(args[0])
+			rhs := mustParse(args[1])
+			diffDocs(os.Stdout, lhs, rhs)
+		},
 	}
 }
 

@@ -24,9 +24,9 @@ func CreateAddressPrefix(account []byte) []byte {
 	return key
 }
 
-func CreateDisableMsgPrefix(msgUrl string) []byte {
-	key := make([]byte, len(AccountPermissionPrefix)+len(msgUrl)+1)
+func CreateDisableMsgPrefix(msgURL string) []byte {
+	key := make([]byte, len(AccountPermissionPrefix)+len(msgURL)+1)
 	copy(key, DisableListPrefix)
-	copy(key[len(DisableListPrefix):], msgUrl)
+	copy(key[len(DisableListPrefix):], msgURL)
 	return key
 }

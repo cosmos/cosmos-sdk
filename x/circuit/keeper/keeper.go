@@ -34,13 +34,13 @@ func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (types.Permissi
 
 	perms := types.Permissions{}
 	if err := k.cdc.Unmarshal(bz, &perms); err != nil {
-		return types.CircuitBreakerPermissions{}, err
+		return types.Permissions{}, err
 	}
 
 	return perms, nil
 }
 
-func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms types.CircuitBreakerPermissions) error {
+func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms types.Permissions) error {
 	store := ctx.KVStore(k.key)
 
 	bz, err := k.cdc.Marshal(&perms)
@@ -55,21 +55,15 @@ func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms types.Cir
 	return nil
 }
 
-func (k *Keeper) IsMsgDisabled(ctx sdk.Context, msgUrl string) bool {
+func (k *Keeper) IsMsgDisabled(ctx sdk.Context, msgURL string) bool {
 	store := ctx.KVStore(k.key)
-	return store.Has(types.CreateDisableMsgPrefix(msgUrl))
+	return store.Has(types.CreateDisableMsgPrefix(msgURL))
 }
 
-func (k *Keeper) DisableMsg(ctx sdk.Context, msgUrl string) {
-	ctx.KVStore(k.key).Set(types.CreateDisableMsgPrefix(msgUrl), []byte{})
+func (k *Keeper) DisableMsg(ctx sdk.Context, msgURL string) {
+	ctx.KVStore(k.key).Set(types.CreateDisableMsgPrefix(msgURL), []byte{})
 }
 
-func (k *Keeper) EnableMsg(ctx sdk.Context, msgUrl string) {
-	ctx.KVStore(k.key).Delete(types.CreateDisableMsgPrefix(msgUrl))
-}
-
-func (k *Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisisState {
-	 params := k.GetParams(ctx)
-
-	 var genAccounts 
+func (k *Keeper) EnableMsg(ctx sdk.Context, msgURL string) {
+	ctx.KVStore(k.key).Delete(types.CreateDisableMsgPrefix(msgURL))
 }

@@ -15,4 +15,5 @@ use (
 	./tests
 	./tools/rosetta
 	./tools/cosmovisor
+	./x/circuit
 )

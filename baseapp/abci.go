@@ -259,12 +259,14 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		app.setState(runTxModeDeliver, initHeader)
 	}
 
-	ctx := app.deliverState.ctx.
+	preparePropCtx, _ := app.cacheTxContext(app.deliverState.ctx, []byte{})
+
+	ctx := preparePropCtx.
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
+		WithConsensusParams(app.GetConsensusParams(preparePropCtx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -313,13 +315,15 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		app.setState(runTxModeDeliver, initHeader)
 	}
 
-	ctx := app.deliverState.ctx.
+	processPropCtx, _ := app.cacheTxContext(app.deliverState.ctx, []byte{})
+
+	ctx := processPropCtx.
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(app.deliverState.ctx))
+		WithConsensusParams(app.GetConsensusParams(processPropCtx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -420,7 +424,6 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
-
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 

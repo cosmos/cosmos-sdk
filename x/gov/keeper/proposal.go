@@ -24,6 +24,12 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 		return v1.Proposal{}, err
 	}
 
+	// assert title is no longer than predefined max length of metadata
+	err = keeper.assertMetadataLength(title)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+
 	// Will hold a comma-separated string of all Msg type URLs.
 	msgsStr := ""
 

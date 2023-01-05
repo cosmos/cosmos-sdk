@@ -562,12 +562,14 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 var _ sdk.Msg = &MsgSubmitProposal{}
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
-func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec, title, summary string) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		GroupPolicyAddress: address,
 		Proposers:          proposers,
 		Metadata:           metadata,
 		Exec:               exec,
+		Title:              title,
+		Summary:            summary,
 	}
 	err := m.SetMsgs(msgs)
 	if err != nil {
@@ -606,6 +608,14 @@ func (m MsgSubmitProposal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.GroupPolicyAddress)
 	if err != nil {
 		return sdkerrors.Wrap(err, "group policy")
+	}
+
+	if m.Title == "" {
+		return sdkerrors.Wrap(errors.ErrEmpty, "title")
+	}
+
+	if m.Summary == "" {
+		return sdkerrors.Wrap(errors.ErrEmpty, "summary")
 	}
 
 	if len(m.Proposers) == 0 {

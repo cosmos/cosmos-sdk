@@ -471,6 +471,14 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	if err := k.assertMetadataLength(req.Summary, "proposal summary"); err != nil {
+		return nil, err
+	}
+
+	if err := k.assertMetadataLength(req.Title, "proposal Title"); err != nil {
+		return nil, err
+	}
+
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
@@ -516,6 +524,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
+		Title:              req.Title,
+		Summary:            req.Summary,
 	}
 
 	if err := m.SetMsgs(msgs); err != nil {

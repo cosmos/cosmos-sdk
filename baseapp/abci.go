@@ -253,7 +253,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	}
 
 	// Tendermint must never call PrepareProposal with a height of 0.
-	// TODO: Link to a doc stating this.
+	// Ref: https://github.com/tendermint/tendermint/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		panic("PrepareProposal called with invalid height")
 	}

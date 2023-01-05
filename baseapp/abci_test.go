@@ -10,7 +10,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/abci/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -1382,7 +1381,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	}
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
 			require.Equal(t, "foo", string(value))
@@ -1405,7 +1404,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	reqProposalTxBytes := [][]byte{}
 	reqProcessProposal := abci.RequestProcessProposal{
-		Txs: reqProposalTxBytes[:],
+		Txs: reqProposalTxBytes,
 	}
 
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
@@ -1414,7 +1413,6 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
 		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
 	})
-
 }
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {

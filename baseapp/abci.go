@@ -256,7 +256,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 	// Here we use deliverState on the first block given that we want to be able
 	// to access any state changes made in InitChain.
 	if req.Height == 1 {
-		ctx = app.deliverState.ctx
+		ctx, _ = app.deliverState.ctx.CacheContext()
 	}
 
 	ctx = ctx.WithVoteInfos(app.voteInfos).
@@ -305,7 +305,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 	// Here we use deliverState on the first block given that we want to be able
 	// to access any state changes made in InitChain.
 	if req.Height == 1 {
-		ctx = app.deliverState.ctx
+		ctx, _ = app.deliverState.ctx.CacheContext()
 	}
 
 	ctx = ctx.

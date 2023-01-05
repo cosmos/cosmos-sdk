@@ -1404,7 +1404,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 
 	reqProposalTxBytes := [][]byte{}
 	reqProcessProposal := abci.RequestProcessProposal{
-		Txs: reqProposalTxBytes[:],
+		Txs: reqProposalTxBytes[],
 	}
 
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)

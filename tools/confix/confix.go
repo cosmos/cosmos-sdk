@@ -29,7 +29,7 @@ import (
 // Upgrade is a convenience wrapper for calls to LoadConfig, ApplyFixes, and
 // CheckValid. If the caller requires more control over the behavior of the
 // Upgrade, call those functions directly.
-func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath string) error {
+func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath string, skipValidate bool) error {
 	if configPath == "" {
 		return errors.New("empty input configuration path")
 	}
@@ -49,9 +49,12 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 		return fmt.Errorf("formatting config: %v", err)
 	}
 
-	// verify that file is valid after applying fixes
-	if err := CheckValid(configPath, buf.Bytes()); err != nil {
-		return fmt.Errorf("updated config is invalid: %v", err)
+	// allow to skip validation
+	if !skipValidate {
+		// verify that file is valid after applying fixes
+		if err := CheckValid(configPath, buf.Bytes()); err != nil {
+			return fmt.Errorf("updated config is invalid: %v", err)
+		}
 	}
 
 	if outputPath == "" {
@@ -90,17 +93,24 @@ func CheckValid(fileName string, data []byte) error {
 		if err := v.Unmarshal(&cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal as server config: %w", err)
 		}
-		return cfg.ValidateBasic()
+
+		if err := cfg.ValidateBasic(); err != nil {
+			return fmt.Errorf("server config invalid : %w", err)
+		}
 	case strings.HasSuffix(fileName, ClientConfig):
 		var cfg clientcfg.ClientConfig
 		if err := v.Unmarshal(&cfg); err != nil {
-			return fmt.Errorf("failed to unmarshal as config config: %w", err)
+			return fmt.Errorf("failed to unmarshal as client config: %w", err)
+		}
+
+		if cfg.ChainID == "" {
+			return errors.New("client config invalid: chain-id is empty")
 		}
 	case strings.HasSuffix(fileName, TMConfig):
-		return errors.New("tendermint config is not supported yet")
+		return errors.New("tendermint config is not supported")
 
 	default:
-		return fmt.Errorf("unknown config file name: %s", fileName)
+		return fmt.Errorf("unknown config: %s", fileName)
 	}
 
 	return nil

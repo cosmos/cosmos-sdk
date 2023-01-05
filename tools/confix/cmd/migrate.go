@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	FlagStdOut  bool
-	FlagVerbose bool
+	FlagStdOut       bool
+	FlagVerbose      bool
+	FlagSkipValidate bool
 )
 
 func MigrateCommand() *cobra.Command {
@@ -49,7 +50,7 @@ In case of any error in updating the file, no output is written.`,
 				outputPath = ""
 			}
 
-			if err := confix.Upgrade(ctx, plan, filename, outputPath); err != nil {
+			if err := confix.Upgrade(ctx, plan, filename, outputPath, FlagSkipValidate); err != nil {
 				log.Fatalf("Failed to migrate config: %v", err)
 			}
 
@@ -59,6 +60,7 @@ In case of any error in updating the file, no output is written.`,
 
 	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
 	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
+	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to mutate unknown configurations)")
 
 	return cmd
 }

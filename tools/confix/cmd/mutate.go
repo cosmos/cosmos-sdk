@@ -72,12 +72,13 @@ func SetCommand() *cobra.Command {
 				ctx = confix.WithLogWriter(ctx, os.Stderr)
 			}
 
-			return confix.Upgrade(ctx, plan, filename, outputPath)
+			return confix.Upgrade(ctx, plan, filename, outputPath, FlagSkipValidate)
 		},
 	}
 
 	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
 	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
+	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to mutate unknown configurations)")
 
 	return cmd
 }

@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/core v0.4.0
+	github.com/cockroachdb/errors v1.8.1
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -28,7 +29,6 @@ require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cockroachdb/errors v1.8.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.0.8 // indirect

@@ -248,10 +248,22 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
+
+	ctx := app.prepareProposalState.ctx
+	// Here we use deliverState on the first block given that we want to be able
+	// to access any state changes made in InitChain.
+	if req.Height == 1 {
+		ctx = app.deliverState.ctx
+	}
+
+	ctx = ctx.WithVoteInfos(app.voteInfos).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -289,13 +301,20 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.processProposalState.ctx.
+	ctx := app.processProposalState.ctx
+	// Here we use deliverState on the first block given that we want to be able
+	// to access any state changes made in InitChain.
+	if req.Height == 1 {
+		ctx = app.deliverState.ctx
+	}
+
+	ctx = ctx.
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {

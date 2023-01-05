@@ -18,6 +18,7 @@ type Keeper struct {
 	storeKey         storetypes.StoreKey
 	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
+	accountKeeper    types.AccountKeeper
 	feeCollectorName string
 
 	// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -45,6 +46,7 @@ func NewKeeper(
 		storeKey:         key,
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
+		accountKeeper:    ak,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 	}
@@ -104,16 +106,16 @@ func (k Keeper) GetParams(ctx sdk.Context) (p types.Params) {
 	return p
 }
 
-// StakingTokenSupply implements an alias call to the underlying staking keeper's
-// StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx sdk.Context) math.Int {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
-}
-
 // BondedRatio implements an alias call to the underlying staking keeper's
 // BondedRatio to be used in BeginBlocker.
 func (k Keeper) BondedRatio(ctx sdk.Context) math.LegacyDec {
 	return k.stakingKeeper.BondedRatio(ctx)
+}
+
+// BondedTokenSupply implements an alian call to the underlying staking keeper's
+// BondedTokenSupply to be used in BeginBlocker
+func (k Keeper) BondedTokenSupply(ctx sdk.Context) sdk.Int {
+	return k.stakingKeeper.TotalBondedTokens(ctx)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's
@@ -131,4 +133,16 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 // AddCollectedFees to be used in BeginBlocker.
 func (k Keeper) AddCollectedFees(ctx sdk.Context, fees sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, fees)
+}
+
+// CountCollectedFees implements an alias call to the underlying supply keeper's
+// CountCollectedFees to be used in BeginBlocker.
+func (k Keeper) CountCollectedFees(ctx sdk.Context, denom string) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAccount(ctx, k.feeCollectorName).GetAddress(), denom)
+}
+
+// BurnFees implements an alias call to the underlying supply keeper's
+// BurnFees to be used in BeginBlocker.
+func (k Keeper) BurnFees(ctx sdk.Context, fees sdk.Coins) error {
+	return k.bankKeeper.BurnCoins(ctx, k.feeCollectorName, fees)
 }

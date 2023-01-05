@@ -31,7 +31,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
-const ConsensusVersion = 5
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}

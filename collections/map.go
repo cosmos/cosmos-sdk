@@ -130,12 +130,15 @@ func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V
 
 // IterateRaw iterates over the collection. The iteration range is untyped, it uses raw
 // bytes. The resulting Iterator is typed.
+// A nil start iterates from the first key contained in the collection.
+// A nil end iterates up to the last key contained in the collection.
+// A nil start and a nil end iterates over every key contained in the collection.
 // TODO(tip): simplify after https://github.com/cosmos/cosmos-sdk/pull/14310 is merged
 func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[K, V], error) {
 	prefixedStart := append(m.prefix, start...)
 	var prefixedEnd []byte
 	if end == nil {
-		prefixedEnd = prefixEndBytes(end)
+		prefixedEnd = prefixEndBytes(m.prefix)
 	} else {
 		prefixedEnd = append(m.prefix, end...)
 	}

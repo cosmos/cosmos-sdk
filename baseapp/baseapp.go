@@ -427,6 +427,8 @@ func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 	case runTxProcessProposal:
 		// It is set on InitChain and Commit.
 		app.processProposalState = baseState
+		app.processProposalState.ctx = app.processProposalState.ctx.
+			WithBlockGasMeter(app.newGasMeter(baseState.ctx))
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
@@ -635,15 +637,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		}
 	}
 
-	// If BlockGasMeter() panics it will be caught by the above recover and will
-	// return an error - in any case BlockGasMeter will consume gas past the limit.
-	//
-	// NOTE: This must exist in a separate defer function for the above recovery
-	// to recover from this one.
-	if mode == runTxModeDeliver {
-		defer consumeBlockGas()
-	}
-
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
 		return sdk.GasInfo{}, nil, nil, 0, err
@@ -736,11 +729,13 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
 		}
 
-		if mode == runTxModeDeliver {
-			// When block gas exceeds, it'll panic and won't commit the cached store.
+		if mode == runTxModeDeliver || mode == runTxProcessProposal {
+			// When block gas exceeds, it'll panic and (in the case of deliverMode) won't commit the cached store.
 			consumeBlockGas()
 
-			msCache.Write()
+			if mode == runTxModeDeliver {
+				msCache.Write()
+			}
 		}
 
 		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {

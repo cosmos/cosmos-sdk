@@ -171,13 +171,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 			WithBlockHeight(req.Header.Height)
 	}
 
-	// add block gas meter
-	var gasMeter sdk.GasMeter
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = sdk.NewGasMeter(maxGas)
-	} else {
-		gasMeter = sdk.NewInfiniteGasMeter()
-	}
+	gasMeter := app.newGasMeter(app.deliverState.ctx)
 
 	// NOTE: header hash is not set in NewContext, so we manually set it here
 
@@ -207,6 +201,17 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	return res
+}
+
+func (app *BaseApp) newGasMeter(ctx sdk.Context) sdk.GasMeter {
+	// add block gas meter
+	var gasMeter sdk.GasMeter
+	if maxGas := app.GetMaximumBlockGas(ctx); maxGas > 0 {
+		gasMeter = sdk.NewGasMeter(maxGas)
+	} else {
+		gasMeter = sdk.NewInfiniteGasMeter()
+	}
+	return gasMeter
 }
 
 // EndBlock implements the ABCI interface.

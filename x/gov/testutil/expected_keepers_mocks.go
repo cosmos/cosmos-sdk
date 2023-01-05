@@ -789,6 +789,21 @@ func (mr *MockBankKeeperMockRecorder) SetSendEnabled(ctx, denom, value interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).SetSendEnabled), ctx, denom, value)
 }
 
+// SpendableBalanceByDenom mocks base method.
+func (m *MockBankKeeper) SpendableBalanceByDenom(arg0 context.Context, arg1 *types0.QuerySpendableBalanceByDenomRequest) (*types0.QuerySpendableBalanceByDenomResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SpendableBalanceByDenom", arg0, arg1)
+	ret0, _ := ret[0].(*types0.QuerySpendableBalanceByDenomResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SpendableBalanceByDenom indicates an expected call of SpendableBalanceByDenom.
+func (mr *MockBankKeeperMockRecorder) SpendableBalanceByDenom(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableBalanceByDenom", reflect.TypeOf((*MockBankKeeper)(nil).SpendableBalanceByDenom), arg0, arg1)
+}
+
 // SpendableBalances mocks base method.
 func (m *MockBankKeeper) SpendableBalances(arg0 context.Context, arg1 *types1.QuerySpendableBalancesRequest) (*types1.QuerySpendableBalancesResponse, error) {
 	m.ctrl.T.Helper()

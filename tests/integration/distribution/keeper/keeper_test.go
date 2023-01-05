@@ -48,7 +48,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 	assert.NilError(t, distrKeeper.SetParams(ctx, params))
 
 	err = distrKeeper.SetWithdrawAddr(ctx, addr[0], addr[1])
-	assert.Assert(t, err == nil)
+	assert.NilError(t, err)
 
 	assert.ErrorContains(t, distrKeeper.SetWithdrawAddr(ctx, addr[0], distrAcc.GetAddress()), fmt.Sprintf("%s is not allowed to receive external funds: unauthorized", distrAcc.GetAddress()))
 }
@@ -178,7 +178,7 @@ func TestFundCommunityPool(t *testing.T) {
 	assert.Assert(t, initPool.CommunityPool.Empty() == true)
 
 	err = distrKeeper.FundCommunityPool(ctx, amount, addr[0])
-	assert.Assert(t, err == nil)
+	assert.NilError(t, err)
 
 	assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), distrKeeper.GetFeePool(ctx).CommunityPool)
 	assert.Assert(t, bankKeeper.GetAllBalances(ctx, addr[0]).Empty() == true)

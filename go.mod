@@ -177,6 +177,9 @@ require (
 )
 
 replace (
+
+	// TODO(tip): temp until a stable version of collections is tagged
+	cosmossdk.io/collections => ./collections
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
@@ -184,9 +187,6 @@ replace (
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
-
-	// TODO(tip): temp until a stable version of collections is tagged
-	cosmossdk.io/collections => ./collections
 )
 
 retract (

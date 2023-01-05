@@ -29,7 +29,7 @@ type priorityNonceMempool struct {
 	senderIndices  map[string]*skiplist.SkipList
 	scores         map[txMeta]txMeta
 	onRead         func(tx sdk.Tx)
-	txReplacement  func(oldTxPriority, newTxPriority int64) bool
+	txReplacement  func(op, np int64) bool
 	maxTx          int
 }
 
@@ -95,7 +95,7 @@ func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption 
 
 // PriorityNonceWithTxReplacement sets a callback to be called when duplicated tx nonce detected
 // during the mempool insert, the dev can define the tx replacement rule based on the tx priority
-func PriorityNonceWithTxReplacement(txReplacementRule func(oldTxPriority, newTxPriority int64) bool) PriorityNonceMempoolOption {
+func PriorityNonceWithTxReplacement(txReplacementRule func(op, np int64) bool) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.txReplacement = txReplacementRule
 	}

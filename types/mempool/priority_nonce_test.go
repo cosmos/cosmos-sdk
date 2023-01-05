@@ -666,9 +666,9 @@ func TestTxReplacement(t *testing.T) {
 	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
 	// otherwise, the Insert will return error
 	feeBump := 20
-	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithTxReplacement(func(oldTxPriority, newTxPriority int64) bool {
+	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithTxReplacement(func(op, np int64) bool {
 		threshold := int64(100 + feeBump)
-		return newTxPriority >= oldTxPriority*threshold/100
+		return np >= op*threshold/100
 	}))
 
 	c := ctx.WithPriority(txs[0].priority)

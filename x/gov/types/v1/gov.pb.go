@@ -266,9 +266,16 @@ type Proposal struct {
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,10,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// title is the title of the proposal
+	//
+	// Since: cosmos-sdk 0.47
 	Title string `protobuf:"bytes,11,opt,name=title,proto3" json:"title,omitempty"`
 	// summary is a short summary of the proposal
-	Summary  string `protobuf:"bytes,12,opt,name=summary,proto3" json:"summary,omitempty"`
+	//
+	// Since: cosmos-sdk 0.47
+	Summary string `protobuf:"bytes,12,opt,name=summary,proto3" json:"summary,omitempty"`
+	// Proposer is the address of the proposal sumbitter
+	//
+	// Since: cosmos-sdk 0.47
 	Proposer string `protobuf:"bytes,13,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }
 

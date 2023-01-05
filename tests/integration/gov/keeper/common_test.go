@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/simapp"
+
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,11 +54,11 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 	)
 
 	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{})
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidator(ctx, val2)

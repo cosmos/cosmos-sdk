@@ -4,13 +4,14 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -29,7 +30,7 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 
 	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
 	stateBytes, err := tmjson.Marshal(genesisState)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	app.InitChain(
 		abcitypes.RequestInitChain{
@@ -40,5 +41,5 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	acc := app.AccountKeeper.GetAccount(ctx, authtypes.NewModuleAddress(types.ModuleName))
-	require.NotNil(t, acc)
+	assert.Assert(t, acc != nil)
 }

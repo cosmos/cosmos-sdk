@@ -35,9 +35,9 @@ In case of any error in updating the file, no output is written.`,
 				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
 			}
 
-			plan, ok := confix.Versions[targetVersion]
+			plan, ok := confix.Migrations[targetVersion]
 			if !ok {
-				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Versions))
+				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))
 			}
 
 			ctx := context.Background()

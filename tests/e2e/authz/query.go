@@ -3,6 +3,7 @@ package authz
 import (
 	"fmt"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -11,12 +12,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
+	"gotest.tools/v3/assert"
 )
 
-func (s *E2ETestSuite) TestQueryAuthorizations() {
-	val := s.network.Validators[0]
+func TestQueryAuthorizations(t *testing.T) {
+	f := initFixture(t)
+	val := f.network.Validators[0]
 
-	grantee := s.grantee[0]
+	grantee := f.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := authzclitestutil.CreateGrant(
@@ -29,11 +32,11 @@ func (s *E2ETestSuite) TestQueryAuthorizations() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
 	)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	assert.NilError(t, err)
+	assert.NilError(t, f.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name      string
@@ -75,27 +78,28 @@ func (s *E2ETestSuite) TestQueryAuthorizations() {
 	for _, tc := range testCases {
 		tc := tc
 
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			cmd := cli.GetCmdQueryGrants()
 			clientCtx := val.ClientCtx
 			resp, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().Contains(string(resp.Bytes()), tc.expErrMsg)
+				assert.Error(t, err, "") //TODO
+				assert.Equal(t, strings.Contains(string(resp.Bytes()), tc.expErrMsg), true)
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				var grants authz.QueryGrantsResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &grants)
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryAuthorization() {
-	val := s.network.Validators[0]
+func TestQueryAuthorization(t *testing.T) {
+	f := initFixture(t)
+	val := f.network.Validators[0]
 
-	grantee := s.grantee[0]
+	grantee := f.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	_, err := authzclitestutil.CreateGrant(
@@ -108,11 +112,11 @@ func (s *E2ETestSuite) TestQueryAuthorization() {
 			fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 			fmt.Sprintf("--%s=%d", cli.FlagExpiration, twoHours),
-			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(f.cfg.BondDenom, sdk.NewInt(10))).String()),
 		},
 	)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
+	assert.NilError(t, err)
+	assert.NilError(t, f.network.WaitForNextBlock())
 
 	testCases := []struct {
 		name           string
@@ -168,35 +172,35 @@ func (s *E2ETestSuite) TestQueryAuthorization() {
 			"Valid txn with allowed list (json)",
 			[]string{
 				val.Address.String(),
-				s.grantee[3].String(),
+				f.grantee[3].String(),
 				typeMsgSend,
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
-			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"88"}],"allow_list":["%s"]}`, s.grantee[4]),
+			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"88"}],"allow_list":["%s"]}`, f.grantee[4]),
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
 
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			cmd := cli.GetCmdQueryGrants()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Error(err)
+				assert.Error(t, err, "") //TODO
 			} else {
-				s.Require().NoError(err)
-				s.Require().Contains(strings.TrimSpace(out.String()), tc.expectedOutput)
+				assert.NilError(t, err)
+				assert.Equal(t, strings.Contains(strings.TrimSpace(out.String()), tc.expectedOutput), true)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryGranterGrants() {
-	val := s.network.Validators[0]
-	grantee := s.grantee[0]
-	require := s.Require()
+func TestQueryGranterGrants(t *testing.T) {
+	f := initFixture(t)
+	val := f.network.Validators[0]
+	grantee := f.grantee[0]
 
 	testCases := []struct {
 		name        string
@@ -248,18 +252,18 @@ func (s *E2ETestSuite) TestQueryGranterGrants() {
 		},
 	}
 	for _, tc := range testCases {
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			cmd := cli.GetQueryGranterGrants()
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				require.Error(err)
-				require.Contains(out.String(), tc.expectedErr)
+				assert.Error(t, err, "") //TODO
+				assert.Equal(t, strings.Contains(out.String(), tc.expectedErr), true)
 			} else {
-				require.NoError(err)
+				assert.NilError(t, err)
 				var grants authz.QueryGranterGrantsResponse
-				require.NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &grants))
-				require.Len(grants.Grants, tc.expItems)
+				assert.NilError(t, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &grants))
+				assert.Equal(t, len(grants.Grants), tc.expItems)
 			}
 		})
 	}

@@ -2,6 +2,8 @@ package authz
 
 import (
 	"fmt"
+	"strings"
+	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -11,11 +13,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"gotest.tools/v3/assert"
 )
 
-func (s *E2ETestSuite) TestQueryGrantGRPC() {
-	val := s.network.Validators[0]
-	grantee := s.grantee[1]
+func TestQueryGrantGRPC(t *testing.T) {
+	f := initFixture(t)
+
+	val := f.network.Validators[0]
+	grantee := f.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s&msg_type_url=%s"
 	testCases := []struct {
 		name      string
@@ -62,28 +67,29 @@ func (s *E2ETestSuite) TestQueryGrantGRPC() {
 	}
 	for _, tc := range testCases {
 		tc := tc
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, _ := testutil.GetRequest(tc.url)
-			require := s.Require()
+			// require := f.Require()
 			if tc.expectErr {
-				require.Contains(string(resp), tc.errorMsg)
+				assert.Equal(t, strings.Contains(string(resp), tc.errorMsg), true)
 			} else {
 				var g authz.QueryGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &g)
-				require.NoError(err)
-				require.Len(g.Grants, 1)
+				assert.NilError(t, err, "")
+				assert.Equal(t, len(g.Grants), 1)
 				g.Grants[0].UnpackInterfaces(val.ClientCtx.InterfaceRegistry)
 				auth, err := g.Grants[0].GetAuthorization()
-				require.NoError(err)
-				require.Equal(auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
+				assert.NilError(t, err, "")
+				assert.Equal(t, auth.MsgTypeURL(), banktypes.SendAuthorization{}.MsgTypeURL())
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryGrantsGRPC() {
-	val := s.network.Validators[0]
-	grantee := s.grantee[1]
+func TestQueryGrantsGRPC(t *testing.T) {
+	f := initFixture(t)
+	val := f.network.Validators[0]
+	grantee := f.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
 	testCases := []struct {
 		name      string
@@ -100,7 +106,7 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 			"",
 			func() {},
 			func(g *authz.QueryGrantsResponse) {
-				s.Require().Len(g.Grants, 1)
+				assert.Equal(t, len(g.Grants), 1)
 			},
 		},
 		{
@@ -119,11 +125,12 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
-				s.Require().NoError(err)
-				s.Require().NoError(s.network.WaitForNextBlock())
+				assert.NilError(t, err) //TODO
+				assert.NilError(t, f.network.WaitForNextBlock())
 			},
+
 			func(g *authz.QueryGrantsResponse) {
-				s.Require().Len(g.Grants, 2)
+				assert.Equal(t, len(g.Grants), 2)
 			},
 		},
 		{
@@ -133,7 +140,8 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 			"",
 			func() {},
 			func(g *authz.QueryGrantsResponse) {
-				s.Require().Len(g.Grants, 1)
+				assert.Equal(t, len(g.Grants), 1)
+
 			},
 		},
 		{
@@ -143,33 +151,35 @@ func (s *E2ETestSuite) TestQueryGrantsGRPC() {
 			"",
 			func() {},
 			func(g *authz.QueryGrantsResponse) {
-				s.Require().Len(g.Grants, 2)
+				assert.Equal(t, len(g.Grants), 2)
+
 			},
 		},
 	}
 	for _, tc := range testCases {
 		tc := tc
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			tc.preRun()
 			resp, err := testutil.GetRequest(tc.url)
-			s.Require().NoError(err)
+			assert.NilError(t, err)
 
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errMsg)
+				assert.Equal(t, strings.Contains(string(resp), tc.errMsg), true)
 			} else {
 				var authorizations authz.QueryGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				tc.postRun(&authorizations)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
-	val := s.network.Validators[0]
-	grantee := s.grantee[1]
-	require := s.Require()
+func TestQueryGranterGrantsGRPC(t *testing.T) {
+	f := initFixture(t)
+	val := f.network.Validators[0]
+	grantee := f.grantee[1]
+	// require := s.Require()
 
 	testCases := []struct {
 		name      string
@@ -201,26 +211,26 @@ func (s *E2ETestSuite) TestQueryGranterGrantsGRPC() {
 		},
 	}
 	for _, tc := range testCases {
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(err)
+			assert.NilError(t, err)
 
 			if tc.expectErr {
-				require.Contains(string(resp), tc.errMsg)
+				assert.Equal(t, strings.Contains(string(resp), tc.errMsg), true)
 			} else {
 				var authorizations authz.QueryGranterGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
-				require.NoError(err)
-				require.Len(authorizations.Grants, tc.numItems)
+				assert.NilError(t, err)
+				assert.Equal(t, len(authorizations.Grants), tc.numItems)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
-	val := s.network.Validators[0]
-	grantee := s.grantee[1]
-	require := s.Require()
+func TestQueryGranteeGrantsGRPC(t *testing.T) {
+	f := initFixture(t)
+	val := f.network.Validators[0]
+	grantee := f.grantee[1]
 
 	testCases := []struct {
 		name      string
@@ -252,17 +262,17 @@ func (s *E2ETestSuite) TestQueryGranteeGrantsGRPC() {
 		},
 	}
 	for _, tc := range testCases {
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(tc.url)
-			require.NoError(err)
+			assert.NilError(t, err)
 
 			if tc.expectErr {
-				require.Contains(string(resp), tc.errMsg)
+				assert.Equal(t, strings.Contains(string(resp), tc.errMsg), true)
 			} else {
 				var authorizations authz.QueryGranteeGrantsResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &authorizations)
-				require.NoError(err)
-				require.Len(authorizations.Grants, tc.numItems)
+				assert.NilError(t, err)
+				assert.Equal(t, len(authorizations.Grants), tc.numItems)
 			}
 		})
 	}

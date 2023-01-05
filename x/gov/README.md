@@ -228,7 +228,7 @@ If a delegator does not vote, it will inherit its validator vote.
 * If the delegator votes after its validator, it will override its validator
   vote with its own. If the proposal is urgent, it is possible
   that the vote will close before delegators have a chance to react and
-  override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass before the end of the voting period. Because as little as 1/3 + 1 validation power could collude to censor transactions, non-collusion is already assumed for ranges exceeding this threshold.
+  override their validator's vote. This is not a problem, as proposals require more than 2/3rd of the total voting power to pass, when tallied at the end of the voting period. Because as little as 1/3 + 1 validation power could collude to censor transactions, non-collusion is already assumed for ranges exceeding this threshold.
 
 #### Validator’s punishment for non-voting
 
@@ -1149,9 +1149,15 @@ where `proposal.json` contains:
     }
   ],
   "metadata": "AQ==",
-  "deposit": "10stake"
+  "deposit": "10stake",
+  "title": "Proposal Title",
+  "summary": "Proposal Summary"
 }
 ```
+
+:::note
+By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
+:::
 
 ##### submit-legacy-proposal
 
@@ -1290,7 +1296,9 @@ Example Output:
       }
     ],
     "votingStartTime": "2021-09-16T19:40:08.712440474Z",
-    "votingEndTime": "2021-09-18T19:40:08.712440474Z"
+    "votingEndTime": "2021-09-18T19:40:08.712440474Z",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
   }
 }
 ```
@@ -1336,7 +1344,9 @@ Example Output:
     ],
     "votingStartTime": "2022-03-28T14:25:26.644857113Z",
     "votingEndTime": "2022-03-30T14:25:26.644857113Z",
-    "metadata": "AQ=="
+    "metadata": "AQ==",
+    "title": "Test Proposal",
+    "summary": "testing, testing, 1, 2, 3"
   }
 }
 ```
@@ -2580,7 +2590,7 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../g
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",

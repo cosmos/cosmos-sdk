@@ -454,7 +454,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto
 
 It's expected to fail if:
 
-* metadata length is greater than `MaxMetadataLen` config.
+* metadata, title, or summary length is greater than `MaxMetadataLen` config.
 * if any of the proposers is not a group member.
 
 ### Msg/WithdrawProposal
@@ -2099,7 +2099,7 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",

@@ -6,22 +6,23 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store/cachemulti"
 	"github.com/cosmos/cosmos-sdk/store/iavl"
 	sdkmaps "github.com/cosmos/cosmos-sdk/store/internal/maps"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
 func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
 }
 
@@ -44,7 +45,7 @@ func TestGetCommitKVStore(t *testing.T) {
 
 func TestStoreMount(t *testing.T) {
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
 	key1 := types.NewKVStoreKey("store1")
 	key2 := types.NewKVStoreKey("store2")
@@ -246,7 +247,7 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 
 	values := 0
 	for ; iterator.Valid(); iterator.Next() {
-		values += 1
+		values++
 	}
 	require.Zero(t, values)
 
@@ -404,7 +405,8 @@ func TestMultiStoreQuery(t *testing.T) {
 	k2, v2 := []byte("water"), []byte("flows")
 	// v3 := []byte("is cold")
 
-	cid := multi.Commit()
+	// Commit the multistore.
+	_ = multi.Commit()
 
 	// Make sure we can get by name.
 	garbage := multi.GetStoreByName("bad-name")
@@ -419,7 +421,7 @@ func TestMultiStoreQuery(t *testing.T) {
 	store2.Set(k2, v2)
 
 	// Commit the multistore.
-	cid = multi.Commit()
+	cid := multi.Commit()
 	ver := cid.Version
 
 	// Reload multistore from database
@@ -533,7 +535,7 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 		require.Error(t, err, "expected error when loading pruned height: %d", v)
 	}
 
-	for v := int64(numVersions - int64(keepRecent)); v < numVersions; v++ {
+	for v := (numVersions - int64(keepRecent)); v < numVersions; v++ {
 		err := ms.LoadVersion(v)
 		require.NoError(t, err, "expected no error when loading height: %d", v)
 	}
@@ -833,7 +835,7 @@ var (
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
@@ -844,7 +846,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 }
 
 func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) (*Store, *types.StoreUpgrades) {
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.SetPruning(pruningOpts)
 
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, nil)
@@ -962,13 +964,13 @@ type commitKVStoreStub struct {
 
 func (stub *commitKVStoreStub) Commit() types.CommitID {
 	commitID := stub.CommitKVStore.Commit()
-	stub.Committed += 1
+	stub.Committed++
 	return commitID
 }
 
 func prepareStoreMap() map[types.StoreKey]types.CommitKVStore {
 	var db dbm.DB = dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)

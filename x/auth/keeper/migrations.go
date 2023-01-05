@@ -27,7 +27,7 @@ func NewMigrator(keeper AccountKeeper, queryServer grpc.Server, ss exported.Subs
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 	var iterErr error
 
-	m.keeper.IterateAccounts(ctx, func(account types.AccountI) (stop bool) {
+	m.keeper.IterateAccounts(ctx, func(account sdk.AccountI) (stop bool) {
 		wb, err := v2.MigrateAccount(ctx, account, m.queryServer)
 		if err != nil {
 			iterErr = err
@@ -63,7 +63,7 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.
-func (m Migrator) V45_SetAccount(ctx sdk.Context, acc types.AccountI) error {
+func (m Migrator) V45_SetAccount(ctx sdk.Context, acc sdk.AccountI) error { //nolint:revive
 	addr := acc.GetAddress()
 	store := ctx.KVStore(m.keeper.storeKey)
 

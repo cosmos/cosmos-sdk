@@ -508,7 +508,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd() *cobra.Command {
 	return cmd
 }
 
-// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/MsgUpdateGroupPolicyMetadata.
+// MsgUpdateGroupPolicyMetadataCmd creates a CLI command for Msg/UpdateGroupPolicyMetadata.
 func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-group-policy-metadata [admin] [group-policy-account] [new-metadata]",
@@ -565,6 +565,8 @@ Parameters:
 		"from_address": "cosmos1...",
 		"to_address": "cosmos1...",
 		"amount":[{"denom": "stake","amount": "10"}]
+		"title": "My proposal",
+		"summary": "This is a proposal to send 10 stake to cosmos1...",
 	}
 	],
 	"metadata": "4pIMOgIGx1vZGU=", // base64-encoded metadata
@@ -599,6 +601,8 @@ Parameters:
 				msgs,
 				prop.Metadata,
 				execFromString(execStr),
+				prop.Title,
+				prop.Summary,
 			)
 			if err != nil {
 				return err
@@ -736,7 +740,7 @@ Parameters:
 	return cmd
 }
 
-// MsgExecCmd creates a CLI command for Msg/MsgExec.
+// MsgExecCmd creates a CLI command for Msg/Exec.
 func MsgExecCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exec [proposal-id]",

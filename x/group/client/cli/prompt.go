@@ -6,14 +6,15 @@ import (
 	"os"
 	"sort"
 
+	"github.com/manifoldco/promptui"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/manifoldco/promptui"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -28,17 +29,19 @@ type proposalType struct {
 	Msg  sdk.Msg
 }
 
-// Prompt the proposal type values and return the proposal and its metadata
+// Prompt the proposal type values and return the proposal and its metadata.
 func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
-	proposal := &Proposal{}
-
 	// set metadata
 	metadata, err := govcli.Prompt(govtypes.ProposalMetadata{}, "proposal")
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
 	// the metadata must be saved on IPFS, set placeholder
-	proposal.Metadata = "ipfs://CID"
+	proposal := &Proposal{
+		Metadata: "ipfs://CID", // the metadata must be saved on IPFS, set placeholder
+		Title:    metadata.Title,
+		Summary:  metadata.Summary,
+	}
 
 	// set group policy address
 	policyAddressPrompt := promptui.Prompt{
@@ -146,6 +149,7 @@ func NewCmdDraftProposal() *cobra.Command {
 	return cmd
 }
 
+// writeFile writes the input to the file.
 func writeFile(fileName string, input any) error {
 	raw, err := json.MarshalIndent(input, "", " ")
 	if err != nil {

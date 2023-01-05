@@ -46,7 +46,7 @@ func TestContext_PrintProto(t *testing.T) {
 	// json
 	buf := &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "json"
+	ctx.OutputFormat = "json" //nolint:goconst
 	err = ctx.PrintProto(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
@@ -56,7 +56,7 @@ func TestContext_PrintProto(t *testing.T) {
 	// yaml
 	buf = &bytes.Buffer{}
 	ctx = ctx.WithOutput(buf)
-	ctx.OutputFormat = "text"
+	ctx.OutputFormat = "text" //nolint:goconst
 	err = ctx.PrintProto(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,

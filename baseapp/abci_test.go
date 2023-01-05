@@ -2,15 +2,16 @@ package baseapp_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -1451,4 +1452,44 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	}
 	res := suite.baseApp.PrepareProposal(req)
 	require.Equal(t, 1, len(res.Txs))
+}
+
+func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
+	prepareOpt := func(app *baseapp.BaseApp) {
+		app.SetPrepareProposal(func(ctx sdk.Context, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+			panic(errors.New("test"))
+		})
+	}
+	suite := NewBaseAppSuite(t, prepareOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+	}
+
+	require.NotPanics(t, func() {
+		res := suite.baseApp.PrepareProposal(req)
+		require.Equal(t, req.Txs, res.Txs)
+	})
+}
+
+func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
+	processOpt := func(app *baseapp.BaseApp) {
+		app.SetProcessProposal(func(ctx sdk.Context, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
+			panic(errors.New("test"))
+		})
+	}
+	suite := NewBaseAppSuite(t, processOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	require.NotPanics(t, func() {
+		res := suite.baseApp.ProcessProposal(abci.RequestProcessProposal{})
+		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
+	})
 }

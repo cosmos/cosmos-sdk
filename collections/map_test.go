@@ -3,14 +3,15 @@ package collections
 import (
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-
 	"github.com/stretchr/testify/require"
 )
 
 func TestMap(t *testing.T) {
 	sk, ctx := deps()
-	m := NewMap(sk, NewPrefix("hi"), Uint64Key, Uint64Value)
+	schemaBuilder := NewSchemaBuilder(sk)
+	m := NewMap(schemaBuilder, NewPrefix("hi"), "m", Uint64Key, Uint64Value)
+	_, err := schemaBuilder.Build()
+	require.NoError(t, err)
 
 	// test not has
 	has, err := m.Has(ctx, 1)
@@ -35,14 +36,12 @@ func TestMap(t *testing.T) {
 	require.False(t, has)
 }
 
-func TestMap_encodeKey(t *testing.T) {
+func Test_encodeKey(t *testing.T) {
 	prefix := "prefix"
 	number := []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 	expectedKey := append([]byte(prefix), number...)
 
-	m := NewMap(storetypes.NewKVStoreKey("test"), NewPrefix(prefix), Uint64Key, Uint64Value)
-
-	gotKey, err := m.encodeKey(0)
+	gotKey, err := encodeKeyWithPrefix(NewPrefix(prefix).Bytes(), Uint64Key, 0)
 	require.NoError(t, err)
 	require.Equal(t, expectedKey, gotKey)
 }

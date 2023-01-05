@@ -789,10 +789,10 @@ func (mr *MockBankKeeperMockRecorder) SetSendEnabled(ctx, denom, value interface
 }
 
 // SpendableBalanceByDenom mocks base method.
-func (m *MockBankKeeper) SpendableBalanceByDenom(arg0 context.Context, arg1 *types1.QuerySpendableBalanceByDenomRequest) (*types1.QuerySpendableBalanceByDenomResponse, error) {
+func (m *MockBankKeeper) SpendableBalanceByDenom(arg0 context.Context, arg1 *types0.QuerySpendableBalanceByDenomRequest) (*types0.QuerySpendableBalanceByDenomResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableBalanceByDenom", arg0, arg1)
-	ret0, _ := ret[0].(*types1.QuerySpendableBalanceByDenomResponse)
+	ret0, _ := ret[0].(*types0.QuerySpendableBalanceByDenomResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

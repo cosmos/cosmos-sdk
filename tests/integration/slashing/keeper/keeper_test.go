@@ -116,7 +116,7 @@ func TestUnJailNotBonded(t *testing.T) {
 	tstaking.CheckValidator(addr, stakingtypes.Unbonded, false)
 
 	// unbond below minimum self-delegation
-	assert.DeepEqual(t, p.BondDenom, tstaking.Denom)
+	assert.Equal(t, p.BondDenom, tstaking.Denom)
 	tstaking.Undelegate(sdk.AccAddress(addr), addr, f.stakingKeeper.TokensFromConsensusPower(ctx, 1), true)
 
 	staking.EndBlocker(ctx, f.stakingKeeper)
@@ -174,20 +174,20 @@ func TestHandleNewValidator(t *testing.T) {
 	f.slashingKeeper.HandleValidatorSignature(ctx, val.Address(), 100, false)
 
 	info, found := f.slashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(val.Address()))
-	assert.Assert(t, found == true)
-	assert.DeepEqual(t, f.slashingKeeper.SignedBlocksWindow(ctx)+1, info.StartHeight)
-	assert.DeepEqual(t, int64(2), info.IndexOffset)
-	assert.DeepEqual(t, int64(1), info.MissedBlocksCounter)
-	assert.DeepEqual(t, time.Unix(0, 0).UTC(), info.JailedUntil)
+	assert.Assert(t, found)
+	assert.Equal(t, f.slashingKeeper.SignedBlocksWindow(ctx)+1, info.StartHeight)
+	assert.Equal(t, int64(2), info.IndexOffset)
+	assert.Equal(t, int64(1), info.MissedBlocksCounter)
+	assert.Equal(t, time.Unix(0, 0).UTC(), info.JailedUntil)
 
 	// validator should be bonded still, should not have been jailed or slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	assert.DeepEqual(t, stakingtypes.Bonded, validator.GetStatus())
+	assert.Equal(t, stakingtypes.Bonded, validator.GetStatus())
 	bondPool := f.stakingKeeper.GetBondedPool(ctx)
 	expTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, 100)
 	// adding genesis validator tokens
 	expTokens = expTokens.Add(f.stakingKeeper.TokensFromConsensusPower(ctx, 1))
-	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(ctx, bondPool.GetAddress(), f.stakingKeeper.BondDenom(ctx)).Amount) == true)
+	assert.Assert(t, expTokens.Equal(f.bankKeeper.GetBalance(ctx, bondPool.GetAddress(), f.stakingKeeper.BondDenom(ctx)).Amount))
 }
 
 // Test a jailed validator being "down" twice
@@ -228,7 +228,7 @@ func TestHandleAlreadyJailed(t *testing.T) {
 
 	// validator should have been jailed and slashed
 	validator, _ := f.stakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(val))
-	assert.DeepEqual(t, stakingtypes.Unbonding, validator.GetStatus())
+	assert.Equal(t, stakingtypes.Unbonding, validator.GetStatus())
 
 	// validator should have been slashed
 	resultingTokens := amt.Sub(f.stakingKeeper.TokensFromConsensusPower(ctx, 1))
@@ -267,7 +267,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)
 	validatorUpdates := staking.EndBlocker(ctx, f.stakingKeeper)
-	assert.DeepEqual(t, 2, len(validatorUpdates))
+	assert.Equal(t, 2, len(validatorUpdates))
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
 	// 100 first blocks OK
@@ -280,7 +280,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	// kick first validator out of validator set
 	tstaking.CreateValidatorWithValPower(sdk.ValAddress(pks[1].Address()), pks[1], power+1, true)
 	validatorUpdates = staking.EndBlocker(ctx, f.stakingKeeper)
-	assert.DeepEqual(t, 2, len(validatorUpdates))
+	assert.Equal(t, 2, len(validatorUpdates))
 	tstaking.CheckValidator(sdk.ValAddress(pks[1].Address()), stakingtypes.Bonded, false)
 	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, false)
 
@@ -292,7 +292,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.DelegateWithPower(sdk.AccAddress(pks[2].Address()), valAddr, 50)
 
 	validatorUpdates = staking.EndBlocker(ctx, f.stakingKeeper)
-	assert.DeepEqual(t, 2, len(validatorUpdates))
+	assert.Equal(t, 2, len(validatorUpdates))
 	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 	newPower := power + 50
 
@@ -318,10 +318,10 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// check all the signing information
 	signInfo, found := f.slashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
-	assert.Assert(t, found == true)
-	assert.DeepEqual(t, int64(700), signInfo.StartHeight)
-	assert.DeepEqual(t, int64(0), signInfo.MissedBlocksCounter)
-	assert.DeepEqual(t, int64(0), signInfo.IndexOffset)
+	assert.Assert(t, found)
+	assert.Equal(t, int64(700), signInfo.StartHeight)
+	assert.Equal(t, int64(0), signInfo.MissedBlocksCounter)
+	assert.Equal(t, int64(0), signInfo.IndexOffset)
 
 	// some blocks pass
 	height = int64(5000)
@@ -338,8 +338,8 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// check start height is correctly set
 	signInfo, found = f.slashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
-	assert.Assert(t, found == true)
-	assert.DeepEqual(t, height, signInfo.StartHeight)
+	assert.Assert(t, found)
+	assert.Equal(t, height, signInfo.StartHeight)
 
 	// validator misses 501 blocks after SignedBlockWindow period (1000 blocks)
 	latest = f.slashingKeeper.SignedBlocksWindow(ctx) + height

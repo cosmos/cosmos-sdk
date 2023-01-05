@@ -31,13 +31,12 @@ type proposalType struct {
 
 // Prompt the proposal type values and return the proposal and its metadata.
 func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMetadata, error) {
-
 	// set metadata
 	metadata, err := govcli.Prompt(govtypes.ProposalMetadata{}, "proposal")
 	if err != nil {
 		return nil, metadata, fmt.Errorf("failed to set proposal metadata: %w", err)
 	}
-	// the metadata must be saved on IPFS, set placeholder
+
 	proposal := &Proposal{
 		Metadata: "ipfs://CID", // the metadata must be saved on IPFS, set placeholder
 		Title:    metadata.Title,
@@ -55,6 +54,17 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMeta
 	}
 	proposal.GroupPolicyAddress = groupPolicyAddress
 
+	// set proposer address
+	proposerPrompt := promptui.Prompt{
+		Label:    "Enter proposer address",
+		Validate: client.ValidatePromptAddress,
+	}
+	proposerAddress, err := proposerPrompt.Run()
+	if err != nil {
+		return nil, metadata, fmt.Errorf("failed to set proposer address: %w", err)
+	}
+	proposal.Proposers = []string{proposerAddress}
+
 	if p.Msg == nil {
 		return proposal, metadata, nil
 	}
@@ -70,6 +80,7 @@ func (p *proposalType) Prompt(cdc codec.Codec) (*Proposal, govtypes.ProposalMeta
 		return nil, metadata, fmt.Errorf("failed to marshal proposal message: %w", err)
 	}
 	proposal.Messages = append(proposal.Messages, message)
+
 	return proposal, metadata, nil
 }
 
@@ -139,7 +150,7 @@ func NewCmdDraftProposal() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Your draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
+			fmt.Printf("The draft proposal has successfully been generated.\nProposals should contain off-chain metadata, please upload the metadata JSON to IPFS.\nThen, replace the generated metadata field with the IPFS CID.\n")
 
 			return nil
 		},

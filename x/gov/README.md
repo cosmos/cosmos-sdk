@@ -1156,7 +1156,7 @@ where `proposal.json` contains:
 ```
 
 :::note
-By default the metadata and the proposal are both limited by 255 characters, this can be overridden by the application developer.
+By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
 :::
 
 ##### submit-legacy-proposal
@@ -2590,7 +2590,7 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../g
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",

@@ -6,7 +6,7 @@ Feature: MsgAuthorizeCircuitBreaker
 
   Rule: the granter must be a super-admin
     Example: granter is a super-admin
-      Given "acct1" has "LEVEL_SUPER_ADMIN"
+      Given "acct1" has permission "LEVEL_SUPER_ADMIN"
       When  attempts to grant "acct2" the permissions
       """
       { "level": "LEVEL_ALL_MSGS" }
@@ -22,7 +22,7 @@ Feature: MsgAuthorizeCircuitBreaker
       Then expect an "unauthorized" error
 
     Example: granter has all msg's permissions
-      Given "acct1" has "LEVEL_ALL_MSGS"
+      Given "acct1" has permission "LEVEL_ALL_MSGS"
       When "acct1" attempts to grant "acct2" the permissions
       """
       { "level": "LEVEL_ALL_MSGS" }
@@ -43,7 +43,7 @@ Feature: MsgAuthorizeCircuitBreaker
       Then expect success
 
     Example: granting LEVEL_SOME_MSGS without limit_msg_types
-      Given "acct1" has "LEVEL_SUPER_ADMIN"
+      Given "acct1" has permission "LEVEL_SUPER_ADMIN"
       When "acct1" attempts to grant "acct2" the permissions
       """
       { "level": "LEVEL_SOME_MSGS" }
@@ -51,7 +51,7 @@ Feature: MsgAuthorizeCircuitBreaker
       Then expect an "invalid request" error
 
     Example: granting LEVEL_ALL_MSGS with limit_msg_types
-      Given that "acct1" has "LEVEL_SUPER_ADMIN"
+      Given "acct1" has permission "LEVEL_SUPER_ADMIN"
       When "acct1" attempts to grant "acct2" the permissions
       """
       {
@@ -62,7 +62,7 @@ Feature: MsgAuthorizeCircuitBreaker
       Then expect an "invalid request" error
 
     Example: attempting to revoke with limit_msg_types
-      Given "acct1" has "LEVEL_SUPER_ADMIN"
+      Given "acct1" has permission "LEVEL_SUPER_ADMIN"
       When "acct1" attempts to grant "acct2" the permissions
       """
       {
@@ -75,8 +75,8 @@ Feature: MsgAuthorizeCircuitBreaker
 
   Rule: permissions can be revoked using LEVEL_NONE_UNSPECIFIED
     Example: revoking permissions
-      Given "acct1" has "LEVEL_SUPER_ADMIN"
-      And "acct2" has "LEVEL_ALL_MSGS"
+      Given "acct1" has permission "LEVEL_SUPER_ADMIN"
+      And "acct2" has permission "LEVEL_ALL_MSGS"
       When "acct1" attempts to grant "acct2" the permissions
       """
       {
@@ -84,4 +84,4 @@ Feature: MsgAuthorizeCircuitBreaker
       }
       """
       Then expect sucesss
-      And expect that "acct2" no permissions
+      And expect that "acct2" has no permissions

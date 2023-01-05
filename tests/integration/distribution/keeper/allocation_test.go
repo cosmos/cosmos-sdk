@@ -106,13 +106,13 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetFeePool(ctx).CommunityPool.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[1]).Commission.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[0]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[1]).Rewards.IsZero() == true)
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetFeePool(ctx).CommunityPool.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[1]).Commission.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[0]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[1]).Rewards.IsZero())
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)))
@@ -147,7 +147,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	assert.DeepEqual(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(2450, 2)}}, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 
 	// zero commission for second proposer
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[1]).Commission.IsZero() == true)
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[1]).Commission.IsZero())
 
 	// just staking.proportional for first proposer less commission = (0.5 * 98%) * 100 / 2 = 24.50
 	assert.DeepEqual(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecWithPrec(2450, 2)}}, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[0]).Rewards)
@@ -207,14 +207,14 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 
 	// assert initial state: zero outstanding rewards, zero community pool, zero commission, zero current rewards
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetFeePool(ctx).CommunityPool.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[1]).Commission.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[0]).Rewards.IsZero() == true)
-	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[1]).Rewards.IsZero() == true)
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetFeePool(ctx).CommunityPool.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[1]).Commission.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[0]).Rewards.IsZero())
+	assert.Assert(t, distrKeeper.GetValidatorCurrentRewards(ctx, valAddrs[1]).Rewards.IsZero())
 
 	// allocate tokens as if both had voted and second was proposer
 	fees := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(634195840)))
@@ -242,7 +242,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	}
 	distrKeeper.AllocateTokens(ctx, 31, votes)
 
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0]).Rewards.IsValid() == true)
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsValid() == true)
-	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[2]).Rewards.IsValid() == true)
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[0]).Rewards.IsValid())
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[1]).Rewards.IsValid())
+	assert.Assert(t, distrKeeper.GetValidatorOutstandingRewards(ctx, valAddrs[2]).Rewards.IsValid())
 }

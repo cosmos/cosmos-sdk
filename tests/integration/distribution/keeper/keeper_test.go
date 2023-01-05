@@ -175,11 +175,11 @@ func TestFundCommunityPool(t *testing.T) {
 	assert.NilError(t, banktestutil.FundAccount(bankKeeper, ctx, addr[0], amount))
 
 	initPool := distrKeeper.GetFeePool(ctx)
-	assert.Assert(t, initPool.CommunityPool.Empty() == true)
+	assert.Assert(t, initPool.CommunityPool.Empty())
 
 	err = distrKeeper.FundCommunityPool(ctx, amount, addr[0])
 	assert.NilError(t, err)
 
 	assert.DeepEqual(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), distrKeeper.GetFeePool(ctx).CommunityPool)
-	assert.Assert(t, bankKeeper.GetAllBalances(ctx, addr[0]).Empty() == true)
+	assert.Assert(t, bankKeeper.GetAllBalances(ctx, addr[0]).Empty())
 }

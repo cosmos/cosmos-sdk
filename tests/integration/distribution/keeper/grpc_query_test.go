@@ -650,7 +650,7 @@ func TestGRPCDelegatorWithdrawAddress(t *testing.T) {
 
 			if testCase.expPass {
 				assert.NilError(t, err)
-				assert.DeepEqual(t, withdrawAddress.WithdrawAddress, addrs[1].String())
+				assert.Equal(t, withdrawAddress.WithdrawAddress, addrs[1].String())
 			} else {
 				assert.ErrorContains(t, err, testCase.expErrMsg)
 				assert.Assert(t, withdrawAddress == nil)

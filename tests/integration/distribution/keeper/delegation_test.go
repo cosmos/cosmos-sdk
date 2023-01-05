@@ -57,19 +57,19 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	del := stakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// historical count should be 2 (once for validator init, once for delegation init)
-	assert.DeepEqual(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// end period
 	endingPeriod := distrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	// historical count should be 2 still
-	assert.DeepEqual(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// calculate delegation rewards
 	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// allocate some rewards
 	initial := int64(10)
@@ -131,7 +131,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// start out block height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
@@ -206,7 +206,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// start out block height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
@@ -385,14 +385,14 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// historical count should be 2 (initial + latest for delegation)
-	assert.DeepEqual(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// withdraw rewards
 	_, err = distrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 	assert.Assert(t, err == nil)
 
 	// historical count should still be 2 (added one record, cleared one)
-	assert.DeepEqual(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// assert correct balance
 	exp := balanceTokens.Sub(valTokens).Add(initial.QuoRaw(2))
@@ -455,7 +455,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// start out block height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
@@ -629,13 +629,13 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	distrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// historical count should be 2 (validator init, delegation init)
-	assert.DeepEqual(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(2), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// second delegation
 	tstaking.Delegate(sdk.AccAddress(valAddrs[1]), valAddrs[0], sdk.NewInt(100))
 
 	// historical count should be 3 (second delegation init)
-	assert.DeepEqual(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// fetch updated validator
 	val = stakingKeeper.Validator(ctx, valAddrs[0])
@@ -659,7 +659,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	assert.NilError(t, err)
 
 	// historical count should be 3 (validator init + two delegations)
-	assert.DeepEqual(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
+	assert.Equal(t, uint64(3), distrKeeper.GetValidatorHistoricalReferenceCount(ctx))
 
 	// validator withdraws commission
 	_, err = distrKeeper.WithdrawValidatorCommission(ctx, valAddrs[0])
@@ -672,16 +672,16 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	rewards := distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
 
 	// rewards for del1 should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// calculate delegation rewards for del2
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
 
 	// rewards for del2 should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// commission should be zero
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero() == true)
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
 
 	// next block
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -700,7 +700,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
 
 	// rewards for del1 should be zero
-	assert.Assert(t, rewards.IsZero() == true)
+	assert.Assert(t, rewards.IsZero())
 
 	// calculate delegation rewards for del2
 	rewards = distrKeeper.CalculateDelegationRewards(ctx, val, del2, endingPeriod)
@@ -737,7 +737,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	assert.DeepEqual(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be zero
-	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero() == true)
+	assert.Assert(t, distrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
 }
 
 func Test100PercentCommissionReward(t *testing.T) {
@@ -805,7 +805,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	assert.NilError(t, err)
 
 	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}
-	assert.Assert(t, rewards.IsEqual(zeroRewards) == true)
+	assert.Assert(t, rewards.IsEqual(zeroRewards))
 
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]
@@ -816,5 +816,5 @@ func Test100PercentCommissionReward(t *testing.T) {
 			hasValue = true
 		}
 	}
-	assert.Assert(t, hasValue == true)
+	assert.Assert(t, hasValue)
 }

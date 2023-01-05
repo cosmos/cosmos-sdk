@@ -81,9 +81,11 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 		return nil, nil, collections.ErrInvalidIterator
 	}
 
-	var count uint64
-	var nextKey []byte
-	var results []collections.KeyValue[K, V]
+	var (
+		count   uint64
+		nextKey []byte
+		results []collections.KeyValue[K, V]
+	)
 
 	for ; iterator.Valid(); iterator.Next() {
 		switch {
@@ -93,13 +95,11 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
 			if err != nil {
 				return nil, nil, err
 			}
-			// if no predicate function is specified
-			// then we just include the result
+			// if no predicate function is specified then we just include the result
 			if predicateFunc == nil {
 				results = append(results, kv)
 				count++
-				// if predicate function is defined we check
-				// if the result matches the filtering criteria
+				// if predicate function is defined we check if the result matches the filtering criteria
 			} else if predicateFunc(kv.Key, kv.Value) {
 				results = append(results, kv)
 				count++

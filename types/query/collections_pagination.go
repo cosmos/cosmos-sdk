@@ -191,14 +191,12 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 		if err != nil {
 			return nil, nil, err
 		}
-		// if no predicate is specified
-		// then we just append the result
+		// if no predicate is specified then we just append the result
 		if predicateFunc == nil {
 			results = append(results, kv)
 			count++
-			// if predicate is applied we execute the
-			// predicate function and append only
-			// if predicateFunc yields true.
+			// if predicate is applied we execute the predicate function
+			// and append only if predicateFunc yields true.
 		} else if predicateFunc(kv.Key, kv.Value) {
 			results = append(results, kv)
 			count++

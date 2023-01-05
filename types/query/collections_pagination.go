@@ -18,14 +18,20 @@ type Collection[K, V any] interface {
 }
 
 // CollectionPaginate follows the same behaviour as Paginate but works on a Collection.
-func CollectionPaginate[K, V any, C Collection[K, V]](ctx context.Context, coll C, pageReq *PageRequest) ([]collections.KeyValue[K, V], *PageResponse, error) {
+func CollectionPaginate[K, V any, C Collection[K, V]](
+	ctx context.Context,
+	coll C,
+	pageReq *PageRequest,
+) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	return CollectionFilteredPaginate[K, V](ctx, coll, pageReq, nil)
 }
 
 // CollectionFilteredPaginate works in the same way as FilteredPaginate but for collection types.
 // A nil predicateFunc means no filtering is applied and results are collected as is.
 func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
-	ctx context.Context, coll C, pageReq *PageRequest,
+	ctx context.Context,
+	coll C,
+	pageReq *PageRequest,
 	predicateFunc func(key K, value V) (include bool),
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	if pageReq == nil {
@@ -56,9 +62,15 @@ func CollectionFilteredPaginate[K, V any, C Collection[K, V]](
 
 // collFilteredPaginateNoKey applies the provided pagination on the collection when the starting key is not set.
 // If predicateFunc is nil no filtering is applied.
-func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](ctx context.Context, coll C, reverse bool, offset, limit uint64, countTotal bool, predicateFunc func(K, V) bool) (
-	[]collections.KeyValue[K, V], *PageResponse, error,
-) {
+func collFilteredPaginateNoKey[K, V any, C Collection[K, V]](
+	ctx context.Context,
+	coll C,
+	reverse bool,
+	offset uint64,
+	limit uint64,
+	countTotal bool,
+	predicateFunc func(K, V) bool,
+) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, nil, reverse)
 	if err != nil {
 		return nil, nil, err
@@ -140,8 +152,11 @@ func advanceIter[I interface {
 // collFilteredPaginateByKey paginates a collection when a starting key
 // is provided in the PageRequest. Predicate is applied only if not nil.
 func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
-	ctx context.Context, coll C,
-	key []byte, reverse bool, limit uint64,
+	ctx context.Context,
+	coll C,
+	key []byte,
+	reverse bool,
+	limit uint64,
 	predicateFunc func(K, V) bool,
 ) ([]collections.KeyValue[K, V], *PageResponse, error) {
 	iterator, err := getCollIter[K, V](ctx, coll, key, reverse)

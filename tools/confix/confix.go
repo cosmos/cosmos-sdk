@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/creachadair/atomicfile"
 	"github.com/creachadair/tomledit"
@@ -17,18 +18,18 @@ import (
 	srvcfg "github.com/cosmos/cosmos-sdk/server/config"
 )
 
-// Migrate reads the configuration file at configPath and applies any
-// transformations necessary to migrate it to the current version. If this
+// Upgrade reads the configuration file at configPath and applies any
+// transformations necessary to Upgrade it to the current version. If this
 // succeeds, the transformed output is written to outputPath. As a special
 // case, if outputPath == "" the output is written to stdout.
 //
 // It is safe if outputPath == inputPath. If a regular file outputPath already
 // exists, it is overwritten. In case of error, the output is not written.
 //
-// Migrate is a convenience wrapper for calls to LoadConfig, ApplyFixes, and
+// Upgrade is a convenience wrapper for calls to LoadConfig, ApplyFixes, and
 // CheckValid. If the caller requires more control over the behavior of the
-// migrate, call those functions directly.
-func Migrate(ctx context.Context, sdkVersion, configPath, outputPath string) error {
+// Upgrade, call those functions directly.
+func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath string) error {
 	if configPath == "" {
 		return errors.New("empty input configuration path")
 	}
@@ -38,7 +39,8 @@ func Migrate(ctx context.Context, sdkVersion, configPath, outputPath string) err
 		return fmt.Errorf("loading config: %v", err)
 	}
 
-	if err := ApplyFixes(ctx, doc); err != nil {
+	// transforms doc and reports whether it succeeded.
+	if err := plan.Apply(ctx, doc); err != nil {
 		return fmt.Errorf("updating %q: %v", configPath, err)
 	}
 
@@ -61,18 +63,14 @@ func Migrate(ctx context.Context, sdkVersion, configPath, outputPath string) err
 	return err
 }
 
-// ApplyFixes transforms doc and reports whether it succeeded.
-func ApplyFixes(ctx context.Context, doc *tomledit.Document) error {
-	return plan.Apply(ctx, doc)
-}
-
 // LoadConfig loads and parses the TOML document from path.
 func LoadConfig(path string) (*tomledit.Document, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open %q: %v", path, err)
 	}
 	defer f.Close()
+
 	return tomledit.Parse(f)
 }
 
@@ -86,21 +84,21 @@ func CheckValid(fileName string, data []byte) error {
 		return fmt.Errorf("reading config: %w", err)
 	}
 
-	switch fileName {
-	case AppConfig:
+	switch {
+	case strings.HasSuffix(fileName, AppConfig):
 		var cfg srvcfg.Config
 		if err := v.Unmarshal(&cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal as server config: %w", err)
 		}
-
 		return cfg.ValidateBasic()
-	case ClientConfig:
+	case strings.HasSuffix(fileName, ClientConfig):
 		var cfg clientcfg.ClientConfig
 		if err := v.Unmarshal(&cfg); err != nil {
 			return fmt.Errorf("failed to unmarshal as config config: %w", err)
 		}
-	case TMConfig:
+	case strings.HasSuffix(fileName, TMConfig):
 		return errors.New("tendermint config is not supported yet")
+
 	default:
 		return fmt.Errorf("unknown config file name: %s", fileName)
 	}

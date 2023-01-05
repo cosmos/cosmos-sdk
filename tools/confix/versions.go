@@ -1,8 +1,7 @@
 package confix
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/creachadair/tomledit"
+	"github.com/creachadair/tomledit/transform"
 )
 
 const (
@@ -11,13 +10,8 @@ const (
 	TMConfig     = "config.toml"
 )
 
-type (
-	// MigrationCallback converts a config from the previous version to the targeted one.
-	MigrationCallback func(tomledit.Document, client.Context) (tomledit.Document, error)
-
-	// MigrationMap defines a mapping from a version to a MigrationCallback.
-	MigrationMap map[string]MigrationCallback
-)
+// MigrationMap defines a mapping from a version to a transformation plan.
+type MigrationMap map[string]transform.Plan
 
 var Versions = MigrationMap{
 	"v0.45": nil,

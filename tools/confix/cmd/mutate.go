@@ -1,19 +1,83 @@
 package cmd
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"strings"
+
+	"cosmossdk.io/tools/confix"
+	"github.com/creachadair/tomledit"
+	"github.com/creachadair/tomledit/parser"
+	"github.com/creachadair/tomledit/transform"
 	"github.com/spf13/cobra"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
-// UpdateCommand returns a CLI command to interactively update an application config value.
-func UpdateCommand() *cobra.Command {
+// SetCommand returns a CLI command to interactively update an application config value.
+func SetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <config> <key> <value>",
-		Short: "Update an application config value",
+		Use:   "set [config] [key] [value]",
+		Short: "Set an application config value",
+		Long:  "Set an application config value. The [config] argument must be the path of the file when using the too standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			filename, inputValue := args[0], args[2]
+			// parse key e.g mempool.size -> [mempool, size]
+			key := strings.Split(args[1], ".")
+
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			if clientCtx.HomeDir != "" {
+				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+			}
+
+			plan := transform.Plan{
+				{
+					Desc: fmt.Sprintf("update %q=%q in %s", key, inputValue, filename),
+					T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+						results := doc.Find(key...)
+						if len(results) == 0 {
+							return fmt.Errorf("key %q not found", key)
+						} else if len(results) > 1 {
+							return fmt.Errorf("key %q is ambiguous", key)
+						}
+
+						value, err := parser.ParseValue(inputValue)
+						if err != nil {
+							value = parser.MustValue(`"` + inputValue + `"`)
+						}
+
+						if ok := transform.InsertMapping(results[0].Section, &parser.KeyValue{
+							Block: results[0].Block,
+							Name:  key,
+							Value: value,
+						}, true); !ok {
+							return errors.New("failed to set value")
+						}
+
+						return nil
+					}),
+				},
+			}
+
+			outputPath := filename
+			if FlagStdOut {
+				outputPath = ""
+			}
+
+			ctx := cmd.Context()
+			if FlagVerbose {
+				ctx = confix.WithLogWriter(ctx, os.Stderr)
+			}
+
+			return confix.Upgrade(ctx, plan, filename, outputPath)
 		},
 	}
+
+	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
+	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
 
 	return cmd
 }
@@ -21,86 +85,35 @@ func UpdateCommand() *cobra.Command {
 // GetCommand returns a CLI command to interactively get an application config value.
 func GetCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get <config> <key>",
+		Use:   "get [config] [key]",
 		Short: "Get an application config value",
+		Long:  "Get an application config value. The [config] argument must be the path of the file when using the too standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			filename, key := args[0], args[1]
+			// parse key e.g mempool.size -> [mempool, size]
+			keys := strings.Split(key, ".")
+
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			if clientCtx.HomeDir != "" {
+				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+			}
+
+			doc, err := confix.LoadConfig(filename)
+			if err != nil {
+				return fmt.Errorf("failed to load config: %w", err)
+			}
+
+			results := doc.Find(keys...)
+			if len(results) == 0 {
+				return fmt.Errorf("key %q not found", key)
+			} else if len(results) > 1 {
+				return fmt.Errorf("key %q is ambiguous", key)
+			}
+
+			return clientCtx.PrintString(fmt.Sprintf("%s\n", results[0].Value.String()))
 		},
 	}
 
 	return cmd
 }
-
-// func runConfigCmd(cmd *cobra.Command, args []string) error {
-// 	clientCtx := client.GetClientContextFromCmd(cmd)
-// 	configPath := filepath.Join(clientCtx.HomeDir, "config")
-
-// 	conf, err := getClientConfig(configPath, clientCtx.Viper)
-// 	if err != nil {
-// 		return fmt.Errorf("couldn't get client config: %v", err)
-// 	}
-
-// 	switch len(args) {
-// 	case 0:
-// 		// print all client config fields to stdout
-// 		s, err := json.MarshalIndent(conf, "", "\t")
-// 		if err != nil {
-// 			return err
-// 		}
-// 		cmd.Println(string(s))
-
-// 	case 1:
-// 		// it's a get
-// 		key := args[0]
-
-// 		switch key {
-// 		case flags.FlagChainID:
-// 			cmd.Println(conf.ChainID)
-// 		case flags.FlagKeyringBackend:
-// 			cmd.Println(conf.KeyringBackend)
-// 		case flags.FlagOutput:
-// 			cmd.Println(conf.Output)
-// 		case flags.FlagNode:
-// 			cmd.Println(conf.Node)
-// 		case flags.FlagBroadcastMode:
-// 			cmd.Println(conf.BroadcastMode)
-// 		default:
-// 			err := errUnknownConfigKey(key)
-// 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
-// 		}
-
-// 	case 2:
-// 		// it's set
-// 		key, value := args[0], args[1]
-
-// 		switch key {
-// 		case flags.FlagChainID:
-// 			conf.SetChainID(value)
-// 		case flags.FlagKeyringBackend:
-// 			conf.SetKeyringBackend(value)
-// 		case flags.FlagOutput:
-// 			conf.SetOutput(value)
-// 		case flags.FlagNode:
-// 			conf.SetNode(value)
-// 		case flags.FlagBroadcastMode:
-// 			conf.SetBroadcastMode(value)
-// 		default:
-// 			return errUnknownConfigKey(key)
-// 		}
-
-// 		confFile := filepath.Join(configPath, "client.toml")
-// 		if err := writeConfigToFile(confFile, conf); err != nil {
-// 			return fmt.Errorf("could not write client config to the file: %v", err)
-// 		}
-
-// 	default:
-// 		panic("cound not execute config command")
-// 	}
-
-// 	return nil
-// }
-
-// func errUnknownConfigKey(key string) error {
-// 	return fmt.Errorf("unknown configuration key: %q", key)
-// }

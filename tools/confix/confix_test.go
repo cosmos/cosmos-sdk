@@ -1,13 +1,10 @@
 package confix_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/creachadair/tomledit"
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/tools/confix"
+	"github.com/creachadair/tomledit"
 )
 
 func mustParseConfig(t *testing.T, path string) *tomledit.Document {
@@ -18,22 +15,11 @@ func mustParseConfig(t *testing.T, path string) *tomledit.Document {
 	return doc
 }
 
-func TestApplyFixes(t *testing.T) {
-	ctx := context.Background()
+func TestUpgrade(t *testing.T) {
+}
 
-	t.Run("Unknown", func(t *testing.T) {
-		err := confix.ApplyFixes(ctx, mustParseConfig(t, "testdata/unknown-app.toml"))
-		assert.ErrorContains(t, err, "unknown SDK version")
-	})
-	t.Run("Unknown Overrride", func(t *testing.T) {
-		err := confix.ApplyFixes(ctx, mustParseConfig(t, "testdata/unknown-app.toml"))
-		assert.NilError(t, err)
-	})
-	t.Run("OK", func(t *testing.T) {
-		doc := mustParseConfig(t, "testdata/v45-config.toml")
-		err := confix.ApplyFixes(ctx, doc)
-		assert.NilError(t, err)
+func TestLoadConfig(t *testing.T) {
+}
 
-		// TODO
-	})
+func TestCheckValid(t *testing.T) {
 }

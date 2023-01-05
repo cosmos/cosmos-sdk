@@ -3,9 +3,8 @@ package internal
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
-	"cosmossdk.io/store/types"
 )
 
 func TestGetSetDelete(t *testing.T) {
@@ -182,8 +181,7 @@ func TestDBIterator(t *testing.T) {
 	verifyIterator(t, ritr, nil, "reverse iterator with empty db")
 }
 
-func verifyIterator(t *testing.T, itr types.Iterator, expected []int64, msg string) {
-	t.Helper()
+func verifyIterator(t *testing.T, itr *memIterator, expected []int64, msg string) {
 	i := 0
 	for itr.Valid() {
 		key := itr.Key()
@@ -196,9 +194,9 @@ func verifyIterator(t *testing.T, itr types.Iterator, expected []int64, msg stri
 }
 
 func int642Bytes(i int64) []byte {
-	return types.Uint64ToBigEndian(uint64(i))
+	return sdk.Uint64ToBigEndian(uint64(i))
 }
 
 func bytes2Int64(buf []byte) int64 {
-	return int64(types.BigEndianToUint64(buf))
+	return int64(sdk.BigEndianToUint64(buf))
 }

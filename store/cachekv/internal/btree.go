@@ -5,8 +5,6 @@ import (
 	"errors"
 
 	"github.com/tidwall/btree"
-
-	"cosmossdk.io/store/types"
 )
 
 const (
@@ -23,24 +21,23 @@ var errKeyEmpty = errors.New("key cannot be empty")
 //
 // We choose tidwall/btree over google/btree here because it provides API to implement step iterator directly.
 type BTree struct {
-	tree *btree.BTreeG[item]
+	tree btree.BTreeG[item]
 }
 
 // NewBTree creates a wrapper around `btree.BTreeG`.
-func NewBTree() BTree {
-	return BTree{
-		tree: btree.NewBTreeGOptions(byKeys, btree.Options{
-			Degree:  bTreeDegree,
-			NoLocks: false,
-		}),
-	}
+func NewBTree() *BTree {
+	return &BTree{tree: *btree.NewBTreeGOptions(byKeys, btree.Options{
+		Degree: bTreeDegree,
+		// Contract: cachekv store must not be called concurrently
+		NoLocks: true,
+	})}
 }
 
-func (bt BTree) Set(key, value []byte) {
+func (bt *BTree) Set(key, value []byte) {
 	bt.tree.Set(newItem(key, value))
 }
 
-func (bt BTree) Get(key []byte) []byte {
+func (bt *BTree) Get(key []byte) []byte {
 	i, found := bt.tree.Get(newItem(key, nil))
 	if !found {
 		return nil
@@ -48,30 +45,22 @@ func (bt BTree) Get(key []byte) []byte {
 	return i.value
 }
 
-func (bt BTree) Delete(key []byte) {
+func (bt *BTree) Delete(key []byte) {
 	bt.tree.Delete(newItem(key, nil))
 }
 
-func (bt BTree) Iterator(start, end []byte) (types.Iterator, error) {
+func (bt *BTree) Iterator(start, end []byte) (*memIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
-	return newMemIterator(start, end, bt, true), nil
+	return NewMemIterator(start, end, bt, make(map[string]struct{}), true), nil
 }
 
-func (bt BTree) ReverseIterator(start, end []byte) (types.Iterator, error) {
+func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) {
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
-	return newMemIterator(start, end, bt, false), nil
-}
-
-// Copy the tree. This is a copy-on-write operation and is very fast because
-// it only performs a shadowed copy.
-func (bt BTree) Copy() BTree {
-	return BTree{
-		tree: bt.tree.Copy(),
-	}
+	return NewMemIterator(start, end, bt, make(map[string]struct{}), false), nil
 }
 
 // item is a btree item with byte slices as keys and values

@@ -64,11 +64,14 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 
 	for i := 0; i < v.NumField(); i++ {
 		// if the field is a struct skip or not slice of string or int then skip
-		// TODO in the future we can add a recursive call to Prompt
-		if v.Field(i).Kind() == reflect.Struct ||
-			(v.Field(i).Kind() == reflect.Slice &&
-				(v.Field(i).Type().Elem().Kind() != reflect.String && v.Field(i).Type().Elem().Kind() != reflect.Int)) {
+		switch v.Field(i).Kind() {
+		case reflect.Struct:
+			// TODO(@julienrbrt) in the future we can add a recursive call to Prompt
 			continue
+		case reflect.Slice:
+			if v.Field(i).Type().Elem().Kind() != reflect.String && v.Field(i).Type().Elem().Kind() != reflect.Int {
+				continue
+			}
 		}
 
 		// create prompts

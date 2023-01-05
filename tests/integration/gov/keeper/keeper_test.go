@@ -3,10 +3,9 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/simapp"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"

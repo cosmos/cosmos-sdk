@@ -38,7 +38,7 @@ func TestGRPCQueryTally(t *testing.T) {
 				req = &v1.QueryTallyResultRequest{}
 			},
 			false,
-			"jlj",
+			"proposal id can not be 0",
 		},
 		{
 			"zero proposal id request",
@@ -46,7 +46,7 @@ func TestGRPCQueryTally(t *testing.T) {
 				req = &v1.QueryTallyResultRequest{ProposalId: 0}
 			},
 			false,
-			"lj;",
+			"proposal id can not be 0",
 		},
 		{
 			"query non existed proposal",
@@ -54,7 +54,7 @@ func TestGRPCQueryTally(t *testing.T) {
 				req = &v1.QueryTallyResultRequest{ProposalId: 1}
 			},
 			false,
-			"kj",
+			"proposal 1 doesn't exist",
 		},
 		{
 			"create a proposal and get tally",
@@ -62,7 +62,7 @@ func TestGRPCQueryTally(t *testing.T) {
 				var err error
 				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
 				assert.NilError(t, err)
-				suite.Require().NotNil(proposal)
+				assert.Assert(t, proposal.String() != "")
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -126,7 +126,7 @@ func TestGRPCQueryTally(t *testing.T) {
 				assert.NilError(t, err)
 				assert.Equal(t, expRes.String(), tally.String())
 			} else {
-				assert.Error(t, err, testCase.expErrMsg)
+				assert.ErrorContains(t, err, testCase.expErrMsg)
 				assert.Assert(t, tally == nil)
 			}
 		})
@@ -159,7 +159,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 				req = &v1beta1.QueryTallyResultRequest{}
 			},
 			false,
-			"dfg",
+			"proposal id can not be 0",
 		},
 		{
 			"zero proposal id request",
@@ -167,7 +167,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: 0}
 			},
 			false,
-			"gdgdg",
+			"proposal id can not be 0",
 		},
 		{
 			"query non existed proposal",
@@ -175,7 +175,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: 1}
 			},
 			false,
-			"nkjh",
+			"proposal 1 doesn't exist",
 		},
 		{
 			"create a proposal and get tally",
@@ -183,7 +183,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 				var err error
 				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
 				assert.NilError(t, err)
-				suite.Require().NotNil(proposal)
+				assert.Assert(t, proposal.String() != "")
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 

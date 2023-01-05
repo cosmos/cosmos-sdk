@@ -293,13 +293,21 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 
 // SetOrderInitGenesis sets the order of init genesis calls
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames, nil)
+	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames, func(moduleName string) bool {
+		module := m.Modules[moduleName]
+		_, hasGenesis := module.(HasGenesis)
+		return !hasGenesis
+	})
 	m.OrderInitGenesis = moduleNames
 }
 
 // SetOrderExportGenesis sets the order of export genesis calls
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
-	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames, nil)
+	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames, func(moduleName string) bool {
+		module := m.Modules[moduleName]
+		_, hasGenesis := module.(HasGenesis)
+		return !hasGenesis
+	})
 	m.OrderExportGenesis = moduleNames
 }
 

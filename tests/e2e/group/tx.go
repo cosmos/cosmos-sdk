@@ -156,7 +156,7 @@ func (s *E2ETestSuite) SetupSuite() {
 				s.createCLIProposal(
 					s.groupPolicies[0].Address, val.Address.String(),
 					s.groupPolicies[0].Address, val.Address.String(),
-					""),
+					"", "title", "summary"),
 			},
 			s.commonFlags...,
 		),
@@ -1464,6 +1464,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
 						"",
+						"title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1481,6 +1482,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
 						"",
+						"title", "summary",
 					),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
@@ -1498,7 +1500,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[3].Address, val.Address.String(),
 						s.groupPolicies[3].Address, val.Address.String(),
-						""),
+						"", "title", "summary"),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
 				s.commonFlags...,
@@ -1515,7 +1517,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -1533,7 +1535,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						tooLongMetadata,
+						tooLongMetadata, "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1550,7 +1552,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						val.Address.String(), s.groupPolicies[0].Address,
-						""),
+						"", "title", "summary"),
 				},
 				s.commonFlags...,
 			),
@@ -1566,7 +1568,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, "invalid",
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1583,7 +1585,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						"invalid", val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1600,7 +1602,7 @@ func (s *E2ETestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						val.Address.String(), val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1654,7 +1656,7 @@ func (s *E2ETestSuite) TestTxVote() {
 					s.createCLIProposal(
 						groupPolicyAddress, accounts[0],
 						groupPolicyAddress, accounts[0],
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1848,7 +1850,7 @@ func (s *E2ETestSuite) TestTxWithdrawProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[1].Address, val.Address.String(),
 						s.groupPolicies[1].Address, val.Address.String(),
-						""),
+						"", "title", "summary"),
 				},
 				s.commonFlags...,
 			),
@@ -1995,7 +1997,7 @@ func (s *E2ETestSuite) TestTxExec() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -2421,7 +2423,7 @@ func (s *E2ETestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			proposal := s.createCLIProposal(
 				groupPolicyAddress, tc.members[0],
 				groupPolicyAddress, tc.members[0],
-				"",
+				"", "title", "summary",
 			)
 			submitProposalArgs := append([]string{
 				proposal,
@@ -2500,7 +2502,7 @@ func (s *E2ETestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) string {
 
 // createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns
 // the path to the JSON file.
-func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom, sendTo, metadata string) string {
+func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom, sendTo, metadata, title, summary string) string {
 	_, err := base64.StdEncoding.DecodeString(metadata)
 	s.Require().NoError(err)
 
@@ -2517,6 +2519,8 @@ func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom,
 		Messages:           []json.RawMessage{msgJSON},
 		Metadata:           metadata,
 		Proposers:          []string{proposer},
+		Title:              title,
+		Summary:            summary,
 	}
 
 	bz, err := json.Marshal(&p)

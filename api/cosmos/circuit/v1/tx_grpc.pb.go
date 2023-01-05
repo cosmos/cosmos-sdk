@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             (unknown)
-// source: cosmos/crisis/v1/tx.proto
+// source: cosmos/circuit/v1/tx.proto
 
-package crisisv1
+package circuitv1
 
 import (
 	context "context"
@@ -42,7 +42,7 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 
 func (c *msgClient) AuthorizeCircuitBreaker(ctx context.Context, in *MsgAuthorizeCircuitBreaker, opts ...grpc.CallOption) (*MsgAuthorizeCircuitBreakerResponse, error) {
 	out := new(MsgAuthorizeCircuitBreakerResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.crisis.v1.Msg/AuthorizeCircuitBreaker", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.circuit.v1.Msg/AuthorizeCircuitBreaker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *msgClient) AuthorizeCircuitBreaker(ctx context.Context, in *MsgAuthoriz
 
 func (c *msgClient) TripCircuitBreaker(ctx context.Context, in *MsgTripCircuitBreaker, opts ...grpc.CallOption) (*MsgTripCircuitBreakerResponse, error) {
 	out := new(MsgTripCircuitBreakerResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.crisis.v1.Msg/TripCircuitBreaker", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.circuit.v1.Msg/TripCircuitBreaker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (c *msgClient) TripCircuitBreaker(ctx context.Context, in *MsgTripCircuitBr
 
 func (c *msgClient) ResetCircuitBreaker(ctx context.Context, in *MsgResetCircuitBreaker, opts ...grpc.CallOption) (*MsgResetCircuitBreakerResponse, error) {
 	out := new(MsgResetCircuitBreakerResponse)
-	err := c.cc.Invoke(ctx, "/cosmos.crisis.v1.Msg/ResetCircuitBreaker", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cosmos.circuit.v1.Msg/ResetCircuitBreaker", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func _Msg_AuthorizeCircuitBreaker_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.crisis.v1.Msg/AuthorizeCircuitBreaker",
+		FullMethod: "/cosmos.circuit.v1.Msg/AuthorizeCircuitBreaker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).AuthorizeCircuitBreaker(ctx, req.(*MsgAuthorizeCircuitBreaker))
@@ -136,7 +136,7 @@ func _Msg_TripCircuitBreaker_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.crisis.v1.Msg/TripCircuitBreaker",
+		FullMethod: "/cosmos.circuit.v1.Msg/TripCircuitBreaker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).TripCircuitBreaker(ctx, req.(*MsgTripCircuitBreaker))
@@ -154,7 +154,7 @@ func _Msg_ResetCircuitBreaker_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cosmos.crisis.v1.Msg/ResetCircuitBreaker",
+		FullMethod: "/cosmos.circuit.v1.Msg/ResetCircuitBreaker",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).ResetCircuitBreaker(ctx, req.(*MsgResetCircuitBreaker))
@@ -166,7 +166,7 @@ func _Msg_ResetCircuitBreaker_Handler(srv interface{}, ctx context.Context, dec 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.crisis.v1.Msg",
+	ServiceName: "cosmos.circuit.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -183,5 +183,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/crisis/v1/tx.proto",
+	Metadata: "cosmos/circuit/v1/tx.proto",
 }

@@ -241,10 +241,9 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 		opt(cfg)
 	}
 
-	// always add runtime module
 	beginBlockers := make([]string, 0)
 	endBlockers := make([]string, 0)
-	initGenesis := []string{"runtime"}
+	initGenesis := make([]string, 0)
 	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
 
 	for _, s := range beginBlockOrder {

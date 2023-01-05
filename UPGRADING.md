@@ -6,9 +6,9 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ### Database configuration
 
-Cleveldb, Boltdb and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool 
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
-<!-- TODO: write data base migration tool -->
+<!-- TODO: write database migration tool -->
 
 ### Protobuf
 
@@ -18,6 +18,13 @@ The SDK is in the process of removing all `gogoproto` annotations.
 
 The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
 [Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
+
+### SimApp
+
+#### Module Assertions
+
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
+This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -90,6 +97,31 @@ This means you should replace all imports of `github.com/gogo/protobuf` to `gith
 This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for generating protobuf files.
+
+#### `{accepts,implements}_interface` proto annotations
+
+The SDK is normalizing the strings inside the Protobuf `accepts_interface` and `implements_interface` annotations. We require them to be fully-scoped names. They will soon be used by code generators like Pulsar and Telescope to match which messages can or cannot be packed inside `Any`s.
+
+Here are the following replacements that you need to perform on your proto files:
+
+```diff
+- "Content"
++ "cosmos.gov.v1beta1.Content"
+- "Authorization"
++ "cosmos.authz.v1beta1.Authorization"
+- "sdk.Msg"
++ "cosmos.base.v1beta1.Msg"
+- "AccountI"
++ "cosmos.auth.v1beta1.AccountI"
+- "ModuleAccountI"
++ "cosmos.auth.v1beta1.ModuleAccountI"
+- "FeeAllowanceI"
++ "cosmos.feegrant.v1beta1.FeeAllowanceI"
+```
+
+Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
+
+For more information, see the [encoding guide](./docs/docs/core/05-encoding.md).
 
 ### Transactions
 

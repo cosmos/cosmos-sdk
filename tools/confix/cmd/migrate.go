@@ -20,19 +20,23 @@ var (
 
 func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate [target-version] [config-file] (options)",
-		Short: "Migrate Cosmos SDK configuration files",
-		Long: `Modify the contents of the specified config TOML file to update the names,
-locations, and values of configuration settings to the current configuration
-layout. The output is written in-place unless --stdout is provided.
+		Use:   "migrate [target-version] [app-toml-path] (options)",
+		Short: "Migrate Cosmos SDK app configuration file to the specified version",
+		Long: `Migrate the contents of the Cosmos SDK app configuration (app.toml) to the specified version.
+The output is written in-place unless --stdout is provided.
 In case of any error in updating the file, no output is written.`,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			targetVersion, filename := args[0], args[1]
+			var filename string
+			targetVersion := args[0]
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if clientCtx.HomeDir != "" {
-				filename = fmt.Sprintf("%s/config/%s.toml", clientCtx.HomeDir, filename)
+				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
+			} else if len(args) > 1 {
+				filename = args[1]
+			} else {
+				return fmt.Errorf("must provide a path to the app.toml file")
 			}
 
 			plan, ok := confix.Migrations[targetVersion]
@@ -50,7 +54,7 @@ In case of any error in updating the file, no output is written.`,
 				outputPath = ""
 			}
 
-			if err := confix.Upgrade(ctx, plan, filename, outputPath, FlagSkipValidate); err != nil {
+			if err := confix.Upgrade(ctx, plan(filename, targetVersion), filename, outputPath, FlagSkipValidate); err != nil {
 				log.Fatalf("Failed to migrate config: %v", err)
 			}
 

@@ -37,14 +37,14 @@ func TestRollback(t *testing.T) {
 		app.Commit()
 	}
 
-	assert.DeepEqual(t, ver0+10, app.LastBlockHeight())
+	assert.Equal(t, ver0+10, app.LastBlockHeight())
 	store := app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value10"), store.Get([]byte("key")))
 
 	// rollback 5 blocks
 	target := ver0 + 5
 	assert.NilError(t, app.CommitMultiStore().RollbackToVersion(target))
-	assert.DeepEqual(t, target, app.LastBlockHeight())
+	assert.Equal(t, target, app.LastBlockHeight())
 
 	// recreate app to have clean check state
 	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
@@ -64,7 +64,7 @@ func TestRollback(t *testing.T) {
 		app.Commit()
 	}
 
-	assert.DeepEqual(t, ver0+10, app.LastBlockHeight())
+	assert.Equal(t, ver0+10, app.LastBlockHeight())
 	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("VALUE10"), store.Get([]byte("key")))
 }

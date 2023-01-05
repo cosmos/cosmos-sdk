@@ -165,9 +165,11 @@ func collFilteredPaginateByKey[K, V any, C Collection[K, V]](
 	}
 	defer iterator.Close()
 
-	var count uint64
-	var nextKey []byte
-	var results []collections.KeyValue[K, V]
+	var (
+		count   uint64
+		nextKey []byte
+		results []collections.KeyValue[K, V]
+	)
 
 	for ; iterator.Valid(); iterator.Next() {
 		// if we reached the specified limit

@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
+
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestParams(t *testing.T) {
@@ -17,11 +18,11 @@ func TestParams(t *testing.T) {
 
 	// check that the empty keeper loads the default
 	resParams := app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	assert.Assert(t, expParams.Equal(resParams))
 
 	// modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	app.StakingKeeper.SetParams(ctx, expParams)
 	resParams = app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	assert.Assert(t, expParams.Equal(resParams))
 }

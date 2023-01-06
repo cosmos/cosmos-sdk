@@ -112,10 +112,10 @@ func diffKeys(lhs, rhs []string) []Diff {
 }
 
 // PrintDiff output prints one line per key that differs:
-// -S name    -- section exists in lhs but not rhs
-// +S name    -- section exists in rhs but not lhs
-// -M name    -- mapping exists in lhs but not f2
-// +M name    -- mapping exists in rhs but not lhs
+// -S name    -- section exists in f1 but not f2
+// +S name    -- section exists in f2 but not f1
+// -M name    -- mapping exists in f1 but not f2
+// +M name    -- mapping exists in f2 but not f1
 func PrintDiff(w io.Writer, diffs []Diff) {
 	for _, diff := range diffs {
 		if diff.Deleted {

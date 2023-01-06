@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"cosmossdk.io/tools/confix"
@@ -20,7 +19,7 @@ var (
 
 func MigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "migrate [target-version] [app-toml-path] (options)",
+		Use:   "migrate [target-version] <app-toml-path> (options)",
 		Short: "Migrate Cosmos SDK app configuration file to the specified version",
 		Long: `Migrate the contents of the Cosmos SDK app configuration (app.toml) to the specified version.
 The output is written in-place unless --stdout is provided.
@@ -31,10 +30,10 @@ In case of any error in updating the file, no output is written.`,
 			targetVersion := args[0]
 
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			if clientCtx.HomeDir != "" {
-				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
-			} else if len(args) > 1 {
+			if len(args) > 1 {
 				filename = args[1]
+			} else if clientCtx.HomeDir != "" {
+				filename = fmt.Sprintf("%s/config/app.toml", clientCtx.HomeDir)
 			} else {
 				return fmt.Errorf("must provide a path to the app.toml file")
 			}
@@ -42,6 +41,11 @@ In case of any error in updating the file, no output is written.`,
 			plan, ok := confix.Migrations[targetVersion]
 			if !ok {
 				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))
+			}
+
+			rawFile, err := confix.LoadConfig(filename)
+			if err != nil {
+				return fmt.Errorf("failed to load config: %v", err)
 			}
 
 			ctx := context.Background()
@@ -54,8 +58,8 @@ In case of any error in updating the file, no output is written.`,
 				outputPath = ""
 			}
 
-			if err := confix.Upgrade(ctx, plan(filename, targetVersion), filename, outputPath, FlagSkipValidate); err != nil {
-				log.Fatalf("Failed to migrate config: %v", err)
+			if err := confix.Upgrade(ctx, plan(rawFile, targetVersion), filename, outputPath, FlagSkipValidate); err != nil {
+				return fmt.Errorf("failed to migrate config: %w", err)
 			}
 
 			return nil
@@ -64,7 +68,7 @@ In case of any error in updating the file, no output is written.`,
 
 	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
 	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
-	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to mutate unknown configurations)")
+	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to migrate unknown configurations)")
 
 	return cmd
 }

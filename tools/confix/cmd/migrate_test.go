@@ -1,7 +1,35 @@
 package cmd_test
 
-import "testing"
+import (
+	"testing"
+
+	"cosmossdk.io/tools/confix/cmd"
+	"github.com/cosmos/cosmos-sdk/client"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"gotest.tools/v3/assert"
+)
 
 func TestMigradeCmd(t *testing.T) {
+	clientCtx, cleanup := initClientContext(t)
+	defer func() {
+		cleanup()
+	}()
 
+	_, err := clitestutil.ExecTestCLICmd(client.Context{}, cmd.MigrateCommand(), []string{"v0.0"})
+	assert.ErrorContains(t, err, "must provide a path to the app.toml file")
+
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.0"})
+	assert.ErrorContains(t, err, "unknown version")
+
+	// clientCtx does not create app.toml, so this should fail
+	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.45"})
+	assert.ErrorContains(t, err, "no such file or directory")
+
+	// // try to migrate from client.toml it should fail without --skip-validate
+	// _, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.45", fmt.Sprintf("%s/config/client.toml", t.TempDir())})
+	// assert.ErrorContains(t, err, "failed to migrate config")
+
+	// // try to migrate from client.toml - it should work and give us a big diff
+	// _, err = clitestutil.ExecTestCLICmd(clientCtx, cmd.MigrateCommand(), []string{"v0.45", fmt.Sprintf("%s/config/client.toml", t.TempDir()), "--skip-validate"})
+	// assert.NilError(t, err)
 }

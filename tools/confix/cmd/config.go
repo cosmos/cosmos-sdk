@@ -12,12 +12,10 @@ func ConfigCommand() *cobra.Command {
 		Short: "Utilities for managing application configuration",
 	}
 
-	// add subcommands
 	cmd.AddCommand(
 		MigrateCommand(),
 		GetCommand(),
 		SetCommand(),
-		DiffCommand(),
 	)
 
 	return cmd

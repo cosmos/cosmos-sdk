@@ -45,30 +45,57 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
 	}
 
+	deletedSections := map[string]bool{}
+
 	diffs := DiffDocs(from, target)
 	for _, diff := range diffs {
 		var step transform.Step
+		keys := strings.Split(diff.Key, ".")
+
 		if !diff.Deleted {
-			step = transform.Step{
-				Desc: fmt.Sprintf("migrate %s", diff.Key),
-				T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
-					_ = strings.Split(diff.Key, ".")
-
-					if diff.Type == Section {
-
-					} else if diff.Type == Mapping {
-
-					} else {
-						return fmt.Errorf("unknown diff type: %s", diff.Type)
-					}
-
-					return nil
-				}),
+			switch diff.Type {
+			case Section:
+				step = transform.Step{
+					Desc: fmt.Sprintf("add %s section", diff.Key),
+					T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
+						doc.Sections = append(doc.Sections, &tomledit.Section{Heading: &parser.Heading{Name: keys}})
+						return nil
+					}),
+				}
+			case Mapping:
+				if len(keys) == 1 { // top-level key
+					step = transform.Step{
+						Desc: fmt.Sprintf("add %s key", diff.Key),
+						T: transform.EnsureKey(nil, &parser.KeyValue{
+							Block: parser.Comments{}, // TODO parse comments from diff
+							Name:  parser.Key{keys[0]},
+							Value: parser.MustValue(diff.Value),
+						})}
+				} else if len(keys) > 1 {
+					step = transform.Step{
+						Desc: fmt.Sprintf("add %s key", diff.Key),
+						T: transform.EnsureKey(parser.Key{keys[0]}, &parser.KeyValue{
+							Block: parser.Comments{}, // TODO parse comments from diff
+							Name:  parser.Key{keys[1]},
+							Value: parser.MustValue(diff.Value),
+						})}
+				}
+			default:
+				panic(fmt.Errorf("unknown diff type: %s", diff.Type))
 			}
 		} else {
+			if diff.Type == Section {
+				deletedSections[diff.Key] = true
+			}
+
+			// when the whole section is deleted we don't need to remove the keys
+			if len(keys) > 1 && deletedSections[keys[0]] {
+				continue
+			}
+
 			step = transform.Step{
 				Desc: fmt.Sprintf("remove %s key", diff.Key),
-				T:    transform.Remove(parser.Key{diff.Key}),
+				T:    transform.Remove(keys),
 			}
 		}
 

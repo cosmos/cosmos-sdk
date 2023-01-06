@@ -16,6 +16,11 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
+// fixture only tests gov's keeper logic around tallying, since it
+// relies on complex interactions with x/staking.
+//
+// It also uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators`.
 type fixture struct {
 	app               *simapp.SimApp
 	ctx               sdk.Context

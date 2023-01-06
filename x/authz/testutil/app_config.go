@@ -1,16 +1,16 @@
 package testutil
 
 import (
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/gov"
-	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/authz/module"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/gov"            // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appconfig"
@@ -45,22 +45,12 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				BeginBlockers: []string{
 					minttypes.ModuleName,
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
 					authz.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				EndBlockers: []string{
-					minttypes.ModuleName,
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
-					authz.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,

@@ -166,7 +166,8 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
-// MempoolConfig defines the configurations for the appside mempool
+// MempoolConfig defines the configurations for the SDK built-in app-side mempool
+// implementations.
 type MempoolConfig struct {
 	// MaxTxs defines the behavior of the mempool. A negative value indicates
 	// the mempool is disabled entirely, zero indicates that the mempool is
@@ -259,7 +260,7 @@ func DefaultConfig() *Config {
 			PruningInterval:     "0",
 			MinRetainBlocks:     0,
 			IndexEvents:         make([]string, 0),
-			IAVLCacheSize:       781250, // 50 MB
+			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			AppDBBackend:        "",
 		},

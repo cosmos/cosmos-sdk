@@ -41,7 +41,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterImplementations(
-		(*authtypes.AccountI)(nil),
+		(*sdk.AccountI)(nil),
 		&BaseVestingAccount{},
 		&DelayedVestingAccount{},
 		&ContinuousVestingAccount{},

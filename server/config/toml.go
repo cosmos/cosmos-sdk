@@ -70,8 +70,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # ["message.sender", "message.recipient"]
 index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 
-# IavlCacheSize set the size of the iavl tree cache. 
-# Default cache size is 50mb.
+# IavlCacheSize set the size of the iavl tree cache (in number of nodes).
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 # IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
@@ -230,7 +229,10 @@ fsync = "{{ .Streamers.File.Fsync }}"
 [mempool]
 # Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
 # Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
-# Setting max_txs to a positive number  (> 0) will limit the number of transactions in the mempool, by the specified amount.
+# Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
+#
+# Note, this configuration only applies to SDK built-in app-side mempool
+# implementations.
 max-txs = "{{ .Mempool.MaxTxs }}"
 `
 

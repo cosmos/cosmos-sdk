@@ -46,7 +46,7 @@ type txKey struct {
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by
 // nonce, the lowest first, picking a random sender on each iteration.
-func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
+func NewSenderNonceMempool(opts ...SenderNonceOptions) *senderNonceMempool {
 	senderMap := make(map[string]*skiplist.SkipList)
 	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{

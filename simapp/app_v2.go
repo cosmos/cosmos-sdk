@@ -274,10 +274,10 @@ func NewSimApp(
 				// NOTE: Since runTx was already executed in CheckTx, which calls
 				// mempool.Insert, ideally everything in the pool should be valid. But
 				// some mempool implementations may insert invalid txs, so we check again.
-				res := bapp.CheckTx(types.RequestCheckTx{
-					Tx:   bz,
-					Type: types.CheckTxType_Recheck,
-				})
+				// res := bapp.CheckTx(types.RequestCheckTx{
+				// 	Tx:   bz,
+				// 	Type: types.CheckTxType_Recheck,
+				// })
 
 				// TODO: passing RE-check seems to result in the same as passing
 				// runTxPrepareProposal to runTx. If we would like to change this
@@ -285,7 +285,8 @@ func NewSimApp(
 				// part of the ABCI interface.
 
 				// _, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-				if res.IsErr() {
+				err = bapp.RunTXTest(bz)
+				if err != nil { //res.IsErr() {
 					err := bapp.Mempool.Remove(memTx)
 					if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 						panic(err)

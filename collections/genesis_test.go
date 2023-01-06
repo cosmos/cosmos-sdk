@@ -11,7 +11,7 @@ import (
 )
 
 func TestDefaultGenesis(t *testing.T) {
-	f := initFixture()
+	f := initFixture(t)
 	writers := map[string]*bufCloser{}
 	require.NoError(t, f.schema.DefaultGenesis(func(field string) (io.WriteCloser, error) {
 		w := newBufCloser(t, "")
@@ -24,12 +24,12 @@ func TestDefaultGenesis(t *testing.T) {
 }
 
 func TestValidateGenesis(t *testing.T) {
-	f := initFixture()
+	f := initFixture(t)
 	require.NoError(t, f.schema.ValidateGenesis(testGenesisSource(t)))
 }
 
 func TestImportGenesis(t *testing.T) {
-	f := initFixture()
+	f := initFixture(t)
 	require.NoError(t, f.schema.InitGenesis(f.ctx, testGenesisSource(t)))
 	it, err := f.m.Iterate(f.ctx, nil)
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func TestImportGenesis(t *testing.T) {
 }
 
 func TestExportGenesis(t *testing.T) {
-	f := initFixture()
+	f := initFixture(t)
 	require.NoError(t, f.m.Set(f.ctx, "abc", 1))
 	require.NoError(t, f.m.Set(f.ctx, "def", 2))
 	require.NoError(t, f.i.Set(f.ctx, 10000))
@@ -65,11 +65,13 @@ type testFixture struct {
 	i      Item[uint64]
 }
 
-func initFixture() *testFixture {
+func initFixture(t *testing.T) *testFixture {
 	sk, ctx := deps()
-	schema := NewSchema(sk)
-	m := NewMap(schema, NewPrefix(1), "map", StringKey, Uint64Value)
-	i := NewItem(schema, NewPrefix(2), "item", Uint64Value)
+	schemaBuilder := NewSchemaBuilder(sk)
+	m := NewMap(schemaBuilder, NewPrefix(1), "map", StringKey, Uint64Value)
+	i := NewItem(schemaBuilder, NewPrefix(2), "item", Uint64Value)
+	schema, err := schemaBuilder.Build()
+	require.NoError(t, err)
 	return &testFixture{
 		schema: schema,
 		ctx:    ctx,

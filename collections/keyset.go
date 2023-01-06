@@ -61,6 +61,17 @@ const noValueValueType = "no_value"
 
 type noValue struct{}
 
+func (n noValue) EncodeJSON(value noValue) ([]byte, error) {
+	return []byte("null"), nil
+}
+
+func (n noValue) DecodeJSON(b []byte) (noValue, error) {
+	if !bytes.Equal(b, []byte("null")) {
+		return noValue{}, fmt.Errorf("%w: invalid value", ErrEncoding)
+	}
+	return noValue{}, nil
+}
+
 func (noValue) Encode(_ noValue) ([]byte, error) {
 	return []byte{}, nil
 }

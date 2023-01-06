@@ -161,11 +161,6 @@ func (s Schema) addCollection(collection collection) {
 	s.collectionsByName[name] = collection
 }
 
-// NameRegex is the regular expression that all valid collection names must match.
-const NameRegex = "[A-Za-z][A-Za-z0-9_]*"
-
-var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
-
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
 	for name, coll := range s.collectionsByName {

@@ -253,7 +253,7 @@ func NewSimApp(
 		// pool := mempool.NoOpMempool{}
 		// baseapp.SetMempool(pool)(bapp) <- this way doesn't work
 		// TODO: this looks weird. Could export Mempool in BaseApp instead?
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, bapp *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 			var (
 				txsBytes  [][]byte
 				byteCount int64
@@ -306,6 +306,9 @@ func NewSimApp(
 			return types.ResponsePrepareProposal{Txs: txsBytes}
 		})
 	}
+	// setPrepareProcessProposal = func(bapp *baseapp.BaseApp) {
+	// 	bapp.SetPrepareProposal(bapp.DefaultPrepareProposal())
+	// }
 	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal)
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 

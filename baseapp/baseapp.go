@@ -46,6 +46,12 @@ type (
 	StoreLoader func(ms sdk.CommitMultiStore) error
 )
 
+// ProcessProposalHandler defines a function type alias for processing a proposer
+type ProcessProposalHandler func(sdk.Context, abci.RequestProcessProposal) abci.ResponseProcessProposal
+
+// PrepareProposalHandler defines a function type alias for preparing a proposal
+type PrepareProposalHandler func(sdk.Context, *BaseApp, abci.RequestPrepareProposal) abci.ResponsePrepareProposal
+
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
 	// initialized on creation
@@ -61,17 +67,17 @@ type BaseApp struct { //nolint: maligned
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	Mempool         mempool.Mempool            // application side mempool
-	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
-	initChainer     sdk.InitChainer            // initialize state with validators and state blob
-	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
-	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
-	prepareProposal sdk.PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
-	endBlocker      sdk.EndBlocker             // logic to run after all txs, and to determine valset changes
-	addrPeerFilter  sdk.PeerFilter             // filter peers by address and port
-	idPeerFilter    sdk.PeerFilter             // filter peers by node ID
-	fauxMerkleMode  bool                       // if true, IAVL MountStores uses MountStoresDB for simulation speed.
+	Mempool         mempool.Mempool        // application side mempool
+	anteHandler     sdk.AnteHandler        // ante handler for fee and auth
+	postHandler     sdk.AnteHandler        // post handler, optional, e.g. for tips
+	initChainer     sdk.InitChainer        // initialize state with validators and state blob
+	beginBlocker    sdk.BeginBlocker       // logic to run before any txs
+	processProposal ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
+	prepareProposal PrepareProposalHandler // the handler which runs on ABCI PrepareProposal
+	endBlocker      sdk.EndBlocker         // logic to run after all txs, and to determine valset changes
+	addrPeerFilter  sdk.PeerFilter         // filter peers by address and port
+	idPeerFilter    sdk.PeerFilter         // filter peers by node ID
+	fauxMerkleMode  bool                   // if true, IAVL MountStores uses MountStoresDB for simulation speed.
 
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
@@ -178,7 +184,7 @@ func NewBaseApp(
 	}
 
 	if app.prepareProposal == nil {
-		app.SetPrepareProposal(app.DefaultPrepareProposal())
+		app.SetPrepareProposal(DefaultPrepareProposal())
 	}
 
 	if app.interBlockCache != nil {
@@ -865,8 +871,8 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 // - If no mempool is set or if the mempool is a no-op mempool, the transactions
 // requested from Tendermint will simply be returned, which, by default, are in
 // FIFO order.
-func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+func DefaultPrepareProposal() PrepareProposalHandler {
+	return func(ctx sdk.Context, app *BaseApp, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
 		// requested from Tendermint, which, by default, should be in FIFO order.
 		_, isNoOp := app.Mempool.(mempool.NoOpMempool)
@@ -915,6 +921,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	}
 }
 
+// This is just a test to see if I can make it work
 func (app *BaseApp) RunTXTest(bz []byte) error {
 	_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
 	return err
@@ -929,7 +936,7 @@ func (app *BaseApp) RunTXTest(bz []byte) error {
 // If any transaction fails to pass either condition, the proposal is rejected.  Note that step (2) is identical to the
 // validation step performed in DefaultPrepareProposal.  It is very important that the same validation logic is used
 // in both steps, and applications must ensure that this is the case in non-default handlers.
-func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
+func (app *BaseApp) DefaultProcessProposal() ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {
 			_, err := app.txDecoder(txBytes)
@@ -948,15 +955,15 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
-func NoOpPrepareProposal() sdk.PrepareProposalHandler {
-	return func(_ sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+func NoOpPrepareProposal() PrepareProposalHandler {
+	return func(_ sdk.Context, _ *BaseApp, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		return abci.ResponsePrepareProposal{Txs: req.Txs}
 	}
 }
 
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
-func NoOpProcessProposal() sdk.ProcessProposalHandler {
+func NoOpProcessProposal() ProcessProposalHandler {
 	return func(_ sdk.Context, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}

@@ -283,7 +283,7 @@ func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 }
 
 // SetProcessProposal sets the process proposal function for the BaseApp.
-func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
+func (app *BaseApp) SetProcessProposal(handler ProcessProposalHandler) {
 	if app.sealed {
 		panic("SetProcessProposal() on sealed BaseApp")
 	}
@@ -291,7 +291,7 @@ func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
 }
 
 // SetPrepareProposal sets the prepare proposal function for the BaseApp.
-func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
+func (app *BaseApp) SetPrepareProposal(handler PrepareProposalHandler) {
 	if app.sealed {
 		panic("SetPrepareProposal() on sealed BaseApp")
 	}

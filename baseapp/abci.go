@@ -265,7 +265,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		}
 	}()
 
-	resp = app.prepareProposal(ctx, req)
+	resp = app.prepareProposal(ctx, app, req)
 	return resp
 }
 

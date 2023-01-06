@@ -17,8 +17,8 @@ Circuit Breaker works with the idea that an address or set of addresses have the
 type level int32
 
 const (
-	// LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
-// breaker permissions.
+    // LEVEL_NONE_UNSPECIFIED indicates that the account will have no circuit
+    // breaker permissions.
     LEVEL_NONE_UNSPECIFIED = iota
     // LEVEL_SOME_MSGS indicates that the account will have permission to
     // trip or reset the circuit breaker for some Msg type URLs. If this level
@@ -50,9 +50,9 @@ List of type urls that are disabled.
 
 ### Authorize 
 
-Authorize, is called by the module authority  (default governance module account) or any account with `LEVEL_SUPER_ADMIN` to give permission to disable/enable messages to another account. There are three levels of permissions that can be granted. `LEVEL_SOME_MSGS` limits the number of messages that can be disabled. `LEVEL_ALL_MSGS` permits all messages to be disabled. `LEVEL_SUPER_ADMIN` allows an account to take all circuit breaker actions including authorizing and deauthorizing other accounts.
+Authorize, is called by the module authority (default governance module account) or any account with `LEVEL_SUPER_ADMIN` to give permission to disable/enable messages to another account. There are three levels of permissions that can be granted. `LEVEL_SOME_MSGS` limits the number of messages that can be disabled. `LEVEL_ALL_MSGS` permits all messages to be disabled. `LEVEL_SUPER_ADMIN` allows an account to take all circuit breaker actions including authorizing and deauthorizing other accounts.
 
-```proto
+```protobuf
   // AuthorizeCircuitBreaker allows a super-admin to grant (or revoke) another
   // account's circuit breaker permissions.
   rpc AuthorizeCircuitBreaker(MsgAuthorizeCircuitBreaker) returns (MsgAuthorizeCircuitBreakerResponse);
@@ -60,9 +60,9 @@ Authorize, is called by the module authority  (default governance module account
 
 ### Trip
 
-Trip, is called by an account to disable message execution for a specific megURL. 
+Trip, is called by an account to disable message execution for a specific msgURL. 
 
-```proto
+```protobuf
   // TripCircuitBreaker pauses processing of Msg's in the state machine.
   rpc TripCircuitBreaker(MsgTripCircuitBreaker) returns (MsgTripCircuitBreakerResponse);
 ```
@@ -71,7 +71,7 @@ Trip, is called by an account to disable message execution for a specific megURL
 
 Reset is called to enable execution of a previously disabled message. 
 
-```proto
+```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
   // have been been paused using TripCircuitBreaker.
   rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
@@ -91,7 +91,7 @@ This message is expected to fail if:
 
 ### MsgTripCircuitBreaker
 
-```proto reference 
+```protobuf reference 
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L77-L93
 ```
 

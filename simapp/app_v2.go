@@ -4,13 +4,11 @@ package simapp
 
 import (
 	_ "embed"
-	"errors"
 	"io"
 	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -27,8 +25,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -249,67 +245,67 @@ func NewSimApp(
 		panic(err)
 	}
 
-	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
-		// pool := mempool.NoOpMempool{}
-		// baseapp.SetMempool(pool)(bapp) <- this way doesn't work
-		// TODO: this looks weird. Could export Mempool in BaseApp instead?
-		bapp.SetPrepareProposal(func(ctx sdk.Context, bapp *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
-			var (
-				txsBytes  [][]byte
-				byteCount int64
-			)
+	// setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
+	// 	// pool := mempool.NoOpMempool{}
+	// 	// baseapp.SetMempool(pool)(bapp) <- this way doesn't work
+	// 	// TODO: this looks weird. Could export Mempool in BaseApp instead?
+	// 	bapp.SetPrepareProposal(func(ctx sdk.Context, bapp *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+	// 		var (
+	// 			txsBytes  [][]byte
+	// 			byteCount int64
+	// 		)
 
-			iterator := bapp.Mempool.Select(ctx, req.Txs)
-			for iterator != nil {
-				memTx := iterator.Tx()
+	// 		iterator := bapp.Mempool.Select(ctx, req.Txs)
+	// 		for iterator != nil {
+	// 			memTx := iterator.Tx()
 
-				// TODO: Is it ok to get the txEncoder from here?
-				bz, err := app.TxConfig().TxEncoder()(memTx)
-				if err != nil {
-					panic(err)
-				}
+	// 			// TODO: Is it ok to get the txEncoder from here?
+	// 			bz, err := bapp.TxEncoder(memTx)
+	// 			if err != nil {
+	// 				panic(err)
+	// 			}
 
-				txSize := int64(len(bz))
+	// 			txSize := int64(len(bz))
 
-				// NOTE: Since runTx was already executed in CheckTx, which calls
-				// mempool.Insert, ideally everything in the pool should be valid. But
-				// some mempool implementations may insert invalid txs, so we check again.
-				// res := bapp.CheckTx(types.RequestCheckTx{
-				// 	Tx:   bz,
-				// 	Type: types.CheckTxType_Recheck,
-				// })
+	// 			// NOTE: Since runTx was already executed in CheckTx, which calls
+	// 			// mempool.Insert, ideally everything in the pool should be valid. But
+	// 			// some mempool implementations may insert invalid txs, so we check again.
+	// 			// res := bapp.CheckTx(types.RequestCheckTx{
+	// 			// 	Tx:   bz,
+	// 			// 	Type: types.CheckTxType_Recheck,
+	// 			// })
 
-				// TODO: passing RE-check seems to result in the same as passing
-				// runTxPrepareProposal to runTx. If we would like to change this
-				// I think we should add a new method and not modify CheckTx as it's
-				// part of the ABCI interface.
+	// 			// TODO: passing RE-check seems to result in the same as passing
+	// 			// runTxPrepareProposal to runTx. If we would like to change this
+	// 			// I think we should add a new method and not modify CheckTx as it's
+	// 			// part of the ABCI interface.
 
-				// _, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-				err = bapp.RunTXTest(bz)
-				if err != nil { //res.IsErr() {
-					err := bapp.Mempool.Remove(memTx)
-					if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-						panic(err)
-					}
+	// 			// _, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+	// 			err = bapp.RunTXTest(bz)
+	// 			if err != nil { //res.IsErr() {
+	// 				err := bapp.Mempool.Remove(memTx)
+	// 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+	// 					panic(err)
+	// 				}
 
-					iterator = iterator.Next()
-					continue
-				} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
-					txsBytes = append(txsBytes, bz)
-				} else {
-					break
-				}
+	// 				iterator = iterator.Next()
+	// 				continue
+	// 			} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+	// 				txsBytes = append(txsBytes, bz)
+	// 			} else {
+	// 				break
+	// 			}
 
-				iterator = iterator.Next()
-			}
+	// 			iterator = iterator.Next()
+	// 		}
 
-			return types.ResponsePrepareProposal{Txs: txsBytes}
-		})
-	}
+	// 		return types.ResponsePrepareProposal{Txs: txsBytes}
+	// 	})
+	// }
 	// setPrepareProcessProposal = func(bapp *baseapp.BaseApp) {
 	// 	bapp.SetPrepareProposal(bapp.DefaultPrepareProposal())
 	// }
-	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal)
+	// baseAppOptions = append(baseAppOptions, setPrepareProcessProposal)
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	if err := app.App.BaseApp.SetStreamingService(appOpts, app.appCodec, app.kvStoreKeys()); err != nil {

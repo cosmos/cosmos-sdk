@@ -65,7 +65,7 @@ type BaseApp struct { //nolint: maligned
 	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
-	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
+	TxEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
 	Mempool         mempool.Mempool        // application side mempool
 	anteHandler     sdk.AnteHandler        // ante handler for fee and auth
@@ -889,7 +889,7 @@ func DefaultPrepareProposal() PrepareProposalHandler {
 		for iterator != nil {
 			memTx := iterator.Tx()
 
-			bz, err := app.txEncoder(memTx)
+			bz, err := app.TxEncoder(memTx)
 			if err != nil {
 				panic(err)
 			}

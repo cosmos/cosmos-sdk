@@ -264,7 +264,7 @@ func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 
 // SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
-	app.txEncoder = txEncoder
+	app.TxEncoder = txEncoder
 }
 
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.

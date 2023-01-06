@@ -138,7 +138,7 @@ func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer
 	// burn the (deposits * proposal_cancel_rate) amount or sent to cancellation destination address.
 	// and deposits * (1 - proposal_cancel_rate) will be sent to depositors.
 	params := keeper.GetParams(ctx)
-	err := keeper.chargeDeposit(ctx, proposal.Id, params.ProposalCancelDest, params.ProposalCancelRatio)
+	err := keeper.ChargeDeposit(ctx, proposal.Id, params.ProposalCancelDest, params.ProposalCancelRatio)
 	if err != nil {
 		return err
 	}

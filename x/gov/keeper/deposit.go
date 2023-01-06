@@ -163,10 +163,10 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	return activatedVotingPeriod, nil
 }
 
-// chargeDeposit will charge proposal cancellation fee (deposits * proposal_cancel_burn_rate)  and
+// ChargeDeposit will charge proposal cancellation fee (deposits * proposal_cancel_burn_rate)  and
 // send to a destAddress if defined or burn otherwise.
 // Remaining funds are send back to the depositor.
-func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
+func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
 	store := ctx.KVStore(keeper.storeKey)
 	rate := sdk.MustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins
@@ -177,20 +177,22 @@ func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 
 		for _, deposit := range deposits.Amount {
 			burnAmount := sdk.NewDecFromInt(deposit.Amount).Mul(rate).TruncateInt()
-			// remainin amount = deposits amount - burn amount
-			remainAmount := sdk.NewCoin(
-				deposit.Denom,
-				deposit.Amount.Sub(burnAmount),
+			// remaining amount = deposits amount - burn amount
+			remainingAmount = remainingAmount.Add(
+				sdk.NewCoin(
+					deposit.Denom,
+					deposit.Amount.Sub(burnAmount),
+				),
 			)
-			remainingAmount = remainingAmount.Add(remainAmount)
 			cancellationCharges = cancellationCharges.Add(
 				sdk.NewCoin(
 					deposit.Denom,
 					burnAmount,
-				))
+				),
+			)
 		}
 
-		if !remainingAmount.IsAnyNil() && !remainingAmount.IsZero() {
+		if !remainingAmount.IsZero() {
 			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(
 				ctx, types.ModuleName, depositerAddress, remainingAmount,
 			)
@@ -201,7 +203,7 @@ func (keeper Keeper) chargeDeposit(ctx sdk.Context, proposalID uint64, destAddre
 	}
 
 	// burn the cancellation fee or sent the cancellation charges to destination address.
-	if !cancellationCharges.IsAnyNil() && !cancellationCharges.IsZero() {
+	if !cancellationCharges.IsZero() {
 		// get the distribution module account address
 		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
 		switch {

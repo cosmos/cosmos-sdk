@@ -264,7 +264,7 @@ func NewSimApp(
 				memTx := iterator.Tx()
 
 				// TODO: Is it ok to get the txEncoder from here?
-				bz, err := app.txConfig.TxEncoder()(memTx)
+				bz, err := app.TxConfig().TxEncoder()(memTx)
 				if err != nil {
 					panic(err)
 				}

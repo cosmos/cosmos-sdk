@@ -199,7 +199,7 @@ func (mp *priorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 func (i *priorityNonceIterator) iteratePriority() Iterator {
 	// beginning of priority iteration
 	if i.priorityNode == nil {
-		i.priorityNode = i.Mempool.priorityIndex.Front()
+		i.priorityNode = i.mempool.priorityIndex.Front()
 	} else {
 		i.priorityNode = i.priorityNode.Next()
 	}
@@ -229,7 +229,7 @@ func (i *priorityNonceIterator) Next() Iterator {
 	cursor, ok := i.senderCursors[i.sender]
 	if !ok {
 		// beginning of sender iteration
-		cursor = i.Mempool.senderIndices[i.sender].Front()
+		cursor = i.mempool.senderIndices[i.sender].Front()
 	} else {
 		// middle of sender iteration
 		cursor = cursor.Next()
@@ -247,7 +247,7 @@ func (i *priorityNonceIterator) Next() Iterator {
 	} else if key.priority == i.nextPriority {
 		// weight is incorporated into the priority index key only (not sender index) so we must fetch it here
 		// from the scores map.
-		weight := i.Mempool.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
+		weight := i.mempool.scores[txMeta{nonce: key.nonce, sender: key.sender}].weight
 		if weight < i.priorityNode.Next().Key().(txMeta).weight {
 			return i.iteratePriority()
 		}

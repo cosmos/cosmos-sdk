@@ -870,7 +870,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
 		// requested from Tendermint, which, by default, should be in FIFO order.
 		_, isNoOp := app.Mempool.(mempool.NoOpMempool)
-		if app.mempool == nil || isNoOp {
+		if app.Mempool == nil || isNoOp {
 			return abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
 

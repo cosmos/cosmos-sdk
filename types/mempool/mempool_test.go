@@ -142,28 +142,28 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	}
 
 	// empty mempool behavior
-	require.Equal(t, 0, s.Mempool.CountTx())
-	itr := s.Mempool.Select(ctx, nil)
+	require.Equal(t, 0, s.mempool.CountTx())
+	itr := s.mempool.Select(ctx, nil)
 	require.Nil(t, itr)
 
 	// same sender-nonce just overwrites a tx
 	for _, tx := range txs {
 		ctx = ctx.WithPriority(tx.priority)
-		err := s.Mempool.Insert(ctx, tx)
+		err := s.mempool.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
-	require.Equal(t, len(accounts), s.Mempool.CountTx())
+	require.Equal(t, len(accounts), s.mempool.CountTx())
 
 	// distinct sender-nonce should not overwrite a tx
 	s.resetMempool()
 	for i, tx := range txs {
 		tx.nonce = uint64(i)
-		err := s.Mempool.Insert(ctx, tx)
+		err := s.mempool.Insert(ctx, tx)
 		require.NoError(t, err)
 	}
-	require.Equal(t, txCount, s.Mempool.CountTx())
+	require.Equal(t, txCount, s.mempool.CountTx())
 
-	itr = s.Mempool.Select(ctx, nil)
+	itr = s.mempool.Select(ctx, nil)
 	sel := fetchTxs(itr, 13)
 	require.Equal(t, 13, len(sel))
 
@@ -171,18 +171,18 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	tx := &sigErrTx{getSigs: func() ([]txsigning.SignatureV2, error) {
 		return nil, fmt.Errorf("error")
 	}}
-	require.Error(t, s.Mempool.Insert(ctx, tx))
-	require.Error(t, s.Mempool.Remove(tx))
+	require.Error(t, s.mempool.Insert(ctx, tx))
+	require.Error(t, s.mempool.Remove(tx))
 	tx.getSigs = func() ([]txsigning.SignatureV2, error) {
 		return nil, nil
 	}
-	require.Error(t, s.Mempool.Insert(ctx, tx))
-	require.Error(t, s.Mempool.Remove(tx))
+	require.Error(t, s.mempool.Insert(ctx, tx))
+	require.Error(t, s.mempool.Remove(tx))
 
 	// removing a tx not in the mempool should error
 	s.resetMempool()
-	require.NoError(t, s.Mempool.Insert(ctx, txs[0]))
-	require.ErrorIs(t, s.Mempool.Remove(txs[1]), mempool.ErrTxNotFound)
+	require.NoError(t, s.mempool.Insert(ctx, txs[0]))
+	require.ErrorIs(t, s.mempool.Remove(txs[1]), mempool.ErrTxNotFound)
 
 	// inserting a tx with a different priority should overwrite the old tx
 	newPriorityTx := testTx{
@@ -190,8 +190,8 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 		priority: txs[0].priority + 1,
 		nonce:    txs[0].nonce,
 	}
-	require.NoError(t, s.Mempool.Insert(ctx, newPriorityTx))
-	require.Equal(t, 1, s.Mempool.CountTx())
+	require.NoError(t, s.mempool.Insert(ctx, newPriorityTx))
+	require.Equal(t, 1, s.mempool.CountTx())
 }
 
 type MempoolTestSuite struct {

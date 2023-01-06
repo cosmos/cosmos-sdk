@@ -22,10 +22,6 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
-	}
-
 	if req.Denom == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid denom")
 	}
@@ -45,10 +41,6 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	if req.Address == "" {
-		return nil, status.Error(codes.InvalidArgument, "address cannot be empty")
 	}
 
 	addr, err := sdk.AccAddressFromBech32(req.Address)
@@ -111,6 +103,29 @@ func (k BaseKeeper) SpendableBalances(ctx context.Context, req *types.QuerySpend
 	}
 
 	return &types.QuerySpendableBalancesResponse{Balances: result, Pagination: pageRes}, nil
+}
+
+// SpendableBalanceByDenom implements a gRPC query handler for retrieving an account's
+// spendable balance for a specific denom.
+func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.QuerySpendableBalanceByDenomRequest) (*types.QuerySpendableBalanceByDenomResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
+	}
+
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	spendable := k.SpendableCoin(sdkCtx, addr, req.Denom)
+
+	return &types.QuerySpendableBalanceByDenomResponse{Balance: &spendable}, nil
 }
 
 // TotalSupply implements the Query/TotalSupply gRPC method

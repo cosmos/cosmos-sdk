@@ -34,9 +34,9 @@ func TestChainAnteDecorators(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func (s *handlerTestSuite) TestChainPostDecorators() {
+func TestChainPostDecorators(t *testing.T) {
 	// test panic when passing an empty sclice of PostDecorators
-	s.Require().Nil(sdk.ChainPostDecorators([]sdk.PostDecorator{}...))
+	require.Nil(t, sdk.ChainPostDecorators([]sdk.PostDecorator{}...))
 
 	// Create empty context as well as transaction
 	ctx := sdk.Context{}
@@ -44,14 +44,14 @@ func (s *handlerTestSuite) TestChainPostDecorators() {
 	res := &sdk.Result{}
 
 	// Create mocks
-	mockCtrl := gomock.NewController(s.T())
+	mockCtrl := gomock.NewController(t)
 	mockPostDecorator1 := mock.NewMockPostDecorator(mockCtrl)
 	mockPostDecorator2 := mock.NewMockPostDecorator(mockCtrl)
 
 	// Test chaining only one post decorator
 	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res.MsgResponses), true, gomock.Eq(true), gomock.Any()).Times(1)
 	_, err := sdk.ChainPostDecorators(mockPostDecorator1)(ctx, tx, res.MsgResponses, true, true)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 
 	// Tests chaining multiple post decorators
 	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), gomock.Eq(res.MsgResponses), true, gomock.Eq(true), gomock.Any()).Times(1)
@@ -63,5 +63,5 @@ func (s *handlerTestSuite) TestChainPostDecorators() {
 		mockPostDecorator1,
 		mockPostDecorator2,
 	)(ctx, tx, res.MsgResponses, true, true)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 }

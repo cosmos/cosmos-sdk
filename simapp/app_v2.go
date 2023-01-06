@@ -249,10 +249,11 @@ func NewSimApp(
 		panic(err)
 	}
 
+	pool := mempool.NewSenderNonceMempool()
+
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
-		pool := mempool.NewSenderNonceMempool()
+
 		// TODO: this looks weird. Could export Mempool in BaseApp instead?
-		baseapp.SetMempool(pool)(bapp)
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 			var (
 				txsBytes  [][]byte
@@ -304,7 +305,7 @@ func NewSimApp(
 			return types.ResponsePrepareProposal{Txs: txsBytes}
 		})
 	}
-	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal)
+	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal, baseapp.SetMempool(pool))
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	if err := app.App.BaseApp.SetStreamingService(appOpts, app.appCodec, app.kvStoreKeys()); err != nil {

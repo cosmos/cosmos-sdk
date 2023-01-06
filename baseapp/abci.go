@@ -258,12 +258,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		panic("PrepareProposal called with invalid height")
 	}
 
-	ctx := app.prepareProposalState.ctx
-	// Here we use deliverState on the first block given that we want to be able
-	// to access any state changes made in InitChain.
-	if req.Height == 1 {
-		ctx, _ = app.deliverState.ctx.CacheContext()
-	}
+	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
 
 	ctx = ctx.WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
@@ -307,12 +302,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.processProposalState.ctx
-	// Here we use deliverState on the first block given that we want to be able
-	// to access any state changes made in InitChain.
-	if req.Height == 1 {
-		ctx, _ = app.deliverState.ctx.CacheContext()
-	}
+	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
 
 	ctx = ctx.
 		WithVoteInfos(app.voteInfos).
@@ -952,4 +942,15 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+// getContextForProposal returns the right context for PrepareProposal and
+// ProcessProposal. We use deliverState on the first block to be able to access
+// any state changes made in InitChain.
+func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
+	if height == 1 {
+		ctx, _ = app.deliverState.ctx.CacheContext()
+		return ctx
+	}
+	return ctx
 }

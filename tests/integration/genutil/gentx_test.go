@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
@@ -299,7 +298,7 @@ func TestDeliverGenTxs(t *testing.T) {
 			tc.malleate()
 
 			if tc.expPass {
-				require.NotPanics(t, func() {
+				assertNotPanics(t, func() {
 					genutil.DeliverGenTxs(
 						f.ctx, genTxs, f.stakingKeeper, f.baseApp.DeliverTx,
 						f.encodingConfig.TxConfig,
@@ -315,4 +314,13 @@ func TestDeliverGenTxs(t *testing.T) {
 			}
 		})
 	}
+}
+
+func assertNotPanics(t *testing.T, f func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("should not panic: %v", r)
+		}
+	}()
+	f()
 }

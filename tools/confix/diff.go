@@ -8,6 +8,7 @@ import (
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
+	"golang.org/x/exp/maps"
 )
 
 const (
@@ -19,8 +20,7 @@ type Diff struct {
 	Type    string // "section" or "mapping"
 	Deleted bool
 
-	Key string
-	// TODO store value change as well
+	Key   string
 	Value string
 }
 
@@ -37,14 +37,14 @@ func DiffDocs(lhs, rhs *tomledit.Document) []Diff {
 	for i < len(lsec) && j < len(rsec) {
 		if lsec[i].Name.Before(rsec[j].Name) {
 			diff = append(diff, Diff{Type: Section, Deleted: true, Key: lsec[i].Name.String()})
-			for _, key := range allKeys(lsec[i]) {
-				diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: key})
+			for key, value := range allKVs(lsec[i]) {
+				diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: key, Value: value})
 			}
 			i++
 		} else if rsec[j].Name.Before(lsec[i].Name) {
 			diff = append(diff, Diff{Type: Section, Key: rsec[j].Name.String()})
-			for _, key := range allKeys(rsec[j]) {
-				diff = append(diff, Diff{Type: Mapping, Key: key})
+			for key, value := range allKVs(rsec[j]) {
+				diff = append(diff, Diff{Type: Mapping, Key: key, Value: value})
 			}
 			j++
 		} else {
@@ -55,57 +55,59 @@ func DiffDocs(lhs, rhs *tomledit.Document) []Diff {
 	}
 	for ; i < len(lsec); i++ {
 		diff = append(diff, Diff{Type: Section, Deleted: true, Key: lsec[i].Name.String()})
-		for _, key := range allKeys(lsec[i]) {
-			diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: key})
+		for key, value := range allKVs(lsec[i]) {
+			diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: key, Value: value})
 		}
 	}
 	for ; j < len(rsec); j++ {
 		diff = append(diff, Diff{Type: Section, Key: rsec[j].Name.String()})
-		for _, key := range allKeys(rsec[j]) {
-			diff = append(diff, Diff{Type: Mapping, Key: key})
+		for key, value := range allKVs(rsec[j]) {
+			diff = append(diff, Diff{Type: Mapping, Key: key, Value: value})
 		}
 	}
 
 	return diff
 }
 
-func allKeys(s *tomledit.Section) []string {
-	var keys []string
-	s.Scan(func(key parser.Key, _ *tomledit.Entry) bool {
-		keys = append(keys, key.String())
+func allKVs(s *tomledit.Section) map[string]string {
+	keys := map[string]string{}
+	s.Scan(func(key parser.Key, entry *tomledit.Entry) bool {
+		keys[key.String()] = entry.Value.String()
 		return true
 	})
 	return keys
 }
 
 func diffSections(lhs, rhs *tomledit.Section) []Diff {
-	return diffKeys(allKeys(lhs), allKeys(rhs))
+	return diffKeys(allKVs(lhs), allKVs(rhs))
 }
 
-func diffKeys(lhs, rhs []string) []Diff {
+func diffKeys(lhs, rhs map[string]string) []Diff {
 	diff := []Diff{}
 
-	sort.Strings(lhs)
-	sort.Strings(rhs)
+	lhsKeys := maps.Keys(lhs)
+	rhsKeys := maps.Keys(rhs)
+	sort.Strings(lhsKeys)
+	sort.Strings(rhsKeys)
 
 	i, j := 0, 0
 	for i < len(lhs) && j < len(rhs) {
-		if lhs[i] < rhs[j] {
-			diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: lhs[i]})
+		if lhsKeys[i] < rhsKeys[j] {
+			diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: lhsKeys[i], Value: lhs[lhsKeys[i]]})
 			i++
-		} else if lhs[i] > rhs[j] {
-			diff = append(diff, Diff{Type: Mapping, Key: rhs[j]})
+		} else if lhsKeys[i] > rhsKeys[j] {
+			diff = append(diff, Diff{Type: Mapping, Key: rhsKeys[j], Value: rhs[rhsKeys[j]]})
 			j++
 		} else {
 			i++
 			j++
 		}
 	}
-	for ; i < len(lhs); i++ {
-		diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: lhs[i]})
+	for ; i < len(lhsKeys); i++ {
+		diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: lhsKeys[i], Value: lhs[lhsKeys[i]]})
 	}
-	for ; j < len(rhs); j++ {
-		diff = append(diff, Diff{Type: Mapping, Key: rhs[j]})
+	for ; j < len(rhsKeys); j++ {
+		diff = append(diff, Diff{Type: Mapping, Key: rhsKeys[j], Value: rhs[rhsKeys[j]]})
 	}
 
 	return diff
@@ -119,9 +121,9 @@ func diffKeys(lhs, rhs []string) []Diff {
 func PrintDiff(w io.Writer, diffs []Diff) {
 	for _, diff := range diffs {
 		if diff.Deleted {
-			fmt.Fprintln(w, fmt.Sprintf("-%s", diff.Type), diff.Key)
+			fmt.Fprintln(w, fmt.Sprintf("-%s", diff.Type), fmt.Sprintf("%s=%s", diff.Key, diff.Value))
 		} else {
-			fmt.Fprintln(w, fmt.Sprintf("+%s", diff.Type), diff.Key)
+			fmt.Fprintln(w, fmt.Sprintf("+%s", diff.Type), fmt.Sprintf("%s=%s", diff.Key, diff.Value))
 		}
 	}
 }

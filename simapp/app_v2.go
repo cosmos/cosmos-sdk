@@ -251,7 +251,7 @@ func NewSimApp(
 
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
 		// pool := mempool.NoOpMempool{}
-		// baseapp.SetMempool(pool)(bapp)
+		// baseapp.SetMempool(pool)(bapp) <- this way doesn't work
 		// TODO: this looks weird. Could export Mempool in BaseApp instead?
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 			var (
@@ -263,6 +263,7 @@ func NewSimApp(
 			for iterator != nil {
 				memTx := iterator.Tx()
 
+				// TODO: Is it ok to get the txEncoder from here?
 				bz, err := app.txConfig.TxEncoder()(memTx)
 				if err != nil {
 					panic(err)
@@ -273,7 +274,7 @@ func NewSimApp(
 				// NOTE: Since runTx was already executed in CheckTx, which calls
 				// mempool.Insert, ideally everything in the pool should be valid. But
 				// some mempool implementations may insert invalid txs, so we check again.
-				res := app.CheckTx(types.RequestCheckTx{
+				res := bapp.CheckTx(types.RequestCheckTx{
 					Tx:   bz,
 					Type: types.CheckTxType_Recheck,
 				})

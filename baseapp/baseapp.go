@@ -915,6 +915,11 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	}
 }
 
+func (app *BaseApp) RunTXTest(bz []byte) error {
+	_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+	return err
+}
+
 // DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
 // Every transaction in the proposal must pass 2 conditions:
 //

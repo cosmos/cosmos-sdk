@@ -4,11 +4,13 @@ package simapp
 
 import (
 	_ "embed"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -25,6 +27,8 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -245,6 +249,62 @@ func NewSimApp(
 		panic(err)
 	}
 
+	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
+		pool := mempool.NewSenderNonceMempool()
+		// TODO: this looks weird. Could export Mempool in BaseApp instead?
+		baseapp.SetMempool(pool)(bapp)
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+			var (
+				txsBytes  [][]byte
+				byteCount int64
+			)
+
+			iterator := pool.Select(ctx, req.Txs)
+			for iterator != nil {
+				memTx := iterator.Tx()
+
+				bz, err := app.txConfig.TxEncoder()(memTx)
+				if err != nil {
+					panic(err)
+				}
+
+				txSize := int64(len(bz))
+
+				// NOTE: Since runTx was already executed in CheckTx, which calls
+				// mempool.Insert, ideally everything in the pool should be valid. But
+				// some mempool implementations may insert invalid txs, so we check again.
+				res := app.CheckTx(types.RequestCheckTx{
+					Tx:   bz,
+					Type: types.CheckTxType_Recheck,
+				})
+
+				// TODO: passing RE-check seems to result in the same as passing
+				// runTxPrepareProposal to runTx. If we would like to change this
+				// I think we should add a new method and not modify CheckTx as it's
+				// part of the ABCI interface.
+
+				// _, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+				if res.IsErr() {
+					err := pool.Remove(memTx)
+					if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+						panic(err)
+					}
+
+					iterator = iterator.Next()
+					continue
+				} else if byteCount += txSize; byteCount <= req.MaxTxBytes {
+					txsBytes = append(txsBytes, bz)
+				} else {
+					break
+				}
+
+				iterator = iterator.Next()
+			}
+
+			return types.ResponsePrepareProposal{Txs: txsBytes}
+		})
+	}
+	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal)
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	if err := app.App.BaseApp.SetStreamingService(appOpts, app.appCodec, app.kvStoreKeys()); err != nil {

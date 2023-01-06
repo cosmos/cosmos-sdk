@@ -149,6 +149,6 @@ It is an integer value that sets the mempool in one of three modes, *bounded*, *
 The priority nonce mempool provides mempool options allowing the application sets callback(s).
 
 * **OnRead**: Set a callback to be called when a transaction is read from the mempool.
-* **TxReplacement**: Set a callback to be called when duplicated tx nonce detected during the mempool insert, the application can define the tx replacement rule based on the tx priority.
+* **TxReplacement**: Sets a callback to be called when duplicated transaction nonce detected during mempool insert. Application can define a transaction replacement rule based on tx priority or certain transaction fields.
 
 More information on the SDK mempool implementation can be found in the [godocs](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).

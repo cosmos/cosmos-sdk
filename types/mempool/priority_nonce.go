@@ -93,8 +93,8 @@ func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption 
 	}
 }
 
-// PriorityNonceWithTxReplacement sets a callback to be called when duplicated tx nonce detected during mempool insert.
-// Application can define a tx replacement rule based on tx priority or certain fields of tx.
+// PriorityNonceWithTxReplacement sets a callback to be called when duplicated transaction nonce detected during mempool insert.
+// Application can define a transaction replacement rule based on tx priority or certain transaction fields.
 func PriorityNonceWithTxReplacement(txReplacementRule func(op, np int64, oTx, nTx sdk.Tx) bool) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.txReplacement = txReplacementRule

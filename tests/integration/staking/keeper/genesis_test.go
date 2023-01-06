@@ -10,6 +10,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/simapp"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -136,7 +137,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		BondDenom:     "stake",
 	}
 
-	require.Panics(t, func() {
+	assertPanics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
 		validator.Status = types.Bonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -144,10 +145,10 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 			Validators: []types.Validator{validator},
 		})
 	},
-		"should panic because bonded pool balance is different from bonded pool coins",
+	// "should panic because bonded pool balance is different from bonded pool coins",
 	)
 
-	require.Panics(t, func() {
+	assertPanics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
 		validator.Status = types.Unbonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -155,7 +156,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 			Validators: []types.Validator{validator},
 		})
 	},
-		"should panic because not bonded pool balance is different from not bonded pool coins",
+	// "should panic because not bonded pool balance is different from not bonded pool coins",
 	)
 }
 

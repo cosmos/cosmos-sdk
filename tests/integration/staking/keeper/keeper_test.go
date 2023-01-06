@@ -8,6 +8,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -55,4 +56,26 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func assertPanics(t *testing.T, f func()) {
+	panicked := false
+	defer func() {
+		if r := recover(); r != nil {
+			panicked = true
+		}
+	}()
+	f()
+	if !panicked {
+		t.Errorf("should panic")
+	}
+}
+
+func assertNotPanics(t *testing.T, f func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("should not panic: %v", r)
+		}
+	}()
+	f()
 }

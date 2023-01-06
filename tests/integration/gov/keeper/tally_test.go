@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/simapp"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -42,7 +43,7 @@ func TestTallyNoQuorum(t *testing.T) {
 
 	createValidators(t, ctx, app, []int64{2, 5, 0})
 
-	addrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000000))
+	addrs := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 1, sdk.NewInt(10000000))
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "", "test", "description", addrs[0])

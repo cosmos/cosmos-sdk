@@ -8,6 +8,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -60,7 +61,7 @@ func initFixture(t *testing.T) *fixture {
 
 	govAcct := f.app.GovKeeper.GetGovernanceAccount(f.ctx).GetAddress()
 	f.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), f.msgSrvr)
-	f.addrs = simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(30000000))
+	f.addrs = simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 2, sdk.NewInt(30000000))
 
 	return f
 }

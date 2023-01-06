@@ -5,11 +5,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/simapp"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

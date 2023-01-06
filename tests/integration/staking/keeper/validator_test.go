@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/simapp"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

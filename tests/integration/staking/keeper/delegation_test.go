@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/simapp"
+	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

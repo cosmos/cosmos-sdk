@@ -22,7 +22,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -97,69 +96,69 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 }
 
 // createValidator creates a validator with random values.
-func createValidator(t *rapid.T, f *fixture) stakingtypes.Validator {
-	pubkey := pubKeyGenerator().Draw(t, "pubkey")
+func createValidator(rt *rapid.T, f *fixture, t *testing.T) stakingtypes.Validator {
+	pubkey := pubKeyGenerator().Draw(rt, "pubkey")
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
 	assert.NilError(t, err)
 	return stakingtypes.Validator{
-		OperatorAddress: sdk.ValAddress(testdata.AddressGenerator(t).Draw(t, "address")).String(),
+		OperatorAddress: sdk.ValAddress(testdata.AddressGenerator(rt).Draw(rt, "address")).String(),
 		ConsensusPubkey: pubkeyAny,
-		Jailed:          rapid.Bool().Draw(t, "jailed"),
-		Status:          bondTypeGenerator().Draw(t, "bond-status"),
-		Tokens:          sdk.NewInt(rapid.Int64Min(10000).Draw(t, "tokens")),
-		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(1, 100).Draw(t, "commission"), 2),
+		Jailed:          rapid.Bool().Draw(rt, "jailed"),
+		Status:          bondTypeGenerator().Draw(rt, "bond-status"),
+		Tokens:          sdk.NewInt(rapid.Int64Min(10000).Draw(rt, "tokens")),
+		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(1, 100).Draw(rt, "commission"), 2),
 		Description: stakingtypes.NewDescription(
-			rapid.StringN(5, 250, 255).Draw(t, "moniker"),
-			rapid.StringN(5, 250, 255).Draw(t, "identity"),
-			rapid.StringN(5, 250, 255).Draw(t, "website"),
-			rapid.StringN(5, 250, 255).Draw(t, "securityContact"),
-			rapid.StringN(5, 250, 255).Draw(t, "details"),
+			rapid.StringN(5, 250, 255).Draw(rt, "moniker"),
+			rapid.StringN(5, 250, 255).Draw(rt, "identity"),
+			rapid.StringN(5, 250, 255).Draw(rt, "website"),
+			rapid.StringN(5, 250, 255).Draw(rt, "securityContact"),
+			rapid.StringN(5, 250, 255).Draw(rt, "details"),
 		),
-		UnbondingHeight: rapid.Int64Min(1).Draw(t, "unbonding-height"),
-		UnbondingTime:   time.Now().Add(durationGenerator().Draw(t, "duration")),
+		UnbondingHeight: rapid.Int64Min(1).Draw(rt, "unbonding-height"),
+		UnbondingTime:   time.Now().Add(durationGenerator().Draw(rt, "duration")),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-change-rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-change-rate"), 2),
 		),
-		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(t, "tokens")),
+		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(rt, "tokens")),
 	}
 }
 
 // createAndSetValidatorWithStatus creates a validator with random values but with given status and sets to the state
-func createAndSetValidatorWithStatus(t *rapid.T, f *fixture, status stakingtypes.BondStatus) stakingtypes.Validator {
-	val := createValidator(t, f)
+func createAndSetValidatorWithStatus(rt *rapid.T, f *fixture, t *testing.T, status stakingtypes.BondStatus) stakingtypes.Validator {
+	val := createValidator(rt, f, t)
 	val.Status = status
-	setValidator(f, val)
+	setValidator(f, t, val)
 	return val
 }
 
 // createAndSetValidator creates a validator with random values and sets to the state
-func createAndSetValidator(t *rapid.T, f *fixture) stakingtypes.Validator {
-	val := createValidator(t, f)
-	setValidator(f, val)
+func createAndSetValidator(rt *rapid.T, f *fixture, t *testing.T) stakingtypes.Validator {
+	val := createValidator(rt, f, t)
+	setValidator(f, t, val)
 	return val
 }
 
-func setValidator(f *fixture, validator stakingtypes.Validator) {
+func setValidator(f *fixture, t *testing.T, validator stakingtypes.Validator) {
 	f.stakingKeeper.SetValidator(f.ctx, validator)
 	f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator)
 	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator)
-	assert.NilError(&testing.T{}, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
+	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
 	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegatorAddress, coins)
 
 	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
-	assert.NilError(&testing.T{}, err)
+	assert.NilError(t, err)
 }
 
 // getStaticValidator creates a validator with hard-coded values and sets to the state.
-func getStaticValidator(f *fixture) stakingtypes.Validator {
+func getStaticValidator(f *fixture, t *testing.T) stakingtypes.Validator {
 	pubkey := ed25519.PubKey{Key: []byte{24, 179, 242, 2, 151, 3, 34, 6, 1, 11, 0, 194, 202, 201, 77, 1, 167, 40, 249, 115, 32, 97, 18, 1, 1, 127, 255, 103, 13, 1, 34, 1}}
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
-	assert.NilError(&testing.T{}, err)
+	assert.NilError(t, err)
 
 	validator := stakingtypes.Validator{
 		OperatorAddress: validator1,
@@ -185,15 +184,15 @@ func getStaticValidator(f *fixture) stakingtypes.Validator {
 		MinSelfDelegation: sdk.NewInt(10),
 	}
 
-	setValidator(f, validator)
+	setValidator(f, t, validator)
 	return validator
 }
 
 // getStaticValidator2 creates a validator with hard-coded values and sets to the state.
-func getStaticValidator2(f *fixture) stakingtypes.Validator {
+func getStaticValidator2(f *fixture, t *testing.T) stakingtypes.Validator {
 	pubkey := ed25519.PubKey{Key: []byte{40, 249, 115, 32, 97, 18, 1, 1, 127, 255, 103, 13, 1, 34, 1, 24, 179, 242, 2, 151, 3, 34, 6, 1, 11, 0, 194, 202, 201, 77, 1, 167}}
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
-	assert.NilError(&testing.T{}, err)
+	assert.NilError(t, err)
 
 	validator := stakingtypes.Validator{
 		OperatorAddress: validator2,
@@ -218,22 +217,22 @@ func getStaticValidator2(f *fixture) stakingtypes.Validator {
 		),
 		MinSelfDelegation: sdk.NewInt(1),
 	}
-	setValidator(f, validator)
+	setValidator(f, t, validator)
 
 	return validator
 }
 
 // createDelegationAndDelegate funds the delegator account with a random delegation in range 100-1000 and delegates.
-func createDelegationAndDelegate(t *rapid.T, f *fixture, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
-	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(t, "amount"))
-	return fundAccountAndDelegate(f, delegator, validator, amt)
+func createDelegationAndDelegate(rt *rapid.T, f *fixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
+	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(rt, "amount"))
+	return fundAccountAndDelegate(f, t, delegator, validator, amt)
 }
 
 // fundAccountAndDelegate funds the delegator account with the specified delegation and delegates.
-func fundAccountAndDelegate(f *fixture, delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
+func fundAccountAndDelegate(f *fixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
-	assert.NilError(&testing.T{}, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
 	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegator, coins)
 
 	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
@@ -246,7 +245,7 @@ func TestGRPCValidator(t *testing.T) {
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		val := createAndSetValidator(rt, f)
+		val := createAndSetValidator(rt, f, t)
 		req := &stakingtypes.QueryValidatorRequest{
 			ValidatorAddr: val.OperatorAddress,
 		}
@@ -255,7 +254,7 @@ func TestGRPCValidator(t *testing.T) {
 	})
 
 	initFixture(t) // reset
-	val := getStaticValidator(f)
+	val := getStaticValidator(f, t)
 	req := &stakingtypes.QueryValidatorRequest{
 		ValidatorAddr: val.OperatorAddress,
 	}
@@ -263,71 +262,72 @@ func TestGRPCValidator(t *testing.T) {
 	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Validator, 1915, false)
 }
 
-// func TestGRPCValidators(t *testing.T) {
-// 	t.Parallel()
-// 	f := initFixture(t)
+func TestGRPCValidators(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-// 	tt := require.New(t)
-// 	validatorStatus := []string{stakingtypes.BondStatusBonded, stakingtypes.BondStatusUnbonded, stakingtypes.BondStatusUnbonding, ""}
-// 	rapid.Check(t, func(rt *rapid.T) {
-// 		valsCount := rapid.IntRange(1, 3).Draw(rt, "num-validators")
-// 		for i := 0; i < valsCount; i++ {
-// 			createAndSetValidator(rt, f)
-// 		}
+	tt := require.New(t)
+	validatorStatus := []string{stakingtypes.BondStatusBonded, stakingtypes.BondStatusUnbonded, stakingtypes.BondStatusUnbonding}
+	rapid.Check(t, func(rt *rapid.T) {
+		valsCount := rapid.IntRange(1, 3).Draw(rt, "num-validators")
+		for i := 0; i < valsCount; i++ {
+			createAndSetValidator(rt, f, t)
+		}
 
-// 		req := &stakingtypes.QueryValidatorsRequest{
-// 			Status:     validatorStatus[rapid.IntRange(0, 3).Draw(rt, "status")],
-// 			Pagination: testdata.PaginationGenerator(rt, uint64(valsCount)).Draw(rt, "pagination"),
-// 		}
+		req := &stakingtypes.QueryValidatorsRequest{
+			Status:     validatorStatus[rapid.IntRange(0, 2).Draw(rt, "status")],
+			Pagination: testdata.PaginationGenerator(rt, uint64(valsCount)).Draw(rt, "pagination"),
+		}
 
-// 		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Validators, 0, true)
-// 	})
+		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Validators, 0, true)
+	})
 
-// 	initFixture(t) // reset
-// 	getStaticValidator(f)
-// 	getStaticValidator2(f)
+	initFixture(t) // reset
+	getStaticValidator(f, t)
+	getStaticValidator2(f, t)
 
-// 	testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 3525, false)
-// }
+	testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 3525, false)
+}
 
-// func TestGRPCValidatorDelegations(t *testing.T) {
-// 	t.Parallel()
-// 	f := initFixture(t)
+func TestGRPCValidatorDelegations(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-// 	rapid.Check(t, func(rt *rapid.T) {
-// 		validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
-// 		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")
+	tt := require.New(t)
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")
 
-// 		for i := 0; i < numDels; i++ {
-// 			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
-// 			_, err := createDelegationAndDelegate(rt, f, delegator, validator)
-// 			assert.NilError(t, err)
-// 		}
+		for i := 0; i < numDels; i++ {
+			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+			_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+			assert.NilError(t, err)
+		}
 
-// 		req := &stakingtypes.QueryValidatorDelegationsRequest{
-// 			ValidatorAddr: validator.OperatorAddress,
-// 			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
-// 		}
+		req := &stakingtypes.QueryValidatorDelegationsRequest{
+			ValidatorAddr: validator.OperatorAddress,
+			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
+		}
 
-// 		testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), req, f.queryClient.ValidatorDelegations, 0, true)
-// 	})
+		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.ValidatorDelegations, 0, true)
+	})
 
-// 	initFixture(t) // reset
+	initFixture(t) // reset
 
-// 	validator := getStaticValidator(f)
+	validator := getStaticValidator(f, t)
 
-// 	_, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
-// 	assert.NilError(t, err)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
-// 	_, err = fundAccountAndDelegate(f, delegatorAddr2, validator, f.amt2)
-// 	assert.NilError(t, err)
+	_, err = fundAccountAndDelegate(f, t, delegatorAddr2, validator, f.amt2)
+	assert.NilError(t, err)
 
-// 	req := &stakingtypes.QueryValidatorDelegationsRequest{
-// 		ValidatorAddr: validator.OperatorAddress,
-// 	}
+	req := &stakingtypes.QueryValidatorDelegationsRequest{
+		ValidatorAddr: validator.OperatorAddress,
+	}
 
-// 	testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), req, f.queryClient.ValidatorDelegations, 11985, false)
-// }
+	testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), req, f.queryClient.ValidatorDelegations, 11985, false)
+}
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
@@ -335,12 +335,12 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		numDels := rapid.IntRange(1, 3).Draw(rt, "num-dels")
 
 		for i := 0; i < numDels; i++ {
 			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
-			shares, err := createDelegationAndDelegate(rt, f, delegator, validator)
+			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
 
 			_, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
@@ -357,14 +357,14 @@ func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
-	shares1, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	validator := getStaticValidator(f, t)
+	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
 	assert.NilError(t, err)
 
-	shares2, err := fundAccountAndDelegate(f, delegatorAddr2, validator, f.amt2)
+	shares2, err := fundAccountAndDelegate(f, t, delegatorAddr2, validator, f.amt2)
 	assert.NilError(t, err)
 
 	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr2, validatorAddr1, shares2)
@@ -383,9 +383,9 @@ func TestGRPCDelegation(t *testing.T) {
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
-		_, err := createDelegationAndDelegate(rt, f, delegator, validator)
+		_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryDelegationRequest{
@@ -398,8 +398,8 @@ func TestGRPCDelegation(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
-	_, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	validator := getStaticValidator(f, t)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegationRequest{
@@ -416,9 +416,9 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
-		shares, err := createDelegationAndDelegate(rt, f, delegator, validator)
+		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
 		_, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
@@ -433,9 +433,9 @@ func TestGRPCUnbondingDelegation(t *testing.T) {
 	})
 
 	initFixture(t) // reset
-	validator := getStaticValidator(f)
+	validator := getStaticValidator(f, t)
 
-	shares1, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
@@ -459,8 +459,8 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 
 		for i := 0; i < numVals; i++ {
-			validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
-			_, err := createDelegationAndDelegate(rt, f, delegator, validator)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+			_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
 		}
 
@@ -474,8 +474,8 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
-	_, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	validator := getStaticValidator(f, t)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorDelegationsRequest{
@@ -491,10 +491,10 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
-		_, err := createDelegationAndDelegate(rt, f, delegator, validator)
+		_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryDelegatorValidatorRequest{
@@ -507,8 +507,8 @@ func TestGRPCDelegatorValidator(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
-	_, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	validator := getStaticValidator(f, t)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 
 	assert.NilError(t, err)
 
@@ -530,8 +530,8 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 
 		for i := 0; i < numVals; i++ {
-			validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
-			shares, err := createDelegationAndDelegate(rt, f, delegator, validator)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
 
 			_, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
@@ -548,8 +548,8 @@ func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
-	shares1, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	validator := getStaticValidator(f, t)
+	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	_, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
@@ -571,7 +571,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
 		vals := make(stakingtypes.Validators, 0, numVals)
 		for i := 0; i < numVals; i++ {
-			validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 			vals = append(vals, validator)
 		}
 
@@ -597,7 +597,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
+	validator := getStaticValidator(f, t)
 
 	historicalInfo := stakingtypes.HistoricalInfo{
 		Header: tmproto.Header{},
@@ -629,8 +629,8 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 
 		for i := 0; i < numVals; i++ {
-			validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
-			_, err := createDelegationAndDelegate(rt, f, delegator, validator)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+			_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 			assert.NilError(t, err)
 		}
 
@@ -644,9 +644,9 @@ func TestGRPCDelegatorValidators(t *testing.T) {
 
 	initFixture(t) // reset
 
-	validator := getStaticValidator(f)
+	validator := getStaticValidator(f, t)
 
-	_, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorValidatorsRequest{DelegatorAddr: delegator1}
@@ -657,15 +657,15 @@ func TestGRPCPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	tt := require.New(t)
+	// tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		createAndSetValidator(rt, f)
+		createAndSetValidator(rt, f, t)
 
-		testdata.DeterministicIterations(f.ctx, tt, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 0, true)
+		testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 0, true)
 	})
 
 	initFixture(t) // reset
-	getStaticValidator(f)
+	getStaticValidator(f, t)
 	testdata.DeterministicIterations(f.ctx, require.New(&testing.T{}), &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6185, false)
 }
 
@@ -675,18 +675,18 @@ func TestGRPCRedelegations(t *testing.T) {
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
-		validator := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		srcValAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 		assert.NilError(t, err)
 
-		validator2 := createAndSetValidatorWithStatus(rt, f, stakingtypes.Bonded)
+		validator2 := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		dstValAddr, err := sdk.ValAddressFromBech32(validator2.OperatorAddress)
 		assert.NilError(t, err)
 
 		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")
 
 		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
-		shares, err := createDelegationAndDelegate(rt, f, delegator, validator)
+		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
 		assert.NilError(t, err)
 
 		_, err = f.stakingKeeper.BeginRedelegation(f.ctx, delegator, srcValAddr, dstValAddr, shares)
@@ -717,10 +717,10 @@ func TestGRPCRedelegations(t *testing.T) {
 	})
 
 	initFixture(t) // reset
-	validator := getStaticValidator(f)
-	_ = getStaticValidator2(f)
+	validator := getStaticValidator(f, t)
+	_ = getStaticValidator2(f, t)
 
-	shares, err := fundAccountAndDelegate(f, delegatorAddr1, validator, f.amt1)
+	shares, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 	assert.NilError(t, err)
 
 	_, err = f.stakingKeeper.BeginRedelegation(f.ctx, delegatorAddr1, validatorAddr1, validatorAddr2, shares)

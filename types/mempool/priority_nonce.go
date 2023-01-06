@@ -29,7 +29,7 @@ type priorityNonceMempool struct {
 	senderIndices  map[string]*skiplist.SkipList
 	scores         map[txMeta]txMeta
 	onRead         func(tx sdk.Tx)
-	txReplacement  func(op, np int64) bool
+	txReplacement  func(op, np int64, oTx, nTx sdk.Tx) bool
 	maxTx          int
 }
 
@@ -93,9 +93,9 @@ func PriorityNonceWithOnRead(onRead func(tx sdk.Tx)) PriorityNonceMempoolOption 
 	}
 }
 
-// PriorityNonceWithTxReplacement sets a callback to be called when duplicated tx nonce detected
-// during the mempool insert, the dev can define the tx replacement rule based on the tx priority
-func PriorityNonceWithTxReplacement(txReplacementRule func(op, np int64) bool) PriorityNonceMempoolOption {
+// PriorityNonceWithTxReplacement sets a callback to be called when duplicated tx nonce detected during mempool insert.
+// Application can define a tx replacement rule based on tx priority or certain fields of tx.
+func PriorityNonceWithTxReplacement(txReplacementRule func(op, np int64, oTx, nTx sdk.Tx) bool) PriorityNonceMempoolOption {
 	return func(mp *priorityNonceMempool) {
 		mp.txReplacement = txReplacementRule
 	}
@@ -184,8 +184,14 @@ func (mp *priorityNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	// changes.
 	sk := txMeta{nonce: nonce, sender: sender}
 	if oldScore, txExists := mp.scores[sk]; txExists {
-		if mp.txReplacement != nil && !mp.txReplacement(oldScore.priority, priority) {
-			return fmt.Errorf("tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v", oldScore.priority, priority)
+		if mp.txReplacement != nil && !mp.txReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
+			return fmt.Errorf(
+				"tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v, oldTx: %v, newTx: %v",
+				oldScore.priority,
+				priority,
+				senderIndex.Get(key).Value.(sdk.Tx),
+				tx,
+			)
 		}
 
 		mp.priorityIndex.Remove(txMeta{

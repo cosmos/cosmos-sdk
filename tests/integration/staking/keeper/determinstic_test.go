@@ -657,7 +657,6 @@ func TestGRPCPool(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	// tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
 		createAndSetValidator(rt, f, t)
 

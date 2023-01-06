@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
-	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -13,9 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type IntegrationTestSuite struct {
-	suite.Suite
-
+type keeperFixture struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	addrs       []sdk.AccAddress
@@ -24,8 +21,10 @@ type IntegrationTestSuite struct {
 	msgServer   types.MsgServer
 }
 
-func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+func initKeeperFixture(t *testing.T) *keeperFixture {
+	f := &keeperFixture{}
+
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
@@ -34,9 +33,9 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
+	f.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
+	addrs, _, validators := createValidators(t, ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,
@@ -49,11 +48,9 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
-	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
-}
+	f.app, f.ctx, f.queryClient, f.addrs, f.vals = app, ctx, queryClient, addrs, validators
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	return f
 }
 
 func assertNotPanics(t *testing.T, f func()) {

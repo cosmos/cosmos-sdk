@@ -249,7 +249,7 @@ func NewSimApp(
 		panic(err)
 	}
 
-	pool := mempool.NewSenderNonceMempool()
+	pool := mempool.NoOpMempool{}
 
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
 

@@ -289,10 +289,10 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 		for id, ts := range shuffled {
 			tx := testTx{priority: int64(ts.p), nonce: uint64(ts.n), address: ts.a, id: id}
 			c := ctx.WithPriority(tx.priority)
-			err := s.mempool.Insert(c, tx)
+			err := s.Mempool.Insert(c, tx)
 			s.NoError(err)
 		}
-		selected := fetchTxs(s.mempool.Select(ctx, nil), 1000)
+		selected := fetchTxs(s.Mempool.Select(ctx, nil), 1000)
 		var orderedTxs []txSpec
 		for _, tx := range selected {
 			ttx := tx.(testTx)

@@ -156,7 +156,7 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	}
 
 	// empty mempool behavior
-	require.Equal(t, 0, s.mempool.CountTx())
+	require.Equal(t, 0, s.Mempool.CountTx())
 	itr := mp.Select(ctx, nil)
 	require.Nil(t, itr)
 

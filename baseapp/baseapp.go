@@ -61,7 +61,7 @@ type BaseApp struct { //nolint: maligned
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
-	mempool         mempool.Mempool            // application side mempool
+	Mempool         mempool.Mempool            // application side mempool
 	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
 	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
 	initChainer     sdk.InitChainer            // initialize state with validators and state blob
@@ -169,7 +169,7 @@ func NewBaseApp(
 		option(app)
 	}
 
-	if app.mempool == nil {
+	if app.Mempool == nil {
 		app.SetMempool(mempool.NoOpMempool{})
 	}
 
@@ -696,12 +696,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	}
 
 	if mode == runTxModeCheck {
-		err = app.mempool.Insert(ctx, tx)
+		err = app.Mempool.Insert(ctx, tx)
 		if err != nil {
 			return gInfo, nil, anteEvents, priority, err
 		}
 	} else if mode == runTxModeDeliver {
-		err = app.mempool.Remove(tx)
+		err = app.Mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents, priority,
 				fmt.Errorf("failed to remove tx from mempool: %w", err)
@@ -869,7 +869,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
 		// requested from Tendermint, which, by default, should be in FIFO order.
-		_, isNoOp := app.mempool.(mempool.NoOpMempool)
+		_, isNoOp := app.Mempool.(mempool.NoOpMempool)
 		if app.mempool == nil || isNoOp {
 			return abci.ResponsePrepareProposal{Txs: req.Txs}
 		}
@@ -879,7 +879,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 			byteCount int64
 		)
 
-		iterator := app.mempool.Select(ctx, req.Txs)
+		iterator := app.Mempool.Select(ctx, req.Txs)
 		for iterator != nil {
 			memTx := iterator.Tx()
 
@@ -895,7 +895,7 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 			// some mempool implementations may insert invalid txs, so we check again.
 			_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
 			if err != nil {
-				err := app.mempool.Remove(memTx)
+				err := app.Mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 					panic(err)
 				}

@@ -15,7 +15,7 @@ import (
 
 var (
 	_ Mempool  = (*senderNonceMempool)(nil)
-	_ Iterator = (*senderNonceMepoolIterator)(nil)
+	_ Iterator = (*senderNonceMempoolIterator)(nil)
 )
 
 var DefaultMaxTx = 0
@@ -46,7 +46,7 @@ type txKey struct {
 
 // NewSenderNonceMempool creates a new mempool that prioritizes transactions by
 // nonce, the lowest first, picking a random sender on each iteration.
-func NewSenderNonceMempool(opts ...SenderNonceOptions) *senderNonceMempool {
+func NewSenderNonceMempool(opts ...SenderNonceOptions) Mempool {
 	senderMap := make(map[string]*skiplist.SkipList)
 	existingTx := make(map[txKey]bool)
 	snp := &senderNonceMempool{
@@ -157,7 +157,7 @@ func (snm *senderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 		s = s.Next()
 	}
 
-	iter := &senderNonceMepoolIterator{
+	iter := &senderNonceMempoolIterator{
 		senders:       senders,
 		rnd:           snm.rnd,
 		senderCursors: senderCursors,
@@ -206,7 +206,7 @@ func (snm *senderNonceMempool) Remove(tx sdk.Tx) error {
 	return nil
 }
 
-type senderNonceMepoolIterator struct {
+type senderNonceMempoolIterator struct {
 	rnd           *rand.Rand
 	currentTx     *skiplist.Element
 	senders       []string
@@ -215,7 +215,7 @@ type senderNonceMepoolIterator struct {
 
 // Next returns the next iterator state which will contain a tx with the next
 // smallest nonce of a randomly selected sender.
-func (i *senderNonceMepoolIterator) Next() Iterator {
+func (i *senderNonceMempoolIterator) Next() Iterator {
 	for len(i.senders) > 0 {
 		senderIndex := i.rnd.Intn(len(i.senders))
 		sender := i.senders[senderIndex]
@@ -231,7 +231,7 @@ func (i *senderNonceMepoolIterator) Next() Iterator {
 			i.senders = removeAtIndex(i.senders, senderIndex)
 		}
 
-		return &senderNonceMepoolIterator{
+		return &senderNonceMempoolIterator{
 			senders:       i.senders,
 			currentTx:     senderCursor,
 			rnd:           i.rnd,
@@ -242,7 +242,7 @@ func (i *senderNonceMepoolIterator) Next() Iterator {
 	return nil
 }
 
-func (i *senderNonceMepoolIterator) Tx() sdk.Tx {
+func (i *senderNonceMempoolIterator) Tx() sdk.Tx {
 	return i.currentTx.Value.(sdk.Tx)
 }
 

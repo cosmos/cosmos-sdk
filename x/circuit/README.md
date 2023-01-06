@@ -5,7 +5,7 @@
 
 Circuit Breaker is a module that is meant to avoid a chain needing to halt/shut down in the presence of a vulnerability, instead the module will allow specific messages or all messages to be disabled. When operating a chain, if it is app specific then a halt of the chain is less detrimental, but if there are applications built on top of the chain then halting is expensive due to the disturbance to applications. 
 
-Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. The address that disabled the message from being executed also has the right to reset the circuit breaker and allow the application to resume execution of the message. 
+Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. Any address with a permission is able to reset the circuit breaker for the message. 
 
 ## State
 
@@ -44,7 +44,7 @@ type Access struct {
 
 List of type urls that are disabled.
 
-* DisableList `0x3 | msg_type_url -> []byte{}` <!--- should this be stored in json to skip encoding and decoding each block, does it matter?-->
+* DisableList `0x2 | msg_type_url -> []byte{}` <!--- should this be stored in json to skip encoding and decoding each block, does it matter?-->
 
 ## State Transitions
 

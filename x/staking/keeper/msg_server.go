@@ -5,17 +5,15 @@ import (
 	"strconv"
 	"time"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
+	"github.com/armon/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/armon/go-metrics"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -477,15 +475,15 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
-func (ms msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if ms.authority != msg.Authority {
-		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.authority, msg.Authority)
+	if k.authority != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
 	// store params
-	if err := ms.SetParams(ctx, msg.Params); err != nil {
+	if err := k.SetParams(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 

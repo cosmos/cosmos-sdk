@@ -7,11 +7,11 @@ import (
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
@@ -39,7 +39,9 @@ import (
 // main function.
 func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
-	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
+	// note, this is not necessary when using app wiring, as depinject can be directly used.
+	// for consistency between app-v1 and app-v2, we do it the same way via methods on simapp
+	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
 	encodingConfig := params.EncodingConfig{
 		InterfaceRegistry: tempApp.InterfaceRegistry(),
 		Codec:             tempApp.AppCodec(),
@@ -87,6 +89,10 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	initRootCmd(rootCmd, encodingConfig)
+
+	if err := tempApp.AutoCliOpts().EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
 
 	return rootCmd
 }
@@ -169,7 +175,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		NewTestnetCmd(simapp.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		config.Cmd(),
-		pruning.PruningCmd(newApp),
+		pruning.Cmd(newApp),
 	)
 
 	server.AddCommands(rootCmd, simapp.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
@@ -257,7 +263,6 @@ func newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
 	return simapp.NewSimApp(
@@ -307,4 +312,14 @@ func appExport(
 	}
 
 	return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var tempDir = func() string {
+	dir, err := os.MkdirTemp("", "simapp")
+	if err != nil {
+		dir = simapp.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }

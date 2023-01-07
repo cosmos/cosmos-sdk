@@ -23,6 +23,10 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace 
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
+	// reset unused params
+	currParams.BaseProposerReward = sdk.ZeroDec()
+	currParams.BonusProposerReward = sdk.ZeroDec()
+
 	if err := currParams.ValidateBasic(); err != nil {
 		return err
 	}

@@ -6,6 +6,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankv4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	v1distr "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v1"
+	v3distr "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v3"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v4gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -45,6 +48,14 @@ func Migrate(appState types.AppMap, clientCtx client.Context) types.AppMap {
 		clientCtx.Codec.MustUnmarshalJSON(authOldState, &old)
 		newAuthState := groupv2.MigrateGenState(&old)
 		appState[v1auth.ModuleName] = clientCtx.Codec.MustMarshalJSON(newAuthState)
+	}
+
+	// Migrate x/distribution params (reset unused)
+	if oldDistState, ok := appState[v1distr.ModuleName]; ok {
+		var old distrtypes.GenesisState
+		clientCtx.Codec.MustUnmarshalJSON(oldDistState, &old)
+		newDistState := v3distr.MigrateJSON(&old)
+		appState[v1distr.ModuleName] = clientCtx.Codec.MustMarshalJSON(newDistState)
 	}
 
 	return appState

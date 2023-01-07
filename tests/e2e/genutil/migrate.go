@@ -16,7 +16,7 @@ func TestGetMigrationCallback(t *testing.T) {
 	}
 }
 
-func (s *IntegrationTestSuite) TestMigrateGenesis() {
+func (s *E2ETestSuite) TestMigrateGenesis() {
 	val0 := s.network.Validators[0]
 
 	testCases := []struct {

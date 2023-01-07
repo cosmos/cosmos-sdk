@@ -94,15 +94,18 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 
 		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", txBytes)
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n%s\n", err, txBytes)
 		}
 
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-
-		if err != nil || !ok {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncancelled transaction\n", err)
 			return err
+		}
+		if !ok {
+			_, _ = fmt.Fprintln(os.Stderr, "cancelled transaction")
+			return nil
 		}
 	}
 

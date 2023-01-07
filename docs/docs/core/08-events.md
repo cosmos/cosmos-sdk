@@ -160,3 +160,9 @@ There are a few events that are automatically emitted for all messages, directly
 * `message.action`: The name of the message type.
 * `message.sender`: The address of the message signer.
 * `message.module`: The name of the module that emitted the message.
+
+:::tip
+The module name is assumed by `baseapp` to be the second element of the message route: `"cosmos.bank.v1beta1.MsgSend" -> "bank"`.
+In case a module does not follow the standard message path, (e.g. IBC), it is advised to keep emitting the module name event.
+`Baseapp` only emits that event if the module have not already done so.
+:::

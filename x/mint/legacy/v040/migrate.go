@@ -16,12 +16,15 @@ func Migrate(mintGenState v039mint.GenesisState) *v040mint.GenesisState {
 			AnnualProvisions: mintGenState.Minter.AnnualProvisions,
 		},
 		Params: v040mint.Params{
-			MintDenom:           mintGenState.Params.MintDenom,
-			InflationRateChange: mintGenState.Params.InflationRateChange,
-			InflationMax:        mintGenState.Params.InflationMax,
-			InflationMin:        mintGenState.Params.InflationMin,
-			GoalBonded:          mintGenState.Params.GoalBonded,
-			BlocksPerYear:       mintGenState.Params.BlocksPerYear,
+			MintDenom:            mintGenState.Params.MintDenom,
+			InflationRateChange:  mintGenState.Params.InflationRateChange,
+			InflationMax:         mintGenState.Params.InflationMax,
+			InflationMin:         mintGenState.Params.InflationMin,
+			GoalBonded:           mintGenState.Params.GoalBonded,
+			BlocksPerYear:        mintGenState.Params.BlocksPerYear,
+			MaxMintableAmount:    mintGenState.Params.MaxMintableAmount,
+			MintedAmountPerBlock: mintGenState.Params.MintedAmountPerBlock,
+			YearlyReduction:      mintGenState.Params.YearlyReduction,
 		},
 	}
 }

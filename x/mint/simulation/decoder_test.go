@@ -2,6 +2,7 @@ package simulation_test
 
 import (
 	"fmt"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,7 @@ func TestDecodeStore(t *testing.T) {
 	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
-	minter := types.NewMinter(sdk.OneDec(), sdk.NewDec(15))
+	minter := types.NewMinter(tmproto.Header{}, sdk.OneDec(), sdk.NewDec(15))
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{

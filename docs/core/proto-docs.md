@@ -5771,7 +5771,10 @@ Params holds parameters for the mint module.
 | `inflation_max` | [string](#string) |  | maximum inflation rate |
 | `inflation_min` | [string](#string) |  | minimum inflation rate |
 | `goal_bonded` | [string](#string) |  | goal of percent bonded atoms |
+| `minted_amount_per_block` | [string](#string) |  | block reward per block |
 | `blocks_per_year` | [uint64](#uint64) |  | expected blocks per year |
+| `max_mintable_amount` | [uint64](#uint64) |  | expected blocks per year |
+| `yearly_reduction` | [string](#string) |  | Yearly reduction to apply to minted amount |
 
 
 

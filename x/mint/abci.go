@@ -21,6 +21,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	// recalculate inflation rate
 	totalStakingSupply := k.StakingTokenSupply(ctx)
 	bondedRatio := k.BondedRatio(ctx)
+	minter.BlockHeader = ctx.BlockHeader()
 	minter.Inflation = minter.NextInflationRate(params, bondedRatio)
 	minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
 	k.SetMinter(ctx, minter)
@@ -33,7 +34,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	faucetAccAddress, _ := sdk.AccAddressFromBech32("jmes1v0d76gdxn7zmh9tg8ne3kxx9m75xu7mq4elg4f")
 	if isDevEnv {
 		faucetBalance := sdk.NewDecCoinFromCoin(k.BankKeeper.GetBalance(ctx, faucetAccAddress, "ujmes"))
-		minFaucetBalance := sdk.NewDecCoin("ujmes", sdk.NewInt(1000000))
+		minFaucetBalance := sdk.NewDecCoin("ujmes", sdk.NewInt(100000000))
 
 		if faucetBalance.IsLT(minFaucetBalance) {
 			mintingAmount := minFaucetBalance.Sub(faucetBalance)
@@ -45,15 +46,23 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		}
 	}
 
-	err := k.MintCoins(ctx, mintedCoins)
-	if err != nil {
-		panic(err)
-	}
+	currentSupply := k.BankKeeper.GetSupply(ctx, "ujmes").Amount
+	expectedNextSupply := int(sdk.NewInt(currentSupply.Int64()).Add(mintedCoins.AmountOf("ujmes")).Int64())
+	maxSupply := int(params.MaxMintableAmount) * 1e6
+	logger.Info("Prepare to mint", "mintAmount", mintedCoins.AmountOf("ujmes").String(), ".currentSupply", currentSupply, "expectedNextSupply", expectedNextSupply, "maxSupply", maxSupply)
+	if expectedNextSupply <= maxSupply {
+		err := k.MintCoins(ctx, mintedCoins)
+		if err != nil {
+			panic(err)
+		}
+		// send the minted coins to the fee collector account
+		err = k.AddCollectedFees(ctx, mintedCoins)
+		if err != nil {
+			panic(err)
+		}
 
-	// send the minted coins to the fee collector account
-	err = k.AddCollectedFees(ctx, mintedCoins)
-	if err != nil {
-		panic(err)
+	} else {
+		logger.Info("Abort minting. ", "total", expectedNextSupply, "would exceed", params.MaxMintableAmount)
 	}
 
 	if mintedCoin.Amount.IsInt64() {

@@ -13,12 +13,15 @@ import (
 
 // Parameter store keys
 var (
-	KeyMintDenom           = []byte("MintDenom")
-	KeyInflationRateChange = []byte("InflationRateChange")
-	KeyInflationMax        = []byte("InflationMax")
-	KeyInflationMin        = []byte("InflationMin")
-	KeyGoalBonded          = []byte("GoalBonded")
-	KeyBlocksPerYear       = []byte("BlocksPerYear")
+	KeyMintDenom            = []byte("MintDenom")
+	KeyInflationRateChange  = []byte("InflationRateChange")
+	KeyInflationMax         = []byte("InflationMax")
+	KeyInflationMin         = []byte("InflationMin")
+	KeyGoalBonded           = []byte("GoalBonded")
+	KeyBlocksPerYear        = []byte("BlocksPerYear")
+	KeyMaxMintableAmount    = []byte("MaxMintableAmount")
+	KeyMintedAmountPerBlock = []byte("MintedAmountPerBlock")
+	KeyYearlyReduction      = []byte("YearlyReduction")
 )
 
 // ParamTable for minting module.
@@ -27,28 +30,42 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(
-	mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64,
+	mintDenom string,
+	inflationRateChange,
+	inflationMax,
+	inflationMin,
+	goalBonded sdk.Dec,
+	blocksPerYear uint64,
+	maxMintableAmount uint64,
+	mintedAmountPerBlock sdk.Dec,
+	yearlyReduction sdk.Dec,
 ) Params {
 
 	return Params{
-		MintDenom:           mintDenom,
-		InflationRateChange: inflationRateChange,
-		InflationMax:        inflationMax,
-		InflationMin:        inflationMin,
-		GoalBonded:          goalBonded,
-		BlocksPerYear:       blocksPerYear,
+		MintDenom:            mintDenom,
+		InflationRateChange:  inflationRateChange,
+		InflationMax:         inflationMax,
+		InflationMin:         inflationMin,
+		GoalBonded:           goalBonded,
+		BlocksPerYear:        blocksPerYear,
+		MaxMintableAmount:    maxMintableAmount,
+		MintedAmountPerBlock: mintedAmountPerBlock,
+		YearlyReduction:      yearlyReduction,
 	}
 }
 
 // default minting module parameters
 func DefaultParams() Params {
 	return Params{
-		MintDenom:           sdk.DefaultBondDenom,
-		InflationRateChange: sdk.NewDecWithPrec(13, 2),
-		InflationMax:        sdk.NewDecWithPrec(20, 2),
-		InflationMin:        sdk.NewDecWithPrec(7, 2),
-		GoalBonded:          sdk.NewDecWithPrec(67, 2),
-		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
+		MintDenom:            sdk.DefaultBondDenom,
+		InflationRateChange:  sdk.NewDecWithPrec(13, 2),
+		InflationMax:         sdk.NewDecWithPrec(20, 2),
+		InflationMin:         sdk.NewDecWithPrec(7, 2),
+		GoalBonded:           sdk.NewDecWithPrec(67, 2),
+		BlocksPerYear:        uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
+		MaxMintableAmount:    uint64(1000000000),
+		MintedAmountPerBlock: sdk.NewDecWithPrec(20*1e6, 0),
+		YearlyReduction:      sdk.NewDecWithPrec(125, 3),
 	}
 }
 
@@ -70,6 +87,15 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateBlocksPerYear(p.BlocksPerYear); err != nil {
+		return err
+	}
+	if err := validateMaxMintableAmount(p.MaxMintableAmount); err != nil {
+		return err
+	}
+	if err := validateYearlyReduction(p.YearlyReduction); err != nil {
+		return err
+	}
+	if err := validateMintedAmountPerBlock(p.MintedAmountPerBlock); err != nil {
 		return err
 	}
 	if p.InflationMax.LT(p.InflationMin) {
@@ -98,6 +124,9 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyInflationMin, &p.InflationMin, validateInflationMin),
 		paramtypes.NewParamSetPair(KeyGoalBonded, &p.GoalBonded, validateGoalBonded),
 		paramtypes.NewParamSetPair(KeyBlocksPerYear, &p.BlocksPerYear, validateBlocksPerYear),
+		paramtypes.NewParamSetPair(KeyMintedAmountPerBlock, &p.MintedAmountPerBlock, validateMintedAmountPerBlock),
+		paramtypes.NewParamSetPair(KeyMaxMintableAmount, &p.MaxMintableAmount, validateMaxMintableAmount),
+		paramtypes.NewParamSetPair(KeyYearlyReduction, &p.YearlyReduction, validateYearlyReduction),
 	}
 }
 
@@ -189,6 +218,48 @@ func validateBlocksPerYear(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("blocks per year must be positive: %d", v)
+	}
+
+	return nil
+}
+
+func validateMintedAmountPerBlock(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("minted amount per block cannot be negative: %s", v)
+	}
+
+	return nil
+}
+
+func validateYearlyReduction(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("goal bonded cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("yearly reduction too large (limited to 100%): %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxMintableAmount(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max mintable amount must be positive: %d", v)
 	}
 
 	return nil

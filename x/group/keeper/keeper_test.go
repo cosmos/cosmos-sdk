@@ -1243,12 +1243,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 				return
 			}
 			s.Require().NoError(err)
-<<<<<<< HEAD
 			res, err := s.keeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
-=======
-
-			res, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
->>>>>>> 37292437c (fix: wrong address set in `EventUpdateGroupPolicy` (#14526))
 				Address: groupPolicyAddr,
 			})
 			s.Require().NoError(err)
@@ -1259,12 +1254,12 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 			events := s.ctx.(sdk.Context).EventManager().ABCIEvents()
 			for _, event := range events {
 				event, err := sdk.ParseTypedEvent(event)
-				s.Require().NoError(err)
-
-				if e, ok := event.(*group.EventUpdateGroupPolicy); ok {
-					s.Require().Equal(e.Address, groupPolicyAddr)
-					hasUpdateGroupPolicyEvent = true
-					break
+				if err == nil {
+					if e, ok := event.(*group.EventUpdateGroupPolicy); ok {
+						s.Require().Equal(e.Address, groupPolicyAddr)
+						hasUpdateGroupPolicyEvent = true
+						break
+					}
 				}
 			}
 

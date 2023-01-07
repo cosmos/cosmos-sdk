@@ -31,11 +31,11 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	mintedCoins := sdk.NewCoins(mintedCoin)
 
 	isDevEnv := ctx.ChainID() == "jmes-888"
-	faucetAccAddress, _ := sdk.AccAddressFromBech32("jmes1v0d76gdxn7zmh9tg8ne3kxx9m75xu7mq4elg4f")
+	faucetAccAddress, _ := sdk.AccAddressFromBech32("jmes137q2vzcu267afzr45crw9x0e97ykrx5t98z7n0")
 	if isDevEnv {
 		faucetBalance := sdk.NewDecCoinFromCoin(k.BankKeeper.GetBalance(ctx, faucetAccAddress, "ujmes"))
 		minFaucetBalance := sdk.NewDecCoin("ujmes", sdk.NewInt(100000000))
-
+		logger.Info("Faucet balance", "amount", faucetBalance)
 		if faucetBalance.IsLT(minFaucetBalance) {
 			mintingAmount := minFaucetBalance.Sub(faucetBalance)
 			logger.Info("Faucet balance is than minFaucetBalance", "faucet balance", faucetBalance, "min faucet:", minFaucetBalance, ". To be minted:", mintingAmount, "to", faucetAccAddress.String())

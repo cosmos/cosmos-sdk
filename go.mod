@@ -34,20 +34,20 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/rs/zerolog v1.23.0
-	github.com/spf13/cast v1.4.1
+	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.19
 	github.com/tendermint/tm-db v0.6.6
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
-	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb
-	google.golang.org/grpc v1.45.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6
+	google.golang.org/grpc v1.51.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -68,13 +68,13 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dvsekhvalnov/jose2go v0.0.0-20200901110807-248326c1351b // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
-	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
-	github.com/google/btree v1.0.0 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/btree v1.1.2 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
@@ -85,8 +85,8 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d // indirect
-	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/lib/pq v1.10.4 // indirect
+	github.com/klauspost/compress v1.15.12 // indirect
+	github.com/lib/pq v1.10.6 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20181016162300-f8f6d4d2b643 // indirect
@@ -104,22 +104,26 @@ require (
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca // indirect
+	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
-	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/net v0.3.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/onsi/ginkgo v1.16.4 // indirect
+	github.com/onsi/gomega v1.20.0 // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
 replace (

@@ -921,8 +921,7 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: admin})
-	if err != nil {
+	if err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: groupPolicyInfo.Address}); err != nil {
 		return err
 	}
 

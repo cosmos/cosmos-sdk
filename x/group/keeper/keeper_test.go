@@ -448,6 +448,9 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			res, err := s.keeper.GroupInfo(ctx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -731,6 +734,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].Member.AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -1252,6 +1258,22 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 			})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroupPolicy, res.Info)
+
+			// check events
+			var hasUpdateGroupPolicyEvent bool
+			events := s.ctx.(sdk.Context).EventManager().ABCIEvents()
+			for _, event := range events {
+				event, err := sdk.ParseTypedEvent(event)
+				if err == nil {
+					if e, ok := event.(*group.EventUpdateGroupPolicy); ok {
+						s.Require().Equal(e.Address, groupPolicyAddr)
+						hasUpdateGroupPolicyEvent = true
+						break
+					}
+				}
+			}
+
+			s.Require().True(hasUpdateGroupPolicyEvent)
 		})
 	}
 }

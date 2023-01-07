@@ -1036,7 +1036,7 @@ func (k Keeper) doUpdateGroupPolicy(ctx context.Context, reqGroupPolicy, reqAdmi
 		return err
 	}
 
-	if err = k.EventService.EventManager(ctx).Emit(&group.EventUpdateGroupPolicy{Address: groupPolicyInfo.Address}); err != nil {
+	if err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: groupPolicyInfo.Address}); err != nil {
 		return err
 	}
 

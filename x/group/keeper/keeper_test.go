@@ -493,6 +493,9 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			res, err := s.groupKeeper.GroupInfo(sdkCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -775,6 +778,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].Member.AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -1327,6 +1333,7 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 				if e, ok := event.(*group.EventUpdateGroupPolicy); ok {
 					s.Require().Equal(e.Address, groupPolicyAddr)
 					hasUpdateGroupPolicyEvent = true
+					break
 				}
 			}
 

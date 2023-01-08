@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"text/template"
 
@@ -25,6 +26,8 @@ output = "{{ .Output }}"
 node = "{{ .Node }}"
 # Transaction broadcasting mode (sync|async)
 broadcast-mode = "{{ .BroadcastMode }}"
+# The home directory where the data and configuration is stored
+home = "{{ .Home }}"
 `
 
 // writeConfigToFile parses defaultConfigTemplate, renders config using the template and writes it to
@@ -38,6 +41,9 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 		return err
 	}
 
+	fmt.Println("Writing config to file: ", configFilePath)
+	fmt.Println("  -> home: ", config.Home)
+	// TODO: Check why folder is not correctly written to the config file
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		return err
 	}
@@ -56,6 +62,8 @@ func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 	v.SetConfigName("client")
 	v.SetConfigType("toml")
 
+	fmt.Println("  > In getClientConfig reading from ", configPath)
+
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
@@ -64,6 +72,8 @@ func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, err
 	}
+
+	fmt.Println("    > Returning config with homeDir:", conf.Home)
 
 	return conf, nil
 }

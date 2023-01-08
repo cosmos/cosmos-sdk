@@ -8,7 +8,6 @@ import (
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 	"github.com/creachadair/tomledit/transform"
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -16,12 +15,17 @@ const (
 	Mapping = "M"
 )
 
+type KV struct {
+	Key   string
+	Value string
+	Block []string // comment block
+}
+
 type Diff struct {
 	Type    string // "section" or "mapping"
 	Deleted bool
 
-	Key   string
-	Value string
+	KV KV
 }
 
 // DiffDocs diffs the keyspaces of the TOML documents in files lhs and rhs.
@@ -36,15 +40,15 @@ func DiffDocs(lhs, rhs *tomledit.Document) []Diff {
 	i, j := 0, 0
 	for i < len(lsec) && j < len(rsec) {
 		if lsec[i].Name.Before(rsec[j].Name) {
-			diff = append(diff, Diff{Type: Section, Deleted: true, Key: lsec[i].Name.String()})
-			for key, value := range allKVs(lsec[i]) {
-				diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: key, Value: value})
+			diff = append(diff, Diff{Type: Section, Deleted: true, KV: KV{Key: lsec[i].Name.String()}})
+			for _, kv := range allKVs(lsec[i]) {
+				diff = append(diff, Diff{Type: Mapping, Deleted: true, KV: kv})
 			}
 			i++
 		} else if rsec[j].Name.Before(lsec[i].Name) {
-			diff = append(diff, Diff{Type: Section, Key: rsec[j].Name.String()})
-			for key, value := range allKVs(rsec[j]) {
-				diff = append(diff, Diff{Type: Mapping, Key: key, Value: value})
+			diff = append(diff, Diff{Type: Section, KV: KV{Key: rsec[j].Name.String()}})
+			for _, kv := range allKVs(rsec[j]) {
+				diff = append(diff, Diff{Type: Mapping, KV: kv})
 			}
 			j++
 		} else {
@@ -54,25 +58,30 @@ func DiffDocs(lhs, rhs *tomledit.Document) []Diff {
 		}
 	}
 	for ; i < len(lsec); i++ {
-		diff = append(diff, Diff{Type: Section, Deleted: true, Key: lsec[i].Name.String()})
-		for key, value := range allKVs(lsec[i]) {
-			diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: key, Value: value})
+		diff = append(diff, Diff{Type: Section, Deleted: true, KV: KV{Key: lsec[i].Name.String()}})
+		for _, kv := range allKVs(lsec[i]) {
+			diff = append(diff, Diff{Type: Mapping, Deleted: true, KV: kv})
 		}
 	}
 	for ; j < len(rsec); j++ {
-		diff = append(diff, Diff{Type: Section, Key: rsec[j].Name.String()})
-		for key, value := range allKVs(rsec[j]) {
-			diff = append(diff, Diff{Type: Mapping, Key: key, Value: value})
+		diff = append(diff, Diff{Type: Section, KV: KV{Key: rsec[j].Name.String()}})
+		for _, kv := range allKVs(rsec[j]) {
+			diff = append(diff, Diff{Type: Mapping, KV: kv})
 		}
 	}
 
 	return diff
 }
 
-func allKVs(s *tomledit.Section) map[string]string {
-	keys := map[string]string{}
+func allKVs(s *tomledit.Section) []KV {
+	keys := []KV{}
 	s.Scan(func(key parser.Key, entry *tomledit.Entry) bool {
-		keys[key.String()] = entry.Value.String()
+		keys = append(keys, KV{
+			Key:   key.String(),
+			Value: entry.Value.String(),
+			Block: entry.Block,
+		})
+
 		return true
 	})
 	return keys
@@ -82,32 +91,34 @@ func diffSections(lhs, rhs *tomledit.Section) []Diff {
 	return diffKeys(allKVs(lhs), allKVs(rhs))
 }
 
-func diffKeys(lhs, rhs map[string]string) []Diff {
+func diffKeys(lhs, rhs []KV) []Diff {
 	diff := []Diff{}
 
-	lhsKeys := maps.Keys(lhs)
-	rhsKeys := maps.Keys(rhs)
-	sort.Strings(lhsKeys)
-	sort.Strings(rhsKeys)
+	sort.Slice(lhs, func(i, j int) bool {
+		return lhs[i].Key < lhs[j].Key
+	})
+	sort.Slice(rhs, func(i, j int) bool {
+		return rhs[i].Key < rhs[j].Key
+	})
 
 	i, j := 0, 0
 	for i < len(lhs) && j < len(rhs) {
-		if lhsKeys[i] < rhsKeys[j] {
-			diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: lhsKeys[i], Value: lhs[lhsKeys[i]]})
+		if lhs[i].Key < rhs[j].Key {
+			diff = append(diff, Diff{Type: Mapping, Deleted: true, KV: lhs[i]})
 			i++
-		} else if lhsKeys[i] > rhsKeys[j] {
-			diff = append(diff, Diff{Type: Mapping, Key: rhsKeys[j], Value: rhs[rhsKeys[j]]})
+		} else if lhs[i].Key > rhs[j].Key {
+			diff = append(diff, Diff{Type: Mapping, KV: rhs[j]})
 			j++
 		} else {
 			i++
 			j++
 		}
 	}
-	for ; i < len(lhsKeys); i++ {
-		diff = append(diff, Diff{Type: Mapping, Deleted: true, Key: lhsKeys[i], Value: lhs[lhsKeys[i]]})
+	for ; i < len(lhs); i++ {
+		diff = append(diff, Diff{Type: Mapping, Deleted: true, KV: lhs[i]})
 	}
-	for ; j < len(rhsKeys); j++ {
-		diff = append(diff, Diff{Type: Mapping, Key: rhsKeys[j], Value: rhs[rhsKeys[j]]})
+	for ; j < len(rhs); j++ {
+		diff = append(diff, Diff{Type: Mapping, KV: rhs[j]})
 	}
 
 	return diff
@@ -121,9 +132,9 @@ func diffKeys(lhs, rhs map[string]string) []Diff {
 func PrintDiff(w io.Writer, diffs []Diff) {
 	for _, diff := range diffs {
 		if diff.Deleted {
-			fmt.Fprintln(w, fmt.Sprintf("-%s", diff.Type), fmt.Sprintf("%s=%s", diff.Key, diff.Value))
+			fmt.Fprintln(w, fmt.Sprintf("-%s", diff.Type), fmt.Sprintf("%s=%s", diff.KV.Key, diff.KV.Value))
 		} else {
-			fmt.Fprintln(w, fmt.Sprintf("+%s", diff.Type), fmt.Sprintf("%s=%s", diff.Key, diff.Value))
+			fmt.Fprintln(w, fmt.Sprintf("+%s", diff.Type), fmt.Sprintf("%s=%s", diff.KV.Key, diff.KV.Value))
 		}
 	}
 }

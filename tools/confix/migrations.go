@@ -50,21 +50,22 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 	diffs := DiffDocs(from, target)
 	for _, diff := range diffs {
 		diff := diff
+		kv := diff.KV
 
 		var step transform.Step
-		keys := strings.Split(diff.Key, ".")
+		keys := strings.Split(kv.Key, ".")
 
 		if !diff.Deleted {
 			switch diff.Type {
 			case Section:
 				step = transform.Step{
-					Desc: fmt.Sprintf("add %s section", diff.Key),
+					Desc: fmt.Sprintf("add %s section", kv.Key),
 					T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
 						doc.Sections = append(doc.Sections, &tomledit.Section{
 							Heading: &parser.Heading{
 								Block: parser.Comments{
 									"###############################################################################",
-									fmt.Sprintf("###							%s Configuration							###", strings.Title(diff.Key)),
+									fmt.Sprintf("###							%s Configuration							###", strings.Title(kv.Key)),
 									"###############################################################################"},
 								Name: keys,
 							},
@@ -75,19 +76,19 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 			case Mapping:
 				if len(keys) == 1 { // top-level key
 					step = transform.Step{
-						Desc: fmt.Sprintf("add %s key", diff.Key),
+						Desc: fmt.Sprintf("add %s key", kv.Key),
 						T: transform.EnsureKey(nil, &parser.KeyValue{
-							Block: parser.Comments{}, // TODO parse comments from diff
+							Block: kv.Block,
 							Name:  parser.Key{keys[0]},
-							Value: parser.MustValue(diff.Value),
+							Value: parser.MustValue(kv.Value),
 						})}
 				} else if len(keys) > 1 {
 					step = transform.Step{
-						Desc: fmt.Sprintf("add %s key", diff.Key),
+						Desc: fmt.Sprintf("add %s key", kv.Key),
 						T: transform.EnsureKey(parser.Key{keys[0]}, &parser.KeyValue{
-							Block: parser.Comments{}, // TODO parse comments from diff
+							Block: kv.Block,
 							Name:  parser.Key{keys[1]},
-							Value: parser.MustValue(diff.Value),
+							Value: parser.MustValue(kv.Value),
 						})}
 				}
 			default:
@@ -95,7 +96,7 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 			}
 		} else {
 			if diff.Type == Section {
-				deletedSections[diff.Key] = true
+				deletedSections[kv.Key] = true
 			}
 
 			// when the whole section is deleted we don't need to remove the keys
@@ -104,7 +105,7 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 			}
 
 			step = transform.Step{
-				Desc: fmt.Sprintf("remove %s key", diff.Key),
+				Desc: fmt.Sprintf("remove %s key", kv.Key),
 				T:    transform.Remove(keys),
 			}
 		}

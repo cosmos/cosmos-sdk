@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -44,6 +45,31 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	require.Equal(t, clientCtx.ChainID, chainId)
 
 	return clientCtx, func() { _ = os.RemoveAll(home) }
+}
+
+func TestConfigHomeCmd(t *testing.T) {
+	clientCtx, cleanup := initClientContext(t, testNode1)
+	defer func() {
+		_ = os.Unsetenv(nodeEnv)
+		cleanup()
+	}()
+
+	// ./build/simd config home newHome
+	cmd := config.Cmd()
+	newHome := filepath.Join(clientCtx.HomeDir, ".tmp-simd")
+	args := []string{"home", newHome}
+	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	require.NoError(t, err)
+
+	// TODO: replace use of user home dir
+	userHomeDir, err := os.UserHomeDir()
+	require.NoErrorf(t, err, "could not get user home directory")
+
+	homeConfig := filepath.Join(userHomeDir, ".simapp", "config", "home.txt")
+	homeDirBz, err := os.ReadFile(homeConfig)
+	require.NoError(t, err)
+
+	require.Equal(t, string(homeDirBz), newHome, "expected contents of home config file to be equal to new home")
 }
 
 func TestConfigCmd(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"cosmossdk.io/core/appmodule"
-	"strings"
 
 	"cosmossdk.io/core/store"
 
@@ -107,6 +107,7 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 // clients.
 type Schema struct {
 	storeAccessor       func(context.Context) store.KVStore
+	collectionsOrdered  []string
 	collectionsByPrefix map[string]collection
 	collectionsByName   map[string]collection
 }

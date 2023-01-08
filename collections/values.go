@@ -7,7 +7,13 @@ import (
 	"strconv"
 )
 
-var Uint64Value ValueCodec[uint64] = uint64Value{}
+var (
+	// Uint64Value implements a ValueCodec for uint64. It converts the uint64 to big endian bytes.
+	// The JSON representation is the string format of uint64.
+	Uint64Value ValueCodec[uint64] = uint64Value{}
+	// StringValue implements a ValueCodec for string.
+	StringValue ValueCodec[string] = stringValue{}
+)
 
 type uint64Value struct{}
 
@@ -50,4 +56,35 @@ func uint64DecodeJSON(b []byte) (uint64, error) {
 		return 0, err
 	}
 	return strconv.ParseUint(str, 10, 64)
+}
+
+type stringValue struct{}
+
+func (stringValue) Encode(value string) ([]byte, error) {
+	return []byte(value), nil
+}
+
+func (stringValue) Decode(b []byte) (string, error) {
+	return string(b), nil
+}
+
+func (stringValue) EncodeJSON(value string) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func (stringValue) DecodeJSON(b []byte) (string, error) {
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return "", err
+	}
+	return s, nil
+}
+
+func (stringValue) Stringify(value string) string {
+	return value
+}
+
+func (stringValue) ValueType() string {
+	return "string"
 }

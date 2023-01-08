@@ -38,8 +38,6 @@ func ValidateCmd(cmd *cobra.Command, args []string) error {
 	var unknownCmd string
 	var skipNext bool
 
-	fmt.Println("RIGHT HERE")
-
 	for _, arg := range args {
 		// search for help flag
 		if arg == "--help" || arg == "-h" {

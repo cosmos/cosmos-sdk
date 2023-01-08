@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -24,9 +25,7 @@ func Cmd() *cobra.Command {
 }
 
 func runConfigCmd(cmd *cobra.Command, args []string) error {
-	fmt.Println("-----------------------\nrunConfigCmd")
 	clientCtx := client.GetClientContextFromCmd(cmd)
-	fmt.Println("> in runConfigCmd with clientCtx.HomeDir: ", clientCtx.HomeDir)
 	configPath := filepath.Join(clientCtx.HomeDir, "config")
 
 	conf, err := getClientConfig(configPath, clientCtx.Viper)
@@ -41,12 +40,14 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		cmd.Println("showing configuration at ", clientCtx.HomeDir)
 		cmd.Println(string(s))
 
 	case 1:
 		// it's a get
 		key := args[0]
 
+		cmd.Println("showing configuration at ", clientCtx.HomeDir)
 		switch key {
 		case flags.FlagChainID:
 			cmd.Println(conf.ChainID)
@@ -58,8 +59,6 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			cmd.Println(conf.Node)
 		case flags.FlagBroadcastMode:
 			cmd.Println(conf.BroadcastMode)
-		case flags.FlagHome:
-			cmd.Println(conf.Home)
 		default:
 			err := errUnknownConfigKey(key)
 			return fmt.Errorf("couldn't get the value for the key: %v, error:  %v", key, err)
@@ -81,11 +80,29 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		case flags.FlagBroadcastMode:
 			conf.SetBroadcastMode(value)
 		case flags.FlagHome:
-			conf.SetHomeDir(value)
-			configPath = value
-			if err = ensureConfigPath(configPath); err != nil {
-				return fmt.Errorf("could not create config folder: %s", configPath)
+			// check if passed value is a valid path for a home directory and create if it is.
+			if _, err = os.Stat(value); err != nil {
+				if err = ensureConfigPath(value); err != nil {
+					return fmt.Errorf("could not create config folder: %s", value)
+				}
 			}
+
+			// TODO: Change to TOML
+			// TODO: Change default node home?
+			//homeFilePath := filepath.Join(simapp.DefaultNodeHome, "config", "home.txt")
+			homeDir, err := os.UserHomeDir()
+			if err != nil {
+				return fmt.Errorf("could not query user home directory: %v", err)
+			}
+			homeFilePath := filepath.Join(homeDir, ".simapp", "config", "home.txt")
+			fmt.Println("selected node configuration at", value)
+			err = writeHomeDirToFile(homeFilePath, value)
+			if err != nil {
+				return fmt.Errorf("could not write new home directory to the configuration file at %s", homeFilePath)
+			}
+
+			return nil
+
 		default:
 			return errUnknownConfigKey(key)
 		}

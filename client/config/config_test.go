@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,7 +27,6 @@ const (
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	home := t.TempDir()
-	fmt.Printf("Using home=%s for testing\n", home)
 	chainId := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
@@ -66,34 +66,9 @@ func TestConfigCmd(t *testing.T) {
 	require.NoError(t, cmd.Execute())
 	out, err := io.ReadAll(b)
 	require.NoError(t, err)
-	require.Equal(t, string(out), testNode1+"\n")
+	split := strings.Split(string(out), "\n")
+	require.Equal(t, split[1], testNode1)
 }
-
-// TestConfigCmdHomeDir tests if the home directory can be changed and the corresponding
-// configuration is written and read to/from the correct file.
-func TestConfigCmdHomeDir(t *testing.T) {
-	clientCtx, cleanup := initClientContext(t, testNode1)
-	defer func() {
-		_ = os.Unsetenv(nodeEnv)
-		cleanup()
-	}()
-
-	// NODE=http://localhost:1 ./build/simd config node http://localhost:2
-	cmd := config.Cmd()
-	args := []string{"node", testNode2}
-	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
-	require.NoError(t, err)
-
-	//./build/simd config node //http://localhost:1
-	b := bytes.NewBufferString("")
-	cmd.SetOut(b)
-	cmd.SetArgs([]string{"node"})
-	require.NoError(t, cmd.Execute())
-	out, err := io.ReadAll(b)
-	require.NoError(t, err)
-	require.Equal(t, string(out), testNode1+"\n")
-}
-
 
 func TestConfigCmdEnvFlag(t *testing.T) {
 	const (

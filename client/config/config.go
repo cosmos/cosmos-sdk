@@ -15,7 +15,6 @@ const (
 	output         = "text"
 	node           = "tcp://localhost:26657"
 	broadcastMode  = "sync"
-	home           = ""
 )
 
 type ClientConfig struct {
@@ -24,12 +23,11 @@ type ClientConfig struct {
 	Output         string `mapstructure:"output" json:"output"`
 	Node           string `mapstructure:"node" json:"node"`
 	BroadcastMode  string `mapstructure:"broadcast-mode" json:"broadcast-mode"`
-	Home           string `mapstructure:"home" json:"home"`
 }
 
 // defaultClientConfig returns the reference to ClientConfig with default values.
 func defaultClientConfig() *ClientConfig {
-	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode, home}
+	return &ClientConfig{chainID, keyringBackend, output, node, broadcastMode}
 }
 
 func (c *ClientConfig) SetChainID(chainID string) {
@@ -52,20 +50,17 @@ func (c *ClientConfig) SetBroadcastMode(broadcastMode string) {
 	c.BroadcastMode = broadcastMode
 }
 
-func (c *ClientConfig) SetHomeDir(homeDir string) {
-	c.Home = homeDir
-}
-
 // ReadFromClientConfig reads values from client.toml file and updates them in client Context
 func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
-	fmt.Println("-------------------\nconfig.go")
-	fmt.Println("> ReadFromClientConfig")
-	homeDirPath := filepath.Join(ctx.HomeDir, "homeDir.toml")
-	ctx = ctx.WithHomeDir(homeDirPath)
-	
+	// TODO: change to TOML
+	homeFilePath := filepath.Join(ctx.HomeDir, "config", "home.txt")
+	homeDir, err := ReadHomeDirFromFile(homeFilePath)
+	if err == nil {
+		ctx = ctx.WithHomeDir(homeDir)
+	}
+
 	configPath := filepath.Join(ctx.HomeDir, "config")
 	configFilePath := filepath.Join(configPath, "client.toml")
-	fmt.Println("  configFilePath: ", configFilePath)
 	conf := defaultClientConfig()
 
 	// if config.toml file does not exist we create it and write default ClientConfig values into it.
@@ -83,7 +78,7 @@ func ReadFromClientConfig(ctx client.Context) (client.Context, error) {
 		}
 	}
 
-	conf, err := getClientConfig(configPath, ctx.Viper)
+	conf, err = getClientConfig(configPath, ctx.Viper)
 	if err != nil {
 		return ctx, fmt.Errorf("couldn't get client config: %v", err)
 	}

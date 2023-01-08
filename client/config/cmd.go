@@ -89,7 +89,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 
 			// TODO: Change to TOML
 			// TODO: Change default node home
-			//homeFilePath := filepath.Join(simapp.DefaultNodeHome, "config", "home.txt")
+			// homeFilePath := filepath.Join(simapp.DefaultNodeHome, "config", "home.txt")
 			homeDir, err := os.UserHomeDir()
 			if err != nil {
 				return fmt.Errorf("could not query user home directory: %v", err)

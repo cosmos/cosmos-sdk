@@ -40,14 +40,14 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		cmd.Println("showing configuration at ", clientCtx.HomeDir)
+		cmd.Println("showing configuration at", clientCtx.HomeDir)
 		cmd.Println(string(s))
 
 	case 1:
 		// it's a get
 		key := args[0]
 
-		cmd.Println("showing configuration at ", clientCtx.HomeDir)
+		cmd.Println("showing configuration at", clientCtx.HomeDir)
 		switch key {
 		case flags.FlagChainID:
 			cmd.Println(conf.ChainID)
@@ -88,7 +88,7 @@ func runConfigCmd(cmd *cobra.Command, args []string) error {
 			}
 
 			// TODO: Change to TOML
-			// TODO: Change default node home?
+			// TODO: Change default node home
 			//homeFilePath := filepath.Join(simapp.DefaultNodeHome, "config", "home.txt")
 			homeDir, err := os.UserHomeDir()
 			if err != nil {

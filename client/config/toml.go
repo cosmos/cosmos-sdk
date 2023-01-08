@@ -40,7 +40,6 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 	}
 
 	fmt.Println("updating node configuration at", configFilePath)
-	// TODO: Check why folder is not correctly written to the config file
 	if err := configTemplate.Execute(&buffer, config); err != nil {
 		return err
 	}

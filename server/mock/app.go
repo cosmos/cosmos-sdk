@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"path/filepath"
 
+	db "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/types"
-	db "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -24,7 +24,7 @@ import (
 // similar to a real app. Make sure rootDir is empty before running the test,
 // in order to guarantee consistent results.
 func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
-	db, err := db.NewGoLevelDB("mock", filepath.Join(rootDir, "data"))
+	db, err := db.NewGoLevelDB("mock", filepath.Join(rootDir, "data"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &kvstoreTx{})
+	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &KVStoreTx{})
 
 	router := bam.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(interfaceRegistry)
@@ -61,13 +61,13 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 	return baseApp, nil
 }
 
-// KVStoreHandler is a simple handler that takes kvstoreTx and writes
+// KVStoreHandler is a simple handler that takes KVStoreTx and writes
 // them to the db.
 func KVStoreHandler(storeKey storetypes.StoreKey) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		dTx, ok := msg.(*kvstoreTx)
+		dTx, ok := msg.(*KVStoreTx)
 		if !ok {
-			return nil, errors.New("KVStoreHandler should only receive kvstoreTx")
+			return nil, errors.New("KVStoreHandler should only receive KVStoreTx")
 		}
 
 		key := dTx.key
@@ -140,15 +140,15 @@ func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMess
 
 // Manually write the handlers for this custom message
 type MsgServer interface {
-	Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error)
+	Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error)
 }
 
 type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(kvstoreTx)
+func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { //nolint:revive
+	in := new(KVStoreTx)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -157,14 +157,14 @@ func _Msg_Test_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/kvstoreTx",
+		FullMethod: "/KVStoreTx",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Test(ctx, req.(*kvstoreTx))
+		return srv.(MsgServer).Test(ctx, req.(*KVStoreTx))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func (m MsgServerImpl) Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error) {
+func (m MsgServerImpl) Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error) {
 	return KVStoreHandler(m.capKeyMainStore)(sdk.UnwrapSDKContext(ctx), msg)
 }

@@ -132,6 +132,9 @@ func init() {
 	)
 }
 
+// GenutilInputs defines the inputs needed for the genutil module.
+//
+//nolint:revive
 type GenutilInputs struct {
 	depinject.In
 

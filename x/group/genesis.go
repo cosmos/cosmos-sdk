@@ -12,6 +12,8 @@ func NewGenesisState() *GenesisState {
 	return &GenesisState{}
 }
 
+// Validate performs basic genesis state validation returning an error upon any
+// failure.
 func (s GenesisState) Validate() error {
 	groups := make(map[uint64]GroupInfo)
 	groupPolicies := make(map[string]GroupPolicyInfo)

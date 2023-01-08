@@ -55,7 +55,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val0 := s.network.Validators[0]
 	s.conn, err = grpc.Dial(
 		val0.AppConfig.GRPC.Address,
-		grpc.WithInsecure(), // Or else we get "no transport security set"
+		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),
 	)
 	s.Require().NoError(err)
@@ -96,7 +96,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BankBalance() {
 	s.Require().NotEmpty(blockHeight[0]) // Should contain the block height
 
 	// Request metadata should work
-	bankRes, err = bankClient.Balance(
+	_, err = bankClient.Balance(
 		metadata.AppendToOutgoingContext(context.Background(), grpctypes.GRPCBlockHeightHeader, "1"), // Add metadata to request
 		&banktypes.QueryBalanceRequest{Address: val0.Address.String(), Denom: denom},
 		grpc.Header(&header),
@@ -239,7 +239,7 @@ func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 }
 
 // mkTxBuilder creates a TxBuilder containing a signed tx from validator 0.
-func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder { //nolint:govet
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 

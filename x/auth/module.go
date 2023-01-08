@@ -31,7 +31,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
-const ConsensusVersion = 5
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -203,6 +203,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type AuthInputs struct {
 	depinject.In
 
@@ -211,12 +212,13 @@ type AuthInputs struct {
 	Cdc    codec.Codec
 
 	RandomGenesisAccountsFn types.RandomGenesisAccountsFn `optional:"true"`
-	AccountI                func() types.AccountI         `optional:"true"`
+	AccountI                func() sdk.AccountI           `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
+//nolint:revive
 type AuthOutputs struct {
 	depinject.Out
 

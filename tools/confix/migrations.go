@@ -49,6 +49,8 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 
 	diffs := DiffDocs(from, target)
 	for _, diff := range diffs {
+		diff := diff
+
 		var step transform.Step
 		keys := strings.Split(diff.Key, ".")
 
@@ -58,7 +60,15 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 				step = transform.Step{
 					Desc: fmt.Sprintf("add %s section", diff.Key),
 					T: transform.Func(func(_ context.Context, doc *tomledit.Document) error {
-						doc.Sections = append(doc.Sections, &tomledit.Section{Heading: &parser.Heading{Name: keys}})
+						doc.Sections = append(doc.Sections, &tomledit.Section{
+							Heading: &parser.Heading{
+								Block: parser.Comments{
+									"###############################################################################",
+									fmt.Sprintf("###							%s Configuration							###", strings.Title(diff.Key)),
+									"###############################################################################"},
+								Name: keys,
+							},
+						})
 						return nil
 					}),
 				}

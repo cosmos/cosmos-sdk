@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
-	github.com/cosmos/cosmos-sdk v0.47.0-alpha2.0.20221219231612-5ed4075ba219
+	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0

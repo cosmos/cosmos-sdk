@@ -183,38 +183,38 @@ func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
 // starting with the provided prefix.
 func NewPairRange[K1, K2 any](prefix K1) *PairRange[K1, K2] {
 	return &PairRange[K1, K2]{
-		start: RangeBoundNone(PairPrefix[K1, K2](prefix)),
-		end:   RangeBoundNextPrefixKey(PairPrefix[K1, K2](prefix)),
+		start: KeyModifierNone(PairPrefix[K1, K2](prefix)),
+		end:   KeyModifierPrefixEnd(PairPrefix[K1, K2](prefix)),
 	}
 }
 
 // PairRange is an API that facilitates working with Pair iteration.
 // It implements the Ranger API.
 type PairRange[K1, K2 any] struct {
-	start *RangeBound[Pair[K1, K2]]
-	end   *RangeBound[Pair[K1, K2]]
+	start *KeyModifier[Pair[K1, K2]]
+	end   *KeyModifier[Pair[K1, K2]]
 	order Order
 
 	err error
 }
 
 func (p *PairRange[K1, K2]) StartInclusive(k2 K2) *PairRange[K1, K2] {
-	p.start = RangeBoundNone(Join(*p.start.key.key1, k2))
+	p.start = KeyModifierNone(Join(*p.start.key.key1, k2))
 	return p
 }
 
 func (p *PairRange[K1, K2]) StartExclusive(k2 K2) *PairRange[K1, K2] {
-	p.start = RangeBoundNextKey(Join(*p.start.key.key1, k2))
+	p.start = KeyModifierNextKey(Join(*p.start.key.key1, k2))
 	return p
 }
 
 func (p *PairRange[K1, K2]) EndInclusive(k2 K2) *PairRange[K1, K2] {
-	p.end = RangeBoundNextKey(Join(*p.end.key.key1, k2))
+	p.end = KeyModifierNextKey(Join(*p.end.key.key1, k2))
 	return p
 }
 
 func (p *PairRange[K1, K2]) EndExclusive(k2 K2) *PairRange[K1, K2] {
-	p.end = RangeBoundNone(Join(*p.end.key.key1, k2))
+	p.end = KeyModifierNone(Join(*p.end.key.key1, k2))
 	return p
 }
 
@@ -223,7 +223,7 @@ func (p *PairRange[K1, K2]) Descending() *PairRange[K1, K2] {
 	return p
 }
 
-func (p *PairRange[K1, K2]) RangeValues() (start *RangeBound[Pair[K1, K2]], end *RangeBound[Pair[K1, K2]], order Order, err error) {
+func (p *PairRange[K1, K2]) RangeValues() (start *KeyModifier[Pair[K1, K2]], end *KeyModifier[Pair[K1, K2]], order Order, err error) {
 	if p.err != nil {
 		return nil, nil, 0, err
 	}

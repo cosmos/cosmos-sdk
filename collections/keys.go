@@ -16,8 +16,11 @@ var (
 	// The encoding just converts the string to bytes.
 	StringKey KeyCodec[string] = stringKey{}
 )
+
+// errDecodeKeySize is a sentinel error.
 var errDecodeKeySize = errors.New("decode error, wrong byte key size")
 
+// StringDelimiter defines the delimiter of a string key when used in non-terminal encodings.
 const StringDelimiter uint8 = 0x0
 
 type uint64Key struct{}

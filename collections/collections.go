@@ -93,11 +93,20 @@ type KeyCodec[T any] interface {
 	// MULTIPART keys
 
 	// EncodeNonTerminal writes the key bytes into the buffer.
-	// TODO: docs.
+	// EncodeNonTerminal is used in multipart keys like Pair
+	// when the part of the key being encoded is not the last one,
+	// and there needs to be a way to distinguish after how many bytes
+	// the first part of the key is finished. The buffer is expected to be
+	// at least as big as SizeNonTerminal(key) returns. It returns
+	// the amount of bytes written.
 	EncodeNonTerminal(buffer []byte, key T) (int, error)
-	// DecodeNonTerminal todo doc
+	// DecodeNonTerminal reads the buffer provided and returns
+	// the key T. DecodeNonTerminal is used in multipart keys
+	// like Pair when the part of the key being decoded is not the
+	// last one. It returns the amount of bytes read.
 	DecodeNonTerminal(buffer []byte) (int, T, error)
-	// SizeNonTerminal todo doc
+	// SizeNonTerminal returns the size of the key K when used in
+	// multipart keys like Pair.
 	SizeNonTerminal(key T) int
 }
 

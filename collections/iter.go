@@ -20,73 +20,85 @@ const (
 	OrderDescending Order = 1
 )
 
-type rangeBoundKind uint8
+type keyModifierKind uint8
 
 const (
-	rangeBoundKindNone rangeBoundKind = iota
-	rangeBoundKindNextKey
-	rangeBoundKindNextPrefixKey
+	keyModifierKindNone keyModifierKind = iota
+	keyModifierKindNextKey
+	keyModifierKindPrefixEnd
 )
 
-type RangeBound[K any] struct {
-	kind rangeBoundKind
+// KeyModifier acts as an enum which defines different ways to encode a given key K to bytes.
+type KeyModifier[K any] struct {
+	kind keyModifierKind
 	key  K
 }
 
-func RangeBoundNextKey[K any](key K) *RangeBound[K] {
-	return &RangeBound[K]{key: key, kind: rangeBoundKindNextKey}
+// KeyModifierNextKey instantiates a KeyModifier that when encoded to bytes
+// identifies the next key after the provided key K.
+// Example: given a string key "ABCD" the next key is bytes("ABCD\0")
+// It's useful when defining inclusivity or exclusivity of a key
+// in store iteration. Specifically: to make an Iterator start exclude key K
+// I would return a KeyModifierNextKey(key) in the Ranger start.
+func KeyModifierNextKey[K any](key K) *KeyModifier[K] {
+	return &KeyModifier[K]{key: key, kind: keyModifierKindNextKey}
 }
 
-func RangeBoundNextPrefixKey[K any](key K) *RangeBound[K] {
-	return &RangeBound[K]{key: key, kind: rangeBoundKindNextPrefixKey}
+// KeyModifierPrefixEnd instantiates a KeyModifier that when encoded to bytes
+// identifies the key that would end the prefix of the key K.
+// Example: if the string key "ABCD" is provided, it would be encoded as bytes("ABCE").
+func KeyModifierPrefixEnd[K any](key K) *KeyModifier[K] {
+	return &KeyModifier[K]{key: key, kind: keyModifierKindPrefixEnd}
 }
 
-func RangeBoundNone[K any](key K) *RangeBound[K] {
-	return &RangeBound[K]{key: key, kind: rangeBoundKindNone}
+// KeyModifierNone instantiates a KeyModifier that applies no modifications
+// to the key K. So its bytes representation will not be altered.
+func KeyModifierNone[K any](key K) *KeyModifier[K] {
+	return &KeyModifier[K]{key: key, kind: keyModifierKindNone}
 }
 
 // Ranger defines a generic interface that provides a range of keys.
 type Ranger[K any] interface {
 	// RangeValues is defined by Ranger implementers.
 	// TODO doc
-	RangeValues() (start *RangeBound[K], end *RangeBound[K], order Order, err error)
+	RangeValues() (start *KeyModifier[K], end *KeyModifier[K], order Order, err error)
 }
 
 // Range is a Ranger implementer.
 type Range[K any] struct {
-	start *RangeBound[K]
-	end   *RangeBound[K]
+	start *KeyModifier[K]
+	end   *KeyModifier[K]
 	order Order
 }
 
 // Prefix sets a fixed prefix for the key range.
 func (r *Range[K]) Prefix(key K) *Range[K] {
-	r.start = RangeBoundNone(key)
-	r.end = RangeBoundNextPrefixKey(key)
+	r.start = KeyModifierNone(key)
+	r.end = KeyModifierPrefixEnd(key)
 	return r
 }
 
 // StartInclusive makes the range contain only keys which are bigger or equal to the provided start K.
 func (r *Range[K]) StartInclusive(start K) *Range[K] {
-	r.start = RangeBoundNone(start)
+	r.start = KeyModifierNone(start)
 	return r
 }
 
 // StartExclusive makes the range contain only keys which are bigger to the provided start K.
 func (r *Range[K]) StartExclusive(start K) *Range[K] {
-	r.start = RangeBoundNextKey(start)
+	r.start = KeyModifierNextKey(start)
 	return r
 }
 
 // EndInclusive makes the range contain only keys which are smaller or equal to the provided end K.
 func (r *Range[K]) EndInclusive(end K) *Range[K] {
-	r.end = RangeBoundNextKey(end)
+	r.end = KeyModifierNextKey(end)
 	return r
 }
 
 // EndExclusive makes the range contain only keys which are smaller to the provided end K.
 func (r *Range[K]) EndExclusive(end K) *Range[K] {
-	r.end = RangeBoundNone(end)
+	r.end = KeyModifierNone(end)
 	return r
 }
 
@@ -101,7 +113,7 @@ var (
 	errOrder = errors.New("collections: invalid order")
 )
 
-func (r *Range[K]) RangeValues() (start *RangeBound[K], end *RangeBound[K], order Order, err error) {
+func (r *Range[K]) RangeValues() (start *KeyModifier[K], end *KeyModifier[K], order Order, err error) {
 	return r.start, r.end, r.order, nil
 }
 
@@ -109,8 +121,8 @@ func (r *Range[K]) RangeValues() (start *RangeBound[K], end *RangeBound[K], orde
 // a nil Ranger can be seen as an ascending iteration over all the possible keys.
 func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K]) (iter Iterator[K, V], err error) {
 	var (
-		start *RangeBound[K]
-		end   *RangeBound[K]
+		start *KeyModifier[K]
+		end   *KeyModifier[K]
 		order = OrderAscending
 	)
 
@@ -267,17 +279,17 @@ type KeyValue[K, V any] struct {
 }
 
 // encodeRangeBound encodes a range bound, modifying the key bytes to adhere to bound semantics.
-func encodeRangeBound[T any](prefix []byte, keyCodec KeyCodec[T], bound *RangeBound[T]) ([]byte, error) {
+func encodeRangeBound[T any](prefix []byte, keyCodec KeyCodec[T], bound *KeyModifier[T]) ([]byte, error) {
 	key, err := encodeKeyWithPrefix(prefix, keyCodec, bound.key)
 	if err != nil {
 		return nil, err
 	}
 	switch bound.kind {
-	case rangeBoundKindNone:
+	case keyModifierKindNone:
 		return key, nil
-	case rangeBoundKindNextKey:
+	case keyModifierKindNextKey:
 		return nextBytesKey(key), nil
-	case rangeBoundKindNextPrefixKey:
+	case keyModifierKindPrefixEnd:
 		return nextBytesPrefixKey(key), nil
 	default:
 		panic("undefined bound kind")

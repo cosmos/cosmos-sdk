@@ -52,6 +52,23 @@ confix set ~/.simapp/config/app.toml pruning "enabled" # sets the value pruning 
 confix set ~/.simapp/config/client.toml chain-id "foo-1" # sets the value chain-id from client.toml
 ```
 
+### Migrate
+
+Migrate a configuration file to a new version, e.g.:
+
+```shell
+simd config migrate v0.47 # migrates defaultHome/config/app.toml to the latest v0.47 config
+```
+
+```shell
+confix migrate v0.47 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.47 config
+```
+
+### Maintainer
+
+At each SDK modification of the default configuration, add the default SDK config under `data/v0.XX-app.toml`.
+This allows users to use the tool standalone.
+
 ## Credits
 
 This project is based on the [Tendermint RFC 019](https://github.com/tendermint/tendermint/blob/5013bc3f4a6d64dcc2bf02ccc002ebc9881c62e4/docs/rfc/rfc-019-config-version.md) and their own implementation of [confix](https://github.com/tendermint/tendermint/blob/v0.36.x/scripts/confix/confix.go).

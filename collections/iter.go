@@ -60,7 +60,17 @@ func KeyModifierNone[K any](key K) *KeyModifier[K] {
 // Ranger defines a generic interface that provides a range of keys.
 type Ranger[K any] interface {
 	// RangeValues is defined by Ranger implementers.
-	// TODO doc
+	// The implementer can optionally return a start and an end.
+	// If start is nil and end is not, the iteration will include all the keys
+	// in the collection up until the provided end.
+	// If start is defined and end is nil, the iteration will include all the keys
+	// in the collection starting from the provided start.
+	// If both are nil then the iteration will include all the possible keys in the
+	// collection.
+	// Order defines the order of the iteration, if order is OrderAscending then the
+	// iteration will yield keys from the smallest to the biggest, if order
+	// is OrderDescending then the iteration will yield keys from the biggest to the smallest.
+	// Ordering is defined by the keys bytes representation, which is dependent on the KeyCodec used.
 	RangeValues() (start *KeyModifier[K], end *KeyModifier[K], order Order, err error)
 }
 

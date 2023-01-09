@@ -1528,7 +1528,7 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 
 func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	processOpt := func(app *baseapp.BaseApp) {
-		app.SetProcessProposal(func(ctx sdk.Context, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		app.SetProcessProposal(func(ctx sdk.Context, app *baseapp.BaseApp, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
 			panic(errors.New("test"))
 		})
 	}

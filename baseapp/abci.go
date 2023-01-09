@@ -325,7 +325,7 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		}
 	}()
 
-	resp = app.processProposal(ctx, req)
+	resp = app.processProposal(ctx, app, req)
 	return resp
 }
 

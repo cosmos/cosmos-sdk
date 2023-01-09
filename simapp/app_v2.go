@@ -253,17 +253,7 @@ func NewSimApp(
 	mempoolOpt := baseapp.SetMempool(nonceMempool)
 
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
-		// pool := mempool.NoOpMempool{}
-		// baseapp.SetMempool(pool)(bapp) // <- this way doesn't work
-		// TODO: this looks weird. Could export Mempool in BaseApp instead?
 		bapp.SetPrepareProposal(func(ctx sdk.Context, app *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
-			// If the mempool is nil or a no-op mempool, we simply return the transactions
-			// requested from Tendermint, which, by default, should be in FIFO order.
-			_, isNoOp := nonceMempool.(mempool.NoOpMempool) //app.Mempool.(mempool.NoOpMempool)
-			if nonceMempool == nil || isNoOp {
-				return types.ResponsePrepareProposal{Txs: req.Txs}
-			}
-
 			var (
 				txsBytes  [][]byte
 				byteCount int64

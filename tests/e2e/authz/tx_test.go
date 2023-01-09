@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/simapp"
 	"github.com/cosmos/gogoproto/proto"
 	"gotest.tools/v3/assert"
 
@@ -39,7 +40,10 @@ func NewFixture(cfg network.Config) *fixture {
 }
 
 func initFixture(t *testing.T) *fixture {
-	f := fixture{}
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
+	cfg.NumValidators = 1
+
+	f := NewFixture(cfg)
 
 	t.Log("setting up e2e test suite")
 
@@ -128,7 +132,7 @@ func initFixture(t *testing.T) *fixture {
 	assert.NilError(t, val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 	assert.NilError(t, clitestutil.CheckTxCode(f.network, val.ClientCtx, response.TxHash, 0))
 
-	return &f
+	return f
 }
 
 func (f *fixture) createAccount(t *testing.T, uid string) sdk.AccAddress {
@@ -171,7 +175,9 @@ var (
 )
 
 func TestCLITxGrantAuthorization(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
@@ -198,7 +204,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"key not found",
+			`granter.info: key not found`,
 		},
 		{
 			"Invalid grantee Address",
@@ -212,7 +218,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"invalid separator index",
+			`decoding bech32 failed: invalid separator index -1`,
 		},
 		{
 			"Invalid expiration time",
@@ -226,7 +232,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"",
+			"EOF",
 		},
 		{
 			"fail with error invalid msg-type",
@@ -260,7 +266,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"cannot set both allowed & deny list",
+			`cannot set both allowed & deny list`,
 		},
 		{
 			"invalid bond denom for tx delegate authorization allowed validators",
@@ -277,7 +283,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"invalid denom",
+			`invalid denom xyz; coin denom should match the current bond denom stake`,
 		},
 		{
 			"invalid bond denom for tx delegate authorization deny validators",
@@ -294,7 +300,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"invalid denom",
+			`invalid denom xyz; coin denom should match the current bond denom stake`,
 		},
 		{
 			"invalid bond denom for tx undelegate authorization",
@@ -311,7 +317,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"invalid denom",
+			`invalid denom xyz; coin denom should match the current bond denom stake`,
 		},
 		{
 			"invalid bond denon for tx redelegate authorization",
@@ -328,7 +334,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 			},
 			0,
 			true,
-			"invalid denom",
+			`invalid denom xyz; coin denom should match the current bond denom stake`,
 		},
 		{
 			"invalid decimal coin expression with more than single coin",
@@ -520,8 +526,7 @@ func TestCLITxGrantAuthorization(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			out, err := authzclitestutil.CreateGrant(val.ClientCtx, tc.args)
 			if tc.expectErr {
-				assert.NilError(t, err, out)
-				assert.Equal(t, strings.Contains(err.Error(), tc.expErrMsg), true)
+				assert.ErrorContains(t, err, tc.expErrMsg)
 			} else {
 				var txResp sdk.TxResponse
 				assert.NilError(t, err)
@@ -539,7 +544,9 @@ func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter,
 }
 
 func TestCmdRevokeAuthorizations(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 
 	grantee := f.grantee[0]
@@ -677,7 +684,7 @@ func TestCmdRevokeAuthorizations(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") // TODO
+				assert.ErrorContains(t, err, "")
 			} else {
 				assert.NilError(t, err)
 				assert.NilError(t, clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -690,7 +697,9 @@ func TestCmdRevokeAuthorizations(t *testing.T) {
 }
 
 func TestExecAuthorizationWithExpiration(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
@@ -734,7 +743,9 @@ func TestExecAuthorizationWithExpiration(t *testing.T) {
 }
 
 func TestNewExecGenericAuthorized(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
@@ -826,7 +837,7 @@ func TestNewExecGenericAuthorized(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, "")
 			} else {
 				assert.NilError(t, err)
 				assert.NilError(t, clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -838,7 +849,9 @@ func TestNewExecGenericAuthorized(t *testing.T) {
 }
 
 func TestNewExecGrantAuthorized(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
@@ -939,7 +952,7 @@ func TestNewExecGrantAuthorized(t *testing.T) {
 				assert.Equal(t, strings.Contains(response.RawLog, tc.expectErrMsg), true)
 
 			case tc.expectErr:
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, "")
 
 			default:
 				assert.NilError(t, err)
@@ -951,7 +964,9 @@ func TestNewExecGrantAuthorized(t *testing.T) {
 }
 
 func TestExecSendAuthzWithAllowList(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[3]
 	allowedAddr := f.grantee[4]
@@ -1042,7 +1057,9 @@ func TestExecSendAuthzWithAllowList(t *testing.T) {
 }
 
 func TestExecDelegateAuthorization(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
@@ -1129,7 +1146,7 @@ func TestExecDelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, "")
 				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
 			} else {
 				var response sdk.TxResponse
@@ -1209,7 +1226,7 @@ func TestExecDelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") // TODO
+				assert.ErrorContains(t, err, "")
 				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
 			} else {
 				var response sdk.TxResponse
@@ -1260,7 +1277,9 @@ func TestExecDelegateAuthorization(t *testing.T) {
 }
 
 func TestExecUndelegateAuthorization(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
@@ -1365,7 +1384,7 @@ func TestExecUndelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, "")
 				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
 			} else {
 				var response sdk.TxResponse
@@ -1447,7 +1466,7 @@ func TestExecUndelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "")
+				assert.ErrorContains(t, err, "")
 				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
 			} else {
 				var response sdk.TxResponse

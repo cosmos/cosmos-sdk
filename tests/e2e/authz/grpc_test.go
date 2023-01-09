@@ -17,7 +17,9 @@ import (
 )
 
 func TestQueryGrantGRPC(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 
 	val := f.network.Validators[0]
 	grantee := f.grantee[1]
@@ -69,7 +71,6 @@ func TestQueryGrantGRPC(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			resp, _ := testutil.GetRequest(tc.url)
-			// require := f.Require()
 			if tc.expectErr {
 				assert.Equal(t, strings.Contains(string(resp), tc.errorMsg), true)
 			} else {
@@ -87,7 +88,10 @@ func TestQueryGrantGRPC(t *testing.T) {
 }
 
 func TestQueryGrantsGRPC(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
+
 	val := f.network.Validators[0]
 	grantee := f.grantee[1]
 	grantsURL := val.APIAddress + "/cosmos/authz/v1beta1/grants?granter=%s&grantee=%s"
@@ -176,10 +180,12 @@ func TestQueryGrantsGRPC(t *testing.T) {
 }
 
 func TestQueryGranterGrantsGRPC(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
+
 	val := f.network.Validators[0]
 	grantee := f.grantee[1]
-	// require := s.Require()
 
 	testCases := []struct {
 		name      string
@@ -207,7 +213,7 @@ func TestQueryGranterGrantsGRPC(t *testing.T) {
 			fmt.Sprintf("%s/cosmos/authz/v1beta1/grants/granter/%s", val.APIAddress, val.Address.String()),
 			false,
 			"",
-			8,
+			3,
 		},
 	}
 	for _, tc := range testCases {
@@ -228,7 +234,9 @@ func TestQueryGranterGrantsGRPC(t *testing.T) {
 }
 
 func TestQueryGranteeGrantsGRPC(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[1]
 

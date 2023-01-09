@@ -16,7 +16,9 @@ import (
 )
 
 func TestQueryAuthorizations(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 
 	grantee := f.grantee[0]
@@ -83,7 +85,7 @@ func TestQueryAuthorizations(t *testing.T) {
 			clientCtx := val.ClientCtx
 			resp, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, tc.expErrMsg)
 				assert.Equal(t, strings.Contains(string(resp.Bytes()), tc.expErrMsg), true)
 			} else {
 				assert.NilError(t, err)
@@ -96,7 +98,9 @@ func TestQueryAuthorizations(t *testing.T) {
 }
 
 func TestQueryAuthorization(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 
 	grantee := f.grantee[0]
@@ -158,7 +162,7 @@ func TestQueryAuthorization(t *testing.T) {
 			"",
 		},
 		{
-			"Valid txn (json)",
+			"Valid query (json)",
 			[]string{
 				val.Address.String(),
 				grantee.String(),
@@ -169,7 +173,7 @@ func TestQueryAuthorization(t *testing.T) {
 			`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"100"}],"allow_list":[]}`,
 		},
 		{
-			"Valid txn with allowed list (json)",
+			"Valid query with allowed list (json)",
 			[]string{
 				val.Address.String(),
 				f.grantee[3].String(),
@@ -177,7 +181,7 @@ func TestQueryAuthorization(t *testing.T) {
 				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
-			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"88"}],"allow_list":["%s"]}`, f.grantee[4]),
+			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"100"}],"allow_list":["%s"]}`, f.grantee[4]),
 		},
 	}
 	for _, tc := range testCases {
@@ -188,9 +192,10 @@ func TestQueryAuthorization(t *testing.T) {
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, "")
 			} else {
 				assert.NilError(t, err)
+				fmt.Println("out", strings.TrimSpace(out.String()), tc.expectedOutput)
 				assert.Equal(t, strings.Contains(strings.TrimSpace(out.String()), tc.expectedOutput), true)
 			}
 		})
@@ -198,7 +203,9 @@ func TestQueryAuthorization(t *testing.T) {
 }
 
 func TestQueryGranterGrants(t *testing.T) {
+	t.Parallel()
 	f := initFixture(t)
+	defer f.TearDownSuite(t)
 	val := f.network.Validators[0]
 	grantee := f.grantee[0]
 
@@ -237,7 +244,7 @@ func TestQueryGranterGrants(t *testing.T) {
 			},
 			false,
 			"",
-			8,
+			3,
 		},
 		{
 			"valid case with pagination",
@@ -257,7 +264,7 @@ func TestQueryGranterGrants(t *testing.T) {
 			clientCtx := val.ClientCtx
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.Error(t, err, "") //TODO
+				assert.ErrorContains(t, err, tc.expectedErr)
 				assert.Equal(t, strings.Contains(out.String(), tc.expectedErr), true)
 			} else {
 				assert.NilError(t, err)

@@ -22,8 +22,8 @@ func (k BaseKeeper) Balance(ctx context.Context, req *types.QueryBalanceRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -117,8 +117,8 @@ func (k BaseKeeper) SpendableBalanceByDenom(ctx context.Context, req *types.Quer
 		return nil, status.Errorf(codes.InvalidArgument, "invalid address: %s", err.Error())
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -145,8 +145,8 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -200,8 +200,8 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "invalid denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -224,8 +224,8 @@ func (k BaseKeeper) DenomOwners(
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.Denom == "" {
-		return nil, status.Error(codes.InvalidArgument, "empty denom")
+	if err := sdk.ValidateDenom(req.Denom); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

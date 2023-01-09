@@ -254,6 +254,13 @@ func NewSimApp(
 		// baseapp.SetMempool(pool)(bapp) // <- this way doesn't work
 		// TODO: this looks weird. Could export Mempool in BaseApp instead?
 		bapp.SetPrepareProposal(func(ctx sdk.Context, app *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+			// If the mempool is nil or a no-op mempool, we simply return the transactions
+			// requested from Tendermint, which, by default, should be in FIFO order.
+			_, isNoOp := app.Mempool.(mempool.NoOpMempool)
+			if app.Mempool == nil || isNoOp {
+				return types.ResponsePrepareProposal{Txs: req.Txs}
+			}
+
 			var (
 				txsBytes  [][]byte
 				byteCount int64

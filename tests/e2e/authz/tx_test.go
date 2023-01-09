@@ -684,7 +684,7 @@ func TestCmdRevokeAuthorizations(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
+				assert.Assert(t, err != nil)
 			} else {
 				assert.NilError(t, err)
 				assert.NilError(t, clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -837,7 +837,7 @@ func TestNewExecGenericAuthorized(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
+				assert.Assert(t, err != nil)
 			} else {
 				assert.NilError(t, err)
 				assert.NilError(t, clientCtx.Codec.UnmarshalJSON(out.Bytes(), tc.respType), out.String())
@@ -952,7 +952,7 @@ func TestNewExecGrantAuthorized(t *testing.T) {
 				assert.Equal(t, strings.Contains(response.RawLog, tc.expectErrMsg), true)
 
 			case tc.expectErr:
-				assert.ErrorContains(t, err, "")
+				assert.ErrorContains(t, err, tc.expectErrMsg)
 
 			default:
 				assert.NilError(t, err)
@@ -1146,8 +1146,7 @@ func TestExecDelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
-				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
+				assert.ErrorContains(t, err, tc.errMsg)
 			} else {
 				var response sdk.TxResponse
 				assert.NilError(t, err)
@@ -1226,8 +1225,7 @@ func TestExecDelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
-				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
+				assert.ErrorContains(t, err, tc.errMsg)
 			} else {
 				var response sdk.TxResponse
 				assert.NilError(t, err)
@@ -1384,8 +1382,7 @@ func TestExecUndelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
-				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
+				assert.ErrorContains(t, err, tc.errMsg)
 			} else {
 				var response sdk.TxResponse
 				assert.NilError(t, err)
@@ -1466,8 +1463,7 @@ func TestExecUndelegateAuthorization(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
-				assert.Equal(t, strings.Contains(err.Error(), tc.errMsg), true)
+				assert.ErrorContains(t, err, tc.errMsg)
 			} else {
 				var response sdk.TxResponse
 				assert.NilError(t, err)

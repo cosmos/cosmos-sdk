@@ -22,7 +22,7 @@ type fixture struct {
 	network *network.Network
 }
 
-func initFixture(t *testing.T) *fixture {
+func initFixture(t *testing.T) (*fixture, func()) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 
@@ -33,13 +33,13 @@ func initFixture(t *testing.T) *fixture {
 	return &fixture{
 		cfg:     cfg,
 		network: network,
-	}
+	}, func() { network.Cleanup() }
 }
 
 func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
-	defer f.network.Cleanup()
+	f, cleanup := initFixture(t)
+	defer cleanup()
 
 	val := f.network.Validators[0]
 

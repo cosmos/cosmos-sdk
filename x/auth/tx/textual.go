@@ -1,14 +1,14 @@
 package tx
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/tx/textual/valuerenderer"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	textualv1 "cosmossdk.io/api/cosmos/msg/textual/v1"
-	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
+	txsigning "cosmossdk.io/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -33,6 +33,11 @@ func (signModeTextualHandler) Modes() []signingtypes.SignMode {
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
 func (h signModeTextualHandler) GetSignBytes(mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
+	panic("SIGN_MODE_TEXTUAL needs GetSignBytesWithContext")
+}
+
+// GetSignBytesWithContext implements SignModeHandler.GetSignBytesWithContext
+func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mode signingtypes.SignMode, data signing.SignerData, tx sdk.Tx) ([]byte, error) {
 	if mode != signingtypes.SignMode_SIGN_MODE_TEXTUAL {
 		return nil, fmt.Errorf("expected %s, got %s", signingtypes.SignMode_SIGN_MODE_TEXTUAL, mode)
 	}
@@ -50,21 +55,15 @@ func (h signModeTextualHandler) GetSignBytes(mode signingtypes.SignMode, data si
 		return nil, err
 	}
 
-	textualData := &textualv1.TextualData{
-		BodyBytes:     bodyBz,
-		AuthInfoBytes: authInfoBz,
-		SignerData: &signingv1beta1.SignerData{
-			Address:       data.Address,
-			ChainId:       data.ChainID,
-			AccountNumber: data.AccountNumber,
-			Sequence:      data.Sequence,
-			PubKey: &anypb.Any{
-				TypeUrl: pbAny.TypeUrl,
-				Value:   pbAny.Value,
-			},
-		},
-	}
-
 	// The first argument needs: https://github.com/cosmos/cosmos-sdk/pull/13701
-	return h.t.GetSignBytes(ctx, textualData)
+	return h.t.GetSignBytes(ctx, bodyBz, authInfoBz, txsigning.SignerData{
+		Address:       data.Address,
+		ChainId:       data.ChainID,
+		AccountNumber: data.AccountNumber,
+		Sequence:      data.Sequence,
+		PubKey: &anypb.Any{
+			TypeUrl: pbAny.TypeUrl,
+			Value:   pbAny.Value,
+		},
+	})
 }

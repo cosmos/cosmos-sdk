@@ -17,13 +17,13 @@ func RandomGenesisDefaultSendEnabledParam(r *rand.Rand) bool {
 }
 
 // RandomGenesisSendEnabled creates randomized values for the SendEnabled slice.
-func RandomGenesisSendEnabled(r *rand.Rand) []types.SendEnabled {
+func RandomGenesisSendEnabled(r *rand.Rand, bondDenom string) []types.SendEnabled {
 	rv := make([]types.SendEnabled, 0, 2)
 	// 60% of the time, add a denom specific record.
 	if r.Int63n(100) < 60 {
 		// 75% of the those times, set send enabled to true.
 		bondEnabled := r.Int63n(100) < 75
-		rv = append(rv, types.SendEnabled{Denom: sdk.DefaultBondDenom, Enabled: bondEnabled})
+		rv = append(rv, types.SendEnabled{Denom: bondDenom, Enabled: bondEnabled})
 	}
 	// Probabilities:
 	//   P(a)    = 60.0% = There's SendEnable entry for the bond denom = .600
@@ -53,14 +53,14 @@ func RandomGenesisSendEnabled(r *rand.Rand) []types.SendEnabled {
 }
 
 // RandomGenesisBalances returns a slice of account balances. Each account has
-// a balance of simState.InitialStake for sdk.DefaultBondDenom.
+// a balance of simState.InitialStake for simState.BondDenom.
 func RandomGenesisBalances(simState *module.SimulationState) []types.Balance {
 	genesisBalances := []types.Balance{}
 
 	for _, acc := range simState.Accounts {
 		genesisBalances = append(genesisBalances, types.Balance{
 			Address: acc.Address.String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, simState.InitialStake)),
+			Coins:   sdk.NewCoins(sdk.NewCoin(simState.BondDenom, simState.InitialStake)),
 		})
 	}
 
@@ -75,11 +75,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { defaultSendEnabledParam = RandomGenesisDefaultSendEnabledParam(r) },
 	)
 
-	sendEnabled := RandomGenesisSendEnabled(simState.Rand)
+	sendEnabled := RandomGenesisSendEnabled(simState.Rand, simState.BondDenom)
 
 	numAccs := int64(len(simState.Accounts))
 	totalSupply := simState.InitialStake.Mul(sdk.NewInt((numAccs + simState.NumBonded)))
-	supply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupply))
+	supply := sdk.NewCoins(sdk.NewCoin(simState.BondDenom, totalSupply))
 
 	bankGenesis := types.GenesisState{
 		Params:      types.NewParams(defaultSendEnabledParam),

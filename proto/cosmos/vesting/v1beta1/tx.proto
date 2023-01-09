@@ -45,6 +45,7 @@ message MsgCreateVestingAccount {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
+  // end of vesting as unix time
   int64 end_time = 4;
   bool  delayed  = 5;
 }
@@ -85,8 +86,9 @@ message MsgCreatePeriodicVestingAccount {
 
   option (gogoproto.equal) = false;
 
-  string          from_address    = 1;
-  string          to_address      = 2;
+  string from_address = 1;
+  string to_address   = 2;
+  // start of vesting as unix time
   int64           start_time      = 3;
   repeated Period vesting_periods = 4 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

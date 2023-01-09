@@ -367,7 +367,7 @@ var xxx_messageInfo_MsgFundCommunityPoolResponse proto.InternalMessageInfo
 //
 // Since: cosmos-sdk 0.47
 type MsgUpdateParams struct {
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/distribution parameters to update.
 	//
@@ -468,7 +468,7 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 //
 // Since: cosmos-sdk 0.47
 type MsgCommunityPoolSpend struct {
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string                                   `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	Recipient string                                   `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	Amount    github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,3,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`

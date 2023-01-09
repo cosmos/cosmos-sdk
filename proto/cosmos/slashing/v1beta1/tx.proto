@@ -20,7 +20,7 @@ service Msg {
   rpc Unjail(MsgUnjail) returns (MsgUnjailResponse);
 
   // UpdateParams defines a governance operation for updating the x/slashing module
-  // parameters. The authority is hard-coded to the x/gov module account.
+  // parameters. The authority defaults to the x/gov module account.
   //
   // Since: cosmos-sdk 0.47
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
@@ -52,7 +52,7 @@ message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
   option (amino.name)           = "cosmos-sdk/x/slashing/MsgUpdateParams";
 
-  // authority is the address of the governance account.
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // params defines the x/slashing parameters to update.

@@ -15,7 +15,7 @@ import (
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	var accountKeeper authkeeper.AccountKeeper
-	app, err := simtestutil.SetupWithConfiguration(
+	app, err := simtestutil.SetupAtGenesis(
 		configurator.NewAppConfig(
 			configurator.ParamsModule(),
 			configurator.AuthModule(),
@@ -24,7 +24,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 			configurator.GovModule(),
 			configurator.ConsensusModule(),
 		),
-		simtestutil.DefaultStartUpConfig(),
 		&accountKeeper,
 	)
 	assert.NilError(t, err)

@@ -134,6 +134,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 	s.Require().NoError(s.ks.SetItem(item))
 
 	k2, err := s.ks.migrate(n1)
+	s.Require().NoError(err)
 	s.Require().Equal(k2.Name, k1.Name)
 
 	pub, err := k2.GetPubKey()

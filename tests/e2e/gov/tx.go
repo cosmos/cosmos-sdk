@@ -21,19 +21,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
 	network *network.Network
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -73,12 +73,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
+func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 	val := s.network.Validators[0]
 
 	// Create a legacy proposal JSON, make sure it doesn't pass this new CLI
@@ -107,6 +107,8 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 			}
 		}
 	],
+	"title": "My awesome title",
+	"summary": "My awesome description",
 	"metadata": "%s",
 	"deposit": "%s"
 }`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(5431)))
@@ -162,7 +164,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
+func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 	val := s.network.Validators[0]
 	invalidProp := `{
 	  "title": "",
@@ -258,7 +260,7 @@ func (s *IntegrationTestSuite) TestNewCmdSubmitLegacyProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdDeposit() {
+func (s *E2ETestSuite) TestNewCmdDeposit() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -336,7 +338,7 @@ func (s *IntegrationTestSuite) TestNewCmdDeposit() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdVote() {
+func (s *E2ETestSuite) TestNewCmdVote() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -410,7 +412,7 @@ func (s *IntegrationTestSuite) TestNewCmdVote() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdWeightedVote() {
+func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {

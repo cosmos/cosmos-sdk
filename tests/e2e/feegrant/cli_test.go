@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
+func TestE2ETestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 3
-	suite.Run(t, NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewE2ETestSuite(cfg))
 }

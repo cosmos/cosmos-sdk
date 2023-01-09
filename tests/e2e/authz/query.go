@@ -13,7 +13,7 @@ import (
 	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 )
 
-func (s *IntegrationTestSuite) TestQueryAuthorizations() {
+func (s *E2ETestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee[0]
@@ -92,7 +92,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryAuthorization() {
+func (s *E2ETestSuite) TestQueryAuthorization() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee[0]
@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGranterGrants() {
+func (s *E2ETestSuite) TestQueryGranterGrants() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	require := s.Require()

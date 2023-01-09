@@ -2,15 +2,16 @@ package baseapp_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -1322,10 +1323,6 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 		ConsensusParams: &tmproto.ConsensusParams{},
 	})
 
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
-	})
-
 	tx := newTxCounter(t, suite.txConfig, 0, 1)
 	txBytes, err := suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
@@ -1346,6 +1343,7 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 2, len(resPrepareProposal.Txs))
@@ -1361,11 +1359,60 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
 	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
 
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	})
+
 	res := suite.baseApp.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
 	require.Equal(t, 1, pool.CountTx())
 
 	require.NotEmpty(t, res.Events)
 	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+}
+
+func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
+	someKey := []byte("some-key")
+
+	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
+			return abci.ResponseInitChain{}
+		})
+	}
+
+	prepareOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+			value := ctx.KVStore(capKey1).Get(someKey)
+			// We should be able to access any state written in InitChain
+			require.Equal(t, "foo", string(value))
+			return abci.ResponsePrepareProposal{Txs: req.Txs}
+		})
+	}
+
+	suite := NewBaseAppSuite(t, setInitChainerOpt, prepareOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1, // this value can't be 0
+	}
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, 0, len(resPrepareProposal.Txs))
+
+	reqProposalTxBytes := [][]byte{}
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs: reqProposalTxBytes,
+	}
+
+	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{
+		Header: tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1},
+	})
 }
 
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
@@ -1388,6 +1435,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1500,
+		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 10, len(resPrepareProposal.Txs))
@@ -1411,6 +1459,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 
 	reqPrepareProposal := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
 	require.Equal(t, 1, len(resPrepareProposal.Txs))
@@ -1448,7 +1497,49 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 	req := abci.RequestPrepareProposal{
 		MaxTxBytes: 1000,
+		Height:     1,
 	}
 	res := suite.baseApp.PrepareProposal(req)
 	require.Equal(t, 1, len(res.Txs))
+}
+
+func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
+	prepareOpt := func(app *baseapp.BaseApp) {
+		app.SetPrepareProposal(func(ctx sdk.Context, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+			panic(errors.New("test"))
+		})
+	}
+	suite := NewBaseAppSuite(t, prepareOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	req := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1,
+	}
+
+	require.NotPanics(t, func() {
+		res := suite.baseApp.PrepareProposal(req)
+		require.Equal(t, req.Txs, res.Txs)
+	})
+}
+
+func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
+	processOpt := func(app *baseapp.BaseApp) {
+		app.SetProcessProposal(func(ctx sdk.Context, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
+			panic(errors.New("test"))
+		})
+	}
+	suite := NewBaseAppSuite(t, processOpt)
+
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &tmproto.ConsensusParams{},
+	})
+
+	require.NotPanics(t, func() {
+		res := suite.baseApp.ProcessProposal(abci.RequestProcessProposal{})
+		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
+	})
 }

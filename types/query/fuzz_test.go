@@ -32,7 +32,7 @@ func FuzzPagination(f *testing.F) {
 	// 1. Set up some seeds.
 	seeds := []*query.PageRequest{
 		new(query.PageRequest),
-		&query.PageRequest{
+		{
 			Offset: 0,
 			Limit:  10,
 		},

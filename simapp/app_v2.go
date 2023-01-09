@@ -259,8 +259,8 @@ func NewSimApp(
 		bapp.SetPrepareProposal(func(ctx sdk.Context, app *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 			// If the mempool is nil or a no-op mempool, we simply return the transactions
 			// requested from Tendermint, which, by default, should be in FIFO order.
-			_, isNoOp := app.Mempool.(mempool.NoOpMempool)
-			if app.Mempool == nil || isNoOp {
+			_, isNoOp := nonceMempool.(mempool.NoOpMempool) //app.Mempool.(mempool.NoOpMempool)
+			if nonceMempool == nil || isNoOp {
 				return types.ResponsePrepareProposal{Txs: req.Txs}
 			}
 
@@ -269,7 +269,7 @@ func NewSimApp(
 				byteCount int64
 			)
 
-			iterator := app.Mempool.Select(ctx, req.Txs)
+			iterator := nonceMempool.Select(ctx, req.Txs)
 			for iterator != nil {
 				memTx := iterator.Tx()
 
@@ -298,7 +298,7 @@ func NewSimApp(
 				err = app.RunTXTest(bz)
 				if err != nil {
 					// if res.IsErr() {
-					err := app.Mempool.Remove(memTx)
+					err := nonceMempool.Remove(memTx)
 					if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 						panic(err)
 					}

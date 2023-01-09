@@ -1,0 +1,4 @@
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230109164440-66e5a1ea4eb5 h1:gFZkNfRXjcbZTFz13pXa14yAAdPht2NE/J/M/IQGtGA=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230109164440-66e5a1ea4eb5/go.mod h1:/XgmiZsL/GbKAZpmEJ/WeVWXmZXw5jUuBEyXnVyIltU=
+github.com/cosmos/cosmos-sdk v0.47.0-alpha2 h1:2ZL273sLh5KBq/6SWPuOxLKcPSoJsqSd/Qq8PgtfH78=
+github.com/cosmos/cosmos-sdk v0.47.0-alpha2/go.mod h1:MwFnt5DfgID2QZWCjR80n8rk4eAHnb7CbVyTN9DnKgY=

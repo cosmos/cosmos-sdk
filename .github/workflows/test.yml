@@ -560,7 +560,7 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
-          cache-dependency-path: collections/go.sum
+          cache-dependency-path: x/nft/go.sum
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:

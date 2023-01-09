@@ -25,7 +25,11 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr.String()})
 	suite.Require().Error(err)
 
-	req := types.NewQueryBalanceRequest(addr, fooDenom)
+	req := types.NewQueryBalanceRequest(addr, "0000")
+	_, err = queryClient.Balance(gocontext.Background(), req)
+	suite.Require().Error(err)
+
+	req = types.NewQueryBalanceRequest(addr, fooDenom)
 	res, err := queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -135,6 +139,58 @@ func (suite *KeeperTestSuite) TestSpendableBalances() {
 	suite.Nil(res.Pagination.NextKey)
 	suite.EqualValues(30, res.Balances[0].Amount.Int64())
 	suite.EqualValues(25, res.Balances[1].Amount.Int64())
+}
+
+func (suite *KeeperTestSuite) TestSpendableBalanceByDenom() {
+	ctx := suite.ctx
+	_, _, addr := testdata.KeyTestPubAddr()
+	ctx = ctx.WithBlockTime(time.Now())
+	queryClient := suite.mockQueryClient(ctx)
+
+	_, err := queryClient.SpendableBalanceByDenom(ctx, &types.QuerySpendableBalanceByDenomRequest{})
+	suite.Require().Error(err)
+
+	req := types.NewQuerySpendableBalanceByDenomRequest(addr, fooDenom)
+	acc := authtypes.NewBaseAccountWithAddress(addr)
+
+	suite.mockSpendableCoins(ctx, acc)
+	res, err := queryClient.SpendableBalanceByDenom(ctx, req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.True(res.Balance.IsZero())
+
+	fooCoins := newFooCoin(100)
+	barCoins := newBarCoin(30)
+
+	origCoins := sdk.NewCoins(fooCoins, barCoins)
+	vacc := vestingtypes.NewContinuousVestingAccount(
+		acc,
+		sdk.NewCoins(fooCoins),
+		ctx.BlockTime().Unix(),
+		ctx.BlockTime().Add(time.Hour).Unix(),
+	)
+
+	suite.mockFundAccount(addr)
+	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr, origCoins))
+
+	// move time forward for half of the tokens to vest
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(30 * time.Minute))
+	queryClient = suite.mockQueryClient(ctx)
+
+	// check fooCoins first, it has some vested and some vesting
+	suite.mockSpendableCoins(ctx, vacc)
+	res, err = queryClient.SpendableBalanceByDenom(ctx, req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.EqualValues(50, res.Balance.Amount.Int64())
+
+	// check barCoins, all of it is spendable
+	req.Denom = barDenom
+	suite.mockSpendableCoins(ctx, vacc)
+	res, err = queryClient.SpendableBalanceByDenom(ctx, req)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.EqualValues(30, res.Balance.Amount.Int64())
 }
 
 func (suite *KeeperTestSuite) TestQueryTotalSupply() {

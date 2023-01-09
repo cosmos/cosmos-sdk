@@ -565,19 +565,19 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
-            collections/**/*.go
-            collections/go.mod
-            collections/go.sum
+            x/nft/**/*.go
+            x/nft/go.mod
+            x/nft/go.sum
       - name: tests
         if: env.GIT_DIFF
         run: |
-          cd collections
+          cd x/nft
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_COLLECTIONS }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_X_NFT }}
         with:
           projectBaseDir: x/nft/

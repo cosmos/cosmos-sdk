@@ -110,7 +110,7 @@ var xxx_messageInfo_MsgUnjailResponse proto.InternalMessageInfo
 //
 // Since: cosmos-sdk 0.47
 type MsgUpdateParams struct {
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/slashing parameters to update.
 	//
@@ -358,7 +358,7 @@ type MsgClient interface {
 	// and rewards again.
 	Unjail(ctx context.Context, in *MsgUnjail, opts ...grpc.CallOption) (*MsgUnjailResponse, error)
 	// UpdateParams defines a governance operation for updating the x/slashing module
-	// parameters. The authority is hard-coded to the x/gov module account.
+	// parameters. The authority defaults to the x/gov module account.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
@@ -397,7 +397,7 @@ type MsgServer interface {
 	// and rewards again.
 	Unjail(context.Context, *MsgUnjail) (*MsgUnjailResponse, error)
 	// UpdateParams defines a governance operation for updating the x/slashing module
-	// parameters. The authority is hard-coded to the x/gov module account.
+	// parameters. The authority defaults to the x/gov module account.
 	//
 	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)

@@ -18,7 +18,7 @@ func TestTallyNoOneVotes(t *testing.T) {
 
 	app, ctx := f.app, f.ctx
 
-	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
+	createValidators(t, ctx, app, []int64{5, 5, 5})
 
 	tp := TestProposal
 	proposal, err := app.GovKeeper.SubmitProposal(ctx, tp, "", "test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))

@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	store "github.com/cosmos/cosmos-sdk/store/types"
@@ -120,6 +119,14 @@ func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // AddModuleInitFlags implements servertypes.ModuleInitFlags interface.
 func AddModuleInitFlags(startCmd *cobra.Command) {
 	startCmd.Flags().Bool(FlagSkipGenesisInvariants, false, "Skip x/crisis invariants check on startup")
@@ -175,24 +182,23 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	return []abci.ValidatorUpdate{}
 }
 
-// New App Wiring Setup
+// App Wiring Setup
 
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModuleBasic, ProvideModule),
+		appmodule.Provide(ProvideModule),
 	)
 }
 
+//nolint:revive
 type CrisisInputs struct {
 	depinject.In
 
-	ModuleKey depinject.OwnModuleKey
-	Config    *modulev1.Module
-	Key       *store.KVStoreKey
-	Cdc       codec.Codec
-	AppOpts   servertypes.AppOptions    `optional:"true"`
-	Authority map[string]sdk.AccAddress `optional:"true"`
+	Config  *modulev1.Module
+	Key     *store.KVStoreKey
+	Cdc     codec.Codec
+	AppOpts servertypes.AppOptions `optional:"true"`
 
 	BankKeeper types.SupplyKeeper
 
@@ -200,15 +206,12 @@ type CrisisInputs struct {
 	LegacySubspace exported.Subspace
 }
 
+//nolint:revive
 type CrisisOutputs struct {
 	depinject.Out
 
-	Module       runtime.AppModuleWrapper
+	Module       appmodule.AppModule
 	CrisisKeeper *keeper.Keeper
-}
-
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
 }
 
 func ProvideModule(in CrisisInputs) CrisisOutputs {
@@ -222,10 +225,10 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	authority, ok := in.Authority[depinject.ModuleKey(in.ModuleKey).Name()]
-	if !ok {
-		// default to governance authority if not provided
-		authority = authtypes.NewModuleAddress(govtypes.ModuleName)
+	// default to governance authority if not provided
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
 	k := keeper.NewKeeper(
@@ -244,5 +247,5 @@ func ProvideModule(in CrisisInputs) CrisisOutputs {
 
 	m := NewAppModule(k, skipGenesisInvariants, in.LegacySubspace)
 
-	return CrisisOutputs{CrisisKeeper: k, Module: runtime.WrapAppModule(m)}
+	return CrisisOutputs{CrisisKeeper: k, Module: m}
 }

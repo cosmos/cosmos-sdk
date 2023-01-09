@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -19,7 +18,7 @@ import (
 
 func TestParams(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	key := sdk.NewKVStoreKey(disttypes.StoreKey)
+	key := sdk.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
@@ -41,9 +40,7 @@ func TestParams(t *testing.T) {
 	)
 
 	// default params
-	communityTax := sdk.NewDecWithPrec(2, 2)        // 2%
-	baseProposerReward := sdk.NewDecWithPrec(1, 2)  // 1%
-	bonusProposerReward := sdk.NewDecWithPrec(4, 2) // 4%
+	communityTax := sdk.NewDecWithPrec(2, 2) // 2%
 	withdrawAddrEnabled := true
 
 	testCases := []struct {
@@ -56,8 +53,8 @@ func TestParams(t *testing.T) {
 			name: "community tax > 1",
 			input: types.Params{
 				CommunityTax:        sdk.NewDecWithPrec(2, 0),
-				BaseProposerReward:  baseProposerReward,
-				BonusProposerReward: bonusProposerReward,
+				BaseProposerReward:  sdk.ZeroDec(),
+				BonusProposerReward: sdk.ZeroDec(),
 				WithdrawAddrEnabled: withdrawAddrEnabled,
 			},
 			expErr:    true,
@@ -67,8 +64,8 @@ func TestParams(t *testing.T) {
 			name: "negative community tax",
 			input: types.Params{
 				CommunityTax:        sdk.NewDecWithPrec(-2, 1),
-				BaseProposerReward:  baseProposerReward,
-				BonusProposerReward: bonusProposerReward,
+				BaseProposerReward:  sdk.ZeroDec(),
+				BonusProposerReward: sdk.ZeroDec(),
 				WithdrawAddrEnabled: withdrawAddrEnabled,
 			},
 			expErr:    true,
@@ -78,52 +75,30 @@ func TestParams(t *testing.T) {
 			name: "base proposer reward > 1",
 			input: types.Params{
 				CommunityTax:        communityTax,
-				BaseProposerReward:  sdk.NewDecWithPrec(2, 0),
-				BonusProposerReward: bonusProposerReward,
+				BaseProposerReward:  sdk.NewDecWithPrec(1, 2),
+				BonusProposerReward: sdk.ZeroDec(),
 				WithdrawAddrEnabled: withdrawAddrEnabled,
 			},
-			expErr:    true,
-			expErrMsg: "sum of base, bonus proposer rewards, and community tax cannot be greater than one",
-		},
-		{
-			name: "negative base proposer reward",
-			input: types.Params{
-				CommunityTax:        communityTax,
-				BaseProposerReward:  sdk.NewDecWithPrec(-2, 0),
-				BonusProposerReward: bonusProposerReward,
-				WithdrawAddrEnabled: withdrawAddrEnabled,
-			},
-			expErr:    true,
-			expErrMsg: "base proposer reward should be positive",
+			expErr:    false,
+			expErrMsg: "base proposer rewards should not be taken into account",
 		},
 		{
 			name: "bonus proposer reward > 1",
 			input: types.Params{
 				CommunityTax:        communityTax,
-				BaseProposerReward:  baseProposerReward,
-				BonusProposerReward: sdk.NewDecWithPrec(2, 0),
+				BaseProposerReward:  sdk.NewDecWithPrec(1, 2),
+				BonusProposerReward: sdk.ZeroDec(),
 				WithdrawAddrEnabled: withdrawAddrEnabled,
 			},
-			expErr:    true,
-			expErrMsg: "sum of base, bonus proposer rewards, and community tax cannot be greater than one",
-		},
-		{
-			name: "negative bonus proposer reward",
-			input: types.Params{
-				CommunityTax:        communityTax,
-				BaseProposerReward:  baseProposerReward,
-				BonusProposerReward: sdk.NewDecWithPrec(-2, 0),
-				WithdrawAddrEnabled: withdrawAddrEnabled,
-			},
-			expErr:    true,
-			expErrMsg: "bonus proposer reward should be positive",
+			expErr:    false,
+			expErrMsg: "bonus proposer rewards should not be taken into account",
 		},
 		{
 			name: "all good",
 			input: types.Params{
 				CommunityTax:        communityTax,
-				BaseProposerReward:  baseProposerReward,
-				BonusProposerReward: bonusProposerReward,
+				BaseProposerReward:  sdk.ZeroDec(),
+				BonusProposerReward: sdk.ZeroDec(),
 				WithdrawAddrEnabled: withdrawAddrEnabled,
 			},
 			expErr: false,

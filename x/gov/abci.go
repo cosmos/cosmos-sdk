@@ -58,8 +58,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		if passes {
 			var (
-				idx int
-				msg sdk.Msg
+				idx    int
+				events sdk.Events
+				msg    sdk.Msg
 			)
 
 			// attempt to execute all messages within the passed proposal
@@ -71,10 +72,14 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			if err == nil {
 				for idx, msg = range messages {
 					handler := keeper.Router().Handler(msg)
-					_, err = handler(cacheCtx, msg)
+
+					var res *sdk.Result
+					res, err = handler(cacheCtx, msg)
 					if err != nil {
 						break
 					}
+
+					events = append(events, res.GetEvents()...)
 				}
 			}
 
@@ -87,6 +92,9 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 				// write state to the underlying multi-store
 				writeCache()
+
+				// propagate the msg events to the current context
+				ctx.EventManager().EmitEvents(events)
 			} else {
 				proposal.Status = v1.StatusFailed
 				tagValue = types.AttributeValueProposalFailed

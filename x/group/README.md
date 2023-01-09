@@ -55,9 +55,9 @@ This module allows the creation and management of on-chain multisig accounts and
     * [REST](#rest)
 * [Metadata](#metadata)
 
-# Concepts
+## Concepts
 
-## Group
+### Group
 
 A group is simply an aggregation of accounts with associated weights. It is not
 an account and doesn't have a balance. It doesn't in and of itself have any
@@ -66,7 +66,7 @@ the ability to add, remove and update members in the group. Note that a
 group policy account could be an administrator of a group, and that the
 administrator doesn't necessarily have to be a member of the group.
 
-## Group Policy
+### Group Policy
 
 A group policy is an account associated with a group and a decision policy.
 Group policies are abstracted from groups because a single group may have
@@ -78,7 +78,7 @@ and then to create separate group policies with different decision policies
 and delegate the desired permissions from the master account to
 those "sub-accounts" using the `x/authz` module.
 
-## Decision Policy
+### Decision Policy
 
 A decision policy is the mechanism by which members of a group can vote on
 proposals, as well as the rules that dictate whether a proposal should pass
@@ -103,13 +103,23 @@ interface:
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/types.go#L27-L41
 ```
 
-### Threshold decision policy
+#### Threshold decision policy
 
 A threshold decision policy defines a threshold of yes votes (based on a tally
 of voter weights) that must be achieved in order for a proposal to pass. For
 this decision policy, abstain and veto are simply treated as no's.
 
-### Percentage decision policy
+This decision policy also has a VotingPeriod window and a MinExecutionPeriod
+window. The former defines the duration after proposal submission where members
+are allowed to vote, after which tallying is performed. The latter specifies
+the minimum duration after proposal submission where the proposal can be
+executed. If set to 0, then the proposal is allowed to be executed immediately
+on submission (using the `TRY_EXEC` option). Obviously, MinExecutionPeriod
+cannot be greater than VotingPeriod+MaxExecutionPeriod (where MaxExecution is
+the app-defined duration that specifies the window after voting ended where a
+proposal can be executed).
+
+#### Percentage decision policy
 
 A percentage decision policy is similar to a threshold decision policy, except
 that the threshold is not defined as a constant weight, but as a percentage.
@@ -117,27 +127,30 @@ It's more suited for groups where the group members' weights can be updated, as
 the percentage threshold stays the same, and doesn't depend on how those member
 weights get updated.
 
-## Proposal
+Same as the Threshold decision policy, the percentage decision policy has the
+two VotingPeriod and MinExecutionPeriod parameters.
+
+### Proposal
 
 Any member(s) of a group can submit a proposal for a group policy account to decide upon.
 A proposal consists of a set of messages that will be executed if the proposal
 passes as well as any metadata associated with the proposal.
 
-### Voting
+#### Voting
 
 There are four choices to choose while voting - yes, no, abstain and veto. Not
 all decision policies will take the four choices into account. Votes can contain some optional metadata.
 In the current implementation, the voting window begins as soon as a proposal
 is submitted, and the end is defined by the group policy's decision policy.
 
-### Withdrawing Proposals
+#### Withdrawing Proposals
 
 Proposals can be withdrawn any time before the voting period end, either by the
 admin of the group policy or by one of the proposers. Once withdrawn, it is
 marked as `PROPOSAL_STATUS_WITHDRAWN`, and no more voting or execution is
 allowed on it.
 
-### Aborted Proposals
+#### Aborted Proposals
 
 If the group policy is updated during the voting period of the proposal, then
 the proposal is marked as `PROPOSAL_STATUS_ABORTED`, and no more voting or
@@ -145,7 +158,7 @@ execution is allowed on it. This is because the group policy defines the rules
 of proposal voting and execution, so if those rules change during the lifecycle
 of a proposal, then the proposal should be marked as stale.
 
-### Tallying
+#### Tallying
 
 Tallying is the counting of all votes on a proposal. It happens only once in
 the lifecycle of a proposal, but can be triggered by two factors, whichever
@@ -162,7 +175,7 @@ marked as `PROPOSAL_STATUS_ACCEPTED`, or else it is marked as
 `PROPOSAL_STATUS_REJECTED`. In any case, no more voting is allowed anymore, and the tally
 result is persisted to state in the proposal's `FinalTallyResult`.
 
-### Executing Proposals
+#### Executing Proposals
 
 Proposals are executed only when the tallying is done, and the group account's
 decision policy allows the proposal to pass based on the tally outcome. They
@@ -189,7 +202,7 @@ as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
 multiple times, until it expires after `MaxExecutionPeriod` after voting period
 end.
 
-## Pruning
+### Pruning
 
 Proposals and votes are automatically pruned to avoid state bloat.
 
@@ -211,111 +224,111 @@ Proposals are pruned:
 
 whichever happens first.
 
-# State
+## State
 
 The `group` module uses the `orm` package which provides table storage with support for
 primary keys and secondary indexes. `orm` also defines `Sequence` which is a persistent unique key generator based on a counter that can be used along with `Table`s.
 
 Here's the list of tables and associated sequences and indexes stored as part of the `group` module.
 
-## Group Table
+### Group Table
 
 The `groupTable` stores `GroupInfo`: `0x0 | BigEndian(GroupId) -> ProtocolBuffer(GroupInfo)`.
 
-### groupSeq
+#### groupSeq
 
 The value of `groupSeq` is incremented when creating a new group and corresponds to the new `GroupId`: `0x1 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
-### groupByAdminIndex
+#### groupByAdminIndex
 
 `groupByAdminIndex` allows to retrieve groups by admin address:
 `0x2 | len([]byte(group.Admin)) | []byte(group.Admin) | BigEndian(GroupId) -> []byte()`.
 
-## Group Member Table
+### Group Member Table
 
 The `groupMemberTable` stores `GroupMember`s: `0x10 | BigEndian(GroupId) | []byte(member.Address) -> ProtocolBuffer(GroupMember)`.
 
 The `groupMemberTable` is a primary key table and its `PrimaryKey` is given by
 `BigEndian(GroupId) | []byte(member.Address)` which is used by the following indexes.
 
-### groupMemberByGroupIndex
+#### groupMemberByGroupIndex
 
 `groupMemberByGroupIndex` allows to retrieve group members by group id:
 `0x11 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
 
-### groupMemberByMemberIndex
+#### groupMemberByMemberIndex
 
 `groupMemberByMemberIndex` allows to retrieve group members by member address:
 `0x12 | len([]byte(member.Address)) | []byte(member.Address) | PrimaryKey -> []byte()`.
 
-## Group Policy Table
+### Group Policy Table
 
 The `groupPolicyTable` stores `GroupPolicyInfo`: `0x20 | len([]byte(Address)) | []byte(Address) -> ProtocolBuffer(GroupPolicyInfo)`.
 
 The `groupPolicyTable` is a primary key table and its `PrimaryKey` is given by
 `len([]byte(Address)) | []byte(Address)` which is used by the following indexes.
 
-### groupPolicySeq
+#### groupPolicySeq
 
 The value of `groupPolicySeq` is incremented when creating a new group policy and is used to generate the new group policy account `Address`:
 `0x21 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
-### groupPolicyByGroupIndex
+#### groupPolicyByGroupIndex
 
 `groupPolicyByGroupIndex` allows to retrieve group policies by group id:
 `0x22 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
 
-### groupPolicyByAdminIndex
+#### groupPolicyByAdminIndex
 
 `groupPolicyByAdminIndex` allows to retrieve group policies by admin address:
 `0x23 | len([]byte(Address)) | []byte(Address) | PrimaryKey -> []byte()`.
 
-## Proposal Table
+### Proposal Table
 
 The `proposalTable` stores `Proposal`s: `0x30 | BigEndian(ProposalId) -> ProtocolBuffer(Proposal)`.
 
-### proposalSeq
+#### proposalSeq
 
 The value of `proposalSeq` is incremented when creating a new proposal and corresponds to the new `ProposalId`: `0x31 | 0x1 -> BigEndian`.
 
 The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
-### proposalByGroupPolicyIndex
+#### proposalByGroupPolicyIndex
 
 `proposalByGroupPolicyIndex` allows to retrieve proposals by group policy account address:
 `0x32 | len([]byte(account.Address)) | []byte(account.Address) | BigEndian(ProposalId) -> []byte()`.
 
-### ProposalsByVotingPeriodEndIndex
+#### ProposalsByVotingPeriodEndIndex
 
 `proposalsByVotingPeriodEndIndex` allows to retrieve proposals sorted by chronological `voting_period_end`:
 `0x33 | sdk.FormatTimeBytes(proposal.VotingPeriodEnd) | BigEndian(ProposalId) -> []byte()`.
 
 This index is used when tallying the proposal votes at the end of the voting period, and for pruning proposals at `VotingPeriodEnd + MaxExecutionPeriod`.
 
-## Vote Table
+### Vote Table
 
 The `voteTable` stores `Vote`s: `0x40 | BigEndian(ProposalId) | []byte(voter.Address) -> ProtocolBuffer(Vote)`.
 
 The `voteTable` is a primary key table and its `PrimaryKey` is given by
 `BigEndian(ProposalId) | []byte(voter.Address)` which is used by the following indexes.
 
-### voteByProposalIndex
+#### voteByProposalIndex
 
 `voteByProposalIndex` allows to retrieve votes by proposal id:
 `0x41 | BigEndian(ProposalId) | PrimaryKey -> []byte()`.
 
-### voteByVoterIndex
+#### voteByVoterIndex
 
 `voteByVoterIndex` allows to retrieve votes by voter address:
 `0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
 
-# Msg Service
+## Msg Service
 
-## Msg/CreateGroup
+### Msg/CreateGroup
 
 A new group can be created with the `MsgCreateGroup`, which has an admin address, a list of members and some optional metadata.
 
@@ -332,7 +345,7 @@ It's expected to fail if
   config
 * members are not correctly set (e.g. wrong address format, duplicates, or with 0 weight).
 
-## Msg/UpdateGroupMembers
+### Msg/UpdateGroupMembers
 
 Group members can be updated with the `UpdateGroupMembers`.
 
@@ -347,7 +360,7 @@ It's expected to fail if:
 * the signer is not the admin of the group.
 * for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
-## Msg/UpdateGroupAdmin
+### Msg/UpdateGroupAdmin
 
 The `UpdateGroupAdmin` can be used to update a group admin.
 
@@ -357,7 +370,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto
 
 It's expected to fail if the signer is not the admin of the group.
 
-## Msg/UpdateGroupMetadata
+### Msg/UpdateGroupMetadata
 
 The `UpdateGroupMetadata` can be used to update a group metadata.
 
@@ -370,7 +383,7 @@ It's expected to fail if:
 * new metadata length is greater than `MaxMetadataLen` config.
 * the signer is not the admin of the group.
 
-## Msg/CreateGroupPolicy
+### Msg/CreateGroupPolicy
 
 A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
 
@@ -384,7 +397,7 @@ It's expected to fail if:
 * metadata length is greater than `MaxMetadataLen` config.
 * the decision policy's `Validate()` method doesn't pass against the group.
 
-## Msg/CreateGroupWithPolicy
+### Msg/CreateGroupWithPolicy
 
 A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
 
@@ -394,7 +407,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto
 
 It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
 
-## Msg/UpdateGroupPolicyAdmin
+### Msg/UpdateGroupPolicyAdmin
 
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
 
@@ -404,7 +417,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto
 
 It's expected to fail if the signer is not the admin of the group policy.
 
-## Msg/UpdateGroupPolicyDecisionPolicy
+### Msg/UpdateGroupPolicyDecisionPolicy
 
 The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
 
@@ -417,7 +430,7 @@ It's expected to fail if:
 * the signer is not the admin of the group policy.
 * the new decision policy's `Validate()` method doesn't pass against the group.
 
-## Msg/UpdateGroupPolicyMetadata
+### Msg/UpdateGroupPolicyMetadata
 
 The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
@@ -430,7 +443,7 @@ It's expected to fail if:
 * new metadata length is greater than `MaxMetadataLen` config.
 * the signer is not the admin of the group.
 
-## Msg/SubmitProposal
+### Msg/SubmitProposal
 
 A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
@@ -441,10 +454,10 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto
 
 It's expected to fail if:
 
-* metadata length is greater than `MaxMetadataLen` config.
+* metadata, title, or summary length is greater than `MaxMetadataLen` config.
 * if any of the proposers is not a group member.
 
-## Msg/WithdrawProposal
+### Msg/WithdrawProposal
 
 A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
 
@@ -457,7 +470,7 @@ It's expected to fail if:
 * the signer is neither the group policy admin nor proposer of the proposal.
 * the proposal is already closed or aborted.
 
-## Msg/Vote
+### Msg/Vote
 
 A new vote can be created with the `MsgVote`, given a proposal id, a voter address, a choice (yes, no, veto or abstain) and some optional metadata.
 An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
@@ -471,7 +484,7 @@ It's expected to fail if:
 * metadata length is greater than `MaxMetadataLen` config.
 * the proposal is not in voting period anymore.
 
-## Msg/Exec
+### Msg/Exec
 
 A proposal can be executed with the `MsgExec`.
 
@@ -484,7 +497,7 @@ The messages that are part of this proposal won't be executed if:
 * the proposal has not been accepted by the group policy.
 * the proposal has already been successfully executed.
 
-## Msg/LeaveGroup
+### Msg/LeaveGroup
 
 The `MsgLeaveGroup` allows group member to leave a group.
 
@@ -497,53 +510,53 @@ It's expected to fail if:
 * the group member is not part of the group.
 * for any one of the associated group policies, if its decision policy's `Validate()` method fails against the updated group.
 
-# Events
+## Events
 
 The group module emits the following events:
 
-## EventCreateGroup
+### EventCreateGroup
 
 | Type                             | Attribute Key | Attribute Value                  |
 | -------------------------------- | ------------- | -------------------------------- |
 | message                          | action        | /cosmos.group.v1.Msg/CreateGroup |
 | cosmos.group.v1.EventCreateGroup | group_id      | {groupId}                        |
 
-## EventUpdateGroup
+### EventUpdateGroup
 
 | Type                             | Attribute Key | Attribute Value                                            |
 | -------------------------------- | ------------- | ---------------------------------------------------------- |
 | message                          | action        | /cosmos.group.v1.Msg/UpdateGroup{Admin\|Metadata\|Members} |
 | cosmos.group.v1.EventUpdateGroup | group_id      | {groupId}                                                  |
 
-## EventCreateGroupPolicy
+### EventCreateGroupPolicy
 
 | Type                                   | Attribute Key | Attribute Value                        |
 | -------------------------------------- | ------------- | -------------------------------------- |
 | message                                | action        | /cosmos.group.v1.Msg/CreateGroupPolicy |
 | cosmos.group.v1.EventCreateGroupPolicy | address       | {groupPolicyAddress}                   |
 
-## EventUpdateGroupPolicy
+### EventUpdateGroupPolicy
 
 | Type                                   | Attribute Key | Attribute Value                                                         |
 | -------------------------------------- | ------------- | ----------------------------------------------------------------------- |
 | message                                | action        | /cosmos.group.v1.Msg/UpdateGroupPolicy{Admin\|Metadata\|DecisionPolicy} |
 | cosmos.group.v1.EventUpdateGroupPolicy | address       | {groupPolicyAddress}                                                    |
 
-## EventCreateProposal
+### EventCreateProposal
 
 | Type                                | Attribute Key | Attribute Value                     |
 | ----------------------------------- | ------------- | ----------------------------------- |
 | message                             | action        | /cosmos.group.v1.Msg/CreateProposal |
 | cosmos.group.v1.EventCreateProposal | proposal_id   | {proposalId}                        |
 
-## EventWithdrawProposal
+### EventWithdrawProposal
 
 | Type                                  | Attribute Key | Attribute Value                       |
 | ------------------------------------- | ------------- | ------------------------------------- |
 | message                               | action        | /cosmos.group.v1.Msg/WithdrawProposal |
 | cosmos.group.v1.EventWithdrawProposal | proposal_id   | {proposalId}                          |
 
-## EventVote
+### EventVote
 
 | Type                      | Attribute Key | Attribute Value           |
 | ------------------------- | ------------- | ------------------------- |
@@ -558,7 +571,7 @@ The group module emits the following events:
 | cosmos.group.v1.EventExec | proposal_id   | {proposalId}              |
 | cosmos.group.v1.EventExec | logs          | {logs_string}             |
 
-## EventLeaveGroup
+### EventLeaveGroup
 
 | Type                            | Attribute Key | Attribute Value                 |
 | ------------------------------- | ------------- | ------------------------------- |
@@ -567,13 +580,13 @@ The group module emits the following events:
 | cosmos.group.v1.EventLeaveGroup | address       | {address}                       |
 
 
-# Client
+## Client
 
-## CLI
+### CLI
 
 A user can query and interact with the `group` module using the CLI.
 
-### Query
+#### Query
 
 The `query` commands allow users to query `group` state.
 
@@ -581,7 +594,7 @@ The `query` commands allow users to query `group` state.
 simd query group --help
 ```
 
-#### group-info
+##### group-info
 
 The `group-info` command allows users to query for group info by given group id.
 
@@ -605,7 +618,7 @@ total_weight: "3"
 version: "1"
 ```
 
-#### group-policy-info
+##### group-policy-info
 
 The `group-policy-info` command allows users to query for group policy info by account address of group policy .
 
@@ -635,7 +648,7 @@ metadata: AQ==
 version: "1"
 ```
 
-#### group-members
+##### group-members
 
 The `group-members` command allows users to query for group members by group id with pagination flags.
 
@@ -668,7 +681,7 @@ pagination:
   total: "2"
 ```
 
-#### groups-by-admin
+##### groups-by-admin
 
 The `groups-by-admin` command allows users to query for groups by admin account address with pagination flags.
 
@@ -701,7 +714,7 @@ pagination:
   total: "2"
 ```
 
-#### group-policies-by-group
+##### group-policies-by-group
 
 The `group-policies-by-group` command allows users to query for group policies by group id with pagination flags.
 
@@ -746,7 +759,7 @@ pagination:
   total: "2"
 ```
 
-#### group-policies-by-admin
+##### group-policies-by-admin
 
 The `group-policies-by-admin` command allows users to query for group policies by admin account address with pagination flags.
 
@@ -791,7 +804,7 @@ pagination:
   total: "2"
 ```
 
-#### proposal
+##### proposal
 
 The `proposal` command allows users to query for proposal by id.
 
@@ -835,9 +848,11 @@ proposal:
     no_count: "0"
     veto_count: "0"
     yes_count: "0"
+  summary: "Summary"
+  title: "Title"
 ```
 
-#### proposals-by-group-policy
+##### proposals-by-group-policy
 
 The `proposals-by-group-policy` command allows users to query for proposals by account address of group policy with pagination flags.
 
@@ -884,9 +899,11 @@ proposals:
     no_count: "0"
     veto_count: "0"
     yes_count: "0"
+  summary: "Summary"
+  title: "Title"
 ```
 
-#### vote
+##### vote
 
 The `vote` command allows users to query for vote by proposal id and voter account address.
 
@@ -911,7 +928,7 @@ vote:
   voter: cosmos1..
 ```
 
-#### votes-by-proposal
+##### votes-by-proposal
 
 The `votes-by-proposal` command allows users to query for votes by proposal id with pagination flags.
 
@@ -939,7 +956,7 @@ votes:
   voter: cosmos1..
 ```
 
-#### votes-by-voter
+##### votes-by-voter
 
 The `votes-by-voter` command allows users to query for votes by voter account address with pagination flags.
 
@@ -1172,11 +1189,11 @@ Example:
 simd tx group leave-group cosmos1... 1
 ```
 
-## gRPC
+### gRPC
 
 A user can query the `group` module using gRPC endpoints.
 
-### GroupInfo
+#### GroupInfo
 
 The `GroupInfo` endpoint allows users to query for group info by given group id.
 
@@ -1205,7 +1222,7 @@ Example Output:
 }
 ```
 
-### GroupPolicyInfo
+#### GroupPolicyInfo
 
 The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
 
@@ -1234,7 +1251,7 @@ Example Output:
 }
 ```
 
-### GroupMembers
+#### GroupMembers
 
 The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
 
@@ -1275,7 +1292,7 @@ Example Output:
 }
 ```
 
-### GroupsByAdmin
+#### GroupsByAdmin
 
 The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
 
@@ -1316,7 +1333,7 @@ Example Output:
 }
 ```
 
-### GroupPoliciesByGroup
+#### GroupPoliciesByGroup
 
 The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
@@ -1357,7 +1374,7 @@ Example Output:
 }
 ```
 
-### GroupPoliciesByAdmin
+#### GroupPoliciesByAdmin
 
 The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
@@ -1398,7 +1415,7 @@ Example Output:
 }
 ```
 
-### Proposal
+#### Proposal
 
 The `Proposal` endpoint allows users to query for proposal by id.
 
@@ -1439,14 +1456,16 @@ Example Output:
       "voting_period": "432000s"
     },
     "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-    "msgs": [
+    "messages": [
       {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
-    ]
+    ],
+    "title": "Title",
+    "summary": "Summary",
   }
 }
 ```
 
-### ProposalsByGroupPolicy
+#### ProposalsByGroupPolicy
 
 The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
@@ -1488,9 +1507,11 @@ Example Output:
         "voting_period": "432000s"
       },
       "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-      "msgs": [
+      "messages": [
         {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
-      ]
+      ],
+      "title": "Title",
+      "summary": "Summary",
     }
   ],
   "pagination": {
@@ -1499,7 +1520,7 @@ Example Output:
 }
 ```
 
-### VoteByProposalVoter
+#### VoteByProposalVoter
 
 The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
 
@@ -1527,7 +1548,7 @@ Example Output:
 }
 ```
 
-### VotesByProposal
+#### VotesByProposal
 
 The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
 
@@ -1560,7 +1581,7 @@ Example Output:
 }
 ```
 
-### VotesByVoter
+#### VotesByVoter
 
 The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
 
@@ -1593,11 +1614,11 @@ Example Output:
 }
 ```
 
-## REST
+### REST
 
 A user can query the `group` module using REST endpoints.
 
-### GroupInfo
+#### GroupInfo
 
 The `GroupInfo` endpoint allows users to query for group info by given group id.
 
@@ -1625,7 +1646,7 @@ Example Output:
 }
 ```
 
-### GroupPolicyInfo
+#### GroupPolicyInfo
 
 The `GroupPolicyInfo` endpoint allows users to query for group policy info by account address of group policy.
 
@@ -1661,7 +1682,7 @@ Example Output:
 }
 ```
 
-### GroupMembers
+#### GroupMembers
 
 The `GroupMembers` endpoint allows users to query for group members by group id with pagination flags.
 
@@ -1703,7 +1724,7 @@ Example Output:
 }
 ```
 
-### GroupsByAdmin
+#### GroupsByAdmin
 
 The `GroupsByAdmin` endpoint allows users to query for groups by admin account address with pagination flags.
 
@@ -1744,7 +1765,7 @@ Example Output:
 }
 ```
 
-### GroupPoliciesByGroup
+#### GroupPoliciesByGroup
 
 The `GroupPoliciesByGroup` endpoint allows users to query for group policies by group id with pagination flags.
 
@@ -1801,7 +1822,7 @@ Example Output:
 }
 ```
 
-### GroupPoliciesByAdmin
+#### GroupPoliciesByAdmin
 
 The `GroupPoliciesByAdmin` endpoint allows users to query for group policies by admin account address with pagination flags.
 
@@ -1857,7 +1878,7 @@ Example Output:
   }
 ```
 
-### Proposal
+#### Proposal
 
 The `Proposal` endpoint allows users to query for proposal by id.
 
@@ -1898,7 +1919,7 @@ Example Output:
       "voting_period": "432000s"
     },
     "executor_result": "EXECUTOR_RESULT_NOT_RUN",
-    "msgs": [
+    "messages": [
       {
         "@type": "/cosmos.bank.v1beta1.MsgSend",
         "from_address": "cosmos1..",
@@ -1910,12 +1931,14 @@ Example Output:
           }
         ]
       }
-    ]
+    ],
+    "title": "Title",
+    "summary": "Summary",
   }
 }
 ```
 
-### ProposalsByGroupPolicy
+#### ProposalsByGroupPolicy
 
 The `ProposalsByGroupPolicy` endpoint allows users to query for proposals by account address of group policy with pagination flags.
 
@@ -1957,7 +1980,7 @@ Example Output:
         "voting_period": "432000s"
       },
       "executor_result": "EXECUTOR_RESULT_NOT_RUN",
-      "msgs": [
+      "messages": [
         {
           "@type": "/cosmos.bank.v1beta1.MsgSend",
           "from_address": "cosmos1..",
@@ -1979,7 +2002,7 @@ Example Output:
 }
 ```
 
-### VoteByProposalVoter
+#### VoteByProposalVoter
 
 The `VoteByProposalVoter` endpoint allows users to query for vote by proposal id and voter account address.
 
@@ -2007,7 +2030,7 @@ Example Output:
 }
 ```
 
-### VotesByProposal
+#### VotesByProposal
 
 The `VotesByProposal` endpoint allows users to query for votes by proposal id with pagination flags.
 
@@ -2041,7 +2064,7 @@ Example Output:
 }
 ```
 
-### VotesByVoter
+#### VotesByVoter
 
 The `VotesByVoter` endpoint allows users to query for votes by voter account address with pagination flags.
 
@@ -2075,18 +2098,18 @@ Example Output:
 }
 ```
 
-# Metadata
+## Metadata
 
 The group module has four locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the group and gov modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
 
-## Proposal
+### Proposal
 
 Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov/README.md#metadata))
 
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",
@@ -2094,7 +2117,12 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 }
 ```
 
-## Vote
+:::note
+The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+:::
+
+### Vote
 
 Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov/README.md#metadata))
 
@@ -2104,7 +2132,7 @@ Location: on-chain as json within 255 character limit (mirrors [gov vote](../gov
 }
 ```
 
-## Group
+### Group
 
 Location: off-chain as json object stored on IPFS
 
@@ -2117,7 +2145,7 @@ Location: off-chain as json object stored on IPFS
 }
 ```
 
-## Decision policy
+### Decision policy
 
 Location: on-chain as json within 255 character limit
 

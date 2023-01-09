@@ -11,7 +11,10 @@ updates:
   - package-ecosystem: npm
     directory: "/docs"
     schedule:
-      interval: daily
+      interval: weekly
+    # DevRel should review docs updates
+    assignees:
+      - "julienrbrt"
 
   - package-ecosystem: gomod
     directory: "/"
@@ -92,6 +95,20 @@ updates:
       - dependencies
   - package-ecosystem: gomod
     directory: "/tx"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/tools/rosetta"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/collections"
     schedule:
       interval: weekly
     labels:

@@ -7,8 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-type stringValueRenderer struct {
-}
+type stringValueRenderer struct{}
 
 // NewStringValueRenderer returns a ValueRenderer for protocol buffer string values.
 // It renders the string as-is without quotation.

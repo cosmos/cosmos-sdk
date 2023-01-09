@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -26,7 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -44,12 +43,12 @@ const validMetadata = "metadata"
 
 var tooLongMetadata = strings.Repeat("A", 256)
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	s.commonFlags = []string{
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -121,7 +120,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		}
 
 		s.createGroupThresholdPolicyWithBalance(val.Address.String(), "1", threshold, 1000)
-		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
 		s.Require().NoError(err, out.String())
 		s.Require().NoError(s.network.WaitForNextBlock())
 	}
@@ -142,7 +141,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err, out.String())
 
 	var res group.QueryGroupPoliciesByGroupResponse
@@ -157,7 +156,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				s.createCLIProposal(
 					s.groupPolicies[0].Address, val.Address.String(),
 					s.groupPolicies[0].Address, val.Address.String(),
-					""),
+					"", "title", "summary"),
 			},
 			s.commonFlags...,
 		),
@@ -182,14 +181,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryProposalCmd(), []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err, out.String())
 
 	var proposalRes group.QueryProposalResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposalRes))
 	s.proposal = proposalRes.Proposal
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryVoteByProposalVoterCmd(), []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryVoteByProposalVoterCmd(), []string{"1", val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err, out.String())
 
 	var voteRes group.QueryVoteByProposalVoterResponse
@@ -203,12 +202,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestTxCreateGroup() {
+func (s *E2ETestSuite) TestTxCreateGroup() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -363,7 +362,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroup() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
+func (s *E2ETestSuite) TestTxUpdateGroupAdmin() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -489,7 +488,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
+func (s *E2ETestSuite) TestTxUpdateGroupMetadata() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -573,7 +572,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMetadata() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
+func (s *E2ETestSuite) TestTxUpdateGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -699,7 +698,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupMembers() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
+func (s *E2ETestSuite) TestTxCreateGroupWithPolicy() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -909,7 +908,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupWithPolicy() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
+func (s *E2ETestSuite) TestTxCreateGroupPolicy() {
 	val := s.network.Validators[0]
 	wrongAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
@@ -1081,7 +1080,7 @@ func (s *IntegrationTestSuite) TestTxCreateGroupPolicy() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
+func (s *E2ETestSuite) TestTxUpdateGroupPolicyAdmin() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
@@ -1181,7 +1180,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
+func (s *E2ETestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
@@ -1326,7 +1325,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
+func (s *E2ETestSuite) TestTxUpdateGroupPolicyMetadata() {
 	val := s.network.Validators[0]
 	newAdmin := s.network.Validators[1].Address
 	clientCtx := val.ClientCtx
@@ -1445,7 +1444,7 @@ func (s *IntegrationTestSuite) TestTxUpdateGroupPolicyMetadata() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxSubmitProposal() {
+func (s *E2ETestSuite) TestTxSubmitProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -1465,6 +1464,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
 						"",
+						"title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1482,6 +1482,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
 						"",
+						"title", "summary",
 					),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
@@ -1499,7 +1500,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[3].Address, val.Address.String(),
 						s.groupPolicies[3].Address, val.Address.String(),
-						""),
+						"", "title", "summary"),
 					fmt.Sprintf("--%s=try", client.FlagExec),
 				},
 				s.commonFlags...,
@@ -1516,7 +1517,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 					fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeLegacyAminoJSON),
 				},
@@ -1534,7 +1535,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						tooLongMetadata,
+						tooLongMetadata, "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1551,7 +1552,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						val.Address.String(), s.groupPolicies[0].Address,
-						""),
+						"", "title", "summary"),
 				},
 				s.commonFlags...,
 			),
@@ -1567,7 +1568,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, "invalid",
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1584,7 +1585,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						"invalid", val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1601,7 +1602,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 					s.createCLIProposal(
 						val.Address.String(), val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1637,7 +1638,7 @@ func (s *IntegrationTestSuite) TestTxSubmitProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxVote() {
+func (s *E2ETestSuite) TestTxVote() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -1655,7 +1656,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 					s.createCLIProposal(
 						groupPolicyAddress, accounts[0],
 						groupPolicyAddress, accounts[0],
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -1836,7 +1837,7 @@ func (s *IntegrationTestSuite) TestTxVote() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
+func (s *E2ETestSuite) TestTxWithdrawProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -1849,7 +1850,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 					s.createCLIProposal(
 						s.groupPolicies[1].Address, val.Address.String(),
 						s.groupPolicies[1].Address, val.Address.String(),
-						""),
+						"", "title", "summary"),
 				},
 				s.commonFlags...,
 			),
@@ -1968,7 +1969,7 @@ func (s *IntegrationTestSuite) TestTxWithdrawProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
+func (s *E2ETestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse) string {
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
 	events := txResp.Logs[0].Events
@@ -1983,7 +1984,7 @@ func (s *IntegrationTestSuite) getProposalIDFromTxResponse(txResp sdk.TxResponse
 	return ""
 }
 
-func (s *IntegrationTestSuite) TestTxExec() {
+func (s *E2ETestSuite) TestTxExec() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -1996,7 +1997,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 					s.createCLIProposal(
 						s.groupPolicies[0].Address, val.Address.String(),
 						s.groupPolicies[0].Address, val.Address.String(),
-						"",
+						"", "title", "summary",
 					),
 				},
 				s.commonFlags...,
@@ -2118,7 +2119,7 @@ func (s *IntegrationTestSuite) TestTxExec() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxLeaveGroup() {
+func (s *E2ETestSuite) TestTxLeaveGroup() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -2174,7 +2175,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	s.Require().NoError(err, out.String())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	out, err = clitestutil.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(clientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err, out.String())
 	s.Require().NotNil(out)
 	var resp group.QueryGroupPoliciesByGroupResponse
@@ -2278,7 +2279,7 @@ func (s *IntegrationTestSuite) TestTxLeaveGroup() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
+func (s *E2ETestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -2422,7 +2423,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			proposal := s.createCLIProposal(
 				groupPolicyAddress, tc.members[0],
 				groupPolicyAddress, tc.members[0],
-				"",
+				"", "title", "summary",
 			)
 			submitProposalArgs := append([]string{
 				proposal,
@@ -2484,7 +2485,7 @@ func (s *IntegrationTestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 	}
 }
 
-func (s *IntegrationTestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) string {
+func (s *E2ETestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) string {
 	s.Require().Greater(len(txResp.Logs), 0)
 	s.Require().NotNil(txResp.Logs[0].Events)
 	events := txResp.Logs[0].Events
@@ -2501,7 +2502,7 @@ func (s *IntegrationTestSuite) getGroupIDFromTxResponse(txResp sdk.TxResponse) s
 
 // createCLIProposal writes a CLI proposal with a MsgSend to a file. Returns
 // the path to the JSON file.
-func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom, sendTo, metadata string) string {
+func (s *E2ETestSuite) createCLIProposal(groupPolicyAddress, proposer, sendFrom, sendTo, metadata, title, summary string) string {
 	_, err := base64.StdEncoding.DecodeString(metadata)
 	s.Require().NoError(err)
 
@@ -2518,6 +2519,8 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 		Messages:           []json.RawMessage{msgJSON},
 		Metadata:           metadata,
 		Proposers:          []string{proposer},
+		Title:              title,
+		Summary:            summary,
 	}
 
 	bz, err := json.Marshal(&p)
@@ -2526,7 +2529,7 @@ func (s *IntegrationTestSuite) createCLIProposal(groupPolicyAddress, proposer, s
 	return testutil.WriteToNewTempFile(s.T(), string(bz)).Name()
 }
 
-func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
+func (s *E2ETestSuite) createAccounts(quantity int) []string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	accounts := make([]string, quantity)
@@ -2559,7 +2562,7 @@ func (s *IntegrationTestSuite) createAccounts(quantity int) []string {
 	return accounts
 }
 
-func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddress []string) string {
+func (s *E2ETestSuite) createGroupWithMembers(membersWeight, membersAddress []string) string {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -2589,7 +2592,7 @@ func (s *IntegrationTestSuite) createGroupWithMembers(membersWeight, membersAddr
 	return s.getGroupIDFromTxResponse(txResp)
 }
 
-func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
+func (s *E2ETestSuite) createGroupThresholdPolicyWithBalance(adminAddress, groupID string, threshold int, tokens int64) string {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	val := s.network.Validators[0]
@@ -2611,7 +2614,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, txResp.TxHash, 0))
 
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, client.QueryGroupPoliciesByGroupCmd(), []string{groupID, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err, out.String())
 
 	var res group.QueryGroupPoliciesByGroupResponse
@@ -2628,7 +2631,7 @@ func (s *IntegrationTestSuite) createGroupThresholdPolicyWithBalance(adminAddres
 	return groupPolicyAddress
 }
 
-func (s *IntegrationTestSuite) newValidMembers(weights, membersAddress []string) group.MemberRequests {
+func (s *E2ETestSuite) newValidMembers(weights, membersAddress []string) group.MemberRequests {
 	s.Require().Equal(len(weights), len(membersAddress))
 	membersValid := group.MemberRequests{}
 	for i, address := range membersAddress {

@@ -1,10 +1,13 @@
 package cli_test
 
 import (
+	"context"
 	"fmt"
+	"io"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -13,111 +16,119 @@ import (
 
 func (s *CLITestSuite) TestQueryClass() {
 	testCases := []struct {
-		name string
-		args struct {
-			ClassID string
-		}
-		expectErr bool
+		name         string
+		args         []string
+		expCmdOutput string
 	}{
 		{
-			name: "valid case",
-			args: struct {
-				ClassID string
-			}{
-				ClassID: testClassID,
-			},
-			expectErr: false,
+			name:         "json output",
+			args:         []string{testClassID, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expCmdOutput: `[kitty --output=json]`,
+		},
+		{
+			name:         "text output",
+			args:         []string{testClassID, fmt.Sprintf("--%s=text", flags.FlagOutput)},
+			expCmdOutput: `[kitty --output=text]`,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryClass()
-			var args []string
-			args = append(args, tc.args.ClassID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryClassResponse
-				err = s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result)
-				s.Require().NoError(err)
-			}
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetOut(io.Discard)
+			s.Require().NotNil(cmd)
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			s.Require().Contains(fmt.Sprint(cmd), "class [class-id] [] [] query an NFT class based on its id")
+			s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 		})
 	}
 }
 
 func (s *CLITestSuite) TestQueryClasses() {
 	testCases := []struct {
-		name      string
-		expectErr bool
+		name         string
+		flagArgs     []string
+		expCmdOutput string
 	}{
 		{
-			name:      "no params",
-			expectErr: false,
+			name:         "json output",
+			flagArgs:     []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expCmdOutput: `[--output=json]`,
+		},
+		{
+			name:         "text output",
+			flagArgs:     []string{fmt.Sprintf("--%s=text", flags.FlagOutput)},
+			expCmdOutput: `[--output=text]`,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryClasses()
-			var args []string
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryClassesResponse
-				err = s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result)
-				s.Require().NoError(err)
-			}
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetOut(io.Discard)
+			s.Require().NotNil(cmd)
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.flagArgs)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			s.Require().Contains(fmt.Sprint(cmd), "classes [] [] query all NFT classes")
+			s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.flagArgs)
+			s.Require().NoError(err)
 		})
 	}
 }
 
 func (s *CLITestSuite) TestQueryNFT() {
 	testCases := []struct {
-		name string
-		args struct {
-			ClassID string
-			ID      string
-		}
-		expectErr bool
+		name         string
+		args         []string
+		expCmdOutput string
 	}{
 		{
-			name: "valid case",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: testClassID,
-				ID:      testID,
-			},
-			expectErr: false,
+			name:         "json output",
+			args:         []string{testClassID, testID, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expCmdOutput: `[kitty kitty1 --output=json]`,
+		},
+		{
+			name:         "text output",
+			args:         []string{testClassID, testID, fmt.Sprintf("--%s=text", flags.FlagOutput)},
+			expCmdOutput: `[kitty kitty1 --output=text]`,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryNFT()
-			var args []string
-			args = append(args, tc.args.ClassID)
-			args = append(args, tc.args.ID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryNFTResponse
-				err = s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result)
-				s.Require().NoError(err)
-			}
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetOut(io.Discard)
+			s.Require().NotNil(cmd)
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			s.Require().Contains(fmt.Sprint(cmd), "nft [class-id] [nft-id] [] [] query an NFT based on its class and id")
+			s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 		})
 	}
 }
@@ -132,6 +143,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 			Owner   string
 		}
 		expectErr bool
+		expErrMsg string
 	}{
 		{
 			name: "empty class id and owner",
@@ -140,6 +152,7 @@ func (s *CLITestSuite) TestQueryNFTs() {
 				Owner   string
 			}{},
 			expectErr: true,
+			expErrMsg: "must provide at least one of classID or owner",
 		},
 		{
 			name: "valid case",
@@ -160,11 +173,12 @@ func (s *CLITestSuite) TestQueryNFTs() {
 			var args []string
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagClassID, tc.args.ClassID))
 			args = append(args, fmt.Sprintf("--%s=%s", cli.FlagOwner, tc.args.Owner))
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
+			args = append(args, fmt.Sprintf("--%s=json", flags.FlagOutput))
 
 			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
 			if tc.expectErr {
 				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
 			} else {
 				s.Require().NoError(err)
 				var result nft.QueryNFTsResponse
@@ -177,43 +191,40 @@ func (s *CLITestSuite) TestQueryNFTs() {
 
 func (s *CLITestSuite) TestQueryOwner() {
 	testCases := []struct {
-		name string
-		args struct {
-			ClassID string
-			ID      string
-		}
-		expectErr bool
+		name         string
+		args         []string
+		expCmdOutput string
 	}{
 		{
-			name: "valid case",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: testClassID,
-				ID:      testID,
-			},
-			expectErr: false,
+			name:         "json output",
+			args:         []string{testClassID, testID, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expCmdOutput: `[kitty kitty1 --output=json]`,
+		},
+		{
+			name:         "text output",
+			args:         []string{testClassID, testID, fmt.Sprintf("--%s=text", flags.FlagOutput)},
+			expCmdOutput: `[kitty kitty1 --output=text]`,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryOwner()
-			var args []string
-			args = append(args, tc.args.ClassID)
-			args = append(args, tc.args.ID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryOwnerResponse
-				err = s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result)
-				s.Require().NoError(err)
-			}
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetOut(io.Discard)
+			s.Require().NotNil(cmd)
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			s.Require().Contains(fmt.Sprint(cmd), "owner [class-id] [nft-id] [] [] query the owner of the NFT based on its class and id")
+			s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 		})
 	}
 }
@@ -222,82 +233,75 @@ func (s *CLITestSuite) TestQueryBalance() {
 	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 
 	testCases := []struct {
-		name string
-		args struct {
-			ClassID string
-			Owner   string
-		}
-		expectErr bool
+		name         string
+		args         []string
+		expCmdOutput string
 	}{
 		{
-			name: "valid case",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: testClassID,
-				Owner:   accounts[0].Address.String(),
-			},
-			expectErr: false,
+			name:         "json output",
+			args:         []string{accounts[0].Address.String(), testClassID, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expCmdOutput: fmt.Sprintf("%s kitty --output=json", accounts[0].Address.String()),
+		},
+		{
+			name:         "text output",
+			args:         []string{accounts[0].Address.String(), testClassID, fmt.Sprintf("--%s=text", flags.FlagOutput)},
+			expCmdOutput: fmt.Sprintf("%s kitty --output=text", accounts[0].Address.String()),
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQueryBalance()
-			var args []string
-			args = append(args, tc.args.Owner)
-			args = append(args, tc.args.ClassID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QueryBalanceResponse
-				err = s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result)
-				s.Require().NoError(err)
-			}
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetOut(io.Discard)
+			s.Require().NotNil(cmd)
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			s.Require().Contains(fmt.Sprint(cmd), "balance [owner] [class-id] [] [] query the number of NFTs of a given class owned by the owner")
+			s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 		})
 	}
 }
 
 func (s *CLITestSuite) TestQuerySupply() {
 	testCases := []struct {
-		name string
-		args struct {
-			ClassID string
-		}
-		expectErr bool
+		name         string
+		args         []string
+		expCmdOutput string
 	}{
 		{
-			name: "valid case",
-			args: struct {
-				ClassID string
-			}{
-				ClassID: testClassID,
-			},
-			expectErr: false,
+			name:         "valid case",
+			args:         []string{testClassID, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expCmdOutput: `[kitty --output=json]`,
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			cmd := cli.GetCmdQuerySupply()
-			var args []string
-			args = append(args, tc.args.ClassID)
-			args = append(args, fmt.Sprintf("--%s=json", tmcli.OutputFlag))
 
-			out, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, args)
-			if tc.expectErr {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				var result nft.QuerySupplyResponse
-				err = s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &result)
-				s.Require().NoError(err)
-			}
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetOut(io.Discard)
+			s.Require().NotNil(cmd)
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			s.Require().Contains(fmt.Sprint(cmd), "supply [class-id] [] [] query the number of nft based on the class")
+			s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+
+			_, err := clitestutil.ExecTestCLICmd(s.clientCtx, cmd, tc.args)
+			s.Require().NoError(err)
 		})
 	}
 }

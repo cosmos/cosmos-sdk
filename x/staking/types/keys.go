@@ -59,6 +59,7 @@ var (
 // UnbondingType defines the type of unbonding operation
 type UnbondingType int
 
+//nolint:revive // we want these underscores, they make life easier
 const (
 	UnbondingType_Undefined UnbondingType = iota
 	UnbondingType_UnbondingDelegation
@@ -66,14 +67,14 @@ const (
 	UnbondingType_ValidatorUnbonding
 )
 
-// Returns a key for an index containing the type of unbonding operations
+// GetUnbondingTypeKey returns a key for an index containing the type of unbonding operations
 func GetUnbondingTypeKey(id uint64) []byte {
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, id)
 	return append(UnbondingTypeKey, bz...)
 }
 
-// Returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
+// GetUnbondingIndexKey returns a key for the index for looking up UnbondingDelegations by the UnbondingDelegationEntries they contain
 func GetUnbondingIndexKey(id uint64) []byte {
 	bz := make([]byte, 8)
 	binary.BigEndian.PutUint64(bz, id)

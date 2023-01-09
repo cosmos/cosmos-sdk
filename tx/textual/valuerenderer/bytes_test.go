@@ -27,7 +27,7 @@ func TestBytesJsonTestCases(t *testing.T) {
 		data, err := base64.StdEncoding.DecodeString(tc.base64)
 		require.NoError(t, err)
 
-		valrend, err := textual.GetValueRenderer(fieldDescriptorFromName("BYTES"))
+		valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
 		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
@@ -37,17 +37,23 @@ func TestBytesJsonTestCases(t *testing.T) {
 
 		// Round trip
 		val, err := valrend.Parse(context.Background(), screens)
+		if err != nil {
+			// Make sure Parse() only errors because of hashed bytes.
+			require.Equal(t, "cannot parse bytes hash", err.Error())
+			require.Greater(t, len(tc.base64), 32)
+			continue
+		}
 		require.NoError(t, err)
 		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
 	}
 }
 
 type bytesTest struct {
-	hex    string
 	base64 string
+	hex    string
 }
 
 func (t *bytesTest) UnmarshalJSON(b []byte) error {
-	a := []interface{}{&t.hex, &t.base64}
+	a := []interface{}{&t.base64, &t.hex}
 	return json.Unmarshal(b, &a)
 }

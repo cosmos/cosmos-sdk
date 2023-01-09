@@ -1,28 +1,28 @@
 # Contributing
 
-* [Contributing](#contributing)
-    * [Teams Dev Calls](#teams-dev-calls)
-    * [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    * [Development Procedure](#development-procedure)
-        * [Testing](#testing)
-        * [Pull Requests](#pull-requests)
-        * [Pull Request Templates](#pull-request-templates)
-        * [Requesting Reviews](#requesting-reviews)
-        * [Updating Documentation](#updating-documentation)
-    * [Dependencies](#dependencies)
-        * [`go.work`](#gowork)
-    * [Protobuf](#protobuf)
-    * [Branching Model and Release](#branching-model-and-release)
-        * [PR Targeting](#pr-targeting)
-    * [Code Owner Membership](#code-owner-membership)
-    * [Concept & Feature Approval Process](#concept--feature-approval-process)
-        * [Strategy Discovery](#strategy-discovery)
-        * [Concept Approval](#concept-approval)
-            * [Time Bound Period](#time-bound-period)
-            * [Approval Committee & Decision Making](#approval-committee--decision-making)
-            * [Committee Members](#committee-members)
-            * [Committee Criteria](#committee-criteria)
-        * [Implementation & Release Approval](#implementation--release-approval)
+* [Teams Dev Calls](#teams-dev-calls)
+* [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+* [Development Procedure](#development-procedure)
+    * [Testing](#testing)
+    * [Pull Requests](#pull-requests)
+    * [Pull Request Templates](#pull-request-templates)
+    * [Requesting Reviews](#requesting-reviews)
+    * [Updating Documentation](#updating-documentation)
+* [Dependencies](#dependencies)
+    * [`go.work`](#gowork)
+    * [`go.mod`](#gomod)
+* [Protobuf](#protobuf)
+* [Branching Model and Release](#branching-model-and-release)
+    * [PR Targeting](#pr-targeting)
+* [Code Owner Membership](#code-owner-membership)
+* [Concept & Feature Approval Process](#concept--feature-approval-process)
+    * [Strategy Discovery](#strategy-discovery)
+    * [Concept Approval](#concept-approval)
+        * [Time Bound Period](#time-bound-period)
+        * [Approval Committee & Decision Making](#approval-committee--decision-making)
+        * [Committee Members](#committee-members)
+        * [Committee Criteria](#committee-criteria)
+    * [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -64,7 +64,7 @@ To synchronize we have few major meetings:
 * Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
 * Cosmos SDK Community Call on Thursday at 16:00 UTC.
 
-If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@marbar3778).
+If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@tac0turtle).
 
 ## Architecture Decision Records (ADR)
 
@@ -181,6 +181,18 @@ The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` f
 We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
 Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
 For consistency between our CI and the local tests, `GOWORK=off` is set in the `Makefile`. This means that the `go.work` file is not used when using `make test` or any other `make` command.
+
+### `go.mod`
+
+When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
+
+* Add the package in [`go.work.example`](./go.work.example)
+* Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
+* Pre-configure SonarCloud
+    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
+    * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
+    * Add an entry for skipping the tests (see [test-skip.yml](.github/workflows/test-skip.yml))
+    * Ask the team to add the project to SonarCloud
 
 ## Protobuf
 

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
@@ -107,7 +107,7 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
-// appConfig usually load from a `app.yaml` with `appconfig.LoadYAML`, defines the application configuration.
+// appConfig defines the application configuration (f.e. app_config.go).
 // extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
 func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupConfig, extraOutputs ...interface{}) (*runtime.App, error) {
 	// create the app with depinject
@@ -148,7 +148,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
 	}
 
-	genesisState, err := GenesisStateWithValSet(codec, appBuilder.DefaultGenesis(), valSet, genAccounts, balances...)
+	genesisState, err := GenesisStateWithValSet(codec, app.DefaultGenesis(), valSet, genAccounts, balances...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create genesis state: %w", err)
 	}

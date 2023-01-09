@@ -4,8 +4,8 @@ use (
 	.
 	./api
 	./client/v2
+	./collections
 	./core
-	./tools/cosmovisor
 	./depinject
 	./errors
 	./math
@@ -13,4 +13,6 @@ use (
 	./tx
 	./simapp
 	./tests
+	./tools/rosetta
+	./tools/cosmovisor
 )

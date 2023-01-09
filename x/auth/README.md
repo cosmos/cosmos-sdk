@@ -88,7 +88,7 @@ account types may do so.
 #### Account Interface
 
 The account interface exposes methods to read and write standard account information.
-Note that all of these methods operate on an account struct confirming to the
+Note that all of these methods operate on an account struct conforming to the
 interface - in order to write the account to the store, the account keeper will
 need to be used.
 
@@ -138,7 +138,7 @@ message BaseAccount {
 
 ### Vesting Account
 
-See [Vesting](https://docs.cosmos.network/main/modules/vesting/).
+See [Vesting](https://docs.cosmos.network/main/modules/auth/vesting/).
 
 ## AnteHandlers
 
@@ -217,7 +217,7 @@ type AccountKeeperI interface {
 	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	GetNextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(sdk.Context) uint64
 }
 ```
 
@@ -239,7 +239,7 @@ The auth module contains the following parameters:
 
 A user can query and interact with the `auth` module using the CLI.
 
-#### Query
+### Query
 
 The `query` commands allow users to query `auth` state.
 
@@ -247,7 +247,7 @@ The `query` commands allow users to query `auth` state.
 simd query auth --help
 ```
 
-##### account
+#### account
 
 The `account` command allow users to query for an account by it's address.
 
@@ -273,7 +273,7 @@ pub_key:
 sequence: "1"
 ```
 
-##### accounts
+#### accounts
 
 The `accounts` command allow users to query all the available accounts.
 
@@ -372,7 +372,7 @@ pagination:
   total: "0"
 ```
 
-##### params
+#### params
 
 The `params` command allow users to query the current auth parameters.
 
@@ -395,6 +395,103 @@ sig_verify_cost_secp256k1: "1000"
 tx_sig_limit: "7"
 tx_size_cost_per_byte: "10"
 ```
+
+### Transactions
+
+The `auth` module supports transactions commands to help you with signing and more. Compared to other modules you can access directly the `auth` module transactions commands using the only `tx` command.
+
+Use directly the `--help` flag to get more information about the `tx` command.
+
+```bash
+simd tx --help
+```
+
+#### `sign`
+
+The `sign` command allows users to sign transactions that was generated offline.
+
+```bash
+simd tx sign tx.json --from $ALICE > tx.signed.json
+```
+
+The result is a signed transaction that can be broadcasted to the network thanks to the broadcast command.
+
+More information about the `sign` command can be found running `simd tx sign --help`.
+
+#### `sign-batch`
+
+The `sign-batch` command allows users to sign multiples offline generated transactions.
+The transactions can be in one file, with one tx per line, or in multiple files.
+
+```bash
+simd tx sign txs.json --from $ALICE > tx.signed.json
+```
+
+or
+
+```bash 
+simd tx sign tx1.json tx2.json tx3.json --from $ALICE > tx.signed.json
+```
+
+The result is multiples signed transactions. For combining the signed transactions into one transactions, use the `--append` flag.
+
+More information about the `sign-batch` command can be found running `simd tx sign-batch --help`.
+
+#### `multi-sign`
+
+The `multi-sign` command allows users to sign transactions that was generated offline by a multisig account.
+
+```bash
+simd tx multisign transaction.json k1k2k3 k1sig.json k2sig.json k3sig.json
+```
+
+Where `k1k2k3` is the multisig account address, `k1sig.json` is the signature of the first signer, `k2sig.json` is the signature of the second signer, and `k3sig.json` is the signature of the third signer.
+
+More information about the `multi-sign` command can be found running `simd tx multi-sign --help`.
+
+#### `multisign-batch`
+
+The `multisign-batch` works the same way as `sign-batch`, but for multisig accounts.
+With the difference that the `multisign-batch` command requires all transactions to be in one file, and the `--append` flag does not exist.
+
+More information about the `multisign-batch` command can be found running `simd tx multisign-batch --help`.
+
+#### `validate-signatures`
+
+The `validate-signatures` command allows users to validate the signatures of a signed transaction.
+
+```bash
+$ simd tx validate-signatures tx.signed.json
+Signers:
+  0: cosmos1l6vsqhh7rnwsyr2kyz3jjg3qduaz8gwgyl8275
+
+Signatures:
+  0: cosmos1l6vsqhh7rnwsyr2kyz3jjg3qduaz8gwgyl8275                      [OK]
+```
+
+More information about the `validate-signatures` command can be found running `simd tx validate-signatures --help`.
+
+#### `broadcast`
+
+The `broadcast` command allows users to broadcast a signed transaction to the network.
+
+```bash
+simd tx broadcast tx.signed.json
+```
+
+More information about the `broadcast` command can be found running `simd tx broadcast --help`.
+
+#### `aux-to-fee`
+
+The `aux-to-fee` comamnds includes the aux signer data in the tx, broadcast the tx, and sends the tip amount to the broadcaster.
+[Learn more about tip transaction](https://docs.cosmos.network/main/core/tips).
+
+```bash
+# simd tx bank send <from> <to> <amount> --aux (optional: --tip <tipAmt> --tipper <tipper>)
+simd tx aux-to-fee tx.aux.signed.json
+```
+
+More information about the `aux-to-fee` command can be found running `simd tx aux-to-fee --help`.
 
 ### gRPC
 

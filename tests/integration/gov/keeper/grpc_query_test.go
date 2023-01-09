@@ -3,16 +3,22 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"testing"
+
+	"gotest.tools/v3/assert"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-func (suite *KeeperTestSuite) TestGRPCQueryTally() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.queryClient
+func TestGRPCQueryTally(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	addrs, _ := createValidators(suite.T(), ctx, app, []int64{5, 5, 5})
+	app, ctx, queryClient := f.app, f.ctx, f.queryClient
+
+	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
 
 	var (
 		req      *v1.QueryTallyResultRequest
@@ -21,9 +27,10 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 	)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -31,6 +38,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				req = &v1.QueryTallyResultRequest{}
 			},
 			false,
+			"proposal id can not be 0",
 		},
 		{
 			"zero proposal id request",
@@ -38,6 +46,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				req = &v1.QueryTallyResultRequest{ProposalId: 0}
 			},
 			false,
+			"proposal id can not be 0",
 		},
 		{
 			"query non existed proposal",
@@ -45,14 +54,15 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				req = &v1.QueryTallyResultRequest{ProposalId: 1}
 			},
 			false,
+			"proposal 1 doesn't exist",
 		},
 		{
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "")
-				suite.Require().NoError(err)
-				suite.Require().NotNil(proposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
+				assert.NilError(t, err)
+				assert.Assert(t, proposal.String() != "")
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -62,6 +72,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				}
 			},
 			true,
+			"",
 		},
 		{
 			"request tally after few votes",
@@ -69,9 +80,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				proposal.Status = v1.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
 
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				assert.NilError(t, app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				assert.NilError(t, app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				assert.NilError(t, app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -85,6 +96,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				}
 			},
 			true,
+			"",
 		},
 		{
 			"request final tally after status changed",
@@ -100,30 +112,34 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 				}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", testCase.msg), func(t *testing.T) {
 			testCase.malleate()
 
 			tally, err := queryClient.TallyResult(gocontext.Background(), req)
 
 			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.String(), tally.String())
+				assert.NilError(t, err)
+				assert.Equal(t, expRes.String(), tally.String())
 			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(tally)
+				assert.ErrorContains(t, err, testCase.expErrMsg)
+				assert.Assert(t, tally == nil)
 			}
 		})
 	}
 }
 
-func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
-	app, ctx, queryClient := suite.app, suite.ctx, suite.legacyQueryClient
+func TestLegacyGRPCQueryTally(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 
-	addrs, _ := createValidators(suite.T(), ctx, app, []int64{5, 5, 5})
+	app, ctx, queryClient := f.app, f.ctx, f.legacyQueryClient
+
+	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
 
 	var (
 		req      *v1beta1.QueryTallyResultRequest
@@ -132,9 +148,10 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 	)
 
 	testCases := []struct {
-		msg      string
-		malleate func()
-		expPass  bool
+		msg       string
+		malleate  func()
+		expPass   bool
+		expErrMsg string
 	}{
 		{
 			"empty request",
@@ -142,6 +159,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				req = &v1beta1.QueryTallyResultRequest{}
 			},
 			false,
+			"proposal id can not be 0",
 		},
 		{
 			"zero proposal id request",
@@ -149,6 +167,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: 0}
 			},
 			false,
+			"proposal id can not be 0",
 		},
 		{
 			"query non existed proposal",
@@ -156,14 +175,15 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: 1}
 			},
 			false,
+			"proposal 1 doesn't exist",
 		},
 		{
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "")
-				suite.Require().NoError(err)
-				suite.Require().NotNil(proposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
+				assert.NilError(t, err)
+				assert.Assert(t, proposal.String() != "")
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -173,6 +193,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				}
 			},
 			true,
+			"",
 		},
 		{
 			"request tally after few votes",
@@ -180,9 +201,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				proposal.Status = v1.StatusVotingPeriod
 				app.GovKeeper.SetProposal(ctx, proposal)
 
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
-				suite.Require().NoError(app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				assert.NilError(t, app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				assert.NilError(t, app.GovKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+				assert.NilError(t, app.GovKeeper.AddVote(ctx, proposal.Id, addrs[2], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -196,6 +217,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				}
 			},
 			true,
+			"",
 		},
 		{
 			"request final tally after status changed",
@@ -211,21 +233,22 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 				}
 			},
 			true,
+			"",
 		},
 	}
 
 	for _, testCase := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", testCase.msg), func() {
+		t.Run(fmt.Sprintf("Case %s", testCase.msg), func(t *testing.T) {
 			testCase.malleate()
 
 			tally, err := queryClient.TallyResult(gocontext.Background(), req)
 
 			if testCase.expPass {
-				suite.Require().NoError(err)
-				suite.Require().Equal(expRes.String(), tally.String())
+				assert.NilError(t, err)
+				assert.Equal(t, expRes.String(), tally.String())
 			} else {
-				suite.Require().Error(err)
-				suite.Require().Nil(tally)
+				assert.ErrorContains(t, err, testCase.expErrMsg)
+				assert.Assert(t, tally == nil)
 			}
 		})
 	}

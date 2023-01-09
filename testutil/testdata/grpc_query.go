@@ -12,11 +12,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	// iterCount defines the number of iterations to run on each query to test
-	// determinism.
-	iterCount = 1000
-)
+// iterCount defines the number of iterations to run on each query to test
+// determinism.
+var iterCount = 1000
 
 type QueryImpl struct{}
 

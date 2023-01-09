@@ -6,10 +6,9 @@ import (
 	"io"
 	"testing"
 
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,16 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 )
 
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-}
-
-func (mockTendermintRPC) BroadcastTxSync(context.Context, tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{}, nil
-}
-
 func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 	encCfg := testutilmod.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
@@ -39,7 +28,7 @@ func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {
 		WithKeyring(kr).
 		WithTxConfig(encCfg.TxConfig).
 		WithCodec(encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")

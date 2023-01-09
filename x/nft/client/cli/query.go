@@ -166,12 +166,6 @@ $ %s query %s nfts <class-id> --owner=<owner>
 				return err
 			}
 
-			if len(classID) > 0 {
-				if err := nft.ValidateClassID(classID); err != nil {
-					return err
-				}
-			}
-
 			if len(owner) == 0 && len(classID) == 0 {
 				return errors.ErrInvalidRequest.Wrap("must provide at least one of classID or owner")
 			}

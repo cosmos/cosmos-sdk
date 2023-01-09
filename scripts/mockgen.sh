@@ -2,10 +2,10 @@
 
 mockgen_cmd="mockgen"
 $mockgen_cmd -source=client/account_retriever.go -package mock -destination testutil/mock/account_retriever.go
-$mockgen_cmd -package mock -destination testutil/mock/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
+$mockgen_cmd -package mock -destination store/mock/cosmos_cosmos_db_DB.go github.com/cosmos/cosmos-db DB
 $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/mock/types_module_module.go
+$mockgen_cmd -source=types/module/mock_appmodule_test.go -package mock -destination testutil/mock/types_mock_appmodule.go
 $mockgen_cmd -source=types/invariant.go -package mock -destination testutil/mock/types_invariant.go
-$mockgen_cmd -source=types/router.go -package mock -destination testutil/mock/types_router.go
 $mockgen_cmd -package mock -destination testutil/mock/grpc_server.go github.com/cosmos/gogoproto/grpc Server
 $mockgen_cmd -package mock -destination testutil/mock/tendermint_tendermint_libs_log_DB.go github.com/tendermint/tendermint/libs/log Logger
 $mockgen_cmd -source=orm/model/ormtable/hooks.go -package ormmocks -destination orm/testing/ormmocks/hooks.go

@@ -19,6 +19,7 @@ type legacyProposal struct {
 	Deposit     string
 }
 
+// validate the legacyProposal
 func (p legacyProposal) validate() error {
 	if p.Type == "" {
 		return fmt.Errorf("proposal type is required")
@@ -34,7 +35,8 @@ func (p legacyProposal) validate() error {
 	return nil
 }
 
-func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) {
+// parseSubmitLegacyProposal reads and parses the legacy proposal.
+func parseSubmitLegacyProposal(fs *pflag.FlagSet) (*legacyProposal, error) {
 	proposal := &legacyProposal{}
 	proposalFile, _ := fs.GetString(FlagProposal)
 
@@ -80,19 +82,22 @@ type proposal struct {
 	Messages []json.RawMessage `json:"messages,omitempty"`
 	Metadata string            `json:"metadata"`
 	Deposit  string            `json:"deposit"`
+	Title    string            `json:"title"`
+	Summary  string            `json:"summary"`
 }
 
-func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.Coins, error) {
+// parseSubmitProposal reads and parses the proposal.
+func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, string, string, sdk.Coins, error) {
 	var proposal proposal
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", "", "", nil, err
 	}
 
 	err = json.Unmarshal(contents, &proposal)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", "", "", nil, err
 	}
 
 	msgs := make([]sdk.Msg, len(proposal.Messages))
@@ -100,7 +105,7 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.C
 		var msg sdk.Msg
 		err := cdc.UnmarshalInterfaceJSON(anyJSON, &msg)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", "", "", nil, err
 		}
 
 		msgs[i] = msg
@@ -108,8 +113,8 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.C
 
 	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 	if err != nil {
-		return nil, "", nil, err
+		return nil, "", "", "", nil, err
 	}
 
-	return msgs, proposal.Metadata, deposit, nil
+	return msgs, proposal.Metadata, proposal.Title, proposal.Summary, deposit, nil
 }

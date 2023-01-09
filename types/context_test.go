@@ -11,6 +11,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -73,12 +74,6 @@ func (s *contextTestSuite) TestLogContext() {
 	ctx.Logger().Error("error")
 }
 
-type dummy int64 //nolint:unused
-
-func (d dummy) Clone() interface{} {
-	return d
-}
-
 // Testing saving/loading sdk type values to/from the context
 func (s *contextTestSuite) TestContextWithCustom() {
 	var ctx types.Context
@@ -98,6 +93,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	blockGasMeter := types.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
 	headerHash := []byte("headerHash")
+	zeroGasCfg := storetypes.GasConfig{}
 
 	ctx = types.NewContext(nil, header, ischeck, logger)
 	s.Require().Equal(header, ctx.BlockHeader())
@@ -110,7 +106,10 @@ func (s *contextTestSuite) TestContextWithCustom() {
 		WithGasMeter(meter).
 		WithMinGasPrices(minGasPrices).
 		WithBlockGasMeter(blockGasMeter).
-		WithHeaderHash(headerHash)
+		WithHeaderHash(headerHash).
+		WithKVGasConfig(zeroGasCfg).
+		WithTransientKVGasConfig(zeroGasCfg)
+
 	s.Require().Equal(height, ctx.BlockHeight())
 	s.Require().Equal(chainid, ctx.ChainID())
 	s.Require().Equal(ischeck, ctx.IsCheckTx())
@@ -122,6 +121,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(blockGasMeter, ctx.BlockGasMeter())
 	s.Require().Equal(headerHash, ctx.HeaderHash().Bytes())
 	s.Require().False(ctx.WithIsCheckTx(false).IsCheckTx())
+	s.Require().Equal(zeroGasCfg, ctx.KVGasConfig())
+	s.Require().Equal(zeroGasCfg, ctx.TransientKVGasConfig())
 
 	// test IsReCheckTx
 	s.Require().False(ctx.IsReCheckTx())
@@ -136,7 +137,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck
+	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck,revive
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -227,7 +228,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, "foo", "bar")
+	ctx = context.WithValue(sdkCtx, "foo", "bar") //nolint:golint,staticcheck,revive
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }

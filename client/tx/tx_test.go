@@ -3,12 +3,14 @@ package tx_test
 import (
 	gocontext "context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -161,6 +163,55 @@ func TestBuildUnsignedTx(t *testing.T) {
 	require.Empty(t, sigs)
 }
 
+func TestMnemonicInMemo(t *testing.T) {
+	txConfig, cdc := newTestTxConfig(t)
+	kb, err := keyring.New(t.Name(), "test", t.TempDir(), nil, cdc)
+	require.NoError(t, err)
+
+	path := hd.CreateHDPath(118, 0, 0).String()
+
+	_, seed, err := kb.NewMnemonic("test_key1", keyring.English, path, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name  string
+		memo  string
+		error bool
+	}{
+		{name: "bare seed", memo: seed, error: true},
+		{name: "padding bare seed", memo: fmt.Sprintf("   %s", seed), error: true},
+		{name: "prefixed", memo: fmt.Sprintf("%s: %s", "prefixed: ", seed), error: false},
+		{name: "normal memo", memo: "this is a memo", error: false},
+		{name: "empty memo", memo: "", error: false},
+		{name: "invalid mnemonic", memo: strings.Repeat("egg", 24), error: false},
+		{name: "caps", memo: strings.ToUpper(seed), error: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			txf := tx.Factory{}.
+				WithTxConfig(txConfig).
+				WithAccountNumber(50).
+				WithSequence(23).
+				WithFees("50stake").
+				WithMemo(tc.memo).
+				WithChainID("test-chain").
+				WithKeybase(kb)
+
+			msg := banktypes.NewMsgSend(sdk.AccAddress("from"), sdk.AccAddress("to"), nil)
+			tx, err := txf.BuildUnsignedTx(msg)
+			if tc.error {
+				require.Error(t, err)
+				require.ErrorContains(t, err, "mnemonic")
+				require.Nil(t, tx)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, tx)
+			}
+		})
+	}
+}
+
 func TestSign(t *testing.T) {
 	txConfig, cdc := newTestTxConfig(t)
 	requireT := require.New(t)
@@ -302,7 +353,7 @@ func TestSign(t *testing.T) {
 	var prevSigs []signingtypes.SignatureV2
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = tx.Sign(tc.txf, tc.from, tc.txb, tc.overwrite)
+			err = tx.Sign(nil, tc.txf, tc.from, tc.txb, tc.overwrite) //nolint:staticcheck
 			if len(tc.expectedPKs) == 0 {
 				requireT.Error(err)
 			} else {
@@ -371,8 +422,9 @@ func TestPreprocessHook(t *testing.T) {
 	msg1 := banktypes.NewMsgSend(addr1, sdk.AccAddress("to"), nil)
 	msg2 := banktypes.NewMsgSend(addr2, sdk.AccAddress("to"), nil)
 	txb, err := txfDirect.BuildUnsignedTx(msg1, msg2)
+	requireT.NoError(err)
 
-	err = tx.Sign(txfDirect, from, txb, false)
+	err = tx.Sign(nil, txfDirect, from, txb, false) //nolint:staticcheck
 	requireT.NoError(err)
 
 	// Run preprocessing

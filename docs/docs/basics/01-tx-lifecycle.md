@@ -5,10 +5,11 @@ sidebar_position: 1
 # Transaction Lifecycle
 
 :::note Synopsis
-This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/01-transactions.md). The transaction will be referred to as `Tx`.
+This document describes the lifecycle of a transaction from creation to committed state changes. Transaction definition is described in a [different doc](../core/01-transactions.md). The transaction is referred to as `Tx`.
 :::
 
 :::note
+
 ### Pre-requisite Readings
 
 * [Anatomy of a Cosmos SDK Application](./00-app-anatomy.md)
@@ -24,9 +25,9 @@ One of the main application interfaces is the command-line interface. The transa
 [appname] tx [command] [args] [flags]
 ```
 
-This command will automatically **create** the transaction, **sign** it using the account's private key, and **broadcast** it to the specified peer node.
+This command automatically **creates** the transaction, **signs** it using the account's private key, and **broadcasts** it to the specified peer node.
 
-There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./03-accounts.md) the transaction is originating from. For example, if the transaction is sending coins, the funds will be drawn from the specified `from` address.
+There are several required and optional flags for transaction creation. The `--from` flag specifies which [account](./03-accounts.md) the transaction is originating from. For example, if the transaction is sending coins, the funds are drawn from the specified `from` address.
 
 #### Gas and Fees
 
@@ -40,11 +41,11 @@ Additionally, there are several [flags](../core/07-cli.md) users can use to indi
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
-Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` will be rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
+Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
 
 #### CLI Example
 
-Users of the application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. It specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
+Users of the application `app` can enter the following command into their CLI to generate a transaction to send 1000uatom from a `senderAddress` to a `recipientAddress`. The command specifies how much gas they are willing to pay: an automatic estimate scaled up by 1.5 times, with a gas price of 0.025uatom per unit gas.
 
 ```bash
 appd tx send <recipientAddress> 1000uatom --from <senderAddress> --gas auto --gas-adjustment 1.5 --gas-prices 0.025uatom
@@ -57,8 +58,8 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 ## Addition to Mempool
 
 Each full-node (running Tendermint) that receives a `Tx` sends an [ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#messages),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the nodes'
-[**Mempool**](https://docs.tendermint.com/master/tendermint-core/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes will discard `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
+`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
+[**Mempool**](https://docs.tendermint.com/master/tendermint-core/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
 
@@ -73,7 +74,7 @@ are not empty, enforcing nonnegative numbers, and other logic specified in the d
 include checking that the relevant values exist and can be transacted with, the address
 has sufficient funds, and the sender is authorized or has the correct ownership to transact.
 At any given moment, full-nodes typically have [multiple versions](../core/00-baseapp.md#state-updates)
-of the application's internal state for different purposes. For example, nodes will execute state
+of the application's internal state for different purposes. For example, nodes execute state
 changes while in the process of verifying transactions, but still need a copy of the last committed
 state in order to answer queries - they should not respond using state with uncommitted changes.
 
@@ -83,7 +84,7 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function will run all checks but exit before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. Tendermint), it is still in its [encoded](../core/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
 
 ### ValidateBasic
 
@@ -93,16 +94,16 @@ To discard obviously invalid messages, the `BaseApp` type calls the `ValidateBas
 
 #### Guideline
 
-Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the CheckTx phase.
+Gas is not charged when `ValidateBasic` is executed, so we recommend only performing all necessary stateless checks to enable middleware operations (for example, parsing the required signer accounts to validate a signature by a middleware) and stateless sanity checks not impacting performance of the `CheckTx` phase.
 Other validation operations must be performed when [handling a message](../building-modules/msg-services#Validation) in a module Msg Server.
 
-Example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
+For example, if the message is to send coins from one address to another, `ValidateBasic` likely checks for non-empty addresses and a non-negative coin amount, but does not require knowledge of state such as the account balance of an address.
 
 See also [Msg Service Validation](../building-modules/03-msg-services.md#Validation).
 
 ### AnteHandler
 
-After the ValidateBasic checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction and other core operations related to blockchain transactions.
+After the `ValidateBasic` checks, the `AnteHandler`s are run. Technically, they are optional, but in practice, they are very often present to perform signature verification, gas calculation, fee deduction, and other core operations related to blockchain transactions.
 
 A copy of the cached context is provided to the `AnteHandler`, which performs limited checks specified for the transaction type. Using a copy allows the `AnteHandler` to do stateful checks for `Tx` without modifying the last committed state, and revert back to the original if the execution fails.
 
@@ -110,7 +111,7 @@ For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/
 
 ### Gas
 
-The [`Context`](../core/02-context.md), which keeps a `GasMeter` that will track how much gas has been used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed so during execution, ever exceeds `GasWanted`, the execution will stop and the changes made to the cached copy of the state won't be committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is greater than their locally defined `min-gas-prices`.
+The [`Context`](../core/02-context.md), which keeps a `GasMeter` that tracks how much gas is used during the execution of `Tx`, is initialized. The user-provided amount of gas for `Tx` is known as `GasWanted`. If `GasConsumed`, the amount of gas consumed during execution, ever exceeds `GasWanted`, the execution stops and the changes made to the cached copy of the state are not committed. Otherwise, `CheckTx` sets `GasUsed` equal to `GasConsumed` and returns it in the result. After calculating the gas and fee values, validator-nodes check that the user-specified `gas-prices` is greater than their locally defined `min-gas-prices`.
 
 ### Discard or Addition to Mempool
 
@@ -126,14 +127,14 @@ the transactions, `CheckTx` is responsible for identifying and rejecting replaye
 
 Currently existing preventative measures include fees and a `sequence` (nonce) counter to distinguish
 replayed transactions from identical but valid ones. If an attacker tries to spam nodes with many
-copies of a `Tx`, full-nodes keeping a mempool cache will reject identical copies instead of running
-`CheckTx` on all of them. Even if the copies have incremented `sequence` numbers, attackers are
+copies of a `Tx`, full-nodes keeping a mempool cache reject all identical copies instead of running
+`CheckTx` on them. Even if the copies have incremented `sequence` numbers, attackers are
 disincentivized by the need to pay fees.
 
 Validator nodes keep a mempool to prevent replay attacks, just as full-nodes do, but also use it as
 a pool of unconfirmed transactions in preparation of block inclusion. Note that even if a `Tx`
 passes all checks at this stage, it is still possible to be found invalid later on, because
-`CheckTx` does not fully validate the transaction (i.e. it does not actually execute the messages).
+`CheckTx` does not fully validate the transaction (that is, it does not actually execute the messages).
 
 ## Inclusion in a Block
 
@@ -205,13 +206,13 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
 * **Decoding:** Since `DeliverTx` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
   Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `runTxModeDeliver`, which is very similar to `CheckTx` but also executes and writes state changes.
 
-* **Checks and AnteHandler:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
+* **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage 
   and a malicious proposer may have included invalid ones. One difference here is that the
-  `AnteHandler` will not compare `gas-prices` to the node's `min-gas-prices` since that value is local
-  to each node - differing values across nodes would yield nondeterministic results.
+  `AnteHandler` does not compare `gas-prices` to the node's `min-gas-prices` since that value is local
+  to each node - differing values across nodes yield nondeterministic results.
 
-* **`MsgServiceRouter`:** While `CheckTx` would have exited, `DeliverTx` continues to run
+* **`MsgServiceRouter`:** After `CheckTx` exits, `DeliverTx` continues to run
   [`runMsgs`](../core/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) to fully execute each `Msg` within the transaction.
   Since the transaction may have messages from different modules, `BaseApp` needs to know which module
   to find the appropriate handler. This is achieved using `BaseApp`'s `MsgServiceRouter` so that it can be processed by the module's Protobuf [`Msg` service](../building-modules/03-msg-services.md).
@@ -219,7 +220,7 @@ Instead of using their `checkState`, full-nodes use `deliverState`:
   
 * **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `deliverTxState`.
 
-* **PostHandlers:** [`PostHandler`](../core/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers` are both reverted.
+* **PostHandlers:** [`PostHandler`](../core/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers`, are both reverted.
 
 * **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the
@@ -243,7 +244,7 @@ finalize the state transitions in the application layer. A new state root is gen
 a merkle proof for the state transitions. Applications use the [`Commit`](../core/00-baseapp.md#commit)
 ABCI method inherited from [Baseapp](../core/00-baseapp.md); it syncs all the state transitions by
 writing the `deliverState` into the application's internal state. As soon as the state changes are
-committed, `checkState` start afresh from the most recently committed state and `deliverState`
+committed, `checkState` starts afresh from the most recently committed state and `deliverState`
 resets to `nil` in order to be consistent and reflect the changes.
 
 Note that not all blocks have the same number of transactions and it is possible for consensus to

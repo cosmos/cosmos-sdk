@@ -4,12 +4,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/tx/textual/valuerenderer"
-	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
-	"github.com/cosmos/cosmos-sdk/codec"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 

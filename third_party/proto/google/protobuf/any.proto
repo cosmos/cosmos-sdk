@@ -34,12 +34,12 @@ package google.protobuf;
 
 import "gogoproto/gogo.proto";
 
-option csharp_namespace = "Google.Protobuf.WellKnownTypes";
-option go_package = "types";
-option java_package = "com.google.protobuf";
+option csharp_namespace     = "Google.Protobuf.WellKnownTypes";
+option go_package           = "types";
+option java_package         = "com.google.protobuf";
 option java_outer_classname = "AnyProto";
-option java_multiple_files = true;
-option objc_class_prefix = "GPB";
+option java_multiple_files  = true;
+option objc_class_prefix    = "GPB";
 
 // `Any` contains an arbitrary serialized protocol buffer message along with a
 // URL that describes the type of the serialized message.
@@ -155,10 +155,10 @@ message Any {
   // Must be a valid serialized protocol buffer of the above specified type.
   bytes value = 2;
 
-  option (gogoproto.typedecl) = false;
+  option (gogoproto.typedecl)         = false;
   option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.gostring) = false;
-  option (gogoproto.stringer) = false;
+  option (gogoproto.gostring)         = false;
+  option (gogoproto.stringer)         = false;
 }
 
 option (gogoproto.goproto_registration) = false;

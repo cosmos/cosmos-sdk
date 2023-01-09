@@ -7,18 +7,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/testutil"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(testutil.IntegrationTestSuite))
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
 }
 
 func TestGRPCQueryTestSuite(t *testing.T) {
-	suite.Run(t, new(testutil.GRPCQueryTestSuite))
+	suite.Run(t, new(GRPCQueryTestSuite))
 }
 
 func TestWithdrawAllSuite(t *testing.T) {
-	suite.Run(t, new(testutil.WithdrawAllTestSuite))
+	suite.Run(t, new(WithdrawAllTestSuite))
 }

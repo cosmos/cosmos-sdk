@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -35,7 +36,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 			"valid query",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QueryAllBalancesResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -53,7 +54,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QueryBalanceResponse{
 					Balance: &sdk.Coin{},
 				})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -80,7 +81,7 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 		{
 			"invalid denom",
 			func() client.Context {
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Code: 1,
 				})
 				return s.baseCtx.WithClient(c)
@@ -88,6 +89,90 @@ func (s *CLITestSuite) TestGetBalancesCmd() {
 			[]string{
 				accounts[0].Address.String(),
 				fmt.Sprintf("--%s=foo", cli.FlagDenom),
+			},
+			nil,
+			true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		s.Run(tc.name, func() {
+			var outBuf bytes.Buffer
+
+			clientCtx := tc.ctxGen().WithOutput(&outBuf)
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+
+			s.Require().NoError(client.SetCmdClientContextHandler(clientCtx, cmd))
+
+			err := cmd.Execute()
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(s.encCfg.Codec.UnmarshalJSON(outBuf.Bytes(), tc.expectResult))
+				s.Require().NoError(err)
+			}
+		})
+	}
+}
+
+func (s *CLITestSuite) TestGetSpendableBalancesCmd() {
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
+
+	cmd := cli.GetSpendableBalancesCmd()
+	cmd.SetOutput(io.Discard)
+
+	testCases := []struct {
+		name         string
+		ctxGen       func() client.Context
+		args         []string
+		expectResult proto.Message
+		expectErr    bool
+	}{
+		{
+			"valid query",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySpendableBalancesResponse{})
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			[]string{
+				accounts[0].Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			&types.QuerySpendableBalancesResponse{},
+			false,
+		},
+		{
+			"valid query with denom flag",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySpendableBalanceByDenomRequest{})
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			[]string{
+				accounts[0].Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				fmt.Sprintf("--%s=photon", cli.FlagDenom),
+			},
+			&types.QuerySpendableBalanceByDenomResponse{},
+			false,
+		},
+		{
+			"invalid Address",
+			func() client.Context {
+				return s.baseCtx
+			},
+			[]string{
+				"foo",
 			},
 			nil,
 			true,
@@ -134,7 +219,7 @@ func (s *CLITestSuite) TestGetCmdDenomsMetadata() {
 			"valid query",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QueryDenomsMetadataResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -149,7 +234,7 @@ func (s *CLITestSuite) TestGetCmdDenomsMetadata() {
 			"valid query with denom",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QueryDenomMetadataResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -164,7 +249,7 @@ func (s *CLITestSuite) TestGetCmdDenomsMetadata() {
 		{
 			"invalid query with denom",
 			func() client.Context {
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Code: 1,
 				})
 				return s.baseCtx.WithClient(c)
@@ -217,7 +302,7 @@ func (s *CLITestSuite) TestGetCmdQueryTotalSupply() {
 			"valid query",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QueryTotalSupplyResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -234,7 +319,7 @@ func (s *CLITestSuite) TestGetCmdQueryTotalSupply() {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySupplyOfResponse{
 					Amount: sdk.Coin{},
 				})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -249,7 +334,7 @@ func (s *CLITestSuite) TestGetCmdQueryTotalSupply() {
 		{
 			"invalid query with denom",
 			func() client.Context {
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Code: 1,
 				})
 				return s.baseCtx.WithClient(c)
@@ -305,7 +390,7 @@ func (s *CLITestSuite) TestGetCmdQuerySendEnabled() {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySendEnabledResponse{
 					SendEnabled: []*types.SendEnabled{},
 				})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -322,7 +407,7 @@ func (s *CLITestSuite) TestGetCmdQuerySendEnabled() {
 				bz, _ := s.encCfg.Codec.Marshal(&types.QuerySendEnabledResponse{
 					SendEnabled: []*types.SendEnabled{},
 				})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)

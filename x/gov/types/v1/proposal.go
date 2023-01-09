@@ -23,7 +23,7 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time, title, summary string, proposer sdk.AccAddress) (Proposal, error) {
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err
@@ -39,6 +39,9 @@ func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, dep
 		FinalTallyResult: &tally,
 		SubmitTime:       &submitTime,
 		DepositEndTime:   &depositEndTime,
+		Title:            title,
+		Summary:          summary,
+		Proposer:         proposer.String(),
 	}
 
 	return p, nil
@@ -95,7 +98,6 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 }
 
 // Format implements the fmt.Formatter interface.
-
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':

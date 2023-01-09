@@ -63,6 +63,15 @@ jq '.app_state.gov.voting_params.voting_period = "600s"' genesis.json > temp.jso
 jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > temp.json && mv temp.json genesis.json
 ```
 
+### Client Interaction
+
+When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended to not expose these endpoints without a proxy that can handle load balancing or authentication is setup between your node and the public. 
+
+:::tip
+A commonly used tool for this is [nginx](https://nginx.org).
+:::
+
+
 ## Adding Genesis Accounts
 
 Before starting the chain, you need to populate the state with at least one account. To do so, first [create a new account in the keyring](./00-keyring.md#adding-keys-to-the-keyring) named `my_validator` under the `test` keyring backend (feel free to choose another name and another backend).
@@ -70,7 +79,7 @@ Before starting the chain, you need to populate the state with at least one acco
 Now that you have created a local account, go ahead and grant it some `stake` tokens in your chain's genesis file. Doing so will also make sure your chain is aware of this account's existence:
 
 ```bash
-simd add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000stake
+simd genesis add-genesis-account $MY_VALIDATOR_ADDRESS 100000000000stake
 ```
 
 Recall that `$MY_VALIDATOR_ADDRESS` is a variable that holds the address of the `my_validator` key in the [keyring](./00-keyring.md#adding-keys-to-the-keyring). Also note that the tokens in the Cosmos SDK have the `{amount}{denom}` format: `amount` is is a 18-digit-precision decimal number, and `denom` is the unique token identifier with its denomination key (e.g. `atom` or `uatom`). Here, we are granting `stake` tokens, as `stake` is the token identifier used for staking in [`simapp`](https://github.com/cosmos/cosmos-sdk/tree/main/simapp). For your own chain with its own staking denom, that token identifier should be used instead.
@@ -79,10 +88,10 @@ Now that your account has some tokens, you need to add a validator to your chain
 
 ```bash
 # Create a gentx.
-simd gentx my_validator 100000000stake --chain-id my-test-chain --keyring-backend test
+simd genesis gentx my_validator 100000000stake --chain-id my-test-chain --keyring-backend test
 
 # Add the gentx to the genesis file.
-simd collect-gentxs
+simd genesis collect-gentxs
 ```
 
 A `gentx` does three things:
@@ -94,7 +103,7 @@ A `gentx` does three things:
 For more information on `gentx`, use the following command:
 
 ```bash
-simd gentx --help
+simd genesis gentx --help
 ```
 
 ## Configuring the Node Using `app.toml` and `config.toml`

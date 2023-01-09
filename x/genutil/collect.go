@@ -1,7 +1,5 @@
 package genutil
 
-// DONTCOVER
-
 import (
 	"encoding/json"
 	"errors"

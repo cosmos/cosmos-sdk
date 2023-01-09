@@ -13,7 +13,6 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -90,6 +89,14 @@ func NewAppModule(k keeper.Keeper) AppModule {
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs a no-op.
@@ -129,22 +136,18 @@ func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONCodec) json.RawMess
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(
-			ProvideModuleBasic,
 			ProvideModule,
 			ProvideSubspace,
 		))
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
+//nolint:revive
 type ParamsInputs struct {
 	depinject.In
 
@@ -154,18 +157,19 @@ type ParamsInputs struct {
 	LegacyAmino       *codec.LegacyAmino
 }
 
+//nolint:revive
 type ParamsOutputs struct {
 	depinject.Out
 
 	ParamsKeeper keeper.Keeper
-	Module       runtime.AppModuleWrapper
+	Module       appmodule.AppModule
 	GovHandler   govv1beta1.HandlerRoute
 }
 
 func ProvideModule(in ParamsInputs) ParamsOutputs {
 	k := keeper.NewKeeper(in.Cdc, in.LegacyAmino, in.KvStoreKey, in.TransientStoreKey)
 
-	m := runtime.WrapAppModule(NewAppModule(k))
+	m := NewAppModule(k)
 	govHandler := govv1beta1.HandlerRoute{RouteKey: proposal.RouterKey, Handler: NewParamChangeProposalHandler(k)}
 
 	return ParamsOutputs{ParamsKeeper: k, Module: m, GovHandler: govHandler}
@@ -184,7 +188,6 @@ func ProvideSubspace(in SubspaceInputs) types.Subspace {
 	kt, exists := in.KeyTables[moduleName]
 	if !exists {
 		return in.Keeper.Subspace(moduleName)
-	} else {
-		return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 	}
+	return in.Keeper.Subspace(moduleName).WithKeyTable(kt)
 }

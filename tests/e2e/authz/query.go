@@ -5,23 +5,22 @@ import (
 	"strings"
 	"time"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 )
 
-func (s *IntegrationTestSuite) TestQueryAuthorizations() {
+func (s *E2ETestSuite) TestQueryAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -47,7 +46,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 			[]string{
 				val.Address.String(),
 				"invalid grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			"decoding bech32 failed: invalid character in string: ' '",
@@ -57,7 +56,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 			[]string{
 				"invalid granter",
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			"decoding bech32 failed: invalid character in string: ' '",
@@ -67,7 +66,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 			[]string{
 				val.Address.String(),
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			``,
@@ -93,14 +92,14 @@ func (s *IntegrationTestSuite) TestQueryAuthorizations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryAuthorization() {
+func (s *E2ETestSuite) TestQueryAuthorization() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -127,7 +126,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				val.Address.String(),
 				"invalid grantee",
 				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			"",
@@ -138,7 +137,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				"invalid granter",
 				grantee.String(),
 				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			"",
@@ -149,7 +148,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				val.Address.String(),
 				grantee.String(),
 				"typeMsgSend",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			"",
@@ -160,7 +159,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				val.Address.String(),
 				grantee.String(),
 				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"100"}],"allow_list":[]}`,
@@ -171,7 +170,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 				val.Address.String(),
 				s.grantee[3].String(),
 				typeMsgSend,
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			fmt.Sprintf(`{"@type":"/cosmos.bank.v1beta1.SendAuthorization","spend_limit":[{"denom":"stake","amount":"88"}],"allow_list":["%s"]}`, s.grantee[4]),
@@ -194,7 +193,7 @@ func (s *IntegrationTestSuite) TestQueryAuthorization() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGranterGrants() {
+func (s *E2ETestSuite) TestQueryGranterGrants() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	require := s.Require()
@@ -210,7 +209,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrants() {
 			"invalid address",
 			[]string{
 				"invalid-address",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true,
 			"decoding bech32 failed",
@@ -220,7 +219,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrants() {
 			"no authorization found",
 			[]string{
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			"",
@@ -230,7 +229,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrants() {
 			"valid case",
 			[]string{
 				val.Address.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			"",
@@ -241,7 +240,7 @@ func (s *IntegrationTestSuite) TestQueryGranterGrants() {
 			[]string{
 				val.Address.String(),
 				"--limit=2",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false,
 			"",

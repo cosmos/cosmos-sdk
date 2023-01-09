@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -18,6 +17,7 @@ import (
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
+	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
@@ -26,7 +26,7 @@ import (
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -34,12 +34,12 @@ type IntegrationTestSuite struct {
 	grantee []sdk.AccAddress
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -66,7 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.msgSendExec(s.grantee[1])
 
 	// grant send authorization to grantee2
-	out, err := CreateGrant(val, []string{
+	out, err := authzclitestutil.CreateGrant(val.ClientCtx, []string{
 		s.grantee[1].String(),
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee[2] = s.createAccount("grantee3")
 
 	// grant send authorization to grantee3
-	_, err = CreateGrant(val, []string{
+	_, err = authzclitestutil.CreateGrant(val.ClientCtx, []string{
 		s.grantee[2].String(),
 		"send",
 		fmt.Sprintf("--%s=100stake", cli.FlagSpendLimit),
@@ -107,8 +107,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.grantee[5] = s.createAccount("grantee6")
 
 	// grant send authorization with allow list to grantee4
-	out, err = CreateGrant(
-		val,
+	out, err = authzclitestutil.CreateGrant(val.ClientCtx,
 		[]string{
 			s.grantee[3].String(),
 			"send",
@@ -128,7 +127,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, 0))
 }
 
-func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
+func (s *E2ETestSuite) createAccount(uid string) sdk.AccAddress {
 	val := s.network.Validators[0]
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -140,7 +139,7 @@ func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
 	return addr
 }
 
-func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
+func (s *E2ETestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := s.network.Validators[0]
 	// Send some funds to the new account.
 	out, err := clitestutil.MsgSendExec(
@@ -156,8 +155,8 @@ func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
@@ -167,7 +166,7 @@ var (
 	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
 )
 
-func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
+func (s *E2ETestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 
@@ -513,10 +512,7 @@ func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			out, err := CreateGrant(
-				val,
-				tc.args,
-			)
+			out, err := authzclitestutil.CreateGrant(val.ClientCtx, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err, out)
 				s.Require().Contains(err.Error(), tc.expErrMsg)
@@ -536,15 +532,15 @@ func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter,
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 }
 
-func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
+func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// send-authorization
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -560,8 +556,8 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// generic-authorization
-	_, err = CreateGrant(
-		val,
+	_, err = authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -577,8 +573,8 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// generic-authorization used for amino testing
-	_, err = CreateGrant(
-		val,
+	_, err = authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -686,13 +682,13 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
+func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -729,13 +725,13 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode()))
 }
 
-func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
+func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"generic",
@@ -832,14 +828,14 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
+func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	grantee1 := s.grantee[2]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -943,15 +939,15 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
+func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[3]
 	allowedAddr := s.grantee[4]
 	notAllowedAddr := s.grantee[5]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"send",
@@ -1028,18 +1024,18 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query tx and check result
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot send to %s address", notAllowedAddr))
 }
 
-func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
+func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"delegate",
@@ -1132,8 +1128,8 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 
 	// test delegate no spend-limit
-	_, err = CreateGrant(
-		val,
+	_, err = authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"delegate",
@@ -1212,8 +1208,8 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	}
 
 	// test delegating to denied validator
-	_, err = CreateGrant(
-		val,
+	_, err = authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"delegate",
@@ -1245,19 +1241,19 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 
 	// query tx and check result
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.ValAddress.String()))
 }
 
-func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
+func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
 
 	// granting undelegate msg authorization
-	_, err := CreateGrant(
-		val,
+	_, err := authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"unbond",
@@ -1367,8 +1363,8 @@ func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
 	}
 
 	// grant undelegate authorization without limit
-	_, err = CreateGrant(
-		val,
+	_, err = authzclitestutil.CreateGrant(
+		val.ClientCtx,
 		[]string{
 			grantee.String(),
 			"unbond",

@@ -645,7 +645,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			if err == nil && status != nil {
 				latestHeight = status.SyncInfo.LatestBlockHeight
 				if latestHeight > h {
-					return latestHeight, nil
+					return h, nil
 				}
 			}
 		}

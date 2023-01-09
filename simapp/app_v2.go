@@ -253,7 +253,7 @@ func NewSimApp(
 	mempoolOpt := baseapp.SetMempool(nonceMempool)
 
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, app *baseapp.BaseApp, runTx func([]byte) error, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, bapp *baseapp.BaseApp, runTx func([]byte) error, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 			var (
 				txsBytes  [][]byte
 				byteCount int64
@@ -264,7 +264,7 @@ func NewSimApp(
 				memTx := iterator.Tx()
 
 				// TODO: Is it ok to get the txEncoder from here?
-				bz, err := app.TxEncoder(memTx)
+				bz, err := bapp.TxEncoder(memTx)
 				if err != nil {
 					panic(err)
 				}

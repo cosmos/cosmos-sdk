@@ -1381,7 +1381,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	}
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, _ *baseapp.BaseApp, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, _ *baseapp.BaseApp, _ func([]byte) error, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
 			require.Equal(t, "foo", string(value))
@@ -1505,7 +1505,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 	prepareOpt := func(app *baseapp.BaseApp) {
-		app.SetPrepareProposal(func(ctx sdk.Context, _ *baseapp.BaseApp, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		app.SetPrepareProposal(func(ctx sdk.Context, _ *baseapp.BaseApp, _ func([]byte) error, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 			panic(errors.New("test"))
 		})
 	}
@@ -1528,7 +1528,7 @@ func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 
 func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 	processOpt := func(app *baseapp.BaseApp) {
-		app.SetProcessProposal(func(ctx sdk.Context, app *baseapp.BaseApp, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		app.SetProcessProposal(func(ctx sdk.Context, app *baseapp.BaseApp, _ func([]byte) error, rpp abci.RequestProcessProposal) abci.ResponseProcessProposal {
 			panic(errors.New("test"))
 		})
 	}

@@ -59,7 +59,7 @@ func TestGetQueryCmd(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		s.Run(name, func(t. *testing.T) {
+		s.Run(name, func(t *testing.T) {
 			cmd := cli.GetQueryCmd()
 			clientCtx := val.ClientCtx
 

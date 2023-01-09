@@ -1,7 +1,5 @@
 package types
 
-import codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 // Handler defines the core of the state transition function of an application.
 type Handler func(ctx Context, msg Msg) (*Result, error)
 
@@ -11,7 +9,7 @@ type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err er
 
 // PostHandler like AnteHandler but it executes after RunMsgs. Runs on success
 // or failure and enables use cases like gas refunding.
-type PostHandler func(ctx Context, tx Tx, msgResponses []*codectypes.Any, simulate, success bool) (newCtx Context, err error)
+type PostHandler func(ctx Context, tx Tx, gasMeter GasMeter, simulate, success bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre-processing.
 type AnteDecorator interface {
@@ -20,10 +18,10 @@ type AnteDecorator interface {
 
 // PostDecorator wraps the next PostHandler to perform custom post-processing.
 type PostDecorator interface {
-	PostHandle(ctx Context, tx Tx, msgResponses []*codectypes.Any, simulate, success bool, next PostHandler) (newCtx Context, err error)
+	PostHandle(ctx Context, tx Tx, gasMeter GasMeter, simulate, success bool, next PostHandler) (newCtx Context, err error)
 }
 
-// ChainDecorator chains AnteDecorators together with each AnteDecorator
+// ChainAnteDecorators ChainDecorator chains AnteDecorators together with each AnteDecorator
 // wrapping over the decorators further along chain and returns a single AnteHandler.
 //
 // NOTE: The first element is outermost decorator, while the last element is innermost
@@ -70,8 +68,8 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 		chain = append(chain, Terminator{})
 	}
 
-	return func(ctx Context, tx Tx, msgResponses []*codectypes.Any, simulate, success bool) (Context, error) {
-		return chain[0].PostHandle(ctx, tx, msgResponses, simulate, success, ChainPostDecorators(chain[1:]...))
+	return func(ctx Context, tx Tx, gasMeter GasMeter, simulate, success bool) (Context, error) {
+		return chain[0].PostHandle(ctx, tx, gasMeter, simulate, success, ChainPostDecorators(chain[1:]...))
 	}
 }
 
@@ -100,7 +98,7 @@ func (t Terminator) AnteHandle(ctx Context, _ Tx, _ bool, _ AnteHandler) (Contex
 	return ctx, nil
 }
 
-// PostHandler returns the provided Context and nil error
-func (t Terminator) PostHandle(ctx Context, _ Tx, _ []*codectypes.Any, _, _ bool, _ PostHandler) (Context, error) {
+// PostHandle returns the provided Context and nil error
+func (t Terminator) PostHandle(ctx Context, _ Tx, _ GasMeter, _, _ bool, _ PostHandler) (Context, error) {
 	return ctx, nil
 }

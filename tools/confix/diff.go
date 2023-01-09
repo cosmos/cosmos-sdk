@@ -28,9 +28,9 @@ type Diff struct {
 	KV KV
 }
 
-// DiffDocs diffs the keyspaces of the TOML documents in files lhs and rhs.
+// DiffKeys diffs the keyspaces of the TOML documents in files lhs and rhs.
 // Comments, order, and values are ignored for comparison purposes.
-func DiffDocs(lhs, rhs *tomledit.Document) []Diff {
+func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
 	diff := diffSections(lhs.Global, rhs.Global)
 
 	lsec, rsec := lhs.Sections, rhs.Sections

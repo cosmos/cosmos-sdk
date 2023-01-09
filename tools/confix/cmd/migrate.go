@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"cosmossdk.io/tools/confix"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -50,7 +49,7 @@ In case of any error in updating the file, no output is written.`,
 
 			ctx := context.Background()
 			if FlagVerbose {
-				ctx = confix.WithLogWriter(ctx, os.Stderr)
+				ctx = confix.WithLogWriter(ctx, cmd.ErrOrStderr())
 			}
 
 			outputPath := filename

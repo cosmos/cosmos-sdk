@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"cosmossdk.io/tools/confix"
@@ -69,7 +68,7 @@ func SetCommand() *cobra.Command {
 
 			ctx := cmd.Context()
 			if FlagVerbose {
-				ctx = confix.WithLogWriter(ctx, os.Stderr)
+				ctx = confix.WithLogWriter(ctx, cmd.ErrOrStderr())
 			}
 
 			return confix.Upgrade(ctx, plan, filename, outputPath, FlagSkipValidate)

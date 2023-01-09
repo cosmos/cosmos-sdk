@@ -49,7 +49,7 @@ func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 
 	deletedSections := map[string]bool{}
 
-	diffs := DiffDocs(from, target)
+	diffs := DiffKeys(from, target)
 	for _, diff := range diffs {
 		diff := diff
 		kv := diff.KV

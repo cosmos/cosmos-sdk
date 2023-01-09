@@ -1,36 +1,16 @@
 package cmd
 
 import (
-	"cosmossdk.io/tools/confix"
 	"github.com/spf13/cobra"
 )
 
 func DiffCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "condiff f1 f2",
-		Short: "Diff the keyspaces of the TOML documents in files f1 and f2",
-		Long: `Diff the keyspaces of the TOML documents in files f1 and f2.
-The output prints one line per key that differs:
-
-   -S name    -- section exists in f1 but not f2
-   +S name    -- section exists in f2 but not f1
-   -M name    -- mapping exists in f1 but not f2
-   +M name    -- mapping exists in f2 but not f1
-
-Comments, order, and values are ignored for comparison purposes.`,
-		Args: cobra.ExactArgs(2),
+		Use:   "diff [config]",
+		Short: "Display the diff between the current config and the SDK default config",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			lhs, err := confix.LoadConfig(args[0])
-			if err != nil {
-				return err
-			}
-
-			rhs, err := confix.LoadConfig(args[1])
-			if err != nil {
-				return err
-			}
-
-			confix.PrintDiff(cmd.OutOrStdout(), confix.DiffDocs(lhs, rhs))
+			// TODO to implement in the next PR
 			return nil
 		},
 	}

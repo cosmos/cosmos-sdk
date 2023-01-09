@@ -14,6 +14,7 @@ func ConfigCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		MigrateCommand(),
+		DiffCommand(),
 		GetCommand(),
 		SetCommand(),
 	)

@@ -276,7 +276,7 @@ func DefaultConfig() *Config {
 			PruningInterval:     "0",
 			MinRetainBlocks:     0,
 			IndexEvents:         make([]string, 0),
-			IAVLCacheSize:       781250, // 50 MB
+			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			AppDBBackend:        "",
 		},

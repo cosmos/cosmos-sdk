@@ -454,7 +454,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto
 
 It's expected to fail if:
 
-* metadata length is greater than `MaxMetadataLen` config.
+* metadata, title, or summary length is greater than `MaxMetadataLen` config.
 * if any of the proposers is not a group member.
 
 ### Msg/WithdrawProposal
@@ -848,6 +848,8 @@ proposal:
     no_count: "0"
     veto_count: "0"
     yes_count: "0"
+  summary: "Summary"
+  title: "Title"
 ```
 
 ##### proposals-by-group-policy
@@ -897,6 +899,8 @@ proposals:
     no_count: "0"
     veto_count: "0"
     yes_count: "0"
+  summary: "Summary"
+  title: "Title"
 ```
 
 ##### vote
@@ -988,7 +992,7 @@ The `tx` commands allow users to interact with the `group` module.
 simd tx group --help
 ```
 
-##### create-group
+#### create-group
 
 The `create-group` command allows users to create a group which is an aggregation of member accounts with associated weights and
 an administrator account.
@@ -1003,7 +1007,7 @@ Example:
 simd tx group create-group cosmos1.. "AQ==" members.json
 ```
 
-##### update-group-admin
+#### update-group-admin
 
 The `update-group-admin` command allows users to update a group's admin.
 
@@ -1017,7 +1021,7 @@ Example:
 simd tx group update-group-admin cosmos1.. 1 cosmos1..
 ```
 
-##### update-group-members
+#### update-group-members
 
 The `update-group-members` command allows users to update a group's members.
 
@@ -1031,7 +1035,7 @@ Example:
 simd tx group update-group-members cosmos1.. 1 members.json
 ```
 
-##### update-group-metadata
+#### update-group-metadata
 
 The `update-group-metadata` command allows users to update a group's metadata.
 
@@ -1045,7 +1049,7 @@ Example:
 simd tx group update-group-metadata cosmos1.. 1 "AQ=="
 ```
 
-##### create-group-policy
+#### create-group-policy
 
 The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy.
 
@@ -1059,7 +1063,7 @@ Example:
 simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-##### create-group-with-policy
+#### create-group-with-policy
 
 The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
 
@@ -1073,7 +1077,7 @@ Example:
 simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-##### update-group-policy-admin
+#### update-group-policy-admin
 
 The `update-group-policy-admin` command allows users to update a group policy admin.
 
@@ -1087,7 +1091,7 @@ Example:
 simd tx group update-group-policy-admin cosmos1.. cosmos1.. cosmos1..
 ```
 
-##### update-group-policy-metadata
+#### update-group-policy-metadata
 
 The `update-group-policy-metadata` command allows users to update a group policy metadata.
 
@@ -1101,7 +1105,7 @@ Example:
 simd tx group update-group-policy-metadata cosmos1.. cosmos1.. "AQ=="
 ```
 
-##### update-group-policy-decision-policy
+#### update-group-policy-decision-policy
 
 The `update-group-policy-decision-policy` command allows users to update a group policy's decision policy.
 
@@ -1115,7 +1119,7 @@ Example:
 simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-##### create-proposal
+#### create-proposal
 
 The `create-proposal` command allows users to submit a new proposal.
 
@@ -1129,7 +1133,7 @@ Example:
 simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
 ```
 
-##### withdraw-proposal
+#### withdraw-proposal
 
 The `withdraw-proposal` command allows users to withdraw a proposal.
 
@@ -1143,7 +1147,7 @@ Example:
 simd tx group withdraw-proposal 1 cosmos1..
 ```
 
-##### vote
+#### vote
 
 The `vote` command allows users to vote on a proposal.
 
@@ -1157,7 +1161,7 @@ Example:
 simd tx group vote 1 cosmos1.. CHOICE_YES "AQ=="
 ```
 
-##### exec
+#### exec
 
 The `exec` command allows users to execute a proposal.
 
@@ -1171,7 +1175,7 @@ Example:
 simd tx group exec 1
 ```
 
-##### leave-group
+#### leave-group
 
 The `leave-group` command allows group member to leave the group.
 
@@ -1452,9 +1456,11 @@ Example Output:
       "voting_period": "432000s"
     },
     "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-    "msgs": [
+    "messages": [
       {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
-    ]
+    ],
+    "title": "Title",
+    "summary": "Summary",
   }
 }
 ```
@@ -1501,9 +1507,11 @@ Example Output:
         "voting_period": "432000s"
       },
       "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-      "msgs": [
+      "messages": [
         {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
-      ]
+      ],
+      "title": "Title",
+      "summary": "Summary",
     }
   ],
   "pagination": {
@@ -1911,7 +1919,7 @@ Example Output:
       "voting_period": "432000s"
     },
     "executor_result": "EXECUTOR_RESULT_NOT_RUN",
-    "msgs": [
+    "messages": [
       {
         "@type": "/cosmos.bank.v1beta1.MsgSend",
         "from_address": "cosmos1..",
@@ -1923,7 +1931,9 @@ Example Output:
           }
         ]
       }
-    ]
+    ],
+    "title": "Title",
+    "summary": "Summary",
   }
 }
 ```
@@ -1970,7 +1980,7 @@ Example Output:
         "voting_period": "432000s"
       },
       "executor_result": "EXECUTOR_RESULT_NOT_RUN",
-      "msgs": [
+      "messages": [
         {
           "@type": "/cosmos.bank.v1beta1.MsgSend",
           "from_address": "cosmos1..",
@@ -2106,6 +2116,11 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
   "vote_option_context": "",
 }
 ```
+
+:::note
+The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+:::
 
 ### Vote
 

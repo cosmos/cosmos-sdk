@@ -34,3 +34,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#14134](https://github.com/cosmos/cosmos-sdk/pull/14134) Initialise core (Prefix, KeyEncoder, ValueEncoder, Map).
 * [#14351](https://github.com/cosmos/cosmos-sdk/pull/14351) Add keyset
 * [#14364](https://github.com/cosmos/cosmos-sdk/pull/14364) Add sequence
+* [#14468](https://github.com/cosmos/cosmos-sdk/pull/14468) Add Map.IterateRaw API.

@@ -248,10 +248,23 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
+
+	// Tendermint must never call PrepareProposal with a height of 0.
+	// Ref: https://github.com/tendermint/tendermint/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	if req.Height < 1 {
+		panic("PrepareProposal called with invalid height")
+	}
+
+	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
+
+	ctx = ctx.WithVoteInfos(app.voteInfos).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -289,13 +302,15 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.processProposalState.ctx.
+	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
+
+	ctx = ctx.
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -927,4 +942,15 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+// getContextForProposal returns the right context for PrepareProposal and
+// ProcessProposal. We use deliverState on the first block to be able to access
+// any state changes made in InitChain.
+func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
+	if height == 1 {
+		ctx, _ = app.deliverState.ctx.CacheContext()
+		return ctx
+	}
+	return ctx
 }

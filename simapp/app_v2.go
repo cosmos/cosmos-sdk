@@ -249,6 +249,9 @@ func NewSimApp(
 		panic(err)
 	}
 
+	nonceMempool := mempool.NewSenderNonceMempool()
+	mempoolOpt := baseapp.SetMempool(nonceMempool)
+
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
 		// pool := mempool.NoOpMempool{}
 		// baseapp.SetMempool(pool)(bapp) // <- this way doesn't work
@@ -314,10 +317,8 @@ func NewSimApp(
 			return types.ResponsePrepareProposal{Txs: txsBytes}
 		})
 	}
-	// setPrepareProcessProposal = func(bapp *baseapp.BaseApp) {
-	// 	bapp.SetPrepareProposal(bapp.DefaultPrepareProposal())
-	// }
-	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal)
+
+	baseAppOptions = append(baseAppOptions, setPrepareProcessProposal, mempoolOpt)
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	if err := app.App.BaseApp.SetStreamingService(appOpts, app.appCodec, app.kvStoreKeys()); err != nil {

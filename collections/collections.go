@@ -105,7 +105,7 @@ type KeyCodec[T any] interface {
 	// like Pair when the part of the key being decoded is not the
 	// last one. It returns the amount of bytes read.
 	DecodeNonTerminal(buffer []byte) (int, T, error)
-	// SizeNonTerminal returns the size of the key K when used in
+	// SizeNonTerminal returns the maximum size of the key K when used in
 	// multipart keys like Pair.
 	SizeNonTerminal(key T) int
 }

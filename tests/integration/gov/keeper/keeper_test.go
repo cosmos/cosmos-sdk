@@ -32,6 +32,9 @@ type fixture struct {
 	legacyMsgSrvr     v1beta1.MsgServer
 }
 
+// initFixture uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators` which is used in most of the
+// gov keeper tests.
 func initFixture(t *testing.T) *fixture {
 	f := &fixture{}
 

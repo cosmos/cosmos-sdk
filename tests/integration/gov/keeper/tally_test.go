@@ -3,10 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
-
-	"cosmossdk.io/simapp"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +13,10 @@ import (
 )
 
 func TestTallyNoOneVotes(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	createValidators(t, ctx, app, []int64{5, 5, 5})
 
@@ -38,8 +37,10 @@ func TestTallyNoOneVotes(t *testing.T) {
 }
 
 func TestTallyNoQuorum(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	createValidators(t, ctx, app, []int64{2, 5, 0})
 
@@ -63,8 +64,10 @@ func TestTallyNoQuorum(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAllYes(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
 	tp := TestProposal
@@ -89,8 +92,10 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51No(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
 
@@ -113,8 +118,10 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 }
 
 func TestTallyOnlyValidators51Yes(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 0})
 
@@ -138,8 +145,10 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsVetoed(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
@@ -164,8 +173,10 @@ func TestTallyOnlyValidatorsVetoed(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
@@ -190,8 +201,10 @@ func TestTallyOnlyValidatorsAbstainPasses(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{6, 6, 7})
 
@@ -216,8 +229,10 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 }
 
 func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	valAccAddrs, _ := createValidators(t, ctx, app, []int64{5, 6, 7})
 	valAccAddr1, valAccAddr2 := valAccAddrs[0], valAccAddrs[1]
@@ -242,8 +257,10 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 }
 
 func TestTallyDelgatorOverride(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{5, 6, 7})
 
@@ -278,8 +295,10 @@ func TestTallyDelgatorOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorInherit(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
@@ -313,8 +332,10 @@ func TestTallyDelgatorInherit(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleOverride(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	addrs, vals := createValidators(t, ctx, app, []int64{5, 6, 7})
 
@@ -353,8 +374,10 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 }
 
 func TestTallyDelgatorMultipleInherit(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	createValidators(t, ctx, app, []int64{25, 6, 7})
 
@@ -394,8 +417,10 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 }
 
 func TestTallyJailedValidator(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{25, 6, 7})
 
@@ -437,8 +462,10 @@ func TestTallyJailedValidator(t *testing.T) {
 }
 
 func TestTallyValidatorMultipleDelegations(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	t.Parallel()
+	f := initFixture(t)
+
+	app, ctx := f.app, f.ctx
 
 	addrs, valAddrs := createValidators(t, ctx, app, []int64{10, 10, 10})
 

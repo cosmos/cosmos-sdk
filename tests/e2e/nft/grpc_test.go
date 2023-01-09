@@ -2,13 +2,20 @@ package nft
 
 import (
 	"fmt"
+	"strings"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/x/nft"
+	"gotest.tools/v3/assert"
 )
 
-func (s *E2ETestSuite) TestQueryBalanceGRPC() {
-	val := s.network.Validators[0]
+func TestQueryBalanceGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 	testCases := []struct {
 		name string
 		args struct {
@@ -16,7 +23,7 @@ func (s *E2ETestSuite) TestQueryBalanceGRPC() {
 			Owner   string
 		}
 		expectErr   bool
-		errMsg      string
+		errorMsg    string
 		expectValue uint64
 	}{
 		{
@@ -26,7 +33,7 @@ func (s *E2ETestSuite) TestQueryBalanceGRPC() {
 				Owner   string
 			}{
 				ClassID: ExpNFT.ClassId,
-				Owner:   s.owner.String(),
+				Owner:   f.owner.String(),
 			},
 			expectErr:   false,
 			expectValue: 0,
@@ -47,22 +54,26 @@ func (s *E2ETestSuite) TestQueryBalanceGRPC() {
 	balanceURL := val.APIAddress + "/cosmos/nft/v1beta1/balance/%s/%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(balanceURL, tc.args.Owner, tc.args.ClassID)
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, _ := testutil.GetRequest(uri)
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errMsg)
+				assert.Assert(t, strings.Contains(string(resp), tc.errorMsg))
 			} else {
 				var g nft.QueryBalanceResponse
 				err := val.ClientCtx.Codec.UnmarshalJSON(resp, &g)
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectValue, g.Amount)
+				assert.NilError(t, err)
+				assert.Equal(t, tc.expectValue, g.Amount)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryOwnerGRPC() {
-	val := s.network.Validators[0]
+func TestQueryOwnerGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 
 	testCases := []struct {
 		name string
@@ -71,7 +82,7 @@ func (s *E2ETestSuite) TestQueryOwnerGRPC() {
 			ID      string
 		}
 		expectErr    bool
-		errMsg       string
+		errorMsg     string
 		expectResult string
 	}{
 		{
@@ -114,23 +125,28 @@ func (s *E2ETestSuite) TestQueryOwnerGRPC() {
 	ownerURL := val.APIAddress + "/cosmos/nft/v1beta1/owner/%s/%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(ownerURL, tc.args.ClassID, tc.args.ID)
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errMsg)
+				assert.ErrorContains(t, err, "not found")
+				assert.Assert(t, strings.Contains(string(resp), tc.errorMsg))
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				var result nft.QueryOwnerResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult, result.Owner)
+				assert.NilError(t, err)
+				assert.DeepEqual(t, tc.expectResult, result.Owner)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQuerySupplyGRPC() {
-	val := s.network.Validators[0]
+func TestQuerySupplyGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 
 	testCases := []struct {
 		name string
@@ -138,7 +154,7 @@ func (s *E2ETestSuite) TestQuerySupplyGRPC() {
 			ClassID string
 		}
 		expectErr    bool
-		errMsg       string
+		errorMsg     string
 		expectResult uint64
 	}{
 		{
@@ -149,7 +165,7 @@ func (s *E2ETestSuite) TestQuerySupplyGRPC() {
 				ClassID: "",
 			},
 			expectErr:    true,
-			errMsg:       nft.ErrEmptyClassID.Error(),
+			errorMsg:     nft.ErrEmptyClassID.Error(),
 			expectResult: 0,
 		},
 		{
@@ -176,23 +192,28 @@ func (s *E2ETestSuite) TestQuerySupplyGRPC() {
 	supplyURL := val.APIAddress + "/cosmos/nft/v1beta1/supply/%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(supplyURL, tc.args.ClassID)
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errMsg)
+				assert.ErrorContains(t, err, "not found")
+				assert.Assert(t, strings.Contains(string(resp), tc.errorMsg))
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				var result nft.QuerySupplyResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult, result.Amount)
+				assert.NilError(t, err)
+				assert.DeepEqual(t, tc.expectResult, result.Amount)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryNFTsGRPC() {
-	val := s.network.Validators[0]
+func TestQueryNFTsGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 	testCases := []struct {
 		name string
 		args struct {
@@ -273,23 +294,28 @@ func (s *E2ETestSuite) TestQueryNFTsGRPC() {
 	nftsOfClassURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts?class_id=%s&owner=%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(nftsOfClassURL, tc.args.ClassID, tc.args.Owner)
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errorMsg)
+				assert.ErrorContains(t, err, "not found")
+				assert.Assert(t, strings.Contains(string(resp), tc.errorMsg))
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				var result nft.QueryNFTsResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(tc.expectResult, result.Nfts)
+				assert.NilError(t, err)
+				assert.DeepEqual(t, tc.expectResult, result.Nfts)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryNFTGRPC() {
-	val := s.network.Validators[0]
+func TestQueryNFTGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 	testCases := []struct {
 		name string
 		args struct {
@@ -338,23 +364,28 @@ func (s *E2ETestSuite) TestQueryNFTGRPC() {
 	nftURL := val.APIAddress + "/cosmos/nft/v1beta1/nfts/%s/%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(nftURL, tc.args.ClassID, tc.args.ID)
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errorMsg)
+				assert.ErrorContains(t, err, "not found")
+				assert.Assert(t, strings.Contains(string(resp), tc.errorMsg))
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				var result nft.QueryNFTResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(ExpNFT, *result.Nft)
+				assert.NilError(t, err)
+				assert.DeepEqual(t, ExpNFT, *result.Nft)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryClassGRPC() {
-	val := s.network.Validators[0]
+func TestQueryClassGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 	testCases := []struct {
 		name string
 		args struct {
@@ -386,29 +417,34 @@ func (s *E2ETestSuite) TestQueryClassGRPC() {
 	classURL := val.APIAddress + "/cosmos/nft/v1beta1/classes/%s"
 	for _, tc := range testCases {
 		uri := fmt.Sprintf(classURL, tc.args.ClassID)
-		s.Run(tc.name, func() {
+		t.Run(tc.name, func(t *testing.T) {
 			resp, err := testutil.GetRequest(uri)
 			if tc.expectErr {
-				s.Require().Contains(string(resp), tc.errorMsg)
+				assert.ErrorContains(t, err, "not found")
+				assert.Assert(t, strings.Contains(string(resp), tc.errorMsg))
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 				var result nft.QueryClassResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-				s.Require().NoError(err)
-				s.Require().EqualValues(ExpClass, *result.Class)
+				assert.NilError(t, err)
+				assert.DeepEqual(t, ExpClass, *result.Class)
 			}
 		})
 	}
 }
 
-func (s *E2ETestSuite) TestQueryClassesGRPC() {
-	val := s.network.Validators[0]
+func TestQueryClassesGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 	classURL := val.APIAddress + "/cosmos/nft/v1beta1/classes"
 	resp, err := testutil.GetRequest(classURL)
-	s.Require().NoError(err)
+	assert.NilError(t, err)
 	var result nft.QueryClassesResponse
 	err = val.ClientCtx.Codec.UnmarshalJSON(resp, &result)
-	s.Require().NoError(err)
-	s.Require().Len(result.Classes, 1)
-	s.Require().EqualValues(ExpClass, *result.Classes[0])
+	assert.NilError(t, err)
+	assert.Assert(t, len(result.Classes) == 1)
+	assert.DeepEqual(t, ExpClass, *result.Classes[0])
 }

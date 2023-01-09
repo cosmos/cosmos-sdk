@@ -8,7 +8,6 @@
 package mock
 
 import (
-	"github.com/cosmos/cosmos-sdk/store"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -77,15 +76,15 @@ func (m *MockPostDecorator) EXPECT() *MockPostDecoratorMockRecorder {
 }
 
 // PostHandle mocks base method.
-func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, gasMeter store.GasMeter, simulate, success bool, next types.PostHandler) (types.Context, error) {
+func (m *MockPostDecorator) PostHandle(ctx types.Context, tx types.Tx, simulate, success bool, next types.PostHandler) (types.Context, error) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PostHandle", ctx, tx, gasMeter, simulate, success, next)
+	m.ctrl.Call(m, "PostHandle", ctx, tx, simulate, success, next)
 	// NOTE: we need to edit the generated code to call the "next handler"
-	return next(ctx, tx, gasMeter, simulate, success)
+	return next(ctx, tx, simulate, success)
 }
 
 // PostHandle indicates an expected call of PostHandle.
-func (mr *MockPostDecoratorMockRecorder) PostHandle(ctx, tx, gasMeter, simulate, success, next interface{}) *gomock.Call {
+func (mr *MockPostDecoratorMockRecorder) PostHandle(ctx, tx, simulate, success, next interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostHandle", reflect.TypeOf((*MockPostDecorator)(nil).PostHandle), ctx, tx, gasMeter, simulate, success, next)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PostHandle", reflect.TypeOf((*MockPostDecorator)(nil).PostHandle), ctx, tx, simulate, success, next)
 }

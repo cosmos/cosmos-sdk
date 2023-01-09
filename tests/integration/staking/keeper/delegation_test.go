@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -19,7 +18,7 @@ import (
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
+	addrDels := simtestutil.AddTestAddrsIncremental(app.BankKeeper, app.StakingKeeper, ctx, 1, sdk.NewInt(10000))
 	addrVals := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)

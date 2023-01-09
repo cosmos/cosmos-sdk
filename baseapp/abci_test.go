@@ -1381,7 +1381,7 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	}
 
 	prepareOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, _ *baseapp.BaseApp, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
 			require.Equal(t, "foo", string(value))

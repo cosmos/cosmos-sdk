@@ -144,3 +144,5 @@ require (
 	pgregory.net/rapid v0.5.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

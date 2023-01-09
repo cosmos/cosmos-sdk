@@ -25,7 +25,7 @@ The main changes in this release are:
 * Dependency Injection / App Wiring
     * [App Wiring](https://docs.cosmos.network/v0.47/building-apps/app-go-v2) is ready for community feedback and testing. It allows to build a chain with less boilerplate by removing the need to manually wire a chain.
     * Community feedback will be implemented in the following releases which can lead to API breakage (`runtime` and [`depinject`](https://docs.cosmos.network/v0.47/tooling/depinject) are `pre-1.0`).
-    * Manually wiring an application is still possible and will always be supported.
+    * Manually wiring an application is still possible and will always remain supported.
 
 * Removal of the [proposer-based rewards](https://github.com/cosmos/cosmos-sdk/issues/12667) from `x/distribution`.
     * This removes unfairness towards smaller validators.

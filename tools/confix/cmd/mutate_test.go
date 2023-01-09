@@ -29,9 +29,7 @@ func initClientContext(t *testing.T) (client.Context, func()) {
 
 func TestSetCmd(t *testing.T) {
 	clientCtx, cleanup := initClientContext(t)
-	defer func() {
-		cleanup()
-	}()
+	defer cleanup()
 
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.SetCommand(), []string{"unexisting", "foo", "foo"})
 	assert.ErrorContains(t, err, "no such file or directory")
@@ -51,9 +49,7 @@ func TestSetCmd(t *testing.T) {
 
 func TestGetCmd(t *testing.T) {
 	clientCtx, cleanup := initClientContext(t)
-	defer func() {
-		cleanup()
-	}()
+	defer cleanup()
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd.GetCommand(), []string{"client", "chain-id"})
 	assert.NilError(t, err)

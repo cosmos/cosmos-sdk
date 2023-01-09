@@ -1879,7 +1879,7 @@ type MsgUpdateParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// constant_fee defines the x/crisis parameter.
 	ConstantFee *v1beta1.Coin `protobuf:"bytes,2,opt,name=constant_fee,json=constantFee,proto3" json:"constant_fee,omitempty"`

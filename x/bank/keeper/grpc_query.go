@@ -55,10 +55,6 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
 		denom := string(key)
-		if err := sdk.ValidateDenom(denom); err != nil {
-			return status.Error(codes.InvalidArgument, err.Error())
-		}
-
 		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
 		if err != nil {
 			return err

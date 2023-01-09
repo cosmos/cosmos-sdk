@@ -1,20 +1,29 @@
+//go:build e2e
+// +build e2e
+
 package mint
 
 import (
 	"fmt"
+	"testing"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
+	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/gogoproto/proto"
 
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-func (s *E2ETestSuite) TestQueryGRPC() {
-	val := s.network.Validators[0]
+func TestQueryGRPC(t *testing.T) {
+	t.Parallel()
+	f, cleanup := initFixture(t)
+	defer cleanup()
+
+	val := f.network.Validators[0]
 	baseURL := val.APIAddress
 	testCases := []struct {
 		name     string
@@ -56,10 +65,10 @@ func (s *E2ETestSuite) TestQueryGRPC() {
 	}
 	for _, tc := range testCases {
 		resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
-		s.Run(tc.name, func() {
-			s.Require().NoError(err)
-			s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
-			s.Require().Equal(tc.expected.String(), tc.respType.String())
+		t.Run(tc.name, func(t *testing.T) {
+			assert.NilError(t, err)
+			assert.NilError(t, val.ClientCtx.Codec.UnmarshalJSON(resp, tc.respType))
+			assert.Equal(t, tc.expected.String(), tc.respType.String())
 		})
 	}
 }

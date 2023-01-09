@@ -13,7 +13,7 @@ The main changes in this release are:
     * Allows chains to set their own mempool implementation.
     * Support of the new `PrepareProposal` and `ProcessProposal` ABCI methods.
 
-* Deprecation of `x/params` modules.
+* Deprecation of the `x/params` module.
     * Modules params are now handled directly by the modules themselves, with the message `MsgUpdateParams`.
     * All core modules have migrated away from `x/params`. It is recommended to migrate your custom modules as well.
 

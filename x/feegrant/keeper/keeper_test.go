@@ -314,7 +314,6 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
 	now := suite.ctx.BlockTime()
 	oneYearExpiry := now.AddDate(1, 0, 0)
-	// oneDay := now.AddDate(0, 0, 1)
 
 	testCases := []struct {
 		name      string

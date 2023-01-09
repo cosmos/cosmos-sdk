@@ -22,9 +22,11 @@ type MigrationMap map[string]func(from *tomledit.Document, to string) transform.
 
 var (
 	Migrations = MigrationMap{
-		"v0.45": NoPlan,
+		"v0.45": NoPlan, // Confix supports only the current supported SDK version. So we do not support v0.44 -> v0.45.
 		"v0.46": PlanBuilder,
 		"v0.47": PlanBuilder,
+		// "v0.47.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
+		// "v0.48": PlanBuilder,
 	}
 
 	//go:embed data

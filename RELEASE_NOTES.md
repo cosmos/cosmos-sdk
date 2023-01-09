@@ -31,6 +31,8 @@ The main changes in this release are:
 * Re-addition of `title` and `summary` fields on group and gov proposals
     * In `v0.46` with `x/gov` v1, these fields were not present (while present in `v1beta1`). After community feedback, they have been added in `x/gov` v1
 
+* Refactoring of tests in the SDK and addition of the [`simtestutil` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/testutil/sims), for facilitating testing without depending on simapp.
+
 Refer to the [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/UPGRADING.md) for upgrading your application.
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.47.x/CHANGELOG.md) for an exhaustive list of changes.
 

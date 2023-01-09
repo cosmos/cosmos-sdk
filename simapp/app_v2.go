@@ -253,7 +253,7 @@ func NewSimApp(
 	mempoolOpt := baseapp.SetMempool(nonceMempool)
 
 	setPrepareProcessProposal := func(bapp *baseapp.BaseApp) {
-		bapp.SetPrepareProposal(func(ctx sdk.Context, app *baseapp.BaseApp, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
+		bapp.SetPrepareProposal(func(ctx sdk.Context, app *baseapp.BaseApp, runTx func([]byte) error, req types.RequestPrepareProposal) types.ResponsePrepareProposal {
 			var (
 				txsBytes  [][]byte
 				byteCount int64
@@ -285,7 +285,7 @@ func NewSimApp(
 				// part of the ABCI interface.
 
 				// _, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
-				err = app.RunTXTest(bz)
+				err = runTx(bz)
 				if err != nil {
 					// if res.IsErr() {
 					err := nonceMempool.Remove(memTx)

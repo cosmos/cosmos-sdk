@@ -47,10 +47,10 @@ type (
 )
 
 // ProcessProposalHandler defines a function type alias for processing a proposer
-type ProcessProposalHandler func(sdk.Context, *BaseApp, abci.RequestProcessProposal) abci.ResponseProcessProposal
+type ProcessProposalHandler func(sdk.Context, *BaseApp, func([]byte) error, abci.RequestProcessProposal) abci.ResponseProcessProposal
 
 // PrepareProposalHandler defines a function type alias for preparing a proposal
-type PrepareProposalHandler func(sdk.Context, *BaseApp, abci.RequestPrepareProposal) abci.ResponsePrepareProposal
+type PrepareProposalHandler func(sdk.Context, *BaseApp, func([]byte) error, abci.RequestPrepareProposal) abci.ResponsePrepareProposal
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
@@ -872,7 +872,7 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 // requested from Tendermint will simply be returned, which, by default, are in
 // FIFO order.
 func DefaultPrepareProposal() PrepareProposalHandler {
-	return func(ctx sdk.Context, app *BaseApp, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return func(ctx sdk.Context, app *BaseApp, runTx func([]byte) error, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
 		// requested from Tendermint, which, by default, should be in FIFO order.
 		_, isNoOp := app.mempool.(mempool.NoOpMempool)
@@ -899,7 +899,7 @@ func DefaultPrepareProposal() PrepareProposalHandler {
 			// NOTE: Since runTx was already executed in CheckTx, which calls
 			// mempool.Insert, ideally everything in the pool should be valid. But
 			// some mempool implementations may insert invalid txs, so we check again.
-			_, _, _, _, err = app.runTx(runTxPrepareProposal, bz)
+			err = runTx(bz)
 			if err != nil {
 				err := app.mempool.Remove(memTx)
 				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
@@ -921,12 +921,6 @@ func DefaultPrepareProposal() PrepareProposalHandler {
 	}
 }
 
-// This is just a test to see if I can make it work
-func (app *BaseApp) RunTXTest(bz []byte) error {
-	_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
-	return err
-}
-
 // DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
 // Every transaction in the proposal must pass 2 conditions:
 //
@@ -937,14 +931,14 @@ func (app *BaseApp) RunTXTest(bz []byte) error {
 // validation step performed in DefaultPrepareProposal.  It is very important that the same validation logic is used
 // in both steps, and applications must ensure that this is the case in non-default handlers.
 func DefaultProcessProposal() ProcessProposalHandler {
-	return func(ctx sdk.Context, app *BaseApp, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return func(ctx sdk.Context, app *BaseApp, runTx func([]byte) error, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		for _, txBytes := range req.Txs {
 			_, err := app.txDecoder(txBytes)
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
 
-			_, _, _, _, err = app.runTx(runTxProcessProposal, txBytes)
+			err = runTx(txBytes)
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
@@ -956,7 +950,7 @@ func DefaultProcessProposal() ProcessProposalHandler {
 // NoOpPrepareProposal defines a no-op PrepareProposal handler. It will always
 // return the transactions sent by the client's request.
 func NoOpPrepareProposal() PrepareProposalHandler {
-	return func(_ sdk.Context, _ *BaseApp, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return func(_ sdk.Context, _ *BaseApp, _ func([]byte) error, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		return abci.ResponsePrepareProposal{Txs: req.Txs}
 	}
 }
@@ -964,7 +958,7 @@ func NoOpPrepareProposal() PrepareProposalHandler {
 // NoOpProcessProposal defines a no-op ProcessProposal Handler. It will always
 // return ACCEPT.
 func NoOpProcessProposal() ProcessProposalHandler {
-	return func(_ sdk.Context, _ *BaseApp, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return func(_ sdk.Context, _ *BaseApp, _ func([]byte) error, _ abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }

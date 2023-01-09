@@ -23,11 +23,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -642,7 +644,7 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 			status, err := val.RPCClient.Status(context.Background())
 			if err == nil && status != nil {
 				latestHeight = status.SyncInfo.LatestBlockHeight
-				if latestHeight >= h {
+				if latestHeight > h {
 					return latestHeight, nil
 				}
 			}

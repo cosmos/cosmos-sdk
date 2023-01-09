@@ -278,7 +278,12 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		}
 	}()
 
-	resp = app.prepareProposal(ctx, app, req)
+	runTx := func(bz []byte) error {
+		_, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+		return err
+	}
+
+	resp = app.prepareProposal(ctx, app, runTx, req)
 	return resp
 }
 
@@ -325,7 +330,12 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		}
 	}()
 
-	resp = app.processProposal(ctx, app, req)
+	runTx := func(bz []byte) error {
+		_, _, _, _, err := app.runTx(runTxProcessProposal, bz)
+		return err
+	}
+
+	resp = app.processProposal(ctx, app, runTx, req)
 	return resp
 }
 

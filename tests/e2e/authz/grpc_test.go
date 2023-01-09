@@ -129,7 +129,7 @@ func TestQueryGrantsGRPC(t *testing.T) {
 					fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 					fmt.Sprintf("--%s=%d", cli.FlagExpiration, time.Now().Add(time.Minute*time.Duration(120)).Unix()),
 				})
-				assert.NilError(t, err) //TODO
+				assert.NilError(t, err)
 				assert.NilError(t, f.network.WaitForNextBlock())
 			},
 

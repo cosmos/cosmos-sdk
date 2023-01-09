@@ -1456,7 +1456,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 
 func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
 	prepareOpt := func(app *baseapp.BaseApp) {
-		app.SetPrepareProposal(func(ctx sdk.Context, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		app.SetPrepareProposal(func(ctx sdk.Context, _ *baseapp.BaseApp, rpp abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 			panic(errors.New("test"))
 		})
 	}

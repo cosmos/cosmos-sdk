@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+func TestPair(t *testing.T) {
+	keyCodec := PairKeyCodec(StringKey, StringKey)
+	t.Run("correctness", func(t *testing.T) {
+		checkKeyCodec(t, keyCodec, Join("A", "B"))
+	})
+
+	t.Run("stringify", func(t *testing.T) {
+		s := keyCodec.Stringify(Join("a", "b"))
+		require.Equal(t, `("a", "b")`, s)
+		s = keyCodec.Stringify(PairPrefix[string, string]("a"))
+		require.Equal(t, `("a", <nil>)`, s)
+		s = keyCodec.Stringify(PairSuffix[string, string]("b"))
+		require.Equal(t, `(<nil>, "b")`, s)
+		s = keyCodec.Stringify(Pair[string, string]{})
+		require.Equal(t, `(<nil>, <nil>)`, s)
+	})
+}
+
 func TestPairRange(t *testing.T) {
 	sk, ctx := deps()
 	schema := NewSchemaBuilder(sk)

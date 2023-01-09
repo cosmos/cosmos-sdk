@@ -133,16 +133,50 @@ func (p pairKeyCodec[K1, K2]) KeyType() string {
 	return fmt.Sprintf("Pair[%s, %s]", p.keyCodec1.KeyType(), p.keyCodec2.KeyType())
 }
 
-func (p pairKeyCodec[K1, K2]) EncodeNonTerminal(buffer []byte, key Pair[K1, K2]) (int, error) {
-	panic("impl")
+func (p pairKeyCodec[K1, K2]) EncodeNonTerminal(buffer []byte, pair Pair[K1, K2]) (int, error) {
+	writtenTotal := 0
+	if pair.key1 != nil {
+		written, err := p.keyCodec1.EncodeNonTerminal(buffer, *pair.key1)
+		if err != nil {
+			return 0, err
+		}
+		writtenTotal += written
+	}
+	if pair.key2 != nil {
+		written, err := p.keyCodec2.EncodeNonTerminal(buffer[writtenTotal:], *pair.key2)
+		if err != nil {
+			return 0, err
+		}
+		writtenTotal += written
+	}
+	return writtenTotal, nil
 }
 
 func (p pairKeyCodec[K1, K2]) DecodeNonTerminal(buffer []byte) (int, Pair[K1, K2], error) {
-	panic("impl")
+	readTotal := 0
+	read, key1, err := p.keyCodec1.DecodeNonTerminal(buffer)
+	if err != nil {
+		return 0, Pair[K1, K2]{}, err
+	}
+	readTotal += read
+	read, key2, err := p.keyCodec2.DecodeNonTerminal(buffer[read:])
+	if err != nil {
+		return 0, Pair[K1, K2]{}, err
+	}
+
+	readTotal += read
+	return readTotal, Join(key1, key2), nil
 }
 
 func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
-	panic("impl")
+	size := 0
+	if key.key1 != nil {
+		size += p.keyCodec1.SizeNonTerminal(*key.key1)
+	}
+	if key.key2 != nil {
+		size += p.keyCodec2.SizeNonTerminal(*key.key2)
+	}
+	return size
 }
 
 // NewPairRange creates a new PairRange which will prefix over all the keys

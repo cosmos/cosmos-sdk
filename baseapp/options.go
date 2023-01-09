@@ -279,7 +279,7 @@ func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 	if app.sealed {
 		panic("SetMempool() on sealed BaseApp")
 	}
-	app.Mempool = mempool
+	app.mempool = mempool
 }
 
 // SetProcessProposal sets the process proposal function for the BaseApp.

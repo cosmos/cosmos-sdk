@@ -25,7 +25,11 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 	_, err = queryClient.Balance(gocontext.Background(), &types.QueryBalanceRequest{Address: addr.String()})
 	suite.Require().Error(err)
 
-	req := types.NewQueryBalanceRequest(addr, fooDenom)
+	req := types.NewQueryBalanceRequest(addr, "0000")
+	_, err = queryClient.Balance(gocontext.Background(), req)
+	suite.Require().Error(err)
+
+	req = types.NewQueryBalanceRequest(addr, fooDenom)
 	res, err := queryClient.Balance(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)

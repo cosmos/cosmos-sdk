@@ -105,10 +105,14 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+* use `cosmos_proto.accepts_interface` to annote `Any` fields that accept interfaces
+  * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+  * example: `(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"` (and not just `Content`)
 * annotate interface implementations with `cosmos_proto.implements_interface`
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+  * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+  * example: `(cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization"` (and not just `Authorization`)
+
+Code generators can then match the `accepts_interface` and `implements_interface` annotations to know whether some Protobuf messages are allowed to be packed in a given `Any` field or not.
 
 ### Transaction Encoding
 
@@ -162,7 +166,7 @@ In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been de
 message Profile {
   // account is the account associated to a profile.
   google.protobuf.Any account = 1 [
-    (cosmos_proto.accepts_interface) = "AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
+    (cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
   ];
   // bio is a short description of the account.
   string bio = 4;
@@ -306,7 +310,7 @@ For example, in the `x/evidence` module defines an `Evidence` interface, which i
 
 message MsgSubmitEvidence {
   string              submitter = 1;
-  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "Evidence"];
+  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "cosmos.evidence.v1beta1.Evidence"];
 }
 ```
 

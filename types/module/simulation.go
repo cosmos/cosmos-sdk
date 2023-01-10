@@ -123,6 +123,7 @@ type SimulationState struct {
 	Accounts     []simulation.Account                 // simulation accounts
 	InitialStake sdkmath.Int                          // initial coins per account
 	NumBonded    int64                                // number of initially bonded accounts
+	BondDenom    string                               // denom to be used as default
 	GenTimestamp time.Time                            // genesis timestamp
 	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
 	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules

@@ -150,7 +150,7 @@ func (suite *KeeperTestSuite) mockSendCoinsFromAccountToModule(acc *authtypes.Ba
 	suite.authKeeper.EXPECT().HasAccount(suite.ctx, moduleAcc.GetAddress()).Return(true)
 }
 
-func (suite *KeeperTestSuite) mockSendCoins(ctx sdk.Context, sender authtypes.AccountI, receiver sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockSendCoins(ctx sdk.Context, sender sdk.AccountI, receiver sdk.AccAddress) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, sender.GetAddress()).Return(sender)
 	suite.authKeeper.EXPECT().HasAccount(ctx, receiver).Return(true)
 }
@@ -160,7 +160,7 @@ func (suite *KeeperTestSuite) mockFundAccount(receiver sdk.AccAddress) {
 	suite.mockSendCoinsFromModuleToAccount(mintAcc, receiver)
 }
 
-func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []authtypes.AccountI, outputs []sdk.AccAddress) {
+func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []sdk.AccountI, outputs []sdk.AccAddress) {
 	for _, input := range inputs {
 		suite.authKeeper.EXPECT().GetAccount(suite.ctx, input.GetAddress()).Return(input)
 	}
@@ -169,15 +169,15 @@ func (suite *KeeperTestSuite) mockInputOutputCoins(inputs []authtypes.AccountI, 
 	}
 }
 
-func (suite *KeeperTestSuite) mockValidateBalance(acc authtypes.AccountI) {
+func (suite *KeeperTestSuite) mockValidateBalance(acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(suite.ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc authtypes.AccountI) {
+func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.AccountI) {
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
-func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc authtypes.AccountI, mAcc authtypes.AccountI) {
+func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc sdk.AccountI, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) mockDelegateCoins(ctx sdk.Context, acc authtypes.A
 	suite.authKeeper.EXPECT().GetAccount(ctx, mAcc.GetAddress()).Return(mAcc)
 }
 
-func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc authtypes.AccountI, mAcc authtypes.AccountI) {
+func (suite *KeeperTestSuite) mockUnDelegateCoins(ctx sdk.Context, acc sdk.AccountI, mAcc sdk.AccountI) {
 	vacc, ok := acc.(banktypes.VestingAccount)
 	if ok {
 		suite.authKeeper.EXPECT().SetAccount(ctx, vacc)
@@ -467,7 +467,7 @@ func (suite *KeeperTestSuite) TestInputOutputNewAccount() {
 
 	require.Empty(suite.bankKeeper.GetAllBalances(ctx, accAddrs[1]))
 
-	suite.mockInputOutputCoins([]authtypes.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
+	suite.mockInputOutputCoins([]sdk.AccountI{authtypes.NewBaseAccountWithAddress(accAddrs[0])}, []sdk.AccAddress{accAddrs[1]})
 	inputs := []banktypes.Input{
 		{Address: accAddrs[0].String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
@@ -517,7 +517,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoins() {
 
 	require.Error(suite.bankKeeper.InputOutputCoins(ctx, insufficientInputs, insufficientOutputs))
 
-	suite.mockInputOutputCoins([]authtypes.AccountI{acc0}, accAddrs[1:3])
+	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[1:3])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, accAddrs[0])
@@ -747,7 +747,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	suite.mockFundAccount(accAddrs[0])
 	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
 
-	suite.mockInputOutputCoins([]authtypes.AccountI{acc0}, accAddrs[2:4])
+	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
@@ -772,7 +772,7 @@ func (suite *KeeperTestSuite) TestMsgMultiSendEvents() {
 	require.NoError(banktestutil.FundAccount(suite.bankKeeper, ctx, accAddrs[0], sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
-	suite.mockInputOutputCoins([]authtypes.AccountI{acc0}, accAddrs[2:4])
+	suite.mockInputOutputCoins([]sdk.AccountI{acc0}, accAddrs[2:4])
 	require.NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	events = ctx.EventManager().ABCIEvents()

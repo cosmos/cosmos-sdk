@@ -51,6 +51,7 @@ func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
+		BondDenom: sdk.DefaultBondDenom,
 	}
 
 	if config.ParamsFile != "" {

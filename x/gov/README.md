@@ -1156,7 +1156,7 @@ where `proposal.json` contains:
 ```
 
 :::note
-By default the metadata and the proposal are both limited by 255 characters, this can be overridden by the application developer.
+By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
 :::
 
 ##### submit-legacy-proposal
@@ -1464,7 +1464,9 @@ Example Output:
       ],
       "votingStartTime": "2022-03-28T14:25:26.644857113Z",
       "votingEndTime": "2022-03-30T14:25:26.644857113Z",
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     },
     {
       "id": "2",
@@ -1486,7 +1488,9 @@ Example Output:
           "amount": "10"
         }
       ],
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     }
   ],
   "pagination": {
@@ -2009,7 +2013,9 @@ Example Output:
     ],
     "voting_start_time": "2022-03-28T14:25:26.644857113Z",
     "voting_end_time": "2022-03-30T14:25:26.644857113Z",
-    "metadata": "AQ=="
+    "metadata": "AQ==",
+    "title": "Proposal Title",
+    "summary": "Proposal Summary"
   }
 }
 ```
@@ -2134,7 +2140,9 @@ Example Output:
       ],
       "voting_start_time": "2022-03-28T14:25:26.644857113Z",
       "voting_end_time": "2022-03-30T14:25:26.644857113Z",
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     },
     {
       "id": "2",
@@ -2168,7 +2176,9 @@ Example Output:
       ],
       "voting_start_time": null,
       "voting_end_time": null,
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     }
   ],
   "pagination": {
@@ -2590,13 +2600,18 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../g
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",
   "vote_option_context": "",
 }
 ```
+
+:::note
+The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+:::
 
 ### Vote
 

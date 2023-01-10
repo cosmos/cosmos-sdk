@@ -139,7 +139,7 @@ func (s TestSuite) setNextAccount() { //nolint:govet // this is a test and we're
 
 	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(accountCredentials.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
-	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), authtypes.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
+	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -494,6 +494,9 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			res, err := s.groupKeeper.GroupInfo(sdkCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -776,6 +779,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].Member.AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -1311,11 +1317,28 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 				return
 			}
 			s.Require().NoError(err)
+
 			res, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
 				Address: groupPolicyAddr,
 			})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroupPolicy, res.Info)
+
+			// check events
+			var hasUpdateGroupPolicyEvent bool
+			events := s.ctx.(sdk.Context).EventManager().ABCIEvents()
+			for _, event := range events {
+				event, err := sdk.ParseTypedEvent(event)
+				s.Require().NoError(err)
+
+				if e, ok := event.(*group.EventUpdateGroupPolicy); ok {
+					s.Require().Equal(e.Address, groupPolicyAddr)
+					hasUpdateGroupPolicyEvent = true
+					break
+				}
+			}
+
+			s.Require().True(hasUpdateGroupPolicyEvent)
 		})
 	}
 }

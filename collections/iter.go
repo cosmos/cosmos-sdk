@@ -2,10 +2,9 @@ package collections
 
 import (
 	"context"
+	"cosmossdk.io/core/store"
 	"errors"
 	"fmt"
-
-	"cosmossdk.io/core/store"
 )
 
 // ErrInvalidIterator is returned when an Iterate call resulted in an invalid iterator.

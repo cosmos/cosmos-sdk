@@ -15,4 +15,4 @@ jobs:
         with:
           project-url: https://github.com/orgs/cosmos/projects/26
           github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
-          labeled: T:sprint
+          labeled: T:Sprint

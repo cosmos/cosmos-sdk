@@ -8,7 +8,6 @@ import (
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
@@ -33,12 +32,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
@@ -1183,18 +1179,6 @@ func TestBalanceTrackingEvents(t *testing.T) {
 	// existence of the new module account because GetModuleAccount checks for the existence via
 	// permissions map and not via state... weird
 	maccPerms := make(map[string][]string)
-	moduleAccPerms := []*authmodulev1.ModuleAccountPermission{
-		{Account: authtypes.FeeCollectorName},
-		{Account: distrtypes.ModuleName},
-		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
-		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-		{Account: nft.ModuleName},
-	}
-	for _, perms := range moduleAccPerms {
-		maccPerms[perms.Account] = perms.Permissions
-	}
 
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
@@ -1326,7 +1310,7 @@ func TestMintCoinRestrictions(t *testing.T) {
 
 	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
 
-	maccPerms := simapp.GetMaccPerms()
+	maccPerms := make(map[string][]string)
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
 	f.accountKeeper = authkeeper.NewAccountKeeper(

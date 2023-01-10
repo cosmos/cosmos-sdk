@@ -1,4 +1,4 @@
-name: Add bugs to bugs project
+name: Add Sprint issues to Cosmos SDK Project 
 
 on:
   issues:

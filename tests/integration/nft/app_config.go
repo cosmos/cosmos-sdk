@@ -1,4 +1,4 @@
-package testutil
+package nft
 
 import (
 	"cosmossdk.io/core/appconfig"

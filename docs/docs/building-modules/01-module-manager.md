@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+<!-- TODO ADD MENTION OF NEW EXTENSION INTERFACE -->
+
 # Module Manager
 
 :::note Synopsis
@@ -36,7 +38,7 @@ are only used for genesis can take advantage of the `Module` patterns without ha
 The `AppModuleBasic` interface defines the independent methods modules need to implement.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L47-L60
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/module/module.go#L49-L59
 ```
 
 Let us go through the methods:
@@ -54,10 +56,10 @@ All the `AppModuleBasic` of an application are managed by the [`BasicManager`](#
 
 ### `AppModuleGenesis`
 
-The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` interface with two added methods.
+The `AppModuleGenesis` interface is a simple embedding of the `AppModuleBasic` and `HasGenesis` interfaces.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/module/module.go#L140-L146
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/module/module.go#L156-L167
 ```
 
 Let us go through the two added methods:

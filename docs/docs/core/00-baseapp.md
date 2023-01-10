@@ -52,7 +52,7 @@ management logic.
 The `BaseApp` type holds many important parameters for any Cosmos SDK based application.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L45-L137
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L50-L146
 ```
 
 Let us go through the most important components.

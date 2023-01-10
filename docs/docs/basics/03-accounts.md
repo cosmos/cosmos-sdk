@@ -231,7 +231,7 @@ import (
 )
 
 // Secp256r1Type uses the secp256r1 ECDSA parameters.
-Secp256r1Type = PubKeyType("secp256r1")
+const Secp256r1Type = PubKeyType("secp256r1")
 
 var Secp256r1 = secp256r1Algo{}
 

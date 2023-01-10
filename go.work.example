@@ -16,4 +16,5 @@ use (
 	./tools/rosetta
 	./tools/cosmovisor
 	./tools/confix
+	./x/nft
 )

@@ -44,7 +44,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCo
 // migrateUBDEntries will remove the ubdEntries with same creation_height
 // and create a new ubdEntry with updated balance and initial_balance
 func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec, legacySubspace exported.Subspace) error {
-	iterator := sdk.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.UnbondingDelegationKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

@@ -73,7 +73,7 @@ func TestGRPCQueryBalance(t *testing.T) {
 
 	fundAccount(f, addr1, coin1)
 	req := banktypes.NewQueryBalanceRequest(addr1, coin1.GetDenom())
-	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Balance, 1081, false)
+	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Balance, 1087, false)
 }
 
 func TestGRPCQueryAllBalances(t *testing.T) {
@@ -107,7 +107,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 	fundAccount(f, addr1, coins...)
 	req := banktypes.NewQueryAllBalancesRequest(addr1, nil)
 
-	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.AllBalances, 30, false)
+	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.AllBalances, 357, false)
 }
 
 func TestGRPCQuerySpendableBalances(t *testing.T) {

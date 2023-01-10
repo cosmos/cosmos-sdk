@@ -98,6 +98,31 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for generating protobuf files.
 
+#### `{accepts,implements}_interface` proto annotations
+
+The SDK is normalizing the strings inside the Protobuf `accepts_interface` and `implements_interface` annotations. We require them to be fully-scoped names. They will soon be used by code generators like Pulsar and Telescope to match which messages can or cannot be packed inside `Any`s.
+
+Here are the following replacements that you need to perform on your proto files:
+
+```diff
+- "Content"
++ "cosmos.gov.v1beta1.Content"
+- "Authorization"
++ "cosmos.authz.v1beta1.Authorization"
+- "sdk.Msg"
++ "cosmos.base.v1beta1.Msg"
+- "AccountI"
++ "cosmos.auth.v1beta1.AccountI"
+- "ModuleAccountI"
++ "cosmos.auth.v1beta1.ModuleAccountI"
+- "FeeAllowanceI"
++ "cosmos.feegrant.v1beta1.FeeAllowanceI"
+```
+
+Please also check that in your own app's proto files that there are no single-word names for those two proto annotations. If so, then replace them with fully-qualified names, even though those names don't actually resolve to an actual protobuf entity.
+
+For more information, see the [encoding guide](./docs/docs/core/05-encoding.md).
+
 ### Transactions
 
 #### Broadcast Mode
@@ -278,7 +303,7 @@ mistakes.
 
 #### `x/params`
 
-* The `x/param` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
+* The `x/params` module has been depreacted in favour of each module housing and providing way to modify their parameters. Each module that has parameters that are changable during runtime have an authority, the authority can be a module or user account. The Cosmos-SDK team recommends migrating modules away from using the param module. An example of how this could look like can be found [here](https://github.com/cosmos/cosmos-sdk/pull/12363). 
 * The Param module will be maintained until April 18, 2023. At this point the module will reach end of life and be removed from the Cosmos SDK.
 
 #### `x/gov`

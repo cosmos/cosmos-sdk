@@ -30,7 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -46,7 +45,7 @@ const (
 
 // We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
-func migrateVestingAccounts(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
+func migrateVestingAccounts(ctx sdk.Context, account sdk.AccountI, queryServer grpc.Server) (sdk.AccountI, error) {
 	bondDenom, err := getBondDenom(ctx, queryServer)
 	if err != nil {
 		return nil, err
@@ -100,7 +99,7 @@ func migrateVestingAccounts(ctx sdk.Context, account types.AccountI, queryServer
 
 	asVesting.TrackDelegation(ctx.BlockTime(), balance, delegations)
 
-	return asVesting.(types.AccountI), nil
+	return asVesting.(sdk.AccountI), nil
 }
 
 func resetVestingDelegatedBalances(evacct exported.VestingAccount) (exported.VestingAccount, bool) {
@@ -290,6 +289,6 @@ func getBondDenom(ctx sdk.Context, queryServer grpc.Server) (string, error) {
 //
 // We use the baseapp.QueryRouter here to do inter-module state querying.
 // PLEASE DO NOT REPLICATE THIS PATTERN IN YOUR OWN APP.
-func MigrateAccount(ctx sdk.Context, account types.AccountI, queryServer grpc.Server) (types.AccountI, error) {
+func MigrateAccount(ctx sdk.Context, account sdk.AccountI, queryServer grpc.Server) (sdk.AccountI, error) {
 	return migrateVestingAccounts(ctx, account, queryServer)
 }

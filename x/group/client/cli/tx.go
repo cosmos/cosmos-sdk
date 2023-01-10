@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -565,6 +566,8 @@ Parameters:
 		"from_address": "cosmos1...",
 		"to_address": "cosmos1...",
 		"amount":[{"denom": "stake","amount": "10"}]
+		"title": "My proposal",
+		"summary": "This is a proposal to send 10 stake to cosmos1...",
 	}
 	],
 	"metadata": "4pIMOgIGx1vZGU=", // base64-encoded metadata
@@ -579,6 +582,9 @@ Parameters:
 
 			// Since the --from flag is not required on this CLI command, we
 			// ignore it, and just use the 1st proposer in the JSON file.
+			if prop.Proposers == nil || len(prop.Proposers) == 0 {
+				return errors.New("no proposers specified in proposal")
+			}
 			cmd.Flags().Set(flags.FlagFrom, prop.Proposers[0])
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -599,6 +605,8 @@ Parameters:
 				msgs,
 				prop.Metadata,
 				execFromString(execStr),
+				prop.Title,
+				prop.Summary,
 			)
 			if err != nil {
 				return err

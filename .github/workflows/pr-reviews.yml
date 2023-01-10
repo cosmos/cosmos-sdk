@@ -7,11 +7,10 @@ on:
       - "main"
       - "releases/**"
 
-permissions:
-  pull-requests: write
-
 jobs:
   request:
+    permissions:
+      pull-requests: write
     name: Request reviews on opened PRs
     runs-on: ubuntu-latest
     steps:

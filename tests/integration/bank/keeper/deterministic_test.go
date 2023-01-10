@@ -44,10 +44,9 @@ var (
 	}
 )
 
-func fundAccount(t *testing.T, addr sdk.AccAddress, coin ...sdk.Coin) {
-	f := initFixture(t)
+func fundAccount(f *fixture, addr sdk.AccAddress, coin ...sdk.Coin) {
 	err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, sdk.NewCoins(coin...))
-	assert.NilError(t, err)
+	assert.NilError(&testing.T{}, err)
 }
 
 func getCoin(rt *rapid.T) sdk.Coin {
@@ -65,14 +64,14 @@ func TestGRPCQueryBalance(t *testing.T) {
 	rapid.Check(t, func(rt *rapid.T) {
 		addr := testdata.AddressGenerator(rt).Draw(rt, "address")
 		coin := getCoin(rt)
-		fundAccount(t, addr, coin)
+		fundAccount(f, addr, coin)
 
 		req := banktypes.NewQueryBalanceRequest(addr, coin.GetDenom())
 
 		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Balance, 0, true)
 	})
 
-	fundAccount(t, addr1, coin1)
+	fundAccount(f, addr1, coin1)
 	req := banktypes.NewQueryBalanceRequest(addr1, coin1.GetDenom())
 	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.Balance, 1081, false)
 }
@@ -94,7 +93,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 			coins = sdk.NewCoins(append(coins, coin)...)
 		}
 
-		fundAccount(t, addr, coins...)
+		fundAccount(f, addr, coins...)
 
 		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(rt, uint64(numCoins)).Draw(rt, "pagination"))
 		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.AllBalances, 0, true)
@@ -105,7 +104,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 		sdk.NewCoin("denom", sdk.NewInt(100)),
 	)
 
-	fundAccount(t, addr1, coins...)
+	fundAccount(f, addr1, coins...)
 	req := banktypes.NewQueryAllBalancesRequest(addr1, nil)
 
 	testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.AllBalances, 30, false)

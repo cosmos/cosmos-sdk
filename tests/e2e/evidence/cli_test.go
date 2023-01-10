@@ -4,6 +4,7 @@
 package evidence
 
 import (
+	"strings"
 	"testing"
 
 	"cosmossdk.io/simapp"
@@ -18,7 +19,7 @@ type fixture struct {
 	network *network.Network
 }
 
-func initFixture(t *testing.T) {
+func initFixture(t *testing.T) *fixture {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 
@@ -37,7 +38,7 @@ func TestGetQueryCmd(t *testing.T) {
 	f := initFixture(t)
 	defer f.network.Cleanup()
 
-	val := s.network.Validators[0]
+	val := f.network.Validators[0]
 
 	testCases := map[string]struct {
 		args           []string
@@ -59,18 +60,18 @@ func TestGetQueryCmd(t *testing.T) {
 	for name, tc := range testCases {
 		tc := tc
 
-		s.Run(name, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			cmd := cli.GetQueryCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				s.Require().Error(err)
+				assert.ErrorContains(t, err, "")
 			} else {
-				s.Require().NoError(err)
+				assert.NilError(t, err)
 			}
 
-			s.Require().Contains(strings.TrimSpace(out.String()), tc.expectedOutput)
+			assert.Assert(t, strings.Contains(strings.TrimSpace(out.String()), tc.expectedOutput))
 		})
 	}
 }

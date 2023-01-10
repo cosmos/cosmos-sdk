@@ -6,6 +6,7 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -129,7 +130,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			require.Nil(t, err, "Cannot marshal tx: %v", err)
 
 			params := suite.accountKeeper.GetParams(suite.ctx)
-			expectedGas := sdk.Gas(len(txBytes)) * params.TxSizeCostPerByte
+			expectedGas := storetypes.Gas(len(txBytes)) * params.TxSizeCostPerByte
 
 			// Set suite.ctx with TxBytes manually
 			suite.ctx = suite.ctx.WithTxBytes(txBytes)

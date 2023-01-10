@@ -7,10 +7,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/store/internal/kv"
 	"github.com/cosmos/cosmos-sdk/store/metrics"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 type Store interface {
@@ -486,3 +486,35 @@ type StoreWithInitialVersion interface {
 	// starting a new chain at an arbitrary height.
 	SetInitialVersion(version int64)
 }
+
+// NewTransientStoreKeys constructs a new map of TransientStoreKey's
+// Must return pointers according to the ocap principle
+// The function will panic if there is a potential conflict in names
+// see `assertNoCommonPrefix` function for more details.
+func NewTransientStoreKeys(names ...string) map[string]*TransientStoreKey {
+	assertNoCommonPrefix(names)
+	keys := make(map[string]*TransientStoreKey)
+	for _, n := range names {
+		keys[n] = NewTransientStoreKey(n)
+	}
+
+	return keys
+}
+
+// NewMemoryStoreKeys constructs a new map matching store key names to their
+// respective MemoryStoreKey references.
+// The function will panic if there is a potential conflict in names (see `assertNoPrefix`
+// function for more details).
+func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
+	assertNoCommonPrefix(names)
+	keys := make(map[string]*MemoryStoreKey)
+	for _, n := range names {
+		keys[n] = NewMemoryStoreKey(n)
+	}
+
+	return keys
+}
+
+// StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
+// simulation.
+type StoreDecoderRegistry map[string]func(kvA, kvB kv.Pair) string

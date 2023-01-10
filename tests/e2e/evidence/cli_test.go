@@ -66,7 +66,7 @@ func TestGetQueryCmd(t *testing.T) {
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
-				assert.ErrorContains(t, err, "")
+				assert.Assert(t, err != nil)
 			} else {
 				assert.NilError(t, err)
 			}

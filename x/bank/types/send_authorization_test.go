@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -21,7 +22,7 @@ var (
 )
 
 func TestSendAuthorization(t *testing.T) {
-	ctx := testutil.DefaultContextWithDB(t, sdk.NewKVStoreKey(types.StoreKey), sdk.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(tmproto.Header{})
+	ctx := testutil.DefaultContextWithDB(t, storetypes.NewKVStoreKey(types.StoreKey), storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(tmproto.Header{})
 	allowList := make([]sdk.AccAddress, 1)
 	allowList[0] = toAddr
 	authorization := types.NewSendAuthorization(coins1000, nil)

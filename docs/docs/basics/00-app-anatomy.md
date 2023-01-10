@@ -88,7 +88,7 @@ Note that the constructor function only creates an instance of the app, while th
 See an example of application constructor from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L204-L474
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go#L214-L522
 ```
 
 ### InitChainer
@@ -100,7 +100,7 @@ In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../build
 See an example of an `InitChainer` from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L524-L532
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go#L569-L577
 ```
 
 ### BeginBlocker and EndBlocker
@@ -114,7 +114,7 @@ As a sidenote, it is important to remember that application-specific blockchains
 See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L514-L522
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go#L555-L563
 ```
 
 ### Register Codec
@@ -122,7 +122,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/app.go#L514-L522
 The `EncodingConfig` structure is the last important part of the `app.go` file. The goal of this structure is to define the codecs that will be used throughout the app.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/params/encoding.go#L9-L16
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/params/encoding.go#L9-L16
 ```
 
 Here are descriptions of what each of the four fields means:
@@ -134,14 +134,11 @@ Here are descriptions of what each of the four fields means:
 * `TxConfig`: `TxConfig` defines an interface a client can utilize to generate an application-defined concrete transaction type. Currently, the SDK handles two transaction types: `SIGN_MODE_DIRECT` (which uses Protobuf binary as over-the-wire encoding) and `SIGN_MODE_LEGACY_AMINO_JSON` (which depends on Amino). Read more about transactions [here](../core/01-transactions.md).
 * `Amino`: Some legacy parts of the Cosmos SDK still use Amino for backwards-compatibility. Each module exposes a `RegisterLegacyAmino` method to register the module's specific types within Amino. This `Amino` codec should not be used by app developers anymore, and will be removed in future releases.
 
-The Cosmos SDK exposes a `MakeTestEncodingConfig` function used to create an `EncodingConfig` for the app constructor (`NewApp`). It uses Protobuf as a default `Codec`.
-
-**NOTE:** This function is deprecated and should only be used to create an app or in tests.
-
-See an example of a `MakeTestEncodingConfig` from `simapp`:
+An application should create its own encondig config.
+See an example of a `simappparams.EncodingConfig` from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/simapp/encoding.go#L8-L19
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app.go#L731-L738
 ```
 
 ## Modules
@@ -172,7 +169,7 @@ For more details, see [transaction lifecycle](./01-tx-lifecycle.md).
 Module developers create custom `Msg` services when they build their own module. The general practice is to define the `Msg` Protobuf service in a `tx.proto` file. For example, the `x/bank` module defines a service with two methods to transfer tokens:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L12-L19
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
 ```
 
 Service methods use `keeper` in order to update the module state.

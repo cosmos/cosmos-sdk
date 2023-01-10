@@ -85,7 +85,7 @@ The first thing that is created in the execution of a CLI command is a `client.C
 The `client.Context` also contains various functions such as `Query()`, which retrieves the RPC Client and makes an ABCI call to relay a query to a full-node.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/client/context.go#L25-L63
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/context.go#L24-L64
 ```
 
 The `client.Context`'s primary role is to store data used during interactions with the end-user and provide methods to interact with this data - it is used before and after the query is processed by the full-node. Specifically, in handling `MyQuery`, the `client.Context` is utilized to encode the query parameters, retrieve the full-node, and write the output. Prior to being relayed to a full-node, the query needs to be encoded into a `[]byte` form, as full-nodes are application-agnostic and do not understand specific types. The full-node (RPC Client) itself is retrieved using the `client.Context`, which knows which node the user CLI is connected to. The query is relayed to this full-node to be processed. Finally, the `client.Context` contains a `Writer` to write output when the response is returned. These steps are further described in later sections.

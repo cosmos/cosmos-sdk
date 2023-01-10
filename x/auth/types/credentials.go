@@ -33,7 +33,7 @@ const ModuleCredentialType = "ModuleCredential"
 var _ cryptotypes.PubKey = &ModuleCredential{}
 
 // NewModuleCredential creates new module credential key.
-// At least one derivation key must be provided and all derivation keys must be not empty.
+// All derivation keys must be non-empty.
 func NewModuleCredential(moduleName string, derivationKeys ...[]byte) (*ModuleCredential, error) {
 	for i := range derivationKeys {
 		if len(derivationKeys[i]) == 0 {

@@ -67,3 +67,35 @@ func (k *Keeper) DisableMsg(ctx sdk.Context, msgURL string) {
 func (k *Keeper) EnableMsg(ctx sdk.Context, msgURL string) {
 	ctx.KVStore(k.key).Delete(types.CreateDisableMsgPrefix(msgURL))
 }
+
+func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, perms types.Permissions) (stop bool)) {
+	store := ctx.KVStore(k.key)
+
+	iter := sdk.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		var perms types.Permissions
+		k.cdc.Unmarshal(iter.Value(), &perms)
+
+		if cb(iter.Key()[len(types.AccountPermissionPrefix):], perms) {
+			break
+		}
+	}
+}
+
+func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(address []byte, perms types.Permissions) (stop bool)) {
+	store := ctx.KVStore(k.key)
+
+	iter := sdk.KVStorePrefixIterator(store, types.DisableListPrefix)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		var perms types.Permissions
+		k.cdc.Unmarshal(iter.Value(), &perms)
+
+		if cb(iter.Key()[len(types.DisableListPrefix):], perms) {
+			break
+		}
+	}
+}

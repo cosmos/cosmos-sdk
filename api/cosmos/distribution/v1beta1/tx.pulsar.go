@@ -6798,7 +6798,7 @@ type MsgUpdateParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/distribution parameters to update.
 	//
@@ -6880,7 +6880,7 @@ type MsgCommunityPoolSpend struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string          `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	Recipient string          `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	Amount    []*v1beta1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount,omitempty"`

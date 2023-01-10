@@ -4,17 +4,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -49,42 +43,6 @@ var (
 		Display: "atom",
 	}
 )
-
-type fixture struct {
-	ctx        sdk.Context
-	bankKeeper keeper.BaseKeeper
-
-	queryClient banktypes.QueryClient
-}
-
-func initFixture(t assert.TestingT) *fixture {
-	f := &fixture{}
-
-	var interfaceRegistry codectypes.InterfaceRegistry
-
-	app, err := simtestutil.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.TxModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
-		),
-		&f.bankKeeper,
-		&interfaceRegistry,
-	)
-	assert.NilError(t, err)
-
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	f.ctx = ctx
-
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
-	banktypes.RegisterQueryServer(queryHelper, f.bankKeeper)
-	f.queryClient = banktypes.NewQueryClient(queryHelper)
-
-	return f
-}
 
 func fundAccount(t *testing.T, addr sdk.AccAddress, coin ...sdk.Coin) {
 	f := initFixture(t)

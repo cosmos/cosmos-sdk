@@ -5,6 +5,8 @@ on:
   pull_request_target:
     types:
       - opened
+      - reopened
+      - synchronize
     branches:
       - "main"
       - "releases/**"
@@ -18,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create PR review request
+        if: ${{ !github.event.pull_request.draft }}
         run: gh pr edit $PR_URL --add-reviewer @cosmos/sdk-core-review
         env:
           GH_TOKEN: ${{ secrets.PRBOT_PAT }}

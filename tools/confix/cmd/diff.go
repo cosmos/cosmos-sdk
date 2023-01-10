@@ -10,7 +10,7 @@ func DiffCommand() *cobra.Command {
 		Short: "Display the diff between the current config and the SDK default config",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO to implement in the next PR
+
 			return nil
 		},
 	}

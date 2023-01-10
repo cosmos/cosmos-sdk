@@ -107,6 +107,12 @@ func (s *storeTestSuite) TestDiffKVStores() {
 	s.checkDiffResults(store1, store2)
 }
 
+func (s *storeTestSuite) checkDiffResults(store1, store2 types.KVStore) {
+	kvAs1, kvBs1 := types.DiffKVStores(store1, store2, nil)
+	kvAs2, kvBs2 := types.DiffKVStores(store1, store2, nil)
+	s.Require().Equal(kvAs1, kvAs2)
+	s.Require().Equal(kvBs1, kvBs2)
+}
 func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 	db := dbm.NewMemDB()
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
@@ -117,11 +123,4 @@ func (s *storeTestSuite) initTestStores() (types.KVStore, types.KVStore) {
 	s.Require().NotPanics(func() { ms.MountStoreWithDB(key2, types.StoreTypeIAVL, db) })
 	s.Require().NoError(ms.LoadLatestVersion())
 	return ms.GetKVStore(key1), ms.GetKVStore(key2)
-}
-
-func (s *storeTestSuite) checkDiffResults(store1, store2 types.KVStore) {
-	kvAs1, kvBs1 := types.DiffKVStores(store1, store2, nil)
-	kvAs2, kvBs2 := types.DiffKVStores(store1, store2, nil)
-	s.Require().Equal(kvAs1, kvAs2)
-	s.Require().Equal(kvBs1, kvBs2)
 }

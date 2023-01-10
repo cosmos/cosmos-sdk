@@ -2,10 +2,9 @@
 name: Request review on PRs
 
 on:
-  pull_request:
+  pull_request_target:
     types:
-      - opened
-      - reopened
+      - ready_for_review
 
 permissions:
   pull-requests: write

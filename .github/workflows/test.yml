@@ -581,3 +581,33 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_X_NFT }}
         with:
           projectBaseDir: x/nft/
+
+  test-confix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.4
+          cache: true
+          cache-dependency-path: tools/confix/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            tools/confix/**/*.go
+            tools/confix/go.mod
+            tools/confix/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd tools/confix
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
+      - name: sonarcloud
+        if: env.GIT_DIFF
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_CONFIX }}
+        with:
+          projectBaseDir: tools/confix/

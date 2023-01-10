@@ -276,7 +276,7 @@ When `Store.Iterator()` is called, it does not simply prefix the `Store.prefix`,
 
 `listenkv.Store` is a wrapper `KVStore` which provides state listening capabilities over the underlying `KVStore`.
 It is applied automatically by the Cosmos SDK on any `KVStore` whose `StoreKey` is specified during state streaming configuration.
-Additional information about state streaming configuration can be found in the [store/streaming/README.md](https://github.com/cosmos/cosmos-sdk/tree/v0.46.0/store/streaming).
+Additional information about state streaming configuration can be found in the [store/streaming/README.md](https://github.com/cosmos/cosmos-sdk/tree/v0.47.0-rc1/store/streaming).
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/listenkv/store.go#L11-L18

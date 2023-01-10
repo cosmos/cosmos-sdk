@@ -170,29 +170,19 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.pro
 
 To create a new key type for using in keyring, `keyring.SignatureAlgo` interface must be fulfilled.
 
-```go
-// cosmos-sdk/crypto/keyring/signing_algorithms.go
-
-// SignatureAlgo defines the interface for a keyring supported algorithm.
-type SignatureAlgo interface {
-	Name() hd.PubKeyType
-	Derive() hd.DeriveFn
-	Generate() hd.GenerateFn
-}
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/keyring/signing_algorithms.go#L10-L15
 ```
 
 The interface consists in three methods where `Name()` returns the name of the algorithm as a `hd.PubKeyType` and `Derive()` and `Generate()` must return the following functions respectively:
 
-```go
-// cosmos-sdk/crypto/hd/algo.go
-
-DeriveFn   func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error)
-GenerateFn func(bz []byte) types.PrivKey
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/hd/algo.go#L28-L31
 ```
-Once the `keyring.SignatureAlgo` has been implemented it must be added to the [list of supported algos](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go#L217) of the keyring.
+Once the `keyring.SignatureAlgo` has been implemented it must be added to the [list of supported algos](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/keyring/keyring.go#L217) of the keyring.
 
 For simplicity the implementation of a new key type should be done inside the `crypto/hd` package.
-There is an example of a working `secp256k1` implementation in [algo.go](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/hd/algo.go#L38).
+There is an example of a working `secp256k1` implementation in [algo.go](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/hd/algo.go#L38).
 
 
 #### Implementing secp256r1 algo
@@ -271,7 +261,7 @@ func (s secp256r1Algo) Generate() GenerateFn {
 }
 ```
 
-Finally, the algo must be added to the list of [supported algos](https://github.com/cosmos/cosmos-sdk/blob/main/crypto/keyring/keyring.go#L217) by the keyring.
+Finally, the algo must be added to the list of [supported algos](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/keyring/keyring.go#L217) by the keyring.
 
 ```go
 // cosmos-sdk/crypto/keyring/keyring.go

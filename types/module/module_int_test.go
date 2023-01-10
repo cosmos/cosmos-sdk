@@ -15,7 +15,7 @@ type TestSuite struct {
 	suite.Suite
 }
 
-func (s TestSuite) TestAssertNoForgottenModules() {
+func (s TestSuite) TestAssertNoForgottenModules() { //nolint:govet
 	m := Manager{
 		Modules: map[string]interface{}{"a": nil, "b": nil},
 	}
@@ -37,7 +37,7 @@ func (s TestSuite) TestAssertNoForgottenModules() {
 	}
 }
 
-func (s TestSuite) TestModuleNames() {
+func (s TestSuite) TestModuleNames() { //nolint:govet // this is a test
 	m := Manager{
 		Modules: map[string]interface{}{"a": nil, "b": nil},
 	}
@@ -46,7 +46,7 @@ func (s TestSuite) TestModuleNames() {
 	s.Require().Equal([]string{"a", "b"}, ms)
 }
 
-func (s TestSuite) TestDefaultMigrationsOrder() {
+func (s TestSuite) TestDefaultMigrationsOrder() { //nolint:govet // this is a test
 	require := s.Require()
 	require.Equal(
 		[]string{"auth2", "d", "z", "auth"},

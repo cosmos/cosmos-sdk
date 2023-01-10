@@ -7,8 +7,9 @@ type Handler func(ctx Context, msg Msg) (*Result, error)
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
-// PostHandler
-type PostHandler func(ctx Context, tx Tx, res *Result, simulate, success bool) (newCtx Context, err error)
+// PostHandler like AnteHandler but it executes after RunMsgs. Runs on success
+// or failure and enables use cases like gas refunding.
+type PostHandler func(ctx Context, tx Tx, simulate, success bool) (newCtx Context, err error)
 
 // AnteDecorator wraps the next AnteHandler to perform custom pre-processing.
 type AnteDecorator interface {
@@ -17,10 +18,10 @@ type AnteDecorator interface {
 
 // PostDecorator wraps the next PostHandler to perform custom post-processing.
 type PostDecorator interface {
-	PostHandle(ctx Context, tx Tx, res *Result, simulate, success bool, next PostHandler) (newCtx Context, err error)
+	PostHandle(ctx Context, tx Tx, simulate, success bool, next PostHandler) (newCtx Context, err error)
 }
 
-// ChainDecorator chains AnteDecorators together with each AnteDecorator
+// ChainAnteDecorators ChainDecorator chains AnteDecorators together with each AnteDecorator
 // wrapping over the decorators further along chain and returns a single AnteHandler.
 //
 // NOTE: The first element is outermost decorator, while the last element is innermost
@@ -67,8 +68,8 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 		chain = append(chain, Terminator{})
 	}
 
-	return func(ctx Context, tx Tx, res *Result, simulate, success bool) (Context, error) {
-		return chain[0].PostHandle(ctx, tx, res, simulate, success, ChainPostDecorators(chain[1:]...))
+	return func(ctx Context, tx Tx, simulate, success bool) (Context, error) {
+		return chain[0].PostHandle(ctx, tx, simulate, success, ChainPostDecorators(chain[1:]...))
 	}
 }
 
@@ -97,7 +98,7 @@ func (t Terminator) AnteHandle(ctx Context, _ Tx, _ bool, _ AnteHandler) (Contex
 	return ctx, nil
 }
 
-// PostHandler returns the provided Context and nil error
-func (t Terminator) PostHandle(ctx Context, _ Tx, _ *Result, _, _ bool, _ PostHandler) (Context, error) {
+// PostHandle returns the provided Context and nil error
+func (t Terminator) PostHandle(ctx Context, _ Tx, _, _ bool, _ PostHandler) (Context, error) {
 	return ctx, nil
 }

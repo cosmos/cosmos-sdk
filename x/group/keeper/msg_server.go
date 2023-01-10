@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -334,23 +333,24 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 	// collision with an existing address.
 	for {
 		nextAccVal := k.groupPolicySeq.NextVal(ctx.KVStore(k.key))
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, nextAccVal)
+		derivationKey := make([]byte, 8)
+		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
-		accountAddr = address.Derive(parentAcc, buf)
-
+		accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey})
+		accountAddr = sdk.AccAddress(accountCredentials.Address())
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision, in which case we just go on to the
 			// next sequence value and derive a new address.
 			continue
 		}
-		acc := k.accKeeper.NewAccount(ctx, &authtypes.ModuleAccount{
-			BaseAccount: &authtypes.BaseAccount{
-				Address: accountAddr.String(),
-			},
-			Name: accountAddr.String(),
-		})
+
+		// group policy accounts are unclaimable base accounts
+		account, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+		if err != nil {
+			return nil, sdkerrors.Wrap(err, "could not create group policy account")
+		}
+
+		acc := k.accKeeper.NewAccount(ctx, account)
 		k.accKeeper.SetAccount(ctx, acc)
 
 		break
@@ -537,7 +537,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		// Consider proposers as Yes votes
 		for i := range proposers {
 			ctx.GasMeter().ConsumeGas(gasCostPerIteration, "vote on proposal")
-			_, err = k.Vote(sdk.WrapSDKContext(ctx), &group.MsgVote{
+			_, err = k.Vote(ctx, &group.MsgVote{
 				ProposalId: id,
 				Voter:      proposers[i],
 				Option:     group.VOTE_OPTION_YES,
@@ -548,7 +548,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		}
 
 		// Then try to execute the proposal
-		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+		_, err = k.Exec(ctx, &group.MsgExec{
 			ProposalId: id,
 			// We consider the first proposer as the MsgExecRequest signer
 			// but that could be revisited (eg using the group policy)
@@ -659,7 +659,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	// Try to execute proposal immediately
 	if req.Exec == group.Exec_EXEC_TRY {
-		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+		_, err = k.Exec(ctx, &group.MsgExec{
 			ProposalId: id,
 			Executor:   voterAddr,
 		})

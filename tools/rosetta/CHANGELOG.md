@@ -38,11 +38,23 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Correctly populates rosetta's `/network/status` endpoint response. Roseta data api is divided into its own go files (account, block, mempool, network).
+* [#14272](https://github.com/cosmos/cosmos-sdk/pull/14272) Use `coinbase/rosetta-sdk-go/types` packages instead of comsos fork.
 
 ### Bug Fixes
 
-* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Wrap tendermint RPC errors to rosetta errors. 
+* [#14285](https://github.com/cosmos/cosmos-sdk/pull/14285) Sets tendermint errors status codes to 500
+
+## v0.2.0 2022-12-07
+
+### Improvements
+
+* [#14118](https://github.com/cosmos/cosmos-sdk/pull/14118) Allow rosetta to be installed as a standalone application.
+* [#14061](https://github.com/cosmos/cosmos-sdk/pull/14061) Adds openapi specification.
+* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Correctly populates rosetta's `/network/status` endpoint response. Rosetta's data api is divided into its own go files (account, block, mempool, network).
+
+### Bug Fixes
+
+* [#13832](https://github.com/cosmos/cosmos-sdk/pull/13832) Wrap tendermint RPC errors to rosetta errors.
 
 ## v0.1.0 2022-11-04
 

@@ -131,7 +131,7 @@ func TestMsgService(t *testing.T) {
 		Sequence:      0,
 	}
 	sigV2, err = tx.SignWithPrivKey(
-		txConfig.SignModeHandler().DefaultMode(), signerData,
+		nil, txConfig.SignModeHandler().DefaultMode(), signerData, //nolint:staticcheck // SA1019: txConfig.SignModeHandler().DefaultMode() is deprecated: use txConfig.SignModeHandler().DefaultMode() instead.
 		txBuilder, priv, txConfig, 0)
 	require.NoError(t, err)
 	err = txBuilder.SetSignatures(sigV2)

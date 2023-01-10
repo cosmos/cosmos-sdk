@@ -14,5 +14,5 @@ jobs:
       - uses: actions/add-to-project@v0.4.0
         with:
           project-url: https://github.com/orgs/cosmos/projects/26
-          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ secrets.PERSONAL_TOKEN }}
           labeled: T:Sprint

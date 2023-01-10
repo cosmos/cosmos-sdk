@@ -15,7 +15,7 @@ import (
 
 func TestGRPCQueryValidators(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	queryClient, vals := f.queryClient, f.vals
 	var req *types.QueryValidatorsRequest
@@ -95,7 +95,7 @@ func TestGRPCQueryValidators(t *testing.T) {
 
 func TestGRPCQueryDelegatorValidators(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs := f.app, f.ctx, f.queryClient, f.addrs
 	params := app.StakingKeeper.GetParams(ctx)
@@ -147,7 +147,7 @@ func TestGRPCQueryDelegatorValidators(t *testing.T) {
 
 func TestGRPCQueryDelegatorValidator(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	queryClient, addrs, vals := f.queryClient, f.addrs, f.vals
 	addr := addrs[1]
@@ -208,7 +208,7 @@ func TestGRPCQueryDelegatorValidator(t *testing.T) {
 
 func TestGRPCQueryDelegation(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
@@ -272,7 +272,7 @@ func TestGRPCQueryDelegation(t *testing.T) {
 
 func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 	addrAcc := addrs[0]
@@ -345,7 +345,7 @@ func TestGRPCQueryDelegatorDelegations(t *testing.T) {
 
 func TestGRPCQueryValidatorDelegations(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 	addrAcc := addrs[0]
@@ -421,7 +421,7 @@ func TestGRPCQueryValidatorDelegations(t *testing.T) {
 
 func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 	addrAcc2 := addrs[1]
@@ -487,7 +487,7 @@ func TestGRPCQueryUnbondingDelegation(t *testing.T) {
 
 func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 	addrAcc, addrAcc1 := addrs[0], addrs[1]
@@ -568,7 +568,7 @@ func TestGRPCQueryDelegatorUnbondingDelegations(t *testing.T) {
 
 func TestGRPCQueryPoolParameters(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient := f.app, f.ctx, f.queryClient
 	bondDenom := sdk.DefaultBondDenom
@@ -589,7 +589,7 @@ func TestGRPCQueryPoolParameters(t *testing.T) {
 
 func TestGRPCQueryHistoricalInfo(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient := f.app, f.ctx, f.queryClient
 
@@ -655,7 +655,7 @@ func TestGRPCQueryHistoricalInfo(t *testing.T) {
 
 func TestGRPCQueryRedelegations(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 
@@ -767,7 +767,7 @@ func TestGRPCQueryRedelegations(t *testing.T) {
 
 func TestGRPCQueryValidatorUnbondingDelegations(t *testing.T) {
 	t.Parallel()
-	f := initKeeperFixture(t)
+	f := initFixture(t)
 
 	app, ctx, queryClient, addrs, vals := f.app, f.ctx, f.queryClient, f.addrs, f.vals
 	addrAcc1, _ := addrs[0], addrs[1]

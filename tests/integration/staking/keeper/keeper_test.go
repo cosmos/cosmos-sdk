@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -12,17 +13,24 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type keeperFixture struct {
+// fixture uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators`.
+type fixture struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	addrs       []sdk.AccAddress
 	vals        []types.Validator
 	queryClient types.QueryClient
 	msgServer   types.MsgServer
+	amt1        math.Int
+	amt2        math.Int
 }
 
-func initKeeperFixture(t *testing.T) *keeperFixture {
-	f := &keeperFixture{}
+// initFixture uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators` which is used in most of the
+// staking keeper tests.
+func initFixture(t *testing.T) *fixture {
+	f := &fixture{}
 
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
@@ -49,6 +57,9 @@ func initKeeperFixture(t *testing.T) *keeperFixture {
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
 	f.app, f.ctx, f.queryClient, f.addrs, f.vals = app, ctx, queryClient, addrs, validators
+
+	f.amt1 = f.app.StakingKeeper.TokensFromConsensusPower(f.ctx, 101)
+	f.amt2 = f.app.StakingKeeper.TokensFromConsensusPower(f.ctx, 102)
 
 	return f
 }

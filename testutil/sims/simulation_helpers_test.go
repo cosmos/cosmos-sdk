@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
-	"github.com/cosmos/cosmos-sdk/store/types"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -100,10 +100,10 @@ func initTestStores(t *testing.T) (storetypes.KVStore, storetypes.KVStore) {
 	db := dbm.NewMemDB()
 	ms := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 
-	key1 := types.NewKVStoreKey("store1")
-	key2 := types.NewKVStoreKey("store2")
-	require.NotPanics(t, func() { ms.MountStoreWithDB(key1, types.StoreTypeIAVL, db) })
-	require.NotPanics(t, func() { ms.MountStoreWithDB(key2, types.StoreTypeIAVL, db) })
+	key1 := storetypes.NewKVStoreKey("store1")
+	key2 := storetypes.NewKVStoreKey("store2")
+	require.NotPanics(t, func() { ms.MountStoreWithDB(key1, storetypes.StoreTypeIAVL, db) })
+	require.NotPanics(t, func() { ms.MountStoreWithDB(key2, storetypes.StoreTypeIAVL, db) })
 	require.NotPanics(t, func() { ms.LoadLatestVersion() })
 	return ms.GetKVStore(key1), ms.GetKVStore(key2)
 }

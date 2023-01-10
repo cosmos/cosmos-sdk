@@ -33,9 +33,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
@@ -1179,7 +1182,20 @@ func TestBalanceTrackingEvents(t *testing.T) {
 	// replace account keeper and bank keeper otherwise the account keeper won't be aware of the
 	// existence of the new module account because GetModuleAccount checks for the existence via
 	// permissions map and not via state... weird
-	maccPerms := simapp.GetMaccPerms()
+	maccPerms := make(map[string][]string)
+	moduleAccPerms := []*authmodulev1.ModuleAccountPermission{
+		{Account: authtypes.FeeCollectorName},
+		{Account: distrtypes.ModuleName},
+		{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
+		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
+		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
+		{Account: nft.ModuleName},
+	}
+	for _, perms := range moduleAccPerms {
+		maccPerms[perms.Account] = perms.Permissions
+	}
+
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
 	f.accountKeeper = authkeeper.NewAccountKeeper(

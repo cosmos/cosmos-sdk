@@ -10,6 +10,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/tools/rosetta v0.2.0
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
+	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-alpha2.0.20221219231612-5ed4075ba219
 	github.com/cosmos/cosmos-sdk/x/nft v0.1.0-alpha1
 	github.com/golang/mock v1.6.0

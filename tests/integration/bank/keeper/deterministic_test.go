@@ -106,12 +106,12 @@ func (suite *DeterministicTestSuite) TestGRPCQueryBalance() {
 		suite.fundAccount(addr, coin)
 
 		req := banktypes.NewQueryBalanceRequest(addr, coin.GetDenom())
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Balance, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.Balance, 0, true)
 	})
 
 	suite.fundAccount(addr1, coin1)
 	req := banktypes.NewQueryBalanceRequest(addr1, coin1.GetDenom())
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Balance, 1087, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.Balance, 1087, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
@@ -130,7 +130,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 		suite.fundAccount(addr, coins...)
 
 		req := banktypes.NewQueryAllBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AllBalances, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.AllBalances, 0, true)
 	})
 
 	coins := sdk.NewCoins(
@@ -141,7 +141,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryAllBalances() {
 	suite.fundAccount(addr1, coins...)
 	req := banktypes.NewQueryAllBalancesRequest(addr1, nil)
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.AllBalances, 357, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.AllBalances, 357, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
@@ -164,7 +164,7 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 		suite.Require().NoError(err)
 
 		req := banktypes.NewQuerySpendableBalancesRequest(addr, testdata.PaginationGenerator(t, uint64(numCoins)).Draw(t, "pagination"))
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SpendableBalances, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.SpendableBalances, 0, true)
 	})
 
 	coins := sdk.NewCoins(
@@ -176,7 +176,7 @@ func (suite *DeterministicTestSuite) TestGRPCQuerySpendableBalances() {
 	suite.Require().NoError(err)
 
 	req := banktypes.NewQuerySpendableBalancesRequest(addr1, nil)
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SpendableBalances, 2032, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.SpendableBalances, 2032, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
@@ -205,7 +205,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 			Pagination: testdata.PaginationGenerator(t, uint64(len(initialSupply))).Draw(t, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.TotalSupply, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.TotalSupply, 0, true)
 	})
 
 	suite.SetupTest() // reset
@@ -218,7 +218,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupply() {
 	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
 
 	req := &banktypes.QueryTotalSupplyRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.TotalSupply, 243, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.TotalSupply, 243, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
@@ -231,14 +231,14 @@ func (suite *DeterministicTestSuite) TestGRPCQueryTotalSupplyOf() {
 		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 
 		req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.SupplyOf, 0, true)
 	})
 
 	coin := sdk.NewCoin("bar", sdk.NewInt(100))
 
 	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, sdk.NewCoins(coin)))
 	req := &banktypes.QuerySupplyOfRequest{Denom: coin.GetDenom()}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SupplyOf, 1021, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.SupplyOf, 1021, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
@@ -256,7 +256,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
 		suite.bankKeeper.SetParams(suite.ctx, params)
 
 		req := &banktypes.QueryParamsRequest{}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Params, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.Params, 0, true)
 	})
 
 	enabledStatus := banktypes.SendEnabled{
@@ -272,7 +272,7 @@ func (suite *DeterministicTestSuite) TestGRPCQueryParams() {
 	suite.bankKeeper.SetParams(suite.ctx, params)
 
 	req := &banktypes.QueryParamsRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Params, 1003, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.Params, 1003, false)
 }
 
 func (suite *DeterministicTestSuite) createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
@@ -324,7 +324,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 			Pagination: testdata.PaginationGenerator(t, uint64(count)).Draw(t, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomsMetadata, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.DenomsMetadata, 0, true)
 	})
 
 	suite.SetupTest() // reset
@@ -332,7 +332,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomsMetadata() {
 	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
 
 	req := &banktypes.QueryDenomsMetadataRequest{}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomsMetadata, 660, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.DenomsMetadata, 660, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
@@ -345,7 +345,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
 			Denom: denomMetadata[0].Base,
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomMetadata, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.DenomMetadata, 0, true)
 	})
 
 	suite.bankKeeper.SetDenomMetaData(suite.ctx, metadataAtom)
@@ -354,7 +354,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomMetadata() {
 		Denom: metadataAtom.Base,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomMetadata, 1300, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.DenomMetadata, 1300, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
@@ -381,7 +381,7 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 			// Pagination is only taken into account when `denoms` is an empty array
 			Pagination: testdata.PaginationGenerator(t, uint64(len(allDenoms))).Draw(t, "pagination"),
 		}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SendEnabled, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.SendEnabled, 0, true)
 	})
 
 	coin1 := banktypes.SendEnabled{
@@ -400,7 +400,7 @@ func (suite *DeterministicTestSuite) TestGRPCSendEnabled() {
 		Denoms: []string{coin1.GetDenom(), coin2.GetDenom()},
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.SendEnabled, 4063, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.SendEnabled, 4063, false)
 }
 
 func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
@@ -423,7 +423,7 @@ func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
 			Denom:      denom,
 			Pagination: testdata.PaginationGenerator(t, uint64(numAddr)).Draw(t, "pagination"),
 		}
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 0, true)
+		testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.DenomOwners, 0, true)
 	})
 
 	denomOwners := []*banktypes.DenomOwner{
@@ -448,5 +448,5 @@ func (suite *DeterministicTestSuite) TestGRPCDenomOwners() {
 	req := &banktypes.QueryDenomOwnersRequest{
 		Denom: coin1.GetDenom(),
 	}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DenomOwners, 2525, false)
+	testdata.DeterministicIterations(suite.ctx, req, suite.queryClient.DenomOwners, 2525, false)
 }

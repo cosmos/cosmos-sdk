@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -19,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSetPubKey(t *testing.T) {
@@ -29,7 +30,7 @@ func TestSetPubKey(t *testing.T) {
 	// keys and addresses
 	priv1, pub1, addr1 := testdata.KeyTestPubAddr()
 	priv2, pub2, addr2 := testdata.KeyTestPubAddr()
-	priv3, pub3, addr3 := testdata.KeyTestPubAddrSecp256R1(require.New(t))
+	priv3, pub3, addr3 := testdata.KeyTestPubAddrSecp256R1()
 
 	addrs := []sdk.AccAddress{addr1, addr2, addr3}
 	pubs := []cryptotypes.PubKey{pub1, pub2, pub3}

@@ -2,8 +2,9 @@ package testdata
 
 import (
 	"encoding/json"
+	"testing"
 
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -44,9 +45,9 @@ func KeyTestPubAddr() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) 
 }
 
 // KeyTestPubAddr generates a new secp256r1 keypair.
-func KeyTestPubAddrSecp256R1(require *require.Assertions) (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
+func KeyTestPubAddrSecp256R1() (cryptotypes.PrivKey, cryptotypes.PubKey, sdk.AccAddress) {
 	key, err := secp256r1.GenPrivKey()
-	require.NoError(err)
+	assert.NilError(&testing.T{}, err)
 	pub := key.PubKey()
 	addr := sdk.AccAddress(pub.Address())
 	return key, pub, addr

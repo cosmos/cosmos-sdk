@@ -53,9 +53,9 @@ func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protore
 	formatted := screens[0].Text
 
 	// If the formatted string starts with `SHA-256=`, then we can't actually
-	// invert to get the original bytes. In this case, we error.
+	// invert to get the original bytes. In this case, we return empty bytes.
 	if strings.HasPrefix(formatted, hashPrefix) {
-		return nilValue, fmt.Errorf("cannot parse bytes hash")
+		return protoreflect.ValueOfBytes([]byte{}), nil
 	}
 
 	// Remove all spaces between every 4th char, then we can decode hex.

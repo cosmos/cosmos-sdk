@@ -2,6 +2,7 @@ package v3
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/exported"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -17,7 +18,7 @@ var ParamsKey = []byte{0x00}
 // version 3. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/slashing
 // module state.
-func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
+func Migrate(ctx sdk.Context, store storetypes.KVStore, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 

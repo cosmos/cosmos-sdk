@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -29,8 +30,8 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("params_transient_test")
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 
 	suite.ctx = testutil.DefaultContext(key, tkey)
 	suite.paramsKeeper = keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)

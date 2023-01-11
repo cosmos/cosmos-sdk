@@ -119,12 +119,12 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	}
 
 	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
-	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	noGasCtx := ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
 	if !k.IsInitialized(noGasCtx) {
 		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
-		iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+		iterator := storetypes.KVStorePrefixIterator(prefixStore, nil)
 
 		// initialize the in-memory store for all persisted capabilities
 		defer iterator.Close()

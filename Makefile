@@ -140,7 +140,10 @@ cosmovisor:
 rosetta:
 	$(MAKE) -C tools/rosetta rosetta
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
+confix:
+	$(MAKE) -C tools/confix confix
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix
 
 
 mocks: $(MOCKS_DIR)

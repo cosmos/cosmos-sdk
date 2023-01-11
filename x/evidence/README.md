@@ -244,7 +244,7 @@ validator to ever re-enter the validator set.
 The `Equivocation` evidence is handled as follows:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/83260b0c2f9afcc7ec94a102f83906e8e56ef18e/x/evidence/keeper/infraction.go#L26-L140
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/evidence/keeper/infraction.go#L26-L140
 ```
 
 **Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module

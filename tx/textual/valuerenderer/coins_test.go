@@ -32,10 +32,8 @@ func TestCoinsJsonTestcases(t *testing.T) {
 				// Create a context.Context containing all coins metadata, to simulate
 				// that they are in state.
 				ctx := context.Background()
-
 				for _, v := range tc.Metadata {
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Base), v)
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(v.Display), v)
+					ctx = addMetadataToContext(ctx, v)
 				}
 
 				listValue := NewGenericList(tc.Proto)
@@ -86,10 +84,10 @@ func checkCoinsEqual(t *testing.T, l1, l2 protoreflect.List) {
 
 func checkCoinEqual(t *testing.T, coin, coin1 *basev1beta1.Coin) {
 	require.Equal(t, coin1.Denom, coin.Denom)
-	v, err := math.LegacyNewDecFromStr(coin.Amount)
-	require.NoError(t, err)
-	v1, err := math.LegacyNewDecFromStr(coin1.Amount)
-	require.NoError(t, err)
+	v, ok := math.NewIntFromString(coin.Amount)
+	require.True(t, ok)
+	v1, ok := math.NewIntFromString(coin1.Amount)
+	require.True(t, ok)
 	require.True(t, v.Equal(v1))
 }
 

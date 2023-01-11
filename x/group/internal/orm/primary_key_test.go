@@ -3,9 +3,10 @@ package orm
 import (
 	"testing"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +23,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	metadata := []byte("metadata")
 	t1 := testdata.TableModel{
@@ -50,7 +51,7 @@ func TestPrimaryKeyTablePrefixScan(t *testing.T) {
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
-		method     func(store sdk.KVStore, start, end []byte) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end []byte) (Iterator, error)
 	}{
 		"exact match with a single result": {
 			start:     EncodeSequence(1), // == PrimaryKey(&t1)
@@ -208,7 +209,7 @@ func TestContains(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	tb, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)

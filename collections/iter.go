@@ -2,10 +2,9 @@ package collections
 
 import (
 	"context"
+	"cosmossdk.io/core/store"
 	"errors"
 	"fmt"
-
-	"cosmossdk.io/core/store"
 )
 
 // ErrInvalidIterator is returned when an Iterate call resulted in an invalid iterator.
@@ -223,9 +222,9 @@ func prefixStartEndBytes[K, V any](m Map[K, V], prefix K) (startBytes, endBytes 
 	return startBytes, prefixEndBytes(startBytes), nil
 }
 
-// Iterator defines a generic wrapper around an sdk.Iterator.
+// Iterator defines a generic wrapper around an storetypes.Iterator.
 // This iterator provides automatic key and value encoding,
-// it assumes all the keys and values contained within the sdk.Iterator
+// it assumes all the keys and values contained within the storetypes.Iterator
 // range are the same.
 type Iterator[K, V any] struct {
 	kc KeyCodec[K]
@@ -241,7 +240,7 @@ func (i Iterator[K, V]) Value() (V, error) {
 	return i.vc.Decode(i.iter.Value())
 }
 
-// Key returns the current sdk.Iterator decoded key.
+// Key returns the current storetypes.Iterator decoded key.
 func (i Iterator[K, V]) Key() (K, error) {
 	bytesKey := i.iter.Key()[i.prefixLength:] // strip prefix namespace
 

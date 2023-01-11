@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,8 +16,8 @@ import (
 )
 
 func TestStoreMigration(t *testing.T) {
-	distributionKey := sdk.NewKVStoreKey("distribution")
-	ctx := testutil.DefaultContext(distributionKey, sdk.NewTransientStoreKey("transient_test"))
+	distributionKey := storetypes.NewKVStoreKey("distribution")
+	ctx := testutil.DefaultContext(distributionKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(distributionKey)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()

@@ -10,12 +10,12 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltestutil "github.com/cosmos/cosmos-sdk/x/genutil/testutil"
@@ -50,8 +50,8 @@ type GenTxTestSuite struct {
 
 func (suite *GenTxTestSuite) SetupTest() {
 	suite.encodingConfig = moduletestutil.MakeTestEncodingConfig(genutil.AppModuleBasic{})
-	key := sdk.NewKVStoreKey("a_Store_Key")
-	tkey := sdk.NewTransientStoreKey("a_transient_store")
+	key := storetypes.NewKVStoreKey("a_Store_Key")
+	tkey := storetypes.NewTransientStoreKey("a_transient_store")
 	suite.ctx = testutil.DefaultContext(key, tkey)
 
 	ctrl := gomock.NewController(suite.T())

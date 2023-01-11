@@ -235,14 +235,14 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 				err = r.ParseRepeated(ctx, subscreens, nf.List())
 			} else {
 				err = mr.parseRepeated(ctx, subscreens, nf.List(), vr)
+
+				//Skip List Terminator
+				idx++
 			}
 			if err != nil {
 				return nilValue, err
 			}
 			msg.Set(fd, nf)
-
-			//Skip List Terminator
-			idx++
 		} else {
 			val, err = vr.Parse(ctx, subscreens)
 			if err != nil {
@@ -250,10 +250,6 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			}
 			msg.Set(fd, val)
 		}
-	}
-
-	if idx > len(screens) {
-		return nilValue, errors.New("leftover screens")
 	}
 
 	return protoreflect.ValueOfMessage(msg), nil

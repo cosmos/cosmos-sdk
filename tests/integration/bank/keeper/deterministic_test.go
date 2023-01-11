@@ -4,11 +4,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -44,7 +50,43 @@ var (
 	}
 )
 
-func fundAccount(f *fixture, addr sdk.AccAddress, coin ...sdk.Coin) {
+type deterministicFixture struct {
+	ctx        sdk.Context
+	bankKeeper keeper.BaseKeeper
+
+	queryClient banktypes.QueryClient
+}
+
+func initDeterministicFixture(t *testing.T) *deterministicFixture {
+	f := &deterministicFixture{}
+
+	var interfaceRegistry codectypes.InterfaceRegistry
+
+	app, err := sims.Setup(
+		configurator.NewAppConfig(
+			configurator.AuthModule(),
+			configurator.TxModule(),
+			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
+			configurator.BankModule(),
+			configurator.StakingModule(),
+		),
+		&f.bankKeeper,
+		&interfaceRegistry,
+	)
+	assert.NilError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = ctx
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	banktypes.RegisterQueryServer(queryHelper, f.bankKeeper)
+	f.queryClient = banktypes.NewQueryClient(queryHelper)
+
+	return f
+}
+
+func fundAccount(f *deterministicFixture, addr sdk.AccAddress, coin ...sdk.Coin) {
 	err := banktestutil.FundAccount(f.bankKeeper, f.ctx, addr, sdk.NewCoins(coin...))
 	assert.NilError(&testing.T{}, err)
 }
@@ -58,7 +100,7 @@ func getCoin(rt *rapid.T) sdk.Coin {
 
 func TestGRPCQueryBalance(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
@@ -78,7 +120,7 @@ func TestGRPCQueryBalance(t *testing.T) {
 
 func TestGRPCQueryAllBalances(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
@@ -112,7 +154,7 @@ func TestGRPCQueryAllBalances(t *testing.T) {
 
 func TestGRPCQuerySpendableBalances(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(t *rapid.T) {
@@ -151,7 +193,7 @@ func TestGRPCQuerySpendableBalances(t *testing.T) {
 
 func TestGRPCQueryTotalSupply(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	res, err := f.queryClient.TotalSupply(f.ctx, &banktypes.QueryTotalSupplyRequest{})
@@ -182,7 +224,7 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.TotalSupply, 0, true)
 	})
 
-	f = initFixture(&testing.T{}) // reset
+	f = initDeterministicFixture(t) // reset
 
 	coins := sdk.NewCoins(
 		sdk.NewCoin("foo", sdk.NewInt(10)),
@@ -197,7 +239,7 @@ func TestGRPCQueryTotalSupply(t *testing.T) {
 
 func TestGRPCQueryTotalSupplyOf(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
@@ -221,7 +263,7 @@ func TestGRPCQueryTotalSupplyOf(t *testing.T) {
 
 func TestGRPCQueryParams(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
@@ -294,7 +336,7 @@ func createAndReturnMetadatas(t *rapid.T, count int) []banktypes.Metadata {
 
 func TestGRPCDenomsMetadata(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
@@ -313,7 +355,7 @@ func TestGRPCDenomsMetadata(t *testing.T) {
 		testdata.DeterministicIterations(f.ctx, tt, req, f.queryClient.DenomsMetadata, 0, true)
 	})
 
-	f = initFixture(&testing.T{}) // reset
+	f = initDeterministicFixture(t) // reset
 
 	f.bankKeeper.SetDenomMetaData(f.ctx, metadataAtom)
 
@@ -323,7 +365,7 @@ func TestGRPCDenomsMetadata(t *testing.T) {
 
 func TestGRPCDenomMetadata(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {
@@ -349,7 +391,7 @@ func TestGRPCDenomMetadata(t *testing.T) {
 
 func TestGRPCSendEnabled(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	allDenoms := []string{}
@@ -399,7 +441,7 @@ func TestGRPCSendEnabled(t *testing.T) {
 
 func TestGRPCDenomOwners(t *testing.T) {
 	t.Parallel()
-	f := initFixture(t)
+	f := initDeterministicFixture(t)
 
 	tt := require.New(t)
 	rapid.Check(t, func(rt *rapid.T) {

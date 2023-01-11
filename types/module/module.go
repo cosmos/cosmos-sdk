@@ -458,12 +458,12 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 				panic(err)
 			}
 
-			rawJson, err := target.JSON()
+			rawJSON, err := target.JSON()
 			if err != nil {
 				panic(err)
 			}
 
-			channels[moduleName] <- rawJson
+			channels[moduleName] <- rawJSON
 		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan json.RawMessage)
 			go func(module HasGenesis, ch chan json.RawMessage) {

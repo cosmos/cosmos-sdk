@@ -39,6 +39,15 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v042gov.ProposalKey(prop1.ProposalId), prop1Bz)
 	store.Set(v042gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
+	// Vote on prop 1
+	options := []v1beta1.WeightedVoteOption{
+		{Option: v1beta1.OptionNo, Weight: sdk.MustNewDecFromStr("0.3")},
+		{Option: v1beta1.OptionYes, Weight: sdk.MustNewDecFromStr("0.7")},
+	}
+	vote1 := v1beta1.NewVote(1, voter, options)
+	vote1Bz := cdc.MustMarshal(&vote1)
+	store.Set(v042gov.VoteKey(1, voter), vote1Bz)
+
 	// Run migrations.
 	err = v046gov.MigrateStore(ctx, govKey, cdc)
 	require.NoError(t, err)
@@ -52,6 +61,14 @@ func TestMigrateStore(t *testing.T) {
 	err = cdc.Unmarshal(store.Get(v042gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
+
+	var newVote1 v1.Vote
+	err = cdc.Unmarshal(store.Get(v042gov.VoteKey(prop1.ProposalId, voter)), &newVote1)
+	require.NoError(t, err)
+	// Without the votes migration, we would have 300000000000000000 in state,
+	// because of how sdk.Dec stores itself in state.
+	require.Equal(t, "0.300000000000000000", newVote1.Options[0].Weight)
+	require.Equal(t, "0.700000000000000000", newVote1.Options[1].Weight)
 }
 
 func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1.Proposal) {

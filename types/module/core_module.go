@@ -16,6 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// UseCoreAPIModule wraps the core API module as an AppModule that this version
+// of the SDK can use.
 func UseCoreAPIModule(name string, module appmodule.AppModule) AppModule {
 	return coreAppModuleAdapator{
 		name:   name,

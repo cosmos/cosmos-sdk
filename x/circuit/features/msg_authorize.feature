@@ -32,7 +32,7 @@ Feature: MsgAuthorizeCircuitBreaker
 
   Rule: limit_msg_types must be used with LEVEL_SOME_MSGS
     Example: granting LEVEL_SOME_MSGS with limit_msg_types
-      Given "acct1" has no permissions
+      Given "acct1" has permission "LEVEL_ALL_MSGS"
       When "acct1" attempts to grant "acct2" the permissions
       """
       {

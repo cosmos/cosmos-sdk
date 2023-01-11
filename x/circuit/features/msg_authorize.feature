@@ -67,7 +67,7 @@ Feature: MsgAuthorizeCircuitBreaker
       """
       {
         "level": "LEVEL_NONE_UNSPECIFIED",
-        "limit_type_urls": "cosmos.bank.v1beta1.MsgSend"
+        "limit_msg_types": "cosmos.bank.v1beta1.MsgSend"
       }
       """
       Then expect an "invalid request" error

@@ -34,6 +34,7 @@ import (
 	"sort"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/genesis"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -100,32 +101,32 @@ func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry)
 
 // DefaultGenesis provides default genesis information for all modules
 func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
-	genesis := make(map[string]json.RawMessage)
+	genesisData := make(map[string]json.RawMessage)
 	for _, b := range bm {
 		if mod, ok := b.(appmodule.HasGenesis); ok {
-			target := newGenesisTarget()
-			err := mod.DefaultGenesis(target.target())
+			target := genesis.RawJSONTarget{}
+			err := mod.DefaultGenesis(target.Target())
 			if err != nil {
 				panic(err)
 			}
 
-			genesis[b.Name()], err = target.json()
+			genesisData[b.Name()], err = target.JSON()
 			if err != nil {
 				panic(err)
 			}
 		} else if mod, ok := b.(HasGenesisBasics); ok {
-			genesis[b.Name()] = mod.DefaultGenesis(cdc)
+			genesisData[b.Name()] = mod.DefaultGenesis(cdc)
 		}
 	}
 
-	return genesis
+	return genesisData
 }
 
 // ValidateGenesis performs genesis state validation for all modules
-func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesis map[string]json.RawMessage) error {
+func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
 	for _, b := range bm {
 		if mod, ok := b.(appmodule.HasGenesis); ok {
-			source, err := genesisSource(genesis[b.Name()])
+			source, err := genesis.SourceFromRawJSON(genesisData[b.Name()])
 			if err != nil {
 				return err
 			}
@@ -134,7 +135,7 @@ func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEn
 				return err
 			}
 		} else if mod, ok := b.(HasGenesisBasics); ok {
-			if err := mod.ValidateGenesis(cdc, txEncCfg, genesis[b.Name()]); err != nil {
+			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[b.Name()]); err != nil {
 				return err
 			}
 		}
@@ -396,7 +397,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 		if module, ok := mod.(appmodule.HasGenesis); ok {
 			// core API genesis
-			source, err := genesisSource(genesisData[moduleName])
+			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
 				panic(err)
 			}
@@ -451,16 +452,18 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 
 		if module, ok := mod.(appmodule.HasGenesis); ok {
 			// core API genesis
-			target := newGenesisTarget()
-			err := module.ExportGenesis(ctx, target.target())
+			target := genesis.RawJSONTarget{}
+			err := module.ExportGenesis(ctx, target.Target())
 			if err != nil {
 				panic(err)
 			}
 
-			genesisData[moduleName], err = target.json()
+			rawJson, err := target.JSON()
 			if err != nil {
 				panic(err)
 			}
+
+			channels[moduleName] <- rawJson
 		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan json.RawMessage)
 			go func(module HasGenesis, ch chan json.RawMessage) {

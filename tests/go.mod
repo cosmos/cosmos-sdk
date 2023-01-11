@@ -30,7 +30,7 @@ require (
 	cloud.google.com/go/storage v1.27.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58 // indirect
 	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476 // indirect
-	cosmossdk.io/core v0.4.0 // indirect
+	cosmossdk.io/core v0.4.1 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -184,8 +184,8 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
+	github.com/cosmos/cosmos-sdk/x/nft => .././x/nft // todo remove after pr merged
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
-	github.com/cosmos/cosmos-sdk/x/nft => .././x/nft // todo remove after pr merged
 )

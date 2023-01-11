@@ -38,7 +38,7 @@ it would like the block constructed.
 Currently, there is a default `PrepareProposal` implementation provided by the application.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/baseapp.go#L870-L908
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L868-L916
 ```
 
 This default implementation can be overridden by the application developer in
@@ -68,7 +68,7 @@ proposal is proposed.
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha2/baseapp/baseapp.go#L911-L935
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L927-L942
 ```
 
 Like `PrepareProposal` this implementation is the default and can be modified by the application developer in [`app.go`](./01-app-go-v2.md):

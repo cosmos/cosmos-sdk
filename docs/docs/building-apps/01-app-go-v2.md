@@ -29,29 +29,29 @@ The `app_config.go` file is the single place to configure all modules parameters
 1. Create the `AppConfig` variable:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app_config.go#L77-L78
+    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L91-L93
     ```
 
 2. Configure the `runtime` module:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app_config.go#L79-L137
+    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L94-L158
     ```
 
 3. Configure the modules defined in the `BeginBlocker` and `EndBlocker` and the `tx` module:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app_config.go#L138-L156
+    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L159-L177
     ```
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app_config.go#L170-L173
+    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L192-L194
     ```
 
 ### Complete `app_config.go`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app_config.go#L52-L233
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_config.go#L52-L254
 ```
 
 ### Alternative formats
@@ -102,7 +102,7 @@ A more complete example of `app.yaml` can be found [here](https://github.com/cos
 In short `depinject` and the [`runtime` package](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) abstract the wiring of the app, and the `AppBuilder` is the place where the app is constructed. [`runtime`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/runtime) takes care of registering the codecs, KV store, subspaces and instantiating `baseapp`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app.go#L180-L331
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L158-L291
 ```
 
 :::warning
@@ -116,7 +116,7 @@ In this case, use `depinject.Configs` for combining the extra configuration and 
 More information on how work `depinject.Configs` and `depinject.Supply` can be found in the [`depinject` documentation](https://pkg.go.dev/cosmossdk.io/depinject).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app.go#L209-L237
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L186-L216
 ```
 
 ### Complete `app_v2.go`
@@ -126,5 +126,5 @@ Note that in the complete `SimApp` `app_v2.go` file, testing utilities are also 
 :::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha1/simapp/app.go#L180-L331
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/simapp/app_v2.go#L75-L395
 ```

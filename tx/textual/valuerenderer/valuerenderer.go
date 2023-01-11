@@ -137,13 +137,6 @@ func (r *Textual) DefineScalar(scalar string, vr ValueRendererCreator) {
 	r.scalars[scalar] = vr
 }
 
-// DefineMsgRenderer adds a custom message renderer to the given
-// protobuf message.
-func (r *Textual) DefineMsgRenderer(name protoreflect.FullName, vr ValueRenderer) {
-	r.init()
-	r.messages[name] = vr
-}
-
 // GetSignBytes returns the transaction sign bytes.
 func (r *Textual) GetSignBytes(ctx context.Context, bodyBz, authInfoBz []byte, signerData signing.SignerData) ([]byte, error) {
 	data := &textualpb.TextualData{

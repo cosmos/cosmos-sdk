@@ -48,7 +48,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTripCircuitBreaker) (*types.MsgTripCircuitBreakerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Check that the account has the permission level of "super admin" or "circuit breaker"
+	// Check that the account has the permission level of "super admin"
 	perms, err := srv.GetPermissions(ctx, []byte(msg.Authority))
 	if err != nil {
 		return nil, err
@@ -75,8 +75,50 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 
 // ResetCircuitBreaker resumes processing of Msg's in the state machine that
 // have been been paused using TripCircuitBreaker.
+func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
+    ctx := sdk.UnwrapSDKContext(goCtx)
+    keeper := srv.Keeper
 
-func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
-	return nil, nil
-	//check that the account has any permission and remove the typeurl from the disable list
+    // Get the permissions for the account specified in the msg.Authority field
+    accountPerms, err := keeper.GetPermissions(ctx, []byte(msg.Authority))
+    if err != nil {
+        return nil, err
+    }
+
+    // check that the account has permission to reset the circuit breaker
+    if accountPerms.Level != types.Permissions_LEVEL_ALL_MSGS && accountPerms.Level != types.Permissions_LEVEL_SOME_MSGS {
+        return nil, fmt.Errorf("account does not have permission to reset the circuit breaker")
+    }
+
+    // check that the account has permission to reset the specific msgTypeURLs, if any were provided
+    if accountPerms.Level == types.Permissions_LEVEL_SOME_MSGS {
+        for _, msgTypeURL := range msg.MsgTypeUrls {
+            if !stringInSlice(msgTypeURL, accountPerms.LimitTypeUrls) {
+                return nil, fmt.Errorf("account does not have permission to reset the specific msgTypeURL %s", msgTypeURL)
+            }
+            // Remove the type URL from the disable list
+            keeper.EnableMsg(ctx, msgTypeURL)
+        }
+    } else if accountPerms.Level == types.Permissions_LEVEL_ALL_MSGS {
+        for _, msgTypeURL := range msg.MsgTypeUrls {
+            if !keeper.IsMsgDisabled(ctx, msgTypeURL) {
+                return nil, fmt.Errorf("msgTypeURL %s is not disabled", msgTypeURL)
+            }
+            // Remove the type URL from the disable list
+            keeper.EnableMsg(ctx, msgTypeURL)
+        }
+    }
+
+    return &types.MsgResetCircuitBreakerResponse{
+        Success: true,
+    }, nil
+}
+
+func stringInSlice(a string, list []string) bool {
+    for _, b := range list {
+        if b == a {
+            return true
+        }
+    }
+    return false
 }

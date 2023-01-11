@@ -79,4 +79,6 @@ message MsgResetCircuitBreaker {
 }
 
 // MsgResetCircuitBreakerResponse defines the Msg/ResetCircuitBreaker response type.
-message MsgResetCircuitBreakerResponse {}
+message MsgResetCircuitBreakerResponse {
+  bool success = 1;
+}

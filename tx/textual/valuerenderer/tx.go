@@ -63,6 +63,10 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 		return nil, err
 	}
 
+	// Create envelope here. We really need to make sure that all the non-Msg
+	// fields inside both TxBody and AuthInfo are flattened here. For example,
+	// if we decide to add new fields in either of those 2 structs, then we
+	// should add a new field here in Envelope.
 	envelope := &textualpb.Envelope{
 		ChainId:                     textualData.SignerData.ChainId,
 		AccountNumber:               textualData.SignerData.AccountNumber,

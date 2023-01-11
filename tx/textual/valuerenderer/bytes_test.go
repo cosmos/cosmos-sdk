@@ -2,7 +2,6 @@ package valuerenderer_test
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"os"
 	"testing"
@@ -24,32 +23,27 @@ func TestBytesJsonTestCases(t *testing.T) {
 	textual := valuerenderer.NewTextual(nil)
 
 	for _, tc := range testcases {
-		data, err := base64.StdEncoding.DecodeString(tc.base64)
-		require.NoError(t, err)
-
 		valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
-		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
+		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(tc.base64))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(screens))
 		require.Equal(t, tc.hex, screens[0].Text)
 
 		// Round trip
 		val, err := valrend.Parse(context.Background(), screens)
-		if err != nil {
-			// Make sure Parse() only errors because of hashed bytes.
-			require.Equal(t, "cannot parse bytes hash", err.Error())
-			require.Greater(t, len(tc.base64), 32)
-			continue
-		}
 		require.NoError(t, err)
-		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
+		if len(tc.base64) > 32 {
+			require.Equal(t, 0, len(val.Bytes()))
+		} else {
+			require.Equal(t, tc.base64, val.Bytes())
+		}
 	}
 }
 
 type bytesTest struct {
-	base64 string
+	base64 []byte
 	hex    string
 }
 

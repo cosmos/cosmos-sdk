@@ -274,7 +274,6 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 			// make an unregistered key to satisfy loadCommitStore params
 			oldKey := types.NewKVStoreKey(oldName)
 			oldParams := rs.storesParams[oldKey]
-			fmt.Println(oldParams)
 			fmt.Println(storeParams)
 
 			// load from the old name

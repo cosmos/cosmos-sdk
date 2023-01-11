@@ -13,6 +13,12 @@ block building than previous versions. This change was enabled by
 [ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
+### Pre-requisite Readings
+
+* [BaseApp](../core/00-baseapp.md)
+
+:::
+
 ## Prepare Proposal
 
 `PrepareProposal` handles construction of the block, meaning that when a proposer

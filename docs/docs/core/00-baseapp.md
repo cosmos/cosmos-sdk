@@ -90,6 +90,8 @@ Then, parameters used to define [volatile states](#state-updates) (i.e. cached s
 * `checkState`: This state is updated during [`CheckTx`](#checktx), and reset on [`Commit`](#commit).
 * `deliverState`: This state is updated during [`DeliverTx`](#delivertx), and set to `nil` on
   [`Commit`](#commit) and gets re-initialized on BeginBlock.
+* `processProposalState`: This state is updated during [`ProcessProposal`](#process-proposal).
+* `prepareProposalState`: This state is updated during [`PrepareProposal`](#prepare-proposal).
 
 Finally, a few more important parameters:
 
@@ -381,7 +383,7 @@ Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effec
 The [`InitChain` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#initchain) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
 * [Consensus Parameters](https://docs.tendermint.com/master/spec/abci/apps.html#consensus-parameters) via `setConsensusParams`.
-* [`checkState` and `deliverState`](#state-updates) via `setCheckState` and `setDeliverState`.
+* [`checkState` and `deliverState`](#state-updates) via `setState`.
 * The [block gas meter](../basics/04-gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
 Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls the [`initChainer()`](../basics/00-app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the `genesis file` and, if defined, call the [`InitGenesis`](../building-modules/08-genesis.md#initgenesis) function of each of the application's modules.
@@ -390,10 +392,10 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 
 The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
-* Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setDeliverState` function.
+* Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setState` function.
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L386-L396
+  https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L406-L433
   ```
   
   This function also resets the [main gas meter](../basics/04-gas-fees.md#main-gas-meter).

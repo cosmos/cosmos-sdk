@@ -29,8 +29,8 @@ const (
 	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
 	runTxModeSimulate                  // Simulate a transaction
 	runTxModeDeliver                   // Deliver a transaction
-	runTxPrepareProposal
-	runTxProcessProposal
+	runTxPrepareProposal			   // Prepare a TM block proposal
+	runTxProcessProposal			   // Process a TM block proposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)

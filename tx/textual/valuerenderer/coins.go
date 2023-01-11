@@ -153,17 +153,21 @@ func (vr coinsValueRenderer) parseCoins(ctx context.Context, coinsStr string) ([
 // a core Parse function for coins.
 func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coin, error) {
 	coinArr := strings.Split(coinStr, " ")
-	amt1 := coinArr[0]
+	amt1 := coinArr[0] // Contains potentially some thousandSeparators
 	coinDenom := coinArr[1]
 
-	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
-		dec, err := parseDec(amt1)
-		if err != nil {
-			return nil, err
-		}
+	amtDecStr, err := parseDec(amt1)
+	if err != nil {
+		return nil, err
+	}
+	amtDec, err := math.LegacyNewDecFromStr(amtDecStr)
+	if err != nil {
+		return nil, err
+	}
 
+	if metadata == nil || metadata.Base == "" || coinArr[1] == metadata.Base {
 		return &basev1beta1.Coin{
-			Amount: dec,
+			Amount: amtDecStr,
 			Denom:  coinDenom,
 		}, nil
 	}
@@ -185,37 +189,24 @@ func parseCoin(coinStr string, metadata *bankv1beta1.Metadata) (*basev1beta1.Coi
 
 	// If we didn't find either exponent, then we return early.
 	if !foundCoinExp || !foundBaseExp {
-		amt, err := parseDec(amt1)
-		if err != nil {
-			return nil, err
-		}
-
 		return &basev1beta1.Coin{
-			Amount: amt,
+			Amount: amtDecStr,
 			Denom:  baseDenom,
 		}, nil
 	}
 
-	// remove 1000 separators, (ex: 1'000'000 -> 1000000)
-	amt1 = strings.ReplaceAll(amt1, "'", "")
-	amt, err := math.LegacyNewDecFromStr(amt1)
-	if err != nil {
-		return nil, err
-	}
-
 	if coinExp > baseExp {
-		amt = amt.Mul(math.LegacyNewDec(10).Power(uint64(coinExp - baseExp)))
+		amtDec = amtDec.Mul(math.LegacyNewDec(10).Power(uint64(coinExp - baseExp)))
 	} else {
-		amt = amt.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
+		amtDec = amtDec.Quo(math.LegacyNewDec(10).Power(uint64(baseExp - coinExp)))
 	}
 
-	amtStr, err := parseDec(amt.String())
-	if err != nil {
-		return nil, err
+	if !amtDec.TruncateDec().Equal(amtDec) {
+		return nil, fmt.Errorf("got non-integer coin amount %s", amtDec)
 	}
 
 	return &basev1beta1.Coin{
-		Amount: amtStr,
+		Amount: amtDec.TruncateInt().String(),
 		Denom:  baseDenom,
 	}, nil
 }

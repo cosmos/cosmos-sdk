@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestTypeSafeRowGetter(t *testing.T) {
-	storeKey := sdk.NewKVStoreKey("test")
+	storeKey := storetypes.NewKVStoreKey("test")
 	ctx := NewMockContext()
 	prefixKey := [2]byte{0x2}
 	store := prefix.NewStore(ctx.KVStore(storeKey), prefixKey[:])

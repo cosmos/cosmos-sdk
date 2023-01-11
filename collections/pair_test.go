@@ -16,8 +16,6 @@ func TestPair(t *testing.T) {
 		require.Equal(t, `("a", "b")`, s)
 		s = keyCodec.Stringify(PairPrefix[string, string]("a"))
 		require.Equal(t, `("a", <nil>)`, s)
-		s = keyCodec.Stringify(PairSuffix[string, string]("b"))
-		require.Equal(t, `(<nil>, "b")`, s)
 		s = keyCodec.Stringify(Pair[string, string]{})
 		require.Equal(t, `(<nil>, <nil>)`, s)
 	})
@@ -39,28 +37,28 @@ func TestPairRange(t *testing.T) {
 	require.Equal(t, uint64(1), v)
 
 	// EXPECT only A1,2
-	iter, err := m.Iterate(ctx, NewPairRange[string, uint64]("A").StartInclusive(1).EndInclusive(2))
+	iter, err := m.Iterate(ctx, NewPrefixedPairRange[string, uint64]("A").StartInclusive(1).EndInclusive(2))
 	require.NoError(t, err)
 	keys, err := iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(1)), Join("A", uint64(2))}, keys)
 
 	// expect the whole "A" prefix
-	iter, err = m.Iterate(ctx, NewPairRange[string, uint64]("A"))
+	iter, err = m.Iterate(ctx, NewPrefixedPairRange[string, uint64]("A"))
 	require.NoError(t, err)
 	keys, err = iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(0)), Join("A", uint64(1)), Join("A", uint64(2))}, keys)
 
 	// expect only A1
-	iter, err = m.Iterate(ctx, NewPairRange[string, uint64]("A").StartExclusive(0).EndExclusive(2))
+	iter, err = m.Iterate(ctx, NewPrefixedPairRange[string, uint64]("A").StartExclusive(0).EndExclusive(2))
 	require.NoError(t, err)
 	keys, err = iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(1))}, keys)
 
 	// expect A2, A1
-	iter, err = m.Iterate(ctx, NewPairRange[string, uint64]("A").Descending().StartExclusive(0).EndInclusive(2))
+	iter, err = m.Iterate(ctx, NewPrefixedPairRange[string, uint64]("A").Descending().StartExclusive(0).EndInclusive(2))
 	require.NoError(t, err)
 	keys, err = iter.Keys()
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(2)), Join("A", uint64(1))}, keys)

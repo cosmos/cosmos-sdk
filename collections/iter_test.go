@@ -179,12 +179,12 @@ func TestRange(t *testing.T) {
 			rng: new(Range[string]),
 		},
 		"ok - start exclusive - end exclusive": {
-			rng:       new(Range[string]).StartExclusive("A").EndExclusive("B"),
+			rng:       new(Range[string]).SuffixStartExclusive("A").SuffixEndExclusive("B"),
 			wantStart: BoundExclusive("A"),
 			wantEnd:   BoundExclusive("B"),
 		},
 		"ok - start inclusive - end inclusive - descending": {
-			rng:       new(Range[string]).StartInclusive("A").EndInclusive("B").Descending(),
+			rng:       new(Range[string]).SuffixStartInclusive("A").SuffixEndInclusive("B").Descending(),
 			wantStart: BoundInclusive("A"),
 			wantEnd:   BoundInclusive("B"),
 			wantOrder: OrderDescending,
@@ -195,11 +195,11 @@ func TestRange(t *testing.T) {
 		},
 
 		"err - prefix and start set": {
-			rng:     new(Range[string]).Prefix("A").StartExclusive("B"),
+			rng:     new(Range[string]).Prefix("A").SuffixStartExclusive("B"),
 			wantErr: errRange,
 		},
 		"err - prefix and end set": {
-			rng:     new(Range[string]).Prefix("A").StartInclusive("B"),
+			rng:     new(Range[string]).Prefix("A").SuffixStartInclusive("B"),
 			wantErr: errRange,
 		},
 	}

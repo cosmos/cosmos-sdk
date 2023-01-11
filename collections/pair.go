@@ -42,11 +42,6 @@ func PairPrefix[K1, K2 any](key K1) Pair[K1, K2] {
 	return Pair[K1, K2]{key1: &key}
 }
 
-// PairSuffix creates a new Pair instance composed only of the second part of the key.
-func PairSuffix[K1, K2 any](key K2) Pair[K1, K2] {
-	return Pair[K1, K2]{key2: &key}
-}
-
 // PairKeyCodec instantiates a new KeyCodec instance that can encode the Pair, given the KeyCodec of the
 // first part of the key and the KeyCodec of the second part of the key.
 func PairKeyCodec[K1, K2 any](keyCodec1 KeyCodec[K1], keyCodec2 KeyCodec[K2]) KeyCodec[Pair[K1, K2]] {
@@ -179,51 +174,52 @@ func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
 	return size
 }
 
-// NewPairRange creates a new PairRange which will prefix over all the keys
+// NewPrefixedPairRange creates a new PrefixedPairRange which will prefix over all the keys
 // starting with the provided prefix.
-func NewPairRange[K1, K2 any](prefix K1) *PairRange[K1, K2] {
-	return &PairRange[K1, K2]{
-		start: KeyModifierNone(PairPrefix[K1, K2](prefix)),
-		end:   KeyModifierPrefixEnd(PairPrefix[K1, K2](prefix)),
+func NewPrefixedPairRange[K1, K2 any](prefix K1) *PrefixedPairRange[K1, K2] {
+	return &PrefixedPairRange[K1, K2]{
+		start: RangeKeyExact(PairPrefix[K1, K2](prefix)),
+		end:   RangeKeyPrefixEnd(PairPrefix[K1, K2](prefix)),
 	}
 }
 
-// PairRange is an API that facilitates working with Pair iteration.
+// PrefixedPairRange is an API that facilitates working with Pair iteration.
 // It implements the Ranger API.
-type PairRange[K1, K2 any] struct {
-	start *KeyModifier[Pair[K1, K2]]
-	end   *KeyModifier[Pair[K1, K2]]
+// Unstable: API and methods are currently unstable.
+type PrefixedPairRange[K1, K2 any] struct {
+	start *RangeKey[Pair[K1, K2]]
+	end   *RangeKey[Pair[K1, K2]]
 	order Order
 
 	err error
 }
 
-func (p *PairRange[K1, K2]) StartInclusive(k2 K2) *PairRange[K1, K2] {
-	p.start = KeyModifierNone(Join(*p.start.key.key1, k2))
+func (p *PrefixedPairRange[K1, K2]) StartInclusive(k2 K2) *PrefixedPairRange[K1, K2] {
+	p.start = RangeKeyExact(Join(*p.start.key.key1, k2))
 	return p
 }
 
-func (p *PairRange[K1, K2]) StartExclusive(k2 K2) *PairRange[K1, K2] {
-	p.start = KeyModifierNextKey(Join(*p.start.key.key1, k2))
+func (p *PrefixedPairRange[K1, K2]) StartExclusive(k2 K2) *PrefixedPairRange[K1, K2] {
+	p.start = RangeKeyNext(Join(*p.start.key.key1, k2))
 	return p
 }
 
-func (p *PairRange[K1, K2]) EndInclusive(k2 K2) *PairRange[K1, K2] {
-	p.end = KeyModifierNextKey(Join(*p.end.key.key1, k2))
+func (p *PrefixedPairRange[K1, K2]) EndInclusive(k2 K2) *PrefixedPairRange[K1, K2] {
+	p.end = RangeKeyNext(Join(*p.end.key.key1, k2))
 	return p
 }
 
-func (p *PairRange[K1, K2]) EndExclusive(k2 K2) *PairRange[K1, K2] {
-	p.end = KeyModifierNone(Join(*p.end.key.key1, k2))
+func (p *PrefixedPairRange[K1, K2]) EndExclusive(k2 K2) *PrefixedPairRange[K1, K2] {
+	p.end = RangeKeyExact(Join(*p.end.key.key1, k2))
 	return p
 }
 
-func (p *PairRange[K1, K2]) Descending() *PairRange[K1, K2] {
+func (p *PrefixedPairRange[K1, K2]) Descending() *PrefixedPairRange[K1, K2] {
 	p.order = OrderDescending
 	return p
 }
 
-func (p *PairRange[K1, K2]) RangeValues() (start *KeyModifier[Pair[K1, K2]], end *KeyModifier[Pair[K1, K2]], order Order, err error) {
+func (p *PrefixedPairRange[K1, K2]) RangeValues() (start *RangeKey[Pair[K1, K2]], end *RangeKey[Pair[K1, K2]], order Order, err error) {
 	if p.err != nil {
 		return nil, nil, 0, err
 	}

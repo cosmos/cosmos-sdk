@@ -45,11 +45,6 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
-// ensureConfigPath creates a directory configPath if it does not exist
-func ensureConfigPath(configPath string) error {
-	return os.MkdirAll(configPath, os.ModePerm)
-}
-
 // getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
 func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 	v.AddConfigPath(configPath)
@@ -60,7 +55,7 @@ func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 		return nil, err
 	}
 
-	conf := new(ClientConfig)
+	conf := DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return nil, err
 	}

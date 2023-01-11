@@ -6,16 +6,17 @@ import (
 	"sort"
 	"strings"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	storemetrics "github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,20 +43,20 @@ type (
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
-	StoreLoader func(ms sdk.CommitMultiStore) error
+	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
 	// initialized on creation
 	logger            log.Logger
-	name              string               // application name from abci.Info
-	db                dbm.DB               // common DB backend
-	cms               sdk.CommitMultiStore // Main (uncached) state
-	qms               sdk.MultiStore       // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+	name              string                      // application name from abci.Info
+	db                dbm.DB                      // common DB backend
+	cms               storetypes.CommitMultiStore // Main (uncached) state
+	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -85,7 +86,7 @@ type BaseApp struct { //nolint: maligned
 	prepareProposalState *state // for PrepareProposal
 
 	// an inter-block write-through cache provided to the context during deliverState
-	interBlockCache sdk.MultiStorePersistentCache
+	interBlockCache storetypes.MultiStorePersistentCache
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -141,7 +142,7 @@ type BaseApp struct { //nolint: maligned
 
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
-	abciListeners []ABCIListener
+	abciListeners []storetypes.ABCIListener
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -156,7 +157,7 @@ func NewBaseApp(
 		logger:           logger,
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db),
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -299,14 +300,14 @@ func (app *BaseApp) LoadLatestVersion() error {
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
+func DefaultStoreLoader(ms storetypes.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
 // UNSAFE: must not be used during the abci life cycle.
-func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
+func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore {
 	return app.cms
 }
 
@@ -350,11 +351,11 @@ func (app *BaseApp) Init() error {
 	emptyHeader := tmproto.Header{}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.setCheckState(emptyHeader)
+	app.setState(runTxModeCheck, emptyHeader)
 
 	// needed for ABCI Replay Blocks mode which calls Prepare/Process proposal (InitChain is not called)
-	app.setPrepareProposalState(emptyHeader)
-	app.setProcessProposalState(emptyHeader)
+	app.setState(runTxPrepareProposal, emptyHeader)
+	app.setState(runTxProcessProposal, emptyHeader)
 	app.Seal()
 
 	if app.cms == nil {
@@ -380,7 +381,7 @@ func (app *BaseApp) setMinRetainBlocks(minRetainBlocks uint64) {
 	app.minRetainBlocks = minRetainBlocks
 }
 
-func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
+func (app *BaseApp) setInterBlockCache(cache storetypes.MultiStorePersistentCache) {
 	app.interBlockCache = cache
 }
 
@@ -402,49 +403,32 @@ func (app *BaseApp) Seal() { app.sealed = true }
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
 
-// setCheckState sets the BaseApp's checkState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// provided header, and minimum gas prices set. It is set on InitChain and reset
-// on Commit.
-func (app *BaseApp) setCheckState(header tmproto.Header) {
+// setState sets the BaseApp's state for the corresponding mode with a branched
+// multi-store (i.e. a CacheMultiStore) and a new Context with the same
+// multi-store branch, and provided header.
+func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 	ms := app.cms.CacheMultiStore()
-	app.checkState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, true, app.logger).WithMinGasPrices(app.minGasPrices),
-	}
-}
-
-// setDeliverState sets the BaseApp's deliverState with a branched multi-store
-// (i.e. a CacheMultiStore) and a new Context with the same multi-store branch,
-// and provided header. It is set on InitChain and BeginBlock and set to nil on
-// Commit.
-func (app *BaseApp) setDeliverState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.deliverState = &state{
+	baseState := &state{
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
-}
 
-// setPrepareProposalState sets the BaseApp's prepareProposalState with a
-// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
-// same multi-store branch, and provided header. It is set on InitChain and Commit.
-func (app *BaseApp) setPrepareProposalState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.prepareProposalState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
-	}
-}
-
-// setProcessProposalState sets the BaseApp's processProposalState with a
-// branched multi-store (i.e. a CacheMultiStore) and a new Context with the
-// same multi-store branch, and provided header. It is set on InitChain and Commit.
-func (app *BaseApp) setProcessProposalState(header tmproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	app.processProposalState = &state{
-		ms:  ms,
-		ctx: sdk.NewContext(ms, header, false, app.logger),
+	switch mode {
+	case runTxModeCheck:
+		// Minimum gas prices are also set. It is set on InitChain and reset on Commit.
+		baseState.ctx = baseState.ctx.WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices)
+		app.checkState = baseState
+	case runTxModeDeliver:
+		// It is set on InitChain and BeginBlock and set to nil on Commit.
+		app.deliverState = baseState
+	case runTxPrepareProposal:
+		// It is set on InitChain and Commit.
+		app.prepareProposalState = baseState
+	case runTxProcessProposal:
+		// It is set on InitChain and Commit.
+		app.processProposalState = baseState
+	default:
+		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
 }
 
@@ -552,7 +536,8 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 }
 
 // Returns the application's deliverState if app is in runTxModeDeliver,
-// otherwise it returns the application's checkstate.
+// prepareProposalState if app is in runTxPrepareProposal, processProposalState
+// if app is in runTxProcessProposal, and checkState otherwise.
 func (app *BaseApp) getState(mode runTxMode) *state {
 	switch mode {
 	case runTxModeDeliver:
@@ -591,18 +576,18 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
 	if msCache.TracingEnabled() {
 		msCache = msCache.SetTracingContext(
-			sdk.TraceContext(
+			storetypes.TraceContext(
 				map[string]interface{}{
 					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
 				},
 			),
-		).(sdk.CacheMultiStore)
+		).(storetypes.CacheMultiStore)
 	}
 
 	return ctx.WithMultiStore(msCache), msCache
@@ -672,7 +657,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
-			msCache sdk.CacheMultiStore
+			msCache storetypes.CacheMultiStore
 		)
 
 		// Branch context before AnteHandler call in case it aborts.
@@ -745,7 +730,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 
 			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate)
 			if err != nil {
-				return gInfo, nil, nil, priority, err
+				return gInfo, nil, anteEvents, priority, err
 			}
 
 			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
@@ -796,7 +781,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode runTxMode) (*s
 		}
 
 		// create message events
-		msgEvents := createEvents(msg).AppendEvents(msgResult.GetEvents())
+		msgEvents := createEvents(msgResult.GetEvents(), msg)
 
 		// append message events, data and logs
 		//
@@ -838,7 +823,7 @@ func makeABCIData(msgResponses []*codectypes.Any) ([]byte, error) {
 	return proto.Marshal(&sdk.TxMsgData{MsgResponses: msgResponses})
 }
 
-func createEvents(msg sdk.Msg) sdk.Events {
+func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 	eventMsgName := sdk.MsgTypeURL(msg)
 	msgEvent := sdk.NewEvent(sdk.EventTypeMessage, sdk.NewAttribute(sdk.AttributeKeyAction, eventMsgName))
 
@@ -847,14 +832,17 @@ func createEvents(msg sdk.Msg) sdk.Events {
 		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeySender, msg.GetSigners()[0].String()))
 	}
 
-	// here we assume that routes module name is the second element of the route
-	// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
-	moduleName := strings.Split(eventMsgName, ".")
-	if len(moduleName) > 1 {
-		msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
+	// verify that events have no module attribute set
+	if _, found := events.GetAttributes(sdk.AttributeKeyModule); !found {
+		// here we assume that routes module name is the second element of the route
+		// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+		moduleName := strings.Split(eventMsgName, ".")
+		if len(moduleName) > 1 {
+			msgEvent = msgEvent.AppendAttributes(sdk.NewAttribute(sdk.AttributeKeyModule, moduleName[1]))
+		}
 	}
 
-	return sdk.Events{msgEvent}
+	return sdk.Events{msgEvent}.AppendEvents(events)
 }
 
 // DefaultPrepareProposal returns the default implementation for processing an

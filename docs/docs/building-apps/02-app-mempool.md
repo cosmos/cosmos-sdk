@@ -5,14 +5,35 @@ sidebar_position: 1
 # Application mempool
 
 :::note Synopsis
-This sections describes how the app side mempool can be used and replaced. 
+This sections describes how the app-side mempool can be used and replaced. 
 :::
 
-Since `v0.47` the application has its own mempool to allow much more granular block building than previous versions. This change was enabled by [ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md). Notably it introduces the prepare and process proposal steps of ABCI. 
+Since `v0.47` the application has its own mempool to allow much more granular
+block building than previous versions. This change was enabled by
+[ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md).
+Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
 ## Prepare Proposal
 
-Prepare proposal handles construction of the block, meaning that when a proposer is preparing to propose a block it asks the application if the txs it collected from the mempool are the right ones, at which point the application will check its own mempool for txs that it would like to include. Now, reading mempool twice in the previous sentence is confusing, lets break it down. Tendermint has a mempool that handles bradcasting transactions to other nodes in the network, but it does not handle ordering of these transactions. The ordering happens at the application level in its own mempool. Allowing the application to handle ordering enables the application to define how it would like the block constructed. 
+`PrepareProposal` handles construction of the block, meaning that when a proposer
+is preparing to propose a block, it requests the application to evaluate a
+`RequestPrepareProposal`, which contains a series of transactions from Tendermint's
+mempool. At this point, the application has complete control over the proposal.
+It can modify, delete, and inject transactions from it's own app-side mempool into
+the proposal or even ignore all the transactions altogether. What the application
+does with the transactions provided to it by `RequestPrepareProposal` have no
+effect on Tendermint's mempool.
+
+Note, that the application defines the semantics of the `PrepareProposal` and it
+MAY be non-deterministic and is only executed by the current block proposer.
+
+Now, reading mempool twice in the previous sentence is confusing, lets break it down.
+Tendermint has a mempool that handles gossiping transactions to other nodes
+in the network. How these transactions are ordered is determined by Tendermint's
+mempool, typically FIFO. However, since the application is able to fully inspect
+all transactions, it can provide greater control over transaction ordering.
+Allowing the application to handle ordering enables the application to define how
+it would like the block constructed. 
 
 Currently, there is a default `PrepareProposal` implementation provided by the application.
 
@@ -20,7 +41,8 @@ Currently, there is a default `PrepareProposal` implementation provided by the a
 https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/baseapp.go#L870-L908
 ```
 
-This default implementation can be overridden by the application developer in favor of a custom implementation in [`app.go`](./01-app-go-v2.md):
+This default implementation can be overridden by the application developer in
+favor of a custom implementation in [`app.go`](./01-app-go-v2.md):
 
 ```go
 prepareOpt := func(app *baseapp.BaseApp) {
@@ -32,7 +54,16 @@ baseAppOptions = append(baseAppOptions, prepareOpt)
 
 ## Process Proposal
 
-Process proposal handles the validation of what is in a block, meaning that after a block has been proposed the other validators have the right to vote no or yes on a block. The validator in the default implementation of `PrepareProposal` runs the transaction in a non execution fashion, it runs the antehandler and gas operations to make sure the transaction is valid. 
+`ProcessProposal` handles the validation of a proposal from `PrepareProposal`,
+which also includes a block header. Meaning, that after a block has been proposed
+the other validators have the right to vote on a block. The validator in the
+default implementation of `PrepareProposal` runs basic validity checks on each
+transaction.
+
+Note, `ProcessProposal` MAY NOT be non-deterministic, i.e. it must be deterministic.
+This means if `ProcessProposal` panics or fails and we reject, all honest validator
+processes will prevote nil and the Tendermint round will proceed again until a valid
+proposal is proposed.
 
 Here is the implementation of the default implementation:
 
@@ -78,7 +109,7 @@ which is FIFO-ordered by default.
 ### Sender Nonce Mempool
 
 The nonce mempool is a mempool that keeps transactions from an sorted by nonce in order to avoid the issues with nonces. 
-It works by storing the transation in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
+It works by storing the transaction in a list sorted by the transaction nonce. When the proposer asks for transactions to be included in a block it randomly selects a sender and gets the first transaction in the list. It repeats this until the mempool is empty or the block is full. 
 
 It is configurable with the following parameters:
 
@@ -115,6 +146,9 @@ It is an integer value that sets the mempool in one of three modes, *bounded*, *
 
 #### Callback
 
-Allow to set a callback to be called when a transaction is read from the mempool.
+The priority nonce mempool provides mempool options allowing the application sets callback(s).
+
+* **OnRead**: Set a callback to be called when a transaction is read from the mempool.
+* **TxReplacement**: Sets a callback to be called when duplicated transaction nonce detected during mempool insert. Application can define a transaction replacement rule based on tx priority or certain transaction fields.
 
 More information on the SDK mempool implementation can be found in the [godocs](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).

@@ -9,6 +9,9 @@
 * Sep 07, 2022: Add custom `Msg`-renderers.
 * Sep 18, 2022: Structured format instead of lines of text
 * Nov 23, 2022: Specify CBOR encoding.
+* Dec 01, 2022: Link to examples in separate JSON file.
+* Dec 06, 2022: Re-ordering of envelope screens.
+* Dec 14, 2022: Mention exceptions for invertability.
 
 ## Status
 
@@ -75,6 +78,14 @@ the composition of rendering and parsing.
 Note that the existence of an inverse function ensures that the
 rendered text contains the full information of the original transaction,
 not a hash or subset.
+
+We make an exception for invertibility for data which are too large to
+meaningfully display, such as byte strings longer than 32 bytes. We may then
+selectively render them with a cryptographically-strong hash. In these cases,
+it is still computationally infeasible to find a different transaction which
+has the same rendering. However, we must ensure that the hash computation is
+simple enough to be reliably executed independently, so at least the hash is
+itself reasonably verifiable when the raw byte string is not.
 
 ### Chain State
 
@@ -167,29 +178,30 @@ We define "transaction envelope" as all data in a transaction that is not in the
 ```
 Chain ID: <string>
 Account number: <uint64>
-*Public Key: <hex_string>
 Sequence: <uint64>
-<TxBody>                                                    // See #8.
-Fee: <coins>                                                // See value renderers for coins encoding.
-*Fee payer: <string>                                        // Skipped if no fee_payer set
-*Fee granter: <string>                                      // Skipped if no fee_granter set
-Memo: <string>                                              // Skipped if no memo set
+Address: <string>
+*Public Key: <Any>
+This transaction has <int> Message(s)                       // Pluralize "Message" only when int>1
+> Message (<int>/<int>): <Any>                              // See value renderers for Any rendering.
+End of Message
+Memo: <string>                                              // Skipped if no memo set.
+Fee: <coins>                                                // See value renderers for coins rendering.
+*Fee payer: <string>                                        // Skipped if no fee_payer set.
+*Fee granter: <string>                                      // Skipped if no fee_granter set.
+Tip: <coins>                                                // Skippted if no tip.
+Tipper: <string>
 *Gas Limit: <uint64>
-*Timeout Height:  <uint64>                                  // Skipped if no timeout_height set
-Tipper: <string>                                            // If there's a tip
-Tip: <string>
-*This transaction has <int> body extension:                 // Skipped if no body extension options
-*<repeated Any>
-*This transaction has <int> body non-critical extensions:   // Skipped if no body non-critical extension options
-*<repeated Any>                                             // See value renderers for Any and array encoding.
-*This transaction has <int> body auth info extensions:      // Skipped if no auth info extension options
-*<repeated Any>
-*This transaction has <int> other signers:                  // Skipped if there is only one signer
-*Signer (<int>/<int>):
-*Public Key: <hex_string>
-*Sequence: <uint64>
+*Timeout Height: <uint64>                                   // Skipped if no timeout_height set.
+*Other signer: <int> SignerInfo                             // Skipped if the transaction only has 1 signer.
+*> Other signer (<int>/<int>): <SignerInfo>
 *End of other signers
-*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined in #10, to prevent tx hash malleability.
+*Extension options: <int> Any:                              // Skipped if no body extension options
+*> Extension options (<int>/<int>): <Any>
+*End of extension options
+*Non critical extension options: <int> Any:                 // Skipped if no body non critical extension options
+*> Non critical extension options (<int>/<int>): <Any>
+*End of Non critical extension options
+*Hash of raw bytes: <hex_string>                            // Hex encoding of bytes defined, to prevent tx hash malleability.
 ```
 
 ### Encoding of the Transaction Body
@@ -210,7 +222,7 @@ Given the following Protobuf message:
 
 ```protobuf
 message Grant {
-  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "Authorization"];
+  google.protobuf.Any       authorization = 1 [(cosmos_proto.accepts_interface) = "cosmos.authz.v1beta1.Authorization"];
   google.protobuf.Timestamp expiration    = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
 
@@ -280,304 +292,13 @@ See [annex 2](./adr-050-sign-mode-textual-annex2.md).
 
 ## Examples
 
-#### Example 1: Simple `MsgSend`
+1. A minimal MsgSend: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/094abcd393379acbbd043996024d66cd65246fb1/tx/textual/internal/testdata/e2e.json#L2-L70).
+2. A transaction with a bit of everything: [see transaction](https://github.com/cosmos/cosmos-sdk/blob/094abcd393379acbbd043996024d66cd65246fb1/tx/textual/internal/testdata/e2e.json#L71-L270).
 
-JSON:
-
-```json
-{
-  "body": {
-    "messages": [
-      {
-        "@type": "/cosmos.bank.v1beta1.MsgSend",
-        "from": "cosmos1...abc",
-        "to": "cosmos1...def",
-        "amount": [
-          {
-            "denom": "uatom",
-            "amount": 10000000
-          }
-        ]
-      }
-    ]
-  },
-  "auth_info": {
-    "signer_infos": [
-      {
-        "public_key": "iQ...==",
-        "mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
-        "sequence": 2
-      }
-    ],
-    "fee": {
-      "amount": [
-        {
-          "denom": "atom",
-          "amount": 0.002
-        }
-      ],
-      "gas_limit": 100000
-    }
-  },
-  // Additional SignerData.
-  "chain_id": "simapp-1",
-  "account_number": 10
-}
-```
-
-SIGN_MODE_TEXTUAL:
-
-```
-Chain ID: simapp-1
-Account number: 10
-*Public Key: iQ...==        // Hex pubkey
-Sequence: 2
-This transaction has 1 message:
-Message (1/1): bank v1beta1 send coins
-From: cosmos1...abc
-To: cosmos1...def
-Amount: 10 atom            // Conversion from uatom to atom using value renderers
-End of transaction messages
-Fee: 0.002 atom
-*Gas: 100'000
-*Hash of raw bytes: <hex_string>
-```
-
-#### Example 2: Multi-Msg Transaction with 3 signers
-
-#### Example 3: Legacy Multisig
-
-#### Example 4: Fee Payer with Tips
-
-```json
-{
-  "body": {
-    "messages": [
-      {
-        "@type": "/cosmos.bank.v1beta1.MsgSend",
-        "from": "cosmos1...tipper",
-        "to": "cosmos1...abc",
-        "amount": [
-          {
-            "denom": "uatom",
-            "amount": 10000000
-          }
-        ]
-      }
-    ]
-  },
-  "auth_info": {
-    "signer_infos": [
-      {
-        "public_key": "iQ...==",
-        "mode_info": { "single": { "mode": "SIGN_MODE_DIRECT_AUX" } },
-        "sequence": 42
-      },
-      {
-        "public_key": "iR...==",
-        "mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
-        "sequence": 2
-      }
-    ],
-    "fee": {
-      "amount": [
-        {
-          "denom": "atom",
-          "amount": 0.002
-        }
-      ],
-      "gas_limit": 100000,
-      "payer": "cosmos1...feepayer"
-    },
-    "tip": {
-      "amount": [
-        {
-          "denom": "ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D",
-          "amount": 200
-        }
-      ],
-      "tipper": "cosmos1...tipper"
-    }
-  },
-  // Additional SignerData.
-  "chain_id": "simapp-1",
-  "account_number": 10
-}
-```
-
-SIGN_MODE_TEXTUAL for the feepayer:
-
-```
-Chain ID: simapp-1
-Account number: 10
-*Public Key: iR...==
-Sequence: 2
-This transaction has 1 message:
-Message (1/1): bank v1beta1 send coins
-From: cosmos1...abc
-To: cosmos1...def
-Amount: 10 atom
-End of transaction messages
-Fee: 0.002 atom
-Fee Payer: cosmos1...feepayer
-Tipper: cosmos1...tipper
-Tip: 200 ibc/CDC4587874B85BEA4FCEC3CEA5A1195139799A1FEE711A07D972537E18FDA39D
-*Gas: 100'000
-*This transaction has 1 other signer:
-*Signer (1/2):
-*Public Key: iQ...==
-*Sign mode: SIGN_MODE_DIRECT_AUX
-*Sequence: 42
-*End of other signers
-*Hash of raw bytes: <hex_string>
-```
-
-#### Example 5: Complex Transaction with Nested Messages
-
-JSON:
-
-```json
-{
-  "body": {
-    "messages": [
-      {
-        "@type": "/cosmos.bank.v1beta1.MsgSend",
-        "from": "cosmos1...abc",
-        "to": "cosmos1...def",
-        "amount": [
-          {
-            "denom": "uatom",
-            "amount": 10000000
-          }
-        ]
-      },
-      {
-        "@type": "/cosmos.gov.v1.MsgSubmitProposal",
-        "proposer": "cosmos1...ghi",
-        "messages": [
-          {
-            "@type": "/cosmos.bank.v1beta1.MsgSend",
-            "from": "cosmos1...jkl",
-            "to": "cosmos1...mno",
-            "amount": [
-              {
-                "denom": "uatom",
-                "amount": 20000000
-              }
-            ]
-          },
-          {
-            "@type": "/cosmos.authz.v1beta1.MsgExec",
-            "grantee": "cosmos1...pqr",
-            "msgs": [
-              {
-                "@type": "/cosmos.bank.v1beta1.MsgSend",
-                "from": "cosmos1...stu",
-                "to": "cosmos1...vwx",
-                "amount": [
-                  {
-                    "denom": "uatom",
-                    "amount": 30000000
-                  }
-                ]
-              },
-              {
-                "@type": "/cosmos.bank.v1beta1.MsgSend",
-                "from": "cosmos1...abc",
-                "to": "cosmos1...def",
-                "amount": [
-                  {
-                    "denom": "uatom",
-                    "amount": 40000000
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "initial_deposit": [
-          {
-            "denom": "atom",
-            "amount": 100.01
-          }
-        ]
-      }
-    ]
-  },
-  "auth_info": {
-    "signer_infos": [
-      {
-        "public_key": "iQ...==",
-        "mode_info": { "single": { "mode": "SIGN_MODE_TEXTUAL" } },
-        "sequence": 2
-      },
-      {
-        "public_key": "iR...==",
-        "mode_info": { "single": { "mode": "SIGN_MODE_DIRECT" } },
-        "sequence": 42
-      }
-    ],
-    "fee": {
-      "amount": [
-        {
-          "denom": "atom",
-          "amount": 0.002
-        }
-      ],
-      "gas_limit": 100000
-    }
-  },
-  // Additional SignerData.
-  "chain_id": "simapp-1",
-  "account_number": 10
-}
-}
-```
-
-SIGN_MODE_TEXTUAL for 1st signer `cosmos1...abc`:
-
-```
-Chain ID: simapp-1
-Account number: 10
-*Public Key: iQ...==
-Sequence: 2
-This transaction has 2 messages:
-Message (1/2): bank v1beta1 send coins
-From: cosmos1...abc
-To: cosmos1...def
-Amount: 10 atom
-Message (2/2): gov v1 submit proposal
-Messages: 2 Messages
-> Message (1/2): bank v1beta1 send coins
-> From: cosmos1...jkl
-> To: cosmos1...mno
-> Amount: 20 atom
-> Message (2/2): authz v1beta exec
-> Grantee: cosmos1...pqr
-> Msgs: 2 Msgs
->> Msg (1/2): bank v1beta1 send coins
->> From: cosmos1...stu
->> To: cosmos1...vwx
->> Amount: 30 atom
->> Msg (2/2): bank v1beta1 send coins
->> From: cosmos1...abc
->> To: cosmos1...def
->> Amount: 40 atom
-> End of Msgs
-End of transaction messages
-Proposer: cosmos1...ghi
-Initial Deposit: 100.01 atom
-End of transaction messages
-Fee: 0.002 atom
-*Gas: 100'000
-*This transaction has 1 other signer:
-*Signer (2/2):
-*Public Key: iR...==
-*Sign mode: SIGN_MODE_DIRECT
-*Sequence: 42
-*End of other signers
-*Hash of raw bytes: <hex_string>
-```
+The examples below are stored in a JSON file with the following fields:
+- `proto`: the representation of the transaction in ProtoJSON,
+- `screens`: the transaction rendered into SIGN_MODE_TEXTUAL screens,
+- `cbor`: the sign bytes of the transaction, which is the CBOR encoding of the screens.
 
 ## Consequences
 

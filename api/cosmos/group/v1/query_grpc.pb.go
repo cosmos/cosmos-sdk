@@ -26,13 +26,13 @@ type QueryClient interface {
 	GroupInfo(ctx context.Context, in *QueryGroupInfoRequest, opts ...grpc.CallOption) (*QueryGroupInfoResponse, error)
 	// GroupPolicyInfo queries group policy info based on account address of group policy.
 	GroupPolicyInfo(ctx context.Context, in *QueryGroupPolicyInfoRequest, opts ...grpc.CallOption) (*QueryGroupPolicyInfoResponse, error)
-	// GroupMembers queries members of a group
+	// GroupMembers queries members of a group by group id.
 	GroupMembers(ctx context.Context, in *QueryGroupMembersRequest, opts ...grpc.CallOption) (*QueryGroupMembersResponse, error)
 	// GroupsByAdmin queries groups by admin address.
 	GroupsByAdmin(ctx context.Context, in *QueryGroupsByAdminRequest, opts ...grpc.CallOption) (*QueryGroupsByAdminResponse, error)
 	// GroupPoliciesByGroup queries group policies by group id.
 	GroupPoliciesByGroup(ctx context.Context, in *QueryGroupPoliciesByGroupRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByGroupResponse, error)
-	// GroupsByAdmin queries group policies by admin address.
+	// GroupPoliciesByAdmin queries group policies by admin address.
 	GroupPoliciesByAdmin(ctx context.Context, in *QueryGroupPoliciesByAdminRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByAdminResponse, error)
 	// Proposal queries a proposal based on proposal id.
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
@@ -40,7 +40,7 @@ type QueryClient interface {
 	ProposalsByGroupPolicy(ctx context.Context, in *QueryProposalsByGroupPolicyRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupPolicyResponse, error)
 	// VoteByProposalVoter queries a vote by proposal id and voter.
 	VoteByProposalVoter(ctx context.Context, in *QueryVoteByProposalVoterRequest, opts ...grpc.CallOption) (*QueryVoteByProposalVoterResponse, error)
-	// VotesByProposal queries a vote by proposal.
+	// VotesByProposal queries a vote by proposal id.
 	VotesByProposal(ctx context.Context, in *QueryVotesByProposalRequest, opts ...grpc.CallOption) (*QueryVotesByProposalResponse, error)
 	// VotesByVoter queries a vote by voter.
 	VotesByVoter(ctx context.Context, in *QueryVotesByVoterRequest, opts ...grpc.CallOption) (*QueryVotesByVoterResponse, error)
@@ -187,13 +187,13 @@ type QueryServer interface {
 	GroupInfo(context.Context, *QueryGroupInfoRequest) (*QueryGroupInfoResponse, error)
 	// GroupPolicyInfo queries group policy info based on account address of group policy.
 	GroupPolicyInfo(context.Context, *QueryGroupPolicyInfoRequest) (*QueryGroupPolicyInfoResponse, error)
-	// GroupMembers queries members of a group
+	// GroupMembers queries members of a group by group id.
 	GroupMembers(context.Context, *QueryGroupMembersRequest) (*QueryGroupMembersResponse, error)
 	// GroupsByAdmin queries groups by admin address.
 	GroupsByAdmin(context.Context, *QueryGroupsByAdminRequest) (*QueryGroupsByAdminResponse, error)
 	// GroupPoliciesByGroup queries group policies by group id.
 	GroupPoliciesByGroup(context.Context, *QueryGroupPoliciesByGroupRequest) (*QueryGroupPoliciesByGroupResponse, error)
-	// GroupsByAdmin queries group policies by admin address.
+	// GroupPoliciesByAdmin queries group policies by admin address.
 	GroupPoliciesByAdmin(context.Context, *QueryGroupPoliciesByAdminRequest) (*QueryGroupPoliciesByAdminResponse, error)
 	// Proposal queries a proposal based on proposal id.
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
@@ -201,7 +201,7 @@ type QueryServer interface {
 	ProposalsByGroupPolicy(context.Context, *QueryProposalsByGroupPolicyRequest) (*QueryProposalsByGroupPolicyResponse, error)
 	// VoteByProposalVoter queries a vote by proposal id and voter.
 	VoteByProposalVoter(context.Context, *QueryVoteByProposalVoterRequest) (*QueryVoteByProposalVoterResponse, error)
-	// VotesByProposal queries a vote by proposal.
+	// VotesByProposal queries a vote by proposal id.
 	VotesByProposal(context.Context, *QueryVotesByProposalRequest) (*QueryVotesByProposalResponse, error)
 	// VotesByVoter queries a vote by voter.
 	VotesByVoter(context.Context, *QueryVotesByVoterRequest) (*QueryVotesByVoterResponse, error)

@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -22,8 +23,8 @@ func TestMigration(t *testing.T) {
 	var cdc codec.Codec
 	depinject.Inject(authztestutil.AppConfig, &cdc)
 
-	authzKey := sdk.NewKVStoreKey("authz")
-	ctx := testutil.DefaultContext(authzKey, sdk.NewTransientStoreKey("transient_test"))
+	authzKey := storetypes.NewKVStoreKey("authz")
+	ctx := testutil.DefaultContext(authzKey, storetypes.NewTransientStoreKey("transient_test"))
 	granter1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	grantee1 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())
 	granter2 := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

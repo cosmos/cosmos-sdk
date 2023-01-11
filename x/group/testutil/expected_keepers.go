@@ -13,8 +13,7 @@ type AccountKeeper interface {
 	group.AccountKeeper
 }
 
-// BankKeeper extends `BankKeeper` from expected_keepers and bank `MsgServer` to mock `Send` and
-// to register handlers in MsgServiceRouter
+// BankKeeper extends bank `MsgServer` to mock `Send` and to register handlers in MsgServiceRouter
 type BankKeeper interface {
 	group.BankKeeper
 	bank.MsgServer

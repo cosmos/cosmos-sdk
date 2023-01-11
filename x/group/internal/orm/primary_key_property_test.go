@@ -1,3 +1,4 @@
+//nolint:unused // this file contains tests
 package orm
 
 import (
@@ -5,11 +6,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
-
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 func TestPrimaryKeyTable(t *testing.T) {
@@ -19,7 +20,7 @@ func TestPrimaryKeyTable(t *testing.T) {
 // primaryKeyMachine is a state machine model of the PrimaryKeyTable. The state
 // is modelled as a map of strings to TableModels.
 type primaryKeyMachine struct {
-	store sdk.KVStore
+	store storetypes.KVStore
 	table *PrimaryKeyTable
 	state map[string]*testdata.TableModel
 }
@@ -47,9 +48,8 @@ func (m *primaryKeyMachine) genTableModel() *rapid.Generator[*testdata.TableMode
 
 	if len(m.stateKeys()) == 0 {
 		return genTableModel
-	} else {
-		return rapid.OneOf(genTableModel, genStateTableModel)
 	}
+	return rapid.OneOf(genTableModel, genStateTableModel)
 }
 
 // Init creates a new instance of the state machine model by building the real
@@ -57,7 +57,7 @@ func (m *primaryKeyMachine) genTableModel() *rapid.Generator[*testdata.TableMode
 func (m *primaryKeyMachine) Init(t *rapid.T) {
 	// Create context
 	ctx := NewMockContext()
-	m.store = ctx.KVStore(sdk.NewKVStoreKey("test"))
+	m.store = ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	// Create primary key table
 	interfaceRegistry := types.NewInterfaceRegistry()

@@ -83,6 +83,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 054: Semver Compatible SDK Modules](./adr-054-semver-compatible-modules.md)
 * [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 059: Test Scopes](./adr-059-test-scopes.md)
+* [ADR 062: Collections State Layer](./adr-062-collections-state-layer.md)
 
 ### Draft
 

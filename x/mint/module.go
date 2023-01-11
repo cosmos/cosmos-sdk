@@ -196,7 +196,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -215,6 +215,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type MintInputs struct {
 	depinject.In
 
@@ -232,6 +233,7 @@ type MintInputs struct {
 	StakingKeeper types.StakingKeeper
 }
 
+//nolint:revive
 type MintOutputs struct {
 	depinject.Out
 

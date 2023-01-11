@@ -26,13 +26,13 @@ func TestContextTestSuite(t *testing.T) {
 }
 
 func (s *contextTestSuite) TestCacheContext() {
-	key := types.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
+	key := storetypes.NewKVStoreKey(s.T().Name() + "_TestCacheContext")
 	k1 := []byte("hello")
 	v1 := []byte("world")
 	k2 := []byte("key")
 	v2 := []byte("value")
 
-	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+s.T().Name()))
+	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
 	store := ctx.KVStore(key)
 	store.Set(k1, v1)
 	s.Require().Equal(v1, store.Get(k1))
@@ -58,8 +58,8 @@ func (s *contextTestSuite) TestCacheContext() {
 }
 
 func (s *contextTestSuite) TestLogContext() {
-	key := types.NewKVStoreKey(s.T().Name())
-	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+s.T().Name()))
+	key := storetypes.NewKVStoreKey(s.T().Name())
+	ctx := testutil.DefaultContext(key, storetypes.NewTransientStoreKey("transient_"+s.T().Name()))
 	ctrl := gomock.NewController(s.T())
 	s.T().Cleanup(ctrl.Finish)
 
@@ -89,8 +89,8 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	txbytes := []byte("txbytes")
 	logger := mock.NewMockLogger(ctrl)
 	voteinfos := []abci.VoteInfo{{}}
-	meter := types.NewGasMeter(10000)
-	blockGasMeter := types.NewGasMeter(20000)
+	meter := storetypes.NewGasMeter(10000)
+	blockGasMeter := storetypes.NewGasMeter(20000)
 	minGasPrices := types.DecCoins{types.NewInt64DecCoin("feetoken", 1)}
 	headerHash := []byte("headerHash")
 	zeroGasCfg := storetypes.GasConfig{}
@@ -137,7 +137,7 @@ func (s *contextTestSuite) TestContextWithCustom() {
 	s.Require().Equal(cp, ctx.WithConsensusParams(cp).ConsensusParams())
 
 	// test inner context
-	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck
+	newContext := context.WithValue(ctx.Context(), "key", "value") //nolint:golint,staticcheck,revive
 	s.Require().NotEqual(ctx.Context(), ctx.WithContext(newContext).Context())
 }
 
@@ -228,7 +228,7 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	s.Require().Panics(func() { types.UnwrapSDKContext(ctx) })
 
 	// test unwrapping when we've used context.WithValue
-	ctx = context.WithValue(sdkCtx, "foo", "bar")
+	ctx = context.WithValue(sdkCtx, "foo", "bar") //nolint:golint,staticcheck,revive
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }

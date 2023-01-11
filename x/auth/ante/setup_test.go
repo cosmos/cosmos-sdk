@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -34,7 +35,7 @@ func TestSetup(t *testing.T) {
 	antehandler := sdk.ChainAnteDecorators(sud)
 
 	// Set height to non-zero value for GasMeter to be set
-	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(sdk.NewGasMeter(0))
+	suite.ctx = suite.ctx.WithBlockHeight(1).WithGasMeter(storetypes.NewGasMeter(0))
 
 	// Context GasMeter Limit not set
 	require.Equal(t, uint64(0), suite.ctx.GasMeter().Limit(), "GasMeter set with limit before setup")
@@ -79,7 +80,7 @@ func TestRecoverPanic(t *testing.T) {
 	require.Equal(t, gasLimit, newCtx.GasMeter().Limit())
 
 	antehandler = sdk.ChainAnteDecorators(sud, PanicDecorator{})
-	require.Panics(t, func() { antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") // nolint:errcheck
+	require.Panics(t, func() { antehandler(suite.ctx, tx, false) }, "Recovered from non-Out-of-Gas panic") //nolint:errcheck
 }
 
 type OutOfGasDecorator struct{}

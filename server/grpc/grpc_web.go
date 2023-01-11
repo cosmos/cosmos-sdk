@@ -27,7 +27,7 @@ func StartGRPCWeb(grpcSrv *grpc.Server, config config.Config) (*http.Server, err
 	grpcWebSrv := &http.Server{
 		Addr:              config.GRPCWeb.Address,
 		Handler:           wrappedServer,
-		ReadHeaderTimeout: 500000000, // added because G112: Potential Slowloris Attack because ReadHeaderTimeout is not configured in the http.Server
+		ReadHeaderTimeout: 500 * time.Millisecond,
 	}
 
 	errCh := make(chan error)

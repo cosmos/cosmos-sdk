@@ -12,7 +12,7 @@ import (
 	client "github.com/cosmos/cosmos-sdk/x/group/client/cli"
 )
 
-func (s *IntegrationTestSuite) TestQueryGroupInfo() {
+func (s *E2ETestSuite) TestQueryGroupInfo() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -70,7 +70,7 @@ func (s *IntegrationTestSuite) TestQueryGroupInfo() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
+func (s *E2ETestSuite) TestQueryGroupsByMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 	require := s.Require()
@@ -147,7 +147,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByMembers() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupMembers() {
+func (s *E2ETestSuite) TestQueryGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -212,7 +212,7 @@ func (s *IntegrationTestSuite) TestQueryGroupMembers() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
+func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -279,7 +279,7 @@ func (s *IntegrationTestSuite) TestQueryGroupsByAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
+func (s *E2ETestSuite) TestQueryGroupPolicyInfo() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -335,7 +335,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPolicyInfo() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
+func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -411,7 +411,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByGroup() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
+func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -487,7 +487,7 @@ func (s *IntegrationTestSuite) TestQueryGroupPoliciesByAdmin() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryProposal() {
+func (s *E2ETestSuite) TestQueryProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -530,7 +530,7 @@ func (s *IntegrationTestSuite) TestQueryProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryProposalsByGroupPolicy() {
+func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -593,7 +593,7 @@ func (s *IntegrationTestSuite) TestQueryProposalsByGroupPolicy() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryVoteByProposalVoter() {
+func (s *E2ETestSuite) TestQueryVoteByProposalVoter() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -636,7 +636,7 @@ func (s *IntegrationTestSuite) TestQueryVoteByProposalVoter() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryVotesByProposal() {
+func (s *E2ETestSuite) TestQueryVotesByProposal() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -699,7 +699,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
+func (s *E2ETestSuite) TestQueryVotesByVoter() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -762,7 +762,7 @@ func (s *IntegrationTestSuite) TestQueryVotesByVoter() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTallyResult() {
+func (s *E2ETestSuite) TestTallyResult() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
 
@@ -781,7 +781,7 @@ func (s *IntegrationTestSuite) TestTallyResult() {
 				s.createCLIProposal(
 					s.groupPolicies[0].Address, val.Address.String(),
 					s.groupPolicies[0].Address, val.Address.String(),
-					""),
+					"", "title", "summary"),
 			},
 			commonFlags...,
 		),

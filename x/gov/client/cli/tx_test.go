@@ -120,6 +120,8 @@ func (s *CLITestSuite) TestNewCmdSubmitProposal() {
 				}
 			}
 		],
+		"title": "My awesome title",
+		"summary": "My awesome description",
 		"metadata": "%s",
 		"deposit": "%s"
 	}`, authtypes.NewModuleAddress(types.ModuleName), base64.StdEncoding.EncodeToString(propMetadata), sdk.NewCoin("stake", sdk.NewInt(5431)))
@@ -200,7 +202,7 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"invalid proposal (file)",
 			[]string{
-				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s=%s", cli.FlagProposal, invalidPropFile.Name()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(10))).String()),
@@ -210,8 +212,8 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"invalid proposal",
 			[]string{
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText),
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin("stake", sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -221,7 +223,7 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 		},
 		{
 			"valid transaction (file)",
-			//nolint:staticcheck // we are intentionally using a deprecated flag here.
+
 			[]string{
 				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
@@ -234,9 +236,9 @@ func (s *CLITestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),                     //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // we are intentionally using a deprecated flag here.
-				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // we are intentionally using a deprecated flag here.
+				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
+				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),
+				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText),
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin("stake", sdk.NewInt(5431)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val[0].Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -295,7 +297,7 @@ func (s *CLITestSuite) TestNewCmdDeposit() {
 			true,
 		},
 		{
-			"deposit on non existing proposal",
+			"deposit on a proposal",
 			[]string{
 				"10",
 				sdk.NewCoin("stake", sdk.NewInt(10)).String(), // 10stake

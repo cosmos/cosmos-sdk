@@ -3,13 +3,14 @@ package orm
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
-	"github.com/stretchr/testify/require"
-	"pgregory.net/rapid"
 )
 
 func TestPaginationProperty(t *testing.T) {
@@ -52,7 +53,7 @@ func TestPaginationProperty(t *testing.T) {
 
 		// Reconstruct the slice from keyed pages
 		reconstructedTableModels = make([]*testdata.TableModel, 0, len(tableModels))
-		var start uint64 = 0
+		var start uint64
 		key := EncodeSequence(0)
 		for key != nil {
 			pageRequest := &query.PageRequest{
@@ -94,7 +95,7 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 	if key != nil {
 		index = int(DecodeSequence(key))
 	}
-	return IteratorFunc(func(dest codec.ProtoMarshaler) (RowID, error) {
+	return IteratorFunc(func(dest proto.Message) (RowID, error) {
 		if dest == nil {
 			return nil, sdkerrors.Wrap(errors.ErrORMInvalidArgument, "destination object must not be nil")
 		}
@@ -116,6 +117,6 @@ func testTableModelIterator(tms []*testdata.TableModel, key RowID) Iterator {
 
 		index++
 
-		return rowID, dest.Unmarshal(bytes)
+		return rowID, proto.Unmarshal(bytes, dest)
 	})
 }

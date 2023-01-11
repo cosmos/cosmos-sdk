@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -23,12 +25,17 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/store"
+	"github.com/cosmos/cosmos-sdk/store/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -84,7 +91,8 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 			panic(err)
 		}
 
-		// Apply the viper config value to the flag when the flag is not set and viper has a value
+		// Apply the viper config value to the flag when the flag is not set and
+		// viper has a value.
 		if !f.Changed && v.IsSet(f.Name) {
 			val := v.Get(f.Name)
 			err = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
@@ -112,7 +120,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	// Get the executable name and configure the viper instance so that environmental
 	// variables are checked based off that name. The underscore character is used
-	// as a separator
+	// as a separator.
 	executableName, err := os.Executable()
 	if err != nil {
 		return err
@@ -120,13 +128,14 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 
 	basename := path.Base(executableName)
 
-	// Configure the viper instance
+	// configure the viper instance
 	if err := serverCtx.Viper.BindPFlags(cmd.Flags()); err != nil {
 		return err
 	}
 	if err := serverCtx.Viper.BindPFlags(cmd.PersistentFlags()); err != nil {
 		return err
 	}
+
 	serverCtx.Viper.SetEnvPrefix(basename)
 	serverCtx.Viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	serverCtx.Viper.AutomaticEnv()
@@ -142,19 +151,25 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
 		return err
 	}
-	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+
+	var logger tmlog.Logger
+	if serverCtx.Viper.GetString(flags.FlagLogFormat) == tmcfg.LogFormatJSON {
+		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
+	} else {
+		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+	}
 	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
 	if err != nil {
 		return err
 	}
 
-	// Check if the tendermint flag for trace logging is set
-	// if it is then setup a tracing logger in this app as well
+	// Check if the tendermint flag for trace logging is set if it is then setup
+	// a tracing logger in this app as well.
 	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
 		logger = tmlog.NewTracingLogger(logger)
 	}
 
-	serverCtx.Logger = logger.With("module", "main")
+	serverCtx.Logger = logger.With("module", "server")
 
 	return SetCmdServerContext(cmd, serverCtx)
 }
@@ -357,13 +372,19 @@ func WaitForQuitSignals() ErrorCode {
 // GetAppDBBackend gets the backend type to use for the application DBs.
 func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	rv := cast.ToString(opts.Get("app-db-backend"))
-
 	if len(rv) == 0 {
 		rv = cast.ToString(opts.Get("db-backend"))
 	}
+
+	// Cosmos SDK has migrated to cosmos-db which does not support all the backends which tm-db supported
+	if rv == "cleveldb" || rv == "badgerdb" || rv == "boltdb" {
+		panic(fmt.Sprintf("invalid app-db-backend %q, use %q, %q, %q instead", rv, dbm.GoLevelDBBackend, dbm.PebbleDBBackend, dbm.RocksDBBackend))
+	}
+
 	if len(rv) != 0 {
 		return dbm.BackendType(rv)
 	}
+
 	return dbm.GoLevelDBBackend
 }
 
@@ -405,4 +426,52 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
 		0o666,
 	)
+}
+
+// DefaultBaseappOptions returns the default baseapp options provided by the Cosmos SDK
+func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
+	var cache storetypes.MultiStorePersistentCache
+
+	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {
+		cache = store.NewCommitKVStoreCacheManager()
+	}
+
+	pruningOpts, err := GetPruningOptionsFromFlags(appOpts)
+	if err != nil {
+		panic(err)
+	}
+
+	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
+	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	if err != nil {
+		panic(err)
+	}
+	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
+	if err != nil {
+		panic(err)
+	}
+
+	snapshotOptions := snapshottypes.NewSnapshotOptions(
+		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
+		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
+	)
+
+	return []func(*baseapp.BaseApp){
+		baseapp.SetPruning(pruningOpts),
+		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(FlagMinGasPrices))),
+		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(FlagHaltHeight))),
+		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(FlagHaltTime))),
+		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(FlagMinRetainBlocks))),
+		baseapp.SetInterBlockCache(cache),
+		baseapp.SetTrace(cast.ToBool(appOpts.Get(FlagTrace))),
+		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(FlagIndexEvents))),
+		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
+		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
+		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
+		baseapp.SetMempool(
+			mempool.NewSenderNonceMempool(
+				mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))),
+			),
+		),
+	}
 }

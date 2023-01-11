@@ -35,7 +35,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 //
 // Since: cosmos-sdk 0.46
 type MsgSoftwareUpgrade struct {
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// plan is the upgrade plan.
 	Plan Plan `protobuf:"bytes,2,opt,name=plan,proto3" json:"plan"`
@@ -131,7 +131,7 @@ var xxx_messageInfo_MsgSoftwareUpgradeResponse proto.InternalMessageInfo
 //
 // Since: cosmos-sdk 0.46
 type MsgCancelUpgrade struct {
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
@@ -270,7 +270,7 @@ type MsgClient interface {
 	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(ctx context.Context, in *MsgSoftwareUpgrade, opts ...grpc.CallOption) (*MsgSoftwareUpgradeResponse, error)
 	// CancelUpgrade is a governance operation for cancelling a previously
-	// approvid software upgrade.
+	// approved software upgrade.
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUpgrade(ctx context.Context, in *MsgCancelUpgrade, opts ...grpc.CallOption) (*MsgCancelUpgradeResponse, error)
@@ -309,7 +309,7 @@ type MsgServer interface {
 	// Since: cosmos-sdk 0.46
 	SoftwareUpgrade(context.Context, *MsgSoftwareUpgrade) (*MsgSoftwareUpgradeResponse, error)
 	// CancelUpgrade is a governance operation for cancelling a previously
-	// approvid software upgrade.
+	// approved software upgrade.
 	//
 	// Since: cosmos-sdk 0.46
 	CancelUpgrade(context.Context, *MsgCancelUpgrade) (*MsgCancelUpgradeResponse, error)

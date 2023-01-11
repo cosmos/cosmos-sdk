@@ -5,21 +5,22 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
 	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/stretchr/testify/suite"
 )
 
 var (
@@ -34,10 +35,6 @@ var (
 		sdk.ValAddress(pubkeys[1].Address()),
 		sdk.ValAddress(pubkeys[2].Address()),
 	}
-
-	// The default power validators are initialized to have within tests
-	initAmt   = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
-	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
 )
 
 func newPubKey(pk string) (res cryptotypes.PubKey) {
@@ -81,14 +78,15 @@ type KeeperTestSuite struct {
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
 	queryClient    types.QueryClient
 	encCfg         moduletestutil.TestEncodingConfig
+	msgServer      types.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
-	testCtx := testutil.DefaultContext(key, tkey)
-	suite.ctx = testCtx
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
+	suite.ctx = testCtx.Ctx
 
 	ctrl := gomock.NewController(suite.T())
 
@@ -111,7 +109,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	router := types.NewRouter()
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
-	suite.ctx = testCtx.WithBlockHeader(tmproto.Header{Height: 1})
+
+	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 
 	suite.accountKeeper = accountKeeper
@@ -120,6 +119,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, evidenceKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
+
+	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
+		suite.evidenceKeeper.Logger(testCtx.Ctx))
+
+	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {

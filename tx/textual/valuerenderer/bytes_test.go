@@ -2,7 +2,6 @@ package valuerenderer_test
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"os"
 	"testing"
@@ -21,16 +20,13 @@ func TestBytesJsonTestCases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	textual := valuerenderer.NewTextual(mockCoinMetadataQuerier)
+	textual := valuerenderer.NewTextual(nil)
 
 	for _, tc := range testcases {
-		data, err := base64.StdEncoding.DecodeString(tc.base64)
-		require.NoError(t, err)
-
 		valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
 		require.NoError(t, err)
 
-		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(data))
+		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(tc.base64))
 		require.NoError(t, err)
 		require.Equal(t, 1, len(screens))
 		require.Equal(t, tc.hex, screens[0].Text)
@@ -38,16 +34,20 @@ func TestBytesJsonTestCases(t *testing.T) {
 		// Round trip
 		val, err := valrend.Parse(context.Background(), screens)
 		require.NoError(t, err)
-		require.Equal(t, tc.base64, base64.StdEncoding.EncodeToString(val.Bytes()))
+		if len(tc.base64) > 32 {
+			require.Equal(t, 0, len(val.Bytes()))
+		} else {
+			require.Equal(t, tc.base64, val.Bytes())
+		}
 	}
 }
 
 type bytesTest struct {
+	base64 []byte
 	hex    string
-	base64 string
 }
 
 func (t *bytesTest) UnmarshalJSON(b []byte) error {
-	a := []interface{}{&t.hex, &t.base64}
+	a := []interface{}{&t.base64, &t.hex}
 	return json.Unmarshal(b, &a)
 }

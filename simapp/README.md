@@ -22,14 +22,14 @@ in this testnet.
     two names can be anything, but you will need to use the same "chain id" in the following steps.
 4. `$ ./simd keys add [key_name]`. This will create a new key, with a name of your choosing.
     Save the output of this command somewhere; you'll need the address generated here later.
-5. `$ ./simd add-genesis-account [key_name] [amount]`, where `key_name` is the same key name as
+5. `$ ./simd genesis add-genesis-account [key_name] [amount]`, where `key_name` is the same key name as
     before; and `amount` is something like `10000000000000000000000000stake`.
-6. `$ ./simd gentx [key_name] [amount] --chain-id [chain-id]`. This will create the genesis
+6. `$ ./simd genesis gentx [key_name] [amount] --chain-id [chain-id]`. This will create the genesis
     transaction for your new chain. Here `amount` should be at least `1000000000stake`. If you
     provide too much or too little, you will encounter an error when starting your node.
 7. Now, one person needs to create the genesis file `genesis.json` using the genesis transactions
    from every participant, by gathering all the genesis transactions under `config/gentx` and then
-   calling `$ ./simd collect-gentxs`. This will create a new `genesis.json` file that includes data
+   calling `$ ./simd genesis collect-gentxs`. This will create a new `genesis.json` file that includes data
    from all the validators (we sometimes call it the "super genesis file" to distinguish it from
    single-validator genesis files).
 8. Once you've received the super genesis file, overwrite your original `genesis.json` file with

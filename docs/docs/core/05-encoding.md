@@ -105,10 +105,14 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote fields that accept interfaces
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+* use `cosmos_proto.accepts_interface` to annote `Any` fields that accept interfaces
+  * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+  * example: `(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"` (and not just `Content`)
 * annotate interface implementations with `cosmos_proto.implements_interface`
-* pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+  * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
+  * example: `(cosmos_proto.implements_interface) = "cosmos.authz.v1beta1.Authorization"` (and not just `Authorization`)
+
+Code generators can then match the `accepts_interface` and `implements_interface` annotations to know whether some Protobuf messages are allowed to be packed in a given `Any` field or not.
 
 ### Transaction Encoding
 
@@ -162,7 +166,7 @@ In [ADR-019](../architecture/adr-019-protobuf-state-encoding.md), it has been de
 message Profile {
   // account is the account associated to a profile.
   google.protobuf.Any account = 1 [
-    (cosmos_proto.accepts_interface) = "AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
+    (cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.AccountI"; // Asserts that this field only accepts Go types implementing `AccountI`. It is purely informational for now.
   ];
   // bio is a short description of the account.
   string bio = 4;
@@ -244,6 +248,34 @@ A real-life example of encoding the pubkey as `Any` inside the Validator struct 
 https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/staking/types/validator.go#L40-L61
 ```
 
+#### `Any`'s TypeURL
+
+When packing a protobuf message inside an `Any`, the message's type is uniquely defined by its type URL, which is the message's fully qualified name prefixed by a `/` (slash) character. In some implementations of `Any`, like the gogoproto one, there's generally [a resolvable prefix, e.g. `type.googleapis.com`](https://github.com/gogo/protobuf/blob/b03c65ea87cdc3521ede29f62fe3ce239267c1bc/protobuf/google/protobuf/any.proto#L87-L91). However, in the Cosmos SDK, we made the decision to not include such prefix, to have shorter type URLs. The Cosmos SDK's own `Any` implementation can be found in `github.com/cosmos/cosmos-sdk/codec/types`.
+
+The Cosmos SDK is also switching away from gogoproto to the official `google.golang.org/protobuf` (known as the Protobuf API v2). Its default `Any` implementation also contains the [`type.googleapis.com`](https://github.com/protocolbuffers/protobuf-go/blob/v1.28.1/types/known/anypb/any.pb.go#L266) prefix. To maintain compatibility with the SDK, the following methods from `"google.golang.org/protobuf/types/known/anypb"` should not be used:
+- `anypb.New`
+- `anypb.MarshalFrom`
+- `anypb.Any#MarshalFrom`
+
+Instead, the Cosmos SDK provides helper functions in `"github.com/cosmos/cosmos-proto/any"`, which create an official `anypb.Any` without inserting the prefixes:
+- `any.New`
+- `any.MarshalFrom`
+
+For example, to pack a `sdk.Msg` called `internalMsg`, use:
+
+```diff
+import (
+- 	"google.golang.org/protobuf/types/known/anypb"
++	"github.com/cosmos/cosmos-proto/any"
+)
+
+- anyMsg, err := anypb.New(internalMsg.Message().Interface())
++ anyMsg, err := any.New(internalMsg.Message().Interface())
+
+- fmt.Println(anyMsg.TypeURL) // type.googleapis.com/cosmos.bank.v1beta1.MsgSend
++ fmt.Println(anyMsg.TypeURL) // /cosmos.bank.v1beta1.MsgSend
+```
+
 ## FAQ
 
 ### How to create modules using protobuf encoding
@@ -278,7 +310,7 @@ For example, in the `x/evidence` module defines an `Evidence` interface, which i
 
 message MsgSubmitEvidence {
   string              submitter = 1;
-  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "Evidence"];
+  google.protobuf.Any evidence  = 2 [(cosmos_proto.accepts_interface) = "cosmos.evidence.v1beta1.Evidence"];
 }
 ```
 

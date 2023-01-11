@@ -30,7 +30,7 @@ func (er enumValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]S
 		return nil, fmt.Errorf("cannot get enum %s variant of number %d", er.ed.FullName(), v.Enum())
 	}
 
-	return []Screen{{Text: string(evd.FullName())}}, nil
+	return []Screen{{Text: string(evd.Name())}}, nil
 
 }
 
@@ -46,7 +46,7 @@ func (er enumValueRenderer) Parse(_ context.Context, screens []Screen) (protoref
 	values := er.ed.Values()
 	for i := 0; i < values.Len(); i++ {
 		evd := values.Get(i)
-		if string(evd.FullName()) == formatted {
+		if string(evd.Name()) == formatted {
 			return protoreflect.ValueOfEnum(evd.Number()), nil
 		}
 	}

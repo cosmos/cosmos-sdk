@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -12,12 +13,17 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/tx/signing"
+	"cosmossdk.io/tx/textual/internal/textualpb"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
 // CoinMetadataQueryFn defines a function that queries state for the coin denom
 // metadata. It is meant to be passed as an argument into `NewTextual`.
 type CoinMetadataQueryFn func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error)
+
+// ValueRendererCreator is a function returning a ValueRenderer.
+type ValueRendererCreator func(protoreflect.FieldDescriptor) ValueRenderer
 
 // Textual holds the configuration for dispatching
 // to specific value renderers for SIGN_MODE_TEXTUAL.
@@ -28,9 +34,9 @@ type Textual struct {
 	// server-side code) or a gRPC query client (for client-side code).
 	coinMetadataQuerier CoinMetadataQueryFn
 	// scalars defines a registry for Cosmos scalars.
-	scalars map[string]ValueRenderer
-	// messages defines a registry for custom message renderers, as defined in
-	// point #9 in the spec. Note that we also use this same registry for the
+	scalars map[string]ValueRendererCreator
+	// messages defines a registry for custom message renderers.
+	// Note that we also use this same registry for the
 	// following messages, as they can be thought of custom message rendering:
 	// - SDK coin and coins
 	// - Protobuf timestamp
@@ -58,12 +64,11 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 			}
 
 			vr := r.scalars[scalar]
-			if vr == nil {
-				return nil, fmt.Errorf("got empty value renderer for scalar %s", scalar)
+			if vr != nil {
+				return vr(fd), nil
 			}
-
-			return vr, nil
 		}
+
 		return NewStringValueRenderer(), nil
 
 	case fd.Kind() == protoreflect.BytesKind:
@@ -74,10 +79,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		fd.Kind() == protoreflect.Uint64Kind ||
 		fd.Kind() == protoreflect.Int32Kind ||
 		fd.Kind() == protoreflect.Int64Kind:
-		return NewIntValueRenderer(), nil
-
-	case fd.Kind() == protoreflect.StringKind:
-		return stringValueRenderer{}, nil
+		return NewIntValueRenderer(fd), nil
 
 	case fd.Kind() == protoreflect.EnumKind:
 		return NewEnumValueRenderer(fd), nil
@@ -90,6 +92,7 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 		if found {
 			return vr, nil
 		}
+
 		if fd.IsMap() {
 			return nil, fmt.Errorf("value renderers cannot format value of type map")
 		}
@@ -114,9 +117,9 @@ func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (Va
 
 func (r *Textual) init() {
 	if r.scalars == nil {
-		r.scalars = map[string]ValueRenderer{}
-		r.scalars["cosmos.Int"] = NewIntValueRenderer()
-		r.scalars["cosmos.Dec"] = NewDecValueRenderer()
+		r.scalars = map[string]ValueRendererCreator{}
+		r.scalars["cosmos.Int"] = func(fd protoreflect.FieldDescriptor) ValueRenderer { return NewIntValueRenderer(fd) }
+		r.scalars["cosmos.Dec"] = func(_ protoreflect.FieldDescriptor) ValueRenderer { return NewDecValueRenderer() }
 	}
 	if r.messages == nil {
 		r.messages = map[protoreflect.FullName]ValueRenderer{}
@@ -124,11 +127,45 @@ func (r *Textual) init() {
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
 		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = NewAnyValueRenderer(r)
+		r.messages[(&textualpb.TextualData{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
 	}
 }
 
 // DefineScalar adds a value renderer to the given Cosmos scalar.
-func (r *Textual) DefineScalar(scalar string, vr ValueRenderer) {
+func (r *Textual) DefineScalar(scalar string, vr ValueRendererCreator) {
 	r.init()
 	r.scalars[scalar] = vr
+}
+
+// GetSignBytes returns the transaction sign bytes.
+func (r *Textual) GetSignBytes(ctx context.Context, bodyBz, authInfoBz []byte, signerData signing.SignerData) ([]byte, error) {
+	data := &textualpb.TextualData{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		SignerData: &textualpb.SignerData{
+			Address:       signerData.Address,
+			ChainId:       signerData.ChainId,
+			AccountNumber: signerData.AccountNumber,
+			Sequence:      signerData.Sequence,
+			PubKey:        signerData.PubKey,
+		},
+	}
+
+	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
+	if err != nil {
+		return nil, err
+	}
+
+	screens, err := vr.Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	err = encode(screens, &buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }

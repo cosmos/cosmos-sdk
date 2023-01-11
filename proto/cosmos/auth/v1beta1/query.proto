@@ -101,7 +101,7 @@ message QueryAccountsRequest {
 // Since: cosmos-sdk 0.43
 message QueryAccountsResponse {
   // accounts are the existing accounts
-  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
+  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.AccountI"];
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
@@ -119,7 +119,7 @@ message QueryAccountRequest {
 // QueryAccountResponse is the response type for the Query/Account RPC method.
 message QueryAccountResponse {
   // account defines the account of the corresponding address.
-  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "AccountI"];
+  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.AccountI"];
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -140,7 +140,7 @@ message QueryModuleAccountsRequest {}
 //
 // Since: cosmos-sdk 0.46
 message QueryModuleAccountsResponse {
-  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
+  repeated google.protobuf.Any accounts = 1 [(cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.ModuleAccountI"];
 }
 
 // QueryModuleAccountByNameRequest is the request type for the Query/ModuleAccountByName RPC method.
@@ -150,7 +150,7 @@ message QueryModuleAccountByNameRequest {
 
 // QueryModuleAccountByNameResponse is the response type for the Query/ModuleAccountByName RPC method.
 message QueryModuleAccountByNameResponse {
-  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "ModuleAccountI"];
+  google.protobuf.Any account = 1 [(cosmos_proto.accepts_interface) = "cosmos.auth.v1beta1.ModuleAccountI"];
 }
 
 // Bech32PrefixRequest is the request type for Bech32Prefix rpc method.
@@ -198,14 +198,14 @@ message AddressStringToBytesResponse {
 // Since: cosmos-sdk 0.46.2
 message QueryAccountAddressByIDRequest {
   // Deprecated, use account_id instead
-  // 
+  //
   // id is the account number of the address to be queried. This field
   // should have been an uint64 (like all account numbers), and will be
   // updated to uint64 in a future version of the auth query.
   int64 id = 1 [deprecated = true];
 
   // account_id is the account number of the address to be queried.
-  // 
+  //
   // Since: cosmos-sdk 0.47
   uint64 account_id = 2;
 }

@@ -9,9 +9,8 @@ import (
 
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/params/types"
-	types2 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/params/types"
+	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -39,10 +38,10 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types0.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx types.Context, addr types.AccAddress) types.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types0.AccountI)
+	ret0, _ := ret[0].(types.AccountI)
 	return ret0
 }
 
@@ -53,7 +52,7 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr interface{}) *gomo
 }
 
 // IterateAccounts mocks base method.
-func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types0.AccountI) bool) {
+func (m *MockAccountKeeper) IterateAccounts(ctx types.Context, process func(types.AccountI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateAccounts", ctx, process)
 }
@@ -179,7 +178,7 @@ func (mr *MockParamSubspaceMockRecorder) Get(ctx, key, ptr interface{}) *gomock.
 }
 
 // GetParamSet mocks base method.
-func (m *MockParamSubspace) GetParamSet(ctx types.Context, ps types1.ParamSet) {
+func (m *MockParamSubspace) GetParamSet(ctx types.Context, ps types0.ParamSet) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "GetParamSet", ctx, ps)
 }
@@ -205,7 +204,7 @@ func (mr *MockParamSubspaceMockRecorder) HasKeyTable() *gomock.Call {
 }
 
 // SetParamSet mocks base method.
-func (m *MockParamSubspace) SetParamSet(ctx types.Context, ps types1.ParamSet) {
+func (m *MockParamSubspace) SetParamSet(ctx types.Context, ps types0.ParamSet) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetParamSet", ctx, ps)
 }
@@ -217,10 +216,10 @@ func (mr *MockParamSubspaceMockRecorder) SetParamSet(ctx, ps interface{}) *gomoc
 }
 
 // WithKeyTable mocks base method.
-func (m *MockParamSubspace) WithKeyTable(table types1.KeyTable) types1.Subspace {
+func (m *MockParamSubspace) WithKeyTable(table types0.KeyTable) types0.Subspace {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithKeyTable", table)
-	ret0, _ := ret[0].(types1.Subspace)
+	ret0, _ := ret[0].(types0.Subspace)
 	return ret0
 }
 
@@ -254,10 +253,10 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // Delegation mocks base method.
-func (m *MockStakingKeeper) Delegation(arg0 types.Context, arg1 types.AccAddress, arg2 types.ValAddress) types2.DelegationI {
+func (m *MockStakingKeeper) Delegation(arg0 types.Context, arg1 types.AccAddress, arg2 types.ValAddress) types1.DelegationI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delegation", arg0, arg1, arg2)
-	ret0, _ := ret[0].(types2.DelegationI)
+	ret0, _ := ret[0].(types1.DelegationI)
 	return ret0
 }
 
@@ -268,10 +267,10 @@ func (mr *MockStakingKeeperMockRecorder) Delegation(arg0, arg1, arg2 interface{}
 }
 
 // GetAllValidators mocks base method.
-func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types2.Validator {
+func (m *MockStakingKeeper) GetAllValidators(ctx types.Context) []types1.Validator {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllValidators", ctx)
-	ret0, _ := ret[0].([]types2.Validator)
+	ret0, _ := ret[0].([]types1.Validator)
 	return ret0
 }
 
@@ -296,7 +295,7 @@ func (mr *MockStakingKeeperMockRecorder) IsValidatorJailed(ctx, addr interface{}
 }
 
 // IterateValidators mocks base method.
-func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types2.ValidatorI) bool) {
+func (m *MockStakingKeeper) IterateValidators(arg0 types.Context, arg1 func(int64, types1.ValidatorI) bool) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "IterateValidators", arg0, arg1)
 }
@@ -334,17 +333,31 @@ func (mr *MockStakingKeeperMockRecorder) MaxValidators(arg0 interface{}) *gomock
 }
 
 // Slash mocks base method.
-func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types2.Infraction) math.Int {
+func (m *MockStakingKeeper) Slash(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec) math.Int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret := m.ctrl.Call(m, "Slash", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 
 // Slash indicates an expected call of Slash.
-func (mr *MockStakingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+func (mr *MockStakingKeeperMockRecorder) Slash(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockStakingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4, arg5)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Slash", reflect.TypeOf((*MockStakingKeeper)(nil).Slash), arg0, arg1, arg2, arg3, arg4)
+}
+
+// SlashWithInfractionReason mocks base method.
+func (m *MockStakingKeeper) SlashWithInfractionReason(arg0 types.Context, arg1 types.ConsAddress, arg2, arg3 int64, arg4 types.Dec, arg5 types1.Infraction) math.Int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SlashWithInfractionReason", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(math.Int)
+	return ret0
+}
+
+// SlashWithInfractionReason indicates an expected call of SlashWithInfractionReason.
+func (mr *MockStakingKeeperMockRecorder) SlashWithInfractionReason(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SlashWithInfractionReason", reflect.TypeOf((*MockStakingKeeper)(nil).SlashWithInfractionReason), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // Unjail mocks base method.
@@ -360,10 +373,10 @@ func (mr *MockStakingKeeperMockRecorder) Unjail(arg0, arg1 interface{}) *gomock.
 }
 
 // Validator mocks base method.
-func (m *MockStakingKeeper) Validator(arg0 types.Context, arg1 types.ValAddress) types2.ValidatorI {
+func (m *MockStakingKeeper) Validator(arg0 types.Context, arg1 types.ValAddress) types1.ValidatorI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Validator", arg0, arg1)
-	ret0, _ := ret[0].(types2.ValidatorI)
+	ret0, _ := ret[0].(types1.ValidatorI)
 	return ret0
 }
 
@@ -374,10 +387,10 @@ func (mr *MockStakingKeeperMockRecorder) Validator(arg0, arg1 interface{}) *gomo
 }
 
 // ValidatorByConsAddr mocks base method.
-func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types2.ValidatorI {
+func (m *MockStakingKeeper) ValidatorByConsAddr(arg0 types.Context, arg1 types.ConsAddress) types1.ValidatorI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatorByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(types2.ValidatorI)
+	ret0, _ := ret[0].(types1.ValidatorI)
 	return ret0
 }
 

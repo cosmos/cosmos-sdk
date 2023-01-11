@@ -40,6 +40,7 @@ func NewTxCmd() *cobra.Command {
 		NewWithdrawAllRewardsCmd(),
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
+		NewDepositValidatorRewardsPoolCmd(),
 	)
 
 	return distTxCmd
@@ -246,6 +247,45 @@ $ %s tx distribution fund-community-pool 100uatom --from mykey
 
 			msg := types.NewMsgFundCommunityPool(amount, depositorAddr)
 
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewDepositValidatorRewardsPoolCmd returns a CLI command handler for creating
+// a MsgDepositValidatorRewardsPool transaction.
+func NewDepositValidatorRewardsPoolCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fund-validator-rewards-pool [val_addr] [amount]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Fund the validator rewards pool with the specified amount",
+		Example: fmt.Sprintf(
+			"%s tx distribution fund-validator-rewards-pool cosmosvaloper1x20lytyf6zkcrv5edpkfkn8sz578qg5sqfyqnp 100uatom --from mykey",
+			version.AppName,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			depositorAddr := clientCtx.GetFromAddress()
+
+			valAddr, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			amount, err := sdk.ParseCoinsNormalized(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDepositValidatorRewardsPool(depositorAddr, valAddr, amount)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

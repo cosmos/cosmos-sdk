@@ -35,11 +35,17 @@
   - x/staking/**/*
 "C:x/upgrade":
   - x/upgrade/**/*
+"C:x/consensus":
+  - x/consensus/**/*
+"C:collections":
+  - collections/**/*
 "C:Cosmovisor":
   - tools/cosmovisor/**/*
 "C:Rosetta":
   - contrib/rosetta/**/*
   - tools/rosetta/**/*
+"C:Confix":
+  - tools/confix/**/*
 "C:Keys":
   - client/keys/**/*
 "Type: Build":

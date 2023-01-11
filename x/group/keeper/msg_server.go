@@ -471,6 +471,14 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	if err := k.assertMetadataLength(req.Summary, "proposal summary"); err != nil {
+		return nil, err
+	}
+
+	if err := k.assertMetadataLength(req.Title, "proposal Title"); err != nil {
+		return nil, err
+	}
+
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
@@ -516,6 +524,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
+		Title:              req.Title,
+		Summary:            req.Summary,
 	}
 
 	if err := m.SetMsgs(msgs); err != nil {
@@ -537,7 +547,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		// Consider proposers as Yes votes
 		for i := range proposers {
 			ctx.GasMeter().ConsumeGas(gasCostPerIteration, "vote on proposal")
-			_, err = k.Vote(sdk.WrapSDKContext(ctx), &group.MsgVote{
+			_, err = k.Vote(ctx, &group.MsgVote{
 				ProposalId: id,
 				Voter:      proposers[i],
 				Option:     group.VOTE_OPTION_YES,
@@ -548,7 +558,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		}
 
 		// Then try to execute the proposal
-		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+		_, err = k.Exec(ctx, &group.MsgExec{
 			ProposalId: id,
 			// We consider the first proposer as the MsgExecRequest signer
 			// but that could be revisited (eg using the group policy)
@@ -659,7 +669,7 @@ func (k Keeper) Vote(goCtx context.Context, req *group.MsgVote) (*group.MsgVoteR
 
 	// Try to execute proposal immediately
 	if req.Exec == group.Exec_EXEC_TRY {
-		_, err = k.Exec(sdk.WrapSDKContext(ctx), &group.MsgExec{
+		_, err = k.Exec(ctx, &group.MsgExec{
 			ProposalId: id,
 			Executor:   voterAddr,
 		})
@@ -911,8 +921,7 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: admin})
-	if err != nil {
+	if err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: groupPolicyInfo.Address}); err != nil {
 		return err
 	}
 

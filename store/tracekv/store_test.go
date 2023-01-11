@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -289,9 +289,4 @@ func TestTraceKVStoreCacheWrap(t *testing.T) {
 func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {
 	store := newEmptyTraceKVStore(nil)
 	require.Panics(t, func() { store.CacheWrapWithTrace(nil, nil) })
-}
-
-func TestTraceKVStoreCacheWrapWithListeners(t *testing.T) {
-	store := newEmptyTraceKVStore(nil)
-	require.Panics(t, func() { store.CacheWrapWithListeners(nil, nil) })
 }

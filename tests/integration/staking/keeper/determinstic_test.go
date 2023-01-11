@@ -60,7 +60,7 @@ func (s *DeterministicTestSuite) SetupTest() {
 	)
 	s.Require().NoError(err)
 
-	// s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now()}).WithGasMeter(sdk.NewInfiniteGasMeter())
+	// s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now()}).WithGasMeter(storetypes.NewInfiniteGasMeter())
 	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)

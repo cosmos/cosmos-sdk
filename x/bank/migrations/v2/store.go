@@ -15,7 +15,7 @@ import (
 // migrateSupply migrates the supply to be stored by denom key instead in a
 // single blob.
 // ref: https://github.com/cosmos/cosmos-sdk/issues/7092
-func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
+func migrateSupply(store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	// Old supply was stored as a single blob under the SupplyKey.
 	var oldSupplyI v1.SupplyI
 	err := cdc.UnmarshalInterface(store.Get(v1.SupplyKey), &oldSupplyI)
@@ -51,7 +51,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 // migrateBalanceKeys migrate the balances keys to cater for variable-length
 // addresses.
-func migrateBalanceKeys(store sdk.KVStore, logger log.Logger) {
+func migrateBalanceKeys(store storetypes.KVStore, logger log.Logger) {
 	// old key is of format:
 	// prefix ("balances") || addrBytes (20 bytes) || denomBytes
 	// new key is of format
@@ -95,7 +95,7 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 }
 
 // pruneZeroBalances removes the zero balance addresses from balances store.
-func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {
+func pruneZeroBalances(store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	balancesStore := prefix.NewStore(store, BalancesPrefix)
 	iterator := balancesStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -114,7 +114,7 @@ func pruneZeroBalances(store sdk.KVStore, cdc codec.BinaryCodec) error {
 }
 
 // pruneZeroSupply removes zero balance denom from supply store.
-func pruneZeroSupply(store sdk.KVStore) error {
+func pruneZeroSupply(store storetypes.KVStore) error {
 	supplyStore := prefix.NewStore(store, SupplyKey)
 	iterator := supplyStore.Iterator(nil, nil)
 	defer iterator.Close()

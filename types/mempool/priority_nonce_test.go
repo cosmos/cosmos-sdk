@@ -638,3 +638,55 @@ func TestTxLimit(t *testing.T) {
 		require.Equal(t, 0, mp.CountTx())
 	}
 }
+
+func TestTxReplacement(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	sa := accounts[0].Address
+
+	txs := []testTx{
+		{priority: 20, nonce: 1, address: sa},
+		{priority: 15, nonce: 1, address: sa}, // priority is less than the first Tx, failed tx replacement when the option enabled.
+		{priority: 23, nonce: 1, address: sa}, // priority is not 20% more than the first Tx, failed tx replacement when the option enabled.
+		{priority: 24, nonce: 1, address: sa}, // priority is 20% more than the first Tx, the first tx will be replaced.
+	}
+
+	// test Priority with default mempool
+	mp := mempool.NewPriorityMempool()
+	for _, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+		require.Equal(t, 1, mp.CountTx())
+
+		iter := mp.Select(ctx, nil)
+		require.Equal(t, tx, iter.Tx())
+	}
+
+	// test Priority with TxReplacement
+	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
+	// otherwise, the Insert will return error
+	feeBump := 20
+	mp = mempool.NewPriorityMempool(mempool.PriorityNonceWithTxReplacement(func(op, np int64, oTx, nTx sdk.Tx) bool {
+		threshold := int64(100 + feeBump)
+		return np >= op*threshold/100
+	}))
+
+	c := ctx.WithPriority(txs[0].priority)
+	require.NoError(t, mp.Insert(c, txs[0]))
+	require.Equal(t, 1, mp.CountTx())
+
+	c = ctx.WithPriority(txs[1].priority)
+	require.Error(t, mp.Insert(c, txs[1]))
+	require.Equal(t, 1, mp.CountTx())
+
+	c = ctx.WithPriority(txs[2].priority)
+	require.Error(t, mp.Insert(c, txs[2]))
+	require.Equal(t, 1, mp.CountTx())
+
+	c = ctx.WithPriority(txs[3].priority)
+	require.NoError(t, mp.Insert(c, txs[3]))
+	require.Equal(t, 1, mp.CountTx())
+
+	iter := mp.Select(ctx, nil)
+	require.Equal(t, txs[3], iter.Tx())
+}

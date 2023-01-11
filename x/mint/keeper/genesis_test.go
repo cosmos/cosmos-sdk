@@ -36,8 +36,8 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 
 	// gomock initializations
@@ -73,7 +73,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 	minter := s.keeper.GetMinter(s.sdkCtx)
 	s.Require().Equal(genesisState.Minter, minter)
 
-	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, sdk.NewTransientStoreKey("transient_test"))
+	invalidCtx := testutil.DefaultContextWithDB(s.T(), s.key, storetypes.NewTransientStoreKey("transient_test"))
 	s.Require().Panics(func() { s.keeper.GetMinter(invalidCtx.Ctx) }, "stored minter should not have been nil")
 	params := s.keeper.GetParams(s.sdkCtx)
 	s.Require().Equal(genesisState.Params, params)

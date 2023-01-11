@@ -10,7 +10,7 @@ This sections describes how the app-side mempool can be used and replaced.
 
 Since `v0.47` the application has its own mempool to allow much more granular
 block building than previous versions. This change was enabled by
-[ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md).
+[ABCI 1.0](https://github.com/tendermint/tendermint/blob/v0.37.0-rc2/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
 
 ### Pre-requisite Readings

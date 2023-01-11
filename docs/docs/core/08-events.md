@@ -22,7 +22,7 @@ Events are implemented in the Cosmos SDK as an alias of the ABCI `Event` type an
 take the form of: `{eventType}.{attributeKey}={attributeValue}`.
 
 ```protobuf reference
-https://github.com/tendermint/tendermint/blob/v0.34.21/proto/tendermint/abci/types.proto#L310-L319
+https://github.com/tendermint/tendermint/blob/v0.37.0-rc2/proto/tendermint/abci/types.proto#L334-L343
 ```
 
 An Event contains:

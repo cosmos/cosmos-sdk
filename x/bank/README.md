@@ -307,6 +307,7 @@ The message will fail under the following conditions:
 * Any of the coins do not have sending enabled
 * Any of the `to` addresses are restricted
 * Any of the coins are locked
+* The inputs and outputs do not correctly correspond to one another
 
 ### MsgUpdateParams
 

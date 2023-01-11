@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -219,7 +220,7 @@ func (s *paginationTestSuite) TestFilteredPaginate() {
 	// balances:<denom:"test0denom" amount:"250" > pagination:<next_key:"test1denom" total:5 >
 }
 
-func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
+func execFilterPaginate(store storetypes.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 
@@ -261,7 +262,7 @@ func (s *paginationTestSuite) TestFilteredPaginationsNextKey() {
 	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances))
 	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
 
-	execFilterPaginate := func(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
+	execFilterPaginate := func(store storetypes.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
 		balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 		accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 

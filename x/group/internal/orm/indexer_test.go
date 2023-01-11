@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
@@ -163,7 +163,7 @@ func TestIndexerOnDelete(t *testing.T) {
 
 	var multiKeyIndex MultiKeyIndex
 	ctx := NewMockContext()
-	storeKey := sdk.NewKVStoreKey("test")
+	storeKey := storetypes.NewKVStoreKey("test")
 	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
@@ -245,7 +245,7 @@ func TestIndexerOnUpdate(t *testing.T) {
 
 	var multiKeyIndex MultiKeyIndex
 	ctx := NewMockContext()
-	storeKey := sdk.NewKVStoreKey("test")
+	storeKey := storetypes.NewKVStoreKey("test")
 	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{multiKeyIndex.prefix})
 
 	specs := map[string]struct {
@@ -253,7 +253,7 @@ func TestIndexerOnUpdate(t *testing.T) {
 		expAddedKeys   []RowID
 		expDeletedKeys []RowID
 		expErr         error
-		addFunc        func(sdk.KVStore, interface{}, RowID) error
+		addFunc        func(storetypes.KVStore, interface{}, RowID) error
 	}{
 		"single key - same key, no update": {
 			srcFunc: func(value interface{}) ([]interface{}, error) {
@@ -333,7 +333,7 @@ func TestIndexerOnUpdate(t *testing.T) {
 				keys := []uint64{1, 2}
 				return []interface{}{keys[value.(int)]}, nil
 			},
-			addFunc: func(_ sdk.KVStore, _ interface{}, _ RowID) error {
+			addFunc: func(_ storetypes.KVStore, _ interface{}, _ RowID) error {
 				return stdErrors.New("test")
 			},
 			expErr: stdErrors.New("test"),
@@ -397,7 +397,7 @@ func TestUniqueKeyAddFunc(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			storeKey := sdk.NewKVStoreKey("test")
+			storeKey := storetypes.NewKVStoreKey("test")
 			store := NewMockContext().KVStore(storeKey)
 			store.Set(presetKey, []byte{})
 
@@ -440,7 +440,7 @@ func TestMultiKeyAddFunc(t *testing.T) {
 	}
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			storeKey := sdk.NewKVStoreKey("test")
+			storeKey := storetypes.NewKVStoreKey("test")
 			store := NewMockContext().KVStore(storeKey)
 			store.Set(presetKey, []byte{})
 
@@ -561,7 +561,7 @@ type addFuncRecorder struct {
 	called             bool
 }
 
-func (c *addFuncRecorder) add(_ sdk.KVStore, key interface{}, rowID RowID) error {
+func (c *addFuncRecorder) add(_ storetypes.KVStore, key interface{}, rowID RowID) error {
 	c.secondaryIndexKeys = append(c.secondaryIndexKeys, key)
 	c.rowIDs = append(c.rowIDs, rowID)
 	c.called = true

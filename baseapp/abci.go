@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -71,7 +72,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
 
@@ -151,7 +152,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(sdk.TraceContext(
+		app.cms.SetTracingContext(storetypes.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -174,11 +175,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// add block gas meter
-	var gasMeter sdk.GasMeter
+	var gasMeter storetypes.GasMeter
 	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = sdk.NewGasMeter(maxGas)
+		gasMeter = storetypes.NewGasMeter(maxGas)
 	} else {
-		gasMeter = sdk.NewInfiniteGasMeter()
+		gasMeter = storetypes.NewInfiniteGasMeter()
 	}
 
 	// NOTE: header hash is not set in NewContext, so we manually set it here
@@ -228,7 +229,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
+		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
 	if app.endBlocker != nil {
@@ -780,7 +781,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	// use custom query multistore if provided
 	qms := app.qms
 	if qms == nil {
-		qms = app.cms.(sdk.MultiStore)
+		qms = app.cms.(storetypes.MultiStore)
 	}
 
 	lastBlockHeight := qms.LatestVersion()
@@ -943,7 +944,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	// "/store" prefix for store queries
-	queryable, ok := app.cms.(sdk.Queryable)
+	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -63,6 +64,21 @@ var (
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
+func assertElementsMatch(listA, listB []string) bool {
+	// Create maps for each slice
+	mapA, mapB := make(map[string]int), make(map[string]int)
+
+	// Populate the maps with the elements of each slice
+	for _, value := range listA {
+		mapA[value]++
+	}
+	for _, value := range listB {
+		mapB[value]++
+	}
+
+	return reflect.DeepEqual(mapA, mapB)
+}
+
 func newFooCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(fooDenom, amt)
 }
@@ -102,7 +118,6 @@ func initFixture(t assert.TestingT) *fixture {
 
 	app, err := sims.Setup(
 		configurator.NewAppConfig(
-			// configurator.TxModule(),
 			configurator.AuthModule(),
 			configurator.BankModule(),
 			configurator.StakingModule(),
@@ -1670,7 +1685,8 @@ func TestIterateSendEnabledEntries(t *testing.T) {
 			})
 		})
 		t.Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
-			// assert.ElementsMatch(t, denoms, seen)
+			match := assertElementsMatch(denoms, seen)
+			assert.Assert(t, match)
 		})
 	}
 

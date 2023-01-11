@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/nft"
@@ -50,7 +51,7 @@ func (k Keeper) GetClass(ctx sdk.Context, classID string) (nft.Class, bool) {
 // GetClasses defines a method for returning all classes information
 func (k Keeper) GetClasses(ctx sdk.Context) (classes []*nft.Class) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, ClassKey)
+	iterator := storetypes.KVStorePrefixIterator(store, ClassKey)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var class nft.Class

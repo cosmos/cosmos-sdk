@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestStore(t *testing.T) {
@@ -15,7 +14,7 @@ func TestStore(t *testing.T) {
 
 	cms := NewCommitMultiStore()
 
-	key := sdk.NewKVStoreKey("test")
+	key := storetypes.NewKVStoreKey("test")
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	err := cms.LoadLatestVersion()
 	require.Nil(t, err)

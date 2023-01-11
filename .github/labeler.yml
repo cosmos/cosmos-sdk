@@ -44,6 +44,8 @@
 "C:Rosetta":
   - contrib/rosetta/**/*
   - tools/rosetta/**/*
+"C:Confix":
+  - tools/confix/**/*
 "C:Keys":
   - client/keys/**/*
 "Type: Build":

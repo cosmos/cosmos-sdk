@@ -200,7 +200,7 @@ When messages and queries are received by the application, they must be routed t
 
 [`sdk.Msg`s](../building-modules/02-messages-and-queries.md#messages) need to be routed after they are extracted from transactions, which are sent from the underlying Tendermint engine via the [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx) ABCI messages. To do so, `BaseApp` holds a `msgServiceRouter` which maps fully-qualified service methods (`string`, defined in each module's Protobuf  `Msg` service) to the appropriate module's `MsgServer` implementation.
 
-The [default `msgServiceRouter` included in `BaseApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/msg_service_router.go) is stateless. However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes. For this reason, the `sdk.Context` is also passed into each [route handler inside `msgServiceRouter`](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/msg_service_router.go#L31-L32). For a stateless router that doesn't want to make use of this, you can just ignore the `ctx`.
+The [default `msgServiceRouter` included in `BaseApp`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/msg_service_router.go) is stateless. However, some applications may want to make use of more stateful routing mechanisms such as allowing governance to disable certain routes or point them to new modules for upgrade purposes. For this reason, the `sdk.Context` is also passed into each [route handler inside `msgServiceRouter`](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/msg_service_router.go#L31-L32). For a stateless router that doesn't want to make use of this, you can just ignore the `ctx`.
 
 The application's `msgServiceRouter` is initialized with all the routes using the application's [module manager](../building-modules/01-module-manager.md#manager) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/00-app-anatomy.md#constructor-function).
 
@@ -272,7 +272,7 @@ The response contains:
 * `GasUsed (int64)`: Amount of gas consumed by transaction. During `CheckTx`, this value is computed by multiplying the standard cost of a transaction byte by the size of the raw transaction. Next is an example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/ante/basic.go#L95-L95
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/ante/basic.go#L96
 ```
 
 * `Events ([]cmn.KVPair)`: Key-Value tags for filtering and indexing transactions (eg. by account). See [`event`s](./08-events.md) for more.
@@ -301,7 +301,7 @@ Before the first transaction of a given block is processed, a [volatile state](#
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/store/types/gas.go#L230-L241
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/store/types/gas.go#L230-L241
 ```
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
@@ -330,7 +330,7 @@ After that, `RunTx()` calls `ValidateBasic()` on each `sdk.Msg`in the `Tx`, whic
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`deliverState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/baseapp/baseapp.go#L647-L654
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L663-L672
 ```
 
 This allows `RunTx` not to commit the changes made to the state during the execution of `anteHandler` if it ends up failing. It also prevents the module implementing the `anteHandler` from writing to state, which is an important part of the [object-capabilities](./10-ocap.md) of the Cosmos SDK.
@@ -342,7 +342,7 @@ Finally, the [`RunMsgs()`](#runmsgs) function is called to process the `sdk.Msg`
 The `AnteHandler` is a special handler that implements the `AnteHandler` interface and is used to authenticate the transaction before the transaction's internal messages are processed.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/handler.go#L6-L8
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/handler.go#L6-L8
 ```
 
 The `AnteHandler` is theoretically optional, but still a very important component of public blockchain networks. It serves 3 primary purposes:
@@ -351,7 +351,7 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 * Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
 * Play a role in the incentivisation of stakeholders via the collection of transaction fees.
 
-`BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../basics/00-app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/ante/ante.go).
+`BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../basics/00-app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/ante/ante.go).
 
 Click [here](../basics/04-gas-fees.md#antehandler) for more on the `anteHandler`.
 
@@ -369,7 +369,7 @@ Like `AnteHandler`s, `PostHandler`s are theoretically optional, one use case for
 Other use cases like unused gas refund can also be enabled by `PostHandler`s.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/auth/posthandler/post.go#L14:L27
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/posthandler/post.go#L1-L15
 ```
 
 Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effectively making the transaction fail.

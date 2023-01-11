@@ -26,26 +26,29 @@ Both of these will ideally allow the ecosystem to move faster because we won't
 be waiting for all dependencies to update synchronously. For instance, we could
 have 3 versions of the core SDK compatible with the latest 2 releases of
 CosmWasm as well as 4 different versions of staking . This sort of setup would
-allow early adopters to aggressively integrate new versions, while allowing 
+allow early adopters to aggressively integrate new versions, while allowing
 more conservative users to be selective about which versions they're ready for.
 
 In order to achieve this, we need to solve the following problems:
+
 1. because of the way [go semantic import versioning](https://research.swtch.com/vgo-import) (SIV)
-works, moving to SIV naively will actually make it harder to achieve these goals
+   works, moving to SIV naively will actually make it harder to achieve these goals
 2. circular dependencies between modules need to be broken to actually release
-many modules in the SDK independently
+   many modules in the SDK independently
 3. pernicious minor version incompatibilities introduced through correctly
-[evolving protobuf schemas](https://developers.google.com/protocol-buffers/docs/proto3#updating)
-without correct [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering)
+   [evolving protobuf schemas](https://developers.google.com/protocol-buffers/docs/proto3#updating)
+   without correct [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering)
 
 Note that all the following discussion assumes that the proto file versioning and state machine versioning of a module
 are distinct in that:
-* proto files are maintained in a non-breaking way (using something like [buf breaking](https://docs.buf.build/breaking/overview)
+
+* proto files are maintained in a non-breaking way (using something
+  like [buf breaking](https://docs.buf.build/breaking/overview)
   to ensure all changes are backwards compatible)
 * proto file versions get bumped much less frequently, i.e. we might maintain `cosmos.bank.v1` through many versions
   of the bank module state machine
 * state machine breaking changes are more common and ideally this is what we'd want to semantically version with
-go modules, ex. `x/bank/v2`, `x/bank/v3`, etc.
+  go modules, ex. `x/bank/v2`, `x/bank/v3`, etc.
 
 ### Problem 1: Semantic Import Versioning Compatibility
 
@@ -92,6 +95,7 @@ types for the second version in `example.com/foo/v2/types`.
 
 Now let's say we have a module `bar` which talks to `foo` using this keeper
 interface which `foo` provides:
+
 ```go
 type FooKeeper interface {
 	DoSomething(MsgDoSomething) error
@@ -103,8 +107,8 @@ type FooKeeper interface {
 Imagine we have a chain which uses both `foo` and `bar` and wants to upgrade to
 `foo/v2`, but the `bar` module has not upgraded to `foo/v2`.
 
-In this case, the chain will not be able to upgrade to `foo/v2` until `bar` 
-has upgraded its references to `example.com/foo/types.MsgDoSomething` to 
+In this case, the chain will not be able to upgrade to `foo/v2` until `bar`
+has upgraded its references to `example.com/foo/types.MsgDoSomething` to
 `example.com/foo/v2/types.MsgDoSomething`.
 
 Even if `bar`'s usage of `MsgDoSomething` has not changed at all, the upgrade
@@ -140,7 +144,8 @@ to reflect the changes needed for `v2` (adding `condition` and requiring
 with this update and use that for `foo/v2`. But this change is state machine
 breaking for `v1`. It requires changing the `ValidateBasic` method to reject
 the case where `amount` is zero, and it adds the `condition` field which
-should be rejected based on [ADR 020 unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering).
+should be rejected based
+on [ADR 020 unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering).
 So adding these changes as a patch on `v1` is actually incorrect based on semantic
 versioning. Chains that want to stay on `v1` of `foo` should not
 be importing these changes because they are incorrect for `v1.`
@@ -168,7 +173,8 @@ possibly dangerous logic error. If `bar/v2` were able to check whether `foo` was
 on `v1` or `v2` and dynamically, it could choose to only use `condition` when
 `foo/v2` is available. Even if `bar/v2` were able to perform this check, however,
 how do we know that it is always performing the check properly. Without
-some sort of framework-level [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering),
+some sort of
+framework-level [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering),
 it is hard to know whether these pernicious hard to detect bugs are getting into
 our app and a client-server layer such as [ADR 033: Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
 may be needed to do this.
@@ -177,7 +183,8 @@ may be needed to do this.
 
 ### Approach A) Separate API and State Machine Modules
 
-One solution (first proposed in https://github.com/cosmos/cosmos-sdk/discussions/10582) is to isolate all protobuf generated code into a separate module
+One solution (first proposed in https://github.com/cosmos/cosmos-sdk/discussions/10582) is to isolate all protobuf
+generated code into a separate module
 from the state machine module. This would mean that we could have state machine
 go modules `foo` and `foo/v2` which could use a types or API go module say
 `foo/api`. This `foo/api` go module would be perpetually on `v1.x` and only
@@ -191,10 +198,11 @@ This is similar to the naive mitigation described above except that it separates
 the types into separate go modules which in and of itself could be used to
 break circular module dependencies. It has the same problems as the naive solution,
 otherwise, which we could rectify by:
+
 1. removing all state machine breaking code from the API module (ex. `ValidateBasic` and any other interface methods)
 2. embedding the correct file descriptors for unknown field filtering in the binary
 
-#### Migrate all interface methods on API types to handlers 
+#### Migrate all interface methods on API types to handlers
 
 To solve 1), we need to remove all interface implementations from generated
 types and instead use a handler approach which essentially means that given
@@ -231,7 +239,7 @@ unknown field filtering will reject `MsgDoSomething` when `condition` is
 set.
 
 The simplest way to do this may be to embed the protobuf `FileDescriptor`s into
-the module itself so that these `FileDescriptor`s are used at runtime rather 
+the module itself so that these `FileDescriptor`s are used at runtime rather
 than the ones that are built into the `foo/api` which may be different. Using
 [buf build](https://docs.buf.build/build/usage#output-format), [go embed](https://pkg.go.dev/embed),
 and a build script we can probably come up with a solution for embedding
@@ -256,7 +264,8 @@ of care to avoid these sorts of issues.
 #### Minor Version Incompatibilities
 
 This approach in and of itself does little to address any potential minor
-version incompatibilities and the requisite [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering).
+version incompatibilities and the
+requisite [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering).
 Likely some sort of client-server routing layer which does this check such as
 [ADR 033: Inter-Module communication](./adr-033-protobuf-inter-module-comm.md)
 is required to make sure that this is done properly. We could then allow
@@ -280,7 +289,8 @@ result in an undesirable performance hit depending on how complex this logic is.
 ### Approach B) Changes to Generated Code
 
 An alternate approach to solving the versioning problem is to change how protobuf code is generated and move modules
-mostly or completely in the direction of inter-module communication as described in [ADR 033](./adr-033-protobuf-inter-module-comm.md).
+mostly or completely in the direction of inter-module communication as described
+in [ADR 033](./adr-033-protobuf-inter-module-comm.md).
 In this paradigm, a module could generate all the types it needs internally - including the API types of other modules -
 and talk to other modules via a client-server boundary. For instance, if `bar` needs to talk to `foo`, it could
 generate its own version of `MsgDoSomething` as `bar/internal/foo/v1.MsgDoSomething` and just pass this to the
@@ -293,11 +303,13 @@ globally if they are generated in an `internal/` package. This will require modu
 with the app-level level protobuf registry, this is similar to what modules already do with the `InterfaceRegistry`
 and amino codec.
 
-If modules _only_ do ADR 033 message passing then a naive and non-performant solution for converting `bar/internal/foo/v1.MsgDoSomething`
+If modules _only_ do ADR 033 message passing then a naive and non-performant solution for
+converting `bar/internal/foo/v1.MsgDoSomething`
 to `foo/internal.MsgDoSomething` would be marshaling and unmarshaling in the ADR 033 router. This would break down if
 we needed to expose protobuf types in `Keeper` interfaces because the whole point is to try to keep these types
 `internal/` so that we don't end up with all the import version incompatibilities we've described above. However,
-because of the issue with minor version incompatibilities and the need for [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering),
+because of the issue with minor version incompatibilities and the need
+for [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering),
 sticking with the `Keeper` paradigm instead of ADR 033 may be unviable to begin with.
 
 A more performant solution (that could maybe be adapted to work with `Keeper` interfaces) would be to only expose
@@ -305,6 +317,7 @@ getters and setters for generated types and internally store data in memory buff
 one implementation to another in a zero-copy way.
 
 For example, imagine this protobuf API with only getters and setters is exposed for `MsgSend`:
+
 ```go
 type MsgSend interface {
 	proto.Message
@@ -338,7 +351,8 @@ In order to simplify access to other modules using ADR 033, a public API module 
 of requiring to generate all client types internally.
 
 The big downsides of this approach are that it requires big changes to how people use protobuf types and would be a
-substantial rewrite of the protobuf code generator. This new generated code, however, could still be made compatible with
+substantial rewrite of the protobuf code generator. This new generated code, however, could still be made compatible
+with
 the [`google.golang.org/protobuf/reflect/protoreflect`](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect)
 API in order to work with all standard golang protobuf tooling.
 
@@ -357,7 +371,7 @@ sync (what we do now) or attempt some ad-hoc potentially hacky solution.
 One approach is to ditch go semantic import versioning (SIV) altogether. Some people have commented that go's SIV
 (i.e. changing the import path to `foo/v2`, `foo/v3`, etc.) is too restrictive and that it should be optional. The
 golang maintainers disagree and only officially support semantic import versioning. We could, however, take the
-contrarian perspective and get more flexibility by using 0.x-based versioning basically forever. 
+contrarian perspective and get more flexibility by using 0.x-based versioning basically forever.
 
 Module version compatibility could then be achieved using go.mod replace directives to pin dependencies to specific
 compatible 0.x versions. For instance if we knew `foo` 0.2 and 0.3 were both compatible with `bar` 0.3 and 0.4, we
@@ -417,18 +431,36 @@ Other downsides to this approach are:
 ## Decision
 
 Based on discussions within the team, the current draft consensus is the following:
+
 1. we are alignment on adopting [ADR 033](./adr-033-protobuf-inter-module-comm.md) not just as an addition to the
-framework, but as a core replacement to the keeper paradigm entirely.
+   framework, but as a core replacement to the keeper paradigm entirely.
 2. the ADR 033 inter-module router will accommodate any variation of approach (A) or (B) given the following rules:
-    a. if the client type is the same as the server type then pass it directly through,
-    b. if both client and server use the zero-copy generated code wrappers (which still need to be defined), then pass
-the memory buffers from one wrapper to the other, or
-    c. marshal/unmarshal types between client and server.
+   a. if the client type is the same as the server type then pass it directly through,
+   b. if both client and server use the zero-copy generated code wrappers (which still need to be defined), then pass
+   the memory buffers from one wrapper to the other, or
+   c. marshal/unmarshal types between client and server.
 
 This approach will allow for both maximal correctness and enable a clear path to enabling modules within in other
 languages, possibly executed within a WASM VM.
 
 ### Minor API Revisions
+
+To declare minor API revisions of proto files, we propose the following guidelines (which were already documented
+in [cosmos.app.v1alpha module options](../proto/cosmos/app/v1alpha1/module.proto)):
+* proto packages which are revised from their initial version (considered revision `0`) should include a `package`
+* comment in some .proto file containing the test `Revision N` at the start of a comment line where `N` is the current
+revision number.
+* all fields, messages, etc. added in a version beyond the initial revision should add a comment at the start of a
+comment line of the form `Since: Revision N` where `N` is the non-zero revision it was added.
+
+It is advised that there is a 1:1 correspondence between a state machine module and versioned set of proto files
+which are versioned either as a buf module a go API module or both. If the buf schema registry is used, the version of
+this buf module should always be `1.N` where `N` corresponds to the package revision. Patch releases should be used when
+only documentation comments are updated. It is okay to include proto packages named `v2`, `v3`, etc. in this same
+`1.N` versioned buf module (ex. `cosmos.bank.v2`) as long as all these proto packages consist of a single API intended
+to be served by a single SDK module.
+
+### Introspecting Minor API Revisions
 
 In order for modules to introspect the minor API revision of peer modules, we propose adding the following method
 to `cosmossdk.io/core/intermodule.Client`:
@@ -459,12 +491,51 @@ type MsgClient interface {
 
 To correctly perform [unknown field filtering](./adr-020-protobuf-transaction-encoding.md#unknown-field-filtering),
 the inter-module router can do one of the following:
+
 * use the `protoreflect` API for messages which support that
 * for gogo proto messages, marshal and use the existing `codec/unknownproto` code
-* for zero-copy messages, do a simple check on the highest set field number (assuming we can require that fields are 
-adding consecutively in increasing order)
+* for zero-copy messages, do a simple check on the highest set field number (assuming we can require that fields are
+  adding consecutively in increasing order)
 
-### Dependency Declaration
+### `FileDescriptor` Registration
+
+Because a single go binary may contain different versions of the same generated protobuf code, we cannot rely on the
+global protobuf registry to contain the correct `FileDescriptor`s. Because `appconfig` module configuration is itself
+written in protobuf, we would like to load the `FileDescriptor`s for a module before loading a module itself. So we
+will provide ways to register `FileDescriptor`s at module registration time before instantiation. We propose the
+following `cosmossdk.io/core/appmodule.Option` constructors for the various cases of how `FileDescriptor`s may be
+packaged:
+
+```go
+package appmodule
+
+// this can be used when we are using google.golang.org/protobuf compatible generated code
+// Ex:
+//   ProtoFiles(bankv1beta1.File_cosmos_bank_v1beta1_module_proto)
+func ProtoFiles(file []protoreflect.FileDescriptor) Option {}
+
+// this can be used when we are using gogo proto generated code.
+func GzippedProtoFiles(file [][]byte) Option {}
+
+// this can be used when we are using buf build to generated a pinned file descriptor
+func ProtoImage(protoImage []byte) Option {}
+```
+
+This approach allows us to support several ways protobuf files might be generated:
+* proto files generated internally to a module (use `ProtoFiles`)
+* the API module approach with pinned file descriptors (use `ProtoImage`)
+* gogo proto (use `GzippedProtoFiles`)
+
+### Module Dependency Declaration
+
+One risk of ADR 033 is that dependencies are called at runtime which are not present in the loaded set of SDK modules.  
+Also we want modules to have a way to define a minimum dependency API revision that they require. Therefore, all
+modules should declare their set of dependencies upfront. These dependencies could be defined when a module is
+instantiated, but ideally we know what the dependencies are before instantiation and can statically look at an app
+config and determine whether the set of modules. For example, if `bar` requires `foo` revision `>= 1`, then we
+should be able to know this when creating an app config with two versions of `bar` and `foo`.
+
+We propose defining these dependencies in the proto options of the module config object itself.
 
 ### Interface Registration
 
@@ -472,15 +543,139 @@ We will also need to define how interface methods are defined on types that are 
 In light of the desire to support modules in other languages, we may want to think of solutions that will accommodate
 other languages such as plugins described briefly in [ADR 033](./adr-033-protobuf-inter-module-comm.md#internal-methods).
 
-### `FileDescriptor` Registration
-
 ### Testing
+
+In order to ensure that modules are indeed with multiple versions of their dependencies, we plan to provide specialized
+unit and integration testing infrastructure that automatically tests multiple versions of dependencies.
 
 #### Unit Testing
 
+Unit tests should be conducted inside SDK modules by mocking their dependencies. In a full ADR 033 scenario,
+this means that all interaction with other modules is done via the inter-module router, so mocking of dependencies
+means mocking their msg and query server implementations. We will provide both a test runner and fixture to make this
+streamlined. The key thing that the test runner should do to test compatibility is to test all combinations of
+dependency API revisions. This can be done by taking the file descriptors for the dependencies, parsing their comments
+to determine the revisions various elements were added, and then created synthetic file descriptors for each revision
+by subtracting elements that were added later.
+
+Here is a proposed API for the unit test runner and fixture:
+
+```go
+package moduletesting
+
+import (
+	"context"
+	"testing"
+
+	"cosmossdk.io/core/intermodule"
+	"cosmossdk.io/depinject"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protodesc"
+)
+
+type TestFixture interface {
+	context.Context
+	intermodule.Client // for making calls to the module we're testing
+	BeginBlock()
+	EndBlock()
+}
+
+type UnitTestFixture interface {
+	TestFixture
+	grpc.ServiceRegistrar // for registering mock service implementations
+}
+
+type UnitTestConfig struct {
+	ModuleConfig              proto.Message    // the module's config object
+	DepinjectConfig           depinject.Config // optional additional depinject config options
+	DependencyFileDescriptors []protodesc.FileDescriptorProto // optional dependency file descriptors to use instead of the global registry
+}
+
+// Run runs the test function for all combinations of dependency API revisions.
+func (cfg UnitTestConfig) Run(t *testing.T, f func(t *testing.T, f UnitTestFixture)) {
+	// ...
+}
+```
+
+Here is an example for testing bar calling foo which takes advantage of conditional service revisions in the expected
+mock arguments:
+
+```go
+func TestBar(t *testing.T) {
+    UnitTestConfig{ModuleConfig: &foomodulev1.Module{}}.Run(t, func (t *testing.T, f moduletesting.UnitTestFixture) {
+        ctrl := gomock.NewController(t)
+        mockFooMsgServer := footestutil.NewMockMsgServer()
+        foov1.RegisterMsgServer(f, mockFooMsgServer)
+        barMsgClient := barv1.NewMsgClient(f)
+		if f.ServiceRevision(foov1.Msg_ServiceDesc.ServiceName) >= 1 {
+            mockFooMsgServer.EXPECT().DoSomething(gomock.Any(), &foov1.MsgDoSomething{
+				...,
+				Condition: ..., // condition is expected in revision >= 1
+            }).Return(&foov1.MsgDoSomethingResponse{}, nil)
+        } else {
+            mockFooMsgServer.EXPECT().DoSomething(gomock.Any(), &foov1.MsgDoSomething{...}).Return(&foov1.MsgDoSomethingResponse{}, nil)
+        }
+        res, err := barMsgClient.CallFoo(f, &MsgCallFoo{})
+        ...
+    })
+}
+```
+
+The unit test runner would make sure that no dependency mocks return arguments which are invalid for the service
+revision being tested to ensure that modules don't incorrectly depend on functionality not present in a given revision.
+
 #### Integration Testing
 
-### Proto File Versioning
+An integration test runner and fixture would also be provided which instead of using mocks would test actual module
+dependencies in various combinations. Here is the proposed API:
+
+```go
+type IntegrationTestFixture interface {
+    TestFixture
+}
+
+type IntegrationTestConfig struct {
+    ModuleConfig     proto.Message    // the module's config object
+    DependencyMatrix map[string][]proto.Message // all the dependent module configs
+}
+
+// Run runs the test function for all combinations of dependency modules.
+func (cfg IntegationTestConfig) Run(t *testing.T, f func (t *testing.T, f IntegrationTestFixture)) {
+    // ...
+}
+```
+
+And here is an example with foo and bar:
+
+```go
+func TestBarIntegration(t *testing.T) {
+    IntegrationTestConfig{
+        ModuleConfig: &barmodulev1.Module{},
+        DependencyMatrix: map[string][]proto.Message{
+            "runtime": []proto.Message{ // test against two versions of runtime
+                &runtimev1.Module{},
+                &runtimev2.Module{},
+            },
+            "foo": []proto.Message{ // test against three versions of foo
+                &foomodulev1.Module{},
+                &foomodulev2.Module{},
+                &foomodulev3.Module{},
+            }
+        }   
+    }.Run(t, func (t *testing.T, f moduletesting.IntegrationTestFixture) {
+        barMsgClient := barv1.NewMsgClient(f)
+        res, err := barMsgClient.CallFoo(f, &MsgCallFoo{})
+        ...
+    })
+}
+```
+
+Unlike unit tests, integration tests actually pull in other module dependencies. So that modules can be written
+without direct dependencies on other modules and because golang has no concept of development dependencies, integration
+tests should be written in separate go modules, ex. `example.com/bar/v2/test`. Because this paradigm uses go semantic
+versioning, it is possible to build a single go module which imports 3 versions of bar and 2 versions of runtime and
+can test these all together in the six various combinations of dependencies.
 
 ## Consequences
 
@@ -493,7 +688,7 @@ the migration overhead.
 ### Positive
 
 * we will be able to deliver interoperable semantically versioned modules which should dramatically increase the
-ability of the Cosmos SDK ecosystem to iterate on new features
+  ability of the Cosmos SDK ecosystem to iterate on new features
 * it will be possible to write Cosmos SDK modules in other languages in the near future
 
 ### Negative
@@ -502,16 +697,25 @@ ability of the Cosmos SDK ecosystem to iterate on new features
 
 ### Neutral
 
+* the `cosmossdk.io/core/appconfig` framework will play a more central role in terms of how modules are defined, this
+  is likely generally a good thing but does mean additional changes for users wanting to stick to the pre-depinject way
+  of wiring up modules
+* `depinject` is somewhat less needed or maybe even obviated because of the full ADR 033 approach. If we adopt the
+  core API proposed in https://github.com/cosmos/cosmos-sdk/pull/12239, then a module would probably always instantiate
+  itself with a method `ProvideModule(appmodule.Service) (appmodule.AppModule, error)`. There is no complex wiring of
+  keeper dependencies in this scenario and dependency injection may not have as much of (or any) use case.
+
 ## Further Discussions
 
 The decision described above is considered in draft mode and is pending final buy-in from the team and key stakeholders.
 Key outstanding discussions if we do adopt that direction are:
+
 * how do module clients introspect dependency module API revisions
 * how do modules determine a minor dependency module API revision requirement
-* how do modules appropriately test compatibility with different dependency versions 
+* how do modules appropriately test compatibility with different dependency versions
 * how to register and resolve interface implementations
 * how do modules register their protobuf file descriptors depending on the approach they take to generated code (the
-API module approach may still be viable as a supported strategy and would need pinned file descriptors) 
+  API module approach may still be viable as a supported strategy and would need pinned file descriptors)
 
 ## References
 

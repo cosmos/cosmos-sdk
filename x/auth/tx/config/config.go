@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
+
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
@@ -124,6 +127,17 @@ func NewTextual(bk BankKeeper) valuerenderer.Textual {
 	textual := valuerenderer.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {
+			status, ok := grpcstatus.FromError(err)
+			if !ok {
+				return nil, err
+			}
+
+			// This means we didn't find any metadata for this denom. Returning
+			// empty metadata.
+			if status.Code() == codes.NotFound {
+				return nil, nil
+			}
+
 			return nil, err
 		}
 

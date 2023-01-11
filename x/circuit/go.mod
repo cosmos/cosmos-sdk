@@ -3,7 +3,7 @@ module circuit
 go 1.19
 
 require (
-	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
+	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.51.0
@@ -19,8 +19,8 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/apd/v3 v3.1.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
-	github.com/cosmos/btcutil v1.0.4 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
+	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
 	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
@@ -74,11 +74,11 @@ require (
 	github.com/tendermint/tendermint v0.37.0-rc2 // indirect
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/crypto v0.2.0 // indirect
+	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
-	golang.org/x/net v0.2.0 // indirect
-	golang.org/x/sys v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/net v0.3.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

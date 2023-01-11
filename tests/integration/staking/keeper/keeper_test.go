@@ -3,20 +3,18 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
+	"cosmossdk.io/simapp"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type IntegrationTestSuite struct {
-	suite.Suite
-
+// fixture uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators`.
+type fixture struct {
 	app         *simapp.SimApp
 	ctx         sdk.Context
 	addrs       []sdk.AccAddress
@@ -25,8 +23,13 @@ type IntegrationTestSuite struct {
 	msgServer   types.MsgServer
 }
 
-func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(suite.T(), false)
+// initFixture uses simapp (and not a depinjected app) because we manually set a
+// new app.StakingKeeper in `createValidators` which is used in most of the
+// staking keeper tests.
+func initFixture(t *testing.T) *fixture {
+	f := &fixture{}
+
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	querier := keeper.Querier{Keeper: app.StakingKeeper}
@@ -35,9 +38,9 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	types.RegisterQueryServer(queryHelper, querier)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	suite.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
+	f.msgServer = keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	addrs, _, validators := createValidators(suite.T(), ctx, app, []int64{9, 8, 7})
+	addrs, _, validators := createValidators(t, ctx, app, []int64{9, 8, 7})
 	header := tmproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,
@@ -50,9 +53,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	hi := types.NewHistoricalInfo(header, sortedVals, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 5, &hi)
 
-	suite.app, suite.ctx, suite.queryClient, suite.addrs, suite.vals = app, ctx, queryClient, addrs, validators
-}
+	f.app, f.ctx, f.queryClient, f.addrs, f.vals = app, ctx, queryClient, addrs, validators
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	return f
 }

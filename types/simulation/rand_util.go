@@ -7,7 +7,8 @@ import (
 	"time"
 	"unsafe"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -41,19 +42,19 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // RandPositiveInt get a rand positive math.Int
-func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
-	if !max.GTE(math.OneInt()) {
-		return math.Int{}, errors.New("max too small")
+func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdkmath.Int, error) {
+	if !max.GTE(sdkmath.OneInt()) {
+		return sdkmath.Int{}, errors.New("max too small")
 	}
 
-	max = max.Sub(math.OneInt())
+	max = max.Sub(sdkmath.OneInt())
 
-	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(math.OneInt()), nil
+	return sdkmath.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdkmath.OneInt()), nil
 }
 
 // RandomAmount generates a random amount
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max math.Int) math.Int {
+func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -65,12 +66,12 @@ func RandomAmount(r *rand.Rand, max math.Int) math.Int {
 		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
 	}
 
-	return sdk.NewIntFromBigInt(randInt)
+	return sdkmath.NewIntFromBigInt(randInt)
 }
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max sdk.Dec) math.LegacyDec {
+func RandomDecAmount(r *rand.Rand, max sdkmath.LegacyDec) sdkmath.LegacyDec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
@@ -82,7 +83,7 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) math.LegacyDec {
 		randInt = big.NewInt(0).Rand(r, max.BigInt())
 	}
 
-	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
+	return sdkmath.LegacyNewDecFromBigIntWithPrec(randInt, sdkmath.LegacyPrecision)
 }
 
 // RandTimestamp generates a random timestamp

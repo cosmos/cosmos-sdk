@@ -131,7 +131,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x05 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0-rc3/proto/cosmos/bank/v1beta1/bank.proto#L11-L16
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/bank.proto#L12-L23
 ```
 
 ## Keepers
@@ -289,7 +289,7 @@ type ViewKeeper interface {
 Send coins from one address to another.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L21-L32
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L38-L53
 ```
 
 The message will fail under the following conditions:
@@ -299,10 +299,10 @@ The message will fail under the following conditions:
 
 ### MsgMultiSend
 
-Send coins from and to a series of different address. If any of the receiving addresses do not correspond to an existing account, a new account is created.
+Send coins from one sender and to a series of different address. If any of the receiving addresses do not correspond to an existing account, a new account is created.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/tx.proto#L37-L45
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L58-L69
 ```
 
 The message will fail under the following conditions:
@@ -317,7 +317,7 @@ The message will fail under the following conditions:
 The `bank` module params can be updated through `MsgUpdateParams`, which can be done using governance proposal. The signer will always be the `gov` module account address. 
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/e167855c9b99c4e58c1455533c6f88af5ff78ae1/proto/cosmos/bank/v1beta1/tx.proto#L56-L69
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L74-L88
 ```
 
 The message handling can fail if:
@@ -329,7 +329,7 @@ The message handling can fail if:
 Used with the x/gov module to set create/edit SendEnabled entries.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/1bb627e7324278218560d2dd61e010881394f504/proto/cosmos/bank/v1beta1/tx.proto#L94-L107
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L96-L117
 ```
 
 The message will fail under the following conditions:

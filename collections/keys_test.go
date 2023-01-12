@@ -16,3 +16,9 @@ func TestUint64Key(t *testing.T) {
 		require.ErrorIs(t, err, errDecodeKeySize)
 	})
 }
+
+func TestStringKey(t *testing.T) {
+	t.Run("correctness", func(t *testing.T) {
+		checkKeyCodec(t, StringKey, "test")
+	})
+}

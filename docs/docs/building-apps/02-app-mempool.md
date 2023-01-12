@@ -10,8 +10,14 @@ This sections describes how the app-side mempool can be used and replaced.
 
 Since `v0.47` the application has its own mempool to allow much more granular
 block building than previous versions. This change was enabled by
-[ABCI 1.0](https://github.com/tendermint/tendermint/blob/main/spec/abci/README.md).
+[ABCI 1.0](https://github.com/tendermint/tendermint/blob/v0.37.0-rc2/spec/abci).
 Notably it introduces the `PrepareProposal` and `ProcessProposal` steps of ABCI++.
+
+### Pre-requisite Readings
+
+* [BaseApp](../core/00-baseapp.md)
+
+:::
 
 ## Prepare Proposal
 
@@ -38,7 +44,7 @@ it would like the block constructed.
 Currently, there is a default `PrepareProposal` implementation provided by the application.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/baseapp/baseapp.go#L870-L908
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L868-L916
 ```
 
 This default implementation can be overridden by the application developer in
@@ -68,7 +74,7 @@ proposal is proposed.
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-alpha2/baseapp/baseapp.go#L911-L935
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/baseapp/baseapp.go#L927-L942
 ```
 
 Like `PrepareProposal` this implementation is the default and can be modified by the application developer in [`app.go`](./01-app-go-v2.md):
@@ -146,6 +152,9 @@ It is an integer value that sets the mempool in one of three modes, *bounded*, *
 
 #### Callback
 
-Allow to set a callback to be called when a transaction is read from the mempool.
+The priority nonce mempool provides mempool options allowing the application sets callback(s).
+
+* **OnRead**: Set a callback to be called when a transaction is read from the mempool.
+* **TxReplacement**: Sets a callback to be called when duplicated transaction nonce detected during mempool insert. Application can define a transaction replacement rule based on tx priority or certain transaction fields.
 
 More information on the SDK mempool implementation can be found in the [godocs](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/types/mempool).

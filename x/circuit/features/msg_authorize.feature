@@ -37,7 +37,7 @@ Feature: MsgAuthorizeCircuitBreaker
       """
       {
        "level": "LEVEL_SOME_MSGS"
-        "limit_msg_types": "cosmos.bank.v1beta1.MsgSend"
+       "limit_msg_types": "cosmos.bank.v1beta1.MsgSend"
       }
       """
       Then expect success

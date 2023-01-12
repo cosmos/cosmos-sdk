@@ -601,7 +601,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 				toAddr:   toAddr,
 				amt:      amt,
 			})
-			i += 1
+			i++
 			if i < len(messages) {
 				if len(messages[i]) > 0 {
 					return nil, errors.New(messages[i])
@@ -630,7 +630,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 				toAddr:   toAddr,
 				amt:      amt,
 			})
-			i += 1
+			i++
 			if i < len(newToAddrs) {
 				if len(newToAddrs[i]) > 0 {
 					return newToAddrs[i], nil

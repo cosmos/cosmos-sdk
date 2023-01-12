@@ -13,7 +13,7 @@ import (
 
 var (
 	hashPrefix = "SHA-256="
-	maxByteLen = 32 // Maximum byte length to be displayed as is. Longer than this, we hash.
+	maxByteLen = 35 // Maximum byte length to be displayed as is. Longer than this, we hash.
 )
 
 // NewBytesValueRenderer returns a ValueRenderer for Protobuf bytes, which are

@@ -1,6 +1,7 @@
 package valuerenderer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -12,6 +13,8 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	"cosmossdk.io/tx/signing"
+	"cosmossdk.io/tx/textual/internal/textualpb"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 
@@ -61,12 +64,11 @@ func (r *Textual) GetFieldValueRenderer(fd protoreflect.FieldDescriptor) (ValueR
 			}
 
 			vr := r.scalars[scalar]
-			if vr == nil {
-				return nil, fmt.Errorf("got empty value renderer for scalar %s", scalar)
+			if vr != nil {
+				return vr(fd), nil
 			}
-
-			return vr(fd), nil
 		}
+
 		return NewStringValueRenderer(), nil
 
 	case fd.Kind() == protoreflect.BytesKind:
@@ -125,6 +127,7 @@ func (r *Textual) init() {
 		r.messages[(&durationpb.Duration{}).ProtoReflect().Descriptor().FullName()] = NewDurationValueRenderer()
 		r.messages[(&timestamppb.Timestamp{}).ProtoReflect().Descriptor().FullName()] = NewTimestampValueRenderer()
 		r.messages[(&anypb.Any{}).ProtoReflect().Descriptor().FullName()] = NewAnyValueRenderer(r)
+		r.messages[(&textualpb.TextualData{}).ProtoReflect().Descriptor().FullName()] = NewTxValueRenderer(r)
 	}
 }
 
@@ -132,4 +135,37 @@ func (r *Textual) init() {
 func (r *Textual) DefineScalar(scalar string, vr ValueRendererCreator) {
 	r.init()
 	r.scalars[scalar] = vr
+}
+
+// GetSignBytes returns the transaction sign bytes.
+func (r *Textual) GetSignBytes(ctx context.Context, bodyBz, authInfoBz []byte, signerData signing.SignerData) ([]byte, error) {
+	data := &textualpb.TextualData{
+		BodyBytes:     bodyBz,
+		AuthInfoBytes: authInfoBz,
+		SignerData: &textualpb.SignerData{
+			Address:       signerData.Address,
+			ChainId:       signerData.ChainId,
+			AccountNumber: signerData.AccountNumber,
+			Sequence:      signerData.Sequence,
+			PubKey:        signerData.PubKey,
+		},
+	}
+
+	vr, err := r.GetMessageValueRenderer(data.ProtoReflect().Descriptor())
+	if err != nil {
+		return nil, err
+	}
+
+	screens, err := vr.Format(ctx, protoreflect.ValueOf(data.ProtoReflect()))
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	err = encode(screens, &buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }

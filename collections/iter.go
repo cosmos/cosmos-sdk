@@ -184,9 +184,9 @@ func newIterator[K, V any](iterator store.Iterator, m Map[K, V]) (Iterator[K, V]
 	}, nil
 }
 
-// Iterator defines a generic wrapper around an sdk.Iterator.
+// Iterator defines a generic wrapper around an storetypes.Iterator.
 // This iterator provides automatic key and value encoding,
-// it assumes all the keys and values contained within the sdk.Iterator
+// it assumes all the keys and values contained within the storetypes.Iterator
 // range are the same.
 type Iterator[K, V any] struct {
 	kc KeyCodec[K]
@@ -202,7 +202,7 @@ func (i Iterator[K, V]) Value() (V, error) {
 	return i.vc.Decode(i.iter.Value())
 }
 
-// Key returns the current sdk.Iterator decoded key.
+// Key returns the current storetypes.Iterator decoded key.
 func (i Iterator[K, V]) Key() (K, error) {
 	bytesKey := i.iter.Key()[i.prefixLength:] // strip prefix namespace
 

@@ -73,22 +73,22 @@ func deps() (store.KVStoreService, context.Context) {
 }
 
 // checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
-func checkKeyCodec[T any](t *testing.T, encoder KeyCodec[T], key T) {
-	buffer := make([]byte, encoder.Size(key))
-	written, err := encoder.Encode(buffer, key)
+func checkKeyCodec[T any](t *testing.T, keyCodec KeyCodec[T], key T) {
+	buffer := make([]byte, keyCodec.Size(key))
+	written, err := keyCodec.Encode(buffer, key)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), written)
-	read, decodedKey, err := encoder.Decode(buffer)
+	read, decodedKey, err := keyCodec.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")
 	// test if terminality is correctly applied
-	pairEncoder := PairKeyCodec(encoder, StringKey)
+	pairCodec := PairKeyCodec(keyCodec, StringKey)
 	pairKey := Join(key, "TEST")
-	buffer = make([]byte, pairEncoder.Size(pairKey))
-	written, err = pairEncoder.Encode(buffer, pairKey)
+	buffer = make([]byte, pairCodec.Size(pairKey))
+	written, err = pairCodec.Encode(buffer, pairKey)
 	require.NoError(t, err)
-	read, decodedPairKey, err := pairEncoder.Decode(buffer)
+	read, decodedPairKey, err := pairCodec.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded non terminal key and pair key read bytes must have same size")
 	require.Equal(t, pairKey, decodedPairKey, "encoding and decoding produces different keys with non terminal encoding")

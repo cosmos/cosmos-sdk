@@ -23,22 +23,24 @@ func TestBytesJsonTestCases(t *testing.T) {
 	textual := textual.NewTextual(nil)
 
 	for _, tc := range testcases {
-		valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
-		require.NoError(t, err)
+		t.Run(tc.hex, func(t *testing.T) {
+			valrend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName("BYTES"))
+			require.NoError(t, err)
 
-		screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(tc.base64))
-		require.NoError(t, err)
-		require.Equal(t, 1, len(screens))
-		require.Equal(t, tc.hex, screens[0].Text)
+			screens, err := valrend.Format(context.Background(), protoreflect.ValueOfBytes(tc.base64))
+			require.NoError(t, err)
+			require.Equal(t, 1, len(screens))
+			require.Equal(t, tc.hex, screens[0].Text)
 
-		// Round trip
-		val, err := valrend.Parse(context.Background(), screens)
-		require.NoError(t, err)
-		if len(tc.base64) > 32 {
-			require.Equal(t, 0, len(val.Bytes()))
-		} else {
-			require.Equal(t, tc.base64, val.Bytes())
-		}
+			// Round trip
+			val, err := valrend.Parse(context.Background(), screens)
+			require.NoError(t, err)
+			if len(tc.base64) > 35 {
+				require.Equal(t, 0, len(val.Bytes()))
+			} else {
+				require.Equal(t, tc.base64, val.Bytes())
+			}
+		})
 	}
 }
 

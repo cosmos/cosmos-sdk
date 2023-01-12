@@ -115,6 +115,10 @@ func (r *Textual) GetMessageValueRenderer(md protoreflect.MessageDescriptor) (Va
 	return NewMessageValueRenderer(r, md), nil
 }
 
+// init initializes Textual's internal `scalars` and `messages` registry for
+// custom scalar and message renderers.
+//
+// It is an idempotent method.
 func (r *Textual) init() {
 	if r.scalars == nil {
 		r.scalars = map[string]ValueRendererCreator{}

@@ -214,7 +214,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for feegrant module's types
-func (am AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[feegrant.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

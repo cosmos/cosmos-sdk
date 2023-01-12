@@ -5,14 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 type fakeOptions struct{}
@@ -20,7 +17,6 @@ type fakeOptions struct{}
 func (f *fakeOptions) Get(key string) interface{} {
 	if key == "streamers.file.write_dir" {
 		return "data/file_streamer"
-
 	}
 	return nil
 }
@@ -51,17 +47,15 @@ func TestStreamingServiceConstructor(t *testing.T) {
 }
 
 func TestLoadStreamingServices(t *testing.T) {
-	db := dbm.NewMemDB()
 	encCdc := types.NewTestCodec()
 	keys := types.NewKVStoreKeys("mockKey1", "mockKey2")
-	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
 
 	testCases := map[string]struct {
 		appOpts            serverTypes.AppOptions
 		activeStreamersLen int
 	}{
 		"empty app options": {
-			appOpts: simtestutil.EmptyAppOptions{},
+			appOpts: emptyAppOptions{},
 		},
 		"all StoreKeys exposed": {
 			appOpts:            streamingAppOptions{keys: []string{"*"}},
@@ -78,7 +72,7 @@ func TestLoadStreamingServices(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc, log.NewNopLogger(), keys)
+			activeStreamers, _, err := streaming.LoadStreamingServices(tc.appOpts, encCdc, log.NewNopLogger(), keys)
 			require.NoError(t, err)
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})
@@ -100,4 +94,10 @@ func (ao streamingAppOptions) Get(o string) interface{} {
 	default:
 		return nil
 	}
+}
+
+type emptyAppOptions struct{}
+
+func (ao emptyAppOptions) Get(o string) interface{} {
+	return nil
 }

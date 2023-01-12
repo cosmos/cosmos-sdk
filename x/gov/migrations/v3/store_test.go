@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -20,8 +21,8 @@ import (
 
 func TestMigrateStore(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{}, gov.AppModuleBasic{}).Codec
-	govKey := sdk.NewKVStoreKey("gov")
-	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
+	govKey := storetypes.NewKVStoreKey("gov")
+	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
 
 	propTime := time.Unix(1e9, 0)
@@ -41,6 +42,15 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v1gov.ProposalKey(prop1.ProposalId), prop1Bz)
 	store.Set(v1gov.ProposalKey(prop2.ProposalId), prop2Bz)
 
+	// Vote on prop 1
+	options := []v1beta1.WeightedVoteOption{
+		{Option: v1beta1.OptionNo, Weight: sdk.MustNewDecFromStr("0.3")},
+		{Option: v1beta1.OptionYes, Weight: sdk.MustNewDecFromStr("0.7")},
+	}
+	vote1 := v1beta1.NewVote(1, voter, options)
+	vote1Bz := cdc.MustMarshal(&vote1)
+	store.Set(v1gov.VoteKey(1, voter), vote1Bz)
+
 	// Run migrations.
 	err = v3gov.MigrateStore(ctx, govKey, cdc)
 	require.NoError(t, err)
@@ -54,6 +64,14 @@ func TestMigrateStore(t *testing.T) {
 	err = cdc.Unmarshal(store.Get(v1gov.ProposalKey(prop2.ProposalId)), &newProp2)
 	require.NoError(t, err)
 	compareProps(t, prop2, newProp2)
+
+	var newVote1 v1.Vote
+	err = cdc.Unmarshal(store.Get(v1gov.VoteKey(prop1.ProposalId, voter)), &newVote1)
+	require.NoError(t, err)
+	// Without the votes migration, we would have 300000000000000000 in state,
+	// because of how sdk.Dec stores itself in state.
+	require.Equal(t, "0.300000000000000000", newVote1.Options[0].Weight)
+	require.Equal(t, "0.700000000000000000", newVote1.Options[1].Weight)
 }
 
 func compareProps(t *testing.T, oldProp v1beta1.Proposal, newProp v1.Proposal) {

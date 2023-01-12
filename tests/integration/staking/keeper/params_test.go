@@ -3,25 +3,40 @@ package keeper
 import (
 	"testing"
 
-	"cosmossdk.io/simapp"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
+
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestParams(t *testing.T) {
-	app := simapp.Setup(t, false)
+	var stakingKeeper *keeper.Keeper
+	app, err := simtestutil.SetupWithConfiguration(
+		configurator.NewAppConfig(
+			configurator.BankModule(),
+			configurator.TxModule(),
+			configurator.StakingModule(),
+			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
+			configurator.AuthModule(),
+		),
+		simtestutil.DefaultStartUpConfig(),
+		&stakingKeeper)
+	assert.NilError(t, err)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	expParams := types.DefaultParams()
 
 	// check that the empty keeper loads the default
-	resParams := app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	resParams := stakingKeeper.GetParams(ctx)
+	assert.Assert(t, expParams.Equal(resParams))
 
 	// modify a params, save, and retrieve
 	expParams.MaxValidators = 777
-	app.StakingKeeper.SetParams(ctx, expParams)
-	resParams = app.StakingKeeper.GetParams(ctx)
-	require.True(t, expParams.Equal(resParams))
+	stakingKeeper.SetParams(ctx, expParams)
+	resParams = stakingKeeper.GetParams(ctx)
+	assert.Assert(t, expParams.Equal(resParams))
 }

@@ -66,7 +66,7 @@ message Supply {
   option (gogoproto.equal)           = true;
   option (gogoproto.goproto_getters) = false;
 
-  option (cosmos_proto.implements_interface) = "SupplyI";
+  option (cosmos_proto.implements_interface) = "cosmos.bank.v1beta1.SupplyI";
 
   repeated cosmos.base.v1beta1.Coin total = 1 [
     (gogoproto.nullable)     = false,

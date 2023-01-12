@@ -6,15 +6,14 @@ import (
 	"os"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
@@ -29,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -217,18 +215,6 @@ func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coi
 	}
 }
 
-// ModuleAccountAddrs provides a list of blocked module accounts from configuration in AppConfig
-//
-// Ported from SimApp
-func ModuleAccountAddrs() map[string]bool {
-	var bk bankkeeper.Keeper
-	err := depinject.Inject(AppConfig, &bk)
-	if err != nil {
-		panic("unable to load DI container")
-	}
-	return bk.GetBlockedAddresses()
-}
-
 // NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
 func NewTestNetworkFixture() network.TestFixture {
 	dir, err := os.MkdirTemp("", "simapp")
@@ -239,7 +225,7 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
-	appCtr := func(val testutil.Validator) servertypes.Application {
+	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
 			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),

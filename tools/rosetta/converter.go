@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcec/v2"
-	rosettatypes "github.com/cosmos/rosetta-sdk-go/types"
+	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -16,6 +16,7 @@ import (
 
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
+
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

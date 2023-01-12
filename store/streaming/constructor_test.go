@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -51,7 +50,7 @@ func TestLoadStreamingServices(t *testing.T) {
 	keys := types.NewKVStoreKeys("mockKey1", "mockKey2")
 
 	testCases := map[string]struct {
-		appOpts            serverTypes.AppOptions
+		appOpts            streaming.AppOptions
 		activeStreamersLen int
 	}{
 		"empty app options": {

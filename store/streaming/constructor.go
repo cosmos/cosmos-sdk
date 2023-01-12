@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -21,7 +20,7 @@ type (
 		Get(string) interface{}
 	}
 
-	ServiceConstructor func(AppOptions, []types.StoreKey, types.Codec, log.Logger) (types.StreamingService, error)
+	ServiceConstructor func(AppOptions, []types.StoreKey, types.Codec, log.Logger, string) (types.StreamingService, error)
 )
 
 // ServiceType enum for specifying the type of StreamingService
@@ -94,8 +93,8 @@ func NewFileStreamingService(
 	keys []types.StoreKey,
 	marshaller types.Codec,
 	logger log.Logger,
+	homePath string,
 ) (types.StreamingService, error) {
-	homePath := cast.ToString(opts.Get(flags.FlagHome))
 	filePrefix := cast.ToString(opts.Get(OptStreamersFilePrefix))
 	fileDir := cast.ToString(opts.Get(OptStreamersFileWriteDir))
 	outputMetadata := cast.ToBool(opts.Get(OptStreamersFileOutputMetadata))
@@ -126,6 +125,7 @@ func LoadStreamingServices(
 	appCodec types.Codec,
 	logger log.Logger,
 	keys map[string]*types.KVStoreKey,
+	homePath string,
 ) ([]types.StreamingService, *sync.WaitGroup, error) {
 	// waitgroup and quit channel for optional shutdown coordination of the streaming service(s)
 	wg := new(sync.WaitGroup)
@@ -172,7 +172,7 @@ func LoadStreamingServices(
 
 		// Generate the streaming service using the constructor, appOptions, and the
 		// StoreKeys we want to expose.
-		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger)
+		streamingService, err := constructor(appOpts, exposeStoreKeys, appCodec, logger, homePath)
 		if err != nil {
 			// Close any services we may have already spun up before hitting the error
 			// on this one.

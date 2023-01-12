@@ -230,7 +230,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
-func postHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.PostHandler {
+func testTxPostHandler(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.PostHandler {
 	return func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (sdk.Context, error) {
 		counter, _ := parseTxMemo(t, tx)
 

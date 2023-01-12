@@ -35,21 +35,12 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 ### `coin`
 
-<<<<<<< HEAD
 - Applies to `cosmos.base.v1beta1.Coin`.
 - Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
 - Amounts are converted to `display` denom amounts and rendered as `number`s above
   - We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 - One space between the denom and amount (e.g. `10 atom`).
 - In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:cosmos:hub:bank:denom:atom`)
-=======
-* Applies to `cosmos.base.v1beta1.Coin`.
-* Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank protobuf definition](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.bank.v1beta1#cosmos.bank.v1beta1.Metadata). If the `display` field is empty or nil, then we do not perform any denom conversion.
-* Amounts are converted to `display` denom amounts and rendered as `number`s above
-    * We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
-* One space between the denom and amount (e.g. `10 atom`).
-* In the future, IBC denoms could maybe be converted to DID/IIDs, if we can find a robust way for doing this (ex. `cosmos:cosmos:hub:bank:denom:atom`)
->>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572))
 
 #### Examples
 
@@ -57,7 +48,6 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 ### `coins`
 
-<<<<<<< HEAD
 - an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
 - the list of coins is ordered by unicode code point of the display denom: `A-Z` < `a-z`. For example, the string `aAbBcC` would be sorted `ABCabc`.
 
@@ -65,17 +55,6 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 - `["3cosm", "2000000uatom"]` -> `2 atom, 3 COSM` (assuming the display denoms are `atom` and `COSM`)
 - `["10atom", "20Acoin"]` -> `20 Acoin, 10 atom` (assuming the display denoms are `atom` and `Acoin`)
-=======
-* an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
-* the list of coins is ordered by unicode code point of the display denom: `A-Z` < `a-z`. For example, the string `aAbBcC` would be sorted `ABCabc`.
-    * if the coins list had 0 items in it then it'll be rendered as `zero`
-
-### Example
-
-* `["3cosm", "2000000uatom"]` -> `2 atom, 3 COSM` (assuming the display denoms are `atom` and `COSM`)
-* `["10atom", "20Acoin"]` -> `20 Acoin, 10 atom` (assuming the display denoms are `atom` and `Acoin`)
-* `[]` -> `zero` 
->>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572))
 
 ### `repeated`
 
@@ -138,12 +117,7 @@ End of Allowed messages
   <field_name>: <1st line of value-rendered message>
   > <lines 2-n of value-rendered message>             // Notice the `>` prefix.
   ```
-<<<<<<< HEAD
   - `>` character is used to denote nesting. For each additional level of nesting, add `>`.
-=======
-
-    * `>` character is used to denote nesting. For each additional level of nesting, add `>`.
->>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572))
 
 #### Examples
 

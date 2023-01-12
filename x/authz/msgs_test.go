@@ -30,6 +30,13 @@ func TestMsgExecAuthorized(t *testing.T) {
 	}{
 		{"nil grantee address", nil, []sdk.Msg{}, false},
 		{"zero-messages test: should fail", grantee, []sdk.Msg{}, false},
+		{"invalid nested msg", grantee, []sdk.Msg{
+			&banktypes.MsgSend{
+				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),
+				FromAddress: "invalid_from_address",
+				ToAddress:   grantee.String(),
+			},
+		}, false},
 		{"valid test: msg type", grantee, []sdk.Msg{
 			&banktypes.MsgSend{
 				Amount:      sdk.NewCoins(sdk.NewInt64Coin("steak", 2)),

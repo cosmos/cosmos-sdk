@@ -47,6 +47,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Bring in Cosmos-SDK [v0.46.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.7) changes [#402](https://github.com/provenance-io/cosmos-sdk/pull/402).
 
+### Bug Fixes
+
+* Pull in Cosmos-SDK authz validate basic fix [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184)
+
 ---
 
 ## [v0.46.6-pio-3](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.6-pio-3) - 2022-12-20

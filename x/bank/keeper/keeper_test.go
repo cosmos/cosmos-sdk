@@ -649,7 +649,7 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsWithRestrictions() {
 	balances := sdk.NewCoins(newFooCoin(1000), newBarCoin(500))
 	fromAddr := accAddrs[0]
 	fromAcc := authtypes.NewBaseAccountWithAddress(fromAddr)
-	inputAccs := []authtypes.AccountI{fromAcc}
+	inputAccs := []sdk.AccountI{fromAcc}
 	toAddr1 := accAddrs[1]
 	toAddr2 := accAddrs[2]
 

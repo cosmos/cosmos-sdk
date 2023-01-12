@@ -230,6 +230,20 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
+func postHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.PostHandler {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (sdk.Context, error) {
+		counter, _ := parseTxMemo(t, tx)
+
+		ctx.EventManager().EmitEvents(
+			counterEvent("post_handler", counter),
+		)
+
+		ctx = ctx.WithPriority(testTxPriority)
+
+		return ctx, nil
+	}
+}
+
 func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)

@@ -1,8 +1,11 @@
 package baseapp_test
 
 import (
+	"cosmossdk.io/depinject"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -654,4 +657,168 @@ func TestLoadVersionPruning(t *testing.T) {
 	err = app.LoadLatestVersion()
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
+}
+
+func TestBaseAppPostHandler(t *testing.T) {
+	testCases := []struct {
+		name     string
+		testFunc func()
+	}{
+		{
+			"success case 1 - The msg errors and the PostHandler is not set",
+			func() {
+				// Setup baseapp.
+				var (
+					appBuilder *runtime.AppBuilder
+					cdc        codec.ProtoCodecMarshaler
+				)
+				err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+				require.NoError(t, err)
+
+				testCtx := testutil.DefaultContextWithDB(t, capKey1, storetypes.NewTransientStoreKey("transient_test"))
+
+				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app.SetCMS(testCtx.CMS)
+				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+				// patch in TxConfig instead of using an output from x/auth/tx
+				txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+				// set the TxDecoder in the BaseApp for minimal tx simulations
+				app.SetTxDecoder(txConfig.TxDecoder())
+
+				app.InitChain(abci.RequestInitChain{})
+
+				deliverKey := []byte("deliver-key")
+				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+				header := tmproto.Header{Height: int64(1)}
+				app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+				tx := newTxCounter(t, txConfig, 1, 0)
+				tx = setFailOnHandler(txConfig, tx, true)
+				txBytes, err := txConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+
+				r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+				require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+				res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+				require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+				events := res.GetEvents()
+				require.Len(t, events, 0, "Should not contain any events as the post handler is not set")
+
+				app.EndBlock(abci.RequestEndBlock{})
+				app.Commit()
+			},
+		},
+		{
+			"success case 2 - The msg errors and the PostHandler is set",
+			func() {
+				postKey := []byte("post-key")
+				anteKey := []byte("ante-key")
+				// Setup baseapp.
+				var (
+					appBuilder *runtime.AppBuilder
+					cdc        codec.ProtoCodecMarshaler
+				)
+				err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+				require.NoError(t, err)
+
+				testCtx := testutil.DefaultContextWithDB(t, capKey1, storetypes.NewTransientStoreKey("transient_test"))
+
+				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app.SetCMS(testCtx.CMS)
+				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+				// patch in TxConfig instead of using an output from x/auth/tx
+				txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+				// set the TxDecoder in the BaseApp for minimal tx simulations
+				app.SetTxDecoder(txConfig.TxDecoder())
+
+				app.InitChain(abci.RequestInitChain{})
+
+				deliverKey := []byte("deliver-key")
+				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+				app.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
+				app.SetPostHandler(postHandlerTxTest(t, capKey1, postKey))
+				header := tmproto.Header{Height: int64(1)}
+				app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+				tx := newTxCounter(t, txConfig, 0, 0)
+				tx = setFailOnHandler(txConfig, tx, true)
+				txBytes, err := txConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+
+				r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+				require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+				res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+				require.False(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+				events := res.GetEvents()
+				require.Len(t, events, 3, "Contains the AnteHandler and the PostHandler")
+
+				app.EndBlock(abci.RequestEndBlock{})
+				app.Commit()
+			},
+		},
+		{
+			"success case 3 - Run Post Handler with runMsgCtx so that the state from runMsgs is persisted",
+			func() {
+				postKey := []byte("post-key")
+				// Setup baseapp.
+				var (
+					appBuilder *runtime.AppBuilder
+					cdc        codec.ProtoCodecMarshaler
+				)
+				err := depinject.Inject(makeMinimalConfig(), &appBuilder, &cdc)
+				require.NoError(t, err)
+
+				testCtx := testutil.DefaultContextWithDB(t, capKey1, storetypes.NewTransientStoreKey("transient_test"))
+
+				app := appBuilder.Build(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), testCtx.DB, nil)
+				app.SetCMS(testCtx.CMS)
+				baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
+
+				// patch in TxConfig instead of using an output from x/auth/tx
+				txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
+				// set the TxDecoder in the BaseApp for minimal tx simulations
+				app.SetTxDecoder(txConfig.TxDecoder())
+
+				app.InitChain(abci.RequestInitChain{})
+
+				deliverKey := []byte("deliver-key")
+				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
+
+				app.SetPostHandler(postHandlerTxTest(t, capKey1, postKey))
+				header := tmproto.Header{Height: int64(1)}
+				app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+				tx := newTxCounter(t, txConfig, 0, 0)
+				txBytes, err := txConfig.TxEncoder()(tx)
+				require.NoError(t, err)
+
+				r := app.CheckTx(abci.RequestCheckTx{Tx: txBytes})
+				require.True(t, r.IsOK(), fmt.Sprintf("%v", r))
+
+				res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+				require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+				events := res.GetEvents()
+				require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+
+				require.NoError(t, err)
+				app.EndBlock(abci.RequestEndBlock{})
+				app.Commit()
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.testFunc()
+		})
+	}
 }

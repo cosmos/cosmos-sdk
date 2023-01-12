@@ -600,11 +600,16 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 // Note, gas execution info is always returned. A reference to a Result is
 // returned if the tx does not run out of gas and if all the messages are valid
 // and execute successfully. An error is returned otherwise.
-func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, priority int64, err error) {
+func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, result *sdk.Result, events []abci.Event, priority int64, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
 	var gasWanted uint64
+
+	var (
+		anteEvents []abci.Event
+		postEvents []abci.Event
+	)
 
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
@@ -670,6 +675,9 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
+		if err != nil {
+			return gInfo, nil, nil, 0, err
+		}
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else
@@ -681,18 +689,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			ctx = newCtx.WithMultiStore(ms)
 		}
 
-		events := ctx.EventManager().Events()
-
 		// GasMeter expected to be set in AnteHandler
-		gasWanted = ctx.GasMeter().Limit()
-
-		if err != nil {
-			return gInfo, nil, nil, 0, err
-		}
-
 		priority = ctx.Priority()
-		msCache.Write()
+		events := ctx.EventManager().Events()
 		anteEvents = events.ToABCIEvents()
+
+		msCache.Write()
 	}
 
 	if mode == runTxModeCheck {
@@ -718,35 +720,85 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 
-	if err == nil {
+	// Case 1: the msg errors and the post handler is not set.
+	if err != nil && app.postHandler == nil {
+		return gInfo, nil, events, priority, err
+	}
 
-		// Run optional postHandlers.
-		//
-		// Note: If the postHandler fails, we also revert the runMsgs state.
-		if app.postHandler != nil {
-			// Follow-up Ref: https://github.com/cosmos/cosmos-sdk/pull/13941
-			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate, err == nil)
-			if err != nil {
-				return gInfo, nil, anteEvents, priority, err
-			}
+	// Case 2: tx errors and the post handler is set. Run PostHandler and revert state from runMsgs
+	if err != nil && app.postHandler != nil {
+		// Run optional postHandlers with a context branched off the ante handler ctx
+		postCtx, postCache := app.cacheTxContext(ctx, txBytes)
 
-			result.Events = append(result.Events, newCtx.EventManager().ABCIEvents()...)
+		newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
+		if err != nil {
+			// return result in case the pointer has been modified by the post decorators
+			return gInfo, result, events, priority, err
 		}
 
 		if mode == runTxModeDeliver {
 			// When block gas exceeds, it'll panic and won't commit the cached store.
 			consumeBlockGas()
 
-			msCache.Write()
+			postCache.Write()
 		}
 
 		if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
 			// append the events in the order of occurrence
-			result.Events = append(anteEvents, result.Events...)
+			postEvents = newCtx.EventManager().ABCIEvents()
+			events = make([]abci.Event, len(anteEvents)+len(postEvents))
+			copy(events[:len(anteEvents)], anteEvents)
+			copy(events[len(anteEvents):], postEvents)
+			result.Events = append(result.Events, events...)
+		} else {
+			events = make([]abci.Event, len(postEvents))
+			copy(events, postEvents)
+			result.Events = append(result.Events, postEvents...)
+		}
+
+		return gInfo, result, events, priority, err
+	}
+
+	// Case 3: tx successful and post handler is set. Run Post Handler with runMsgCtx so that the state from runMsgs is persisted
+	if app.postHandler != nil {
+		newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate, err == nil)
+		if err != nil {
+			return gInfo, nil, nil, priority, err
+		}
+
+		postEvents = newCtx.EventManager().Events().ToABCIEvents()
+		result.Events = append(result.Events, postEvents...)
+
+		if len(anteEvents) > 0 {
+			events = make([]abci.Event, len(anteEvents)+len(postEvents))
+			copy(events[:len(anteEvents)], anteEvents)
+			copy(events[len(anteEvents):], postEvents)
+		} else {
+			events = make([]abci.Event, len(postEvents))
+			copy(events, postEvents)
 		}
 	}
 
-	return gInfo, result, anteEvents, priority, err
+	// Case 4: tx successful and post handler is not set.
+
+	if mode == runTxModeDeliver {
+		// When block gas exceeds, it'll panic and won't commit the cached store.
+		consumeBlockGas()
+
+		msCache.Write()
+	}
+
+	if len(anteEvents) > 0 && (mode == runTxModeDeliver || mode == runTxModeSimulate) {
+		// append the events in the order of occurrence:
+		// 	1. AnteHandler events
+		// 	2. Transaction Result events
+		// 	3. PostHandler events
+		result.Events = append(anteEvents, result.Events...)
+
+		copy(events, result.Events)
+	}
+
+	return gInfo, result, events, priority, err
 }
 
 // runMsgs iterates through a list of messages and executes them with the provided

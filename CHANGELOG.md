@@ -43,13 +43,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Add functionality to update denom metadata via gov proposal [#270](https://github.com/provenance-io/cosmos-sdk/pull/270)
 
+### Bug Fixes
+
+* Pull in Cosmos-SDK authz validate basic fix [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184)
+
+---
+
+## [v0.46.7-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.7-pio-1) - 2022-12-14
+
 ### Improvements
 
 * Bring in Cosmos-SDK [v0.46.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.7) changes [#402](https://github.com/provenance-io/cosmos-sdk/pull/402).
 
-### Bug Fixes
+### Full Commit History
 
-* Pull in Cosmos-SDK authz validate basic fix [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184)
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.6-pio-1...v0.46.7-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7...v0.46.7-pio-1
 
 ---
 

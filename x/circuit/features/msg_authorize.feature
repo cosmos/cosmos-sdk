@@ -63,7 +63,7 @@ Feature: MsgAuthorizeCircuitBreaker
 
     Example: attempting to revoke with limit_msg_types
       Given "acct1" has permission "LEVEL_SUPER_ADMIN"
-      When "acct1" attempts to grant "acct2" the permissions
+      When "acct1" attempts to revoke "acct2" the permissions
       """
       {
         "level": "LEVEL_NONE_UNSPECIFIED",
@@ -77,7 +77,7 @@ Feature: MsgAuthorizeCircuitBreaker
     Example: revoking permissions
       Given "acct1" has permission "LEVEL_SUPER_ADMIN"
       And "acct2" has permission "LEVEL_ALL_MSGS"
-      When "acct1" attempts to grant "acct2" the permissions
+      When "acct1" attempts to revoke "acct2" the permissions
       """
       {
         "level": "LEVEL_NONE_UNSPECIFIED",

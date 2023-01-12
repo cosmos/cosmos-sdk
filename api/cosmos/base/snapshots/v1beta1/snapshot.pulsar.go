@@ -1144,8 +1144,6 @@ var (
 	fd_SnapshotItem_iavl              protoreflect.FieldDescriptor
 	fd_SnapshotItem_extension         protoreflect.FieldDescriptor
 	fd_SnapshotItem_extension_payload protoreflect.FieldDescriptor
-	fd_SnapshotItem_kv                protoreflect.FieldDescriptor
-	fd_SnapshotItem_schema            protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1155,8 +1153,6 @@ func init() {
 	fd_SnapshotItem_iavl = md_SnapshotItem.Fields().ByName("iavl")
 	fd_SnapshotItem_extension = md_SnapshotItem.Fields().ByName("extension")
 	fd_SnapshotItem_extension_payload = md_SnapshotItem.Fields().ByName("extension_payload")
-	fd_SnapshotItem_kv = md_SnapshotItem.Fields().ByName("kv")
-	fd_SnapshotItem_schema = md_SnapshotItem.Fields().ByName("schema")
 }
 
 var _ protoreflect.Message = (*fastReflection_SnapshotItem)(nil)
@@ -1250,18 +1246,6 @@ func (x *fastReflection_SnapshotItem) Range(f func(protoreflect.FieldDescriptor,
 			if !f(fd_SnapshotItem_extension_payload, value) {
 				return
 			}
-		case *SnapshotItem_Kv:
-			v := o.Kv
-			value := protoreflect.ValueOfMessage(v.ProtoReflect())
-			if !f(fd_SnapshotItem_kv, value) {
-				return
-			}
-		case *SnapshotItem_Schema:
-			v := o.Schema
-			value := protoreflect.ValueOfMessage(v.ProtoReflect())
-			if !f(fd_SnapshotItem_schema, value) {
-				return
-			}
 		}
 	}
 }
@@ -1311,6 +1295,7 @@ func (x *fastReflection_SnapshotItem) Has(fd protoreflect.FieldDescriptor) bool 
 		} else {
 			return false
 		}
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.kv":
 		if x.Item == nil {
 			return false
@@ -1327,6 +1312,8 @@ func (x *fastReflection_SnapshotItem) Has(fd protoreflect.FieldDescriptor) bool 
 		} else {
 			return false
 		}
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.snapshots.v1beta1.SnapshotItem"))
@@ -1351,10 +1338,13 @@ func (x *fastReflection_SnapshotItem) Clear(fd protoreflect.FieldDescriptor) {
 		x.Item = nil
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.extension_payload":
 		x.Item = nil
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.kv":
 		x.Item = nil
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.schema":
 		x.Item = nil
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.snapshots.v1beta1.SnapshotItem"))
@@ -1403,6 +1393,7 @@ func (x *fastReflection_SnapshotItem) Get(descriptor protoreflect.FieldDescripto
 		} else {
 			return protoreflect.ValueOfMessage((*SnapshotExtensionPayload)(nil).ProtoReflect())
 		}
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.kv":
 		if x.Item == nil {
 			return protoreflect.ValueOfMessage((*SnapshotKVItem)(nil).ProtoReflect())
@@ -1419,6 +1410,8 @@ func (x *fastReflection_SnapshotItem) Get(descriptor protoreflect.FieldDescripto
 		} else {
 			return protoreflect.ValueOfMessage((*SnapshotSchema)(nil).ProtoReflect())
 		}
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.snapshots.v1beta1.SnapshotItem"))
@@ -1451,12 +1444,15 @@ func (x *fastReflection_SnapshotItem) Set(fd protoreflect.FieldDescriptor, value
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.extension_payload":
 		cv := value.Message().Interface().(*SnapshotExtensionPayload)
 		x.Item = &SnapshotItem_ExtensionPayload{ExtensionPayload: cv}
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.kv":
 		cv := value.Message().Interface().(*SnapshotKVItem)
 		x.Item = &SnapshotItem_Kv{Kv: cv}
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.schema":
 		cv := value.Message().Interface().(*SnapshotSchema)
 		x.Item = &SnapshotItem_Schema{Schema: cv}
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.snapshots.v1beta1.SnapshotItem"))
@@ -1541,6 +1537,7 @@ func (x *fastReflection_SnapshotItem) Mutable(fd protoreflect.FieldDescriptor) p
 			x.Item = oneofValue
 			return protoreflect.ValueOfMessage(value.ProtoReflect())
 		}
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.kv":
 		if x.Item == nil {
 			value := &SnapshotKVItem{}
@@ -1573,6 +1570,8 @@ func (x *fastReflection_SnapshotItem) Mutable(fd protoreflect.FieldDescriptor) p
 			x.Item = oneofValue
 			return protoreflect.ValueOfMessage(value.ProtoReflect())
 		}
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.snapshots.v1beta1.SnapshotItem"))
@@ -1598,12 +1597,15 @@ func (x *fastReflection_SnapshotItem) NewField(fd protoreflect.FieldDescriptor) 
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.extension_payload":
 		value := &SnapshotExtensionPayload{}
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.kv":
 		value := &SnapshotKVItem{}
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "cosmos.base.snapshots.v1beta1.SnapshotItem.schema":
 		value := &SnapshotSchema{}
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.snapshots.v1beta1.SnapshotItem"))
@@ -1630,10 +1632,6 @@ func (x *fastReflection_SnapshotItem) WhichOneof(d protoreflect.OneofDescriptor)
 			return x.Descriptor().Fields().ByName("extension")
 		case *SnapshotItem_ExtensionPayload:
 			return x.Descriptor().Fields().ByName("extension_payload")
-		case *SnapshotItem_Kv:
-			return x.Descriptor().Fields().ByName("kv")
-		case *SnapshotItem_Schema:
-			return x.Descriptor().Fields().ByName("schema")
 		}
 	default:
 		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.snapshots.v1beta1.SnapshotItem", d.FullName()))
@@ -1715,18 +1713,6 @@ func (x *fastReflection_SnapshotItem) ProtoMethods() *protoiface.Methods {
 				break
 			}
 			l = options.Size(x.ExtensionPayload)
-			n += 1 + l + runtime.Sov(uint64(l))
-		case *SnapshotItem_Kv:
-			if x == nil {
-				break
-			}
-			l = options.Size(x.Kv)
-			n += 1 + l + runtime.Sov(uint64(l))
-		case *SnapshotItem_Schema:
-			if x == nil {
-				break
-			}
-			l = options.Size(x.Schema)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -1811,32 +1797,6 @@ func (x *fastReflection_SnapshotItem) ProtoMethods() *protoiface.Methods {
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0x22
-		case *SnapshotItem_Kv:
-			encoded, err := options.Marshal(x.Kv)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x2a
-		case *SnapshotItem_Schema:
-			encoded, err := options.Marshal(x.Schema)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x32
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -2026,76 +1986,6 @@ func (x *fastReflection_SnapshotItem) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				x.Item = &SnapshotItem_ExtensionPayload{v}
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Kv", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				v := &SnapshotKVItem{}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], v); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				x.Item = &SnapshotItem_Kv{v}
-				iNdEx = postIndex
-			case 6:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Schema", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				v := &SnapshotSchema{}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], v); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				x.Item = &SnapshotItem_Schema{v}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -4026,6 +3916,7 @@ func (x *fastReflection_SnapshotExtensionPayload) ProtoMethods() *protoiface.Met
 	}
 }
 
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 var (
 	md_SnapshotKVItem       protoreflect.MessageDescriptor
 	fd_SnapshotKVItem_key   protoreflect.FieldDescriptor
@@ -4038,86 +3929,96 @@ func init() {
 	fd_SnapshotKVItem_key = md_SnapshotKVItem.Fields().ByName("key")
 	fd_SnapshotKVItem_value = md_SnapshotKVItem.Fields().ByName("value")
 }
+=======
+// Code generated by protoc-gen-go. DO NOT EDIT.
+// versions:
+// 	protoc-gen-go v1.27.0
+// 	protoc        (unknown)
+// source: cosmos/base/store/snapshots/v1beta1/snapshot.proto
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 
-var _ protoreflect.Message = (*fastReflection_SnapshotKVItem)(nil)
+const (
+	// Verify that this generated code is sufficiently up-to-date.
+	_ = protoimpl.EnforceVersion(20 - protoimpl.MinVersion)
+	// Verify that runtime/protoimpl is sufficiently up-to-date.
+	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
+)
 
-type fastReflection_SnapshotKVItem SnapshotKVItem
+// Snapshot contains Tendermint state sync snapshot info.
+type Snapshot struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
 
-func (x *SnapshotKVItem) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_SnapshotKVItem)(x)
+	Height   uint64    `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	Format   uint32    `protobuf:"varint,2,opt,name=format,proto3" json:"format,omitempty"`
+	Chunks   uint32    `protobuf:"varint,3,opt,name=chunks,proto3" json:"chunks,omitempty"`
+	Hash     []byte    `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
+	Metadata *Metadata `protobuf:"bytes,5,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 func (x *SnapshotKVItem) slowProtoReflect() protoreflect.Message {
 	mi := &file_cosmos_base_snapshots_v1beta1_snapshot_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
+=======
+func (x *Snapshot) Reset() {
+	*x = Snapshot{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_msgTypes[0]
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_SnapshotKVItem_messageType fastReflection_SnapshotKVItem_messageType
-var _ protoreflect.MessageType = fastReflection_SnapshotKVItem_messageType{}
-
-type fastReflection_SnapshotKVItem_messageType struct{}
-
-func (x fastReflection_SnapshotKVItem_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_SnapshotKVItem)(nil)
-}
-func (x fastReflection_SnapshotKVItem_messageType) New() protoreflect.Message {
-	return new(fastReflection_SnapshotKVItem)
-}
-func (x fastReflection_SnapshotKVItem_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_SnapshotKVItem
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_SnapshotKVItem) Descriptor() protoreflect.MessageDescriptor {
-	return md_SnapshotKVItem
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_SnapshotKVItem) Type() protoreflect.MessageType {
-	return _fastReflection_SnapshotKVItem_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_SnapshotKVItem) New() protoreflect.Message {
-	return new(fastReflection_SnapshotKVItem)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_SnapshotKVItem) Interface() protoreflect.ProtoMessage {
-	return (*SnapshotKVItem)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_SnapshotKVItem) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Key) != 0 {
-		value := protoreflect.ValueOfBytes(x.Key)
-		if !f(fd_SnapshotKVItem_key, value) {
-			return
-		}
-	}
-	if len(x.Value) != 0 {
-		value := protoreflect.ValueOfBytes(x.Value)
-		if !f(fd_SnapshotKVItem_value, value) {
-			return
-		}
+		ms.StoreMessageInfo(mi)
 	}
 }
 
+func (x *Snapshot) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Snapshot) ProtoMessage() {}
+
+// Deprecated: Use Snapshot.ProtoReflect.Descriptor instead.
+func (*Snapshot) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Snapshot) GetHeight() uint64 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+func (x *Snapshot) GetFormat() uint32 {
+	if x != nil {
+		return x.Format
+	}
+	return 0
+}
+
+func (x *Snapshot) GetChunks() uint32 {
+	if x != nil {
+		return x.Chunks
+	}
+	return 0
+}
+
+func (x *Snapshot) GetHash() []byte {
+	if x != nil {
+		return x.Hash
+	}
+	return nil
+}
+
+func (x *Snapshot) GetMetadata() *Metadata {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 // Has reports whether a field is populated.
 //
 // Some fields have the property of nullability where it is possible to
@@ -5075,6 +4976,8 @@ func (x *Snapshot) GetMetadata() *Metadata {
 	return nil
 }
 
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 // Metadata contains SDK-specific snapshot metadata.
 type Metadata struct {
 	state         protoimpl.MessageState
@@ -5127,8 +5030,6 @@ type SnapshotItem struct {
 	//	*SnapshotItem_Iavl
 	//	*SnapshotItem_Extension
 	//	*SnapshotItem_ExtensionPayload
-	//	*SnapshotItem_Kv
-	//	*SnapshotItem_Schema
 	Item isSnapshotItem_Item `protobuf_oneof:"item"`
 }
 
@@ -5187,20 +5088,6 @@ func (x *SnapshotItem) GetExtensionPayload() *SnapshotExtensionPayload {
 	return nil
 }
 
-func (x *SnapshotItem) GetKv() *SnapshotKVItem {
-	if x, ok := x.GetItem().(*SnapshotItem_Kv); ok {
-		return x.Kv
-	}
-	return nil
-}
-
-func (x *SnapshotItem) GetSchema() *SnapshotSchema {
-	if x, ok := x.GetItem().(*SnapshotItem_Schema); ok {
-		return x.Schema
-	}
-	return nil
-}
-
 type isSnapshotItem_Item interface {
 	isSnapshotItem_Item()
 }
@@ -5221,14 +5108,6 @@ type SnapshotItem_ExtensionPayload struct {
 	ExtensionPayload *SnapshotExtensionPayload `protobuf:"bytes,4,opt,name=extension_payload,json=extensionPayload,proto3,oneof"`
 }
 
-type SnapshotItem_Kv struct {
-	Kv *SnapshotKVItem `protobuf:"bytes,5,opt,name=kv,proto3,oneof"`
-}
-
-type SnapshotItem_Schema struct {
-	Schema *SnapshotSchema `protobuf:"bytes,6,opt,name=schema,proto3,oneof"`
-}
-
 func (*SnapshotItem_Store) isSnapshotItem_Item() {}
 
 func (*SnapshotItem_Iavl) isSnapshotItem_Item() {}
@@ -5236,10 +5115,6 @@ func (*SnapshotItem_Iavl) isSnapshotItem_Item() {}
 func (*SnapshotItem_Extension) isSnapshotItem_Item() {}
 
 func (*SnapshotItem_ExtensionPayload) isSnapshotItem_Item() {}
-
-func (*SnapshotItem_Kv) isSnapshotItem_Item() {}
-
-func (*SnapshotItem_Schema) isSnapshotItem_Item() {}
 
 // SnapshotStoreItem contains metadata about a snapshotted store.
 //
@@ -5427,6 +5302,7 @@ func (x *SnapshotExtensionPayload) GetPayload() []byte {
 	return nil
 }
 
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 // SnapshotKVItem is an exported Key/Value Pair
 //
 // Since: cosmos-sdk 0.46
@@ -5608,6 +5484,94 @@ var file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDesc = []byte{
 	0x3a, 0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73,
 	0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x33,
+=======
+var File_cosmos_base_store_snapshots_v1beta1_snapshot_proto protoreflect.FileDescriptor
+
+var file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_rawDesc = []byte{
+	0x0a, 0x32, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x73, 0x74,
+	0x6f, 0x72, 0x65, 0x2f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x2f, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x12, 0x23, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
+	0xb7, 0x01, 0x0a, 0x08, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x16, 0x0a, 0x06,
+	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x68, 0x65,
+	0x69, 0x67, 0x68, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x12, 0x16, 0x0a, 0x06,
+	0x63, 0x68, 0x75, 0x6e, 0x6b, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x63, 0x68,
+	0x75, 0x6e, 0x6b, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61, 0x73, 0x68, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x12, 0x4f, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x22, 0x2d, 0x0a, 0x08, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x21, 0x0a, 0x0c, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x5f, 0x68,
+	0x61, 0x73, 0x68, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x0b, 0x63, 0x68, 0x75,
+	0x6e, 0x6b, 0x48, 0x61, 0x73, 0x68, 0x65, 0x73, 0x22, 0x87, 0x03, 0x0a, 0x0c, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x4e, 0x0a, 0x05, 0x73, 0x74, 0x6f,
+	0x72, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x36, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x49, 0x74, 0x65, 0x6d,
+	0x48, 0x00, 0x52, 0x05, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x12, 0x55, 0x0a, 0x04, 0x69, 0x61, 0x76,
+	0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x35, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x49, 0x41, 0x56, 0x4c, 0x49, 0x74, 0x65, 0x6d, 0x42, 0x08,
+	0xe2, 0xde, 0x1f, 0x04, 0x49, 0x41, 0x56, 0x4c, 0x48, 0x00, 0x52, 0x04, 0x69, 0x61, 0x76, 0x6c,
+	0x12, 0x5a, 0x0a, 0x09, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x3a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x61, 0x48,
+	0x00, 0x52, 0x09, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x6c, 0x0a, 0x11,
+	0x65, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x70, 0x61, 0x79, 0x6c, 0x6f, 0x61,
+	0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x3d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x50,
+	0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x48, 0x00, 0x52, 0x10, 0x65, 0x78, 0x74, 0x65, 0x6e, 0x73,
+	0x69, 0x6f, 0x6e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x42, 0x06, 0x0a, 0x04, 0x69, 0x74,
+	0x65, 0x6d, 0x22, 0x27, 0x0a, 0x11, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x53, 0x74,
+	0x6f, 0x72, 0x65, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x6c, 0x0a, 0x10, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x49, 0x41, 0x56, 0x4c, 0x49, 0x74, 0x65, 0x6d, 0x12,
+	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65,
+	0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69,
+	0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f,
+	0x6e, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0x43, 0x0a, 0x15, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73, 0x69, 0x6f, 0x6e, 0x4d, 0x65,
+	0x74, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x22, 0x34,
+	0x0a, 0x18, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x73,
+	0x69, 0x6f, 0x6e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61,
+	0x79, 0x6c, 0x6f, 0x61, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x70, 0x61, 0x79,
+	0x6c, 0x6f, 0x61, 0x64, 0x42, 0xb0, 0x02, 0x0a, 0x27, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x42, 0x0d, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x45, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f,
+	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x73, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x04, 0x43, 0x42, 0x53, 0x53, 0xaa,
+	0x02, 0x23, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x2e, 0x53, 0x74,
+	0x6f, 0x72, 0x65, 0x2e, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x2e, 0x56, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x23, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42,
+	0x61, 0x73, 0x65, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x2f, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c,
+	0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x27,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x53, 0x74,
+	0x6f, 0x72, 0x65, 0x3a, 0x3a, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x3a, 0x3a,
+	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 }
 
 var (
@@ -5619,6 +5583,7 @@ func file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDescGZIP() []byte {
 	file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDescOnce.Do(func() {
 		file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDescData)
 	})
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 	return file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDescData
 }
 
@@ -5647,6 +5612,32 @@ var file_cosmos_base_snapshots_v1beta1_snapshot_proto_depIdxs = []int32{
 	7, // [7:7] is the sub-list for extension type_name
 	7, // [7:7] is the sub-list for extension extendee
 	0, // [0:7] is the sub-list for field type_name
+=======
+	return file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_rawDescData
+}
+
+var file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_goTypes = []interface{}{
+	(*Snapshot)(nil),                 // 0: cosmos.base.store.snapshots.v1beta1.Snapshot
+	(*Metadata)(nil),                 // 1: cosmos.base.store.snapshots.v1beta1.Metadata
+	(*SnapshotItem)(nil),             // 2: cosmos.base.store.snapshots.v1beta1.SnapshotItem
+	(*SnapshotStoreItem)(nil),        // 3: cosmos.base.store.snapshots.v1beta1.SnapshotStoreItem
+	(*SnapshotIAVLItem)(nil),         // 4: cosmos.base.store.snapshots.v1beta1.SnapshotIAVLItem
+	(*SnapshotExtensionMeta)(nil),    // 5: cosmos.base.store.snapshots.v1beta1.SnapshotExtensionMeta
+	(*SnapshotExtensionPayload)(nil), // 6: cosmos.base.store.snapshots.v1beta1.SnapshotExtensionPayload
+}
+var file_cosmos_base_store_snapshots_v1beta1_snapshot_proto_depIdxs = []int32{
+	1, // 0: cosmos.base.store.snapshots.v1beta1.Snapshot.metadata:type_name -> cosmos.base.store.snapshots.v1beta1.Metadata
+	3, // 1: cosmos.base.store.snapshots.v1beta1.SnapshotItem.store:type_name -> cosmos.base.store.snapshots.v1beta1.SnapshotStoreItem
+	4, // 2: cosmos.base.store.snapshots.v1beta1.SnapshotItem.iavl:type_name -> cosmos.base.store.snapshots.v1beta1.SnapshotIAVLItem
+	5, // 3: cosmos.base.store.snapshots.v1beta1.SnapshotItem.extension:type_name -> cosmos.base.store.snapshots.v1beta1.SnapshotExtensionMeta
+	6, // 4: cosmos.base.store.snapshots.v1beta1.SnapshotItem.extension_payload:type_name -> cosmos.base.store.snapshots.v1beta1.SnapshotExtensionPayload
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 }
 
 func init() { file_cosmos_base_snapshots_v1beta1_snapshot_proto_init() }
@@ -5739,6 +5730,7 @@ func file_cosmos_base_snapshots_v1beta1_snapshot_proto_init() {
 				return nil
 			}
 		}
+<<<<<<< HEAD:api/cosmos/base/snapshots/v1beta1/snapshot.pulsar.go
 		file_cosmos_base_snapshots_v1beta1_snapshot_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SnapshotKVItem); i {
 			case 0:
@@ -5763,14 +5755,14 @@ func file_cosmos_base_snapshots_v1beta1_snapshot_proto_init() {
 				return nil
 			}
 		}
+=======
+>>>>>>> e4c0788bf (docs: update docs links to v0.47 (#14572)):api/cosmos/base/store/snapshots/v1beta1/snapshot.pulsar.go
 	}
 	file_cosmos_base_snapshots_v1beta1_snapshot_proto_msgTypes[2].OneofWrappers = []interface{}{
 		(*SnapshotItem_Store)(nil),
 		(*SnapshotItem_Iavl)(nil),
 		(*SnapshotItem_Extension)(nil),
 		(*SnapshotItem_ExtensionPayload)(nil),
-		(*SnapshotItem_Kv)(nil),
-		(*SnapshotItem_Schema)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -5778,7 +5770,7 @@ func file_cosmos_base_snapshots_v1beta1_snapshot_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_base_snapshots_v1beta1_snapshot_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

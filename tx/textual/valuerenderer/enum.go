@@ -7,8 +7,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// test changes in tx (disabled on repo, not online)
-
 type enumValueRenderer struct {
 	ed protoreflect.EnumDescriptor
 }

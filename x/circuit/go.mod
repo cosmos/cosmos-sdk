@@ -1,4 +1,4 @@
-module circuit
+module github.com/cosmos/cosmos-sdk/x/circuit
 
 go 1.19
 

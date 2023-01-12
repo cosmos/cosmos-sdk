@@ -166,7 +166,7 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
 
-func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+func (app *BaseApp) SetPostHandler(ph sdk.PostHandler) {
 	if app.sealed {
 		panic("SetPostHandler() on sealed BaseApp")
 	}

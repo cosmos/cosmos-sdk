@@ -63,7 +63,7 @@ message MsgCreateValidator {
     (gogoproto.nullable)   = false
   ];
   // Deprecated: Use of Delegator Address in MsgCreateValidator is deprecated.
-  // The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in beck32 notation).
+  // The validator address bytes and delegator address bytes refer to the same account while creating validator (defer only in bech32 notation).
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString", deprecated = true];
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];

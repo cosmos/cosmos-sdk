@@ -138,7 +138,7 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 	prefixedStart := append(m.prefix, start...)
 	var prefixedEnd []byte
 	if end == nil {
-		prefixedEnd = prefixEndBytes(m.prefix)
+		prefixedEnd = nextBytesPrefixKey(m.prefix)
 	} else {
 		prefixedEnd = append(m.prefix, end...)
 	}

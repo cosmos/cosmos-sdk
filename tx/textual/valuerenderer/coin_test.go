@@ -31,6 +31,20 @@ func mockCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Me
 	return v.(*bankv1beta1.Metadata), nil
 }
 
+// addMetadataToContext appends relevant coin metadata to the mock context
+// used in tests.
+func addMetadataToContext(ctx context.Context, metadata *bankv1beta1.Metadata) context.Context {
+	if metadata == nil {
+		return ctx
+	}
+
+	for _, m := range metadata.DenomUnits {
+		ctx = context.WithValue(ctx, mockCoinMetadataKey(m.Denom), metadata)
+	}
+
+	return ctx
+}
+
 func TestMetadataQuerier(t *testing.T) {
 	// Errors on nil metadata querier
 	textual := valuerenderer.NewTextual(nil)
@@ -66,10 +80,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.Text, func(t *testing.T) {
 			if tc.Proto != nil {
-				ctx := context.WithValue(context.Background(), mockCoinMetadataKey(tc.Proto.Denom), tc.Metadata)
-				if tc.Metadata != nil {
-					ctx = context.WithValue(ctx, mockCoinMetadataKey(tc.Metadata.Display), tc.Metadata)
-				}
+				ctx := addMetadataToContext(context.Background(), tc.Metadata)
 
 				screens, err := vr.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 

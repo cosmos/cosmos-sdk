@@ -165,3 +165,117 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/tx/v1beta1/tx.pro
 * `ed25519`
 
 * `ExportPrivKeyArmor(uid, encryptPassphrase string) (armor string, err error)` exports a private key in ASCII-armored encrypted format using the given passphrase. You can then either import the private key again into the keyring using the `ImportPrivKey(uid, armor, passphrase string)` function or decrypt it into a raw private key using the `UnarmorDecryptPrivKey(armorStr string, passphrase string)` function.
+
+### Create New Key Type
+
+To create a new key type for using in keyring, `keyring.SignatureAlgo` interface must be fulfilled.
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/keyring/signing_algorithms.go#L10-L15
+```
+
+The interface consists in three methods where `Name()` returns the name of the algorithm as a `hd.PubKeyType` and `Derive()` and `Generate()` must return the following functions respectively:
+
+```go reference
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/hd/algo.go#L28-L31
+```
+Once the `keyring.SignatureAlgo` has been implemented it must be added to the [list of supported algos](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/keyring/keyring.go#L217) of the keyring.
+
+For simplicity the implementation of a new key type should be done inside the `crypto/hd` package.
+There is an example of a working `secp256k1` implementation in [algo.go](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/hd/algo.go#L38).
+
+
+#### Implementing secp256r1 algo
+
+Here is an example of how secp256r1 could be implemented.
+
+First a new function to create a private key from a secret number is needed in the secp256r1 package. This function could look like this:
+
+```go
+// cosmos-sdk/crypto/keys/secp256r1/privkey.go
+
+// NewPrivKeyFromSecret creates a private key derived for the secret number
+// represented in big-endian. The `secret` must be a valid ECDSA field element.
+func NewPrivKeyFromSecret(secret []byte) (*PrivKey, error) {
+	var d = new(big.Int).SetBytes(secret)
+	if d.Cmp(secp256r1.Params().N) >= 1 {
+		return nil, sdkerrors.Wrap(errors.ErrInvalidRequest, "secret not in the curve base field")
+	}
+	sk := new(ecdsa.PrivKey)
+	return &PrivKey{&ecdsaSK{*sk}}, nil
+}
+```
+
+After that `secp256r1Algo` can be implemented.
+
+```go
+// cosmos-sdk/crypto/hd/secp256r1Algo.go
+
+package hd
+
+import (
+	"github.com/cosmos/go-bip39"
+	
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
+	"github.com/cosmos/cosmos-sdk/crypto/types"
+)
+
+// Secp256r1Type uses the secp256r1 ECDSA parameters.
+const Secp256r1Type = PubKeyType("secp256r1")
+
+var Secp256r1 = secp256r1Algo{}
+
+type secp256r1Algo struct{}
+
+func (s secp256r1Algo) Name() PubKeyType {
+	return Secp256r1Type
+}
+
+// Derive derives and returns the secp256r1 private key for the given seed and HD path.
+func (s secp256r1Algo) Derive() DeriveFn {
+	return func(mnemonic string, bip39Passphrase, hdPath string) ([]byte, error) {
+		seed, err := bip39.NewSeedWithErrorChecking(mnemonic, bip39Passphrase)
+		if err != nil {
+			return nil, err
+		}
+
+		masterPriv, ch := ComputeMastersFromSeed(seed)
+		if len(hdPath) == 0 {
+			return masterPriv[:], nil
+		}
+		derivedKey, err := DerivePrivateKeyForPath(masterPriv, ch, hdPath)
+
+		return derivedKey, err
+	}
+}
+
+// Generate generates a secp256r1 private key from the given bytes.
+func (s secp256r1Algo) Generate() GenerateFn {
+	return func(bz []byte) types.PrivKey {
+		key, err := secp256r1.NewPrivKeyFromSecret(bz)
+		if err != nil {
+			panic(err)
+		}
+		return key
+	}
+}
+```
+
+Finally, the algo must be added to the list of [supported algos](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/crypto/keyring/keyring.go#L217) by the keyring.
+
+```go
+// cosmos-sdk/crypto/keyring/keyring.go
+
+func newKeystore(kr keyring.Keyring, cdc codec.Codec, backend string, opts ...Option) keystore {
+	// Default options for keybase, these can be overwritten using the
+	// Option function
+	options := Options{
+		SupportedAlgos:       SigningAlgoList{hd.Secp256k1, hd.Secp256r1}, // added here
+		SupportedAlgosLedger: SigningAlgoList{hd.Secp256k1},
+	}
+...
+```
+
+Hereafter to create new keys using your algo, you must specify it with the flag `--algo` :
+
+`simd keys add myKey --algo secp256r1`

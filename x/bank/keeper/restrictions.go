@@ -22,6 +22,7 @@ func (r MintingRestrictionFn) Then(second MintingRestrictionFn) MintingRestricti
 // If all entries are nil, nil is returned.
 // If exactly one entry is not nil, it is returned.
 // Otherwise, a new MintingRestrictionFn is returned that runs the non-nil restrictions in the order they are given.
+// The composition runs each minting restriction until an error is encountered and returns that error.
 func ComposeMintingRestrictions(restrictions ...MintingRestrictionFn) MintingRestrictionFn {
 	toRun := make([]MintingRestrictionFn, 0, len(restrictions))
 	for _, r := range restrictions {
@@ -66,6 +67,8 @@ func (r SendRestrictionFn) Then(second SendRestrictionFn) SendRestrictionFn {
 // If all entries are nil, nil is returned.
 // If exactly one entry is not nil, it is returned.
 // Otherwise, a new SendRestrictionFn is returned that runs the non-nil restrictions in the order they are given.
+// The composition runs each send restriction until an error is encountered and returns that error,
+// otherwise it returns the toAddr of the last send restriction.
 func ComposeSendRestrictions(restrictions ...SendRestrictionFn) SendRestrictionFn {
 	toRun := make([]SendRestrictionFn, 0, len(restrictions))
 	for _, r := range restrictions {

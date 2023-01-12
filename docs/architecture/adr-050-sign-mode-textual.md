@@ -228,7 +228,6 @@ message Grant {
 
 message MsgGrant {
   option (cosmos.msg.v1.signer) = "granter";
-  option (cosmos.msg.v1.textual.type_url) = "authz v1beta1 grant";
 
   string granter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string grantee = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -249,13 +248,13 @@ End of transaction messages
 
 Application developers may choose to not follow default renderer value output for their own `Msg`s. In this case, they can implement their own custom `Msg` renderer. This is similar to [EIP4430](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4430.md), where the smart contract developer chooses the description string to be shown to the end user.
 
-This is done by setting the `cosmos.msg.v1.textual.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
+This is done by setting the `cosmos.msg.textual.v1.expert_custom_renderer` Protobuf option to a non-empty string. This option CAN ONLY be set on a Protobuf message representing transaction message object (implementing `sdk.Msg` interface).
 
 ```protobuf
 message MsgFooBar {
   // Optional comments to describe in human-readable language the formatting
   // rules of the custom renderer.
-  option (cosmos.msg.v1.textual.expert_custom_renderer) = "<unique algorithm identifier>";
+  option (cosmos.msg.textual.v1.expert_custom_renderer) = "<unique algorithm identifier>";
 
   // proto fields
 }
@@ -263,7 +262,7 @@ message MsgFooBar {
 
 When this option is set on a `Msg`, a registered function will transform the `Msg` into an array of one or more strings, which MAY use the key/value format (described in point #3) with the expert field prefix (described in point #5) and arbitrary indentation (point #6). These strings MAY be rendered from a `Msg` field using a default value renderer, or they may be generated from several fields using custom logic.
 
-The `<unique algorithm identifier>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the documentation or specification of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
+The `<unique algorithm identifrer>` is a string convention chosen by the application developer and is used to identify the custom `Msg` renderer. For example, the documentation or specification of this custom algorithm can reference this identifier. This identifier CAN have a versioned suffix (e.g. `_v1`) to adapt for future changes (which would be consensus-breaking). We also recommend adding Protobuf comments to describe in human language the custom logic used.
 
 Moreover, the renderer must provide 2 functions: one for formatting from Protobuf to string, and one for parsing string to Protobuf. These 2 functions are provided by the application developer. To satisfy point #1, the parse function MUST be the inverse of the formatting function. This property will not be checked by the SDK at runtime. However, we strongly recommend the application developer to include a comprehensive suite in their app repo to test invertibility, as to not introduce security bugs.
 

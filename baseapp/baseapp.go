@@ -63,7 +63,7 @@ type BaseApp struct { //nolint: maligned
 
 	mempool         mempool.Mempool            // application side mempool
 	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
+	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
 	initChainer     sdk.InitChainer            // initialize state with validators and state blob
 	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
 	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
@@ -717,18 +717,15 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
+
 	if err == nil {
 
 		// Run optional postHandlers.
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
-			// The runMsgCtx context currently contains events emitted by the ante handler.
-			// We clear this to correctly order events without duplicates.
-			// Note that the state is still preserved.
-			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
-
-			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate)
+			// Follow-up Ref: https://github.com/cosmos/cosmos-sdk/pull/13941
+			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, anteEvents, priority, err
 			}

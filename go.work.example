@@ -17,4 +17,5 @@ use (
 	./tools/cosmovisor
 	./tools/confix
 	./x/nft
+	./store
 )

@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/streaming/file"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -17,7 +16,13 @@ import (
 )
 
 // ServiceConstructor is used to construct a streaming service
-type ServiceConstructor func(serverTypes.AppOptions, []types.StoreKey, types.Codec, log.Logger) (types.StreamingService, error)
+type (
+	AppOptions interface {
+		Get(string) interface{}
+	}
+
+	ServiceConstructor func(AppOptions, []types.StoreKey, types.Codec, log.Logger) (types.StreamingService, error)
+)
 
 // ServiceType enum for specifying the type of StreamingService
 type ServiceType int
@@ -85,7 +90,7 @@ func NewServiceConstructor(name string) (ServiceConstructor, error) {
 // NewFileStreamingService is the streaming.ServiceConstructor function for
 // creating a FileStreamingService.
 func NewFileStreamingService(
-	opts serverTypes.AppOptions,
+	opts AppOptions,
 	keys []types.StoreKey,
 	marshaller types.Codec,
 	logger log.Logger,
@@ -117,7 +122,7 @@ func NewFileStreamingService(
 // WaitGroup and quit channel used to synchronize with the streaming services
 // and any error that occurs during the setup.
 func LoadStreamingServices(
-	appOpts serverTypes.AppOptions,
+	appOpts AppOptions,
 	appCodec types.Codec,
 	logger log.Logger,
 	keys map[string]*types.KVStoreKey,

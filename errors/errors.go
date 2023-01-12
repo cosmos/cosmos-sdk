@@ -9,6 +9,8 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 )
 
+// foo
+
 // UndefinedCodespace when we explicitly declare no codespace
 const UndefinedCodespace = "undefined"
 

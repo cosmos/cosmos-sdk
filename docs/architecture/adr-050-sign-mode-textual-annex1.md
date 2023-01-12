@@ -256,11 +256,16 @@ Examples:
 
 ### bytes
 
-* Bytes of length shorter or equal to 32 are rendered in hexadecimal, all capital letters, without the `0x` prefix.
-* Bytes of length greater than 32 are hashed using SHA256. The rendered text is `SHA-256=`, followed by the 32-byte hash, in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length shorter or equal to 35 are rendered in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length greater than 35 are hashed using SHA256. The rendered text is `SHA-256=`, followed by the 32-byte hash, in hexadecimal, all capital letters, without the `0x` prefix.
 * The hexadecimal string is finally separated into groups of 4 digits, with a space `' '` as separator. If the bytes length is odd, the 2 remaining hexadecimal characters are at the end.
 
-Note: Data longer than 32 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertability](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.
+The number 35 was chosen because it is the longest length where the hashed-and-prefixed representation is longer than the original data directly formatted, using the 3 rules above. More specifically:
+- a 35-byte array will have 70 hex characters, plus 17 space characters, resulting in 87 characters.
+- byte arrays starting from length 36 will be be hashed to 32 bytes, which is 64 hex characters plus 15 spaces, and with the `SHA-256=` prefix, it takes 87 characters.
+Also, secp256k1 public keys have length 33, so their Textual representation is not their hashed value, which we would like to avoid.
+
+Note: Data longer than 35 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertability](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.
 
 #### Examples
 
@@ -268,8 +273,8 @@ Inputs are displayed as byte arrays.
 
 * `[0]`: `00`
 * `[0,1,2]`: `0001 02`
-* `[0,1,2,..,31]`: `0001 0203 0405 0607 0809 0A0B 0C0D 0E0F 1011 1213 1415 1617 1819 1A1B 1C1D 1E1F` 
-* `[0,1,2,..,32]`: `SHA-256=5D8F CFEF A9AE EB71 1FB8 ED1E 4B7D 5C8A 9BAF A46E 8E76 E68A A18A DCE5 A10D F6AB`
+* `[0,1,2,..,34]`: `0001 0203 0405 0607 0809 0A0B 0C0D 0E0F 1011 1213 1415 1617 1819 1A1B 1C1D 1E1F 2021 22`
+* `[0,1,2,..,35]`: `SHA-256=5D7E 2D9B 1DCB C85E 7C89 0036 A2CF 2F9F E7B6 6554 F2DF 08CE C6AA 9C0A 25C9 9C21`
 
 ### address bytes
 

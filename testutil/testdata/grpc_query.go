@@ -84,8 +84,8 @@ func DeterministicIterations[request proto.Message, response proto.Message](
 	for i := 0; i < iterCount; i++ {
 		before := ctx.GasMeter().GasConsumed()
 		res, err := grpcFn(ctx, req)
-		assert.Equal(&testing.T{}, ctx.GasMeter().GasConsumed()-before, gasConsumed)
-		assert.NilError(&testing.T{}, err)
-		assert.DeepEqual(&testing.T{}, res, prevRes)
+		assert.Equal(t, ctx.GasMeter().GasConsumed()-before, gasConsumed)
+		assert.NilError(t, err)
+		assert.DeepEqual(t, res, prevRes)
 	}
 }

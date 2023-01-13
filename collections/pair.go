@@ -5,11 +5,14 @@ import (
 	"strings"
 )
 
+// Pair defines a key composed of two keys.
 type Pair[K1, K2 any] struct {
 	key1 *K1
 	key2 *K2
 }
 
+// K1 returns the first part of the key.
+// If not present the zero value is returned.
 func (p Pair[K1, K2]) K1() (k1 K1) {
 	if p.key1 == nil {
 		return
@@ -17,6 +20,8 @@ func (p Pair[K1, K2]) K1() (k1 K1) {
 	return *p.key1
 }
 
+// K2 returns the second part of the key.
+// If not present the zero value is returned.
 func (p Pair[K1, K2]) K2() (k2 K2) {
 	if p.key2 == nil {
 		return
@@ -24,6 +29,7 @@ func (p Pair[K1, K2]) K2() (k2 K2) {
 	return *p.key2
 }
 
+// Join creates a new Pair instance composed of the two provided keys, in order.
 func Join[K1, K2 any](key1 K1, key2 K2) Pair[K1, K2] {
 	return Pair[K1, K2]{
 		key1: &key1,
@@ -31,6 +37,13 @@ func Join[K1, K2 any](key1 K1, key2 K2) Pair[K1, K2] {
 	}
 }
 
+// PairPrefix creates a new Pair instance composed only of the first part of the key.
+func PairPrefix[K1, K2 any](key K1) Pair[K1, K2] {
+	return Pair[K1, K2]{key1: &key}
+}
+
+// PairKeyCodec instantiates a new KeyCodec instance that can encode the Pair, given the KeyCodec of the
+// first part of the key and the KeyCodec of the second part of the key.
 func PairKeyCodec[K1, K2 any](keyCodec1 KeyCodec[K1], keyCodec2 KeyCodec[K2]) KeyCodec[Pair[K1, K2]] {
 	return pairKeyCodec[K1, K2]{
 		keyCodec1: keyCodec1,
@@ -115,87 +128,89 @@ func (p pairKeyCodec[K1, K2]) KeyType() string {
 	return fmt.Sprintf("Pair[%s, %s]", p.keyCodec1.KeyType(), p.keyCodec2.KeyType())
 }
 
-func (p pairKeyCodec[K1, K2]) EncodeNonTerminal(buffer []byte, key Pair[K1, K2]) (int, error) {
-	panic("impl")
+func (p pairKeyCodec[K1, K2]) EncodeNonTerminal(buffer []byte, pair Pair[K1, K2]) (int, error) {
+	writtenTotal := 0
+	if pair.key1 != nil {
+		written, err := p.keyCodec1.EncodeNonTerminal(buffer, *pair.key1)
+		if err != nil {
+			return 0, err
+		}
+		writtenTotal += written
+	}
+	if pair.key2 != nil {
+		written, err := p.keyCodec2.EncodeNonTerminal(buffer[writtenTotal:], *pair.key2)
+		if err != nil {
+			return 0, err
+		}
+		writtenTotal += written
+	}
+	return writtenTotal, nil
 }
 
 func (p pairKeyCodec[K1, K2]) DecodeNonTerminal(buffer []byte) (int, Pair[K1, K2], error) {
-	panic("impl")
+	readTotal := 0
+	read, key1, err := p.keyCodec1.DecodeNonTerminal(buffer)
+	if err != nil {
+		return 0, Pair[K1, K2]{}, err
+	}
+	readTotal += read
+	read, key2, err := p.keyCodec2.DecodeNonTerminal(buffer[read:])
+	if err != nil {
+		return 0, Pair[K1, K2]{}, err
+	}
+
+	readTotal += read
+	return readTotal, Join(key1, key2), nil
 }
 
 func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
-	panic("impl")
+	size := 0
+	if key.key1 != nil {
+		size += p.keyCodec1.SizeNonTerminal(*key.key1)
+	}
+	if key.key2 != nil {
+		size += p.keyCodec2.SizeNonTerminal(*key.key2)
+	}
+	return size
 }
 
+// NewPrefixedPairRange creates a new PairRange which will prefix over all the keys
+// starting with the provided prefix.
+func NewPrefixedPairRange[K1, K2 any](prefix K1) *PairRange[K1, K2] {
+	return &PairRange[K1, K2]{
+		start: RangeKeyExact(PairPrefix[K1, K2](prefix)),
+		end:   RangeKeyPrefixEnd(PairPrefix[K1, K2](prefix)),
+	}
+}
+
+// PairRange is an API that facilitates working with Pair iteration.
+// It implements the Ranger API.
+// Unstable: API and methods are currently unstable.
 type PairRange[K1, K2 any] struct {
-	start *RangeBound[Pair[K1, K2]]
-	end   *RangeBound[Pair[K1, K2]]
+	start *RangeKey[Pair[K1, K2]]
+	end   *RangeKey[Pair[K1, K2]]
 	order Order
 
 	err error
 }
 
-func (p *PairRange[K1, K2]) Prefix(k1 K1) *PairRange[K1, K2] {
-	p.start = RangeBoundNone(Pair[K1, K2]{
-		key1: &k1,
-	})
-	p.end = RangeBoundNextPrefixKey(Pair[K1, K2]{
-		key1: &k1,
-	})
-
-	return p
-}
-
 func (p *PairRange[K1, K2]) StartInclusive(k2 K2) *PairRange[K1, K2] {
-	if p.start == nil {
-		p.err = fmt.Errorf("collections: invalid pair range, called start without prefix")
-		return p
-	}
-	p.start = RangeBoundNone(Pair[K1, K2]{
-		key1: p.start.key.key1,
-		key2: &k2,
-	})
+	p.start = RangeKeyExact(Join(*p.start.key.key1, k2))
 	return p
 }
 
 func (p *PairRange[K1, K2]) StartExclusive(k2 K2) *PairRange[K1, K2] {
-	if p.start == nil {
-		p.err = fmt.Errorf("collections: invalid pair range, called start without prefix")
-		return p
-	}
-	p.start = RangeBoundNextKey(Pair[K1, K2]{
-		key1: p.start.key.key1,
-		key2: &k2,
-	})
-
+	p.start = RangeKeyNext(Join(*p.start.key.key1, k2))
 	return p
 }
 
 func (p *PairRange[K1, K2]) EndInclusive(k2 K2) *PairRange[K1, K2] {
-	if p.end == nil {
-		p.err = fmt.Errorf("collections: invalid pair range, called end without prefix")
-		return p
-	}
-
-	p.end = RangeBoundNextKey(Pair[K1, K2]{
-		key1: p.end.key.key1,
-		key2: &k2,
-	})
-
+	p.end = RangeKeyNext(Join(*p.end.key.key1, k2))
 	return p
 }
 
 func (p *PairRange[K1, K2]) EndExclusive(k2 K2) *PairRange[K1, K2] {
-	if p.end == nil {
-		p.err = fmt.Errorf("collections: invalid pair range, called end without prefix")
-		return p
-	}
-
-	p.end = RangeBoundNone(Pair[K1, K2]{
-		key1: p.end.key.key1,
-		key2: &k2,
-	})
-
+	p.end = RangeKeyExact(Join(*p.end.key.key1, k2))
 	return p
 }
 
@@ -204,7 +219,7 @@ func (p *PairRange[K1, K2]) Descending() *PairRange[K1, K2] {
 	return p
 }
 
-func (p *PairRange[K1, K2]) RangeValues() (start *RangeBound[Pair[K1, K2]], end *RangeBound[Pair[K1, K2]], order Order, err error) {
+func (p *PairRange[K1, K2]) RangeValues() (start *RangeKey[Pair[K1, K2]], end *RangeKey[Pair[K1, K2]], order Order, err error) {
 	if p.err != nil {
 		return nil, nil, 0, err
 	}

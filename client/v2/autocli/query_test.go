@@ -245,7 +245,7 @@ func TestNotFoundErrors(t *testing.T) {
 		Service:           testpb.Query_ServiceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{{RpcMethod: "bar"}},
 	})
-	assert.ErrorContains(t, err, "rpc method bar not found")
+	assert.ErrorContains(t, err, "rpc method \"bar\" not found")
 
 	// bad positional field
 	_, err = b.BuildModuleQueryCommand("test", &autocliv1.ServiceCommandDescriptor{

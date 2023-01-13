@@ -18,6 +18,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -69,7 +70,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	res = app.initChainer(app.deliverState.ctx, req)
 
@@ -149,7 +150,7 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
 	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(sdk.TraceContext(
+		app.cms.SetTracingContext(storetypes.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
 		))
 	}
@@ -172,11 +173,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// add block gas meter
-	var gasMeter sdk.GasMeter
+	var gasMeter storetypes.GasMeter
 	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = sdk.NewGasMeter(maxGas)
+		gasMeter = storetypes.NewGasMeter(maxGas)
 	} else {
-		gasMeter = sdk.NewInfiniteGasMeter()
+		gasMeter = storetypes.NewInfiniteGasMeter()
 	}
 
 	// NOTE: header hash is not set in NewContext, so we manually set it here
@@ -212,7 +213,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 // EndBlock implements the ABCI interface.
 func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBlock) {
 	if app.deliverState.ms.TracingEnabled() {
-		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(sdk.CacheMultiStore)
+		app.deliverState.ms = app.deliverState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
 	if app.endBlocker != nil {
@@ -248,10 +249,23 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
-	ctx := app.getContextForTx(runTxPrepareProposal, []byte{})
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
+
+	// Tendermint must never call PrepareProposal with a height of 0.
+	// Ref: https://github.com/tendermint/tendermint/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	if req.Height < 1 {
+		panic("PrepareProposal called with invalid height")
+	}
+
+	ctx := app.getContextForProposal(app.prepareProposalState.ctx, req.Height)
+
+	ctx = ctx.WithVoteInfos(app.voteInfos).
+		WithBlockHeight(req.Height).
+		WithBlockTime(req.Time).
+		WithProposer(req.ProposerAddress).
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -289,13 +303,15 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		panic("app.ProcessProposal is not set")
 	}
 
-	ctx := app.processProposalState.ctx.
+	ctx := app.getContextForProposal(app.processProposalState.ctx, req.Height)
+
+	ctx = ctx.
 		WithVoteInfos(app.voteInfos).
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(app.processProposalState.ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -702,7 +718,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	// use custom query multistore if provided
 	qms := app.qms
 	if qms == nil {
-		qms = app.cms.(sdk.MultiStore)
+		qms = app.cms.(storetypes.MultiStore)
 	}
 
 	lastBlockHeight := qms.LatestVersion()
@@ -865,7 +881,7 @@ func handleQueryApp(app *BaseApp, path []string, req abci.RequestQuery) abci.Res
 
 func handleQueryStore(app *BaseApp, path []string, req abci.RequestQuery) abci.ResponseQuery {
 	// "/store" prefix for store queries
-	queryable, ok := app.cms.(sdk.Queryable)
+	queryable, ok := app.cms.(storetypes.Queryable)
 	if !ok {
 		return sdkerrors.QueryResult(sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "multistore doesn't support queries"), app.trace)
 	}
@@ -927,4 +943,15 @@ func SplitABCIQueryPath(requestPath string) (path []string) {
 	}
 
 	return path
+}
+
+// getContextForProposal returns the right context for PrepareProposal and
+// ProcessProposal. We use deliverState on the first block to be able to access
+// any state changes made in InitChain.
+func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
+	if height == 1 {
+		ctx, _ = app.deliverState.ctx.CacheContext()
+		return ctx
+	}
+	return ctx
 }

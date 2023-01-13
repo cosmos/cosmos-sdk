@@ -2,13 +2,11 @@ package collections
 
 import (
 	"context"
-	"cosmossdk.io/core/store"
-	"encoding/json"
-	"fmt"
-	db "github.com/tendermint/tm-db"
 	"math"
-	"reflect"
 	"testing"
+
+	"cosmossdk.io/core/store"
+	db "github.com/cosmos/cosmos-db"
 
 	"github.com/stretchr/testify/require"
 )
@@ -75,22 +73,22 @@ func deps() (store.KVStoreService, context.Context) {
 }
 
 // checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
-func checkKeyCodec[T any](t *testing.T, encoder KeyCodec[T], key T) {
-	buffer := make([]byte, encoder.Size(key))
-	written, err := encoder.Encode(buffer, key)
+func checkKeyCodec[T any](t *testing.T, keyCodec KeyCodec[T], key T) {
+	buffer := make([]byte, keyCodec.Size(key))
+	written, err := keyCodec.Encode(buffer, key)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), written)
-	read, decodedKey, err := encoder.Decode(buffer)
+	read, decodedKey, err := keyCodec.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")
 	// test if terminality is correctly applied
-	pairEncoder := PairKeyCodec(encoder, StringKey)
+	pairCodec := PairKeyCodec(keyCodec, StringKey)
 	pairKey := Join(key, "TEST")
-	buffer = make([]byte, pairEncoder.Size(pairKey))
-	written, err = pairEncoder.Encode(buffer, pairKey)
+	buffer = make([]byte, pairCodec.Size(pairKey))
+	written, err = pairCodec.Encode(buffer, pairKey)
 	require.NoError(t, err)
-	read, decodedPairKey, err := pairEncoder.Decode(buffer)
+	read, decodedPairKey, err := pairCodec.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded non terminal key and pair key read bytes must have same size")
 	require.Equal(t, pairKey, decodedPairKey, "encoding and decoding produces different keys with non terminal encoding")
@@ -104,31 +102,6 @@ func checkValueCodec[T any](t *testing.T, encoder ValueCodec[T], value T) {
 	require.NoError(t, err)
 	require.Equal(t, value, decodedValue, "encoding and decoding produces different values")
 }
-
-type testValueCodec[T any] struct{}
-
-func (testValueCodec[T]) Encode(value T) ([]byte, error) {
-	b, err := json.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-func (testValueCodec[T]) Decode(b []byte) (T, error) {
-	t := new(T)
-	err := json.Unmarshal(b, t)
-	if err != nil {
-		return *t, err
-	}
-	return *t, nil
-}
-func (testValueCodec[T]) Stringify(value T) string {
-	return fmt.Sprintf("%#v", value)
-}
-
-func (testValueCodec[T]) ValueType() string { return reflect.TypeOf(*new(T)).Name() }
-
-func newTestValueCodec[T any]() ValueCodec[T] { return testValueCodec[T]{} }
 
 func TestPrefix(t *testing.T) {
 	t.Run("panics on invalid int", func(t *testing.T) {

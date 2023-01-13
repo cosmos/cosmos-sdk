@@ -100,7 +100,7 @@ custom decision policies, as long as they adhere to the `DecisionPolicy`
 interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/x/group/types.go#L27-L41
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/group/types.go#L27-L45
 ```
 
 #### Threshold decision policy
@@ -336,13 +336,12 @@ The metadata has a maximum length that is chosen by the app developer, and
 passed into the group keeper as a config.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L66-L78
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L67-L80
 ```
 
 It's expected to fail if
 
-* metadata length is greater than `MaxMetadataLen`
-  config
+* metadata length is greater than `MaxMetadataLen` config
 * members are not correctly set (e.g. wrong address format, duplicates, or with 0 weight).
 
 ### Msg/UpdateGroupMembers
@@ -350,7 +349,7 @@ It's expected to fail if
 Group members can be updated with the `UpdateGroupMembers`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L87-L100
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L88-L102
 ```
 
 In the list of `MemberUpdates`, an existing member can be removed by setting its weight to 0.
@@ -365,7 +364,7 @@ It's expected to fail if:
 The `UpdateGroupAdmin` can be used to update a group admin.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L105-L117
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L107-L120
 ```
 
 It's expected to fail if the signer is not the admin of the group.
@@ -375,7 +374,7 @@ It's expected to fail if the signer is not the admin of the group.
 The `UpdateGroupMetadata` can be used to update a group metadata.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L122-L134
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L125-L138
 ```
 
 It's expected to fail if:
@@ -388,7 +387,7 @@ It's expected to fail if:
 A new group policy can be created with the `MsgCreateGroupPolicy`, which has an admin address, a group id, a decision policy and some optional metadata.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L143-L160
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L147-L165
 ```
 
 It's expected to fail if:
@@ -402,7 +401,7 @@ It's expected to fail if:
 A new group with policy can be created with the `MsgCreateGroupWithPolicy`, which has an admin address, a list of members, a decision policy, a `group_policy_as_admin` field to optionally set group and group policy admin with group policy address and some optional metadata for group and group policy.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L183-L206
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L191-L215
 ```
 
 It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateGroupPolicy`.
@@ -412,7 +411,7 @@ It's expected to fail for the same reasons as `Msg/CreateGroup` and `Msg/CreateG
 The `UpdateGroupPolicyAdmin` can be used to update a group policy admin.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L169-L181
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L173-L186
 ```
 
 It's expected to fail if the signer is not the admin of the group policy.
@@ -422,7 +421,7 @@ It's expected to fail if the signer is not the admin of the group policy.
 The `UpdateGroupPolicyDecisionPolicy` can be used to update a decision policy.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L219-L235
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L226-L241
 ```
 
 It's expected to fail if:
@@ -435,7 +434,7 @@ It's expected to fail if:
 The `UpdateGroupPolicyMetadata` can be used to update a group policy metadata.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L240-L252
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L246-L259
 ```
 
 It's expected to fail if:
@@ -449,12 +448,12 @@ A new proposal can be created with the `MsgSubmitProposal`, which has a group po
 An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L275-L298
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L281-L315
 ```
 
 It's expected to fail if:
 
-* metadata length is greater than `MaxMetadataLen` config.
+* metadata, title, or summary length is greater than `MaxMetadataLen` config.
 * if any of the proposers is not a group member.
 
 ### Msg/WithdrawProposal
@@ -462,7 +461,7 @@ It's expected to fail if:
 A proposal can be withdrawn using `MsgWithdrawProposal` which has an `address` (can be either a proposer or the group policy admin) and a `proposal_id` (which has to be withdrawn).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L307-L316
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L323-L333
 ```
 
 It's expected to fail if:
@@ -476,7 +475,7 @@ A new vote can be created with the `MsgVote`, given a proposal id, a voter addre
 An optional `Exec` value can be provided to try to execute the proposal immediately after voting.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L321-L339
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L338-L358
 ```
 
 It's expected to fail if:
@@ -489,7 +488,7 @@ It's expected to fail if:
 A proposal can be executed with the `MsgExec`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L341-L353
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L363-L373
 ```
 
 The messages that are part of this proposal won't be executed if:
@@ -502,7 +501,7 @@ The messages that are part of this proposal won't be executed if:
 The `MsgLeaveGroup` allows group member to leave a group.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/group/v1/tx.proto#L362-L370
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/group/v1/tx.proto#L381-L391
 ```
 
 It's expected to fail if:
@@ -848,6 +847,8 @@ proposal:
     no_count: "0"
     veto_count: "0"
     yes_count: "0"
+  summary: "Summary"
+  title: "Title"
 ```
 
 ##### proposals-by-group-policy
@@ -897,6 +898,8 @@ proposals:
     no_count: "0"
     veto_count: "0"
     yes_count: "0"
+  summary: "Summary"
+  title: "Title"
 ```
 
 ##### vote
@@ -988,7 +991,7 @@ The `tx` commands allow users to interact with the `group` module.
 simd tx group --help
 ```
 
-##### create-group
+#### create-group
 
 The `create-group` command allows users to create a group which is an aggregation of member accounts with associated weights and
 an administrator account.
@@ -1003,7 +1006,7 @@ Example:
 simd tx group create-group cosmos1.. "AQ==" members.json
 ```
 
-##### update-group-admin
+#### update-group-admin
 
 The `update-group-admin` command allows users to update a group's admin.
 
@@ -1017,7 +1020,7 @@ Example:
 simd tx group update-group-admin cosmos1.. 1 cosmos1..
 ```
 
-##### update-group-members
+#### update-group-members
 
 The `update-group-members` command allows users to update a group's members.
 
@@ -1031,7 +1034,7 @@ Example:
 simd tx group update-group-members cosmos1.. 1 members.json
 ```
 
-##### update-group-metadata
+#### update-group-metadata
 
 The `update-group-metadata` command allows users to update a group's metadata.
 
@@ -1045,7 +1048,7 @@ Example:
 simd tx group update-group-metadata cosmos1.. 1 "AQ=="
 ```
 
-##### create-group-policy
+#### create-group-policy
 
 The `create-group-policy` command allows users to create a group policy which is an account associated with a group and a decision policy.
 
@@ -1059,7 +1062,7 @@ Example:
 simd tx group create-group-policy cosmos1.. 1 "AQ==" '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-##### create-group-with-policy
+#### create-group-with-policy
 
 The `create-group-with-policy` command allows users to create a group which is an aggregation of member accounts with associated weights and an administrator account with decision policy. If the `--group-policy-as-admin` flag is set to `true`, the group policy address becomes the group and group policy admin.
 
@@ -1073,7 +1076,7 @@ Example:
 simd tx group create-group-with-policy cosmos1.. "AQ==" "AQ==" members.json '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-##### update-group-policy-admin
+#### update-group-policy-admin
 
 The `update-group-policy-admin` command allows users to update a group policy admin.
 
@@ -1087,7 +1090,7 @@ Example:
 simd tx group update-group-policy-admin cosmos1.. cosmos1.. cosmos1..
 ```
 
-##### update-group-policy-metadata
+#### update-group-policy-metadata
 
 The `update-group-policy-metadata` command allows users to update a group policy metadata.
 
@@ -1101,7 +1104,7 @@ Example:
 simd tx group update-group-policy-metadata cosmos1.. cosmos1.. "AQ=="
 ```
 
-##### update-group-policy-decision-policy
+#### update-group-policy-decision-policy
 
 The `update-group-policy-decision-policy` command allows users to update a group policy's decision policy.
 
@@ -1115,7 +1118,7 @@ Example:
 simd tx group update-group-policy-decision-policy cosmos1.. cosmos1.. '{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"2", "windows": {"voting_period": "120h", "min_execution_period": "0s"}}'
 ```
 
-##### create-proposal
+#### create-proposal
 
 The `create-proposal` command allows users to submit a new proposal.
 
@@ -1129,7 +1132,7 @@ Example:
 simd tx group create-proposal cosmos1.. cosmos1.. msg_tx.json "AQ=="
 ```
 
-##### withdraw-proposal
+#### withdraw-proposal
 
 The `withdraw-proposal` command allows users to withdraw a proposal.
 
@@ -1143,7 +1146,7 @@ Example:
 simd tx group withdraw-proposal 1 cosmos1..
 ```
 
-##### vote
+#### vote
 
 The `vote` command allows users to vote on a proposal.
 
@@ -1157,7 +1160,7 @@ Example:
 simd tx group vote 1 cosmos1.. CHOICE_YES "AQ=="
 ```
 
-##### exec
+#### exec
 
 The `exec` command allows users to execute a proposal.
 
@@ -1171,7 +1174,7 @@ Example:
 simd tx group exec 1
 ```
 
-##### leave-group
+#### leave-group
 
 The `leave-group` command allows group member to leave the group.
 
@@ -1452,9 +1455,11 @@ Example Output:
       "voting_period": "432000s"
     },
     "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-    "msgs": [
+    "messages": [
       {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
-    ]
+    ],
+    "title": "Title",
+    "summary": "Summary",
   }
 }
 ```
@@ -1501,9 +1506,11 @@ Example Output:
         "voting_period": "432000s"
       },
       "executorResult": "EXECUTOR_RESULT_NOT_RUN",
-      "msgs": [
+      "messages": [
         {"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"denom":"stake","amount":"100000000"}],"fromAddress":"cosmos1..","toAddress":"cosmos1.."}
-      ]
+      ],
+      "title": "Title",
+      "summary": "Summary",
     }
   ],
   "pagination": {
@@ -1911,7 +1918,7 @@ Example Output:
       "voting_period": "432000s"
     },
     "executor_result": "EXECUTOR_RESULT_NOT_RUN",
-    "msgs": [
+    "messages": [
       {
         "@type": "/cosmos.bank.v1beta1.MsgSend",
         "from_address": "cosmos1..",
@@ -1923,7 +1930,9 @@ Example Output:
           }
         ]
       }
-    ]
+    ],
+    "title": "Title",
+    "summary": "Summary",
   }
 }
 ```
@@ -1970,7 +1979,7 @@ Example Output:
         "voting_period": "432000s"
       },
       "executor_result": "EXECUTOR_RESULT_NOT_RUN",
-      "msgs": [
+      "messages": [
         {
           "@type": "/cosmos.bank.v1beta1.MsgSend",
           "from_address": "cosmos1..",
@@ -2099,13 +2108,18 @@ Location: off-chain as json object stored on IPFS (mirrors [gov proposal](../gov
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",
   "vote_option_context": "",
 }
 ```
+
+:::note
+The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+:::
 
 ### Vote
 

@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -43,8 +44,8 @@ type KeeperTestSuite struct {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(suite.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
 
 	maccPerms := map[string][]string{
@@ -190,7 +191,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	// Fix duplicate account numbers
 	pubKey1 := ed25519.GenPrivKey().PubKey()
 	pubKey2 := ed25519.GenPrivKey().PubKey()
-	accts := []types.AccountI{
+	accts := []sdk.AccountI{
 		&types.BaseAccount{
 			Address:       sdk.AccAddress(pubKey1.Address()).String(),
 			PubKey:        codectypes.UnsafePackAny(pubKey1),
@@ -229,7 +230,7 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	suite.Require().Equal(len(keeperAccts), len(accts)+1, "number of accounts in the keeper vs in genesis state")
 	for i, genAcct := range accts {
 		genAcctAddr := genAcct.GetAddress()
-		var keeperAcct types.AccountI
+		var keeperAcct sdk.AccountI
 		for _, kacct := range keeperAccts {
 			if genAcctAddr.Equals(kacct.GetAddress()) {
 				keeperAcct = kacct

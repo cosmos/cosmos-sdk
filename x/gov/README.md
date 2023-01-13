@@ -6,11 +6,11 @@ sidebar_position: 1
 
 ## Abstract
 
-This paper specifies the Governance module of the Cosmos-SDK, which was first
+This paper specifies the Governance module of the Cosmos SDK, which was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in
 June 2016.
 
-The module enables Cosmos-SDK based blockchain to support an on-chain governance
+The module enables Cosmos SDK based blockchain to support an on-chain governance
 system. In this system, holders of the native staking token of the chain can vote
 on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
@@ -186,11 +186,11 @@ Often times the entity owning that address might not be a single individual. For
 To represent weighted vote on chain, we use the following Protobuf message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L33-L43
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L34-L47
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1beta1/gov.proto#L136-L150
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L181-L201
 ```
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
@@ -264,7 +264,7 @@ Once a block contains more than 2/3rd *precommits* where a common
 nodes, non-validating full nodes and light-nodes) are expected to switch to the
 new version of the software.
 
-Validators and full nodes can use an automation tool, such as [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/main/tools/cosmovisor/README.md), for automatically switching version of the chain.
+Validators and full nodes can use an automation tool, such as [Cosmovisor](https://docs.cosmos.network/main/tooling/cosmovisor), for automatically switching version of the chain.
 
 ## State
 
@@ -277,7 +277,7 @@ unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L42-L59
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L51-L99
 ```
 
 A proposal will generally require more than just a set of messages to explain its
@@ -325,19 +325,19 @@ parameter set has to be created and the previous one rendered inactive.
 #### DepositParams
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L102-L112
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L152-L162
 ```
 
 #### VotingParams
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L114-L118
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L164-L168
 ```
 
 #### TallyParams
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L120-L132
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L170-L182
 ```
 
 Parameters are stored in a global `GlobalParams` KVStore.
@@ -377,7 +377,7 @@ const (
 ### Deposit
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/gov.proto#L34-L40
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L38-L49
 ```
 
 ### ValidatorGovInfo
@@ -393,7 +393,9 @@ This type is used in a temp map when tallying
 
 ## Stores
 
-*Note: Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list*
+:::note
+Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list
+:::
 
 We will use one KVStore `Governance` to store four mappings:
 
@@ -498,11 +500,10 @@ More information on how to submit proposals in the [client section](#client).
 
 ### Proposal Submission
 
-Proposals can be submitted by any account via a `MsgSubmitProposal`
-transaction.
+Proposals can be submitted by any account via a `MsgSubmitProposal` transaction.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L33-L43
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L42-L69
 ```
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
@@ -573,7 +574,7 @@ Once a proposal is submitted, if
 `MsgDeposit` transactions to increase the proposal's deposit.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L90-L97
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L134-L147
 ```
 
 **State modifications:**
@@ -641,17 +642,18 @@ bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/gov/v1/tx.proto#L64-L72
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L92-L108
 ```
 
 **State modifications:**
 
 * Record `Vote` of sender
 
-*Note: Gas cost for this message has to take into account the future tallying of the vote in EndBlocker.*
+:::note
+Gas cost for this message has to take into account the future tallying of the vote in EndBlocker.
+:::
 
-Next is a pseudocode outline of the way `MsgVote` transactions are
-handled:
+Next is a pseudocode outline of the way `MsgVote` transactions are handled:
 
 ```go
   // PSEUDOCODE //
@@ -1156,7 +1158,7 @@ where `proposal.json` contains:
 ```
 
 :::note
-By default the metadata and the proposal are both limited by 255 characters, this can be overridden by the application developer.
+By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
 :::
 
 ##### submit-legacy-proposal
@@ -1464,7 +1466,9 @@ Example Output:
       ],
       "votingStartTime": "2022-03-28T14:25:26.644857113Z",
       "votingEndTime": "2022-03-30T14:25:26.644857113Z",
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     },
     {
       "id": "2",
@@ -1486,7 +1490,9 @@ Example Output:
           "amount": "10"
         }
       ],
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     }
   ],
   "pagination": {
@@ -2009,7 +2015,9 @@ Example Output:
     ],
     "voting_start_time": "2022-03-28T14:25:26.644857113Z",
     "voting_end_time": "2022-03-30T14:25:26.644857113Z",
-    "metadata": "AQ=="
+    "metadata": "AQ==",
+    "title": "Proposal Title",
+    "summary": "Proposal Summary"
   }
 }
 ```
@@ -2134,7 +2142,9 @@ Example Output:
       ],
       "voting_start_time": "2022-03-28T14:25:26.644857113Z",
       "voting_end_time": "2022-03-30T14:25:26.644857113Z",
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     },
     {
       "id": "2",
@@ -2168,7 +2178,9 @@ Example Output:
       ],
       "voting_start_time": null,
       "voting_end_time": null,
-      "metadata": "AQ=="
+      "metadata": "AQ==",
+      "title": "Proposal Title",
+      "summary": "Proposal Summary"
     }
   ],
   "pagination": {
@@ -2590,13 +2602,18 @@ Location: off-chain as json object stored on IPFS (mirrors [group proposal](../g
 ```json
 {
   "title": "",
-  "authors": "",
+  "authors": [""],
   "summary": "",
   "details": "",
   "proposal_forum_url": "",
   "vote_option_context": "",
 }
 ```
+
+:::note
+The `authors` field is an array of strings, this is to allow for multiple authors to be listed in the metadata.
+In v0.46, the `authors` field is a comma-separated string. Frontends are encouraged to support both formats for backwards compatibility.
+:::
 
 ### Vote
 

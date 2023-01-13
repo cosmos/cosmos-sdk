@@ -431,7 +431,7 @@ func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, entries []*types.Send
 }
 
 // setSendEnabledEntry sets SendEnabled for the given denom to the give value in the provided store.
-func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
+func (k BaseSendKeeper) setSendEnabledEntry(store storetypes.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
 
 	bz := k.cdc.MustMarshal(&gogotypes.BoolValue{Value: value})
@@ -448,7 +448,7 @@ func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
 }
 
 // getSendEnabledPrefixStore gets a prefix store for the SendEnabled entries.
-func (k BaseSendKeeper) getSendEnabledPrefixStore(ctx sdk.Context) sdk.KVStore {
+func (k BaseSendKeeper) getSendEnabledPrefixStore(ctx sdk.Context) storetypes.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.SendEnabledPrefix)
 }
 
@@ -493,7 +493,7 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEn
 //	if !found {
 //	    sendEnabled = DefaultSendEnabled
 //	}
-func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, bool) {
+func (k BaseSendKeeper) getSendEnabled(store storetypes.KVStore, denom string) (bool, bool) {
 	key := types.CreateSendEnabledKey(denom)
 	if !store.Has(key) {
 		return false, false
@@ -512,7 +512,7 @@ func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, b
 
 // getSendEnabledOrDefault gets the SendEnabled value for a denom. If it's not
 // in the store, this will return defaultVal.
-func (k BaseSendKeeper) getSendEnabledOrDefault(store sdk.KVStore, denom string, defaultVal bool) bool {
+func (k BaseSendKeeper) getSendEnabledOrDefault(store storetypes.KVStore, denom string, defaultVal bool) bool {
 	sendEnabled, found := k.getSendEnabled(store, denom)
 	if found {
 		return sendEnabled

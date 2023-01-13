@@ -101,12 +101,8 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	// s.Require().NoError(s.network.WaitForNextBlock())
-	// height, err := s.network.LatestHeight()
-
 	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
-	// val.RPCClient.Tx(val.ClientCtx., []byte(tr.TxHash), false)
 	s.txHeight = resp.Height
 }
 

@@ -14,12 +14,12 @@ import (
 	"github.com/spf13/cast"
 )
 
-// ServiceConstructor is used to construct a streaming service
 type (
+	// AppOptions is an interface for accessing application options
 	AppOptions interface {
 		Get(string) interface{}
 	}
-
+	// ServiceConstructor is used to construct a streaming service
 	ServiceConstructor func(AppOptions, []types.StoreKey, types.Codec, log.Logger, string) (types.StreamingService, error)
 )
 

@@ -44,7 +44,7 @@ corresponding updates to the state.
 Blockchain invariants can be checked using the `MsgVerifyInvariant` message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/crisis/v1beta1/tx.proto#L16-L26
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/crisis/v1beta1/tx.proto#L26-L42
 ```
 
 This message is expected to fail if:

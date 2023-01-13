@@ -68,3 +68,6 @@ func (noKey) DecodeJSON(b []byte) (noKey, error) {
 	}
 	return noKey{}, nil
 }
+func (k noKey) EncodeNonTerminal(_ []byte, _ noKey) (int, error) { panic("must not be called") }
+func (k noKey) DecodeNonTerminal(_ []byte) (int, noKey, error)   { panic("must not be called") }
+func (k noKey) SizeNonTerminal(_ noKey) int                      { panic("must not be called") }

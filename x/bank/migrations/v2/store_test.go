@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,8 +19,8 @@ import (
 
 func TestSupplyMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	bankKey := sdk.NewKVStoreKey("bank")
-	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
+	bankKey := storetypes.NewKVStoreKey("bank")
+	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
 
 	v1bank.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -68,8 +69,8 @@ func TestSupplyMigration(t *testing.T) {
 
 func TestBalanceKeysMigration(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	bankKey := sdk.NewKVStoreKey("bank")
-	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
+	bankKey := storetypes.NewKVStoreKey("bank")
+	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(bankKey)
 
 	_, _, addr := testdata.KeyTestPubAddr()

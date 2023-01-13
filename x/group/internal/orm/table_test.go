@@ -10,8 +10,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
@@ -97,7 +97,7 @@ func TestCreate(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			ctx := NewMockContext()
-			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
@@ -154,7 +154,7 @@ func TestUpdate(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			ctx := NewMockContext()
-			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)
@@ -203,7 +203,7 @@ func TestDelete(t *testing.T) {
 			cdc := codec.NewProtoCodec(interfaceRegistry)
 
 			ctx := NewMockContext()
-			store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+			store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 			anyPrefix := [2]byte{0x10}
 			myTable, err := newTable(anyPrefix, &testdata.TableModel{}, cdc)

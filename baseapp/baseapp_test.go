@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	capKey1 = sdk.NewKVStoreKey("key1")
-	capKey2 = sdk.NewKVStoreKey("key2")
+	capKey1 = storetypes.NewKVStoreKey("key1")
+	capKey2 = storetypes.NewKVStoreKey("key2")
 
 	// testTxPriority is the CheckTx priority that we set in the test
 	// AnteHandler.
@@ -221,7 +221,7 @@ func TestSetLoader(t *testing.T) {
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
-		key := sdk.NewKVStoreKey(storeKey)
+		key := storetypes.NewKVStoreKey(storeKey)
 		rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 
 		err := rs.LoadLatestVersion()
@@ -241,7 +241,7 @@ func TestSetLoader(t *testing.T) {
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 
-		key := sdk.NewKVStoreKey(storeKey)
+		key := storetypes.NewKVStoreKey(storeKey)
 		rs.MountStoreWithDB(key, storetypes.StoreTypeIAVL, nil)
 
 		err := rs.LoadLatestVersion()
@@ -285,7 +285,7 @@ func TestSetLoader(t *testing.T) {
 				opts = append(opts, tc.setLoader)
 			}
 			app := baseapp.NewBaseApp(t.Name(), defaultLogger(), db, nil, opts...)
-			app.MountStores(sdk.NewKVStoreKey(tc.loadStoreKey))
+			app.MountStores(storetypes.NewKVStoreKey(tc.loadStoreKey))
 			err := app.LoadLatestVersion()
 			require.Nil(t, err)
 
@@ -613,7 +613,7 @@ func TestLoadVersionPruning(t *testing.T) {
 	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
 
 	// make a cap key and mount the store
-	capKey := sdk.NewKVStoreKey("key1")
+	capKey := storetypes.NewKVStoreKey("key1")
 	app.MountStores(capKey)
 
 	err := app.LoadLatestVersion() // needed to make stores non-nil

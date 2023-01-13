@@ -136,7 +136,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 // as defined in ADR-041.
 func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	it := storetypes.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
 	vm := make(module.VersionMap)
 	defer it.Close()
@@ -154,7 +154,7 @@ func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 // GetModuleVersions gets a slice of module consensus versions
 func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	it := storetypes.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
 	mv := make([]*types.ModuleVersion, 0)
@@ -173,7 +173,7 @@ func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 // getModuleVersion gets the version for a given module, and returns true if it exists, false otherwise
 func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	it := storetypes.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
@@ -258,7 +258,7 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 
 // GetLastCompletedUpgrade returns the last applied upgrade name and height.
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
-	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	iter := storetypes.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
 	if iter.Valid() {
@@ -287,7 +287,7 @@ func encodeDoneKey(name string, height int64) []byte {
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
-	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	iter := storetypes.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {

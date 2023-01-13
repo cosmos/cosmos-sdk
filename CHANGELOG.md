@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## State Machine Breaking
+
+* (baseapp, x/auth/posthandler) [#13940](https://github.com/cosmos/cosmos-sdk/pull/13940) Update `PostHandler` to receive the `runTx` success boolean.
+
 ## [v0.47.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc1) - 2022-01-09
 
 ### Features

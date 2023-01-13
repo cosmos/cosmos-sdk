@@ -76,7 +76,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
-	s.Require().Equal(uint32(0), txRes.Code)
+	s.Require().Equalf(uint32(0), txRes.Code, "out: %s", txRes.RawLog)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// unbonding the amount

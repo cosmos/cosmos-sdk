@@ -238,9 +238,9 @@ jobs:
         run: |
           make test-sim-nondeterminism
 
-  ##################################
-  #### Cosmos SDK Go Submodules ####
-  ##################################
+  ###############################
+  #### Cosmos SDK Submodules ####
+  ###############################
 
   # NOTE: The following jobs are used to test the Cosmos SDK Go submodules.
   # They run when there is a diff in their respective directories.
@@ -552,11 +552,11 @@ jobs:
         with:
           projectBaseDir: tools/confix/
 
-  ####################################
-  #### Cosmos SDK ./X Go Submodules ####
-  ####################################
+  #############################
+  ### Cosmos SDK x/{module} ###
+  #############################
 
-  # NOTE: The following jobs are used to test the Cosmos SDK Go submodules that are located under ./x.
+  # NOTE: The following jobs are used to test the Cosmos SDK Go submodules present under x/{module}.
   # They run when there is a diff in their respective directories.
 
   test-tx:

@@ -225,7 +225,7 @@ It is **not** the role of the consensus engine to define the state or the validi
 
 Developers building on top of the Cosmos SDK need not implement the ABCI themselves, as `BaseApp` comes with a built-in implementation of the interface. Let us go through the main ABCI messages that `BaseApp` implements:
 
-* [`Prepare Proposal`](#process-proposal)
+* [`Prepare Proposal`](#prepare-proposal)
 * [`Process Proposal`](#process-proposal)
 * [`CheckTx`](#checktx)
 * [`DeliverTx`](#delivertx)

@@ -66,10 +66,9 @@ func (m *TestAnyResponse) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 // 2. That the gas consumption of the query is the same. When
 // `gasOverwrite` is set to true, we also check that this consumed
 // gas value is equal to the hardcoded `gasConsumed`.
-//
-// TODO: replace "github.com/stretchr/testify/require" with "gotest.tools/v3"
 func DeterministicIterations[request proto.Message, response proto.Message](
 	ctx sdk.Context,
+	t *testing.T,
 	req request,
 	grpcFn func(context.Context, request, ...grpc.CallOption) (response, error),
 	gasConsumed uint64,
@@ -77,7 +76,7 @@ func DeterministicIterations[request proto.Message, response proto.Message](
 ) {
 	before := ctx.GasMeter().GasConsumed()
 	prevRes, err := grpcFn(ctx, req)
-	assert.NilError(&testing.T{}, err)
+	assert.NilError(t, err)
 	if gasOverwrite { // to handle regressions, i.e. check that gas consumption didn't change
 		gasConsumed = ctx.GasMeter().GasConsumed() - before
 	}

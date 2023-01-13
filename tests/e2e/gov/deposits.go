@@ -22,8 +22,6 @@ type DepositTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
-	// deposits    sdk.Coins
-	// proposalIDs []string
 }
 
 func NewDepositTestSuite(cfg network.Config) *DepositTestSuite {

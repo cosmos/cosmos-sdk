@@ -177,10 +177,7 @@ func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
 
 // GENESIS
 
-type jsonPairKey struct {
-	Key1 json.RawMessage `json:"key_1"`
-	Key2 json.RawMessage `json:"key_2"`
-}
+type jsonPairKey [2]json.RawMessage
 
 func (p pairKeyCodec[K1, K2]) EncodeJSON(v Pair[K1, K2]) ([]byte, error) {
 	k1Json, err := p.keyCodec1.EncodeJSON(v.K1())
@@ -191,10 +188,7 @@ func (p pairKeyCodec[K1, K2]) EncodeJSON(v Pair[K1, K2]) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.Marshal(jsonPairKey{
-		Key1: k1Json,
-		Key2: k2Json,
-	})
+	return json.Marshal(jsonPairKey{k1Json, k2Json})
 }
 
 func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
@@ -204,11 +198,11 @@ func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
 		return Pair[K1, K2]{}, err
 	}
 
-	k1, err := p.keyCodec1.DecodeJSON(pairJSON.Key1)
+	k1, err := p.keyCodec1.DecodeJSON(pairJSON[0])
 	if err != nil {
 		return Pair[K1, K2]{}, err
 	}
-	k2, err := p.keyCodec2.DecodeJSON(pairJSON.Key2)
+	k2, err := p.keyCodec2.DecodeJSON(pairJSON[1])
 	if err != nil {
 		return Pair[K1, K2]{}, err
 	}

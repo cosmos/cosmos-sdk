@@ -23,7 +23,7 @@ func TestPair(t *testing.T) {
 	t.Run("json", func(t *testing.T) {
 		b, err := keyCodec.EncodeJSON(Join("k1", "k2"))
 		require.NoError(t, err)
-		require.Equal(t, []byte(`{"key_1":"k1","key_2":"k2"}`), b)
+		require.Equal(t, []byte(`["k1","k2"]`), b)
 	})
 }
 

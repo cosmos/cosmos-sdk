@@ -37,6 +37,8 @@
   - x/upgrade/**/*
 "C:x/consensus":
   - x/consensus/**/*
+"C:x/circuit":
+  - x/circuit/**/*
 "C:collections":
   - collections/**/*
 "C:Cosmovisor":
@@ -44,6 +46,8 @@
 "C:Rosetta":
   - contrib/rosetta/**/*
   - tools/rosetta/**/*
+"C:Confix":
+  - tools/confix/**/*
 "C:Keys":
   - client/keys/**/*
 "Type: Build":

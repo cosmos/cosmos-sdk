@@ -7,25 +7,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	"cosmossdk.io/math"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
@@ -33,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -299,7 +297,7 @@ func TestDeliverGenTxs(t *testing.T) {
 			tc.malleate()
 
 			if tc.expPass {
-				require.NotPanics(t, func() {
+				sdktestutil.AssertNotPanics(t, func() {
 					genutil.DeliverGenTxs(
 						f.ctx, genTxs, f.stakingKeeper, f.baseApp.DeliverTx,
 						f.encodingConfig.TxConfig,

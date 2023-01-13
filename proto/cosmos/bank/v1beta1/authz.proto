@@ -26,5 +26,5 @@ message SendAuthorization {
   // granter. If omitted, any recipient is allowed.
   //
   // Since: cosmos-sdk 0.47
-  repeated string allow_list = 2;
+  repeated string allow_list = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

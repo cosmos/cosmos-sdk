@@ -183,7 +183,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr store.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 

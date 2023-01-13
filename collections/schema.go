@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sort"
+	"strings"
 
 	"cosmossdk.io/core/appmodule"
-	"strings"
 
 	"cosmossdk.io/core/store"
 
@@ -60,9 +61,17 @@ func (s *SchemaBuilder) Build() (Schema, error) {
 		}
 	}
 
+	// compute ordered collections
+	collectionsOrdered := make([]string, 0, len(s.schema.collectionsByName))
+	for name := range s.schema.collectionsByName {
+		collectionsOrdered = append(collectionsOrdered, name)
+	}
+	sort.Strings(collectionsOrdered)
+	s.schema.collectionsOrdered = collectionsOrdered
+
 	if s.schema == nil {
 		// explicit panic to avoid nil pointer dereference
-		panic("schema is nil")
+		panic("builder already used to construct a schema")
 	}
 
 	schema := *s.schema
@@ -107,6 +116,7 @@ var nameRegex = regexp.MustCompile("^" + NameRegex + "$")
 // clients.
 type Schema struct {
 	storeAccessor       func(context.Context) store.KVStore
+	collectionsOrdered  []string
 	collectionsByPrefix map[string]collection
 	collectionsByName   map[string]collection
 }
@@ -163,43 +173,57 @@ func (s Schema) addCollection(collection collection) {
 
 // DefaultGenesis implements the appmodule.HasGenesis.DefaultGenesis method.
 func (s Schema) DefaultGenesis(target appmodule.GenesisTarget) error {
-	for name, coll := range s.collectionsByName {
-		writer, err := target(name)
+	for _, name := range s.collectionsOrdered {
+		err := s.defaultGenesis(target, name)
 		if err != nil {
-			return err
-		}
-
-		err = coll.defaultGenesis(writer)
-		if err != nil {
-			return err
-		}
-
-		err = writer.Close()
-		if err != nil {
-			return err
+			return fmt.Errorf("failed to instantiate default genesis for %s: %w", name, err)
 		}
 	}
 
 	return nil
 }
 
+func (s Schema) defaultGenesis(target appmodule.GenesisTarget, name string) error {
+	wc, err := target(name)
+	if err != nil {
+		return err
+	}
+	defer wc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	return coll.defaultGenesis(wc)
+}
+
 // ValidateGenesis implements the appmodule.HasGenesis.ValidateGenesis method.
 func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
-	for name, coll := range s.collectionsByName {
-		reader, err := source(name)
+	for _, name := range s.collectionsOrdered {
+		err := s.validateGenesis(source, name)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed genesis validation of %s: %w", name, err)
 		}
+	}
+	return nil
+}
 
-		err = coll.validateGenesis(reader)
-		if err != nil {
-			return err
-		}
+func (s Schema) validateGenesis(source appmodule.GenesisSource, name string) error {
+	rc, err := source(name)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
 
-		err = reader.Close()
-		if err != nil {
-			return err
-		}
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	err = coll.validateGenesis(rc)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -207,21 +231,31 @@ func (s Schema) ValidateGenesis(source appmodule.GenesisSource) error {
 
 // InitGenesis implements the appmodule.HasGenesis.InitGenesis method.
 func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
-	for name, coll := range s.collectionsByName {
-		reader, err := source(name)
+	for _, name := range s.collectionsOrdered {
+		err := s.initGenesis(ctx, source, name)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed genesis initialisation of %s: %w", name, err)
 		}
+	}
 
-		err = coll.importGenesis(ctx, reader)
-		if err != nil {
-			return err
-		}
+	return nil
+}
 
-		err = reader.Close()
-		if err != nil {
-			return err
-		}
+func (s Schema) initGenesis(ctx context.Context, source appmodule.GenesisSource, name string) error {
+	rc, err := source(name)
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	err = coll.importGenesis(ctx, rc)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -229,22 +263,35 @@ func (s Schema) InitGenesis(ctx context.Context, source appmodule.GenesisSource)
 
 // ExportGenesis implements the appmodule.HasGenesis.ExportGenesis method.
 func (s Schema) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
-	for name, coll := range s.collectionsByName {
-		writer, err := target(name)
+	for _, name := range s.collectionsOrdered {
+		err := s.exportGenesis(ctx, target, name)
 		if err != nil {
-			return err
-		}
-
-		err = coll.exportGenesis(ctx, writer)
-		if err != nil {
-			return err
-		}
-
-		err = writer.Close()
-		if err != nil {
-			return err
+			return fmt.Errorf("failed to export genesis for %s: %w", name, err)
 		}
 	}
 
 	return nil
+}
+
+func (s Schema) exportGenesis(ctx context.Context, target appmodule.GenesisTarget, name string) error {
+	wc, err := target(name)
+	if err != nil {
+		return err
+	}
+	defer wc.Close()
+
+	coll, err := s.getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	return coll.exportGenesis(ctx, wc)
+}
+
+func (s Schema) getCollection(name string) (collection, error) {
+	coll, ok := s.collectionsByName[name]
+	if !ok {
+		return nil, fmt.Errorf("unknown collection: %s", name)
+	}
+	return coll, nil
 }

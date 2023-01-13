@@ -1,8 +1,9 @@
 package collections
 
 import (
+	"bytes"
 	"context"
-	io "io"
+	"fmt"
 )
 
 // Item is a type declaration based on Map
@@ -18,8 +19,7 @@ func NewItem[V any](
 	name string,
 	valueCodec ValueCodec[V],
 ) Item[V] {
-	item := (Item[V])(newMap[noKey](schema, prefix, name, noKey{}, valueCodec))
-	schema.addCollection(item)
+	item := (Item[V])(NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
 	return item
 }
 
@@ -53,49 +53,6 @@ func (i Item[V]) Remove(ctx context.Context) error {
 	return (Map[noKey, V])(i).Remove(ctx, noKey{})
 }
 
-func (i Item[V]) defaultGenesis(writer io.Writer) error {
-	var value V
-	bz, err := i.vc.EncodeJSON(value)
-	_, err = writer.Write(bz)
-	return err
-}
-
-func (i Item[V]) validateGenesis(reader io.Reader) error {
-	bz, err := io.ReadAll(reader)
-	if err != nil {
-		return err
-	}
-
-	_, err = i.vc.DecodeJSON(bz)
-	return err
-}
-
-func (i Item[V]) importGenesis(ctx context.Context, reader io.Reader) error {
-	bz, err := io.ReadAll(reader)
-	if err != nil {
-		return err
-	}
-
-	value, err := i.vc.DecodeJSON(bz)
-
-	return i.Set(ctx, value)
-}
-
-func (i Item[V]) exportGenesis(ctx context.Context, writer io.Writer) error {
-	value, err := i.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	bz, err := i.vc.EncodeJSON(value)
-	if err != nil {
-		return err
-	}
-
-	_, err = writer.Write(bz)
-	return err
-}
-
 // noKey defines a KeyCodec which decodes nothing.
 type noKey struct{}
 
@@ -104,5 +61,13 @@ func (noKey) KeyType() string                       { return "no_key" }
 func (noKey) Size(_ noKey) int                      { return 0 }
 func (noKey) Encode(_ []byte, _ noKey) (int, error) { return 0, nil }
 func (noKey) Decode(_ []byte) (int, noKey, error)   { return 0, noKey{}, nil }
-func (noKey) EncodeJSON(_ noKey) ([]byte, error)    { return []byte("null"), nil }
-func (noKey) DecodeJSON(_ []byte) (noKey, error)    { return noKey{}, nil }
+func (noKey) EncodeJSON(_ noKey) ([]byte, error)    { return []byte(`"item"`), nil }
+func (noKey) DecodeJSON(b []byte) (noKey, error) {
+	if !bytes.Equal(b, []byte(`"item"`)) {
+		return noKey{}, fmt.Errorf("%w: invalid item json key bytes", ErrEncoding)
+	}
+	return noKey{}, nil
+}
+func (k noKey) EncodeNonTerminal(_ []byte, _ noKey) (int, error) { panic("must not be called") }
+func (k noKey) DecodeNonTerminal(_ []byte) (int, noKey, error)   { panic("must not be called") }
+func (k noKey) SizeNonTerminal(_ noKey) int                      { panic("must not be called") }

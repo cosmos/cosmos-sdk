@@ -52,7 +52,7 @@ To install the latest version of `cosmovisor`, run the following command:
 go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@latest
 ```
 
-To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos-SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
+To install a previous version, you can specify the version. IMPORTANT: Chains that use Cosmos SDK v0.44.3 or earlier (eg v0.44.2) and want to use auto-download feature MUST use `cosmovisor v0.1.0`
 
 ```shell
 go install github.com/cosmos/cosmos-sdk/cosmovisor/cmd/cosmovisor@v0.1.0

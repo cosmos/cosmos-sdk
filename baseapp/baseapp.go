@@ -25,12 +25,12 @@ import (
 )
 
 const (
-	runTxModeCheck    runTxMode = iota // Check a transaction
-	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
-	runTxModeSimulate                  // Simulate a transaction
-	runTxModeDeliver                   // Deliver a transaction
-	runTxPrepareProposal
-	runTxProcessProposal
+	runTxModeCheck       runTxMode = iota // Check a transaction
+	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
+	runTxModeSimulate                     // Simulate a transaction
+	runTxModeDeliver                      // Deliver a transaction
+	runTxPrepareProposal                  // Prepare a TM block proposal
+	runTxProcessProposal                  // Process a TM block proposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -43,27 +43,27 @@ type (
 	// from disk. This is useful for state migration, when loading a datastore written with
 	// an older version of the software. In particular, if a module changed the substore key name
 	// (or removed a substore) between two versions of the software.
-	StoreLoader func(ms sdk.CommitMultiStore) error
+	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
 // BaseApp reflects the ABCI application implementation.
 type BaseApp struct { //nolint: maligned
 	// initialized on creation
 	logger            log.Logger
-	name              string               // application name from abci.Info
-	db                dbm.DB               // common DB backend
-	cms               sdk.CommitMultiStore // Main (uncached) state
-	qms               sdk.MultiStore       // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader          // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter     // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter    // router for redirecting Msg service messages
+	name              string                      // application name from abci.Info
+	db                dbm.DB                      // common DB backend
+	cms               storetypes.CommitMultiStore // Main (uncached) state
+	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
 
 	mempool         mempool.Mempool            // application side mempool
 	anteHandler     sdk.AnteHandler            // ante handler for fee and auth
-	postHandler     sdk.AnteHandler            // post handler, optional, e.g. for tips
+	postHandler     sdk.PostHandler            // post handler, optional, e.g. for tips
 	initChainer     sdk.InitChainer            // initialize state with validators and state blob
 	beginBlocker    sdk.BeginBlocker           // logic to run before any txs
 	processProposal sdk.ProcessProposalHandler // the handler which runs on ABCI ProcessProposal
@@ -86,7 +86,7 @@ type BaseApp struct { //nolint: maligned
 	prepareProposalState *state // for PrepareProposal
 
 	// an inter-block write-through cache provided to the context during deliverState
-	interBlockCache sdk.MultiStorePersistentCache
+	interBlockCache storetypes.MultiStorePersistentCache
 
 	// absent validators from begin block
 	voteInfos []abci.VoteInfo
@@ -300,14 +300,14 @@ func (app *BaseApp) LoadLatestVersion() error {
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms sdk.CommitMultiStore) error {
+func DefaultStoreLoader(ms storetypes.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
 // UNSAFE: must not be used during the abci life cycle.
-func (app *BaseApp) CommitMultiStore() sdk.CommitMultiStore {
+func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore {
 	return app.cms
 }
 
@@ -381,7 +381,7 @@ func (app *BaseApp) setMinRetainBlocks(minRetainBlocks uint64) {
 	app.minRetainBlocks = minRetainBlocks
 }
 
-func (app *BaseApp) setInterBlockCache(cache sdk.MultiStorePersistentCache) {
+func (app *BaseApp) setInterBlockCache(cache storetypes.MultiStorePersistentCache) {
 	app.interBlockCache = cache
 }
 
@@ -576,18 +576,18 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
-func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, sdk.CacheMultiStore) {
+func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	// TODO: https://github.com/cosmos/cosmos-sdk/issues/2824
 	msCache := ms.CacheMultiStore()
 	if msCache.TracingEnabled() {
 		msCache = msCache.SetTracingContext(
-			sdk.TraceContext(
+			storetypes.TraceContext(
 				map[string]interface{}{
 					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
 				},
 			),
-		).(sdk.CacheMultiStore)
+		).(storetypes.CacheMultiStore)
 	}
 
 	return ctx.WithMultiStore(msCache), msCache
@@ -657,7 +657,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
-			msCache sdk.CacheMultiStore
+			msCache storetypes.CacheMultiStore
 		)
 
 		// Branch context before AnteHandler call in case it aborts.
@@ -717,18 +717,15 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
+
 	if err == nil {
 
 		// Run optional postHandlers.
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
-			// The runMsgCtx context currently contains events emitted by the ante handler.
-			// We clear this to correctly order events without duplicates.
-			// Note that the state is still preserved.
-			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
-
-			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate)
+			// Follow-up Ref: https://github.com/cosmos/cosmos-sdk/pull/13941
+			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, anteEvents, priority, err
 			}

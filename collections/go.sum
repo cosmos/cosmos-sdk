@@ -1,6 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/core v0.4.0 h1:QPYg2v21OGr7yjJC5HEWiuhfFJxzdqbDDv1PZzH7cas=
-cosmossdk.io/core v0.4.0/go.mod h1:Zqd1GB+krTF3bzhTnPNwzy3NTtXu+MKLX/9sPQXTIDE=
+cosmossdk.io/core v0.4.1 h1:5icpjPmw8J4uFp6w8OoLJPxsw6X3kRi9nAtTr3qp2Ok=
+cosmossdk.io/core v0.4.1/go.mod h1:Zqd1GB+krTF3bzhTnPNwzy3NTtXu+MKLX/9sPQXTIDE=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=

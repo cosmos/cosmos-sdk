@@ -72,4 +72,17 @@ func TestSendAuthorization(t *testing.T) {
 	require.Nil(t, resp.Updated)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), fmt.Sprintf("cannot send to %s address", unknownAddr))
+
+	t.Log("send to address in allow list")
+	authzWithAllowList = types.NewSendAuthorization(coins1000, allowList)
+	require.Equal(t, authzWithAllowList.MsgTypeURL(), "/cosmos.bank.v1beta1.MsgSend")
+	require.NoError(t, authorization.ValidateBasic())
+	send = types.NewMsgSend(fromAddr, allowList[0], coins500)
+	require.NoError(t, authzWithAllowList.ValidateBasic())
+	resp, err = authzWithAllowList.Accept(ctx, send)
+	require.NoError(t, err)
+	require.True(t, resp.Accept)
+	require.NotNil(t, resp.Updated)
+	// coins1000-coins500 = coins500
+	require.Equal(t, types.NewSendAuthorization(coins500, allowList).String(), resp.Updated.String())
 }

@@ -1,6 +1,10 @@
 package appmodule
 
 import (
+	"cosmossdk.io/depinject"
+	"google.golang.org/grpc"
+)
+import (
 	"context"
 
 	"cosmossdk.io/depinject"
@@ -15,6 +19,26 @@ type AppModule interface {
 
 	// IsAppModule is a dummy method to tag a struct as implementing an AppModule.
 	IsAppModule()
+}
+
+// HasServices is the extension interface that modules should implement to register
+// implementations of services defined in .proto files.
+type HasServices interface {
+	AppModule
+
+	// RegisterServices registers the module's services with the app's service
+	// registrar.
+	//
+	// Two types of services are currently supported:
+	// - read-only gRPC query services, which are the default.
+	// - transaction message services, which must have the protobuf service
+	//   option "cosmos.msg.v1.service" (defined in "cosmos/msg/v1/service.proto")
+	//   set to true.
+	//
+	// The service registrar will figure out which type of service you are
+	// implementing based on the presence (or absence) of protobuf options. You
+	// do not need to specify this in golang code.
+	RegisterServices(grpc.ServiceRegistrar)
 }
 
 // HasBeginBlocker is the extension interface that modules should implement to run

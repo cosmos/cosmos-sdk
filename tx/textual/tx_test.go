@@ -6,20 +6,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cosmos/cosmos-proto/any"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/testing/protocmp"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	_ "cosmossdk.io/api/cosmos/auth/v1beta1"
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519"
-	"cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
@@ -102,15 +99,9 @@ func TestTxJsonTestcases(t *testing.T) {
 			parsedAuthInfo := &txv1beta1.AuthInfo{}
 			err = proto.Unmarshal(parsedTextualData.AuthInfoBytes, parsedAuthInfo)
 			require.NoError(t, err)
-			// Remove the non-parsable fields, i.e. the hashed bytes
-			for i, si := range txAuthInfo.SignerInfos {
-				txAuthInfo.SignerInfos[i].PublicKey = removePkKeys(t, si.PublicKey)
-			}
 			diff = cmp.Diff(txAuthInfo, parsedAuthInfo, protocmp.Transform())
 			require.Empty(t, diff)
 
-			// Remove the non-parsable fields, i.e. the hashed public key
-			removePkKeys(t, signerData.PubKey)
 			diff = cmp.Diff(
 				signerData,
 				signerDataFromProto(parsedTextualData.SignerData),
@@ -154,29 +145,5 @@ func signerDataFromProto(d *textualpb.SignerData) signing.SignerData {
 		AccountNumber: d.AccountNumber,
 		Sequence:      d.Sequence,
 		PubKey:        d.PubKey,
-	}
-}
-
-// removePkKeys takes a public key Any, decodes it, and recursively removes all
-// the "key" fields (hashed by textual) inside it.
-func removePkKeys(t *testing.T, pkAny *anypb.Any) *anypb.Any {
-	pk, err := anypb.UnmarshalNew(pkAny, proto.UnmarshalOptions{})
-	require.NoError(t, err)
-	m := pk.ProtoReflect().Interface()
-	switch m := m.(type) {
-	case *multisig.LegacyAminoPubKey:
-		newAnys := make([]*anypb.Any, len(m.PublicKeys))
-		for i, any := range m.PublicKeys {
-			newAnys[i] = removePkKeys(t, any)
-		}
-
-		m.PublicKeys = newAnys
-		newMultisigAny, err := any.New(m)
-		require.NoError(t, err)
-
-		return newMultisigAny
-	default:
-		pkAny.Value = nil
-		return pkAny
 	}
 }

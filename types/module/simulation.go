@@ -8,7 +8,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -22,7 +21,7 @@ type AppModuleSimulation interface {
 	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
 
 	// register a func to decode the each module's defined types from their corresponding store key
-	RegisterStoreDecoder(storetypes.StoreDecoderRegistry)
+	RegisterStoreDecoder(simulation.StoreDecoderRegistry)
 
 	// simulation operations (i.e msgs) with their respective weight
 	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
@@ -32,7 +31,7 @@ type AppModuleSimulation interface {
 // for managing and executing simulation functionalities for a group of modules
 type SimulationManager struct {
 	Modules       []AppModuleSimulation           // array of app modules; we use an array for deterministic simulation tests
-	StoreDecoders storetypes.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
+	StoreDecoders simulation.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
 }
 
 // NewSimulationManager creates a new SimulationManager object
@@ -41,7 +40,7 @@ type SimulationManager struct {
 func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 	return &SimulationManager{
 		Modules:       modules,
-		StoreDecoders: make(storetypes.StoreDecoderRegistry),
+		StoreDecoders: make(simulation.StoreDecoderRegistry),
 	}
 }
 

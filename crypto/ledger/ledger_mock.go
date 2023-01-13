@@ -1,6 +1,3 @@
-//go:build ledger && test_ledger_mock
-// +build ledger,test_ledger_mock
-
 package ledger
 
 import (
@@ -10,7 +7,6 @@ import (
 	btcec "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cosmos/go-bip39"
-	secp256k1 "github.com/tendermint/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -40,11 +36,11 @@ func (mock LedgerSECP256K1Mock) Close() error {
 // as per the original API, it returns an uncompressed key
 func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) ([]byte, error) {
 	if derivationPath[0] != 44 {
-		return nil, errors.New("Invalid derivation path")
+		return nil, errors.New("invalid derivation path")
 	}
 
 	if derivationPath[1] != sdk.GetConfig().GetCoinType() {
-		return nil, errors.New("Invalid derivation path")
+		return nil, errors.New("invalid derivation path")
 	}
 
 	seed, err := bip39.NewSeedWithErrorChecking(testdata.TestMnemonic, "")
@@ -59,7 +55,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := secp256k1.PrivKeyFromBytes(secp256k1.S256(), derivedPriv[:])
+	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv[:])
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -100,18 +96,10 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv, _ := secp256k1.PrivKeyFromBytes(secp256k1.S256(), derivedPriv[:])
+	priv, _ := btcec.PrivKeyFromBytes(derivedPriv[:])
+	sig := ecdsa.Sign(priv, crypto.Sha256(message))
 
-	sig, err := priv.Sign(crypto.Sha256(message))
-	if err != nil {
-		return nil, err
-	}
-
-	// Need to return DER as the ledger does
-	var r, s btcec.ModNScalar
-	r.SetByteSlice(sig.R.Bytes())
-	s.SetByteSlice(sig.S.Bytes())
-	return ecdsa.NewSignature(&r, &s).Serialize(), nil
+	return sig.Serialize(), nil
 }
 
 // ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path

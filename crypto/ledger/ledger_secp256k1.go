@@ -3,13 +3,10 @@ package ledger
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"os"
 
 	btcec "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
-
-	tmbtcec "github.com/tendermint/btcd/btcec"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -218,12 +215,12 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	}
 
 	sigStr := sigDER.Serialize()
-	var r, s big.Int
+	var r, s btcec.ModNScalar
 	// The format of a DER encoded signature is as follows:
 	// 0x30 <total length> 0x02 <length of R> <R> 0x02 <length of S> <S>
-	r.SetBytes(sigStr[4 : 4+sigStr[3]])
-	s.SetBytes(sigStr[4+sigStr[3]+2:])
-	sigBER := tmbtcec.Signature{R: &r, S: &s}
+	r.SetByteSlice(sigStr[4 : 4+sigStr[3]])
+	s.SetByteSlice(sigStr[4+sigStr[3]+2:])
+	sigBER := ecdsa.NewSignature(&r, &s)
 
 	return sigBER.Serialize(), nil
 }

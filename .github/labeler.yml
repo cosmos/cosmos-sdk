@@ -37,6 +37,8 @@
   - x/upgrade/**/*
 "C:x/consensus":
   - x/consensus/**/*
+"C:x/circuit":
+  - x/circuit/**/*
 "C:collections":
   - collections/**/*
 "C:Cosmovisor":

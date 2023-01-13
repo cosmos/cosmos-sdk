@@ -22,7 +22,7 @@ The `context` is a data structure intended to be passed from function to functio
 The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://pkg.go.dev/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./04-store.md#base-layer-kvstores) in the [`multistore`](./04-store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L17-L42
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/types/context.go#L17-L44
 ```
 
 * **Base Context:** The base type is a Go [Context](https://pkg.go.dev/context), which is explained further in the [Go Context Package](#go-context-package) section below.
@@ -40,6 +40,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/types/context.go#L17-L42
 * **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./08-events.md). Modules may define module specific
   `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `DeliverTx`, `BeginBlock`, and `EndBlock` and are returned to Tendermint for indexing. For example:
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
+* **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
+* **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
 
 ## Go Context Package
 

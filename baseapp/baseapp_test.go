@@ -1,13 +1,15 @@
 package baseapp_test
 
 import (
-	"cosmossdk.io/depinject"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	"cosmossdk.io/depinject"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
@@ -742,7 +744,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
 				app.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
-				app.SetPostHandler(postHandlerTxTest(t, capKey1, postKey))
+				app.SetPostHandler(testTxPostHandler(t, capKey1, postKey))
 				header := tmproto.Header{Height: int64(1)}
 				app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
@@ -792,7 +794,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 				deliverKey := []byte("deliver-key")
 				baseapptestutil.RegisterCounterServer(app.MsgServiceRouter(), CounterServerImpl{t, capKey1, deliverKey})
 
-				app.SetPostHandler(postHandlerTxTest(t, capKey1, postKey))
+				app.SetPostHandler(testTxPostHandler(t, capKey1, postKey))
 				header := tmproto.Header{Height: int64(1)}
 				app.BeginBlock(abci.RequestBeginBlock{Header: header})
 

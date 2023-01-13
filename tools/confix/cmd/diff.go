@@ -7,7 +7,7 @@ import (
 func DiffCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "diff [config]",
-		Short: "Display the diff between the current config and the SDK default config",
+		Short: "Outputs all config values that are different from the defaults.",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 

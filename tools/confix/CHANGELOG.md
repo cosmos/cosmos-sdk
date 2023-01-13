@@ -31,4 +31,5 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+* [#14568](https://github.com/cosmos/cosmos-sdk/pull/14568) Add `diff` command and improve `migrate`.
 * [#14342](https://github.com/cosmos/cosmos-sdk/pull/14342) Add `confix` tool to manage configuration files.

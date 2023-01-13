@@ -2,7 +2,10 @@ package collections
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"math"
+	"reflect"
 	"testing"
 
 	"cosmossdk.io/core/store"
@@ -102,6 +105,31 @@ func checkValueCodec[T any](t *testing.T, encoder ValueCodec[T], value T) {
 	require.NoError(t, err)
 	require.Equal(t, value, decodedValue, "encoding and decoding produces different values")
 }
+
+type testValueCodec[T any] struct{}
+
+func (testValueCodec[T]) Encode(value T) ([]byte, error) {
+	b, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+func (testValueCodec[T]) Decode(b []byte) (T, error) {
+	t := new(T)
+	err := json.Unmarshal(b, t)
+	if err != nil {
+		return *t, err
+	}
+	return *t, nil
+}
+func (testValueCodec[T]) Stringify(value T) string {
+	return fmt.Sprintf("%#v", value)
+}
+
+func (testValueCodec[T]) ValueType() string { return reflect.TypeOf(*new(T)).Name() }
+
+func newTestValueCodec[T any]() ValueCodec[T] { return testValueCodec[T]{} }
 
 func TestPrefix(t *testing.T) {
 	t.Run("panics on invalid int", func(t *testing.T) {

@@ -61,7 +61,7 @@ func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Contex
 
 // ExactMatch returns a MultiIndexIterator containing all the primary keys referenced by the provided reference key.
 func (m *MultiIndex[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Context, refKey ReferenceKey) (MultiIndexIterator[ReferenceKey, PrimaryKey], error) {
-	return m.Iterate(ctx, new(PairRange[ReferenceKey, PrimaryKey]).Prefix(refKey))
+	return m.Iterate(ctx, NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
 }
 
 // MultiIndexIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].

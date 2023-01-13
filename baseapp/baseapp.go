@@ -675,9 +675,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		anteCtx, msCache = app.cacheTxContext(ctx, txBytes)
 		anteCtx = anteCtx.WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
-		if err != nil {
-			return gInfo, nil, nil, 0, err
-		}
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else
@@ -690,6 +687,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		}
 
 		// GasMeter expected to be set in AnteHandler
+		gasWanted = ctx.GasMeter().Limit()
+
+		if err != nil {
+			return gInfo, nil, nil, 0, err
+		}
+
 		priority = ctx.Priority()
 		events := ctx.EventManager().Events()
 		anteEvents = events.ToABCIEvents()

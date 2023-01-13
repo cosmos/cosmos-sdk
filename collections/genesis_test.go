@@ -12,17 +12,17 @@ import (
 
 func TestDefaultGenesis(t *testing.T) {
 	f := initFixture(t)
-	writers := map[string]*bufCloser{}
+	var writers []*bufCloser
 	require.NoError(t, f.schema.DefaultGenesis(func(field string) (io.WriteCloser, error) {
 		w := newBufCloser(t, "")
-		writers[field] = w
+		writers = append(writers, w)
 		return w, nil
 	}))
 	require.Len(t, writers, 4)
-	require.Equal(t, `[]`, writers["map"].Buffer.String())
-	require.Equal(t, `[]`, writers["item"].Buffer.String())
-	require.Equal(t, `[]`, writers["key_set"].Buffer.String())
-	require.Equal(t, `[]`, writers["sequence"].Buffer.String())
+	require.Equal(t, `[]`, writers[0].Buffer.String())
+	require.Equal(t, `[]`, writers[1].Buffer.String())
+	require.Equal(t, `[]`, writers[2].Buffer.String())
+	require.Equal(t, `[]`, writers[3].Buffer.String())
 }
 
 func TestValidateGenesis(t *testing.T) {
@@ -67,17 +67,17 @@ func TestExportGenesis(t *testing.T) {
 	f := initFixture(t)
 	require.NoError(t, f.schema.InitGenesis(f.ctx, createTestGenesisSource(t)))
 
-	writers := map[string]*bufCloser{}
+	var writers []*bufCloser
 	require.NoError(t, f.schema.ExportGenesis(f.ctx, func(field string) (io.WriteCloser, error) {
 		w := newBufCloser(t, "")
-		writers[field] = w
+		writers = append(writers, w)
 		return w, nil
 	}))
 	require.Len(t, writers, 4)
-	require.Equal(t, expectedMapGenesis, writers["map"].Buffer.String())
-	require.Equal(t, expectedItemGenesis, writers["item"].Buffer.String())
-	require.Equal(t, expectedSequenceGenesis, writers["sequence"].Buffer.String())
-	require.Equal(t, expectedKeySetGenesis, writers["key_set"].Buffer.String())
+	require.Equal(t, expectedItemGenesis, writers[0].Buffer.String())
+	require.Equal(t, expectedKeySetGenesis, writers[1].Buffer.String())
+	require.Equal(t, expectedMapGenesis, writers[2].Buffer.String())
+	require.Equal(t, expectedSequenceGenesis, writers[3].Buffer.String())
 }
 
 type testFixture struct {
@@ -109,7 +109,12 @@ func initFixture(t *testing.T) *testFixture {
 }
 
 func createTestGenesisSource(t *testing.T) appmodule.GenesisSource {
+	expectedOrder := []string{"item", "key_set", "map", "sequence"}
+	currentIndex := 0
 	return func(field string) (io.ReadCloser, error) {
+		require.Equal(t, expectedOrder[currentIndex], field, "unordered genesis")
+		currentIndex++
+
 		switch field {
 		case "map":
 			return newBufCloser(t, expectedMapGenesis), nil

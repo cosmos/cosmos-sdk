@@ -4,13 +4,10 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/spf13/cast"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/spf13/cast"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -37,7 +34,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/streaming"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -268,23 +264,7 @@ func NewSimApp(
 	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, "testingkey")
 
 	// register streaming services
-	streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
-	for service := range streamingCfg {
-		pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
-		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-		if len(pluginName) > 0 {
-			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-			if err != nil {
-				fmt.Printf("failed to load streaming plugin: %s", err)
-				os.Exit(1)
-			}
-			if err := baseapp.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-				fmt.Printf("failed to register streaming plugin: %s", err)
-				os.Exit(1)
-			}
-		}
-	}
+	RegisterStreamingServices(bApp, appOpts, keys)
 
 	app := &SimApp{
 		BaseApp:           bApp,

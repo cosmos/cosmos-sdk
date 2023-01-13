@@ -6,8 +6,6 @@ import (
 	"sort"
 	"strings"
 
-	dbm "github.com/cosmos/cosmos-db"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -15,10 +13,12 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"golang.org/x/exp/maps"
 
+	dbm "github.com/cosmos/cosmos-db"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storemetrics "github.com/cosmos/cosmos-sdk/store/metrics"
 	"github.com/cosmos/cosmos-sdk/store/snapshots"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -140,16 +140,8 @@ type BaseApp struct { //nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// abciListeners for hooking into the ABCI message processing of the BaseApp
-	// and exposing the requests and responses to external consumers
-	abciListeners []ABCIListener
-
-	// abciListenersAsync for determining if abciListeners will run asynchronously.
-	abciListenersAsync bool
-
-	// stopNodeOnABCIListenerErr halts the node when ABCI streaming service listening results in an error.
-	// stopNodeOnABCIListenerErr=true MUST be paired with abciListenersAsync=false, otherwise it will be ignored.
-	stopNodeOnABCIListenerErr bool
+	// streamingManager for managing instances and configuration of ABCIListener services
+	streamingManager storetypes.StreamingManager
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -419,6 +411,7 @@ func (app *BaseApp) setState(mode runTxMode, header tmproto.Header) {
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
+	baseState.ctx = baseState.ctx.WithStreamingManager(app.streamingManager)
 
 	switch mode {
 	case runTxModeCheck:

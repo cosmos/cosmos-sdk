@@ -5,7 +5,7 @@ package cosmos.streaming.abci.v1;
 import "tendermint/abci/types.proto";
 import "cosmos/base/store/v1beta1/listening.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/streaming/plugins/abci/v1";
+option go_package = "github.com/cosmos/cosmos-sdk/store/streaming/plugins/abci/v1";
 
 // ListenBeginBlockRequest is the request type for the ListenBeginBlock RPC method
 message ListenBeginBlockRequest {

@@ -4,17 +4,17 @@ import dbm "github.com/cosmos/cosmos-db"
 
 // KVStore describes the basic interface for interacting with key-value stores.
 type KVStore interface {
-	// Get returns nil iff key doesn't exist. Panics on nil key.
-	Get(key []byte) []byte
+	// Get returns nil iff key doesn't exist. Errors on nil key.
+	Get(key []byte) ([]byte, error)
 
-	// Has checks if a key exists. Panics on nil key.
-	Has(key []byte) bool
+	// Has checks if a key exists. Errors on nil key.
+	Has(key []byte) (bool, error)
 
-	// Set sets the key. Panics on nil key or value.
-	Set(key, value []byte)
+	// Set sets the key. Errors on nil key or value.
+	Set(key, value []byte) error
 
-	// Delete deletes the key. Panics on nil key.
-	Delete(key []byte)
+	// Delete deletes the key. Errors on nil key.
+	Delete(key []byte) error
 
 	// Iterator iterates over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.

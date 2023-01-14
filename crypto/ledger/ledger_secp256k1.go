@@ -218,9 +218,16 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	sigStr := sigDER.Serialize()
 	// The format of a DER encoded signature is as follows:
 	// 0x30 <total length> 0x02 <length of R> <R> 0x02 <length of S> <S>
-	var r, s big.Int
+	r, s := new(big.Int), new(big.Int)
 	r.SetBytes(sigStr[4 : 4+sigStr[3]])
 	s.SetBytes(sigStr[4+sigStr[3]+2:])
+
+	sModNScalar := new(btcec.ModNScalar)
+	sModNScalar.SetByteSlice(s.Bytes())
+	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
+	if sModNScalar.IsOverHalfOrder() {
+		s = new(big.Int).Sub(btcec.S256().N, s)
+	}
 
 	sigBytes := make([]byte, 64)
 	// 0 pad the byte arrays from the left if they aren't big enough.

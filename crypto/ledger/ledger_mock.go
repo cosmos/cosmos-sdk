@@ -1,3 +1,6 @@
+//go:build ledger && test_ledger_mock
+// +build ledger,test_ledger_mock
+
 package ledger
 
 import (
@@ -55,7 +58,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv[:])
+	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv)
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -69,7 +72,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(pk[:])
+	cmp, err := btcec.ParsePubKey(pk)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -96,7 +99,7 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv, _ := btcec.PrivKeyFromBytes(derivedPriv[:])
+	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
 	sig := ecdsa.Sign(priv, crypto.Sha256(message))
 
 	return sig.Serialize(), nil

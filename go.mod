@@ -138,6 +138,8 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
+	// use informal system fork of tendermint
+	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
 
 	// latest grpc doesn't work with with our modified proto compiler, so we need to enforce
 	// the following version across all dependencies.

@@ -1,6 +1,8 @@
 package appmodule
 
 import (
+	"context"
+
 	"cosmossdk.io/depinject"
 	"google.golang.org/grpc"
 )
@@ -34,4 +36,24 @@ type HasServices interface {
 	// implementing based on the presence (or absence) of protobuf options. You
 	// do not need to specify this in golang code.
 	RegisterServices(grpc.ServiceRegistrar)
+}
+
+// HasBeginBlocker is the extension interface that modules should implement to run
+// custom logic before transaction processing in a block.
+type HasBeginBlocker interface {
+	AppModule
+
+	// BeginBlock is a method that will be run before transactions are processed in
+	// a block.
+	BeginBlock(context.Context) error
+}
+
+// HasEndBlocker is the extension interface that modules should implement to run
+// custom logic after transaction processing in a block.
+type HasEndBlocker interface {
+	AppModule
+
+	// EndBlock is a method that will be run after transactions are processed in
+	// a block.
+	EndBlock(context.Context) error
 }

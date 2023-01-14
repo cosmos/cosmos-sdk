@@ -121,3 +121,10 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+  - package-ecosystem: gomod
+    directory: "/x/circuit"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies

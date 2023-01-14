@@ -8,7 +8,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/btcsuite/btcd v0.22.1
 	github.com/coinbase/rosetta-sdk-go v0.7.0
-	github.com/confio/ics23/go v0.7.0
+	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/iavl v0.19.4
@@ -45,7 +45,7 @@ require (
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.6
 	github.com/tidwall/btree v1.5.0
-	golang.org/x/crypto v0.1.0
+	golang.org/x/crypto v0.2.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	google.golang.org/genproto v0.0.0-20221014213838-99cd37c6964a
 	google.golang.org/grpc v1.50.1
@@ -117,9 +117,9 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/net v0.1.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/term v0.1.0 // indirect
+	golang.org/x/net v0.2.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+	golang.org/x/term v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -128,9 +128,6 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-
-	// vendor ics23
-	github.com/confio/ics23/go => ./ics23/go
 
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

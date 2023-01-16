@@ -123,7 +123,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * Store pacakge no longer has a dependency on baseapp. 
 * (store) [#14438](https://github.com/cosmos/cosmos-sdk/pull/14438)  Pass logger from baseapp to store. 
 * (store) [#14439](https://github.com/cosmos/cosmos-sdk/pull/14439) Remove global metric gatherer from store. 
-  * By default store has a no op metric gatherer, the application developer must set another metric gatherer or us the provided one in `store/metrics`.
+    * By default store has a no op metric gatherer, the application developer must set another metric gatherer or us the provided one in `store/metrics`.
 * [#14406](https://github.com/cosmos/cosmos-sdk/issues/14406) Migrate usage of types/store.go to store/types/..
 
 ### State Machine Breaking
@@ -154,6 +154,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### API Breaking Changes
 
+* (snapshots) [#14597](https://github.com/cosmos/cosmos-sdk/pull/14597) Move `snapshots` to `store/snapshots`, rename and bump proto package to v1.
 * (crypto/keyring) [#14151](https://github.com/cosmos/cosmos-sdk/pull/14151) Move keys presentation from `crypto/keyring` to `client/keys`
 * (modules) [#13850](https://github.com/cosmos/cosmos-sdk/pull/13850) and [#14046](https://github.com/cosmos/cosmos-sdk/pull/14046) Remove gogoproto stringer annotations. This removes the custom `String()` methods on all types that were using the annotations.
 * (x/auth) [#13850](https://github.com/cosmos/cosmos-sdk/pull/13850/) Remove `MarshalYAML` methods from module (`x/...`) types.
@@ -169,7 +170,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#13380](https://github.com/cosmos/cosmos-sdk/pull/13380) Remove deprecated `sdk.NewLevelDB`.
 * (simapp) [#13378](https://github.com/cosmos/cosmos-sdk/pull/13378) Move `simapp.App` to `runtime.AppI`.
 * (tx) [#12659](https://github.com/cosmos/cosmos-sdk/pull/12659) Remove broadcast mode `block`.
-* (db) [#13370](https://github.com/cosmos/cosmos-sdk/pull/13370) remove storev2alpha1, see also https://github.com/cosmos/cosmos-sdk/pull/13371
+* (db) [#13370](https://github.com/cosmos/cosmos-sdk/pull/13370) Remove storev2alpha1, see also https://github.com/cosmos/cosmos-sdk/pull/13371
 * (x/bank) [#12706](https://github.com/cosmos/cosmos-sdk/pull/12706) Removed the `testutil` package from the `x/bank/client` package.
 * (simapp) [#12747](https://github.com/cosmos/cosmos-sdk/pull/12747) Remove `simapp.MakeTestEncodingConfig`. Please use `moduletestutil.MakeTestEncodingConfig` (`types/module/testutil`) in tests instead.
 * (x/bank) [#12648](https://github.com/cosmos/cosmos-sdk/pull/12648) `NewSendAuthorization` takes a new argument of an optional list of addresses allowed to receive bank assests via authz MsgSend grant. You can pass `nil` for the same behavior as before, i.e. any recipient is allowed.

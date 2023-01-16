@@ -22,8 +22,8 @@ var (
 )
 
 func init() {
-	file_cosmos_base_store_v1beta1_listening_proto_init()
-	md_StoreKVPair = File_cosmos_base_store_v1beta1_listening_proto.Messages().ByName("StoreKVPair")
+	file_cosmos_store_v1beta1_listening_proto_init()
+	md_StoreKVPair = File_cosmos_store_v1beta1_listening_proto.Messages().ByName("StoreKVPair")
 	fd_StoreKVPair_store_key = md_StoreKVPair.Fields().ByName("store_key")
 	fd_StoreKVPair_delete = md_StoreKVPair.Fields().ByName("delete")
 	fd_StoreKVPair_key = md_StoreKVPair.Fields().ByName("key")
@@ -39,7 +39,7 @@ func (x *StoreKVPair) ProtoReflect() protoreflect.Message {
 }
 
 func (x *StoreKVPair) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_store_v1beta1_listening_proto_msgTypes[0]
+	mi := &file_cosmos_store_v1beta1_listening_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -134,19 +134,19 @@ func (x *fastReflection_StoreKVPair) Range(f func(protoreflect.FieldDescriptor, 
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_StoreKVPair) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.StoreKVPair.store_key":
+	case "cosmos.store.v1beta1.StoreKVPair.store_key":
 		return x.StoreKey != ""
-	case "cosmos.base.store.v1beta1.StoreKVPair.delete":
+	case "cosmos.store.v1beta1.StoreKVPair.delete":
 		return x.Delete != false
-	case "cosmos.base.store.v1beta1.StoreKVPair.key":
+	case "cosmos.store.v1beta1.StoreKVPair.key":
 		return len(x.Key) != 0
-	case "cosmos.base.store.v1beta1.StoreKVPair.value":
+	case "cosmos.store.v1beta1.StoreKVPair.value":
 		return len(x.Value) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.StoreKVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.StoreKVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -158,19 +158,19 @@ func (x *fastReflection_StoreKVPair) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_StoreKVPair) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.StoreKVPair.store_key":
+	case "cosmos.store.v1beta1.StoreKVPair.store_key":
 		x.StoreKey = ""
-	case "cosmos.base.store.v1beta1.StoreKVPair.delete":
+	case "cosmos.store.v1beta1.StoreKVPair.delete":
 		x.Delete = false
-	case "cosmos.base.store.v1beta1.StoreKVPair.key":
+	case "cosmos.store.v1beta1.StoreKVPair.key":
 		x.Key = nil
-	case "cosmos.base.store.v1beta1.StoreKVPair.value":
+	case "cosmos.store.v1beta1.StoreKVPair.value":
 		x.Value = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.StoreKVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.StoreKVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -182,23 +182,23 @@ func (x *fastReflection_StoreKVPair) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_StoreKVPair) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.base.store.v1beta1.StoreKVPair.store_key":
+	case "cosmos.store.v1beta1.StoreKVPair.store_key":
 		value := x.StoreKey
 		return protoreflect.ValueOfString(value)
-	case "cosmos.base.store.v1beta1.StoreKVPair.delete":
+	case "cosmos.store.v1beta1.StoreKVPair.delete":
 		value := x.Delete
 		return protoreflect.ValueOfBool(value)
-	case "cosmos.base.store.v1beta1.StoreKVPair.key":
+	case "cosmos.store.v1beta1.StoreKVPair.key":
 		value := x.Key
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.base.store.v1beta1.StoreKVPair.value":
+	case "cosmos.store.v1beta1.StoreKVPair.value":
 		value := x.Value
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.StoreKVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.StoreKVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.StoreKVPair does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.StoreKVPair does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -214,19 +214,19 @@ func (x *fastReflection_StoreKVPair) Get(descriptor protoreflect.FieldDescriptor
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_StoreKVPair) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.StoreKVPair.store_key":
+	case "cosmos.store.v1beta1.StoreKVPair.store_key":
 		x.StoreKey = value.Interface().(string)
-	case "cosmos.base.store.v1beta1.StoreKVPair.delete":
+	case "cosmos.store.v1beta1.StoreKVPair.delete":
 		x.Delete = value.Bool()
-	case "cosmos.base.store.v1beta1.StoreKVPair.key":
+	case "cosmos.store.v1beta1.StoreKVPair.key":
 		x.Key = value.Bytes()
-	case "cosmos.base.store.v1beta1.StoreKVPair.value":
+	case "cosmos.store.v1beta1.StoreKVPair.value":
 		x.Value = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.StoreKVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.StoreKVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -242,19 +242,19 @@ func (x *fastReflection_StoreKVPair) Set(fd protoreflect.FieldDescriptor, value 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_StoreKVPair) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.StoreKVPair.store_key":
-		panic(fmt.Errorf("field store_key of message cosmos.base.store.v1beta1.StoreKVPair is not mutable"))
-	case "cosmos.base.store.v1beta1.StoreKVPair.delete":
-		panic(fmt.Errorf("field delete of message cosmos.base.store.v1beta1.StoreKVPair is not mutable"))
-	case "cosmos.base.store.v1beta1.StoreKVPair.key":
-		panic(fmt.Errorf("field key of message cosmos.base.store.v1beta1.StoreKVPair is not mutable"))
-	case "cosmos.base.store.v1beta1.StoreKVPair.value":
-		panic(fmt.Errorf("field value of message cosmos.base.store.v1beta1.StoreKVPair is not mutable"))
+	case "cosmos.store.v1beta1.StoreKVPair.store_key":
+		panic(fmt.Errorf("field store_key of message cosmos.store.v1beta1.StoreKVPair is not mutable"))
+	case "cosmos.store.v1beta1.StoreKVPair.delete":
+		panic(fmt.Errorf("field delete of message cosmos.store.v1beta1.StoreKVPair is not mutable"))
+	case "cosmos.store.v1beta1.StoreKVPair.key":
+		panic(fmt.Errorf("field key of message cosmos.store.v1beta1.StoreKVPair is not mutable"))
+	case "cosmos.store.v1beta1.StoreKVPair.value":
+		panic(fmt.Errorf("field value of message cosmos.store.v1beta1.StoreKVPair is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.StoreKVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.StoreKVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -263,19 +263,19 @@ func (x *fastReflection_StoreKVPair) Mutable(fd protoreflect.FieldDescriptor) pr
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_StoreKVPair) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.StoreKVPair.store_key":
+	case "cosmos.store.v1beta1.StoreKVPair.store_key":
 		return protoreflect.ValueOfString("")
-	case "cosmos.base.store.v1beta1.StoreKVPair.delete":
+	case "cosmos.store.v1beta1.StoreKVPair.delete":
 		return protoreflect.ValueOfBool(false)
-	case "cosmos.base.store.v1beta1.StoreKVPair.key":
+	case "cosmos.store.v1beta1.StoreKVPair.key":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.base.store.v1beta1.StoreKVPair.value":
+	case "cosmos.store.v1beta1.StoreKVPair.value":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.StoreKVPair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.StoreKVPair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.StoreKVPair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -285,7 +285,7 @@ func (x *fastReflection_StoreKVPair) NewField(fd protoreflect.FieldDescriptor) p
 func (x *fastReflection_StoreKVPair) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.store.v1beta1.StoreKVPair", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.store.v1beta1.StoreKVPair", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -681,8 +681,8 @@ var (
 )
 
 func init() {
-	file_cosmos_base_store_v1beta1_listening_proto_init()
-	md_BlockMetadata = File_cosmos_base_store_v1beta1_listening_proto.Messages().ByName("BlockMetadata")
+	file_cosmos_store_v1beta1_listening_proto_init()
+	md_BlockMetadata = File_cosmos_store_v1beta1_listening_proto.Messages().ByName("BlockMetadata")
 	fd_BlockMetadata_request_begin_block = md_BlockMetadata.Fields().ByName("request_begin_block")
 	fd_BlockMetadata_response_begin_block = md_BlockMetadata.Fields().ByName("response_begin_block")
 	fd_BlockMetadata_deliver_txs = md_BlockMetadata.Fields().ByName("deliver_txs")
@@ -700,7 +700,7 @@ func (x *BlockMetadata) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BlockMetadata) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_store_v1beta1_listening_proto_msgTypes[1]
+	mi := &file_cosmos_store_v1beta1_listening_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -807,23 +807,23 @@ func (x *fastReflection_BlockMetadata) Range(f func(protoreflect.FieldDescriptor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BlockMetadata) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_begin_block":
 		return x.RequestBeginBlock != nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_begin_block":
 		return x.ResponseBeginBlock != nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.deliver_txs":
+	case "cosmos.store.v1beta1.BlockMetadata.deliver_txs":
 		return len(x.DeliverTxs) != 0
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_end_block":
 		return x.RequestEndBlock != nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_end_block":
 		return x.ResponseEndBlock != nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_commit":
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
 		return x.ResponseCommit != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -835,23 +835,23 @@ func (x *fastReflection_BlockMetadata) Has(fd protoreflect.FieldDescriptor) bool
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_begin_block":
 		x.RequestBeginBlock = nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_begin_block":
 		x.ResponseBeginBlock = nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.deliver_txs":
+	case "cosmos.store.v1beta1.BlockMetadata.deliver_txs":
 		x.DeliverTxs = nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_end_block":
 		x.RequestEndBlock = nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_end_block":
 		x.ResponseEndBlock = nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_commit":
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
 		x.ResponseCommit = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -863,32 +863,32 @@ func (x *fastReflection_BlockMetadata) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BlockMetadata) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_begin_block":
 		value := x.RequestBeginBlock
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_begin_block":
 		value := x.ResponseBeginBlock
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.deliver_txs":
+	case "cosmos.store.v1beta1.BlockMetadata.deliver_txs":
 		if len(x.DeliverTxs) == 0 {
 			return protoreflect.ValueOfList(&_BlockMetadata_3_list{})
 		}
 		listValue := &_BlockMetadata_3_list{list: &x.DeliverTxs}
 		return protoreflect.ValueOfList(listValue)
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_end_block":
 		value := x.RequestEndBlock
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_end_block":
 		value := x.ResponseEndBlock
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_commit":
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
 		value := x.ResponseCommit
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -904,25 +904,25 @@ func (x *fastReflection_BlockMetadata) Get(descriptor protoreflect.FieldDescript
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_begin_block":
 		x.RequestBeginBlock = value.Message().Interface().(*abci.RequestBeginBlock)
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_begin_block":
 		x.ResponseBeginBlock = value.Message().Interface().(*abci.ResponseBeginBlock)
-	case "cosmos.base.store.v1beta1.BlockMetadata.deliver_txs":
+	case "cosmos.store.v1beta1.BlockMetadata.deliver_txs":
 		lv := value.List()
 		clv := lv.(*_BlockMetadata_3_list)
 		x.DeliverTxs = *clv.list
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_end_block":
 		x.RequestEndBlock = value.Message().Interface().(*abci.RequestEndBlock)
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_end_block":
 		x.ResponseEndBlock = value.Message().Interface().(*abci.ResponseEndBlock)
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_commit":
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
 		x.ResponseCommit = value.Message().Interface().(*abci.ResponseCommit)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -938,42 +938,42 @@ func (x *fastReflection_BlockMetadata) Set(fd protoreflect.FieldDescriptor, valu
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_begin_block":
 		if x.RequestBeginBlock == nil {
 			x.RequestBeginBlock = new(abci.RequestBeginBlock)
 		}
 		return protoreflect.ValueOfMessage(x.RequestBeginBlock.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_begin_block":
 		if x.ResponseBeginBlock == nil {
 			x.ResponseBeginBlock = new(abci.ResponseBeginBlock)
 		}
 		return protoreflect.ValueOfMessage(x.ResponseBeginBlock.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.deliver_txs":
+	case "cosmos.store.v1beta1.BlockMetadata.deliver_txs":
 		if x.DeliverTxs == nil {
 			x.DeliverTxs = []*BlockMetadata_DeliverTx{}
 		}
 		value := &_BlockMetadata_3_list{list: &x.DeliverTxs}
 		return protoreflect.ValueOfList(value)
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_end_block":
 		if x.RequestEndBlock == nil {
 			x.RequestEndBlock = new(abci.RequestEndBlock)
 		}
 		return protoreflect.ValueOfMessage(x.RequestEndBlock.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_end_block":
 		if x.ResponseEndBlock == nil {
 			x.ResponseEndBlock = new(abci.ResponseEndBlock)
 		}
 		return protoreflect.ValueOfMessage(x.ResponseEndBlock.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_commit":
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
 		if x.ResponseCommit == nil {
 			x.ResponseCommit = new(abci.ResponseCommit)
 		}
 		return protoreflect.ValueOfMessage(x.ResponseCommit.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -982,29 +982,29 @@ func (x *fastReflection_BlockMetadata) Mutable(fd protoreflect.FieldDescriptor) 
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BlockMetadata) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_begin_block":
 		m := new(abci.RequestBeginBlock)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_begin_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_begin_block":
 		m := new(abci.ResponseBeginBlock)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.deliver_txs":
+	case "cosmos.store.v1beta1.BlockMetadata.deliver_txs":
 		list := []*BlockMetadata_DeliverTx{}
 		return protoreflect.ValueOfList(&_BlockMetadata_3_list{list: &list})
-	case "cosmos.base.store.v1beta1.BlockMetadata.request_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.request_end_block":
 		m := new(abci.RequestEndBlock)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_end_block":
+	case "cosmos.store.v1beta1.BlockMetadata.response_end_block":
 		m := new(abci.ResponseEndBlock)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.response_commit":
+	case "cosmos.store.v1beta1.BlockMetadata.response_commit":
 		m := new(abci.ResponseCommit)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1014,7 +1014,7 @@ func (x *fastReflection_BlockMetadata) NewField(fd protoreflect.FieldDescriptor)
 func (x *fastReflection_BlockMetadata) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.store.v1beta1.BlockMetadata", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.store.v1beta1.BlockMetadata", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1515,8 +1515,8 @@ var (
 )
 
 func init() {
-	file_cosmos_base_store_v1beta1_listening_proto_init()
-	md_BlockMetadata_DeliverTx = File_cosmos_base_store_v1beta1_listening_proto.Messages().ByName("BlockMetadata").Messages().ByName("DeliverTx")
+	file_cosmos_store_v1beta1_listening_proto_init()
+	md_BlockMetadata_DeliverTx = File_cosmos_store_v1beta1_listening_proto.Messages().ByName("BlockMetadata").Messages().ByName("DeliverTx")
 	fd_BlockMetadata_DeliverTx_request = md_BlockMetadata_DeliverTx.Fields().ByName("request")
 	fd_BlockMetadata_DeliverTx_response = md_BlockMetadata_DeliverTx.Fields().ByName("response")
 }
@@ -1530,7 +1530,7 @@ func (x *BlockMetadata_DeliverTx) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BlockMetadata_DeliverTx) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_store_v1beta1_listening_proto_msgTypes[2]
+	mi := &file_cosmos_store_v1beta1_listening_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1613,15 +1613,15 @@ func (x *fastReflection_BlockMetadata_DeliverTx) Range(f func(protoreflect.Field
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BlockMetadata_DeliverTx) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.request":
 		return x.Request != nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.response":
 		return x.Response != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata.DeliverTx"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1633,15 +1633,15 @@ func (x *fastReflection_BlockMetadata_DeliverTx) Has(fd protoreflect.FieldDescri
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata_DeliverTx) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.request":
 		x.Request = nil
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.response":
 		x.Response = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata.DeliverTx"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1653,17 +1653,17 @@ func (x *fastReflection_BlockMetadata_DeliverTx) Clear(fd protoreflect.FieldDesc
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BlockMetadata_DeliverTx) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.request":
 		value := x.Request
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.response":
 		value := x.Response
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata.DeliverTx"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1679,15 +1679,15 @@ func (x *fastReflection_BlockMetadata_DeliverTx) Get(descriptor protoreflect.Fie
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata_DeliverTx) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.request":
 		x.Request = value.Message().Interface().(*abci.RequestDeliverTx)
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.response":
 		x.Response = value.Message().Interface().(*abci.ResponseDeliverTx)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata.DeliverTx"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1703,21 +1703,21 @@ func (x *fastReflection_BlockMetadata_DeliverTx) Set(fd protoreflect.FieldDescri
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BlockMetadata_DeliverTx) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.request":
 		if x.Request == nil {
 			x.Request = new(abci.RequestDeliverTx)
 		}
 		return protoreflect.ValueOfMessage(x.Request.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.response":
 		if x.Response == nil {
 			x.Response = new(abci.ResponseDeliverTx)
 		}
 		return protoreflect.ValueOfMessage(x.Response.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata.DeliverTx"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1726,17 +1726,17 @@ func (x *fastReflection_BlockMetadata_DeliverTx) Mutable(fd protoreflect.FieldDe
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BlockMetadata_DeliverTx) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.request":
 		m := new(abci.RequestDeliverTx)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response":
+	case "cosmos.store.v1beta1.BlockMetadata.DeliverTx.response":
 		m := new(abci.ResponseDeliverTx)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.v1beta1.BlockMetadata.DeliverTx"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.v1beta1.BlockMetadata.DeliverTx does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1746,7 +1746,7 @@ func (x *fastReflection_BlockMetadata_DeliverTx) NewField(fd protoreflect.FieldD
 func (x *fastReflection_BlockMetadata_DeliverTx) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.store.v1beta1.BlockMetadata.DeliverTx", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.store.v1beta1.BlockMetadata.DeliverTx", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2026,7 +2026,7 @@ func (x *fastReflection_BlockMetadata_DeliverTx) ProtoMethods() *protoiface.Meth
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: cosmos/base/store/v1beta1/listening.proto
+// source: cosmos/store/v1beta1/listening.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -2054,7 +2054,7 @@ type StoreKVPair struct {
 func (x *StoreKVPair) Reset() {
 	*x = StoreKVPair{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_store_v1beta1_listening_proto_msgTypes[0]
+		mi := &file_cosmos_store_v1beta1_listening_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2068,7 +2068,7 @@ func (*StoreKVPair) ProtoMessage() {}
 
 // Deprecated: Use StoreKVPair.ProtoReflect.Descriptor instead.
 func (*StoreKVPair) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_store_v1beta1_listening_proto_rawDescGZIP(), []int{0}
+	return file_cosmos_store_v1beta1_listening_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *StoreKVPair) GetStoreKey() string {
@@ -2117,7 +2117,7 @@ type BlockMetadata struct {
 func (x *BlockMetadata) Reset() {
 	*x = BlockMetadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_store_v1beta1_listening_proto_msgTypes[1]
+		mi := &file_cosmos_store_v1beta1_listening_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2131,7 +2131,7 @@ func (*BlockMetadata) ProtoMessage() {}
 
 // Deprecated: Use BlockMetadata.ProtoReflect.Descriptor instead.
 func (*BlockMetadata) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_store_v1beta1_listening_proto_rawDescGZIP(), []int{1}
+	return file_cosmos_store_v1beta1_listening_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *BlockMetadata) GetRequestBeginBlock() *abci.RequestBeginBlock {
@@ -2189,7 +2189,7 @@ type BlockMetadata_DeliverTx struct {
 func (x *BlockMetadata_DeliverTx) Reset() {
 	*x = BlockMetadata_DeliverTx{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_store_v1beta1_listening_proto_msgTypes[2]
+		mi := &file_cosmos_store_v1beta1_listening_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2203,7 +2203,7 @@ func (*BlockMetadata_DeliverTx) ProtoMessage() {}
 
 // Deprecated: Use BlockMetadata_DeliverTx.ProtoReflect.Descriptor instead.
 func (*BlockMetadata_DeliverTx) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_store_v1beta1_listening_proto_rawDescGZIP(), []int{1, 0}
+	return file_cosmos_store_v1beta1_listening_proto_rawDescGZIP(), []int{1, 0}
 }
 
 func (x *BlockMetadata_DeliverTx) GetRequest() *abci.RequestDeliverTx {
@@ -2220,97 +2220,95 @@ func (x *BlockMetadata_DeliverTx) GetResponse() *abci.ResponseDeliverTx {
 	return nil
 }
 
-var File_cosmos_base_store_v1beta1_listening_proto protoreflect.FileDescriptor
+var File_cosmos_store_v1beta1_listening_proto protoreflect.FileDescriptor
 
-var file_cosmos_base_store_v1beta1_listening_proto_rawDesc = []byte{
-	0x0a, 0x29, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x73, 0x74,
-	0x6f, 0x72, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6c, 0x69, 0x73, 0x74,
-	0x65, 0x6e, 0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x19, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x1b, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69,
-	0x6e, 0x74, 0x2f, 0x61, 0x62, 0x63, 0x69, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x6a, 0x0a, 0x0b, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x56, 0x50, 0x61,
-	0x69, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x5f, 0x6b, 0x65, 0x79, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x4b, 0x65, 0x79, 0x12,
-	0x16, 0x0a, 0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22,
-	0x83, 0x05, 0x0a, 0x0d, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0x12, 0x52, 0x0a, 0x13, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x62, 0x65, 0x67,
-	0x69, 0x6e, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22,
-	0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69,
-	0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f,
-	0x63, 0x6b, 0x52, 0x11, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x42, 0x65, 0x67, 0x69, 0x6e,
-	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x55, 0x0a, 0x14, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x5f, 0x62, 0x65, 0x67, 0x69, 0x6e, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74,
-	0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x65,
-	0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x12, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x53, 0x0a, 0x0b,
-	0x64, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x5f, 0x74, 0x78, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42, 0x6c,
-	0x6f, 0x63, 0x6b, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x44, 0x65, 0x6c, 0x69,
-	0x76, 0x65, 0x72, 0x54, 0x78, 0x52, 0x0a, 0x64, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78,
-	0x73, 0x12, 0x4c, 0x0a, 0x11, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x65, 0x6e, 0x64,
-	0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x74,
-	0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x0f,
-	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12,
-	0x4f, 0x0a, 0x12, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x5f, 0x65, 0x6e, 0x64, 0x5f,
-	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65,
-	0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x10,
-	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
-	0x12, 0x48, 0x0a, 0x0f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x5f, 0x63, 0x6f, 0x6d,
-	0x6d, 0x69, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x6e, 0x64,
+var file_cosmos_store_v1beta1_listening_proto_rawDesc = []byte{
+	0x0a, 0x24, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x69, 0x6e, 0x67,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73,
+	0x74, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x1b, 0x74, 0x65,
+	0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2f, 0x61, 0x62, 0x63, 0x69, 0x2f, 0x74, 0x79,
+	0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x6a, 0x0a, 0x0b, 0x53, 0x74, 0x6f,
+	0x72, 0x65, 0x4b, 0x56, 0x50, 0x61, 0x69, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x74, 0x6f, 0x72,
+	0x65, 0x5f, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x74, 0x6f,
+	0x72, 0x65, 0x4b, 0x65, 0x79, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x64, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x10, 0x0a,
+	0x03, 0x6b, 0x65, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12,
+	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xfe, 0x04, 0x0a, 0x0d, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x52, 0x0a, 0x13, 0x72, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x5f, 0x62, 0x65, 0x67, 0x69, 0x6e, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e,
+	0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x42, 0x65,
+	0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x11, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x55, 0x0a, 0x14, 0x72,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x5f, 0x62, 0x65, 0x67, 0x69, 0x6e, 0x5f, 0x62, 0x6c,
+	0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x74, 0x65, 0x6e, 0x64,
 	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x0e, 0x72, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x1a, 0x88, 0x01, 0x0a, 0x09, 0x44,
-	0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x12, 0x3b, 0x0a, 0x07, 0x72, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e, 0x64,
-	0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x52, 0x07, 0x72, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72,
-	0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x52, 0x08, 0x72, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xef, 0x01, 0x0a, 0x1d, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x0e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x69,
-	0x6e, 0x67, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x42, 0x53, 0xaa, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x56, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x19, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61,
-	0x73, 0x65, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0xe2, 0x02, 0x25, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c, 0x53,
-	0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1c, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x3a, 0x3a, 0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x3a, 0x3a,
-	0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6e, 0x73, 0x65, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x12,
+	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x65, 0x67, 0x69, 0x6e, 0x42, 0x6c, 0x6f,
+	0x63, 0x6b, 0x12, 0x4e, 0x0a, 0x0b, 0x64, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x5f, 0x74, 0x78,
+	0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42,
+	0x6c, 0x6f, 0x63, 0x6b, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x44, 0x65, 0x6c,
+	0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x52, 0x0a, 0x64, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54,
+	0x78, 0x73, 0x12, 0x4c, 0x0a, 0x11, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x65, 0x6e,
+	0x64, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e,
+	0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52,
+	0x0f, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
+	0x12, 0x4f, 0x0a, 0x12, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x5f, 0x65, 0x6e, 0x64,
+	0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74,
+	0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52,
+	0x10, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x45, 0x6e, 0x64, 0x42, 0x6c, 0x6f, 0x63,
+	0x6b, 0x12, 0x48, 0x0a, 0x0f, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x5f, 0x63, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x6e,
+	0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x0e, 0x72, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x1a, 0x88, 0x01, 0x0a, 0x09,
+	0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x12, 0x3b, 0x0a, 0x07, 0x72, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x6e,
+	0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x52, 0x07, 0x72,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3e, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65,
+	0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x44, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x54, 0x78, 0x52, 0x08, 0x72, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0xd0, 0x01, 0x0a, 0x18, 0x63, 0x6f, 0x6d, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x42, 0x0e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x69, 0x6e, 0x67, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x32, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b,
+	0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73,
+	0x74, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x73, 0x74, 0x6f,
+	0x72, 0x65, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x53, 0x58, 0xaa,
+	0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x56,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x14, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x20,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x56, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x16, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74, 0x6f, 0x72, 0x65,
+	0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
-	file_cosmos_base_store_v1beta1_listening_proto_rawDescOnce sync.Once
-	file_cosmos_base_store_v1beta1_listening_proto_rawDescData = file_cosmos_base_store_v1beta1_listening_proto_rawDesc
+	file_cosmos_store_v1beta1_listening_proto_rawDescOnce sync.Once
+	file_cosmos_store_v1beta1_listening_proto_rawDescData = file_cosmos_store_v1beta1_listening_proto_rawDesc
 )
 
-func file_cosmos_base_store_v1beta1_listening_proto_rawDescGZIP() []byte {
-	file_cosmos_base_store_v1beta1_listening_proto_rawDescOnce.Do(func() {
-		file_cosmos_base_store_v1beta1_listening_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_base_store_v1beta1_listening_proto_rawDescData)
+func file_cosmos_store_v1beta1_listening_proto_rawDescGZIP() []byte {
+	file_cosmos_store_v1beta1_listening_proto_rawDescOnce.Do(func() {
+		file_cosmos_store_v1beta1_listening_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_store_v1beta1_listening_proto_rawDescData)
 	})
-	return file_cosmos_base_store_v1beta1_listening_proto_rawDescData
+	return file_cosmos_store_v1beta1_listening_proto_rawDescData
 }
 
-var file_cosmos_base_store_v1beta1_listening_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_cosmos_base_store_v1beta1_listening_proto_goTypes = []interface{}{
-	(*StoreKVPair)(nil),             // 0: cosmos.base.store.v1beta1.StoreKVPair
-	(*BlockMetadata)(nil),           // 1: cosmos.base.store.v1beta1.BlockMetadata
-	(*BlockMetadata_DeliverTx)(nil), // 2: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx
+var file_cosmos_store_v1beta1_listening_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_cosmos_store_v1beta1_listening_proto_goTypes = []interface{}{
+	(*StoreKVPair)(nil),             // 0: cosmos.store.v1beta1.StoreKVPair
+	(*BlockMetadata)(nil),           // 1: cosmos.store.v1beta1.BlockMetadata
+	(*BlockMetadata_DeliverTx)(nil), // 2: cosmos.store.v1beta1.BlockMetadata.DeliverTx
 	(*abci.RequestBeginBlock)(nil),  // 3: tendermint.abci.RequestBeginBlock
 	(*abci.ResponseBeginBlock)(nil), // 4: tendermint.abci.ResponseBeginBlock
 	(*abci.RequestEndBlock)(nil),    // 5: tendermint.abci.RequestEndBlock
@@ -2319,15 +2317,15 @@ var file_cosmos_base_store_v1beta1_listening_proto_goTypes = []interface{}{
 	(*abci.RequestDeliverTx)(nil),   // 8: tendermint.abci.RequestDeliverTx
 	(*abci.ResponseDeliverTx)(nil),  // 9: tendermint.abci.ResponseDeliverTx
 }
-var file_cosmos_base_store_v1beta1_listening_proto_depIdxs = []int32{
-	3, // 0: cosmos.base.store.v1beta1.BlockMetadata.request_begin_block:type_name -> tendermint.abci.RequestBeginBlock
-	4, // 1: cosmos.base.store.v1beta1.BlockMetadata.response_begin_block:type_name -> tendermint.abci.ResponseBeginBlock
-	2, // 2: cosmos.base.store.v1beta1.BlockMetadata.deliver_txs:type_name -> cosmos.base.store.v1beta1.BlockMetadata.DeliverTx
-	5, // 3: cosmos.base.store.v1beta1.BlockMetadata.request_end_block:type_name -> tendermint.abci.RequestEndBlock
-	6, // 4: cosmos.base.store.v1beta1.BlockMetadata.response_end_block:type_name -> tendermint.abci.ResponseEndBlock
-	7, // 5: cosmos.base.store.v1beta1.BlockMetadata.response_commit:type_name -> tendermint.abci.ResponseCommit
-	8, // 6: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.request:type_name -> tendermint.abci.RequestDeliverTx
-	9, // 7: cosmos.base.store.v1beta1.BlockMetadata.DeliverTx.response:type_name -> tendermint.abci.ResponseDeliverTx
+var file_cosmos_store_v1beta1_listening_proto_depIdxs = []int32{
+	3, // 0: cosmos.store.v1beta1.BlockMetadata.request_begin_block:type_name -> tendermint.abci.RequestBeginBlock
+	4, // 1: cosmos.store.v1beta1.BlockMetadata.response_begin_block:type_name -> tendermint.abci.ResponseBeginBlock
+	2, // 2: cosmos.store.v1beta1.BlockMetadata.deliver_txs:type_name -> cosmos.store.v1beta1.BlockMetadata.DeliverTx
+	5, // 3: cosmos.store.v1beta1.BlockMetadata.request_end_block:type_name -> tendermint.abci.RequestEndBlock
+	6, // 4: cosmos.store.v1beta1.BlockMetadata.response_end_block:type_name -> tendermint.abci.ResponseEndBlock
+	7, // 5: cosmos.store.v1beta1.BlockMetadata.response_commit:type_name -> tendermint.abci.ResponseCommit
+	8, // 6: cosmos.store.v1beta1.BlockMetadata.DeliverTx.request:type_name -> tendermint.abci.RequestDeliverTx
+	9, // 7: cosmos.store.v1beta1.BlockMetadata.DeliverTx.response:type_name -> tendermint.abci.ResponseDeliverTx
 	8, // [8:8] is the sub-list for method output_type
 	8, // [8:8] is the sub-list for method input_type
 	8, // [8:8] is the sub-list for extension type_name
@@ -2335,13 +2333,13 @@ var file_cosmos_base_store_v1beta1_listening_proto_depIdxs = []int32{
 	0, // [0:8] is the sub-list for field type_name
 }
 
-func init() { file_cosmos_base_store_v1beta1_listening_proto_init() }
-func file_cosmos_base_store_v1beta1_listening_proto_init() {
-	if File_cosmos_base_store_v1beta1_listening_proto != nil {
+func init() { file_cosmos_store_v1beta1_listening_proto_init() }
+func file_cosmos_store_v1beta1_listening_proto_init() {
+	if File_cosmos_store_v1beta1_listening_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_cosmos_base_store_v1beta1_listening_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_store_v1beta1_listening_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StoreKVPair); i {
 			case 0:
 				return &v.state
@@ -2353,7 +2351,7 @@ func file_cosmos_base_store_v1beta1_listening_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_base_store_v1beta1_listening_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_store_v1beta1_listening_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BlockMetadata); i {
 			case 0:
 				return &v.state
@@ -2365,7 +2363,7 @@ func file_cosmos_base_store_v1beta1_listening_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_base_store_v1beta1_listening_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_store_v1beta1_listening_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BlockMetadata_DeliverTx); i {
 			case 0:
 				return &v.state
@@ -2382,18 +2380,18 @@ func file_cosmos_base_store_v1beta1_listening_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_cosmos_base_store_v1beta1_listening_proto_rawDesc,
+			RawDescriptor: file_cosmos_store_v1beta1_listening_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_cosmos_base_store_v1beta1_listening_proto_goTypes,
-		DependencyIndexes: file_cosmos_base_store_v1beta1_listening_proto_depIdxs,
-		MessageInfos:      file_cosmos_base_store_v1beta1_listening_proto_msgTypes,
+		GoTypes:           file_cosmos_store_v1beta1_listening_proto_goTypes,
+		DependencyIndexes: file_cosmos_store_v1beta1_listening_proto_depIdxs,
+		MessageInfos:      file_cosmos_store_v1beta1_listening_proto_msgTypes,
 	}.Build()
-	File_cosmos_base_store_v1beta1_listening_proto = out.File
-	file_cosmos_base_store_v1beta1_listening_proto_rawDesc = nil
-	file_cosmos_base_store_v1beta1_listening_proto_goTypes = nil
-	file_cosmos_base_store_v1beta1_listening_proto_depIdxs = nil
+	File_cosmos_store_v1beta1_listening_proto = out.File
+	file_cosmos_store_v1beta1_listening_proto_rawDesc = nil
+	file_cosmos_store_v1beta1_listening_proto_goTypes = nil
+	file_cosmos_store_v1beta1_listening_proto_depIdxs = nil
 }

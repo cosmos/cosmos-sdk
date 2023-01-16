@@ -10,23 +10,43 @@ import (
 )
 
 func TestNewModuleCrendentials(t *testing.T) {
+	// wrong derivation keys
+	_, err := authtypes.NewModuleCredential("group", []byte{})
+	require.Error(t, err, "derivation keys must be non empty")
+	_, err = authtypes.NewModuleCredential("group", [][]byte{{0x0, 0x30}, {}}...)
+	require.Error(t, err)
+
 	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
 
-	credential := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}})
-	require.NoError(t, sdk.VerifyAddressFormat(credential.Address().Bytes()))
+	credential, err := authtypes.NewModuleCredential("group")
+	require.NoError(t, err, "must be able to create a Root Module credential (see ADR-33)")
+	require.NoError(t, sdk.VerifyAddressFormat(credential.Address()))
+
+	credential, err = authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
+	require.NoError(t, err)
+	require.NoError(t, sdk.VerifyAddressFormat(credential.Address()))
 	addr, err := sdk.AccAddressFromHexUnsafe(credential.Address().String())
 	require.NoError(t, err)
 	require.Equal(t, expected.String(), addr.String())
 
-	require.True(t, credential.Equals(authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}})))
-	require.False(t, credential.Equals(authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x1}})))
-	require.False(t, credential.Equals(authtypes.NewModuleCredential("group", [][]byte{{0x20}})))
+	c, err := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
+	require.NoError(t, err)
+	require.True(t, credential.Equals(c))
+
+	c, err = authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x1}}...)
+	require.NoError(t, err)
+	require.False(t, credential.Equals(c))
+
+	c, err = authtypes.NewModuleCredential("group", []byte{0x20})
+	require.NoError(t, err)
+	require.False(t, credential.Equals(c))
 }
 
 func TestNewBaseAccountWithPubKey(t *testing.T) {
 	expected := sdk.MustAccAddressFromBech32("cosmos1fpn0w0yf4x300llf5r66jnfhgj4ul6cfahrvqsskwkhsw6sv84wsmz359y")
 
-	credential := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}})
+	credential, err := authtypes.NewModuleCredential("group", [][]byte{{0x20}, {0x0}}...)
+	require.NoError(t, err)
 	account, err := authtypes.NewBaseAccountWithPubKey(credential)
 	require.NoError(t, err)
 	require.Equal(t, expected, account.GetAddress())

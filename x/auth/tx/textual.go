@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/tx/textual/valuerenderer"
+	"cosmossdk.io/tx/textual"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -16,7 +16,7 @@ import (
 
 // signModeTextualHandler defines the SIGN_MODE_TEXTUAL SignModeHandler
 type signModeTextualHandler struct {
-	t valuerenderer.Textual
+	t textual.Textual
 }
 
 var _ signing.SignModeHandler = signModeTextualHandler{}

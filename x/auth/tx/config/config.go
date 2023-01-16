@@ -11,7 +11,7 @@ import (
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/tx/textual/valuerenderer"
+	"cosmossdk.io/tx/textual"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -123,8 +123,8 @@ func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, err
 
 // NewTextual creates a new Textual struct using the given
 // BankKeeper to retrieve coin metadata.
-func NewTextual(bk BankKeeper) valuerenderer.Textual {
-	textual := valuerenderer.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+func NewTextual(bk BankKeeper) textual.Textual {
+	textual := textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {
 			status, ok := grpcstatus.FromError(err)

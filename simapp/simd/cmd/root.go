@@ -19,7 +19,7 @@ import (
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-	"cosmossdk.io/tx/textual/valuerenderer"
+	"cosmossdk.io/tx/textual"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -88,7 +88,7 @@ func NewRootCmd() *cobra.Command {
 			txConfigWithTextual := tx.NewTxConfigWithTextual(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
 				encodingConfig.TxConfig.SignModeHandler().Modes(),
-				valuerenderer.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
+				textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 					bankQueryClient := bankv1beta1.NewQueryClient(initClientCtx)
 					res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
 						Denom: denom,

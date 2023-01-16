@@ -51,6 +51,13 @@ func NewStreamingService(
 	logger log.Logger,
 	outputMetadata, stopNodeOnErr, fsync bool,
 ) (*StreamingService, error) {
+	// Check that the writeDir exists and is writable so that we can catch the
+	// error here at initialization. If it is not we don't open a dstFile until we
+	// receive our first ABCI message.
+	if err := isDirWriteable(writeDir); err != nil {
+		return nil, err
+	}
+
 	// sort storeKeys for deterministic output
 	sort.SliceStable(storeKeys, func(i, j int) bool {
 		return storeKeys[i].Name() < storeKeys[j].Name()
@@ -60,13 +67,6 @@ func NewStreamingService(
 	listeners := make([]*types.MemoryListener, len(storeKeys))
 	for i, key := range storeKeys {
 		listeners[i] = types.NewMemoryListener(key)
-	}
-
-	// Check that the writeDir exists and is writable so that we can catch the
-	// error here at initialization. If it is not we don't open a dstFile until we
-	// receive our first ABCI message.
-	if err := isDirWriteable(writeDir); err != nil {
-		return nil, err
 	}
 
 	return &StreamingService{

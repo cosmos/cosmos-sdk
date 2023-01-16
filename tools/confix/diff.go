@@ -73,6 +73,35 @@ func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
 	return diff
 }
 
+// DiffKeys diffs the keyspaces with different values of the TOML documents in files lhs and rhs.
+func DiffValues(lhs, rhs *tomledit.Document) []Diff {
+	diff := diffSections(lhs.Global, rhs.Global)
+
+	lsec, rsec := lhs.Sections, rhs.Sections
+	transform.SortSectionsByName(lsec)
+	transform.SortSectionsByName(rsec)
+
+	i, j := 0, 0
+	for i < len(lsec) && j < len(rsec) {
+		if rsec[j].Name.Before(lsec[i].Name) {
+			for _, kv := range allKVs(rsec[j]) {
+				diff = append(diff, Diff{Type: Mapping, KV: kv})
+			}
+			j++
+		} else {
+			for _, d := range diffSections(lsec[i], rsec[j]) {
+				if !d.Deleted {
+					diff = append(diff, d)
+				}
+			}
+			i++
+			j++
+		}
+	}
+
+	return diff
+}
+
 func allKVs(s *tomledit.Section) []KV {
 	keys := []KV{}
 	s.Scan(func(key parser.Key, entry *tomledit.Entry) bool {
@@ -88,10 +117,12 @@ func allKVs(s *tomledit.Section) []KV {
 }
 
 func diffSections(lhs, rhs *tomledit.Section) []Diff {
-	return diffKeys(allKVs(lhs), allKVs(rhs))
+	return diffDocs(allKVs(lhs), allKVs(rhs), true)
 }
 
-func diffKeys(lhs, rhs []KV) []Diff {
+// diffDocs get the diff between all keys in lhs and rhs.
+// when a key is in both lhs and rhs, it is ignored, unless value is true in which case the value is as well compared.
+func diffDocs(lhs, rhs []KV, value bool) []Diff {
 	diff := []Diff{}
 
 	sort.Slice(lhs, func(i, j int) bool {
@@ -110,6 +141,11 @@ func diffKeys(lhs, rhs []KV) []Diff {
 			diff = append(diff, Diff{Type: Mapping, KV: rhs[j]})
 			j++
 		} else {
+			// key exists in both lhs and rhs
+			// if value is true, compare the values
+			if value && lhs[i].Value != rhs[j].Value {
+				diff = append(diff, Diff{Type: Mapping, KV: lhs[i]})
+			}
 			i++
 			j++
 		}

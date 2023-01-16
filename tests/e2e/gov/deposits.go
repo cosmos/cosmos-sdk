@@ -131,8 +131,7 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 
 	args := []string{fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	cmd := cli.GetCmdQueryProposals()
-	res, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	fmt.Println(res.String())
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
 
 	// query proposal

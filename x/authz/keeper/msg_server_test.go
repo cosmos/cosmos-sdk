@@ -116,6 +116,18 @@ func (suite *TestSuite) TestGrant() {
 				}
 			},
 		},
+		{
+			name: "valid grant with allow list",
+			malleate: func() *authz.MsgGrant {
+				grant, err := authz.NewGrant(curBlockTime, banktypes.NewSendAuthorization(coins, []sdk.AccAddress{granter}), &oneYear)
+				suite.Require().NoError(err)
+				return &authz.MsgGrant{
+					Granter: granter.String(),
+					Grantee: grantee.String(),
+					Grant:   grant,
+				}
+			},
+		},
 	}
 
 	for _, tc := range testCases {

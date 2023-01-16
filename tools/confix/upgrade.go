@@ -65,17 +65,6 @@ func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath st
 	return err
 }
 
-// LoadConfig loads and parses the TOML document from path.
-func LoadConfig(path string) (*tomledit.Document, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open %q: %v", path, err)
-	}
-	defer f.Close()
-
-	return tomledit.Parse(f)
-}
-
 // CheckValid checks whether the specified config appears to be a valid Cosmos SDK config file.
 // It tries to unmarshal the config into both the server and client config structs.
 func CheckValid(fileName string, data []byte) error {

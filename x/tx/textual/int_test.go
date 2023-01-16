@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/tx/textual"
+	"cosmossdk.io/x/tx/textual"
 )
 
 func TestIntJsonTestcases(t *testing.T) {

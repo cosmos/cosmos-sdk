@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  - name: js
+    out: ../ui/src/gen
+    opt: import_style=commonjs
+  - name: grpc-web
+    out: ../ui/src/gen
+    opt: import_style=typescript,mode=grpcwebtext

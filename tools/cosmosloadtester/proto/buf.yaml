@@ -1,0 +1,11 @@
+version: v1
+name: buf.build/orijtech/cosmosloadtester
+deps:
+  - buf.build/googleapis/googleapis
+lint:
+
+  use:
+    - DEFAULT
+  except:
+    # We follow the guidelines from https://google.aip.dev which conflict with Buf's suggestions.
+    - RPC_RESPONSE_STANDARD_NAME

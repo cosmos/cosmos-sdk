@@ -1,0 +1,142 @@
+syntax = "proto3";
+option go_package = "github.com/orijtech/cosmosloadtester/proto/orijtech/cosmosloadtester/v1";
+
+package orijtech.cosmosloadtester.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/duration.proto";
+
+service LoadtestService {
+  rpc RunLoadtest(RunLoadtestRequest) returns (RunLoadtestResponse) {
+    option (google.api.http) = {
+      post: "/v1/loadtest:run"
+      body: "*"
+    };
+  };
+}
+
+message RunLoadtestRequest {
+  // The identifier of the client factory to use for generating load testing transactions.
+  // Maps to --client-factory in tm-load-test.
+  string client_factory = 1;
+  // The number of connections to open to each endpoint simultaneously.
+  // Maps to --connections in tm-load-test.
+  int32 connection_count = 2;
+  // The duration (in seconds) for which to handle the load test.
+  // Maps to --time in tm-load-test.
+  google.protobuf.Duration duration = 3;
+  // The period (in seconds) at which to send batches of transactions.
+  // Maps to --send-period in tm-load-test.
+  google.protobuf.Duration send_period = 4;
+  // The number of transactions to generate each second on each connection, to each endpoint.
+  // Maps to --rate in tm-load-test.
+  int32 transactions_per_second = 5;
+  // The size of each transaction, in bytes - must be greater than 40.
+  // Maps to --size in tm-load-test.
+  int32 transaction_size_bytes = 6;
+  // The maximum number of transactions to send - set to -1 to turn off this limit.
+  // Maps to --count in tm-load-test.
+  int32 transaction_count = 7;
+  enum BroadcastTxMethod {
+    // Default value. This value is unused.
+    BROADCAST_TX_METHOD_UNSPECIFIED = 0;
+    BROADCAST_TX_METHOD_SYNC = 1;
+    BROADCAST_TX_METHOD_ASYNC = 2;
+    BROADCAST_TX_METHOD_COMMIT = 3;
+  }
+  // The broadcast_tx method to use when submitting transactions - can be async, sync or commit.
+  // Maps to --broadcast-tx-method in tm-load-test.
+  BroadcastTxMethod broadcast_tx_method = 8;
+  // A list of URLs indicating Tendermint WebSockets RPC endpoints to which to connect.
+  // Maps to --endpoints in tm-load-test.
+  repeated string endpoints = 9;
+  enum EndpointSelectMethod {
+    // Default value. This value is unused.
+    ENDPOINT_SELECT_METHOD_UNSPECIFIED = 0;
+    // Select only the supplied endpoint(s) for load testing (the default).
+    ENDPOINT_SELECT_METHOD_SUPPLIED = 1;
+    // Select newly discovered endpoints only (excluding supplied endpoints).
+    ENDPOINT_SELECT_METHOD_DISCOVERED = 2;
+    // Select from any of supplied and/or discovered endpoints.
+    ENDPOINT_SELECT_METHOD_ANY = 3;
+  }
+  // The method by which to select endpoints.
+  // Maps to --endpoint-select-method in tm-load-test.
+  EndpointSelectMethod endpoint_select_method = 10;
+  // The minimum number of peers to expect when crawling the P2P network from the specified endpoint(s) prior to waiting for workers to connect.
+  // Maps to --expect-peers in tm-load-test.
+  int32 expect_peers_count = 11;
+  // The maximum number of endpoints to use for testing, where 0 means unlimited.
+  // Maps to --max-endpoints in tm-load-test.
+  int32 max_endpoint_count = 12;
+  // The number of seconds to wait for all required peers to connect if expect-peers > 0.
+  // Maps to --peer-connect-timeout in tm-load-test.
+  google.protobuf.Duration peer_connect_timeout = 13;
+  // The minimum number of peers to which each peer must be connected before starting the load test.
+  // Maps to --min-peer-connectvity in tm-load-test.
+  int32 min_peer_connectivity_count = 14;
+  // Where to store aggregate statistics (in CSV format) for the load test.
+  // Maps to --stats-output in tm-load-test.
+  string stats_output_file_path = 15;
+}
+
+message RunLoadtestResponse {
+  // The total number of transactions sent.
+  // Corresponds to total_time in tm-load-test.
+  int64 total_txs = 1;
+  // The total time taken to send `total_txs` transactions.
+  // Corresponds to total_txs in tm-load-test.
+  google.protobuf.Duration total_time = 2;
+  // The cumulative number of bytes sent as transactions.
+  // Corresponds to total_bytes in tm-load-test.
+  int64 total_bytes = 3;
+  // The rate at which transactions were submitted (tx/sec).
+  // Corresponds to avg_tx_rate in tm-load-test.
+  double avg_txs_per_second = 4;
+  // The rate at which data was transmitted in transactions (bytes/sec).
+  // Corresponds to avg_data_rate in tm-load-test.
+  double avg_bytes_per_second = 5;
+
+  // The respective points per second from 0 until the request's max_time.
+  repeated PerSecond per_sec = 6;
+}
+
+message PerSecond {
+  // Indicates the ordinal number of the current second e.g. for the 8th second, sec=7, 1st second, sec=0.
+  // Second is creating by using the lower bounds/floor of the second e.g. values at:
+  //    0.74 sec fall within sec=0
+  //    9.94 sec fall within sec=9
+  int64 sec = 1;
+  // Indicates the queries per second captured by stuffing points within a second booundary.
+  double qps = 2;
+  // Bytes indicates the bytes sent within the time period.
+  double bytes_sent = 3;
+  // Indicates the aggregated percentile values by bytes.
+  Ranking bytes_rankings = 4;
+  // Indicates the aggregated percentile values by latency.
+  Ranking latency_rankings = 5;
+}
+
+message Percentile {
+  // The time relative to the request's start time.
+  google.protobuf.Duration start_offset = 1;
+  // The time between request send and receipt of a response.
+  google.protobuf.Duration latency = 2;
+  // The number of bytes sent.
+  int64 bytes_sent = 3;
+  // The human friendly value of the percentile's occurence. It is useful for easy debugging.
+  string at_str = 4;
+}
+
+message Ranking {
+  // The 50th percentile value aka the median.
+  Percentile p50 = 1;
+  // The 75th percentile value.
+  Percentile p75 = 2;
+  // The 90th percentile value.
+  Percentile p90 = 3;
+  // The 95th percentile value.
+  Percentile p95 = 4;
+  // The 99th percentile value, useful to identify outliers.
+  Percentile p99 = 5;
+}

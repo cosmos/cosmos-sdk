@@ -1,0 +1,289 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "orijtech/cosmosloadtester/v1/loadtest_service.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "LoadtestService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/loadtest:run": {
+      "post": {
+        "operationId": "LoadtestService_RunLoadtest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RunLoadtestResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1RunLoadtestRequest"
+            }
+          }
+        ],
+        "tags": [
+          "LoadtestService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "RunLoadtestRequestBroadcastTxMethod": {
+      "type": "string",
+      "enum": [
+        "BROADCAST_TX_METHOD_UNSPECIFIED",
+        "BROADCAST_TX_METHOD_SYNC",
+        "BROADCAST_TX_METHOD_ASYNC",
+        "BROADCAST_TX_METHOD_COMMIT"
+      ],
+      "default": "BROADCAST_TX_METHOD_UNSPECIFIED",
+      "description": " - BROADCAST_TX_METHOD_UNSPECIFIED: Default value. This value is unused."
+    },
+    "RunLoadtestRequestEndpointSelectMethod": {
+      "type": "string",
+      "enum": [
+        "ENDPOINT_SELECT_METHOD_UNSPECIFIED",
+        "ENDPOINT_SELECT_METHOD_SUPPLIED",
+        "ENDPOINT_SELECT_METHOD_DISCOVERED",
+        "ENDPOINT_SELECT_METHOD_ANY"
+      ],
+      "default": "ENDPOINT_SELECT_METHOD_UNSPECIFIED",
+      "description": " - ENDPOINT_SELECT_METHOD_UNSPECIFIED: Default value. This value is unused.\n - ENDPOINT_SELECT_METHOD_SUPPLIED: Select only the supplied endpoint(s) for load testing (the default).\n - ENDPOINT_SELECT_METHOD_DISCOVERED: Select newly discovered endpoints only (excluding supplied endpoints).\n - ENDPOINT_SELECT_METHOD_ANY: Select from any of supplied and/or discovered endpoints."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1PerSecond": {
+      "type": "object",
+      "properties": {
+        "sec": {
+          "type": "string",
+          "format": "int64",
+          "title": "Indicates the ordinal number of the current second e.g. for the 8th second, sec=7, 1st second, sec=0.\nSecond is creating by using the lower bounds/floor of the second e.g. values at:\n   0.74 sec fall within sec=0\n   9.94 sec fall within sec=9"
+        },
+        "qps": {
+          "type": "number",
+          "format": "double",
+          "description": "Indicates the queries per second captured by stuffing points within a second booundary."
+        },
+        "bytesSent": {
+          "type": "number",
+          "format": "double",
+          "description": "Bytes indicates the bytes sent within the time period."
+        },
+        "bytesRankings": {
+          "$ref": "#/definitions/v1Ranking",
+          "description": "Indicates the aggregated percentile values by bytes."
+        },
+        "latencyRankings": {
+          "$ref": "#/definitions/v1Ranking",
+          "description": "Indicates the aggregated percentile values by latency."
+        }
+      }
+    },
+    "v1Percentile": {
+      "type": "object",
+      "properties": {
+        "startOffset": {
+          "type": "string",
+          "description": "The time relative to the request's start time."
+        },
+        "latency": {
+          "type": "string",
+          "description": "The time between request send and receipt of a response."
+        },
+        "bytesSent": {
+          "type": "string",
+          "format": "int64",
+          "description": "The number of bytes sent."
+        },
+        "atStr": {
+          "type": "string",
+          "description": "The human friendly value of the percentile's occurence. It is useful for easy debugging."
+        }
+      }
+    },
+    "v1Ranking": {
+      "type": "object",
+      "properties": {
+        "p50": {
+          "$ref": "#/definitions/v1Percentile",
+          "description": "The 50th percentile value aka the median."
+        },
+        "p75": {
+          "$ref": "#/definitions/v1Percentile",
+          "description": "The 75th percentile value."
+        },
+        "p90": {
+          "$ref": "#/definitions/v1Percentile",
+          "description": "The 90th percentile value."
+        },
+        "p95": {
+          "$ref": "#/definitions/v1Percentile",
+          "description": "The 95th percentile value."
+        },
+        "p99": {
+          "$ref": "#/definitions/v1Percentile",
+          "description": "The 99th percentile value, useful to identify outliers."
+        }
+      }
+    },
+    "v1RunLoadtestRequest": {
+      "type": "object",
+      "properties": {
+        "clientFactory": {
+          "type": "string",
+          "description": "The identifier of the client factory to use for generating load testing transactions.\nMaps to --client-factory in tm-load-test."
+        },
+        "connectionCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The number of connections to open to each endpoint simultaneously.\nMaps to --connections in tm-load-test."
+        },
+        "duration": {
+          "type": "string",
+          "description": "The duration (in seconds) for which to handle the load test.\nMaps to --time in tm-load-test."
+        },
+        "sendPeriod": {
+          "type": "string",
+          "description": "The period (in seconds) at which to send batches of transactions.\nMaps to --send-period in tm-load-test."
+        },
+        "transactionsPerSecond": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The number of transactions to generate each second on each connection, to each endpoint.\nMaps to --rate in tm-load-test."
+        },
+        "transactionSizeBytes": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The size of each transaction, in bytes - must be greater than 40.\nMaps to --size in tm-load-test."
+        },
+        "transactionCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum number of transactions to send - set to -1 to turn off this limit.\nMaps to --count in tm-load-test."
+        },
+        "broadcastTxMethod": {
+          "$ref": "#/definitions/RunLoadtestRequestBroadcastTxMethod",
+          "description": "The broadcast_tx method to use when submitting transactions - can be async, sync or commit.\nMaps to --broadcast-tx-method in tm-load-test."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of URLs indicating Tendermint WebSockets RPC endpoints to which to connect.\nMaps to --endpoints in tm-load-test."
+        },
+        "endpointSelectMethod": {
+          "$ref": "#/definitions/RunLoadtestRequestEndpointSelectMethod",
+          "description": "The method by which to select endpoints.\nMaps to --endpoint-select-method in tm-load-test."
+        },
+        "expectPeersCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The minimum number of peers to expect when crawling the P2P network from the specified endpoint(s) prior to waiting for workers to connect.\nMaps to --expect-peers in tm-load-test."
+        },
+        "maxEndpointCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The maximum number of endpoints to use for testing, where 0 means unlimited.\nMaps to --max-endpoints in tm-load-test."
+        },
+        "peerConnectTimeout": {
+          "type": "string",
+          "description": "The number of seconds to wait for all required peers to connect if expect-peers \u003e 0.\nMaps to --peer-connect-timeout in tm-load-test."
+        },
+        "minPeerConnectivityCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The minimum number of peers to which each peer must be connected before starting the load test.\nMaps to --min-peer-connectvity in tm-load-test."
+        },
+        "statsOutputFilePath": {
+          "type": "string",
+          "description": "Where to store aggregate statistics (in CSV format) for the load test.\nMaps to --stats-output in tm-load-test."
+        }
+      }
+    },
+    "v1RunLoadtestResponse": {
+      "type": "object",
+      "properties": {
+        "totalTxs": {
+          "type": "string",
+          "format": "int64",
+          "description": "The total number of transactions sent.\nCorresponds to total_time in tm-load-test."
+        },
+        "totalTime": {
+          "type": "string",
+          "description": "The total time taken to send `total_txs` transactions.\nCorresponds to total_txs in tm-load-test."
+        },
+        "totalBytes": {
+          "type": "string",
+          "format": "int64",
+          "description": "The cumulative number of bytes sent as transactions.\nCorresponds to total_bytes in tm-load-test."
+        },
+        "avgTxsPerSecond": {
+          "type": "number",
+          "format": "double",
+          "description": "The rate at which transactions were submitted (tx/sec).\nCorresponds to avg_tx_rate in tm-load-test."
+        },
+        "avgBytesPerSecond": {
+          "type": "number",
+          "format": "double",
+          "description": "The rate at which data was transmitted in transactions (bytes/sec).\nCorresponds to avg_data_rate in tm-load-test."
+        },
+        "perSec": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1PerSecond"
+          },
+          "description": "The respective points per second from 0 until the request's max_time."
+        }
+      }
+    }
+  }
+}

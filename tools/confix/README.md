@@ -10,6 +10,50 @@ It is based on the [Tendermint RFC 019](https://github.com/tendermint/tendermint
 
 ## Installation
 
+### Add Config Command
+
+To add the confix tool, it's required to add the `ConfigCommand` to your application's root command file (e.g. `simd/cmd/root.go`).
+
+Import the `confixCmd` package:
+
+```go
+import "cosmossdk.io/tools/confix/cmd"
+```
+
+Find the following line:
+
+```go
+initRootCmd(rootCmd, encodingConfig)
+```
+
+After that line, add the following:
+
+```go
+rootCmd.AddCommand(
+    confixcmd.ConfigCommand(),
+)
+```
+
+The `ConfixCommand` function builds the `config` root command and is defined in the `confixCmd` package (`cosmossdk.io/tools/confix/cmd`).
+An implementation example can be found in `simapp`.
+
+The command will be available as `simd config`.
+
+### Using Confix Standalone
+
+To use Confix standalone, without having to add it in your application, install it with the following command:
+
+```bash
+go install cosmossdk.io/tools/confix/cmd/confix@latest
+```
+
+:::warning
+Currently, due to the replace directive in the Confix go.mod, it is not possible to use `go install`.
+Building from source or importing in an application is required until that replace directive is removed.
+:::
+
+Alternatively, for building from source, simply run `make confix`. The binary will be located in `tools/confix`.
+
 ## Usage
 
 Use standalone:
@@ -62,6 +106,18 @@ simd config migrate v0.47 # migrates defaultHome/config/app.toml to the latest v
 
 ```shell
 confix migrate v0.47 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.47 config
+```
+
+### Diff
+
+Get the diff between a given configuration file and the default configuration file, e.g.:
+
+```shell
+simd config diff v0.47 # gets the diff between defaultHome/config/app.toml and the latest v0.47 config
+```
+
+```shell
+confix diff v0.47 ~/.simapp/config/app.toml # gets the diff between ~/.simapp/config/app.toml and the latest v0.47 config
 ```
 
 ### Maintainer

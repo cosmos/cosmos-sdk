@@ -185,6 +185,8 @@ require (
 )
 
 replace (
+	// TODO delete after release of confix
+	cosmossdk.io/tools/confix => ../tools/confix
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.

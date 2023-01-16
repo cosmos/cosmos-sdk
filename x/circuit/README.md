@@ -1,5 +1,4 @@
-# Circuit Breaker - block specific functionality in the state machine
-
+# `x/circuit`
 
 ## Concepts
 
@@ -84,6 +83,7 @@ Reset is called to enable execution of a previously disabled message.
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L25-L75
 ```
+
 This message is expected to fail if:
 
 * the granter is not an account with permission level `LEVEL_SUPER_ADMIN` or the module authority

@@ -5,6 +5,7 @@ import (
 	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store/metrics"
@@ -15,6 +16,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/spf13/cast"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -166,7 +168,7 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
 
-func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+func (app *BaseApp) SetPostHandler(ph sdk.PostHandler) {
 	if app.sealed {
 		panic("SetPostHandler() on sealed BaseApp")
 	}
@@ -239,7 +241,8 @@ func (app *BaseApp) SetStreamingService(
 	appCodec storetypes.Codec,
 	keys map[string]*storetypes.KVStoreKey,
 ) error {
-	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys)
+	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
+	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys, homePath)
 	if err != nil {
 		return err
 	}

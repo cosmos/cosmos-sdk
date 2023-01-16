@@ -5,7 +5,7 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476
-	cosmossdk.io/core v0.4.0
+	cosmossdk.io/core v0.4.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
@@ -58,8 +58,8 @@ require (
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
-	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef
-	google.golang.org/grpc v1.51.0
+	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9
+	google.golang.org/grpc v1.52.0
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5

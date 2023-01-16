@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 func FuzzTypesDecSetString(f *testing.F) {
 	f.Fuzz(func(t *testing.T, b []byte) {
-		dec, err := sdk.NewDecFromStr(string(b))
+		dec, err := sdkmath.LegacyNewDecFromStr(string(b))
 		if err != nil {
 			return
 		}

@@ -11,11 +11,11 @@ import (
 type Keeper struct {
 	key       storetypes.StoreKey
 	cdc       codec.Codec //used to marshall and unarshall structs to and from []byte
-	authority []byte      /* string */
+	authority string
 }
 
 // contructs a new Circuit Keeper instance
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, authority []byte /* todo: byte or string */) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, authority string) Keeper {
 	return Keeper{
 		key:       storeKey,
 		cdc:       cdc,
@@ -23,14 +23,14 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, authority []byte /
 	}
 }
 
-func (k *Keeper) GetAuthority() []byte /* string */ {
+func (k *Keeper) GetAuthority() string /* string */ {
 	return k.authority
 }
 
-func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (types.Permissions, error) {
+func (k *Keeper) GetPermissions(ctx sdk.Context, address string) (types.Permissions, error) {
 	store := ctx.KVStore(k.key)
 
-	bz := store.Get(address)
+	bz := store.Get([]byte(address))
 
 	perms := types.Permissions{}
 	if err := k.cdc.Unmarshal(bz, &perms); err != nil {
@@ -40,10 +40,10 @@ func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (types.Permissi
 	return perms, nil
 }
 
-func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms types.Permissions) error {
+func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Permissions) error {
 	store := ctx.KVStore(k.key)
 
-	bz, err := k.cdc.Marshal(&perms)
+	bz, err := k.cdc.Marshal(perms)
 	if err != nil {
 		return err
 	}

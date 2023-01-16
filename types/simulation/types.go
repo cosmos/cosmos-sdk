@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
@@ -172,3 +173,7 @@ type Params interface {
 	LivenessTransitionMatrix() TransitionMatrix
 	BlockSizeTransitionMatrix() TransitionMatrix
 }
+
+// StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
+// simulation.
+type StoreDecoderRegistry map[string]func(kvA, kvB kv.Pair) string

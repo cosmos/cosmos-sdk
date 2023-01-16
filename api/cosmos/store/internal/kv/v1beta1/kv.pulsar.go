@@ -70,8 +70,8 @@ var (
 )
 
 func init() {
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_init()
-	md_Pairs = File_cosmos_base_store_internal_kv_v1beta1_kv_proto.Messages().ByName("Pairs")
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_init()
+	md_Pairs = File_cosmos_store_internal_kv_v1beta1_kv_proto.Messages().ByName("Pairs")
 	fd_Pairs_pairs = md_Pairs.Fields().ByName("pairs")
 }
 
@@ -84,7 +84,7 @@ func (x *Pairs) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Pairs) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes[0]
+	mi := &file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -161,13 +161,13 @@ func (x *fastReflection_Pairs) Range(f func(protoreflect.FieldDescriptor, protor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Pairs) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pairs.pairs":
+	case "cosmos.store.internal.kv.v1beta1.Pairs.pairs":
 		return len(x.Pairs) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pairs"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pairs"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -179,13 +179,13 @@ func (x *fastReflection_Pairs) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Pairs) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pairs.pairs":
+	case "cosmos.store.internal.kv.v1beta1.Pairs.pairs":
 		x.Pairs = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pairs"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pairs"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -197,7 +197,7 @@ func (x *fastReflection_Pairs) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Pairs) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pairs.pairs":
+	case "cosmos.store.internal.kv.v1beta1.Pairs.pairs":
 		if len(x.Pairs) == 0 {
 			return protoreflect.ValueOfList(&_Pairs_1_list{})
 		}
@@ -205,9 +205,9 @@ func (x *fastReflection_Pairs) Get(descriptor protoreflect.FieldDescriptor) prot
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pairs"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pairs"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pairs does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pairs does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -223,15 +223,15 @@ func (x *fastReflection_Pairs) Get(descriptor protoreflect.FieldDescriptor) prot
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Pairs) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pairs.pairs":
+	case "cosmos.store.internal.kv.v1beta1.Pairs.pairs":
 		lv := value.List()
 		clv := lv.(*_Pairs_1_list)
 		x.Pairs = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pairs"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pairs"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -247,7 +247,7 @@ func (x *fastReflection_Pairs) Set(fd protoreflect.FieldDescriptor, value protor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Pairs) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pairs.pairs":
+	case "cosmos.store.internal.kv.v1beta1.Pairs.pairs":
 		if x.Pairs == nil {
 			x.Pairs = []*Pair{}
 		}
@@ -255,9 +255,9 @@ func (x *fastReflection_Pairs) Mutable(fd protoreflect.FieldDescriptor) protoref
 		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pairs"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pairs"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -266,14 +266,14 @@ func (x *fastReflection_Pairs) Mutable(fd protoreflect.FieldDescriptor) protoref
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Pairs) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pairs.pairs":
+	case "cosmos.store.internal.kv.v1beta1.Pairs.pairs":
 		list := []*Pair{}
 		return protoreflect.ValueOfList(&_Pairs_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pairs"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pairs"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pairs does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -283,7 +283,7 @@ func (x *fastReflection_Pairs) NewField(fd protoreflect.FieldDescriptor) protore
 func (x *fastReflection_Pairs) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.store.internal.kv.v1beta1.Pairs", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.store.internal.kv.v1beta1.Pairs", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -514,8 +514,8 @@ var (
 )
 
 func init() {
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_init()
-	md_Pair = File_cosmos_base_store_internal_kv_v1beta1_kv_proto.Messages().ByName("Pair")
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_init()
+	md_Pair = File_cosmos_store_internal_kv_v1beta1_kv_proto.Messages().ByName("Pair")
 	fd_Pair_key = md_Pair.Fields().ByName("key")
 	fd_Pair_value = md_Pair.Fields().ByName("value")
 }
@@ -529,7 +529,7 @@ func (x *Pair) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Pair) slowProtoReflect() protoreflect.Message {
-	mi := &file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes[1]
+	mi := &file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -612,15 +612,15 @@ func (x *fastReflection_Pair) Range(f func(protoreflect.FieldDescriptor, protore
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Pair) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.key":
+	case "cosmos.store.internal.kv.v1beta1.Pair.key":
 		return len(x.Key) != 0
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.value":
+	case "cosmos.store.internal.kv.v1beta1.Pair.value":
 		return len(x.Value) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -632,15 +632,15 @@ func (x *fastReflection_Pair) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Pair) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.key":
+	case "cosmos.store.internal.kv.v1beta1.Pair.key":
 		x.Key = nil
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.value":
+	case "cosmos.store.internal.kv.v1beta1.Pair.value":
 		x.Value = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -652,17 +652,17 @@ func (x *fastReflection_Pair) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Pair) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.key":
+	case "cosmos.store.internal.kv.v1beta1.Pair.key":
 		value := x.Key
 		return protoreflect.ValueOfBytes(value)
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.value":
+	case "cosmos.store.internal.kv.v1beta1.Pair.value":
 		value := x.Value
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pair does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pair does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -678,15 +678,15 @@ func (x *fastReflection_Pair) Get(descriptor protoreflect.FieldDescriptor) proto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Pair) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.key":
+	case "cosmos.store.internal.kv.v1beta1.Pair.key":
 		x.Key = value.Bytes()
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.value":
+	case "cosmos.store.internal.kv.v1beta1.Pair.value":
 		x.Value = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -702,15 +702,15 @@ func (x *fastReflection_Pair) Set(fd protoreflect.FieldDescriptor, value protore
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Pair) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.key":
-		panic(fmt.Errorf("field key of message cosmos.base.store.internal.kv.v1beta1.Pair is not mutable"))
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.value":
-		panic(fmt.Errorf("field value of message cosmos.base.store.internal.kv.v1beta1.Pair is not mutable"))
+	case "cosmos.store.internal.kv.v1beta1.Pair.key":
+		panic(fmt.Errorf("field key of message cosmos.store.internal.kv.v1beta1.Pair is not mutable"))
+	case "cosmos.store.internal.kv.v1beta1.Pair.value":
+		panic(fmt.Errorf("field value of message cosmos.store.internal.kv.v1beta1.Pair is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -719,15 +719,15 @@ func (x *fastReflection_Pair) Mutable(fd protoreflect.FieldDescriptor) protorefl
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Pair) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.key":
+	case "cosmos.store.internal.kv.v1beta1.Pair.key":
 		return protoreflect.ValueOfBytes(nil)
-	case "cosmos.base.store.internal.kv.v1beta1.Pair.value":
+	case "cosmos.store.internal.kv.v1beta1.Pair.value":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.store.internal.kv.v1beta1.Pair"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.internal.kv.v1beta1.Pair"))
 		}
-		panic(fmt.Errorf("message cosmos.base.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message cosmos.store.internal.kv.v1beta1.Pair does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -737,7 +737,7 @@ func (x *fastReflection_Pair) NewField(fd protoreflect.FieldDescriptor) protoref
 func (x *fastReflection_Pair) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.store.internal.kv.v1beta1.Pair", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.store.internal.kv.v1beta1.Pair", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -999,7 +999,7 @@ func (x *fastReflection_Pair) ProtoMethods() *protoiface.Methods {
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: cosmos/base/store/internal/kv/v1beta1/kv.proto
+// source: cosmos/store/internal/kv/v1beta1/kv.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -1020,7 +1020,7 @@ type Pairs struct {
 func (x *Pairs) Reset() {
 	*x = Pairs{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes[0]
+		mi := &file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1034,7 +1034,7 @@ func (*Pairs) ProtoMessage() {}
 
 // Deprecated: Use Pairs.ProtoReflect.Descriptor instead.
 func (*Pairs) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescGZIP(), []int{0}
+	return file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Pairs) GetPairs() []*Pair {
@@ -1057,7 +1057,7 @@ type Pair struct {
 func (x *Pair) Reset() {
 	*x = Pair{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes[1]
+		mi := &file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1071,7 +1071,7 @@ func (*Pair) ProtoMessage() {}
 
 // Deprecated: Use Pair.ProtoReflect.Descriptor instead.
 func (*Pair) Descriptor() ([]byte, []int) {
-	return file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescGZIP(), []int{1}
+	return file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Pair) GetKey() []byte {
@@ -1088,65 +1088,62 @@ func (x *Pair) GetValue() []byte {
 	return nil
 }
 
-var File_cosmos_base_store_internal_kv_v1beta1_kv_proto protoreflect.FileDescriptor
+var File_cosmos_store_internal_kv_v1beta1_kv_proto protoreflect.FileDescriptor
 
-var file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDesc = []byte{
-	0x0a, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x73, 0x74,
+var file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDesc = []byte{
+	0x0a, 0x29, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x6b, 0x76, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2f, 0x6b, 0x76, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x20, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e,
+	0x61, 0x6c, 0x2e, 0x6b, 0x76, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x14, 0x67,
+	0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x22, 0x4b, 0x0a, 0x05, 0x50, 0x61, 0x69, 0x72, 0x73, 0x12, 0x42, 0x0a, 0x05,
+	0x70, 0x61, 0x69, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x6e, 0x61, 0x6c, 0x2e, 0x6b, 0x76, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50,
+	0x61, 0x69, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x70, 0x61, 0x69, 0x72, 0x73,
+	0x22, 0x2e, 0x0a, 0x04, 0x50, 0x61, 0x69, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x42, 0x91, 0x02, 0x0a, 0x24, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2e, 0x6b,
+	0x76, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x4b, 0x76, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x3b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
+	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74,
 	0x6f, 0x72, 0x65, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x6b, 0x76, 0x2f,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6b, 0x76, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x25, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x73, 0x74,
-	0x6f, 0x72, 0x65, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2e, 0x6b, 0x76, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x50, 0x0a,
-	0x05, 0x50, 0x61, 0x69, 0x72, 0x73, 0x12, 0x47, 0x0a, 0x05, 0x70, 0x61, 0x69, 0x72, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e,
-	0x61, 0x6c, 0x2e, 0x6b, 0x76, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61,
-	0x69, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x70, 0x61, 0x69, 0x72, 0x73, 0x22,
-	0x2e, 0x0a, 0x04, 0x50, 0x61, 0x69, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x42,
-	0xb1, 0x02, 0x0a, 0x29, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e,
-	0x61, 0x6c, 0x2e, 0x6b, 0x76, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x07, 0x4b,
-	0x76, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x40, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2f, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x6b, 0x76, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x3b, 0x6b, 0x76, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x05, 0x43, 0x42, 0x53,
-	0x49, 0x4b, 0xaa, 0x02, 0x25, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x42, 0x61, 0x73, 0x65,
-	0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2e,
-	0x4b, 0x76, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x25, 0x43, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x49,
-	0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5c, 0x4b, 0x76, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0xe2, 0x02, 0x31, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x42, 0x61, 0x73, 0x65,
-	0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5c,
-	0x4b, 0x76, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x2a, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a,
-	0x3a, 0x42, 0x61, 0x73, 0x65, 0x3a, 0x3a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x3a, 0x3a, 0x49, 0x6e,
-	0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x3a, 0x3a, 0x4b, 0x76, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x6b, 0x76, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0xa2, 0x02, 0x04, 0x43, 0x53, 0x49, 0x4b, 0xaa, 0x02, 0x20, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c,
+	0x2e, 0x4b, 0x76, 0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x20, 0x43, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x6e, 0x61, 0x6c, 0x5c, 0x4b, 0x76, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02,
+	0x2c, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x5c, 0x49, 0x6e,
+	0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5c, 0x4b, 0x76, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x24,
+	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x3a, 0x3a, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x3a, 0x3a, 0x4b, 0x76, 0x3a, 0x3a, 0x56, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescOnce sync.Once
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescData = file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDesc
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescOnce sync.Once
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescData = file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDesc
 )
 
-func file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescGZIP() []byte {
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescOnce.Do(func() {
-		file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescData)
+func file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescGZIP() []byte {
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescOnce.Do(func() {
+		file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescData = protoimpl.X.CompressGZIP(file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescData)
 	})
-	return file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDescData
+	return file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDescData
 }
 
-var file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_cosmos_base_store_internal_kv_v1beta1_kv_proto_goTypes = []interface{}{
-	(*Pairs)(nil), // 0: cosmos.base.store.internal.kv.v1beta1.Pairs
-	(*Pair)(nil),  // 1: cosmos.base.store.internal.kv.v1beta1.Pair
+var file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cosmos_store_internal_kv_v1beta1_kv_proto_goTypes = []interface{}{
+	(*Pairs)(nil), // 0: cosmos.store.internal.kv.v1beta1.Pairs
+	(*Pair)(nil),  // 1: cosmos.store.internal.kv.v1beta1.Pair
 }
-var file_cosmos_base_store_internal_kv_v1beta1_kv_proto_depIdxs = []int32{
-	1, // 0: cosmos.base.store.internal.kv.v1beta1.Pairs.pairs:type_name -> cosmos.base.store.internal.kv.v1beta1.Pair
+var file_cosmos_store_internal_kv_v1beta1_kv_proto_depIdxs = []int32{
+	1, // 0: cosmos.store.internal.kv.v1beta1.Pairs.pairs:type_name -> cosmos.store.internal.kv.v1beta1.Pair
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -1154,13 +1151,13 @@ var file_cosmos_base_store_internal_kv_v1beta1_kv_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_cosmos_base_store_internal_kv_v1beta1_kv_proto_init() }
-func file_cosmos_base_store_internal_kv_v1beta1_kv_proto_init() {
-	if File_cosmos_base_store_internal_kv_v1beta1_kv_proto != nil {
+func init() { file_cosmos_store_internal_kv_v1beta1_kv_proto_init() }
+func file_cosmos_store_internal_kv_v1beta1_kv_proto_init() {
+	if File_cosmos_store_internal_kv_v1beta1_kv_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Pairs); i {
 			case 0:
 				return &v.state
@@ -1172,7 +1169,7 @@ func file_cosmos_base_store_internal_kv_v1beta1_kv_proto_init() {
 				return nil
 			}
 		}
-		file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Pair); i {
 			case 0:
 				return &v.state
@@ -1189,18 +1186,18 @@ func file_cosmos_base_store_internal_kv_v1beta1_kv_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDesc,
+			RawDescriptor: file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_cosmos_base_store_internal_kv_v1beta1_kv_proto_goTypes,
-		DependencyIndexes: file_cosmos_base_store_internal_kv_v1beta1_kv_proto_depIdxs,
-		MessageInfos:      file_cosmos_base_store_internal_kv_v1beta1_kv_proto_msgTypes,
+		GoTypes:           file_cosmos_store_internal_kv_v1beta1_kv_proto_goTypes,
+		DependencyIndexes: file_cosmos_store_internal_kv_v1beta1_kv_proto_depIdxs,
+		MessageInfos:      file_cosmos_store_internal_kv_v1beta1_kv_proto_msgTypes,
 	}.Build()
-	File_cosmos_base_store_internal_kv_v1beta1_kv_proto = out.File
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_rawDesc = nil
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_goTypes = nil
-	file_cosmos_base_store_internal_kv_v1beta1_kv_proto_depIdxs = nil
+	File_cosmos_store_internal_kv_v1beta1_kv_proto = out.File
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_rawDesc = nil
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_goTypes = nil
+	file_cosmos_store_internal_kv_v1beta1_kv_proto_depIdxs = nil
 }

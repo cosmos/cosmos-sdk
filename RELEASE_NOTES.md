@@ -11,5 +11,6 @@ Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.
 ```go
 # Can be deleted from go.mod
 replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
-Instead, github.com/confio/ics23/go must be bumped to v0.9.0.
 ```
+
+Instead, `github.com/confio/ics23/go` must be **bumped to `v0.9.0`**.

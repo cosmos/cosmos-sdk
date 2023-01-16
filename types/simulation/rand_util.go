@@ -42,7 +42,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // RandPositiveInt get a rand positive math.Int
-func RandPositiveInt(r *rand.Rand, max sdk.Int) (sdkmath.Int, error) {
+func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
 	if !max.GTE(sdkmath.OneInt()) {
 		return sdkmath.Int{}, errors.New("max too small")
 	}

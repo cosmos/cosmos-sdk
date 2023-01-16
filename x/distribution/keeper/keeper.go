@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -163,4 +162,39 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	k.SetFeePool(ctx, feePool)
 
 	return nil
+}
+
+// SaveGrant method grants the provided authorization to the grantee on the granter's account
+// with the provided expiration time. If there is an existing authorization grant for the
+// same `sdk.Msg` type, this grant overwrites that.
+func (k Keeper) SaveAutoRestakeEntry(ctx sdk.Context, delegator sdk.AccAddress, validator sdk.ValAddress) error {
+	store := ctx.KVStore(k.storeKey)
+
+	skey := autoRestakeKey(delegator, validator)
+
+	store.Set(skey, []byte("k"))
+	return nil
+}
+
+// DeleteGrant revokes any authorization for the provided message type granted to the grantee
+// by the granter.
+func (k Keeper) DeleteAutoRestakeEntry(ctx sdk.Context, delegator sdk.AccAddress, validator sdk.ValAddress) error {
+	store := ctx.KVStore(k.storeKey)
+	skey := autoRestakeKey(delegator, validator)
+	found := store.Has(skey)
+	if !found {
+		return sdkerrors.ErrNotFound.Wrap("authorization not found")
+	}
+	store.Delete(skey)
+	return nil
+}
+
+func autoRestakeKey(delegator sdk.AccAddress, validator sdk.ValAddress) []byte {
+	l := 3 + len(delegator) + len(validator)
+	key := make([]byte, l)
+	copy(key, []byte("lol"))
+	copy(key[1:], delegator)
+	copy(key[1+len(delegator):], validator)
+
+	return key
 }

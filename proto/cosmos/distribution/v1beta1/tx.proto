@@ -24,6 +24,8 @@ service Msg {
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
+
+  rpc SetAutoRestake(MsgSetAutoRestake) returns (MsgSetAutoRestakeResponse);
 }
 
 // MsgSetWithdrawAddress sets the withdraw address for
@@ -35,6 +37,20 @@ message MsgSetWithdrawAddress {
   string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string withdraw_address  = 2 [(gogoproto.moretags) = "yaml:\"withdraw_address\""];
 }
+
+// MsgEnableAutoRestake enables auto-restaking for a
+// a delegator-validator pair.
+message MsgSetAutoRestake {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  bool   enabled           = 3 [(gogoproto.moretags) = "yaml:\"enabled\""];
+}
+
+// MsgAutoRestakeResponse defines the Msg/AutoRestakeResponse response type.
+message MsgSetAutoRestakeResponse {}
 
 // MsgSetWithdrawAddressResponse defines the Msg/SetWithdrawAddress response type.
 message MsgSetWithdrawAddressResponse {}

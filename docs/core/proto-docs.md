@@ -248,6 +248,7 @@
     - [CommunityPoolSpendProposalWithDeposit](#cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit)
     - [DelegationDelegatorReward](#cosmos.distribution.v1beta1.DelegationDelegatorReward)
     - [DelegatorStartingInfo](#cosmos.distribution.v1beta1.DelegatorStartingInfo)
+    - [EventAddAutoRestake](#cosmos.distribution.v1beta1.EventAddAutoRestake)
     - [FeePool](#cosmos.distribution.v1beta1.FeePool)
     - [Params](#cosmos.distribution.v1beta1.Params)
     - [ValidatorAccumulatedCommission](#cosmos.distribution.v1beta1.ValidatorAccumulatedCommission)
@@ -294,6 +295,8 @@
 - [cosmos/distribution/v1beta1/tx.proto](#cosmos/distribution/v1beta1/tx.proto)
     - [MsgFundCommunityPool](#cosmos.distribution.v1beta1.MsgFundCommunityPool)
     - [MsgFundCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse)
+    - [MsgSetAutoRestake](#cosmos.distribution.v1beta1.MsgSetAutoRestake)
+    - [MsgSetAutoRestakeResponse](#cosmos.distribution.v1beta1.MsgSetAutoRestakeResponse)
     - [MsgSetWithdrawAddress](#cosmos.distribution.v1beta1.MsgSetWithdrawAddress)
     - [MsgSetWithdrawAddressResponse](#cosmos.distribution.v1beta1.MsgSetWithdrawAddressResponse)
     - [MsgWithdrawDelegatorReward](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward)
@@ -3812,6 +3815,16 @@ thus sdk.Dec is used.
 
 
 
+<a name="cosmos.distribution.v1beta1.EventAddAutoRestake"></a>
+
+### EventAddAutoRestake
+
+
+
+
+
+
+
 <a name="cosmos.distribution.v1beta1.FeePool"></a>
 
 ### FeePool
@@ -4506,6 +4519,34 @@ MsgFundCommunityPoolResponse defines the Msg/FundCommunityPool response type.
 
 
 
+<a name="cosmos.distribution.v1beta1.MsgSetAutoRestake"></a>
+
+### MsgSetAutoRestake
+MsgEnableAutoRestake enables auto-restaking for a
+a delegator-validator pair.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator_address` | [string](#string) |  |  |
+| `validator_address` | [string](#string) |  |  |
+| `enabled` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="cosmos.distribution.v1beta1.MsgSetAutoRestakeResponse"></a>
+
+### MsgSetAutoRestakeResponse
+MsgAutoRestakeResponse defines the Msg/AutoRestakeResponse response type.
+
+
+
+
+
+
 <a name="cosmos.distribution.v1beta1.MsgSetWithdrawAddress"></a>
 
 ### MsgSetWithdrawAddress
@@ -4603,6 +4644,7 @@ Msg defines the distribution Msg service.
 | `WithdrawDelegatorReward` | [MsgWithdrawDelegatorReward](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward) | [MsgWithdrawDelegatorRewardResponse](#cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse) | WithdrawDelegatorReward defines a method to withdraw rewards of delegator from a single validator. | |
 | `WithdrawValidatorCommission` | [MsgWithdrawValidatorCommission](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission) | [MsgWithdrawValidatorCommissionResponse](#cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse) | WithdrawValidatorCommission defines a method to withdraw the full commission to the validator address. | |
 | `FundCommunityPool` | [MsgFundCommunityPool](#cosmos.distribution.v1beta1.MsgFundCommunityPool) | [MsgFundCommunityPoolResponse](#cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse) | FundCommunityPool defines a method to allow an account to directly fund the community pool. | |
+| `SetAutoRestake` | [MsgSetAutoRestake](#cosmos.distribution.v1beta1.MsgSetAutoRestake) | [MsgSetAutoRestakeResponse](#cosmos.distribution.v1beta1.MsgSetAutoRestakeResponse) |  | |
 
  <!-- end services -->
 

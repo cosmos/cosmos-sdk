@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"golang.org/x/crypto/blowfish"
+	"golang.org/x/crypto/blowfish" //nolint:staticcheck // used in origial https://cs.opensource.google/go/x/crypto/+/master:bcrypt/bcrypt.go
 )
 
 const (
@@ -23,11 +23,11 @@ const (
 	DefaultCost int = 10 // the cost that will actually be set if a cost below MinCost is passed into GenerateFromPassword
 )
 
-// The error returned from CompareHashAndPassword when a password and hash do
+// ErrMismatchedHashAndPassword is returned from CompareHashAndPassword when a password and hash do
 // not match.
 var ErrMismatchedHashAndPassword = errors.New("crypto/bcrypt: hashedPassword is not the hash of the given password")
 
-// The error returned from CompareHashAndPassword when a hash is too short to
+// ErrHashTooShort is returned from CompareHashAndPassword when a hash is too short to
 // be a bcrypt hash.
 var ErrHashTooShort = errors.New("crypto/bcrypt: hashedSecret too short to be a bcrypted password")
 
@@ -49,7 +49,7 @@ func (ih InvalidHashPrefixError) Error() string {
 type InvalidCostError int
 
 func (ic InvalidCostError) Error() string {
-	return fmt.Sprintf("crypto/bcrypt: cost %d is outside allowed range (%d,%d)", int(ic), int(MinCost), int(MaxCost))
+	return fmt.Sprintf("crypto/bcrypt: cost %d is outside allowed range (%d,%d)", int(ic), MinCost, MaxCost)
 }
 
 const (
@@ -184,7 +184,7 @@ func bcrypt(password []byte, cost int, salt []byte) ([]byte, error) {
 	cipherData := make([]byte, len(magicCipherData))
 	copy(cipherData, magicCipherData)
 
-	c, err := expensiveBlowfishSetup(password, uint32(cost), salt)
+	c, err := expensiveBlowfishSetup(password, uint32(cost), salt) //nolint:gosec // used in origial https://cs.opensource.google/go/x/crypto/+/master:bcrypt/bcrypt.go
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func expensiveBlowfishSetup(key []byte, cost uint32, salt []byte) (*blowfish.Cip
 	// Bug compatibility with C bcrypt implementations. They use the trailing
 	// NULL in the key string during expansion.
 	// We copy the key to prevent changing the underlying array.
-	ckey := append(key[:len(key):len(key)], 0)
+	ckey := append(key[:len(key):len(key)], 0) //nolint:gocritic // used in origial https://cs.opensource.google/go/x/crypto/+/master:bcrypt/bcrypt.go
 
 	c, err := blowfish.NewSaltedCipher(ckey, csalt)
 	if err != nil {

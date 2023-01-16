@@ -29,6 +29,15 @@ type LedgerPrivKey interface {
 	Type() string
 }
 
+// LedgerPrivKeyTextual is a Ledger PrivKey type that supports signing with
+// SIGN_MODE_TEXTUAL. It is added as a non-breaking change, instead of directly
+// on the LedgerPrivKey interface.
+type LedgerPrivKeyTextual interface {
+	LedgerPrivKey
+	// SignTextual signs a messages on the Ledger devices using Textual.
+	SignTextual(msg []byte) ([]byte, error)
+}
+
 // PrivKey defines a private key and extends proto.Message. For now, it extends
 // LedgerPrivKey (see godoc for LedgerPrivKey). Ultimately, we should remove
 // LedgerPrivKey and add its methods here directly.

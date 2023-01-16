@@ -192,6 +192,7 @@ replace (
 	// todo remove at pseudo version of confix
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tx => ../tx
+	github.com/cosmos/ledger-cosmos-go => ../../ledger-cosmos-go
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.

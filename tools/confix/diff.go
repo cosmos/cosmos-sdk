@@ -84,10 +84,11 @@ func DiffValues(lhs, rhs *tomledit.Document) []Diff {
 
 	i, j := 0, 0
 	for i < len(lsec) && j < len(rsec) {
-		if rsec[j].Name.Before(lsec[i].Name) {
-			for _, kv := range allKVs(rsec[j]) {
-				diff = append(diff, Diff{Type: Mapping, KV: kv})
-			}
+		if lsec[i].Name.Before(rsec[j].Name) {
+			// skip keys present in lhs but not in rhs
+			i++
+		} else if rsec[j].Name.Before(lsec[i].Name) {
+			// skip keys present in rhs but not in lhs
 			j++
 		} else {
 			for _, d := range diffDocs(allKVs(lsec[i]), allKVs(rsec[j]), true) {
@@ -107,7 +108,8 @@ func allKVs(s *tomledit.Section) []KV {
 	keys := []KV{}
 	s.Scan(func(key parser.Key, entry *tomledit.Entry) bool {
 		keys = append(keys, KV{
-			Key:   key.String(),
+			Key: key.String(),
+			// we get the value of the current configuration (i.e the one we want to compare/migrate)
 			Value: entry.Value.String(),
 			Block: entry.Block,
 		})

@@ -1,6 +1,7 @@
 # Cosmos SDK v0.46.8 Release Notes
 
-This release introduces bug fixes and improvements.
+This release introduces bug fixes and improvements. Notably, the SDK have now switched to Informal Systems' Tendermint fork.
+Their fork have no changes compared to the upstream Tendermint, but it is now [maintained by Informal Systems](https://twitter.com/informalinc/status/1613580954383040512). Chains are invited to do the same.
 
 Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md) for an exhaustive list of changes.
 

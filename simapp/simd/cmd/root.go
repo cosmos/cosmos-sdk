@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"io"
 	"os"
@@ -11,15 +10,11 @@ import (
 	"github.com/spf13/viper"
 	tmcfg "github.com/tendermint/tendermint/config"
 	"github.com/tendermint/tendermint/libs/log"
-	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
 
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-	"cosmossdk.io/tx/textual"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -28,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -88,25 +84,7 @@ func NewRootCmd() *cobra.Command {
 			txConfigWithTextual := tx.NewTxConfigWithTextual(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
 				encodingConfig.TxConfig.SignModeHandler().Modes(),
-				textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-					bankQueryClient := bankv1beta1.NewQueryClient(initClientCtx)
-					res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
-						Denom: denom,
-					})
-
-					status, ok := grpcstatus.FromError(err)
-					if !ok {
-						return nil, err
-					}
-
-					// This means we didn't find any metadata for this denom. Returning
-					// empty metadata.
-					if status.Code() == codes.NotFound {
-						return nil, nil
-					}
-
-					return res.Metadata, nil
-				}),
+				clienttx.NewTextualWithClientCtx(initClientCtx),
 			)
 			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 

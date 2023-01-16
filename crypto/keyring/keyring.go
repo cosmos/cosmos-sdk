@@ -107,7 +107,7 @@ type Signer interface {
 	Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error)
+	SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -391,13 +391,13 @@ func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]by
 	}
 }
 
-func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
+func (ks keystore) SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return ks.Sign(k.Name, msg, 0)
+	return ks.Sign(k.Name, msg, signMode)
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
@@ -619,7 +619,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 			return nil, nil, err
 		}
 	case signing.SignMode_SIGN_MODE_TEXTUAL:
-		sig, err = priv.SignTextual(msg)
+		sig, err = priv.SignLedgerTextual(msg)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -34,8 +34,8 @@ type LedgerPrivKey interface {
 // on the LedgerPrivKey interface.
 type LedgerPrivKeyTextual interface {
 	LedgerPrivKey
-	// SignTextual signs a messages on the Ledger devices using Textual.
-	SignTextual(msg []byte) ([]byte, error)
+	// SignLedgerTextual signs a messages on the Ledger device using Textual.
+	SignLedgerTextual(msg []byte) ([]byte, error)
 }
 
 // PrivKey defines a private key and extends proto.Message. For now, it extends

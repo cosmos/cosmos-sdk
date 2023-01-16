@@ -148,6 +148,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// Temporary until we tag a new version
 replace cosmossdk.io/tx => ../../tx
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

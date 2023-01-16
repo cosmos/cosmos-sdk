@@ -146,9 +146,9 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	return sign(device, pkl, message, 0)
 }
 
-// Sign returns a secp256k1 signature for the corresponding message using
+// SignLedgerTextual returns a secp256k1 signature for the corresponding message using
 // SIGN_MODE_TEXTUAL.
-func (pkl PrivKeyLedgerSecp256k1) SignTextual(message []byte) ([]byte, error) {
+func (pkl PrivKeyLedgerSecp256k1) SignLedgerTextual(message []byte) ([]byte, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err

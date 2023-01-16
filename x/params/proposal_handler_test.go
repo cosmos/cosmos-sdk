@@ -3,11 +3,10 @@ package params_test
 import (
 	"testing"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -17,6 +16,7 @@ import (
 	paramstestutil "github.com/cosmos/cosmos-sdk/x/params/testutil"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // StakingKeeper defines the expected staking keeper
@@ -34,8 +34,8 @@ type HandlerTestSuite struct {
 
 func (suite *HandlerTestSuite) SetupTest() {
 	encodingCfg := moduletestutil.MakeTestEncodingConfig(params.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(paramtypes.StoreKey)
-	tkey := sdk.NewTransientStoreKey("params_transient_test")
+	key := storetypes.NewKVStoreKey(paramtypes.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("params_transient_test")
 
 	ctx := testutil.DefaultContext(key, tkey)
 	paramsKeeper := keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)

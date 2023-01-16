@@ -70,14 +70,14 @@ func (s Subspace) WithKeyTable(table KeyTable) Subspace {
 }
 
 // Returns a KVStore identical with ctx.KVStore(s.key).Prefix()
-func (s Subspace) kvStore(ctx sdk.Context) sdk.KVStore {
+func (s Subspace) kvStore(ctx sdk.Context) storetypes.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
 	return prefix.NewStore(ctx.KVStore(s.key), append(s.name, '/'))
 }
 
 // Returns a transient store for modification
-func (s Subspace) transientStore(ctx sdk.Context) sdk.KVStore {
+func (s Subspace) transientStore(ctx sdk.Context) storetypes.KVStore {
 	// append here is safe, appends within a function won't cause
 	// weird side effects when its singlethreaded
 	return prefix.NewStore(ctx.TransientStore(s.tkey), append(s.name, '/'))
@@ -134,7 +134,7 @@ func (s Subspace) GetIfExists(ctx sdk.Context, key []byte, ptr interface{}) {
 func (s Subspace) IterateKeys(ctx sdk.Context, cb func(key []byte) bool) {
 	store := s.kvStore(ctx)
 
-	iter := sdk.KVStorePrefixIterator(store, nil)
+	iter := storetypes.KVStorePrefixIterator(store, nil)
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {

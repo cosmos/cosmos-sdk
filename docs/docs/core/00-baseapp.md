@@ -231,9 +231,32 @@ Developers building on top of the Cosmos SDK need not implement the ABCI themsel
 * [`DeliverTx`](#delivertx)
 
 
-## Prepare Proposal
+### Prepare Proposal
 
-## Process Proposal
+### Process Proposal
+The `ProcessProposal` function is part of the new methods introduced in Application Blockchain Interface (ABCI++) in Tendermint. This function is called by the BaseApp as part of the ABCI message flow, and is executed during the `BeginBlock` phase of the consensus process. The purpose of this function is to give more control to the application for block validation, allowing it to check all transactions in a proposed block before the validator sends the prevote for the block. It allows a validator to perform application-dependent work in a proposed block, enabling features such as immediate block execution, and allows the Application to reject invalid blocks.
+
+The `ProcessProposal` function performs several key tasks, including:
+
+1.  Validating the proposed block by checking all transactions in it.
+2.  Checking the proposed block against the current state of the application, to ensure that it is valid and that it can be executed.
+3.  Updating the application's state based on the proposal, if it is valid and passes all checks.
+4.  Returning a response to Tendermint indicating the result of the proposal processing.
+
+The `ProcessProposal` is an important part of the application's overall governance system. It is used to manage the network's parameters and other key aspects of its operation. It also ensures that the coherence property is adhered to i.e. all honest validators must accept a proposal by an honest proposer.
+
+It's important to note that `ProcessProposal` complements the `PrepareProposal` method which enables the application to have more fine-grained transaction control by allowing it to reorder, drop, delay, modify, and even add transactions as they see necessary. The combination of these two methods means that it is possible to guarantee that no invalid transactions are ever committed. Furthermore, such a setup can give rise to other interesting use cases such as Oracles, threshold decryption and more.
+
+Tendermint calls it when it receives a proposal and the Tendermint algorithm has not locked on a value. The Application cannot modify the proposal at this point but can reject it if it is invalid. If that is the case, Tendermint will prevote `nil` on the proposal, which has strong liveness implications for Tendermint. As a general rule, the Application SHOULD accept a prepared proposal passed via `ProcessProposal`, even if a part of the proposal is invalid (e.g., an invalid transaction); the Application can ignore the invalid part of the prepared proposal at block execution time.
+
+However, developers must exercise greater caution when using these methods. Incorrectly coding these methods could affect liveness as Tendermint is unable to receive 2/3 valid precommits to finalize a block.
+
+`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+
+* `Code (uint32)`: Response Code. `0` if successful.
+* `Data ([]byte)`: Result bytes, if any.
+* `Log (string):` The output of the application's logger. May be non-deterministic.
+* `Info (string):` Additional information. May be non-deterministic.
 
 ### CheckTx
 

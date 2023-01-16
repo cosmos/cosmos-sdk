@@ -3,26 +3,11 @@ module github.com/cosmos/cosmos-sdk
 go 1.18
 
 require (
-<<<<<<< HEAD
 	github.com/99designs/keyring v1.1.6
 	github.com/armon/go-metrics v0.3.10
-	github.com/bgentry/speakeasy v0.1.0
+	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
 	github.com/btcsuite/btcd v0.22.1
 	github.com/coinbase/rosetta-sdk-go v0.7.0
-=======
-	cosmossdk.io/api v0.2.6
-	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476
-	cosmossdk.io/core v0.4.1
-	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/math v1.0.0-beta.4
-	github.com/99designs/keyring v1.2.1
-	github.com/armon/go-metrics v0.4.1
-	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2
-	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
-	github.com/cockroachdb/apd/v2 v2.0.2
->>>>>>> 6887e1db7 (build: bump `bgentry/speakasy` to pseudo version (#14633))
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/go-bip39 v1.0.0

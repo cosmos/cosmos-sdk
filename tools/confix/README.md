@@ -108,6 +108,18 @@ simd config migrate v0.47 # migrates defaultHome/config/app.toml to the latest v
 confix migrate v0.47 ~/.simapp/config/app.toml # migrate ~/.simapp/config/app.toml to the latest v0.47 config
 ```
 
+### Diff
+
+Get the diff between a given configuration file and the default configuration file, e.g.:
+
+```shell
+simd config diff v0.47 # gets the diff between defaultHome/config/app.toml and the latest v0.47 config
+```
+
+```shell
+confix diff v0.47 ~/.simapp/config/app.toml # gets the diff between ~/.simapp/config/app.toml and the latest v0.47 config
+```
+
 ### Maintainer
 
 At each SDK modification of the default configuration, add the default SDK config under `data/v0.XX-app.toml`.

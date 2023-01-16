@@ -187,7 +187,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for slashing module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -210,6 +210,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type SlashingInputs struct {
 	depinject.In
 
@@ -226,6 +227,7 @@ type SlashingInputs struct {
 	LegacySubspace exported.Subspace
 }
 
+//nolint:revive
 type SlashingOutputs struct {
 	depinject.Out
 

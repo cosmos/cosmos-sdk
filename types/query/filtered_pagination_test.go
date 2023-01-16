@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -56,7 +57,7 @@ func (s *paginationTestSuite) TestFilteredPaginations() {
 	s.Require().NotNil(res)
 	s.Require().Equal(2, len(balances))
 	s.Require().NotNil(res.NextKey)
-	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test2denom"))
+	s.Require().Equal(string(res.NextKey), "test2denom")
 	s.Require().Equal(uint64(4), res.Total)
 
 	s.T().Log("verify both key and offset can't be given")
@@ -152,7 +153,7 @@ func (s *paginationTestSuite) TestReverseFilteredPaginations() {
 	s.Require().NotNil(res)
 	s.Require().Equal(2, len(balns))
 	s.Require().NotNil(res.NextKey)
-	s.Require().Equal(string(res.NextKey), fmt.Sprintf("test5denom"))
+	s.Require().Equal(string(res.NextKey), "test5denom")
 
 	s.T().Log("verify last page records, nextKey for query and reverse true")
 	pageReq = &query.PageRequest{Key: res.NextKey, Reverse: true}
@@ -219,7 +220,7 @@ func (s *paginationTestSuite) TestFilteredPaginate() {
 	// balances:<denom:"test0denom" amount:"250" > pagination:<next_key:"test1denom" total:5 >
 }
 
-func execFilterPaginate(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
+func execFilterPaginate(store storetypes.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
 	balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 	accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 
@@ -261,7 +262,7 @@ func (s *paginationTestSuite) TestFilteredPaginationsNextKey() {
 	s.Require().NoError(testutil.FundAccount(s.bankKeeper, s.ctx, addr1, balances))
 	store := s.ctx.KVStore(s.app.UnsafeFindStoreKey(types.StoreKey))
 
-	execFilterPaginate := func(store sdk.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
+	execFilterPaginate := func(store storetypes.KVStore, pageReq *query.PageRequest, appCodec codec.Codec) (balances sdk.Coins, res *query.PageResponse, err error) {
 		balancesStore := prefix.NewStore(store, types.BalancesPrefix)
 		accountStore := prefix.NewStore(balancesStore, address.MustLengthPrefix(addr1))
 

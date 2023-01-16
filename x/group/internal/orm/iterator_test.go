@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,7 +21,7 @@ func TestReadAll(t *testing.T) {
 	specs := map[string]struct {
 		srcIT     Iterator
 		destSlice func() ModelSlicePtr
-		expErr    *sdkerrors.Error
+		expErr    *sdkerrors.Error //nolint:staticcheck // SA1019: sdkerrors.Error is deprecated: the type has been moved to cosmossdk.io/errors module. Please use the above module instead of this package.
 		expIDs    []RowID
 		expResult ModelSlicePtr
 	}{
@@ -203,12 +204,12 @@ func TestPaginate(t *testing.T) {
 	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
 	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		return []interface{}{[]byte(val.(*testdata.TableModel).Metadata)}, nil
+		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
 	}, testdata.TableModel{}.Metadata)
 	require.NoError(t, err)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	metadata := []byte("metadata")
 	t1 := testdata.TableModel{
@@ -238,6 +239,7 @@ func TestPaginate(t *testing.T) {
 	}
 
 	for _, g := range []testdata.TableModel{t1, t2, t3, t4, t5} {
+		g := g
 		_, err := tb.Create(store, &g)
 		require.NoError(t, err)
 	}

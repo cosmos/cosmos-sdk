@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

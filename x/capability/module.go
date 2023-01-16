@@ -168,7 +168,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for capability module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -187,6 +187,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type CapabilityInputs struct {
 	depinject.In
 
@@ -197,6 +198,7 @@ type CapabilityInputs struct {
 	Cdc         codec.Codec
 }
 
+//nolint:revive
 type CapabilityOutputs struct {
 	depinject.Out
 

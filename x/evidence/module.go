@@ -183,7 +183,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
@@ -202,6 +202,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type EvidenceInputs struct {
 	depinject.In
 
@@ -212,6 +213,7 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
+//nolint:revive
 type EvidenceOutputs struct {
 	depinject.Out
 

@@ -188,7 +188,7 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
@@ -205,6 +205,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type BankInputs struct {
 	depinject.In
 
@@ -218,6 +219,7 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
+//nolint:revive
 type BankOutputs struct {
 	depinject.Out
 

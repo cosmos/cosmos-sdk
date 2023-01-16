@@ -14,7 +14,8 @@ import (
 	dpb "github.com/golang/protobuf/protoc-gen-go/descriptor"
 )
 
-// importsToFix lets us now that we're only fixing gogoproto/gogoproto.proto imports, we're not fixing cosmos protos.
+// importsToFix lets us now that we're only fixing gogoproto/gogoproto.proto
+// imports, we're not fixing cosmos Proto schemas.
 var importsToFix = map[string]string{
 	"gogo.proto": "gogoproto/gogo.proto",
 }
@@ -41,15 +42,15 @@ func fixRegistration(registeredAs, importedAs string) error {
 	if err != nil {
 		return fmt.Errorf("unable to compress: %w", err)
 	}
+
 	gogoproto.RegisterFile(importedAs, fixedRaw)
 	return nil
 }
 
 func init() {
-	// we need to fix the gogoproto filedesc to match the import path
-	// in theory this shouldn't be required, generally speaking
-	// proto files should be imported as their registration path
-
+	// We need to fix the gogoproto file descriptor to match the import path, in
+	// theory this shouldn't be required, generally speaking proto files should be
+	// imported as their registration path.
 	for registeredAs, importedAs := range importsToFix {
 		err := fixRegistration(registeredAs, importedAs)
 		if err != nil {
@@ -66,23 +67,27 @@ func compress(fd *dpb.FileDescriptorProto) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	buf := new(bytes.Buffer)
 	cw := gzip.NewWriter(buf)
+
 	_, err = cw.Write(fdBytes)
 	if err != nil {
 		cw.Close()
 		return nil, err
 	}
+
 	err = cw.Close()
 	if err != nil {
 		return nil, err
 	}
+
 	return buf.Bytes(), nil
 }
 
 func getFileDescriptor(filePath string) []byte {
-	// since we got well known descriptors which are not registered into gogoproto registry
-	// but are instead registered into the proto one, we need to check both
+	// Since we got well known descriptors which are not registered into gogoproto
+	// registry but are instead registered into the proto one, we need to check both.
 	fd := gogoproto.FileDescriptor(filePath)
 	if len(fd) != 0 {
 		return fd
@@ -109,7 +114,7 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 	}
 
 	// check into proto registry
-	//nolint:staticcheck // Seems likely that we should refactor this file.
+	//nolint:staticcheck
 	for id, desc := range proto.RegisteredExtensions(m) {
 		if id == extID {
 			return &gogoproto.ExtensionDesc{
@@ -128,6 +133,7 @@ func getExtension(extID int32, m proto.Message) *gogoproto.ExtensionDesc {
 
 func getExtensionsNumbers(m proto.Message) []int32 {
 	gogoProtoExts := gogoproto.RegisteredExtensions(m)
+
 	out := make([]int32, 0, len(gogoProtoExts))
 	for id := range gogoProtoExts {
 		out = append(out, id)
@@ -141,5 +147,6 @@ func getExtensionsNumbers(m proto.Message) []int32 {
 	for id := range protoExts {
 		out = append(out, id)
 	}
+
 	return out
 }

@@ -56,7 +56,7 @@ The minter is a space for holding current inflation information.
 * Minter: `0x00 -> ProtocolBuffer(minter)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L9-L23
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L10-L24
 ```
 
 ### Params
@@ -67,14 +67,12 @@ it can be updated with governance or the address with authority.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/mint/v1beta1/mint.proto#L25-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
 ```
-
 
 ## Begin-Block
 
-Minting parameters are recalculated and inflation
-paid at the beginning of each block.
+Minting parameters are recalculated and inflation paid at the beginning of each block.
 
 ### Inflation rate calculation
 
@@ -101,7 +99,7 @@ NextInflationRate(params Params, bondedRatio sdk.Dec) (inflation sdk.Dec) {
 	inflationRateChangePerYear = (1 - bondedRatio/params.GoalBonded) * params.InflationRateChange
 	inflationRateChange = inflationRateChangePerYear/blocksPerYr
 
-	// increase the new annual inflation for this next cycle
+	// increase the new annual inflation for this next block
 	inflation += inflationRateChange
 	if inflation > params.InflationMax {
 		inflation = params.InflationMax

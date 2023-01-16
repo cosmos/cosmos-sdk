@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 	expHistInfos := []stakingtypes.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		keeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
+		keeper.SetHistoricalInfo(ctx, int64(10+i), &hi) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 	}
 
 	infos := keeper.GetAllHistoricalInfo(ctx)

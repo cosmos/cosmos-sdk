@@ -137,7 +137,7 @@ func Composed(typ string, subaccounts []Addressable) []byte {
 
 The `typ` parameter should be a schema descriptor, containing all significant attributes with deterministic serialization (eg: utf8 string).
 `LengthPrefix` is a function which prepends 1 byte to the address. The value of that byte is the length of the address bits before prepending. The address must be at most 255 bits long.
-We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, (a) => LengthPrefix(a))) = map(bs, (b) => LengthPrefix(b))` iff `as = bs`.
+We are using `LengthPrefix` to eliminate conflicts - it assures, that for 2 lists of addresses: `as = {a1, a2, ..., an}` and `bs = {b1, b2, ..., bm}` such that every `bi` and `ai` is at most 255 long, `concatenate(map(as, (a) => LengthPrefix(a))) = map(bs, (b) => LengthPrefix(b))` if `as = bs`.
 
 Implementation Tip: account implementations should cache addresses.
 

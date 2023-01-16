@@ -1,5 +1,5 @@
 syntax = "proto3";
-package cosmos.base.store.internal.kv.v1beta1;
+package cosmos.store.internal.kv.v1beta1;
 
 import "gogoproto/gogo.proto";
 

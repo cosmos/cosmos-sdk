@@ -42,11 +42,13 @@ func DiffCommand() *cobra.Command {
 
 			diff := confix.DiffValues(rawFile, targetVersionFile)
 			if len(diff) == 0 {
-				clientCtx.PrintString("All config values are the same as the defaults.\n")
-				return nil
+				return clientCtx.PrintString("All config values are the same as the defaults.\n")
 			}
 
-			clientCtx.PrintString("The following config values are different from the defaults:\n")
+			if err := clientCtx.PrintString("The following config values are different from the defaults:\n"); err != nil {
+				return err
+			}
+
 			confix.PrintDiff(cmd.OutOrStdout(), diff)
 			return nil
 		},

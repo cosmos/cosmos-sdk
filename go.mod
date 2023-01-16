@@ -25,7 +25,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/cosmos/iavl v0.20.0-alpha1
-	github.com/cosmos/ledger-cosmos-go v0.12.2
+	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/gofuzz v1.2.0
@@ -179,11 +179,9 @@ require (
 )
 
 replace (
+	cosmossdk.io/api => ./api
 	// Temporary until we tag new versions
 	cosmossdk.io/tx => ./tx
-	github.com/cosmos/ledger-cosmos-go => ../ledger-cosmos-go
-
-	cosmossdk.io/api => ./api
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

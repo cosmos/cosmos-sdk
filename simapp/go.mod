@@ -24,11 +24,6 @@ require (
 )
 
 require (
-	cosmossdk.io/tx v0.0.0
-	google.golang.org/grpc v1.52.0
-)
-
-require (
 	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.13.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
@@ -36,6 +31,7 @@ require (
 	cloud.google.com/go/storage v1.27.0 // indirect
 	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
+	cosmossdk.io/tx v0.0.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -66,7 +62,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0-alpha1 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.9.0 // indirect
 	github.com/creachadair/atomicfile v0.2.7 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -179,6 +175,7 @@ require (
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9 // indirect
+	google.golang.org/grpc v1.52.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
@@ -192,7 +189,7 @@ replace (
 	// todo remove at pseudo version of confix
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/tx => ../tx
-	github.com/cosmos/ledger-cosmos-go => ../../ledger-cosmos-go
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.

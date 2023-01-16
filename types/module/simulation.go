@@ -7,9 +7,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -23,7 +21,7 @@ type AppModuleSimulation interface {
 	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
 
 	// register a func to decode the each module's defined types from their corresponding store key
-	RegisterStoreDecoder(sdk.StoreDecoderRegistry)
+	RegisterStoreDecoder(simulation.StoreDecoderRegistry)
 
 	// simulation operations (i.e msgs) with their respective weight
 	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
@@ -32,8 +30,8 @@ type AppModuleSimulation interface {
 // SimulationManager defines a simulation manager that provides the high level utility
 // for managing and executing simulation functionalities for a group of modules
 type SimulationManager struct {
-	Modules       []AppModuleSimulation    // array of app modules; we use an array for deterministic simulation tests
-	StoreDecoders sdk.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
+	Modules       []AppModuleSimulation           // array of app modules; we use an array for deterministic simulation tests
+	StoreDecoders simulation.StoreDecoderRegistry // functions to decode the key-value pairs from each module's store
 }
 
 // NewSimulationManager creates a new SimulationManager object
@@ -42,7 +40,7 @@ type SimulationManager struct {
 func NewSimulationManager(modules ...AppModuleSimulation) *SimulationManager {
 	return &SimulationManager{
 		Modules:       modules,
-		StoreDecoders: make(sdk.StoreDecoderRegistry),
+		StoreDecoders: make(simulation.StoreDecoderRegistry),
 	}
 }
 
@@ -124,6 +122,7 @@ type SimulationState struct {
 	Accounts     []simulation.Account                 // simulation accounts
 	InitialStake sdkmath.Int                          // initial coins per account
 	NumBonded    int64                                // number of initially bonded accounts
+	BondDenom    string                               // denom to be used as default
 	GenTimestamp time.Time                            // genesis timestamp
 	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
 	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules

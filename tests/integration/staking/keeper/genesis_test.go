@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
+	"cosmossdk.io/simapp"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/simapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -32,14 +33,14 @@ func TestInitGenesis(t *testing.T) {
 
 	params := app.StakingKeeper.GetParams(ctx)
 	validators := app.StakingKeeper.GetAllValidators(ctx)
-	require.Len(t, validators, 1)
+	assert.Assert(t, len(validators) == 1)
 	var delegations []types.Delegation
 
 	pk0, err := codectypes.NewAnyWithValue(PKs[0])
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	pk1, err := codectypes.NewAnyWithValue(PKs[1])
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// initialize the validators
 	bondedVal1 := types.Validator{
@@ -64,7 +65,7 @@ func TestInitGenesis(t *testing.T) {
 
 	// mint coins in the bonded pool representing the validators coins
 	i2 := len(validators) - 1 // -1 to exclude genesis validator
-	require.NoError(t,
+	assert.NilError(t,
 		testutil.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
@@ -82,26 +83,26 @@ func TestInitGenesis(t *testing.T) {
 	vals := app.StakingKeeper.InitGenesis(ctx, genesisState)
 
 	actualGenesis := app.StakingKeeper.ExportGenesis(ctx)
-	require.Equal(t, genesisState.Params, actualGenesis.Params)
-	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
-	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
+	assert.DeepEqual(t, genesisState.Params, actualGenesis.Params)
+	assert.DeepEqual(t, genesisState.Delegations, actualGenesis.Delegations)
+	assert.DeepEqual(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
 
 	// Ensure validators have addresses.
 	vals2, err := staking.WriteValidators(ctx, app.StakingKeeper)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	for _, val := range vals2 {
-		require.NotEmpty(t, val.Address)
+		assert.Assert(t, val.Address.String() != "")
 	}
 
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
-	require.True(t, found)
-	require.Equal(t, types.Bonded, resVal.Status)
+	assert.Assert(t, found)
+	assert.Equal(t, types.Bonded, resVal.Status)
 
 	resVal, found = app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[1]))
-	require.True(t, found)
-	require.Equal(t, types.Bonded, resVal.Status)
+	assert.Assert(t, found)
+	assert.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 
@@ -110,7 +111,7 @@ func TestInitGenesis(t *testing.T) {
 		abcivals[i] = val.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx))
 	}
 
-	require.Equal(t, abcivals, vals)
+	assert.DeepEqual(t, abcivals, vals)
 }
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
@@ -118,7 +119,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	consPub, err := codectypes.NewAnyWithValue(PKs[0])
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	validator := types.Validator{
 		OperatorAddress: sdk.ValAddress("12345678901234567890").String(),
@@ -136,7 +137,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 		BondDenom:     "stake",
 	}
 
-	require.Panics(t, func() {
+	sdktestutil.AssertPanics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
 		validator.Status = types.Bonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -144,10 +145,10 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 			Validators: []types.Validator{validator},
 		})
 	},
-		"should panic because bonded pool balance is different from bonded pool coins",
+	// "should panic because bonded pool balance is different from bonded pool coins",
 	)
 
-	require.Panics(t, func() {
+	sdktestutil.AssertPanics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
 		validator.Status = types.Unbonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
@@ -155,13 +156,13 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 			Validators: []types.Validator{validator},
 		})
 	},
-		"should panic because not bonded pool balance is different from not bonded pool coins",
+	// "should panic because not bonded pool balance is different from not bonded pool coins",
 	)
 }
 
 func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
-	require.True(t, size > 100)
+	assert.Assert(t, size > 100)
 
 	app, ctx, addrs := bootstrapGenesisTest(t, 200)
 	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
@@ -179,7 +180,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			PKs[i],
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
 		)
-		require.NoError(t, err)
+		assert.NilError(t, err)
 		validators[i].Status = types.Bonded
 
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
@@ -198,7 +199,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	genesisState := types.NewGenesisState(params, validators, delegations)
 
 	// mint coins in the bonded pool representing the validators coins
-	require.NoError(t,
+	assert.NilError(t,
 		testutil.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
@@ -216,5 +217,5 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// remove genesis validator
 	vals = vals[:100]
-	require.Equal(t, abcivals, vals)
+	assert.DeepEqual(t, abcivals, vals)
 }

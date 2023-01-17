@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/tx v0.0.0
+	cosmossdk.io/x/tx v0.0.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -181,7 +181,7 @@ require (
 replace (
 	cosmossdk.io/api => ./api
 	// Temporary until we tag new versions
-	cosmossdk.io/tx => ./tx
+	cosmossdk.io/x/tx => ./x/tx
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

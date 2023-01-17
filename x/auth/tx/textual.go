@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/tx/textual"
+	"cosmossdk.io/x/tx/textual"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	txsigning "cosmossdk.io/tx/signing"
+	txsigning "cosmossdk.io/x/tx/signing"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"

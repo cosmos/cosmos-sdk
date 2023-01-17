@@ -4,7 +4,7 @@ import (
 	"context"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/tx/textual"
+	"cosmossdk.io/x/tx/textual"
 	"github.com/cosmos/cosmos-sdk/client"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"

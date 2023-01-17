@@ -3,7 +3,7 @@ package tx
 import (
 	"fmt"
 
-	"cosmossdk.io/tx/textual"
+	"cosmossdk.io/x/tx/textual"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

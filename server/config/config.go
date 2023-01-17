@@ -22,9 +22,6 @@ const (
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "localhost:9090"
 
-	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "localhost:9091"
-
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.
 	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
@@ -147,12 +144,6 @@ type GRPCConfig struct {
 type GRPCWebConfig struct {
 	// Enable defines if the gRPC-web should be enabled.
 	Enable bool `mapstructure:"enable"`
-
-	// Address defines the gRPC-web server to listen on
-	Address string `mapstructure:"address"`
-
-	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
-	EnableUnsafeCORS bool `mapstructure:"enable-unsafe-cors"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -283,8 +274,7 @@ func DefaultConfig() *Config {
 			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
 		GRPCWeb: GRPCWebConfig{
-			Enable:  true,
-			Address: DefaultGRPCWebAddress,
+			Enable: true,
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,

@@ -12,8 +12,10 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/tendermint/tendermint/libs/log"
 	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
+	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
@@ -27,6 +29,8 @@ type Server struct {
 	Router            *mux.Router
 	GRPCGatewayRouter *runtime.ServeMux
 	ClientCtx         client.Context
+
+	GRPCSrv *grpc.Server
 
 	logger  log.Logger
 	metrics *telemetry.Metrics
@@ -52,7 +56,7 @@ func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	}
 }
 
-func New(clientCtx client.Context, logger log.Logger) *Server {
+func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Server {
 	// The default JSON marshaller used by the gRPC-Gateway is unable to marshal non-nullable non-scalar fields.
 	// Using the gogo/gateway package with the gRPC-Gateway WithMarshaler option fixes the scalar field marshalling issue.
 	marshalerOption := &gateway.JSONPb{
@@ -63,9 +67,9 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 	}
 
 	return &Server{
+		logger:    logger,
 		Router:    mux.NewRouter(),
 		ClientCtx: clientCtx,
-		logger:    logger,
 		GRPCGatewayRouter: runtime.NewServeMux(
 			// Custom marshaler option is required for gogo proto
 			runtime.WithMarshalerOption(runtime.MIMEWildcard, marshalerOption),
@@ -78,6 +82,7 @@ func New(clientCtx client.Context, logger log.Logger) *Server {
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
 		),
+		GRPCSrv: grpcSrv,
 	}
 }
 
@@ -102,17 +107,38 @@ func (s *Server) Start(cfg config.Config) error {
 
 	s.registerGRPCGatewayRoutes()
 	s.listener = listener
-	var h http.Handler = s.Router
-
+	var handler http.Handler = s.Router
 	s.mtx.Unlock()
 
-	if cfg.API.EnableUnsafeCORS {
-		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-		return tmrpcserver.Serve(s.listener, allowAllCORS(h), s.logger, tmCfg)
+	// configure grpc-web server
+	if cfg.GRPC.Enable && cfg.GRPCWeb.Enable {
+		var options []grpcweb.Option
+		if cfg.API.EnableUnsafeCORS {
+			options = append(options,
+				grpcweb.WithOriginFunc(func(origin string) bool {
+					return true
+				}),
+			)
+		}
+
+		wrappedGrpc := grpcweb.WrapServer(s.GRPCSrv, options...)
+		handler = http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			if wrappedGrpc.IsGrpcWebRequest(req) {
+				wrappedGrpc.ServeHTTP(resp, req)
+				return
+			}
+			// Fall back to other servers.
+			handler.ServeHTTP(resp, req)
+		})
 	}
 
 	s.logger.Info("starting API server...")
-	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
+	if cfg.API.EnableUnsafeCORS {
+		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
+		return tmrpcserver.Serve(s.listener, allowAllCORS(handler), s.logger, tmCfg)
+	}
+
+	return tmrpcserver.Serve(s.listener, handler, s.logger, tmCfg)
 }
 
 // Close closes the API server.

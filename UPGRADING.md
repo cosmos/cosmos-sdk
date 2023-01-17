@@ -4,7 +4,23 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
-### Database configuration
+### Configuration
+
+A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+
+```bash
+simd config migrate v0.48
+```
+
+More information about [confix](https://docs.cosmos.network/main/tooling/confix).
+
+#### gRPC-Web
+
+gRPC-Web is now listening to the same address as the API server (default: `localhost:1317`).
+The possibility to listen to a different address has been removed, as well its the settings.
+Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
+
+#### Database Configuration
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 

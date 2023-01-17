@@ -37,10 +37,26 @@ jobs:
             Makefile
       - name: Build
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+        run: GOARCH=${{ matrix.go-arch }} make build
       - name: Build Legacy
         if: env.GIT_DIFF
+<<<<<<< HEAD
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
       - name: Build Cosmovisor
         if: env.GIT_DIFF
         run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
+=======
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
+        ###################
+        ## Build Tooling ##
+        ###################
+      - name: Build Cosmovisor
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
+      - name: Build Rosetta
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make rosetta
+      - name: Build Confix
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make confix
+>>>>>>> 781a4d6d7 (ci: test ledger in build CI (#14642))

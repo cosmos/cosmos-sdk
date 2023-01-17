@@ -12,7 +12,7 @@ import (
 // a two-thirds majority of all staked OSMO voting power voting YES.
 
 var (
-	minExpeditedDeposit   = sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(5000*1_000_000)))
+	minExpeditedDeposit   = sdk.NewCoins(sdk.NewCoin("uscrt", sdk.NewInt(750*1_000_000)))
 	expeditedVotingPeriod = time.Duration(time.Hour * 24)
 	expeditedThreshold    = sdk.NewDec(2).Quo(sdk.NewDec(3))
 )

@@ -105,7 +105,6 @@ func (s *Server) Start(cfg config.Config) error {
 		return err
 	}
 
-	s.registerGRPCGatewayRoutes()
 	s.listener = listener
 	s.mtx.Unlock()
 
@@ -121,15 +120,19 @@ func (s *Server) Start(cfg config.Config) error {
 		}
 
 		wrappedGrpc := grpcweb.WrapServer(s.GRPCSrv, options...)
-		s.Router.HandleFunc("/", func(resp http.ResponseWriter, req *http.Request) {
+		s.Router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 			if wrappedGrpc.IsGrpcWebRequest(req) {
-				wrappedGrpc.ServeHTTP(resp, req)
+				wrappedGrpc.ServeHTTP(w, req)
 				return
 			}
-			// Fall back to other servers.
-			s.Router.ServeHTTP(resp, req)
+
+			// Fall back to grpc gateway server.
+			s.GRPCGatewayRouter.ServeHTTP(w, req)
 		})
 	}
+
+	// register grpc-gateway routes (after grpc-web server as the first match is used)
+	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 
 	s.logger.Info("starting API server...")
 	if cfg.API.EnableUnsafeCORS {
@@ -145,10 +148,6 @@ func (s *Server) Close() error {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 	return s.listener.Close()
-}
-
-func (s *Server) registerGRPCGatewayRoutes() {
-	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 }
 
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {

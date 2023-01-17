@@ -4,7 +4,7 @@ import math "math"
 
 const (
 	MaxKeyLength   = math.MaxUint16
-	MaxValueLength = math.MaxUint32
+	MaxValueLength = math.MaxInt32
 )
 
 // AssertValidKey checks if the key is valid(key is not nil)

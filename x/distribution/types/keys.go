@@ -53,6 +53,8 @@ var (
 	ValidatorCurrentRewardsPrefix        = []byte{0x06} // key for current validator rewards
 	ValidatorAccumulatedCommissionPrefix = []byte{0x07} // key for accumulated validator commission
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
+
+	AutoRestakeEntryPrefix = []byte{0xF0}
 )
 
 // GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.

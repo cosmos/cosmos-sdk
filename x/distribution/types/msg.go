@@ -166,6 +166,16 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
+// a funding amount.
+func NewMsgSetAutoRestake(delegator sdk.AccAddress, validator sdk.ValAddress, toggle bool) *MsgSetAutoRestake {
+	return &MsgSetAutoRestake{
+		delegator.String(),
+		validator.String(),
+		toggle,
+	}
+}
+
 func (msg MsgSetAutoRestake) ValidateBasic() error {
 	if msg.ValidatorAddress == "" {
 		return ErrEmptyValidatorAddr

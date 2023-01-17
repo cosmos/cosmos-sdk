@@ -259,3 +259,11 @@ func (k Keeper) FoundationTax(c context.Context, req *types.QueryFoundationTaxRe
 
 	return &types.QueryFoundationTaxResponse{Tax: fee.String(), FoundationAddress: addr.String()}, nil
 }
+
+// RestakeThreshold queries the restake threshold
+func (k Keeper) RestakeThreshold(c context.Context, req *types.QueryRestakeThresholdRequest) (*types.QueryRestakeThresholdResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	threshold := k.GetMinimumRestakeThreshold(ctx)
+
+	return &types.QueryRestakeThresholdResponse{Threshold: threshold}, nil
+}

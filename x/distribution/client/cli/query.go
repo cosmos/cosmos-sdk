@@ -319,3 +319,38 @@ $ %s query distribution community-pool
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
+
+//// GetCmdQueryCommunityPool returns the command for fetching community pool info.
+//func GetAutoRestakeStatus() *cobra.Command {
+//	cmd := &cobra.Command{
+//		Use:   "community-pool",
+//		Args:  cobra.NoArgs,
+//		Short: "Query the amount of coins in the community pool",
+//		Long: strings.TrimSpace(
+//			fmt.Sprintf(`Query all coins in the community pool which is under Governance control.
+//
+//Example:
+//$ %s query distribution community-pool
+//`,
+//				version.AppName,
+//			),
+//		),
+//		RunE: func(cmd *cobra.Command, args []string) error {
+//			clientCtx, err := client.GetClientQueryContext(cmd)
+//			if err != nil {
+//				return err
+//			}
+//			queryClient := types.NewQueryClient(clientCtx)
+//
+//			res, err := queryClient.RestakeThreshold(cmd.Context(), &types.QueryCommunityPoolRequest{})
+//			if err != nil {
+//				return err
+//			}
+//
+//			return clientCtx.PrintProto(res)
+//		},
+//	}
+//
+//	flags.AddQueryFlagsToCmd(cmd)
+//	return cmd
+//}

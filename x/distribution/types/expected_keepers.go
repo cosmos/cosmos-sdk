@@ -55,6 +55,11 @@ type StakingKeeper interface {
 	// and delegator outside the scope of the staking module.
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
 
+	DoDelegate(
+		sdk.Context, sdk.AccAddress, sdk.Int, stakingtypes.BondStatus,
+		stakingtypes.ValidatorI, bool,
+	) (sdk.Dec, error)
+
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32
 

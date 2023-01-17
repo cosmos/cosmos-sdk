@@ -248,7 +248,6 @@
     - [CommunityPoolSpendProposalWithDeposit](#cosmos.distribution.v1beta1.CommunityPoolSpendProposalWithDeposit)
     - [DelegationDelegatorReward](#cosmos.distribution.v1beta1.DelegationDelegatorReward)
     - [DelegatorStartingInfo](#cosmos.distribution.v1beta1.DelegatorStartingInfo)
-    - [EventAddAutoRestake](#cosmos.distribution.v1beta1.EventAddAutoRestake)
     - [FeePool](#cosmos.distribution.v1beta1.FeePool)
     - [Params](#cosmos.distribution.v1beta1.Params)
     - [ValidatorAccumulatedCommission](#cosmos.distribution.v1beta1.ValidatorAccumulatedCommission)
@@ -283,6 +282,8 @@
     - [QueryFoundationTaxResponse](#cosmos.distribution.v1beta1.QueryFoundationTaxResponse)
     - [QueryParamsRequest](#cosmos.distribution.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.distribution.v1beta1.QueryParamsResponse)
+    - [QueryRestakeThresholdRequest](#cosmos.distribution.v1beta1.QueryRestakeThresholdRequest)
+    - [QueryRestakeThresholdResponse](#cosmos.distribution.v1beta1.QueryRestakeThresholdResponse)
     - [QueryValidatorCommissionRequest](#cosmos.distribution.v1beta1.QueryValidatorCommissionRequest)
     - [QueryValidatorCommissionResponse](#cosmos.distribution.v1beta1.QueryValidatorCommissionResponse)
     - [QueryValidatorOutstandingRewardsRequest](#cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsRequest)
@@ -3815,16 +3816,6 @@ thus sdk.Dec is used.
 
 
 
-<a name="cosmos.distribution.v1beta1.EventAddAutoRestake"></a>
-
-### EventAddAutoRestake
-
-
-
-
-
-
-
 <a name="cosmos.distribution.v1beta1.FeePool"></a>
 
 ### FeePool
@@ -3854,6 +3845,7 @@ Params defines the set of params for the distribution module.
 | `withdraw_addr_enabled` | [bool](#bool) |  |  |
 | `secret_foundation_tax` | [string](#string) |  |  |
 | `secret_foundation_address` | [string](#string) |  |  |
+| `minimum_restake_threshold` | [string](#string) |  |  |
 
 
 
@@ -4357,6 +4349,31 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
+<a name="cosmos.distribution.v1beta1.QueryRestakeThresholdRequest"></a>
+
+### QueryRestakeThresholdRequest
+QueryRestakeThresholdRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="cosmos.distribution.v1beta1.QueryRestakeThresholdResponse"></a>
+
+### QueryRestakeThresholdResponse
+QueryRestakeThresholdResponse is the request type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `threshold` | [string](#string) |  | threshold = minimum amount in uscrt that you need to have delegated to enable restaking |
+
+
+
+
+
+
 <a name="cosmos.distribution.v1beta1.QueryValidatorCommissionRequest"></a>
 
 ### QueryValidatorCommissionRequest
@@ -4480,6 +4497,7 @@ Query defines the gRPC querier service for distribution module.
 | `DelegatorWithdrawAddress` | [QueryDelegatorWithdrawAddressRequest](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest) | [QueryDelegatorWithdrawAddressResponse](#cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse) | DelegatorWithdrawAddress queries withdraw address of a delegator. | GET|/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address|
 | `CommunityPool` | [QueryCommunityPoolRequest](#cosmos.distribution.v1beta1.QueryCommunityPoolRequest) | [QueryCommunityPoolResponse](#cosmos.distribution.v1beta1.QueryCommunityPoolResponse) | CommunityPool queries the community pool coins. | GET|/cosmos/distribution/v1beta1/community_pool|
 | `FoundationTax` | [QueryFoundationTaxRequest](#cosmos.distribution.v1beta1.QueryFoundationTaxRequest) | [QueryFoundationTaxResponse](#cosmos.distribution.v1beta1.QueryFoundationTaxResponse) | DelegatorWithdrawAddress queries withdraw address of a delegator. | GET|/cosmos/distribution/v1beta1/foundation_tax|
+| `RestakeThreshold` | [QueryRestakeThresholdRequest](#cosmos.distribution.v1beta1.QueryRestakeThresholdRequest) | [QueryRestakeThresholdResponse](#cosmos.distribution.v1beta1.QueryRestakeThresholdResponse) | RestakeThreshold queries the community pool coins. | GET|/cosmos/distribution/v1beta1/restake_threshold|
 
  <!-- end services -->
 

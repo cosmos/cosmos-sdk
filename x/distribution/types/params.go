@@ -17,6 +17,7 @@ var (
 	ParamStoreKeyWithdrawAddrEnabled = []byte("withdrawaddrenabled")
 	ParamSecretFoundationTax         = []byte("secretfoundationtax")
 	ParamSecretFoundationAddress     = []byte("secretfoundationaddress")
+	ParamMinimumRestakeThreshold     = []byte("minimumrestakethreshold")
 )
 
 // ParamKeyTable returns the parameter key table.
@@ -33,6 +34,7 @@ func DefaultParams() Params {
 		BaseProposerReward:      sdk.NewDecWithPrec(1, 2), // 1%
 		BonusProposerReward:     sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:     true,
+		MinimumRestakeThreshold: sdk.NewDec(10_000_000),
 	}
 }
 
@@ -50,6 +52,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamStoreKeyWithdrawAddrEnabled, &p.WithdrawAddrEnabled, validateWithdrawAddrEnabled),
 		paramtypes.NewParamSetPair(ParamSecretFoundationTax, &p.SecretFoundationTax, validateSecretFoundationTax),
 		paramtypes.NewParamSetPair(ParamSecretFoundationAddress, &p.SecretFoundationAddress, validateSecretFoundationAddress),
+		paramtypes.NewParamSetPair(ParamMinimumRestakeThreshold, &p.MinimumRestakeThreshold, validateMinimumRestakeThreshold),
 	}
 }
 
@@ -182,6 +185,22 @@ func validateSecretFoundationAddress(i interface{}) error {
 			return fmt.Errorf("invalid parameter for foundation address: %s", err.Error())
 		}
 		return sdk.VerifyAddressFormat(addr)
+	}
+
+	return nil
+}
+
+func validateMinimumRestakeThreshold(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid minimum restake threshold parameter type: %T", i)
+	}
+
+	if v.IsNil() {
+		return fmt.Errorf("minimum restake threshold must be not nil")
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("minimum restake threshold must be positive: %s", v)
 	}
 
 	return nil

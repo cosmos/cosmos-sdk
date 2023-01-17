@@ -67,7 +67,23 @@ service Query {
   rpc FoundationTax(QueryFoundationTaxRequest) returns (QueryFoundationTaxResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/foundation_tax";
   }
+
+  // RestakeThreshold queries the community pool coins.
+  rpc RestakeThreshold(QueryRestakeThresholdRequest) returns (QueryRestakeThresholdResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/restake_threshold";
+  }
 }
+
+// QueryRestakeThresholdRequest is the request type for the Query/Params RPC method.
+message QueryRestakeThresholdRequest {}
+
+// QueryRestakeThresholdResponse is the request type for the Query/Params RPC method.
+message QueryRestakeThresholdResponse {
+  // threshold = minimum amount in uscrt that you need to have delegated to enable restaking
+  string threshold = 1
+    [(gogoproto.nullable) = false, (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec"];
+}
+
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}

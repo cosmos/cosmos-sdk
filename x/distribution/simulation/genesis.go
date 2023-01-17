@@ -15,16 +15,22 @@ import (
 
 // Simulation parameter constants
 const (
-	CommunityTax        = "community_tax"
-	BaseProposerReward  = "base_proposer_reward"
-	BonusProposerReward = "bonus_proposer_reward"
-	WithdrawEnabled     = "withdraw_enabled"
-	FoundationTax       = "foundation_tax"
+	CommunityTax            = "community_tax"
+	BaseProposerReward      = "base_proposer_reward"
+	BonusProposerReward     = "bonus_proposer_reward"
+	WithdrawEnabled         = "withdraw_enabled"
+	FoundationTax           = "foundation_tax"
+	MinimumRestakeThreshold = "minimum_restake_threshold"
 )
 
 // GenSecretFoundationTax returns a randomized secret foundation tax parameter.
 func GenSecretFoundationTax(r *rand.Rand) sdk.Dec {
 	return sdk.NewDecWithPrec(1, 2).Add(sdk.NewDecWithPrec(int64(r.Intn(30)), 2))
+}
+
+// GenMinimumRestakeThreshold returns a randomized restake threshold.
+func GenMinimumRestakeThreshold(r *rand.Rand) sdk.Dec {
+	return sdk.NewDec(int64(r.Intn(100_000_000)))
 }
 
 // GenCommunityTax randomized CommunityTax
@@ -78,6 +84,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { foundationTax = GenSecretFoundationTax(r) },
 	)
 
+	var restakeThreshold sdk.Dec
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, MinimumRestakeThreshold, &restakeThreshold, simState.Rand,
+		func(r *rand.Rand) { restakeThreshold = GenMinimumRestakeThreshold(r) },
+	)
+
 	foundationTaxAcc, _ := simulation.RandomAcc(simState.Rand, simState.Accounts)
 
 	distrGenesis := types.GenesisState{
@@ -89,6 +101,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			BaseProposerReward:      baseProposerReward,
 			BonusProposerReward:     bonusProposerReward,
 			WithdrawAddrEnabled:     withdrawEnabled,
+			MinimumRestakeThreshold: restakeThreshold,
 		},
 	}
 

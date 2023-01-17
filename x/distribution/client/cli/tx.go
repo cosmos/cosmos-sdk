@@ -41,6 +41,7 @@ func NewTxCmd() *cobra.Command {
 		NewWithdrawAllRewardsCmd(),
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
+		NewTxRestakeCmd(),
 	)
 
 	return distTxCmd
@@ -328,6 +329,48 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	return cmd
+}
+
+func NewTxRestakeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "set-auto-restaking [validator] [true/false]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Toggle automatic rewards compounding",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Either enable or disable auto restaking
+
+Example:
+$ %s tx distribution set-auto-restaking false --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delegator := clientCtx.GetFromAddress()
+
+			validator, err := sdk.ValAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			toggle := false
+			if args[1] == "true" {
+				toggle = true
+			}
+
+			msg := types.NewMsgSetAutoRestake(delegator, validator, toggle)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

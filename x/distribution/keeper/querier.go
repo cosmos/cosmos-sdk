@@ -44,6 +44,9 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryFoundationTax:
 			return queryFoundationTax(ctx, path[1:], req, k, legacyQuerierCdc)
 
+		case types.QueryMinimumRestakeThreshold:
+			return queryMinimumRestakeThreshold(ctx, path[1:], req, k, legacyQuerierCdc)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
@@ -275,6 +278,16 @@ func queryFoundationTax(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keep
 	}
 
 	bz, err := legacyQuerierCdc.MarshalJSON(resp)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryMinimumRestakeThreshold(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	amount := k.GetMinimumRestakeThreshold(ctx)
+	bz, err := legacyQuerierCdc.MarshalJSON(amount)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

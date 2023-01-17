@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -170,6 +172,15 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 func (k Keeper) SaveAutoRestakeEntry(ctx sdk.Context, delegator sdk.AccAddress, validator sdk.ValAddress) error {
 	store := ctx.KVStore(k.storeKey)
 
+	delegation := k.stakingKeeper.Delegation(ctx, delegator, validator)
+	valInfo := k.stakingKeeper.Validator(ctx, validator)
+
+	currentStake := valInfo.TokensFromShares(delegation.GetShares())
+
+	if k.GetMinimumRestakeThreshold(ctx).GT(currentStake) {
+		return types.ErrNotEnoughStakeForAuto
+	}
+
 	skey := autoRestakeKey(delegator, validator)
 
 	store.Set(skey, []byte("k"))
@@ -189,12 +200,118 @@ func (k Keeper) DeleteAutoRestakeEntry(ctx sdk.Context, delegator sdk.AccAddress
 	return nil
 }
 
+func (k Keeper) PerformRestake(ctx sdk.Context, delegator sdk.AccAddress, validator sdk.ValAddress) error {
+	coins, err := k.WithdrawDelegationRewards(ctx, delegator, validator)
+	if err != nil {
+		return err
+	}
+
+	baseDenom := "uscrt"
+	//if baseDenom == "" {
+	//	baseDenom = sdk.DefaultBondDenom
+	//}
+	coinsToRedelegate := coins.AmountOf(baseDenom)
+
+	println(coinsToRedelegate.String())
+
+	val := k.stakingKeeper.Validator(ctx, validator)
+
+	_, err = k.stakingKeeper.DoDelegate(ctx, delegator, coinsToRedelegate, 1, val, true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func autoRestakeKey(delegator sdk.AccAddress, validator sdk.ValAddress) []byte {
-	l := 3 + len(delegator) + len(validator)
+	// key is of format:
+	// 0xF0<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes>
+	delegator = address.MustLengthPrefix(delegator)
+	validator = address.MustLengthPrefix(validator)
+
+	//fmt.Println("saving key: ", hex.EncodeToString(delegator), hex.EncodeToString(validator))
+
+	////	l := 1 + len(grantee) + len(granter) + len(m)
+	////	key := make([]byte, l)
+	////	copy(key, GrantKey)
+	////	copy(key[1:], granter)
+	////	copy(key[1+len(granter):], grantee)
+	////	copy(key[l-len(m):], m)
+	////	//	fmt.Println(">>>> len", l, key)
+	////	return key
+
+	l := 1 + len(delegator) + len(validator)
 	key := make([]byte, l)
-	copy(key, []byte("lol"))
+	copy(key, types.AutoRestakeEntryPrefix)
 	copy(key[1:], delegator)
 	copy(key[1+len(delegator):], validator)
 
 	return key
 }
+
+func addressesFromRestakeKeyStore(key []byte) (delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) {
+	// key is of format:
+	// 0xF0<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes>
+	kv.AssertKeyAtLeastLength(key, 2)
+
+	delAddrLen := key[1] // remove prefix key
+	kv.AssertKeyAtLeastLength(key, int(3+delAddrLen))
+	valAddrLen := int(key[2+delAddrLen])
+	kv.AssertKeyAtLeastLength(key, 3+int(delAddrLen+byte(valAddrLen)))
+
+	// lol go code sucks
+	delegatorAddr = sdk.AccAddress(key[2 : 2+delAddrLen])
+	validatorAddr = sdk.ValAddress(key[3+delAddrLen : 3+delAddrLen+byte(valAddrLen)])
+
+	return delegatorAddr, validatorAddr
+}
+
+// delegatorAddressFromRestakeKeyStore parses the delegator address only - will be useful for iterating by delegator
+// (probably)
+func delegatorAddressFromRestakeKeyStore(key []byte) sdk.AccAddress {
+	addrLen := key[0]
+	return sdk.AccAddress(key[1 : 1+addrLen])
+}
+
+//// grantStoreKey - return authorization store key
+//// Items are stored with the following key: values
+////
+//// - 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>: Grant
+//func grantStoreKey(grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) []byte {
+//	m := conv.UnsafeStrToBytes(msgType)
+//	granter = address.MustLengthPrefix(granter)
+//	grantee = address.MustLengthPrefix(grantee)
+//
+//	l := 1 + len(grantee) + len(granter) + len(m)
+//	key := make([]byte, l)
+//	copy(key, GrantKey)
+//	copy(key[1:], granter)
+//	copy(key[1+len(granter):], grantee)
+//	copy(key[l-len(m):], m)
+//	//	fmt.Println(">>>> len", l, key)
+//	return key
+//}
+//
+//// addressesFromGrantStoreKey - split granter & grantee address from the authorization key
+//func addressesFromGrantStoreKey(key []byte) (granterAddr, granteeAddr sdk.AccAddress) {
+//	// key is of format:
+//	// 0x01<granterAddressLen (1 Byte)><granterAddress_Bytes><granteeAddressLen (1 Byte)><granteeAddress_Bytes><msgType_Bytes>
+//	kv.AssertKeyAtLeastLength(key, 2)
+//	granterAddrLen := key[1] // remove prefix key
+//	kv.AssertKeyAtLeastLength(key, int(3+granterAddrLen))
+//	granterAddr = sdk.AccAddress(key[2 : 2+granterAddrLen])
+//	granteeAddrLen := int(key[2+granterAddrLen])
+//	kv.AssertKeyAtLeastLength(key, 4+int(granterAddrLen+byte(granteeAddrLen)))
+//	granteeAddr = sdk.AccAddress(key[3+granterAddrLen : 3+granterAddrLen+byte(granteeAddrLen)])
+//
+//	return granterAddr, granteeAddr
+//}
+//
+//// firstAddressFromGrantStoreKey parses the first address only
+//func firstAddressFromGrantStoreKey(key []byte) sdk.AccAddress {
+//	addrLen := key[0]
+//	return sdk.AccAddress(key[1 : 1+addrLen])
+//}
+
+//func (k Keeper) PerformAllRestakes(ctx )

@@ -1,9 +1,19 @@
 package types
 
+import math "math"
+
+const (
+	MaxKeyLength   = math.MaxUint16
+	MaxValueLength = math.MaxUint32
+)
+
 // AssertValidKey checks if the key is valid(key is not nil)
 func AssertValidKey(key []byte) {
 	if len(key) == 0 {
 		panic("key is nil")
+	}
+	if len(key) > MaxKeyLength {
+		panic("key is too large")
 	}
 }
 
@@ -11,5 +21,8 @@ func AssertValidKey(key []byte) {
 func AssertValidValue(value []byte) {
 	if value == nil {
 		panic("value is nil")
+	}
+	if len(value) > MaxValueLength {
+		panic("value is too large")
 	}
 }

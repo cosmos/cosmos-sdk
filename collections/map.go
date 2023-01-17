@@ -112,8 +112,7 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 		return err
 	}
 	kvStore := m.sa(ctx)
-	kvStore.Delete(bytesKey)
-	return nil
+	return kvStore.Delete(bytesKey)
 }
 
 // Iterate provides an Iterator over K and V. It accepts a Ranger interface.

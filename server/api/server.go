@@ -120,7 +120,7 @@ func (s *Server) Start(cfg config.Config) error {
 		}
 
 		wrappedGrpc := grpcweb.WrapServer(s.GRPCSrv, options...)
-		s.Router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		s.Router.PathPrefix("/").Handler(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			if wrappedGrpc.IsGrpcWebRequest(req) {
 				wrappedGrpc.ServeHTTP(w, req)
 				return
@@ -128,7 +128,7 @@ func (s *Server) Start(cfg config.Config) error {
 
 			// Fall back to grpc gateway server.
 			s.GRPCGatewayRouter.ServeHTTP(w, req)
-		})
+		}))
 	}
 
 	// register grpc-gateway routes (after grpc-web server as the first match is used)

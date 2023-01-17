@@ -277,6 +277,11 @@ func NewSimApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
 	)
+	app.BankKeeper.SetHooks(
+		banktypes.NewMultiSendHooks(
+		// register the send hooks here
+		),
+	)
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)

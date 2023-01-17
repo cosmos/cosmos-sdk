@@ -63,6 +63,7 @@ type BaseSendKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+	hooks     types.SendHooks
 }
 
 func NewBaseSendKeeper(
@@ -83,6 +84,7 @@ func NewBaseSendKeeper(
 		ak:             ak,
 		storeService:   storeService,
 		blockedAddrs:   blockedAddrs,
+		hooks:          nil,
 		authority:      authority,
 		logger:         logger,
 	}
@@ -114,6 +116,27 @@ func (k BaseSendKeeper) SetParams(ctx context.Context, params types.Params) erro
 	}
 	return k.Params.Set(ctx, params)
 }
+
+
+// Hooks gets the hooks for base send *Keeper {
+	func (k *BaseSendKeeper) Hooks() types.SendHooks {
+		if k.hooks == nil {
+			// return a no-op implementation if no hooks are set
+			return types.MultiSendHooks{}
+		}
+	
+		return k.hooks
+	}
+	
+	// SetHooks sets the send hooks. In contrast to other receivers, this method must take a pointer due to nature
+	// of the hooks interface and SDK start up sequence.
+	func (k *BaseSendKeeper) SetHooks(sh types.SendHooks) {
+		if k.hooks != nil {
+			panic("cannot set bank send hooks twice")
+		}
+	
+		k.hooks = sh
+	}
 
 // InputOutputCoins performs multi-send functionality. It accepts an
 // input that corresponds to a series of outputs. It returns an error if the
@@ -149,6 +172,11 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
+		// Run After Send hooks if present.
+		if err := k.Hooks().AfterSend(ctx, outAddress, outAddress, out.Coins); err != nil {
+			return err
+		}
+
 		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
 			return err
 		}
@@ -178,6 +206,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 // SendCoins transfers amt coins from a sending account to a receiving account.
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
+	// Run send hooks if present.
+	if err := k.Hooks().BeforeSend(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	err := k.subUnlockedCoins(ctx, fromAddr, amt)
 	if err != nil {
 		return err
@@ -196,6 +228,11 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	if !accExists {
 		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
+	}
+
+	// Run After Send hooks if present.
+	if err := k.Hooks().AfterSend(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
 	}
 
 	// bech32 encoding is expensive! Only do it once for fromAddr

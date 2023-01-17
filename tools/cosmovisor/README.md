@@ -266,9 +266,9 @@ Clean `~/.simapp` (never do this in a production environment):
 Set up app config:
 
 ```shell
-./build/simd config chain-id test
-./build/simd config keyring-backend test
-./build/simd config broadcast-mode sync
+./build/simd config set client chain-id test
+./build/simd config set client keyring-backend test
+./build/simd config set client broadcast-mode sync
 ```
 
 Initialize the node and overwrite any previous genesis file (never do this in a production environment):

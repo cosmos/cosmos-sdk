@@ -64,20 +64,28 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 	store := ctx.KVStore(srv.key)
 
 	switch perms.Level {
-    case types.Permissions_LEVEL_SUPER_ADMIN:
-        // add all msg type urls to the disable list
-        for _, msgTypeUrl := range msg.MsgTypeUrls {
-            store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
-        }
-    case types.Permissions_LEVEL_SOME_MSGS:
-        // iterate over the msg type urls
-        for _, msgTypeUrl := range msg.MsgTypeUrls {
-            // check if the message is in the list of allowed messages
-            if !store.Has(types.CreateDisableMsgPrefix(msgTypeUrl)) {
-                return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeUrl)
-            }
-            store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
-        }
+	case types.Permissions_LEVEL_SUPER_ADMIN:
+		// add all msg type urls to the disable list
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
+		}
+	case types.Permissions_LEVEL_SOME_MSGS:
+		// iterate over the msg type urls
+		for _, msgTypeUrl := range msg.MsgTypeUrls {
+			// check if the message is in the list of allowed messages
+			if !store.Has(types.CreateDisableMsgPrefix(msgTypeUrl)) {
+				return nil, fmt.Errorf("account does not have permission to trip circuit breaker for message %s", msgTypeUrl)
+			}
+			store.Set(types.CreateDisableMsgPrefix(msgTypeUrl), []byte{0x01})
+		}
+	}
+
+	var msg_urls string
+	if len(msg.GetMsgTypeUrls()) > 1 {
+
+		for _, url := range msg.GetMsgTypeUrls() {
+			msg_urls = msg_urls + ", " + url
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

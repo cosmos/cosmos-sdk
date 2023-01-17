@@ -55,7 +55,6 @@ func (h signModeTextualHandler) GetSignBytesWithContext(ctx context.Context, mod
 		return nil, err
 	}
 
-	// The first argument needs: https://github.com/cosmos/cosmos-sdk/pull/13701
 	return h.t.GetSignBytes(ctx, bodyBz, authInfoBz, txsigning.SignerData{
 		Address:       data.Address,
 		ChainId:       data.ChainID,

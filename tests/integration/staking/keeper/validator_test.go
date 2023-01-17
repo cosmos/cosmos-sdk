@@ -44,7 +44,7 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	assert.Assert(t, len(delegations) == 1)
 	delegation := delegations[0]
 
-	_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
+	_, _, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
 	assert.NilError(t, err)
 
 	// end block to unbond genesis validator

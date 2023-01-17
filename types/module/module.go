@@ -342,10 +342,27 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 }
 
 // ExportGenesis performs export genesis functionality for modules
-func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string]json.RawMessage {
+func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec, modulesToExport []string) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
-	for _, moduleName := range m.OrderExportGenesis {
+	if len(modulesToExport) == 0 {
 
+		for _, moduleName := range m.OrderExportGenesis {
+			if moduleName == "interchainaccounts" {
+				genesisData[moduleName] = m.Modules[moduleName].DefaultGenesis(cdc)
+			} else {
+				genesisData[moduleName] = m.Modules[moduleName].ExportGenesis(ctx, cdc)
+			}
+		}
+
+		return genesisData
+	}
+
+	// verify modules exists in app, so that we don't panic in the middle of an export
+	if err := m.checkModulesExists(modulesToExport); err != nil {
+		panic(err)
+	}
+
+	for _, moduleName := range modulesToExport {
 		if moduleName == "interchainaccounts" {
 			genesisData[moduleName] = m.Modules[moduleName].DefaultGenesis(cdc)
 		} else {
@@ -354,6 +371,17 @@ func (m *Manager) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) map[string
 	}
 
 	return genesisData
+}
+
+// checkModulesExists verifies that all modules in the list exist in the app
+func (m *Manager) checkModulesExists(moduleName []string) error {
+	for _, name := range moduleName {
+		if _, ok := m.Modules[name]; !ok {
+			return fmt.Errorf("module %s does not exist", name)
+		}
+	}
+
+	return nil
 }
 
 // assertNoForgottenModules checks that we didn't forget any modules in the

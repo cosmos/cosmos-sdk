@@ -20,7 +20,7 @@ func NewUniqueIndex[ReferenceKey, PrimaryKey, Value any](
 ) *UniqueIndex[ReferenceKey, PrimaryKey, Value] {
 	return &UniqueIndex[ReferenceKey, PrimaryKey, Value]{
 		getRefKey: getRefKeyFunc,
-		refs:      newMap[ReferenceKey, PrimaryKey](schema, prefix, name, refCodec, keyToValueCodec[PrimaryKey]{kc: pkCodec}),
+		refs:      NewMap[ReferenceKey, PrimaryKey](schema, prefix, name, refCodec, keyToValueCodec[PrimaryKey]{kc: pkCodec}),
 	}
 }
 
@@ -98,6 +98,14 @@ func (i UniqueIndexIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]Pair[Refere
 // keyToValueCodec is a ValueCodec that wraps a KeyCodec to make it behave like a ValueCodec.
 type keyToValueCodec[K any] struct {
 	kc KeyCodec[K]
+}
+
+func (k keyToValueCodec[K]) EncodeJSON(value K) ([]byte, error) {
+	return k.kc.EncodeJSON(value)
+}
+
+func (k keyToValueCodec[K]) DecodeJSON(b []byte) (K, error) {
+	return k.kc.DecodeJSON(b)
 }
 
 func (k keyToValueCodec[K]) Encode(value K) ([]byte, error) {

@@ -17,7 +17,7 @@ import (
 	msg "cosmossdk.io/api/cosmos/msg/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/tx/textual/internal/textualpb"
+	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
 
 var (

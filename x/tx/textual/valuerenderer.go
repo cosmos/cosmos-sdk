@@ -13,8 +13,8 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/tx/signing"
-	"cosmossdk.io/tx/textual/internal/textualpb"
+	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/textual/internal/textualpb"
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 )
 

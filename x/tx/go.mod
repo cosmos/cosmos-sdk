@@ -1,4 +1,4 @@
-module cosmossdk.io/tx
+module cosmossdk.io/x/tx
 
 go 1.19
 

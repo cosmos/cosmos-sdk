@@ -7,7 +7,7 @@ import (
 )
 
 func TestUint64Key(t *testing.T) {
-	t.Run("bijective", func(t *testing.T) {
+	t.Run("correctness", func(t *testing.T) {
 		checkKeyCodec(t, Uint64Key, 55)
 	})
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/tx/textual"
-	"cosmossdk.io/tx/textual/internal/testpb"
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/testpb"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protojson"

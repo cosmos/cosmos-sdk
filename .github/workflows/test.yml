@@ -559,7 +559,7 @@ jobs:
   # NOTE: The following jobs are used to test the Cosmos SDK Go submodules present under x/{module}.
   # They run when there is a diff in their respective directories.
 
-  test-tx:
+  test-x-tx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -567,18 +567,18 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
-          cache-dependency-path: tx/go.sum
+          cache-dependency-path: x/tx/go.sum
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
-            tx/**/*.go
-            tx/go.mod
-            tx/go.sum
+            x/tx/**/*.go
+            x/tx/go.mod
+            x/tx/go.sum
       - name: tests
         if: env.GIT_DIFF
         run: |
-          cd tx
+          cd x/tx
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
       - name: sonarcloud
         if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
@@ -587,7 +587,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: tx/
+          projectBaseDir: x/tx/
 
   test-x-nft:
     runs-on: ubuntu-latest

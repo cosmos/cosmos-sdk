@@ -169,7 +169,9 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 
 	require.True(operationMsg.OK)
 	require.Equal(types.TypeMsgCreateValidator, msg.Type())
-	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
+	valaddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	require.NoError(err)
+	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", sdk.AccAddress(valaddr).String())
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }

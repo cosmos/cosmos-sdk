@@ -123,6 +123,7 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 
 	// Expert fields.
 	expert := map[string]struct{}{
+		"Address":                        {},
 		"Public key":                     {},
 		"Fee payer":                      {},
 		"Fee granter":                    {},

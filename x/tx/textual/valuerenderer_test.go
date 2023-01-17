@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/tx/textual"
-	"cosmossdk.io/tx/textual/internal/testpb"
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/testpb"
 )
 
 func TestDispatcher(t *testing.T) {

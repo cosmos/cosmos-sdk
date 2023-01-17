@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/tx/textual"
-	"cosmossdk.io/tx/textual/internal/testpb"
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/testpb"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

@@ -146,7 +146,7 @@ func (s *GRPCWebTestSuite) makeRequest(
 		contentType = "application/grpc-web-text"
 	}
 
-	url := fmt.Sprintf("http://%s%s", strings.TrimLeft(val.AppConfig.API.Address, "tcp://"), method)
+	url := fmt.Sprintf("http://%s%s", strings.TrimPrefix(val.AppConfig.API.Address, "tcp://"), method)
 	req, err := http.NewRequest(verb, url, body)
 	s.Require().NoError(err, "failed creating a request")
 	req.Header = headers

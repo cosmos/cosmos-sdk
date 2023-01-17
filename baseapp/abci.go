@@ -375,10 +375,11 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Otherwise, the ResponseDeliverTx will contain relevant error information.
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
+	var res abci.ResponseDeliverTx
 	defer func() {
 		// call the streaming service hook with the EndBlock messages
 		for _, abciListener := range app.streamingManager.AbciListeners {
@@ -403,13 +404,15 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	return abci.ResponseDeliverTx{
+	res = abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
+
+	return res
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

@@ -157,6 +157,8 @@ type SnapshotItem struct {
 	//	*SnapshotItem_IAVL
 	//	*SnapshotItem_Extension
 	//	*SnapshotItem_ExtensionPayload
+	//	*SnapshotItem_KV
+	//	*SnapshotItem_Schema
 	Item isSnapshotItem_Item `protobuf_oneof:"item"`
 }
 
@@ -211,11 +213,19 @@ type SnapshotItem_Extension struct {
 type SnapshotItem_ExtensionPayload struct {
 	ExtensionPayload *SnapshotExtensionPayload `protobuf:"bytes,4,opt,name=extension_payload,json=extensionPayload,proto3,oneof" json:"extension_payload,omitempty"`
 }
+type SnapshotItem_KV struct {
+	KV *SnapshotKVItem `protobuf:"bytes,5,opt,name=kv,proto3,oneof" json:"kv,omitempty"`
+}
+type SnapshotItem_Schema struct {
+	Schema *SnapshotSchema `protobuf:"bytes,6,opt,name=schema,proto3,oneof" json:"schema,omitempty"`
+}
 
 func (*SnapshotItem_Store) isSnapshotItem_Item()            {}
 func (*SnapshotItem_IAVL) isSnapshotItem_Item()             {}
 func (*SnapshotItem_Extension) isSnapshotItem_Item()        {}
 func (*SnapshotItem_ExtensionPayload) isSnapshotItem_Item() {}
+func (*SnapshotItem_KV) isSnapshotItem_Item()               {}
+func (*SnapshotItem_Schema) isSnapshotItem_Item()           {}
 
 func (m *SnapshotItem) GetItem() isSnapshotItem_Item {
 	if m != nil {
@@ -252,6 +262,22 @@ func (m *SnapshotItem) GetExtensionPayload() *SnapshotExtensionPayload {
 	return nil
 }
 
+// Deprecated: Do not use.
+func (m *SnapshotItem) GetKV() *SnapshotKVItem {
+	if x, ok := m.GetItem().(*SnapshotItem_KV); ok {
+		return x.KV
+	}
+	return nil
+}
+
+// Deprecated: Do not use.
+func (m *SnapshotItem) GetSchema() *SnapshotSchema {
+	if x, ok := m.GetItem().(*SnapshotItem_Schema); ok {
+		return x.Schema
+	}
+	return nil
+}
+
 // XXX_OneofWrappers is for the internal use of the proto package.
 func (*SnapshotItem) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
@@ -259,6 +285,8 @@ func (*SnapshotItem) XXX_OneofWrappers() []interface{} {
 		(*SnapshotItem_IAVL)(nil),
 		(*SnapshotItem_Extension)(nil),
 		(*SnapshotItem_ExtensionPayload)(nil),
+		(*SnapshotItem_KV)(nil),
+		(*SnapshotItem_Schema)(nil),
 	}
 }
 
@@ -484,6 +512,114 @@ func (m *SnapshotExtensionPayload) GetPayload() []byte {
 	return nil
 }
 
+// SnapshotKVItem is an exported Key/Value Pair
+//
+// Since: cosmos-sdk 0.46
+// Deprecated: This message was part of store/v2alpha1 which has been deleted from v0.47.
+//
+// Deprecated: Do not use.
+type SnapshotKVItem struct {
+	Key   []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (m *SnapshotKVItem) Reset()         { *m = SnapshotKVItem{} }
+func (m *SnapshotKVItem) String() string { return proto.CompactTextString(m) }
+func (*SnapshotKVItem) ProtoMessage()    {}
+func (*SnapshotKVItem) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dd7a3c9b0a19e1ee, []int{7}
+}
+func (m *SnapshotKVItem) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotKVItem) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotKVItem.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotKVItem) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotKVItem.Merge(m, src)
+}
+func (m *SnapshotKVItem) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotKVItem) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotKVItem.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotKVItem proto.InternalMessageInfo
+
+func (m *SnapshotKVItem) GetKey() []byte {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+func (m *SnapshotKVItem) GetValue() []byte {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+// SnapshotSchema is an exported schema of smt store
+//
+// Since: cosmos-sdk 0.46
+// Deprecated: This message was part of store/v2alpha1 which has been deleted from v0.47.
+//
+// Deprecated: Do not use.
+type SnapshotSchema struct {
+	Keys [][]byte `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
+}
+
+func (m *SnapshotSchema) Reset()         { *m = SnapshotSchema{} }
+func (m *SnapshotSchema) String() string { return proto.CompactTextString(m) }
+func (*SnapshotSchema) ProtoMessage()    {}
+func (*SnapshotSchema) Descriptor() ([]byte, []int) {
+	return fileDescriptor_dd7a3c9b0a19e1ee, []int{8}
+}
+func (m *SnapshotSchema) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SnapshotSchema) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SnapshotSchema.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SnapshotSchema) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SnapshotSchema.Merge(m, src)
+}
+func (m *SnapshotSchema) XXX_Size() int {
+	return m.Size()
+}
+func (m *SnapshotSchema) XXX_DiscardUnknown() {
+	xxx_messageInfo_SnapshotSchema.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SnapshotSchema proto.InternalMessageInfo
+
+func (m *SnapshotSchema) GetKeys() [][]byte {
+	if m != nil {
+		return m.Keys
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Snapshot)(nil), "cosmos.base.snapshots.v1beta1.Snapshot")
 	proto.RegisterType((*Metadata)(nil), "cosmos.base.snapshots.v1beta1.Metadata")
@@ -492,6 +628,8 @@ func init() {
 	proto.RegisterType((*SnapshotIAVLItem)(nil), "cosmos.base.snapshots.v1beta1.SnapshotIAVLItem")
 	proto.RegisterType((*SnapshotExtensionMeta)(nil), "cosmos.base.snapshots.v1beta1.SnapshotExtensionMeta")
 	proto.RegisterType((*SnapshotExtensionPayload)(nil), "cosmos.base.snapshots.v1beta1.SnapshotExtensionPayload")
+	proto.RegisterType((*SnapshotKVItem)(nil), "cosmos.base.snapshots.v1beta1.SnapshotKVItem")
+	proto.RegisterType((*SnapshotSchema)(nil), "cosmos.base.snapshots.v1beta1.SnapshotSchema")
 }
 
 func init() {
@@ -499,40 +637,44 @@ func init() {
 }
 
 var fileDescriptor_dd7a3c9b0a19e1ee = []byte{
-	// 513 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xd1, 0x6e, 0xd3, 0x30,
-	0x14, 0x8d, 0xd7, 0xb4, 0x74, 0x37, 0x41, 0xea, 0xac, 0x81, 0x22, 0x24, 0xb2, 0x92, 0x97, 0xf5,
-	0x61, 0x4b, 0x58, 0x99, 0xc4, 0x33, 0x45, 0xa0, 0x54, 0x02, 0x81, 0x3c, 0xc4, 0x03, 0x2f, 0x93,
-	0xdb, 0x7a, 0x4d, 0xd4, 0x26, 0xae, 0x6a, 0xb7, 0xa2, 0x7f, 0xc1, 0xaf, 0xf0, 0x17, 0x7b, 0xdc,
-	0x23, 0x4f, 0x13, 0x6a, 0x3f, 0x80, 0x5f, 0x40, 0xb6, 0x93, 0x30, 0x8d, 0x0d, 0xb6, 0xa7, 0xde,
-	0x73, 0x7a, 0xee, 0xf1, 0xf5, 0xc9, 0x35, 0x1c, 0x0c, 0xb9, 0xc8, 0xb8, 0x88, 0x06, 0x54, 0xb0,
-	0x48, 0xe4, 0x74, 0x26, 0x12, 0x2e, 0x45, 0xb4, 0x3c, 0x1a, 0x30, 0x49, 0x8f, 0x2a, 0x26, 0x9c,
-	0xcd, 0xb9, 0xe4, 0xf8, 0xa9, 0x51, 0x87, 0x4a, 0x1d, 0x56, 0xea, 0xb0, 0x50, 0x3f, 0xd9, 0x1d,
-	0xf3, 0x31, 0xd7, 0xca, 0x48, 0x55, 0xa6, 0x29, 0xf8, 0x8e, 0xa0, 0x79, 0x52, 0x68, 0xf1, 0x63,
-	0x68, 0x24, 0x2c, 0x1d, 0x27, 0xd2, 0x43, 0x6d, 0xd4, 0xb1, 0x49, 0x81, 0x14, 0x7f, 0xc6, 0xe7,
-	0x19, 0x95, 0xde, 0x56, 0x1b, 0x75, 0x1e, 0x92, 0x02, 0x29, 0x7e, 0x98, 0x2c, 0xf2, 0x89, 0xf0,
-	0x6a, 0x86, 0x37, 0x08, 0x63, 0xb0, 0x13, 0x2a, 0x12, 0xcf, 0x6e, 0xa3, 0x8e, 0x4b, 0x74, 0x8d,
-	0xfb, 0xd0, 0xcc, 0x98, 0xa4, 0x23, 0x2a, 0xa9, 0x57, 0x6f, 0xa3, 0x8e, 0xd3, 0xdd, 0x0f, 0xff,
-	0x39, 0x70, 0xf8, 0xbe, 0x90, 0xf7, 0xec, 0xf3, 0xcb, 0x3d, 0x8b, 0x54, 0xed, 0xc1, 0x21, 0x34,
-	0xcb, 0xff, 0xf0, 0x33, 0x70, 0xf5, 0xa1, 0xa7, 0xea, 0x10, 0x26, 0x3c, 0xd4, 0xae, 0x75, 0x5c,
-	0xe2, 0x68, 0x2e, 0xd6, 0x54, 0xf0, 0x6b, 0x0b, 0xdc, 0xf2, 0x8a, 0x7d, 0xc9, 0x32, 0x1c, 0x43,
-	0x5d, 0x48, 0x3e, 0x67, 0xfa, 0x96, 0x4e, 0xf7, 0xf9, 0x7f, 0xe6, 0x28, 0x7b, 0x4f, 0x54, 0x8f,
-	0x32, 0x88, 0x2d, 0x62, 0x0c, 0xf0, 0x07, 0xb0, 0x53, 0xba, 0x9c, 0xea, 0x58, 0x9c, 0x6e, 0x74,
-	0x47, 0xa3, 0xfe, 0xab, 0xcf, 0xef, 0x94, 0x4f, 0xaf, 0xb9, 0xbe, 0xdc, 0xb3, 0x15, 0x8a, 0x2d,
-	0xa2, 0x8d, 0xf0, 0x27, 0xd8, 0x66, 0x5f, 0x25, 0xcb, 0x45, 0xca, 0x73, 0x1d, 0xaa, 0xd3, 0x3d,
-	0xbe, 0xa3, 0xeb, 0x9b, 0xb2, 0x4f, 0x65, 0x13, 0x5b, 0xe4, 0x8f, 0x11, 0x3e, 0x83, 0x9d, 0x0a,
-	0x9c, 0xce, 0xe8, 0x6a, 0xca, 0xe9, 0x48, 0x7f, 0x1c, 0xa7, 0xfb, 0xf2, 0xbe, 0xee, 0x1f, 0x4d,
-	0x7b, 0x6c, 0x91, 0x16, 0xbb, 0xc6, 0xf5, 0x1a, 0x60, 0xa7, 0x92, 0x65, 0xc1, 0x3e, 0xec, 0xfc,
-	0x15, 0x9a, 0x5a, 0x8a, 0x9c, 0x66, 0x26, 0xf4, 0x6d, 0xa2, 0xeb, 0x60, 0x0a, 0xad, 0xeb, 0xa1,
-	0xe0, 0x16, 0xd4, 0x26, 0x6c, 0xa5, 0x65, 0x2e, 0x51, 0x25, 0xde, 0x85, 0xfa, 0x92, 0x4e, 0x17,
-	0x4c, 0xc7, 0xec, 0x12, 0x03, 0xb0, 0x07, 0x0f, 0x96, 0x6c, 0x5e, 0x05, 0x55, 0x23, 0x25, 0xbc,
-	0xb2, 0xc6, 0xea, 0x8e, 0xf5, 0x72, 0x8d, 0x83, 0xd7, 0xf0, 0xe8, 0xc6, 0xb0, 0x6e, 0x1a, 0xed,
-	0xb6, 0x9d, 0x0f, 0x8e, 0xc1, 0xbb, 0x2d, 0x13, 0x35, 0x52, 0x99, 0xae, 0x19, 0xbf, 0x84, 0xbd,
-	0xb7, 0xe7, 0x6b, 0x1f, 0x5d, 0xac, 0x7d, 0xf4, 0x73, 0xed, 0xa3, 0x6f, 0x1b, 0xdf, 0xba, 0xd8,
-	0xf8, 0xd6, 0x8f, 0x8d, 0x6f, 0x7d, 0x39, 0x18, 0xa7, 0x32, 0x59, 0x0c, 0xc2, 0x21, 0xcf, 0xa2,
-	0xe2, 0xb9, 0x9b, 0x9f, 0x43, 0x31, 0x9a, 0x5c, 0x79, 0xf4, 0x72, 0x35, 0x63, 0x62, 0xd0, 0xd0,
-	0xaf, 0xf6, 0xc5, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6c, 0x90, 0xf8, 0x1f, 0x1a, 0x04, 0x00,
-	0x00,
+	// 586 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0xf6, 0x3a, 0x4e, 0x48, 0xd7, 0x06, 0xb5, 0xab, 0x82, 0x2c, 0x24, 0xdc, 0xe0, 0x4b, 0x7d,
+	0x68, 0x6d, 0x1a, 0x2a, 0x21, 0x21, 0x2e, 0x04, 0x81, 0x1c, 0x05, 0x04, 0xda, 0xa0, 0x1c, 0xb8,
+	0x54, 0x9b, 0x64, 0x1b, 0x47, 0x8e, 0xb3, 0x51, 0x76, 0x63, 0x91, 0x27, 0xe0, 0xca, 0xab, 0xf0,
+	0x16, 0x3d, 0xf6, 0xc8, 0xa9, 0x42, 0xc9, 0x8b, 0xa0, 0x5d, 0xff, 0xb4, 0x94, 0x16, 0xd2, 0x53,
+	0x66, 0x26, 0xdf, 0xf7, 0x79, 0x76, 0xbe, 0x9d, 0x85, 0x07, 0x03, 0xc6, 0x13, 0xc6, 0x83, 0x3e,
+	0xe1, 0x34, 0xe0, 0x53, 0x32, 0xe3, 0x11, 0x13, 0x3c, 0x48, 0x8f, 0xfa, 0x54, 0x90, 0xa3, 0xb2,
+	0xe2, 0xcf, 0xe6, 0x4c, 0x30, 0xf4, 0x24, 0x43, 0xfb, 0x12, 0xed, 0x97, 0x68, 0x3f, 0x47, 0x3f,
+	0xde, 0x1d, 0xb1, 0x11, 0x53, 0xc8, 0x40, 0x46, 0x19, 0xc9, 0xfd, 0x01, 0x60, 0xbd, 0x9b, 0x63,
+	0xd1, 0x23, 0x58, 0x8b, 0xe8, 0x78, 0x14, 0x09, 0x1b, 0x34, 0x80, 0x67, 0xe0, 0x3c, 0x93, 0xf5,
+	0x53, 0x36, 0x4f, 0x88, 0xb0, 0xf5, 0x06, 0xf0, 0xee, 0xe3, 0x3c, 0x93, 0xf5, 0x41, 0xb4, 0x98,
+	0xc6, 0xdc, 0xae, 0x64, 0xf5, 0x2c, 0x43, 0x08, 0x1a, 0x11, 0xe1, 0x91, 0x6d, 0x34, 0x80, 0x67,
+	0x61, 0x15, 0xa3, 0x36, 0xac, 0x27, 0x54, 0x90, 0x21, 0x11, 0xc4, 0xae, 0x36, 0x80, 0x67, 0x36,
+	0xf7, 0xfd, 0x7f, 0x36, 0xec, 0x7f, 0xc8, 0xe1, 0x2d, 0xe3, 0xec, 0x62, 0x4f, 0xc3, 0x25, 0xdd,
+	0x3d, 0x84, 0xf5, 0xe2, 0x3f, 0xf4, 0x14, 0x5a, 0xea, 0xa3, 0x27, 0xf2, 0x23, 0x94, 0xdb, 0xa0,
+	0x51, 0xf1, 0x2c, 0x6c, 0xaa, 0x5a, 0xa8, 0x4a, 0xee, 0x37, 0x03, 0x5a, 0xc5, 0x11, 0xdb, 0x82,
+	0x26, 0x28, 0x84, 0x55, 0x2e, 0xd8, 0x9c, 0xaa, 0x53, 0x9a, 0xcd, 0x67, 0xff, 0xe9, 0xa3, 0xe0,
+	0x76, 0x25, 0x47, 0x0a, 0x84, 0x1a, 0xce, 0x04, 0xd0, 0x47, 0x68, 0x8c, 0x49, 0x3a, 0x51, 0x63,
+	0x31, 0x9b, 0xc1, 0x86, 0x42, 0xed, 0xd7, 0xbd, 0xf7, 0x52, 0xa7, 0x55, 0x5f, 0x5d, 0xec, 0x19,
+	0x32, 0x0b, 0x35, 0xac, 0x84, 0xd0, 0x67, 0xb8, 0x45, 0xbf, 0x0a, 0x3a, 0xe5, 0x63, 0x36, 0x55,
+	0x43, 0x35, 0x9b, 0xc7, 0x1b, 0xaa, 0xbe, 0x2d, 0x78, 0x72, 0x36, 0xa1, 0x86, 0x2f, 0x85, 0xd0,
+	0x29, 0xdc, 0x29, 0x93, 0x93, 0x19, 0x59, 0x4e, 0x18, 0x19, 0x2a, 0x73, 0xcc, 0xe6, 0x8b, 0xbb,
+	0xaa, 0x7f, 0xca, 0xe8, 0xa1, 0x86, 0xb7, 0xe9, 0xb5, 0x1a, 0x6a, 0x43, 0x3d, 0x4e, 0x73, 0x77,
+	0x0f, 0x37, 0x14, 0xee, 0xf4, 0xca, 0x51, 0xe8, 0x9d, 0x9e, 0x0d, 0x42, 0x0d, 0xeb, 0x71, 0x8a,
+	0x3a, 0xb0, 0xc6, 0x07, 0x11, 0x4d, 0x88, 0x5d, 0xbb, 0x93, 0x5c, 0x57, 0x91, 0x5a, 0xba, 0x12,
+	0xca, 0x25, 0x5a, 0x35, 0x68, 0x8c, 0x05, 0x4d, 0xdc, 0x7d, 0xb8, 0xf3, 0x97, 0x99, 0xf2, 0xb2,
+	0x4e, 0x49, 0x92, 0x5d, 0x86, 0x2d, 0xac, 0x62, 0x77, 0x02, 0xb7, 0xaf, 0x9b, 0x85, 0xb6, 0x61,
+	0x25, 0xa6, 0x4b, 0x05, 0xb3, 0xb0, 0x0c, 0xd1, 0x2e, 0xac, 0xa6, 0x64, 0xb2, 0xa0, 0xca, 0x7e,
+	0x0b, 0x67, 0x09, 0xb2, 0xe1, 0xbd, 0x94, 0xce, 0x4b, 0x03, 0x2b, 0xb8, 0x48, 0xaf, 0xac, 0x97,
+	0x9c, 0x7d, 0xb5, 0x58, 0x2f, 0xf7, 0x0d, 0x7c, 0x78, 0xa3, 0x89, 0x37, 0xb5, 0x76, 0xdb, 0x2e,
+	0xba, 0xc7, 0xd0, 0xbe, 0xcd, 0x2b, 0xd9, 0x52, 0xe1, 0x7a, 0xd6, 0x7e, 0x91, 0xba, 0xaf, 0xe0,
+	0x83, 0x3f, 0x8d, 0xd8, 0xf4, 0x98, 0x2f, 0x75, 0x1b, 0xb8, 0xde, 0x25, 0x3b, 0x9b, 0xbb, 0xec,
+	0x38, 0xa6, 0xcb, 0x62, 0x0d, 0x55, 0x2c, 0x91, 0xad, 0x77, 0x67, 0x2b, 0x07, 0x9c, 0xaf, 0x1c,
+	0xf0, 0x6b, 0xe5, 0x80, 0xef, 0x6b, 0x47, 0x3b, 0x5f, 0x3b, 0xda, 0xcf, 0xb5, 0xa3, 0x7d, 0x39,
+	0x18, 0x8d, 0x45, 0xb4, 0xe8, 0xfb, 0x03, 0x96, 0x04, 0xf9, 0x73, 0x97, 0xfd, 0x1c, 0xf2, 0x61,
+	0x7c, 0xe5, 0xd1, 0x13, 0xcb, 0x19, 0xe5, 0xfd, 0x9a, 0x7a, 0xb5, 0x9e, 0xff, 0x0e, 0x00, 0x00,
+	0xff, 0xff, 0xe5, 0xb5, 0xd9, 0x60, 0x1a, 0x05, 0x00, 0x00,
 }
 
 func (m *Snapshot) Marshal() (dAtA []byte, err error) {
@@ -738,6 +880,48 @@ func (m *SnapshotItem_ExtensionPayload) MarshalToSizedBuffer(dAtA []byte) (int, 
 	}
 	return len(dAtA) - i, nil
 }
+func (m *SnapshotItem_KV) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotItem_KV) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.KV != nil {
+		{
+			size, err := m.KV.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintSnapshot(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *SnapshotItem_Schema) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotItem_Schema) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Schema != nil {
+		{
+			size, err := m.Schema.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintSnapshot(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x32
+	}
+	return len(dAtA) - i, nil
+}
 func (m *SnapshotStoreItem) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -880,6 +1064,75 @@ func (m *SnapshotExtensionPayload) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *SnapshotKVItem) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotKVItem) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotKVItem) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintSnapshot(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintSnapshot(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SnapshotSchema) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SnapshotSchema) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SnapshotSchema) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Keys) > 0 {
+		for iNdEx := len(m.Keys) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Keys[iNdEx])
+			copy(dAtA[i:], m.Keys[iNdEx])
+			i = encodeVarintSnapshot(dAtA, i, uint64(len(m.Keys[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintSnapshot(dAtA []byte, offset int, v uint64) int {
 	offset -= sovSnapshot(v)
 	base := offset
@@ -990,6 +1243,30 @@ func (m *SnapshotItem_ExtensionPayload) Size() (n int) {
 	}
 	return n
 }
+func (m *SnapshotItem_KV) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.KV != nil {
+		l = m.KV.Size()
+		n += 1 + l + sovSnapshot(uint64(l))
+	}
+	return n
+}
+func (m *SnapshotItem_Schema) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Schema != nil {
+		l = m.Schema.Size()
+		n += 1 + l + sovSnapshot(uint64(l))
+	}
+	return n
+}
 func (m *SnapshotStoreItem) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1051,6 +1328,38 @@ func (m *SnapshotExtensionPayload) Size() (n int) {
 	l = len(m.Payload)
 	if l > 0 {
 		n += 1 + l + sovSnapshot(uint64(l))
+	}
+	return n
+}
+
+func (m *SnapshotKVItem) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovSnapshot(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovSnapshot(uint64(l))
+	}
+	return n
+}
+
+func (m *SnapshotSchema) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Keys) > 0 {
+		for _, b := range m.Keys {
+			l = len(b)
+			n += 1 + l + sovSnapshot(uint64(l))
+		}
 	}
 	return n
 }
@@ -1486,6 +1795,76 @@ func (m *SnapshotItem) Unmarshal(dAtA []byte) error {
 			}
 			m.Item = &SnapshotItem_ExtensionPayload{v}
 			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field KV", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSnapshot
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &SnapshotKVItem{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &SnapshotItem_KV{v}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Schema", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSnapshot
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &SnapshotSchema{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Item = &SnapshotItem_Schema{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSnapshot(dAtA[iNdEx:])
@@ -1908,6 +2287,206 @@ func (m *SnapshotExtensionPayload) Unmarshal(dAtA []byte) error {
 			if m.Payload == nil {
 				m.Payload = []byte{}
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSnapshot(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotKVItem) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSnapshot
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotKVItem: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotKVItem: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSnapshot
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = append(m.Key[:0], dAtA[iNdEx:postIndex]...)
+			if m.Key == nil {
+				m.Key = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSnapshot
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = append(m.Value[:0], dAtA[iNdEx:postIndex]...)
+			if m.Value == nil {
+				m.Value = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSnapshot(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SnapshotSchema) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSnapshot
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SnapshotSchema: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SnapshotSchema: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Keys", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSnapshot
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSnapshot
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Keys = append(m.Keys, make([]byte, postIndex-iNdEx))
+			copy(m.Keys[len(m.Keys)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

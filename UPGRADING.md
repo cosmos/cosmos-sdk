@@ -20,7 +20,7 @@ gRPC-Web is now listening to the same address as the API server (default: `local
 The possibility to listen to a different address has been removed, as well its the settings.
 Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
 
-#### Database Configuration
+#### Database
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 

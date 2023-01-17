@@ -12,7 +12,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/tx/textual"
+	"cosmossdk.io/x/tx/textual"
 )
 
 // mockCoinMetadataKey is used in the mock coin metadata querier.

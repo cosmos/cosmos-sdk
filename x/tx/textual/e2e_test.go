@@ -16,8 +16,8 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
-	"cosmossdk.io/tx/textual"
-	"cosmossdk.io/tx/textual/internal/textualpb"
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
 
 type e2eJsonTest struct {

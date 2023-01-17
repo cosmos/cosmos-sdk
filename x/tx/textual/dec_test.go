@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"cosmossdk.io/tx/textual"
+	"cosmossdk.io/x/tx/textual"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

@@ -94,7 +94,7 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/tx"
+    directory: "/x/tx"
     schedule:
       interval: weekly
     labels:

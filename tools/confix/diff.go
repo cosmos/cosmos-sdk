@@ -31,7 +31,8 @@ type Diff struct {
 // DiffKeys diffs the keyspaces of the TOML documents in files lhs and rhs.
 // Comments, order, and values are ignored for comparison purposes.
 func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
-	diff := diffSections(lhs.Global, rhs.Global)
+	// diff sections
+	diff := diffDocs(allKVs(lhs.Global), allKVs(rhs.Global), false)
 
 	lsec, rsec := lhs.Sections, rhs.Sections
 	transform.SortSectionsByName(lsec)
@@ -52,7 +53,7 @@ func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
 			}
 			j++
 		} else {
-			diff = append(diff, diffSections(lsec[i], rsec[j])...)
+			diff = append(diff, diffDocs(allKVs(lsec[i]), allKVs(rsec[j]), false)...)
 			i++
 			j++
 		}
@@ -73,11 +74,42 @@ func DiffKeys(lhs, rhs *tomledit.Document) []Diff {
 	return diff
 }
 
+// DiffKeys diffs the keyspaces with different values of the TOML documents in files lhs and rhs.
+func DiffValues(lhs, rhs *tomledit.Document) []Diff {
+	diff := diffDocs(allKVs(lhs.Global), allKVs(rhs.Global), true)
+
+	lsec, rsec := lhs.Sections, rhs.Sections
+	transform.SortSectionsByName(lsec)
+	transform.SortSectionsByName(rsec)
+
+	i, j := 0, 0
+	for i < len(lsec) && j < len(rsec) {
+		if lsec[i].Name.Before(rsec[j].Name) {
+			// skip keys present in lhs but not in rhs
+			i++
+		} else if rsec[j].Name.Before(lsec[i].Name) {
+			// skip keys present in rhs but not in lhs
+			j++
+		} else {
+			for _, d := range diffDocs(allKVs(lsec[i]), allKVs(rsec[j]), true) {
+				if !d.Deleted {
+					diff = append(diff, d)
+				}
+			}
+			i++
+			j++
+		}
+	}
+
+	return diff
+}
+
 func allKVs(s *tomledit.Section) []KV {
 	keys := []KV{}
 	s.Scan(func(key parser.Key, entry *tomledit.Entry) bool {
 		keys = append(keys, KV{
-			Key:   key.String(),
+			Key: key.String(),
+			// we get the value of the current configuration (i.e the one we want to compare/migrate)
 			Value: entry.Value.String(),
 			Block: entry.Block,
 		})
@@ -87,11 +119,9 @@ func allKVs(s *tomledit.Section) []KV {
 	return keys
 }
 
-func diffSections(lhs, rhs *tomledit.Section) []Diff {
-	return diffKeys(allKVs(lhs), allKVs(rhs))
-}
-
-func diffKeys(lhs, rhs []KV) []Diff {
+// diffDocs get the diff between all keys in lhs and rhs.
+// when a key is in both lhs and rhs, it is ignored, unless value is true in which case the value is as well compared.
+func diffDocs(lhs, rhs []KV, value bool) []Diff {
 	diff := []Diff{}
 
 	sort.Slice(lhs, func(i, j int) bool {
@@ -110,6 +140,11 @@ func diffKeys(lhs, rhs []KV) []Diff {
 			diff = append(diff, Diff{Type: Mapping, KV: rhs[j]})
 			j++
 		} else {
+			// key exists in both lhs and rhs
+			// if value is true, compare the values
+			if value && lhs[i].Value != rhs[j].Value {
+				diff = append(diff, Diff{Type: Mapping, KV: lhs[i]})
+			}
 			i++
 			j++
 		}

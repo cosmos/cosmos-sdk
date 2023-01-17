@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -47,7 +48,6 @@ func (s *E2ETestSuite) SetupSuite() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	unbond, err := sdk.ParseCoinNormalized("10stake")
 	s.Require().NoError(err)
@@ -1460,8 +1460,6 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Use CLI to create a delegation from the new account to validator `val`.
-	delHeight, err := s.network.LatestHeight()
-	require.NoError(err)
 	cmd := cli.NewDelegateCmd()
 	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, []string{
 		val.ValAddress.String(),
@@ -1480,31 +1478,27 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.
-	for {
+	s.network.RetryForBlocks(func() error {
 		latestHeight, err := s.network.LatestHeight()
 		require.NoError(err)
-
-		// Wait maximum 10 blocks, or else fail test.
-		if latestHeight > delHeight+10 {
-			s.Fail("timeout reached")
-		}
-
 		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)
-		require.NoError(err)
-
-		if len(res.ValidatorUpdates) > 0 {
-			valUpdate := res.ValidatorUpdates[0]
-			require.Equal(
-				valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
-				val.PubKey.Bytes(),
-			)
-
-			// We got our validator update, test passed.
-			break
+		if err != nil {
+			return err
 		}
 
-		s.network.WaitForNextBlock()
-	}
+		if len(res.ValidatorUpdates) == 0 {
+			return errors.New("validator update not found yet")
+		}
+
+		valUpdate := res.ValidatorUpdates[0]
+		require.Equal(
+			valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
+			val.PubKey.Bytes(),
+		)
+
+		return nil
+
+	}, 10)
 }
 
 // https://github.com/cosmos/cosmos-sdk/issues/10660

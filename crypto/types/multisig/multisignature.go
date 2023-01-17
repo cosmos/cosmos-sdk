@@ -1,6 +1,7 @@
 package multisig
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -73,7 +74,7 @@ func AddSignatureFromPubKey(mSig *signing.MultiSignatureData, sig signing.Signat
 	}
 
 	if len(keys) == 0 {
-		return fmt.Errorf("keys can't be empty or nil %v", keys)
+		return errors.New("keys can't be empty")
 	}
 
 	index := getIndex(pubkey, keys)

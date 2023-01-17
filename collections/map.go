@@ -30,22 +30,15 @@ func NewMap[K, V any](
 	keyCodec KeyCodec[K],
 	valueCodec ValueCodec[V],
 ) Map[K, V] {
-	m := newMap(schemaBuilder, prefix, name, keyCodec, valueCodec)
-	schemaBuilder.addCollection(m)
-	return m
-}
-
-func newMap[K, V any](
-	schemaBuilder *SchemaBuilder, prefix Prefix, name string,
-	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
-) Map[K, V] {
-	return Map[K, V]{
+	m := Map[K, V]{
 		kc:     keyCodec,
 		vc:     valueCodec,
 		sa:     schemaBuilder.schema.storeAccessor,
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
+	schemaBuilder.addCollection(m)
+	return m
 }
 
 func (m Map[K, V]) getName() string {

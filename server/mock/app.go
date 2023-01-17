@@ -29,7 +29,7 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 		return nil, err
 	}
 
-	capKeyMainStore := sdk.NewKVStoreKey("main")
+	capKeyMainStore := storetypes.NewKVStoreKey("main")
 
 	baseApp := bam.NewBaseApp("kvstore", logger, db, decodeTx)
 	baseApp.MountStores(capKeyMainStore)

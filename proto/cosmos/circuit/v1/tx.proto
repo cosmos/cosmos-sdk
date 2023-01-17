@@ -44,7 +44,6 @@ message MsgAuthorizeCircuitBreakerResponse {
   bool success = 1;
 }
 
-
 // MsgTripCircuitBreaker defines the Msg/TripCircuitBreaker request type.
 message MsgTripCircuitBreaker {
   option (cosmos.msg.v1.signer) = "authority";

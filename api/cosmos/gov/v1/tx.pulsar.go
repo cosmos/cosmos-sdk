@@ -5975,8 +5975,12 @@ type MsgSubmitProposal struct {
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// title is the title of the proposal.
+	//
+	// Since: cosmos-sdk 0.47
 	Title string `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
 	// summary is the summary of the proposal
+	//
+	// Since: cosmos-sdk 0.47
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
 }
 
@@ -6425,7 +6429,7 @@ type MsgUpdateParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address of the governance account.
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/gov parameters to update.
 	//

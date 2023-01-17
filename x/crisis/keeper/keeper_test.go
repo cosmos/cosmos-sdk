@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -19,8 +20,8 @@ func TestLogger(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
 
@@ -33,7 +34,7 @@ func TestInvariants(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
 	require.Equal(t, keeper.InvCheckPeriod(), uint(5))
@@ -48,8 +49,8 @@ func TestAssertInvariants(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
 

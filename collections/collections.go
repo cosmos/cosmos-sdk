@@ -22,6 +22,8 @@ type collection interface {
 
 	// getPrefix is the unique prefix of the collection within a schema.
 	getPrefix() []byte
+
+	genesisHandler
 }
 
 // Prefix defines a segregation namespace
@@ -85,10 +87,33 @@ type KeyCodec[T any] interface {
 	// to return the maximum varint bytes buffer length, at the risk of
 	// over-estimating in order to pick the most performant path.
 	Size(key T) int
+	// EncodeJSON encodes the value as JSON.
+	EncodeJSON(value T) ([]byte, error)
+	// DecodeJSON decodes the provided JSON bytes into an instance of T.
+	DecodeJSON(b []byte) (T, error)
 	// Stringify returns a string representation of T.
 	Stringify(key T) string
 	// KeyType returns a string identifier for the type of the key.
 	KeyType() string
+
+	// MULTIPART keys
+
+	// EncodeNonTerminal writes the key bytes into the buffer.
+	// EncodeNonTerminal is used in multipart keys like Pair
+	// when the part of the key being encoded is not the last one,
+	// and there needs to be a way to distinguish after how many bytes
+	// the first part of the key is finished. The buffer is expected to be
+	// at least as big as SizeNonTerminal(key) returns. It returns
+	// the amount of bytes written.
+	EncodeNonTerminal(buffer []byte, key T) (int, error)
+	// DecodeNonTerminal reads the buffer provided and returns
+	// the key T. DecodeNonTerminal is used in multipart keys
+	// like Pair when the part of the key being decoded is not the
+	// last one. It returns the amount of bytes read.
+	DecodeNonTerminal(buffer []byte) (int, T, error)
+	// SizeNonTerminal returns the maximum size of the key K when used in
+	// multipart keys like Pair.
+	SizeNonTerminal(key T) int
 }
 
 // ValueCodec defines a generic interface which is implemented
@@ -98,6 +123,10 @@ type ValueCodec[T any] interface {
 	Encode(value T) ([]byte, error)
 	// Decode returns the type T given its binary representation.
 	Decode(b []byte) (T, error)
+	// EncodeJSON encodes the value as JSON.
+	EncodeJSON(value T) ([]byte, error)
+	// DecodeJSON decodes the provided JSON bytes into an instance of T.
+	DecodeJSON(b []byte) (T, error)
 	// Stringify returns a string representation of T.
 	Stringify(value T) string
 	// ValueType returns the identifier for the type.

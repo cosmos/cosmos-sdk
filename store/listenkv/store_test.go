@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/internal/kv"
 	"github.com/cosmos/cosmos-sdk/store/listenkv"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/store/types"
@@ -21,7 +22,7 @@ func bz(s string) []byte { return []byte(s) }
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
 func valFmt(i int) []byte { return bz(fmt.Sprintf("value%0.8d", i)) }
 
-var kvPairs = []types.KVPair{
+var kvPairs = []kv.Pair{
 	{Key: keyFmt(1), Value: valFmt(1)},
 	{Key: keyFmt(2), Value: valFmt(2)},
 	{Key: keyFmt(3), Value: valFmt(3)},

@@ -30,22 +30,15 @@ func NewMap[K, V any](
 	keyCodec KeyCodec[K],
 	valueCodec ValueCodec[V],
 ) Map[K, V] {
-	m := newMap(schemaBuilder, prefix, name, keyCodec, valueCodec)
-	schemaBuilder.addCollection(m)
-	return m
-}
-
-func newMap[K, V any](
-	schemaBuilder *SchemaBuilder, prefix Prefix, name string,
-	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
-) Map[K, V] {
-	return Map[K, V]{
+	m := Map[K, V]{
 		kc:     keyCodec,
 		vc:     valueCodec,
 		sa:     schemaBuilder.schema.storeAccessor,
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
+	schemaBuilder.addCollection(m)
+	return m
 }
 
 func (m Map[K, V]) getName() string {
@@ -127,6 +120,49 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 func (m Map[K, V]) Iterate(ctx context.Context, ranger Ranger[K]) (Iterator[K, V], error) {
 	return iteratorFromRanger(ctx, m, ranger)
 }
+
+// IterateRaw iterates over the collection. The iteration range is untyped, it uses raw
+// bytes. The resulting Iterator is typed.
+// A nil start iterates from the first key contained in the collection.
+// A nil end iterates up to the last key contained in the collection.
+// A nil start and a nil end iterates over every key contained in the collection.
+// TODO(tip): simplify after https://github.com/cosmos/cosmos-sdk/pull/14310 is merged
+func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[K, V], error) {
+	prefixedStart := append(m.prefix, start...)
+	var prefixedEnd []byte
+	if end == nil {
+		prefixedEnd = nextBytesPrefixKey(m.prefix)
+	} else {
+		prefixedEnd = append(m.prefix, end...)
+	}
+
+	s := m.sa(ctx)
+	var storeIter store.Iterator
+	switch order {
+	case OrderAscending:
+		storeIter = s.Iterator(prefixedStart, prefixedEnd)
+	case OrderDescending:
+		storeIter = s.ReverseIterator(prefixedStart, prefixedEnd)
+	default:
+		return Iterator[K, V]{}, errOrder
+	}
+
+	if !storeIter.Valid() {
+		return Iterator[K, V]{}, ErrInvalidIterator
+	}
+	return Iterator[K, V]{
+		kc:           m.kc,
+		vc:           m.vc,
+		iter:         storeIter,
+		prefixLength: len(m.prefix),
+	}, nil
+}
+
+// KeyCodec returns the Map's KeyCodec.
+func (m Map[K, V]) KeyCodec() KeyCodec[K] { return m.kc }
+
+// ValueCodec returns the Map's ValueCodec.
+func (m Map[K, V]) ValueCodec() ValueCodec[V] { return m.vc }
 
 func encodeKeyWithPrefix[K any](prefix []byte, kc KeyCodec[K], key K) ([]byte, error) {
 	prefixLen := len(prefix)

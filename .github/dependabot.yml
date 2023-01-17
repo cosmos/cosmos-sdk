@@ -94,7 +94,7 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/tx"
+    directory: "/x/tx"
     schedule:
       interval: weekly
     labels:
@@ -109,6 +109,20 @@ updates:
       - dependencies
   - package-ecosystem: gomod
     directory: "/collections"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/x/nft"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/x/circuit"
     schedule:
       interval: weekly
     labels:

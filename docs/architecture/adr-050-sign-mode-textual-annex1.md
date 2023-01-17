@@ -5,6 +5,7 @@
 * Dec 06, 2021: Initial Draft
 * Feb 07, 2022: Draft read and concept-ACKed by the Ledger team.
 * Dec 01, 2022: Remove `Object: ` prefix on Any header screen.
+* Dec 13, 2022: Sign over bytes hash when bytes length > 32.
 
 ## Status
 
@@ -37,7 +38,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 ### `coin`
 
 * Applies to `cosmos.base.v1beta1.Coin`.
-* Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank Protobuf definition](https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/bank/v1beta1/bank.proto#L79-L108). If the `display` field is empty or nil, then we do not perform any denom conversion.
+* Denoms are converted to `display` denoms using `Metadata` (if available). **This requires a state query**. The definition of `Metadata` can be found in the [bank protobuf definition](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.bank.v1beta1#cosmos.bank.v1beta1.Metadata). If the `display` field is empty or nil, then we do not perform any denom conversion.
 * Amounts are converted to `display` denom amounts and rendered as `number`s above
     * We do not change the capitalization of the denom. In practice, `display` denoms are stored in lowercase in state (e.g. `10 atom`), however they are often showed in UPPERCASE in everyday life (e.g. `10 ATOM`). Value renderers keep the case used in state, but we may recommend chains changing the denom metadata to be uppercase for better user display.
 * One space between the denom and amount (e.g. `10 atom`).
@@ -51,13 +52,13 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 * an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
 * the list of coins is ordered by unicode code point of the display denom: `A-Z` < `a-z`. For example, the string `aAbBcC` would be sorted `ABCabc`.
-- if the coins list had 0 items in it then it'll be rendered as `zero`
+    * if the coins list had 0 items in it then it'll be rendered as `zero`
 
 ### Example
 
 * `["3cosm", "2000000uatom"]` -> `2 atom, 3 COSM` (assuming the display denoms are `atom` and `COSM`)
 * `["10atom", "20Acoin"]` -> `20 Acoin, 10 atom` (assuming the display denoms are `atom` and `Acoin`)
-- `[]` -> `zero` 
+* `[]` -> `zero` 
 
 ### `repeated`
 
@@ -124,6 +125,7 @@ End of Allowed messages
   <field_name>: <1st line of value-rendered message>
   > <lines 2-n of value-rendered message>             // Notice the `>` prefix.
   ```
+
     * `>` character is used to denote nesting. For each additional level of nesting, add `>`.
 
 #### Examples
@@ -254,7 +256,25 @@ Examples:
 
 ### bytes
 
-* Bytes are rendered in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length shorter or equal to 35 are rendered in hexadecimal, all capital letters, without the `0x` prefix.
+* Bytes of length greater than 35 are hashed using SHA256. The rendered text is `SHA-256=`, followed by the 32-byte hash, in hexadecimal, all capital letters, without the `0x` prefix.
+* The hexadecimal string is finally separated into groups of 4 digits, with a space `' '` as separator. If the bytes length is odd, the 2 remaining hexadecimal characters are at the end.
+
+The number 35 was chosen because it is the longest length where the hashed-and-prefixed representation is longer than the original data directly formatted, using the 3 rules above. More specifically:
+- a 35-byte array will have 70 hex characters, plus 17 space characters, resulting in 87 characters.
+- byte arrays starting from length 36 will be be hashed to 32 bytes, which is 64 hex characters plus 15 spaces, and with the `SHA-256=` prefix, it takes 87 characters.
+Also, secp256k1 public keys have length 33, so their Textual representation is not their hashed value, which we would like to avoid.
+
+Note: Data longer than 35 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertability](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.
+
+#### Examples
+
+Inputs are displayed as byte arrays.
+
+* `[0]`: `00`
+* `[0,1,2]`: `0001 02`
+* `[0,1,2,..,34]`: `0001 0203 0405 0607 0809 0A0B 0C0D 0E0F 1011 1213 1415 1617 1819 1A1B 1C1D 1E1F 2021 22`
+* `[0,1,2,..,35]`: `SHA-256=5D7E 2D9B 1DCB C85E 7C89 0036 A2CF 2F9F E7B6 6554 F2DF 08CE C6AA 9C0A 25C9 9C21`
 
 ### address bytes
 

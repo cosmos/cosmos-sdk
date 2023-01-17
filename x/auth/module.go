@@ -31,7 +31,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/auth module consensus version.
-const ConsensusVersion = 5
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule           = AppModule{}
@@ -184,7 +184,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for auth module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.accountKeeper)
 }
 

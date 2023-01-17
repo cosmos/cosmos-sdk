@@ -16,6 +16,7 @@ import (
 	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -51,9 +52,9 @@ type TestSuite struct {
 
 func (s *TestSuite) SetupTest() {
 	s.blockTime = tmtime.Now()
-	key := sdk.NewKVStoreKey(group.StoreKey)
+	key := storetypes.NewKVStoreKey(group.StoreKey)
 
-	testCtx := testutil.DefaultContextWithDB(s.T(), key, sdk.NewTransientStoreKey("transient_test"))
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{}, bank.AppModuleBasic{})
 	s.addrs = simtestutil.CreateIncrementalAccounts(6)
 
@@ -127,16 +128,17 @@ func (s TestSuite) setNextAccount() { //nolint:govet // this is a test and we're
 	derivationKey := make([]byte, 8)
 	binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-	accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{keeper.GroupPolicyTablePrefix}, derivationKey})
-
-	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+	ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{keeper.GroupPolicyTablePrefix}, derivationKey)
 	s.Require().NoError(err)
 
-	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+	groupPolicyAcc, err := authtypes.NewBaseAccountWithPubKey(ac)
+	s.Require().NoError(err)
+
+	groupPolicyAccBumpAccountNumber, err := authtypes.NewBaseAccountWithPubKey(ac)
 	s.Require().NoError(err)
 	groupPolicyAccBumpAccountNumber.SetAccountNumber(nextAccVal)
 
-	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(accountCredentials.Address())).Return(nil).AnyTimes()
+	s.accountKeeper.EXPECT().GetAccount(gomock.Any(), sdk.AccAddress(ac.Address())).Return(nil).AnyTimes()
 	s.accountKeeper.EXPECT().NewAccount(gomock.Any(), groupPolicyAcc).Return(groupPolicyAccBumpAccountNumber).AnyTimes()
 	s.accountKeeper.EXPECT().SetAccount(gomock.Any(), sdk.AccountI(groupPolicyAccBumpAccountNumber)).Return().AnyTimes()
 }
@@ -493,6 +495,9 @@ func (s *TestSuite) TestUpdateGroupMetadata() {
 			res, err := s.groupKeeper.GroupInfo(sdkCtx, &group.QueryGroupInfoRequest{GroupId: groupID})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expStored, res.Info)
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -775,6 +780,9 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 				s.Assert().Equal(spec.expMembers[i].Member.AddedAt, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(spec.expMembers[i].GroupId, loadedMembers[i].GroupId)
 			}
+
+			events := sdkCtx.EventManager().ABCIEvents()
+			s.Require().Len(events, 1) // EventUpdateGroup
 		})
 	}
 }
@@ -1310,11 +1318,28 @@ func (s *TestSuite) TestUpdateGroupPolicyMetadata() {
 				return
 			}
 			s.Require().NoError(err)
+
 			res, err := s.groupKeeper.GroupPolicyInfo(s.ctx, &group.QueryGroupPolicyInfoRequest{
 				Address: groupPolicyAddr,
 			})
 			s.Require().NoError(err)
 			s.Assert().Equal(spec.expGroupPolicy, res.Info)
+
+			// check events
+			var hasUpdateGroupPolicyEvent bool
+			events := s.ctx.(sdk.Context).EventManager().ABCIEvents()
+			for _, event := range events {
+				event, err := sdk.ParseTypedEvent(event)
+				s.Require().NoError(err)
+
+				if e, ok := event.(*group.EventUpdateGroupPolicy); ok {
+					s.Require().Equal(e.Address, groupPolicyAddr)
+					hasUpdateGroupPolicyEvent = true
+					break
+				}
+			}
+
+			s.Require().True(hasUpdateGroupPolicyEvent)
 		})
 	}
 }

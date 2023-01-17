@@ -2,43 +2,45 @@ package keeper_test
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtime "github.com/tendermint/tendermint/types/time"
+	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 const (
@@ -62,6 +64,21 @@ var (
 	initCoins  = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 )
 
+func assertElementsMatch(listA, listB []string) bool {
+	// Create maps for each slice
+	mapA, mapB := make(map[string]int), make(map[string]int)
+
+	// Populate the maps with the elements of each slice
+	for _, value := range listA {
+		mapA[value]++
+	}
+	for _, value := range listB {
+		mapB[value]++
+	}
+
+	return reflect.DeepEqual(mapA, mapB)
+}
+
 func newFooCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(fooDenom, amt)
 }
@@ -81,9 +98,7 @@ func getCoinsByName(ctx sdk.Context, bk keeper.Keeper, ak types.AccountKeeper, m
 	return bk.GetAllBalances(ctx, macc.GetAddress())
 }
 
-type IntegrationTestSuite struct {
-	suite.Suite
-
+type fixture struct {
 	bankKeeper    keeper.BaseKeeper
 	accountKeeper authkeeper.AccountKeeper
 	stakingKeeper *stakingkeeper.Keeper
@@ -96,9 +111,42 @@ type IntegrationTestSuite struct {
 	fetchStoreKey func(string) storetypes.StoreKey
 }
 
-func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
+func initFixture(t assert.TestingT) *fixture {
+	f := &fixture{}
+
+	var interfaceRegistry codectypes.InterfaceRegistry
+
+	app, err := sims.Setup(
+		configurator.NewAppConfig(
+			configurator.AuthModule(),
+			configurator.BankModule(),
+			configurator.StakingModule(),
+			configurator.ParamsModule(),
+			configurator.ConsensusModule(),
+			configurator.VestingModule()),
+		&f.accountKeeper, &f.bankKeeper, &f.stakingKeeper,
+		&f.appCodec, &f.authConfig, &interfaceRegistry,
+	)
+	assert.NilError(t, err)
+
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = ctx
+	f.fetchStoreKey = app.UnsafeFindStoreKey
+
+	queryHelper := baseapp.NewQueryServerTestHelper(f.ctx, interfaceRegistry)
+	types.RegisterQueryServer(queryHelper, f.bankKeeper)
+	queryClient := types.NewQueryClient(queryHelper)
+	types.RegisterInterfaces(interfaceRegistry)
+
+	f.queryClient = queryClient
+	f.msgServer = keeper.NewMsgServerImpl(f.bankKeeper)
+
+	return f
+}
+
+func initKeepersWithmAccPerms(f *fixture, blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
 	maccPerms := map[string][]string{}
-	for _, permission := range suite.authConfig.ModuleAccountPermissions {
+	for _, permission := range f.authConfig.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
@@ -110,150 +158,129 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 	maccPerms[randomPerm] = []string{"random"}
 	authKeeper := authkeeper.NewAccountKeeper(
-		appCodec, suite.fetchStoreKey(types.StoreKey), authtypes.ProtoBaseAccount,
+		appCodec, f.fetchStoreKey(types.StoreKey), authtypes.ProtoBaseAccount,
 		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	bankKeeper := keeper.NewBaseKeeper(
-		appCodec, suite.fetchStoreKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, f.fetchStoreKey(types.StoreKey), authKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return authKeeper, bankKeeper
 }
 
-func (suite *IntegrationTestSuite) SetupTest() {
-	var interfaceRegistry codectypes.InterfaceRegistry
+func TestSupply(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
 
-	app, err := sims.Setup(
-		configurator.NewAppConfig(
-			configurator.AuthModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.VestingModule()),
-		&suite.accountKeeper, &suite.bankKeeper, &suite.stakingKeeper,
-		&interfaceRegistry, &suite.appCodec, &suite.authConfig)
-	suite.NoError(err)
-
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
-	suite.fetchStoreKey = app.UnsafeFindStoreKey
-
-	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, interfaceRegistry)
-	types.RegisterQueryServer(queryHelper, suite.bankKeeper)
-	queryClient := types.NewQueryClient(queryHelper)
-	types.RegisterInterfaces(interfaceRegistry)
-
-	suite.queryClient = queryClient
-	suite.msgServer = keeper.NewMsgServerImpl(suite.bankKeeper)
-}
-
-func (suite *IntegrationTestSuite) TestSupply() {
-	ctx := suite.ctx
-
-	require := suite.Require()
+	ctx := f.ctx
 
 	// add module accounts to supply keeper
-	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
+	authKeeper, keeper := initKeepersWithmAccPerms(f, make(map[string]bool))
 
 	genesisSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	require.NoError(err)
+	assert.NilError(t, err)
 
 	initialPower := int64(100)
-	initTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, initialPower)
+	initTokens := f.stakingKeeper.TokensFromConsensusPower(ctx, initialPower)
 	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))
 
 	// set burnerAcc balance
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
-	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
-	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
+	assert.NilError(t, keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+	assert.NilError(t, keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
 
 	total, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	require.NoError(err)
+	assert.NilError(t, err)
 
 	expTotalSupply := initCoins.Add(genesisSupply...)
-	require.Equal(expTotalSupply, total)
+	assert.DeepEqual(t, expTotalSupply, total)
 
 	// burning all supplied tokens
 	err = keeper.BurnCoins(ctx, authtypes.Burner, initCoins)
-	require.NoError(err)
+	assert.NilError(t, err)
 
 	total, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	require.NoError(err)
-	require.Equal(total, genesisSupply)
+	assert.NilError(t, err)
+	assert.DeepEqual(t, total, genesisSupply)
 }
 
-func (suite *IntegrationTestSuite) TestSendCoinsFromModuleToAccount_Blocklist() {
-	ctx := suite.ctx
+func TestSendCoinsFromModuleToAccount_Blocklist(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 
 	// add module accounts to supply keeper
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
-	_, keeper := suite.initKeepersWithmAccPerms(map[string]bool{addr1.String(): true})
+	_, keeper := initKeepersWithmAccPerms(f, map[string]bool{addr1.String(): true})
 
-	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
-	suite.Require().Error(keeper.SendCoinsFromModuleToAccount(
-		ctx, minttypes.ModuleName, addr1, initCoins,
-	))
+	assert.NilError(t, keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	assert.Error(t, keeper.SendCoinsFromModuleToAccount(
+		ctx, minttypes.ModuleName, addr1, initCoins), fmt.Sprintf("%s is not allowed to receive funds: unauthorized", addr1))
 }
 
-func (suite *IntegrationTestSuite) TestSupply_SendCoins() {
-	ctx := suite.ctx
+func TestSupply_SendCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 
 	// add module accounts to supply keeper
-	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
+	authKeeper, keeper := initKeepersWithmAccPerms(f, make(map[string]bool))
 
 	baseAcc := authKeeper.NewAccountWithAddress(ctx, authtypes.NewModuleAddress("baseAcc"))
 
 	// set initial balances
-	suite.
-		Require().
-		NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
+	assert.NilError(t, keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 
-	suite.
-		Require().
-		NoError(keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, holderAcc.GetAddress(), initCoins))
+	assert.NilError(t, keeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, holderAcc.GetAddress(), initCoins))
 
 	authKeeper.SetModuleAccount(ctx, holderAcc)
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
 	authKeeper.SetAccount(ctx, baseAcc)
 
-	suite.Require().Panics(func() {
+	testutil.AssertPanics(t, func() {
 		_ = keeper.SendCoinsFromModuleToModule(ctx, "", holderAcc.GetName(), initCoins) // nolint:errcheck
 	})
 
-	suite.Require().Panics(func() {
+	testutil.AssertPanics(t, func() {
 		_ = keeper.SendCoinsFromModuleToModule(ctx, authtypes.Burner, "", initCoins) // nolint:errcheck
 	})
 
-	suite.Require().Panics(func() {
+	testutil.AssertPanics(t, func() {
 		_ = keeper.SendCoinsFromModuleToAccount(ctx, "", baseAcc.GetAddress(), initCoins) // nolint:errcheck
 	})
 
-	suite.Require().Error(
+	assert.Error(t,
 		keeper.SendCoinsFromModuleToAccount(ctx, holderAcc.GetName(), baseAcc.GetAddress(), initCoins.Add(initCoins...)),
+		fmt.Sprintf("spendable balance %s is smaller than %s: insufficient funds", initCoins, initCoins.Add(initCoins...)),
 	)
 
-	suite.Require().NoError(
+	assert.NilError(t,
 		keeper.SendCoinsFromModuleToModule(ctx, holderAcc.GetName(), authtypes.Burner, initCoins),
 	)
-	suite.Require().Equal(sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, holderAcc.GetName()).String())
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+	assert.Equal(t, sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, holderAcc.GetName()).String())
+	assert.DeepEqual(t, initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 
-	suite.Require().NoError(
+	assert.NilError(t,
 		keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Burner, baseAcc.GetAddress(), initCoins),
 	)
-	suite.Require().Equal(sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner).String())
-	suite.Require().Equal(initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
+	assert.Equal(t, sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner).String())
+	assert.DeepEqual(t, initCoins, keeper.GetAllBalances(ctx, baseAcc.GetAddress()))
 
-	suite.Require().NoError(keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
-	suite.Require().Equal(sdk.NewCoins().String(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()).String())
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
+	assert.NilError(t, keeper.SendCoinsFromAccountToModule(ctx, baseAcc.GetAddress(), authtypes.Burner, initCoins))
+	assert.Equal(t, sdk.NewCoins().String(), keeper.GetAllBalances(ctx, baseAcc.GetAddress()).String())
+	assert.DeepEqual(t, initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner))
 }
 
-func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
-	ctx := suite.ctx
+func TestSupply_MintCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 
 	// add module accounts to supply keeper
-	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
+	authKeeper, keeper := initKeepersWithmAccPerms(f, make(map[string]bool))
 
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
 	authKeeper.SetModuleAccount(ctx, minterAcc)
@@ -261,136 +288,142 @@ func (suite *IntegrationTestSuite) TestSupply_MintCoins() {
 	authKeeper.SetModuleAccount(ctx, randomPermAcc)
 
 	initialSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, "", initCoins) }, "no module account")                // nolint:errcheck
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }, "invalid permission") // nolint:errcheck
+	// no module account
+	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, "", initCoins) }) // nolint:errcheck
+	// invalid permission
+	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) // nolint:errcheck
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, sdk.Coins{sdk.Coin{Denom: "denom", Amount: sdk.NewInt(-10)}})
-	suite.Require().Error(err, "insufficient coins")
+	assert.Error(t, err, fmt.Sprintf("%sdenom: invalid coins", sdk.NewInt(-10)))
 
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
+	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, randomPerm, initCoins) }) // nolint:errcheck
 
 	err = keeper.MintCoins(ctx, authtypes.Minter, initCoins)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Minter))
+	assert.DeepEqual(t, initCoins, getCoinsByName(ctx, keeper, authKeeper, authtypes.Minter))
 	totalSupply, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
-	suite.Require().Equal(initialSupply.Add(initCoins...), totalSupply)
+	assert.DeepEqual(t, initialSupply.Add(initCoins...), totalSupply)
 
 	// test same functionality on module account with multiple permissions
 	initialSupply, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
 	err = keeper.MintCoins(ctx, multiPermAcc.GetName(), initCoins)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
 	totalSupply, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(initCoins, getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
-	suite.Require().Equal(initialSupply.Add(initCoins...), totalSupply)
-	suite.Require().Panics(func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) // nolint:errcheck
+	assert.NilError(t, err)
+	assert.DeepEqual(t, initCoins, getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()))
+	assert.DeepEqual(t, initialSupply.Add(initCoins...), totalSupply)
+	testutil.AssertPanics(t, func() { keeper.MintCoins(ctx, authtypes.Burner, initCoins) }) // nolint:errcheck
 }
 
-func (suite *IntegrationTestSuite) TestSupply_BurnCoins() {
-	ctx := suite.ctx
+func TestSupply_BurnCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	// add module accounts to supply keeper
-	authKeeper, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
+	authKeeper, keeper := initKeepersWithmAccPerms(f, make(map[string]bool))
 
 	// set burnerAcc balance
 	authKeeper.SetModuleAccount(ctx, burnerAcc)
-	suite.
-		Require().
-		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
-	suite.
-		Require().
-		NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
+	assert.NilError(t, keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+	assert.NilError(t, keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, burnerAcc.GetAddress(), initCoins))
 
 	// inflate supply
-	suite.
-		Require().
-		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+	assert.NilError(t, keeper.MintCoins(ctx, authtypes.Minter, initCoins))
 	supplyAfterInflation, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, "", initCoins) }, "no module account")                    // nolint:errcheck
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }, "invalid permission")     // nolint:errcheck
-	suite.Require().Panics(func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }, "random permission") // nolint:errcheck
+	assert.NilError(t, err)
+	// no module account
+	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, "", initCoins) }) // nolint:errcheck
+	// invalid permission
+	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, authtypes.Minter, initCoins) }) // nolint:errcheck
+	// random permission
+	testutil.AssertPanics(t, func() { keeper.BurnCoins(ctx, randomPerm, supplyAfterInflation) }) // nolint:errcheck
 	err = keeper.BurnCoins(ctx, authtypes.Burner, supplyAfterInflation)
-	suite.Require().Error(err, "insufficient coins")
+	assert.Error(t, err, fmt.Sprintf("spendable balance %s is smaller than %s: insufficient funds", initCoins, supplyAfterInflation))
 
 	err = keeper.BurnCoins(ctx, authtypes.Burner, initCoins)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 	supplyAfterBurn, _, err := keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner).String())
-	suite.Require().Equal(supplyAfterInflation.Sub(initCoins...), supplyAfterBurn)
+	assert.NilError(t, err)
+	assert.Equal(t, sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, authtypes.Burner).String())
+	assert.DeepEqual(t, supplyAfterInflation.Sub(initCoins...), supplyAfterBurn)
 
 	// test same functionality on module account with multiple permissions
-	suite.
-		Require().
-		NoError(keeper.MintCoins(ctx, authtypes.Minter, initCoins))
+	assert.NilError(t, keeper.MintCoins(ctx, authtypes.Minter, initCoins))
 
 	supplyAfterInflation, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
-	suite.Require().NoError(keeper.SendCoins(ctx, authtypes.NewModuleAddress(authtypes.Minter), multiPermAcc.GetAddress(), initCoins))
+	assert.NilError(t, err)
+	assert.NilError(t, keeper.SendCoins(ctx, authtypes.NewModuleAddress(authtypes.Minter), multiPermAcc.GetAddress(), initCoins))
 	authKeeper.SetModuleAccount(ctx, multiPermAcc)
 
 	err = keeper.BurnCoins(ctx, multiPermAcc.GetName(), initCoins)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 	supplyAfterBurn, _, err = keeper.GetPaginatedTotalSupply(ctx, &query.PageRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()).String())
-	suite.Require().Equal(supplyAfterInflation.Sub(initCoins...), supplyAfterBurn)
+	assert.NilError(t, err)
+	assert.Equal(t, sdk.NewCoins().String(), getCoinsByName(ctx, keeper, authKeeper, multiPermAcc.GetName()).String())
+	assert.DeepEqual(t, supplyAfterInflation.Sub(initCoins...), supplyAfterBurn)
 }
 
-func (suite *IntegrationTestSuite) TestSendCoinsNewAccount() {
-	ctx := suite.ctx
+func TestSendCoinsNewAccount(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
-	acc1 := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
-	suite.accountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, balances))
+	acc1 := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	f.accountKeeper.SetAccount(ctx, acc1)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
 
-	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, addr1)
-	suite.Require().Equal(balances, acc1Balances)
+	acc1Balances := f.bankKeeper.GetAllBalances(ctx, addr1)
+	assert.DeepEqual(t, balances, acc1Balances)
 
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 
-	suite.Require().Nil(suite.accountKeeper.GetAccount(ctx, addr2))
-	suite.bankKeeper.GetAllBalances(ctx, addr2)
-	suite.Require().Empty(suite.bankKeeper.GetAllBalances(ctx, addr2))
+	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) == nil)
+	f.bankKeeper.GetAllBalances(ctx, addr2)
+	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addr2).Empty())
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(50))
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
-	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, addr2)
-	acc1Balances = suite.bankKeeper.GetAllBalances(ctx, addr1)
-	suite.Require().Equal(sendAmt, acc2Balances)
+	acc2Balances := f.bankKeeper.GetAllBalances(ctx, addr2)
+	acc1Balances = f.bankKeeper.GetAllBalances(ctx, addr1)
+	assert.DeepEqual(t, sendAmt, acc2Balances)
 	updatedAcc1Bal := balances.Sub(sendAmt...)
-	suite.Require().Len(acc1Balances, len(updatedAcc1Bal))
-	suite.Require().Equal(acc1Balances, updatedAcc1Bal)
-	suite.Require().NotNil(suite.accountKeeper.GetAccount(ctx, addr2))
+	assert.Assert(t, len(acc1Balances) == len(updatedAcc1Bal))
+	assert.DeepEqual(t, acc1Balances, updatedAcc1Bal)
+	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) != nil)
 }
 
-func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
-	ctx := suite.ctx
+func TestInputOutputNewAccount(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
-	acc1 := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
-	suite.accountKeeper.SetAccount(ctx, acc1)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, balances))
+	acc1 := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	f.accountKeeper.SetAccount(ctx, acc1)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
 
-	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, addr1)
-	suite.Require().Equal(balances, acc1Balances)
+	acc1Balances := f.bankKeeper.GetAllBalances(ctx, addr1)
+	assert.DeepEqual(t, balances, acc1Balances)
 
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 
-	suite.Require().Nil(suite.accountKeeper.GetAccount(ctx, addr2))
-	suite.Require().Empty(suite.bankKeeper.GetAllBalances(ctx, addr2))
+	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) == nil)
+	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addr2).Empty())
 
 	inputs := []types.Input{
 		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
@@ -399,29 +432,32 @@ func (suite *IntegrationTestSuite) TestInputOutputNewAccount() {
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	suite.Require().NoError(suite.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
+	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, inputs, outputs))
 
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
-	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, addr2)
-	suite.Require().Equal(expected, acc2Balances)
-	suite.Require().NotNil(suite.accountKeeper.GetAccount(ctx, addr2))
+	acc2Balances := f.bankKeeper.GetAllBalances(ctx, addr2)
+	assert.DeepEqual(t, expected, acc2Balances)
+	assert.Assert(t, f.accountKeeper.GetAccount(ctx, addr2) != nil)
 }
 
-func (suite *IntegrationTestSuite) TestInputOutputCoins() {
-	ctx := suite.ctx
+func TestInputOutputCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	balances := sdk.NewCoins(newFooCoin(90), newBarCoin(30))
 
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
-	acc1 := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
-	suite.accountKeeper.SetAccount(ctx, acc1)
+	acc1 := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	f.accountKeeper.SetAccount(ctx, acc1)
 
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
-	acc2 := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
-	suite.accountKeeper.SetAccount(ctx, acc2)
+	acc2 := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	f.accountKeeper.SetAccount(ctx, acc2)
 
 	addr3 := sdk.AccAddress([]byte("addr3_______________"))
-	acc3 := suite.accountKeeper.NewAccountWithAddress(ctx, addr3)
-	suite.accountKeeper.SetAccount(ctx, acc3)
+	acc3 := f.accountKeeper.NewAccountWithAddress(ctx, addr3)
+	f.accountKeeper.SetAccount(ctx, acc3)
 
 	input := []types.Input{
 		{Address: addr1.String(), Coins: sdk.NewCoins(newFooCoin(60), newBarCoin(20))},
@@ -431,10 +467,10 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(30), newBarCoin(10))},
 	}
 
-	suite.Require().Error(suite.bankKeeper.InputOutputCoins(ctx, input, []types.Output{}))
-	suite.Require().Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
+	assert.Error(t, f.bankKeeper.InputOutputCoins(ctx, input, []types.Output{}), "sum inputs != sum outputs")
+	assert.Error(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs), "spendable balance  is smaller than 20bar: insufficient funds")
 
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, balances))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
 
 	insufficientInput := []types.Input{
 		{
@@ -446,59 +482,65 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 		{Address: addr2.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 		{Address: addr3.String(), Coins: sdk.NewCoins(newFooCoin(300), newBarCoin(100))},
 	}
-	suite.Require().Error(suite.bankKeeper.InputOutputCoins(ctx, insufficientInput, insufficientOutputs))
-	suite.Require().NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
+	assert.Error(t, f.bankKeeper.InputOutputCoins(ctx, insufficientInput, insufficientOutputs), "sum inputs != sum outputs")
+	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
-	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, addr1)
+	acc1Balances := f.bankKeeper.GetAllBalances(ctx, addr1)
 	expected := sdk.NewCoins(newFooCoin(30), newBarCoin(10))
-	suite.Require().Equal(expected, acc1Balances)
+	assert.DeepEqual(t, expected, acc1Balances)
 
-	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, addr2)
-	suite.Require().Equal(expected, acc2Balances)
+	acc2Balances := f.bankKeeper.GetAllBalances(ctx, addr2)
+	assert.DeepEqual(t, expected, acc2Balances)
 
-	acc3Balances := suite.bankKeeper.GetAllBalances(ctx, addr3)
-	suite.Require().Equal(expected, acc3Balances)
+	acc3Balances := f.bankKeeper.GetAllBalances(ctx, addr3)
+	assert.DeepEqual(t, expected, acc3Balances)
 }
 
-func (suite *IntegrationTestSuite) TestSendCoins() {
-	ctx := suite.ctx
+func TestSendCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
 
 	addr1 := sdk.AccAddress("addr1_______________")
-	acc1 := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
-	suite.accountKeeper.SetAccount(ctx, acc1)
+	acc1 := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	f.accountKeeper.SetAccount(ctx, acc1)
 
 	addr2 := sdk.AccAddress("addr2_______________")
-	acc2 := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
-	suite.accountKeeper.SetAccount(ctx, acc2)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, balances))
+	acc2 := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	f.accountKeeper.SetAccount(ctx, acc2)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, balances))
 
 	sendAmt := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
-	suite.Require().Error(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
+	assert.Error(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendAmt), "spendable balance  is smaller than 25bar: insufficient funds")
 
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, balances))
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendAmt))
 
-	acc1Balances := suite.bankKeeper.GetAllBalances(ctx, addr1)
+	acc1Balances := f.bankKeeper.GetAllBalances(ctx, addr1)
 	expected := sdk.NewCoins(newFooCoin(50), newBarCoin(25))
-	suite.Require().Equal(expected, acc1Balances)
+	assert.DeepEqual(t, expected, acc1Balances)
 
-	acc2Balances := suite.bankKeeper.GetAllBalances(ctx, addr2)
+	acc2Balances := f.bankKeeper.GetAllBalances(ctx, addr2)
 	expected = sdk.NewCoins(newFooCoin(150), newBarCoin(75))
-	suite.Require().Equal(expected, acc2Balances)
+	assert.DeepEqual(t, expected, acc2Balances)
 
 	// we sent all foo coins to acc2, so foo balance should be deleted for acc1 and bar should be still there
 	var coins []sdk.Coin
-	suite.bankKeeper.IterateAccountBalances(ctx, addr1, func(c sdk.Coin) (stop bool) {
+	f.bankKeeper.IterateAccountBalances(ctx, addr1, func(c sdk.Coin) (stop bool) {
 		coins = append(coins, c)
 		return true
 	})
-	suite.Require().Len(coins, 1)
-	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
+	assert.Assert(t, len(coins) == 1)
+	assert.DeepEqual(t, newBarCoin(25), coins[0])
 }
 
-func (suite *IntegrationTestSuite) TestValidateBalance() {
-	ctx := suite.ctx
+func TestValidateBalance(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -506,25 +548,28 @@ func (suite *IntegrationTestSuite) TestValidateBalance() {
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 
-	suite.Require().Error(suite.bankKeeper.ValidateBalance(ctx, addr1))
+	assert.Error(t, f.bankKeeper.ValidateBalance(ctx, addr1), fmt.Sprintf("account %s does not exist: unknown address", addr1))
 
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
-	suite.accountKeeper.SetAccount(ctx, acc)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	f.accountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, balances))
-	suite.Require().NoError(suite.bankKeeper.ValidateBalance(ctx, addr1))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, balances))
+	assert.NilError(t, f.bankKeeper.ValidateBalance(ctx, addr1))
 
 	bacc := authtypes.NewBaseAccountWithAddress(addr2)
 	vacc := vesting.NewContinuousVestingAccount(bacc, balances.Add(balances...), now.Unix(), endTime.Unix())
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, balances))
-	suite.Require().Error(suite.bankKeeper.ValidateBalance(ctx, addr2))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, balances))
+	assert.Error(t, f.bankKeeper.ValidateBalance(ctx, addr2), "vesting amount 200foo cannot be greater than total amount 100foo")
 }
 
-func (suite *IntegrationTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
-	ctx := suite.ctx
+func TestSendCoins_Invalid_SendLockedCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	balances := sdk.NewCoins(newFooCoin(50))
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
@@ -537,82 +582,91 @@ func (suite *IntegrationTestSuite) TestSendCoins_Invalid_SendLockedCoins() {
 
 	acc0 := authtypes.NewBaseAccountWithAddress(addr)
 	vacc := vesting.NewContinuousVestingAccount(acc0, origCoins, now.Unix(), endTime.Unix())
-	suite.accountKeeper.SetAccount(ctx, vacc)
+	f.accountKeeper.SetAccount(ctx, vacc)
 
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, suite.ctx, addr2, balances))
-	suite.Require().Error(suite.bankKeeper.SendCoins(ctx, addr, addr2, sendCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, f.ctx, addr2, balances))
+	assert.Error(t, f.bankKeeper.SendCoins(ctx, addr, addr2, sendCoins), fmt.Sprintf("locked amount exceeds account balance funds: %s > 0stake: insufficient funds", origCoins))
 }
 
-func (suite *IntegrationTestSuite) TestSendEnabled() {
-	ctx := suite.ctx
+func TestSendEnabled(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	enabled := true
 	params := types.DefaultParams()
-	suite.Require().Equal(enabled, params.DefaultSendEnabled)
+	assert.Equal(t, enabled, params.DefaultSendEnabled)
 
-	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, params))
+	assert.NilError(t, f.bankKeeper.SetParams(ctx, params))
 
 	bondCoin := sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())
 	fooCoin := sdk.NewCoin("foocoin", math.OneInt())
 	barCoin := sdk.NewCoin("barcoin", math.OneInt())
 
 	// assert with default (all denom) send enabled both Bar and Bond Denom are enabled
-	suite.Require().Equal(enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, barCoin))
-	suite.Require().Equal(enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, bondCoin))
+	assert.Equal(t, enabled, f.bankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	assert.Equal(t, enabled, f.bankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Both coins should be send enabled.
-	err := suite.bankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
-	suite.Require().NoError(err)
+	err := f.bankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
+	assert.NilError(t, err)
 
 	// Set default send_enabled to !enabled, add a foodenom that overrides default as enabled
 	params.DefaultSendEnabled = !enabled
-	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, params))
-	suite.bankKeeper.SetSendEnabled(ctx, fooCoin.Denom, enabled)
+	assert.NilError(t, f.bankKeeper.SetParams(ctx, params))
+	f.bankKeeper.SetSendEnabled(ctx, fooCoin.Denom, enabled)
 
 	// Expect our specific override to be enabled, others to be !enabled.
-	suite.Require().Equal(enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, fooCoin))
-	suite.Require().Equal(!enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, barCoin))
-	suite.Require().Equal(!enabled, suite.bankKeeper.IsSendEnabledCoin(ctx, bondCoin))
+	assert.Equal(t, enabled, f.bankKeeper.IsSendEnabledCoin(ctx, fooCoin))
+	assert.Equal(t, !enabled, f.bankKeeper.IsSendEnabledCoin(ctx, barCoin))
+	assert.Equal(t, !enabled, f.bankKeeper.IsSendEnabledCoin(ctx, bondCoin))
 
 	// Foo coin should be send enabled.
-	err = suite.bankKeeper.IsSendEnabledCoins(ctx, fooCoin)
-	suite.Require().NoError(err)
+	err = f.bankKeeper.IsSendEnabledCoins(ctx, fooCoin)
+	assert.NilError(t, err)
 
 	// Expect an error when one coin is not send enabled.
-	err = suite.bankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
-	suite.Require().Error(err)
+	err = f.bankKeeper.IsSendEnabledCoins(ctx, fooCoin, bondCoin)
+	assert.Error(t, err, "stake transfers are currently disabled: send transactions are disabled")
 
 	// Expect an error when all coins are not send enabled.
-	err = suite.bankKeeper.IsSendEnabledCoins(ctx, bondCoin, barCoin)
-	suite.Require().Error(err)
+	err = f.bankKeeper.IsSendEnabledCoins(ctx, bondCoin, barCoin)
+	assert.Error(t, err, "stake transfers are currently disabled: send transactions are disabled")
 }
 
-func (suite *IntegrationTestSuite) TestHasBalance() {
-	ctx := suite.ctx
+func TestHasBalance(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr)
-	suite.accountKeeper.SetAccount(ctx, acc)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr)
+	f.accountKeeper.SetAccount(ctx, acc)
 
 	balances := sdk.NewCoins(newFooCoin(100))
-	suite.Require().False(suite.bankKeeper.HasBalance(ctx, addr, newFooCoin(99)))
+	assert.Assert(t, f.bankKeeper.HasBalance(ctx, addr, newFooCoin(99)) == false)
 
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, balances))
-	suite.Require().False(suite.bankKeeper.HasBalance(ctx, addr, newFooCoin(101)))
-	suite.Require().True(suite.bankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
-	suite.Require().True(suite.bankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr, balances))
+	assert.Assert(t, f.bankKeeper.HasBalance(ctx, addr, newFooCoin(101)) == false)
+	assert.Assert(t, f.bankKeeper.HasBalance(ctx, addr, newFooCoin(100)))
+	assert.Assert(t, f.bankKeeper.HasBalance(ctx, addr, newFooCoin(1)))
 }
 
-func (suite *IntegrationTestSuite) TestMsgSendEvents() {
-	ctx := suite.ctx
+func TestMsgSendEvents(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr)
 
-	suite.accountKeeper.SetAccount(ctx, acc)
+	f.accountKeeper.SetAccount(ctx, acc)
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, newCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr, newCoins))
 
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr, addr2, newCoins))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr, addr2, newCoins))
 	event1 := sdk.Event{
 		Type:       types.EventTypeTransfer,
 		Attributes: []abci.EventAttribute{},
@@ -641,25 +695,28 @@ func (suite *IntegrationTestSuite) TestMsgSendEvents() {
 
 	// events are shifted due to the funding account events
 	events := ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(10, len(events))
-	suite.Require().Equal(abci.Event(event1), events[8])
-	suite.Require().Equal(abci.Event(event2), events[9])
+	assert.Equal(t, 10, len(events))
+	assert.DeepEqual(t, abci.Event(event1), events[8])
+	assert.DeepEqual(t, abci.Event(event2), events[9])
 }
 
-func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
-	ctx := suite.ctx
+func TestMsgMultiSendEvents(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
 
-	suite.Require().NoError(suite.bankKeeper.SetParams(ctx, types.DefaultParams()))
+	ctx := f.ctx
+
+	assert.NilError(t, f.bankKeeper.SetParams(ctx, types.DefaultParams()))
 
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	addr3 := sdk.AccAddress([]byte("addr3_______________"))
 	addr4 := sdk.AccAddress([]byte("addr4_______________"))
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr)
-	acc2 := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr)
+	acc2 := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.accountKeeper.SetAccount(ctx, acc2)
+	f.accountKeeper.SetAccount(ctx, acc)
+	f.accountKeeper.SetAccount(ctx, acc2)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))
 	newCoins := sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
@@ -675,17 +732,17 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		{Address: addr4.String(), Coins: newCoins2},
 	}
 
-	suite.Require().Error(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
+	assert.Error(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs), fmt.Sprintf("spendable balance  is smaller than %s: insufficient funds", newCoins2))
 
 	events := ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(0, len(events))
+	assert.Equal(t, 0, len(events))
 
 	// Set addr's coins but not addr2's coins
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
-	suite.Require().NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50), sdk.NewInt64Coin(barDenom, 100))))
+	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
+	assert.Equal(t, 12, len(events)) // 12 events because account funding causes extra minting + coin_spent + coin_recv events
 
 	event1 := sdk.Event{
 		Type:       sdk.EventTypeMessage,
@@ -695,19 +752,19 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		event1.Attributes,
 		abci.EventAttribute{Key: types.AttributeKeySender, Value: addr.String()},
 	)
-	suite.Require().Equal(abci.Event(event1), events[7])
+	assert.DeepEqual(t, abci.Event(event1), events[7])
 
 	// Set addr's coins and addr2's coins
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))))
 	newCoins = sdk.NewCoins(sdk.NewInt64Coin(fooDenom, 50))
 
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr, sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))))
 	newCoins2 = sdk.NewCoins(sdk.NewInt64Coin(barDenom, 100))
 
-	suite.Require().NoError(suite.bankKeeper.InputOutputCoins(ctx, input, outputs))
+	assert.NilError(t, f.bankKeeper.InputOutputCoins(ctx, input, outputs))
 
 	events = ctx.EventManager().ABCIEvents()
-	suite.Require().Equal(30, len(events)) // 27 due to account funding + coin_spent + coin_recv events
+	assert.Equal(t, 30, len(events)) // 27 due to account funding + coin_spent + coin_recv events
 
 	event2 := sdk.Event{
 		Type:       types.EventTypeTransfer,
@@ -733,13 +790,16 @@ func (suite *IntegrationTestSuite) TestMsgMultiSendEvents() {
 		abci.EventAttribute{Key: sdk.AttributeKeyAmount, Value: newCoins2.String()},
 	)
 	// events are shifted due to the funding account events
-	suite.Require().Equal(abci.Event(event1), events[25])
-	suite.Require().Equal(abci.Event(event2), events[27])
-	suite.Require().Equal(abci.Event(event3), events[29])
+	assert.DeepEqual(t, abci.Event(event1), events[25])
+	assert.DeepEqual(t, abci.Event(event2), events[27])
+	assert.DeepEqual(t, abci.Event(event3), events[29])
 }
 
-func (suite *IntegrationTestSuite) TestSpendableCoins() {
-	ctx := suite.ctx
+func TestSpendableCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -751,28 +811,31 @@ func (suite *IntegrationTestSuite) TestSpendableCoins() {
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	addrModule := sdk.AccAddress([]byte("moduleAcc___________"))
 
-	macc := suite.accountKeeper.NewAccountWithAddress(ctx, addrModule)
+	macc := f.accountKeeper.NewAccountWithAddress(ctx, addrModule)
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
 	vacc := vesting.NewContinuousVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
-	suite.accountKeeper.SetAccount(ctx, macc)
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, origCoins))
+	f.accountKeeper.SetAccount(ctx, macc)
+	f.accountKeeper.SetAccount(ctx, vacc)
+	f.accountKeeper.SetAccount(ctx, acc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, origCoins))
 
-	suite.Require().Equal(origCoins, suite.bankKeeper.SpendableCoins(ctx, addr2))
-	suite.Require().Equal(origCoins[0], suite.bankKeeper.SpendableCoin(ctx, addr2, "stake"))
+	assert.DeepEqual(t, origCoins, f.bankKeeper.SpendableCoins(ctx, addr2))
+	assert.DeepEqual(t, origCoins[0], f.bankKeeper.SpendableCoin(ctx, addr2, "stake"))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	suite.Require().NoError(suite.bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
-	suite.Require().Equal(origCoins.Sub(delCoins...), suite.bankKeeper.SpendableCoins(ctx, addr1))
-	suite.Require().Equal(origCoins.Sub(delCoins...)[0], suite.bankKeeper.SpendableCoin(ctx, addr1, "stake"))
+	assert.NilError(t, f.bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
+	assert.DeepEqual(t, origCoins.Sub(delCoins...), f.bankKeeper.SpendableCoins(ctx, addr1))
+	assert.DeepEqual(t, origCoins.Sub(delCoins...)[0], f.bankKeeper.SpendableCoin(ctx, addr1, "stake"))
 }
 
-func (suite *IntegrationTestSuite) TestVestingAccountSend() {
-	ctx := suite.ctx
+func TestVestingAccountSend(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -786,22 +849,25 @@ func (suite *IntegrationTestSuite) TestVestingAccountSend() {
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
 	vacc := vesting.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
-	suite.Require().Error(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	assert.Error(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins), fmt.Sprintf("spendable balance  is smaller than %s: insufficient funds", sendCoins))
 
 	// receive some coins
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, sendCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, sendCoins))
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
-	suite.Require().Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, addr1))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	assert.DeepEqual(t, origCoins, f.bankKeeper.GetAllBalances(ctx, addr1))
 }
 
-func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
-	ctx := suite.ctx
+func TestPeriodicVestingAccountSend(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -818,23 +884,26 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountSend() {
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
 	vacc := vesting.NewPeriodicVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), periods)
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
 
 	// require that no coins be sendable at the beginning of the vesting schedule
-	suite.Require().Error(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	assert.Error(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins), fmt.Sprintf("spendable balance  is smaller than %s: insufficient funds", sendCoins))
 
 	// receive some coins
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, sendCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, sendCoins))
 
 	// require that all vested coins are spendable plus any received
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
-	suite.Require().Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, addr1))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr1, addr2, sendCoins))
+	assert.DeepEqual(t, origCoins, f.bankKeeper.GetAllBalances(ctx, addr1))
 }
 
-func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
-	ctx := suite.ctx
+func TestVestingAccountReceive(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -847,28 +916,31 @@ func (suite *IntegrationTestSuite) TestVestingAccountReceive() {
 
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
 	vacc := vesting.NewContinuousVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, origCoins))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	f.accountKeeper.SetAccount(ctx, acc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, origCoins))
 
 	// send some coins to the vesting account
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
 
 	// require the coins are spendable
-	vacc = suite.accountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
-	balances := suite.bankKeeper.GetAllBalances(ctx, addr1)
-	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
+	vacc = f.accountKeeper.GetAccount(ctx, addr1).(*vesting.ContinuousVestingAccount)
+	balances := f.bankKeeper.GetAllBalances(ctx, addr1)
+	assert.DeepEqual(t, origCoins.Add(sendCoins...), balances)
+	assert.DeepEqual(t, balances.Sub(vacc.LockedCoins(now)...), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
+	assert.DeepEqual(t, balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
 }
 
-func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
-	ctx := suite.ctx
+func TestPeriodicVestingAccountReceive(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 
@@ -886,28 +958,31 @@ func (suite *IntegrationTestSuite) TestPeriodicVestingAccountReceive() {
 	}
 
 	vacc := vesting.NewPeriodicVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), periods)
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, origCoins))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	f.accountKeeper.SetAccount(ctx, acc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, origCoins))
 
 	// send some coins to the vesting account
-	suite.Require().NoError(suite.bankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
+	assert.NilError(t, f.bankKeeper.SendCoins(ctx, addr2, addr1, sendCoins))
 
 	// require the coins are spendable
-	vacc = suite.accountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
-	balances := suite.bankKeeper.GetAllBalances(ctx, addr1)
-	suite.Require().Equal(origCoins.Add(sendCoins...), balances)
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now)...), sendCoins)
+	vacc = f.accountKeeper.GetAccount(ctx, addr1).(*vesting.PeriodicVestingAccount)
+	balances := f.bankKeeper.GetAllBalances(ctx, addr1)
+	assert.DeepEqual(t, origCoins.Add(sendCoins...), balances)
+	assert.DeepEqual(t, balances.Sub(vacc.LockedCoins(now)...), sendCoins)
 
 	// require coins are spendable plus any that have vested
-	suite.Require().Equal(balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
+	assert.DeepEqual(t, balances.Sub(vacc.LockedCoins(now.Add(12*time.Hour))...), origCoins)
 }
 
-func (suite *IntegrationTestSuite) TestDelegateCoins() {
-	ctx := suite.ctx
+func TestDelegateCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -919,58 +994,64 @@ func (suite *IntegrationTestSuite) TestDelegateCoins() {
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 	addrModule := sdk.AccAddress([]byte("moduleAcc___________"))
 
-	macc := suite.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	macc := f.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
 	vacc := vesting.NewContinuousVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.accountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, origCoins))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	f.accountKeeper.SetAccount(ctx, acc)
+	f.accountKeeper.SetAccount(ctx, macc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	suite.Require().NoError(suite.bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
-	suite.Require().Equal(origCoins.Sub(delCoins...), suite.bankKeeper.GetAllBalances(ctx, addr2))
-	suite.Require().Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, addrModule))
+	assert.NilError(t, f.bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins))
+	assert.DeepEqual(t, origCoins.Sub(delCoins...), f.bankKeeper.GetAllBalances(ctx, addr2))
+	assert.DeepEqual(t, delCoins, f.bankKeeper.GetAllBalances(ctx, addrModule))
 
 	// require the ability for a vesting account to delegate
-	suite.Require().NoError(suite.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
-	suite.Require().Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, addr1))
+	assert.NilError(t, f.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	assert.DeepEqual(t, delCoins, f.bankKeeper.GetAllBalances(ctx, addr1))
 
 	// require that delegated vesting amount is equal to what was delegated with DelegateCoins
-	acc = suite.accountKeeper.GetAccount(ctx, addr1)
+	acc = f.accountKeeper.GetAccount(ctx, addr1)
 	vestingAcc, ok := acc.(types.VestingAccount)
-	suite.Require().True(ok)
-	suite.Require().Equal(delCoins, vestingAcc.GetDelegatedVesting())
+	assert.Assert(t, ok)
+	assert.DeepEqual(t, delCoins, vestingAcc.GetDelegatedVesting())
 }
 
-func (suite *IntegrationTestSuite) TestDelegateCoins_Invalid() {
-	ctx := suite.ctx
+func TestDelegateCoins_Invalid(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 
 	origCoins := sdk.NewCoins(newFooCoin(100))
 	delCoins := sdk.NewCoins(newFooCoin(50))
 
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	addrModule := sdk.AccAddress([]byte("moduleAcc___________"))
-	macc := suite.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	macc := f.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
 
-	suite.Require().Error(suite.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	assert.Error(t, f.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins), fmt.Sprintf("module account %s does not exist: unknown address", addrModule.String()))
 	invalidCoins := sdk.Coins{sdk.Coin{Denom: "fooDenom", Amount: sdk.NewInt(-50)}}
-	suite.Require().Error(suite.bankKeeper.DelegateCoins(ctx, addr1, addrModule, invalidCoins))
+	assert.Error(t, f.bankKeeper.DelegateCoins(ctx, addr1, addrModule, invalidCoins), fmt.Sprintf("module account %s does not exist: unknown address", addrModule.String()))
 
-	suite.accountKeeper.SetAccount(ctx, macc)
-	suite.Require().Error(suite.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.Require().Error(suite.bankKeeper.DelegateCoins(ctx, addr1, addrModule, origCoins.Add(origCoins...)))
+	f.accountKeeper.SetAccount(ctx, macc)
+	assert.Error(t, f.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins), fmt.Sprintf("failed to delegate; 0foo is smaller than %s: insufficient funds", delCoins))
+	f.accountKeeper.SetAccount(ctx, acc)
+	assert.Error(t, f.bankKeeper.DelegateCoins(ctx, addr1, addrModule, origCoins.Add(origCoins...)), fmt.Sprintf("failed to delegate; 0foo is smaller than %s: insufficient funds", origCoins.Add(origCoins...)))
 }
 
-func (suite *IntegrationTestSuite) TestUndelegateCoins() {
-	ctx := suite.ctx
+func TestUndelegateCoins(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 	now := tmtime.Now()
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
@@ -983,150 +1064,163 @@ func (suite *IntegrationTestSuite) TestUndelegateCoins() {
 	addrModule := sdk.AccAddress([]byte("moduleAcc___________"))
 
 	bacc := authtypes.NewBaseAccountWithAddress(addr1)
-	macc := suite.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+	macc := f.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
 
 	vacc := vesting.NewContinuousVestingAccount(bacc, origCoins, ctx.BlockHeader().Time.Unix(), endTime.Unix())
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr2)
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr2)
 
-	suite.accountKeeper.SetAccount(ctx, vacc)
-	suite.accountKeeper.SetAccount(ctx, acc)
-	suite.accountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr2, origCoins))
+	f.accountKeeper.SetAccount(ctx, vacc)
+	f.accountKeeper.SetAccount(ctx, acc)
+	f.accountKeeper.SetAccount(ctx, macc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr2, origCoins))
 
 	ctx = ctx.WithBlockTime(now.Add(12 * time.Hour))
 
 	// require the ability for a non-vesting account to delegate
-	err := suite.bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
-	suite.Require().NoError(err)
+	err := f.bankKeeper.DelegateCoins(ctx, addr2, addrModule, delCoins)
+	assert.NilError(t, err)
 
-	suite.Require().Equal(origCoins.Sub(delCoins...), suite.bankKeeper.GetAllBalances(ctx, addr2))
-	suite.Require().Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, addrModule))
+	assert.DeepEqual(t, origCoins.Sub(delCoins...), f.bankKeeper.GetAllBalances(ctx, addr2))
+	assert.DeepEqual(t, delCoins, f.bankKeeper.GetAllBalances(ctx, addrModule))
 
 	// require the ability for a non-vesting account to undelegate
-	suite.Require().NoError(suite.bankKeeper.UndelegateCoins(ctx, addrModule, addr2, delCoins))
+	assert.NilError(t, f.bankKeeper.UndelegateCoins(ctx, addrModule, addr2, delCoins))
 
-	suite.Require().Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, addr2))
-	suite.Require().True(suite.bankKeeper.GetAllBalances(ctx, addrModule).Empty())
+	assert.DeepEqual(t, origCoins, f.bankKeeper.GetAllBalances(ctx, addr2))
+	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addrModule).Empty())
 
 	// require the ability for a vesting account to delegate
-	suite.Require().NoError(suite.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
+	assert.NilError(t, f.bankKeeper.DelegateCoins(ctx, addr1, addrModule, delCoins))
 
-	suite.Require().Equal(origCoins.Sub(delCoins...), suite.bankKeeper.GetAllBalances(ctx, addr1))
-	suite.Require().Equal(delCoins, suite.bankKeeper.GetAllBalances(ctx, addrModule))
+	assert.DeepEqual(t, origCoins.Sub(delCoins...), f.bankKeeper.GetAllBalances(ctx, addr1))
+	assert.DeepEqual(t, delCoins, f.bankKeeper.GetAllBalances(ctx, addrModule))
 
 	// require the ability for a vesting account to undelegate
-	suite.Require().NoError(suite.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	assert.NilError(t, f.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
 
-	suite.Require().Equal(origCoins, suite.bankKeeper.GetAllBalances(ctx, addr1))
-	suite.Require().True(suite.bankKeeper.GetAllBalances(ctx, addrModule).Empty())
+	assert.DeepEqual(t, origCoins, f.bankKeeper.GetAllBalances(ctx, addr1))
+	assert.Assert(t, f.bankKeeper.GetAllBalances(ctx, addrModule).Empty())
 
 	// require that delegated vesting amount is completely empty, since they were completely undelegated
-	acc = suite.accountKeeper.GetAccount(ctx, addr1)
+	acc = f.accountKeeper.GetAccount(ctx, addr1)
 	vestingAcc, ok := acc.(types.VestingAccount)
-	suite.Require().True(ok)
-	suite.Require().Empty(vestingAcc.GetDelegatedVesting())
+	assert.Assert(t, ok)
+	assert.Assert(t, vestingAcc.GetDelegatedVesting().Empty())
 }
 
-func (suite *IntegrationTestSuite) TestUndelegateCoins_Invalid() {
-	ctx := suite.ctx
+func TestUndelegateCoins_Invalid(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx := f.ctx
 
 	origCoins := sdk.NewCoins(newFooCoin(100))
 	delCoins := sdk.NewCoins(newFooCoin(50))
 
 	addr1 := sdk.AccAddress([]byte("addr1_______________"))
 	addrModule := sdk.AccAddress([]byte("moduleAcc___________"))
-	macc := suite.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
-	acc := suite.accountKeeper.NewAccountWithAddress(ctx, addr1)
+	macc := f.accountKeeper.NewAccountWithAddress(ctx, addrModule) // we don't need to define an actual module account bc we just need the address for testing
+	acc := f.accountKeeper.NewAccountWithAddress(ctx, addr1)
 
-	suite.Require().Error(suite.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	assert.Error(t, f.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins), fmt.Sprintf("module account %s does not exist: unknown address", addrModule.String()))
 
-	suite.accountKeeper.SetAccount(ctx, macc)
-	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr1, origCoins))
+	f.accountKeeper.SetAccount(ctx, macc)
+	assert.NilError(t, banktestutil.FundAccount(f.bankKeeper, ctx, addr1, origCoins))
 
-	suite.Require().Error(suite.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
-	suite.accountKeeper.SetAccount(ctx, acc)
+	assert.Error(t, f.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins), fmt.Sprintf("spendable balance  is smaller than %s: insufficient funds", delCoins))
+	f.accountKeeper.SetAccount(ctx, acc)
 
-	suite.Require().Error(suite.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins))
+	assert.Error(t, f.bankKeeper.UndelegateCoins(ctx, addrModule, addr1, delCoins), fmt.Sprintf("spendable balance  is smaller than %s: insufficient funds", delCoins))
 }
 
-func (suite *IntegrationTestSuite) TestSetDenomMetaData() {
-	ctx := suite.ctx
+func TestSetDenomMetaData(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
 
-	metadata := suite.getTestMetadata()
+	ctx := f.ctx
+
+	metadata := getTestMetadata()
 
 	for i := range []int{1, 2} {
-		suite.bankKeeper.SetDenomMetaData(ctx, metadata[i])
+		f.bankKeeper.SetDenomMetaData(ctx, metadata[i])
 	}
 
-	actualMetadata, found := suite.bankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
-	suite.Require().True(found)
-	found = suite.bankKeeper.HasDenomMetaData(ctx, metadata[1].Base)
-	suite.Require().True(found)
-	suite.Require().Equal(metadata[1].GetBase(), actualMetadata.GetBase())
-	suite.Require().Equal(metadata[1].GetDisplay(), actualMetadata.GetDisplay())
-	suite.Require().Equal(metadata[1].GetDescription(), actualMetadata.GetDescription())
-	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetDenom(), actualMetadata.GetDenomUnits()[1].GetDenom())
-	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetExponent(), actualMetadata.GetDenomUnits()[1].GetExponent())
-	suite.Require().Equal(metadata[1].GetDenomUnits()[1].GetAliases(), actualMetadata.GetDenomUnits()[1].GetAliases())
+	actualMetadata, found := f.bankKeeper.GetDenomMetaData(ctx, metadata[1].Base)
+	assert.Assert(t, found)
+	found = f.bankKeeper.HasDenomMetaData(ctx, metadata[1].Base)
+	assert.Assert(t, found)
+	assert.Equal(t, metadata[1].GetBase(), actualMetadata.GetBase())
+	assert.Equal(t, metadata[1].GetDisplay(), actualMetadata.GetDisplay())
+	assert.Equal(t, metadata[1].GetDescription(), actualMetadata.GetDescription())
+	assert.Equal(t, metadata[1].GetDenomUnits()[1].GetDenom(), actualMetadata.GetDenomUnits()[1].GetDenom())
+	assert.Equal(t, metadata[1].GetDenomUnits()[1].GetExponent(), actualMetadata.GetDenomUnits()[1].GetExponent())
+	assert.DeepEqual(t, metadata[1].GetDenomUnits()[1].GetAliases(), actualMetadata.GetDenomUnits()[1].GetAliases())
 }
 
-func (suite *IntegrationTestSuite) TestIterateAllDenomMetaData() {
-	ctx := suite.ctx
+func TestIterateAllDenomMetaData(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
 
-	expectedMetadata := suite.getTestMetadata()
+	ctx := f.ctx
+
+	expectedMetadata := getTestMetadata()
 	// set metadata
 	for i := range []int{1, 2} {
-		suite.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
+		f.bankKeeper.SetDenomMetaData(ctx, expectedMetadata[i])
 	}
 	// retrieve metadata
 	actualMetadata := make([]types.Metadata, 0)
-	suite.bankKeeper.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
+	f.bankKeeper.IterateAllDenomMetaData(ctx, func(metadata types.Metadata) bool {
 		actualMetadata = append(actualMetadata, metadata)
 		return false
 	})
 	// execute checks
 	for i := range []int{1, 2} {
-		suite.Require().Equal(expectedMetadata[i].GetBase(), actualMetadata[i].GetBase())
-		suite.Require().Equal(expectedMetadata[i].GetDisplay(), actualMetadata[i].GetDisplay())
-		suite.Require().Equal(expectedMetadata[i].GetDescription(), actualMetadata[i].GetDescription())
-		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetDenom(), actualMetadata[i].GetDenomUnits()[1].GetDenom())
-		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetExponent(), actualMetadata[i].GetDenomUnits()[1].GetExponent())
-		suite.Require().Equal(expectedMetadata[i].GetDenomUnits()[1].GetAliases(), actualMetadata[i].GetDenomUnits()[1].GetAliases())
+		assert.Equal(t, expectedMetadata[i].GetBase(), actualMetadata[i].GetBase())
+		assert.Equal(t, expectedMetadata[i].GetDisplay(), actualMetadata[i].GetDisplay())
+		assert.Equal(t, expectedMetadata[i].GetDescription(), actualMetadata[i].GetDescription())
+		assert.Equal(t, expectedMetadata[i].GetDenomUnits()[1].GetDenom(), actualMetadata[i].GetDenomUnits()[1].GetDenom())
+		assert.Equal(t, expectedMetadata[i].GetDenomUnits()[1].GetExponent(), actualMetadata[i].GetDenomUnits()[1].GetExponent())
+		assert.DeepEqual(t, expectedMetadata[i].GetDenomUnits()[1].GetAliases(), actualMetadata[i].GetDenomUnits()[1].GetAliases())
 	}
 }
 
-func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
+func TestBalanceTrackingEvents(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
 	// replace account keeper and bank keeper otherwise the account keeper won't be aware of the
 	// existence of the new module account because GetModuleAccount checks for the existence via
 	// permissions map and not via state... weird
-	maccPerms := simapp.GetMaccPerms()
+	maccPerms := make(map[string][]string)
+
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
-	suite.accountKeeper = authkeeper.NewAccountKeeper(
-		suite.appCodec, suite.fetchStoreKey(authtypes.StoreKey),
+	f.accountKeeper = authkeeper.NewAccountKeeper(
+		f.appCodec, f.fetchStoreKey(authtypes.StoreKey),
 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	suite.bankKeeper = keeper.NewBaseKeeper(suite.appCodec, suite.fetchStoreKey(types.StoreKey),
-		suite.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
+		f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// set account with multiple permissions
-	suite.accountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
+	f.accountKeeper.SetModuleAccount(f.ctx, multiPermAcc)
 	// mint coins
-	suite.Require().NoError(
-		suite.bankKeeper.MintCoins(
-			suite.ctx,
+	assert.NilError(t,
+		f.bankKeeper.MintCoins(
+			f.ctx,
 			multiPermAcc.Name,
 			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(100000)))),
 	)
 	// send coins to address
 	addr1 := sdk.AccAddress("addr1_______________")
-	suite.Require().NoError(
-		suite.bankKeeper.SendCoinsFromModuleToAccount(
-			suite.ctx,
+	assert.NilError(t,
+		f.bankKeeper.SendCoinsFromModuleToAccount(
+			f.ctx,
 			multiPermAcc.Name,
 			addr1,
 			sdk.NewCoins(sdk.NewCoin("utxo", sdk.NewInt(50000))),
@@ -1134,9 +1228,9 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 	)
 
 	// burn coins from module account
-	suite.Require().NoError(
-		suite.bankKeeper.BurnCoins(
-			suite.ctx,
+	assert.NilError(t,
+		f.bankKeeper.BurnCoins(
+			f.ctx,
 			multiPermAcc.Name,
 			sdk.NewCoins(sdk.NewInt64Coin("utxo", 1000)),
 		),
@@ -1147,56 +1241,56 @@ func (suite *IntegrationTestSuite) TestBalanceTrackingEvents() {
 
 	balances := make(map[string]sdk.Coins)
 
-	for _, e := range suite.ctx.EventManager().ABCIEvents() {
+	for _, e := range f.ctx.EventManager().ABCIEvents() {
 		switch e.Type {
 		case types.EventTypeCoinBurn:
 			burnedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
-			suite.Require().NoError(err)
+			assert.NilError(t, err)
 			supply = supply.Sub(burnedCoins...)
 
 		case types.EventTypeCoinMint:
 			mintedCoins, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
-			suite.Require().NoError(err)
+			assert.NilError(t, err)
 			supply = supply.Add(mintedCoins...)
 
 		case types.EventTypeCoinSpent:
 			coinsSpent, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
-			suite.Require().NoError(err)
+			assert.NilError(t, err)
 			spender, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
-			suite.Require().NoError(err)
+			assert.NilError(t, err)
 			balances[spender.String()] = balances[spender.String()].Sub(coinsSpent...)
 
 		case types.EventTypeCoinReceived:
 			coinsRecv, err := sdk.ParseCoinsNormalized((string)(e.Attributes[1].Value))
-			suite.Require().NoError(err)
+			assert.NilError(t, err)
 			receiver, err := sdk.AccAddressFromBech32((string)(e.Attributes[0].Value))
-			suite.Require().NoError(err)
+			assert.NilError(t, err)
 			balances[receiver.String()] = balances[receiver.String()].Add(coinsRecv...)
 		}
 	}
 
 	// check balance and supply tracking
-	suite.Require().True(suite.bankKeeper.HasSupply(suite.ctx, "utxo"))
-	savedSupply := suite.bankKeeper.GetSupply(suite.ctx, "utxo")
+	assert.Assert(t, f.bankKeeper.HasSupply(f.ctx, "utxo"))
+	savedSupply := f.bankKeeper.GetSupply(f.ctx, "utxo")
 	utxoSupply := savedSupply
-	suite.Require().Equal(utxoSupply.Amount, supply.AmountOf("utxo"))
+	assert.DeepEqual(t, utxoSupply.Amount, supply.AmountOf("utxo"))
 	// iterate accounts and check balances
-	suite.bankKeeper.IterateAllBalances(suite.ctx, func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
+	f.bankKeeper.IterateAllBalances(f.ctx, func(address sdk.AccAddress, coin sdk.Coin) (stop bool) {
 		// if it's not utxo coin then skip
 		if coin.Denom != "utxo" {
 			return false
 		}
 
 		balance, exists := balances[address.String()]
-		suite.Require().True(exists)
+		assert.Assert(t, exists)
 
 		expectedUtxo := sdk.NewCoin("utxo", balance.AmountOf(coin.Denom))
-		suite.Require().Equal(expectedUtxo.String(), coin.String())
+		assert.Equal(t, expectedUtxo.String(), coin.String())
 		return false
 	})
 }
 
-func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
+func getTestMetadata() []types.Metadata {
 	return []types.Metadata{
 		{
 			Name:        "Cosmos Hub Atom",
@@ -1225,18 +1319,21 @@ func (suite *IntegrationTestSuite) getTestMetadata() []types.Metadata {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
+func TestMintCoinRestrictions(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
 	type BankMintingRestrictionFn func(ctx sdk.Context, coins sdk.Coins) error
 
-	maccPerms := simapp.GetMaccPerms()
+	maccPerms := make(map[string][]string)
 	maccPerms[multiPerm] = []string{authtypes.Burner, authtypes.Minter, authtypes.Staking}
 
-	suite.accountKeeper = authkeeper.NewAccountKeeper(
-		suite.appCodec, suite.fetchStoreKey(authtypes.StoreKey),
+	f.accountKeeper = authkeeper.NewAccountKeeper(
+		f.appCodec, f.fetchStoreKey(authtypes.StoreKey),
 		authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	suite.accountKeeper.SetModuleAccount(suite.ctx, multiPermAcc)
+	f.accountKeeper.SetModuleAccount(f.ctx, multiPermAcc)
 
 	type testCase struct {
 		coinsToTry sdk.Coin
@@ -1272,33 +1369,37 @@ func (suite *IntegrationTestSuite) TestMintCoinRestrictions() {
 	}
 
 	for _, test := range tests {
-		suite.bankKeeper = keeper.NewBaseKeeper(suite.appCodec, suite.fetchStoreKey(types.StoreKey),
-			suite.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		f.bankKeeper = keeper.NewBaseKeeper(f.appCodec, f.fetchStoreKey(types.StoreKey),
+			f.accountKeeper, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		).WithMintCoinsRestriction(keeper.MintingRestrictionFn(test.restrictionFn))
 		for _, testCase := range test.testCases {
 			if testCase.expectPass {
-				suite.Require().NoError(
-					suite.bankKeeper.MintCoins(
-						suite.ctx,
+				assert.NilError(t,
+					f.bankKeeper.MintCoins(
+						f.ctx,
 						multiPermAcc.Name,
 						sdk.NewCoins(testCase.coinsToTry),
 					),
 				)
 			} else {
-				suite.Require().Error(
-					suite.bankKeeper.MintCoins(
-						suite.ctx,
+				assert.Error(t,
+					f.bankKeeper.MintCoins(
+						f.ctx,
 						multiPermAcc.Name,
 						sdk.NewCoins(testCase.coinsToTry),
 					),
+					"Module bank only has perms for minting foo coins, tried minting bar coins",
 				)
 			}
 		}
 	}
 }
 
-func (suite *IntegrationTestSuite) TestIsSendEnabledDenom() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestIsSendEnabledDenom(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 
 	defaultCoin := "defaultCoin"
 	enabledCoin := "enabledCoin"
@@ -1328,10 +1429,10 @@ func (suite *IntegrationTestSuite) TestIsSendEnabledDenom() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
-			suite.T().Run(fmt.Sprintf("%s default %t", tc.denom, def), func(t *testing.T) {
-				actual := suite.bankKeeper.IsSendEnabledDenom(suite.ctx, tc.denom)
+			t.Run(fmt.Sprintf("%s default %t", tc.denom, def), func(t *testing.T) {
+				actual := f.bankKeeper.IsSendEnabledDenom(f.ctx, tc.denom)
 				exp := tc.exp
 				if tc.expDef {
 					exp = def
@@ -1342,8 +1443,11 @@ func (suite *IntegrationTestSuite) TestIsSendEnabledDenom() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGetSendEnabledEntry() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestGetSendEnabledEntry(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 
 	bankKeeper.SetAllSendEnabled(ctx, []*types.SendEnabled{
 		{Denom: "gettruecoin", Enabled: true},
@@ -1373,7 +1477,7 @@ func (suite *IntegrationTestSuite) TestGetSendEnabledEntry() {
 	}
 
 	for _, tc := range tests {
-		suite.T().Run(tc.denom, func(t *testing.T) {
+		t.Run(tc.denom, func(t *testing.T) {
 			actualSE, actualF := bankKeeper.GetSendEnabledEntry(ctx, tc.denom)
 			assert.Equal(t, tc.expF, actualF, "found")
 			assert.Equal(t, tc.expSE, actualSE, "SendEnabled")
@@ -1381,8 +1485,11 @@ func (suite *IntegrationTestSuite) TestGetSendEnabledEntry() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestSetSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestSetSendEnabled(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 
 	tests := []struct {
 		name  string
@@ -1433,9 +1540,9 @@ func (suite *IntegrationTestSuite) TestSetSendEnabled() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
-			suite.T().Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
 				bankKeeper.SetSendEnabled(ctx, tc.denom, tc.value)
 				actual := bankKeeper.IsSendEnabledDenom(ctx, tc.denom)
 				assert.Equal(t, tc.value, actual)
@@ -1444,8 +1551,11 @@ func (suite *IntegrationTestSuite) TestSetSendEnabled() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestSetAllSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestSetAllSendEnabled(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 
 	tests := []struct {
 		name         string
@@ -1503,9 +1613,9 @@ func (suite *IntegrationTestSuite) TestSetAllSendEnabled() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
 		for _, tc := range tests {
-			suite.T().Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%s default %t", tc.name, def), func(t *testing.T) {
 				bankKeeper.SetAllSendEnabled(ctx, tc.sendEnableds)
 				for _, se := range tc.sendEnableds {
 					actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
@@ -1516,26 +1626,32 @@ func (suite *IntegrationTestSuite) TestSetAllSendEnabled() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestDeleteSendEnabled() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestDeleteSendEnabled(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
-		suite.T().Run(fmt.Sprintf("default %t", def), func(t *testing.T) {
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
+		t.Run(fmt.Sprintf("default %t", def), func(t *testing.T) {
 			denom := fmt.Sprintf("somerand%tcoin", !def)
 			bankKeeper.SetSendEnabled(ctx, denom, !def)
-			require.Equal(t, !def, bankKeeper.IsSendEnabledDenom(ctx, denom))
+			assert.Equal(t, !def, bankKeeper.IsSendEnabledDenom(ctx, denom))
 			bankKeeper.DeleteSendEnabled(ctx, denom)
-			require.Equal(t, def, bankKeeper.IsSendEnabledDenom(ctx, denom))
+			assert.Equal(t, def, bankKeeper.IsSendEnabledDenom(ctx, denom))
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestIterateSendEnabledEntries(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
 
-	suite.T().Run("no entries to iterate", func(t *testing.T) {
+	ctx, bankKeeper := f.ctx, f.bankKeeper
+
+	t.Run("no entries to iterate", func(t *testing.T) {
 		count := 0
 		bankKeeper.IterateSendEnabledEntries(ctx, func(_ string, _ bool) (stop bool) {
 			count++
@@ -1555,9 +1671,9 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
 		var seen []string
-		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
+		t.Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
 			bankKeeper.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) (stop bool) {
 				seen = append(seen, denom)
 				exp := true
@@ -1568,8 +1684,9 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 				return false
 			})
 		})
-		suite.T().Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
-			assert.ElementsMatch(t, denoms, seen)
+		t.Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
+			match := assertElementsMatch(denoms, seen)
+			assert.Assert(t, match)
 		})
 	}
 
@@ -1577,7 +1694,7 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 		bankKeeper.DeleteSendEnabled(ctx, denom)
 	}
 
-	suite.T().Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
+	t.Run("no entries to iterate again after deleting all of them", func(t *testing.T) {
 		count := 0
 		bankKeeper.IterateSendEnabledEntries(ctx, func(_ string, _ bool) (stop bool) {
 			count++
@@ -1587,28 +1704,31 @@ func (suite *IntegrationTestSuite) TestIterateSendEnabledEntries() {
 	})
 }
 
-func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestGetAllSendEnabledEntries(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
 
-	suite.T().Run("no entries", func(t *testing.T) {
+	ctx, bankKeeper := f.ctx, f.bankKeeper
+
+	t.Run("no entries", func(t *testing.T) {
 		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-		assert.Len(t, actual, 0)
+		assert.Assert(t, len(actual) == 0)
 	})
 
 	alpha := strings.Split("abcdefghijklmnopqrstuvwxyz", "")
 	denoms := make([]string, len(alpha)*2)
 	for i, l := range alpha {
-		denoms[i*2] = fmt.Sprintf("%sitercointrue", l)
-		denoms[i*2+1] = fmt.Sprintf("%sitercoinfalse", l)
-		bankKeeper.SetSendEnabled(ctx, denoms[i*2], true)
-		bankKeeper.SetSendEnabled(ctx, denoms[i*2+1], false)
+		denoms[i*2] = fmt.Sprintf("%sitercoinfalse", l)
+		denoms[i*2+1] = fmt.Sprintf("%sitercointrue", l)
+		bankKeeper.SetSendEnabled(ctx, denoms[i*2], false)
+		bankKeeper.SetSendEnabled(ctx, denoms[i*2+1], true)
 	}
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
 		var seen []string
-		suite.T().Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
+		t.Run(fmt.Sprintf("all denoms have expected values default %t", def), func(t *testing.T) {
 			actual := bankKeeper.GetAllSendEnabledEntries(ctx)
 			for _, se := range actual {
 				seen = append(seen, se.Denom)
@@ -1619,8 +1739,8 @@ func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
 				assert.Equal(t, exp, se.Enabled, se.Denom)
 			}
 		})
-		suite.T().Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
-			assert.ElementsMatch(t, denoms, seen)
+		t.Run(fmt.Sprintf("all denoms were seen default %t", def), func(t *testing.T) {
+			assert.DeepEqual(t, denoms, seen)
 		})
 	}
 
@@ -1628,9 +1748,9 @@ func (suite *IntegrationTestSuite) TestGetAllSendEnabledEntries() {
 		bankKeeper.DeleteSendEnabled(ctx, denom)
 	}
 
-	suite.T().Run("no entries again after deleting all of them", func(t *testing.T) {
+	t.Run("no entries again after deleting all of them", func(t *testing.T) {
 		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-		assert.Len(t, actual, 0)
+		assert.Assert(t, len(actual) == 0)
 	})
 }
 
@@ -1642,18 +1762,21 @@ func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 	*ps.(*types.Params) = ms.ps
 }
 
-func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestMigrator_Migrate3to4(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 
 	for _, def := range []bool{true, false} {
 		params := types.Params{DefaultSendEnabled: def}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
-		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
+		t.Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
 			legacySubspace := func(ps types.Params) mockSubspace {
 				return mockSubspace{ps: ps}
 			}(types.NewParams(def))
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
-			require.NoError(t, migrator.Migrate3to4(ctx))
+			assert.NilError(t, migrator.Migrate3to4(ctx))
 			actual := bankKeeper.GetParams(ctx)
 			assert.Equal(t, params.DefaultSendEnabled, actual.DefaultSendEnabled)
 		})
@@ -1666,15 +1789,15 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 				{Denom: fmt.Sprintf("falsecoin%t", def), Enabled: false},
 			},
 		}
-		suite.Require().NoError(bankKeeper.SetParams(ctx, params))
-		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
+		assert.NilError(t, bankKeeper.SetParams(ctx, params))
+		t.Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
 			legacySubspace := func(ps types.Params) mockSubspace {
 				return mockSubspace{ps: ps}
 			}(types.NewParams(def))
 			migrator := keeper.NewMigrator(bankKeeper, legacySubspace)
-			require.NoError(t, migrator.Migrate3to4(ctx))
+			assert.NilError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)
-			assert.Len(t, newParams.SendEnabled, 0)
+			assert.Assert(t, len(newParams.SendEnabled) == 0)
 			for _, se := range params.SendEnabled {
 				actual := bankKeeper.IsSendEnabledDenom(ctx, se.Denom)
 				assert.Equal(t, se.Enabled, actual, se.Denom)
@@ -1683,32 +1806,31 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestSetParams() {
-	ctx, bankKeeper := suite.ctx, suite.bankKeeper
+func TestSetParams(t *testing.T) {
+	f := initFixture(t)
+	t.Parallel()
+
+	ctx, bankKeeper := f.ctx, f.bankKeeper
 	params := types.NewParams(true)
 	params.SendEnabled = []*types.SendEnabled{
 		{Denom: "paramscointrue", Enabled: true},
 		{Denom: "paramscoinfalse", Enabled: false},
 	}
-	suite.Require().NoError(bankKeeper.SetParams(ctx, params))
+	assert.NilError(t, bankKeeper.SetParams(ctx, params))
 
-	suite.Run("stored params are as expected", func() {
+	t.Run("stored params are as expected", func(t *testing.T) {
 		actual := bankKeeper.GetParams(ctx)
-		suite.Assert().True(actual.DefaultSendEnabled, "DefaultSendEnabled")
-		suite.Assert().Len(actual.SendEnabled, 0, "SendEnabled")
+		assert.Assert(t, actual.DefaultSendEnabled, "DefaultSendEnabled")
+		assert.Assert(t, len(actual.SendEnabled) == 0, "SendEnabled")
 	})
 
-	suite.Run("send enabled params converted to store", func() {
+	t.Run("send enabled params converted to store", func(t *testing.T) {
 		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
-		if suite.Assert().Len(actual, 2) {
-			suite.Equal("paramscoinfalse", actual[0].Denom, "actual[0].Denom")
-			suite.False(actual[0].Enabled, "actual[0].Enabled")
-			suite.Equal("paramscointrue", actual[1].Denom, "actual[1].Denom")
-			suite.True(actual[1].Enabled, "actual[1].Enabled")
+		if assert.Check(t, len(actual) == 2) {
+			assert.Equal(t, "paramscoinfalse", actual[0].Denom, "actual[0].Denom")
+			assert.Assert(t, actual[0].Enabled == false, "actual[0].Enabled")
+			assert.Equal(t, "paramscointrue", actual[1].Denom, "actual[1].Denom")
+			assert.Assert(t, actual[1].Enabled, "actual[1].Enabled")
 		}
 	})
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
 }

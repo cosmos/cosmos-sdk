@@ -18,6 +18,7 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -78,7 +79,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
 		},
 	}
 
@@ -230,14 +231,14 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
-func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
 	return &sdk.Result{}, nil
 }
 
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 	bz := make([]byte, 8)
 	n := binary.PutVarint(bz, i)
 	store.Set(key, bz[:n])
@@ -347,7 +348,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	return builder.GetTx()
 }
 
-func getIntFromStore(t *testing.T, store sdk.KVStore, key []byte) int64 {
+func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0

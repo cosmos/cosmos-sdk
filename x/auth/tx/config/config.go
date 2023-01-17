@@ -55,7 +55,7 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
+	textual := newTextualWithBankKeeper(in.TxBankKeeper)
 	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
@@ -121,9 +121,9 @@ func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, err
 	return anteHandler, nil
 }
 
-// NewTextual creates a new Textual struct using the given
+// newTextualWithBankKeeper creates a new Textual struct using the given
 // BankKeeper to retrieve coin metadata.
-func NewTextualWithBankKeeper(bk BankKeeper) textual.Textual {
+func newTextualWithBankKeeper(bk BankKeeper) textual.Textual {
 	textual := textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {

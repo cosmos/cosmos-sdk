@@ -37,8 +37,8 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 cosmossdk.io/api v0.2.6 h1:AoNwaLLapcLsphhMK6+o0kZl+D6MMUaHVqSdwinASGU=
 cosmossdk.io/api v0.2.6/go.mod h1:u/d+GAxil0nWpl1XnQL8nkziQDIWuBDhv8VnDm/s6dI=
-cosmossdk.io/core v0.4.0 h1:QPYg2v21OGr7yjJC5HEWiuhfFJxzdqbDDv1PZzH7cas=
-cosmossdk.io/core v0.4.0/go.mod h1:Zqd1GB+krTF3bzhTnPNwzy3NTtXu+MKLX/9sPQXTIDE=
+cosmossdk.io/core v0.4.1 h1:5icpjPmw8J4uFp6w8OoLJPxsw6X3kRi9nAtTr3qp2Ok=
+cosmossdk.io/core v0.4.1/go.mod h1:Zqd1GB+krTF3bzhTnPNwzy3NTtXu+MKLX/9sPQXTIDE=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=
@@ -117,8 +117,8 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.4 h1:t82sN+Y0WeqxDLJRSpNd8YFX5URIrT+p8n6oJbJ2Dok=
 github.com/cosmos/iavl v0.19.4/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ledger-cosmos-go v0.12.2 h1:/XYaBlE2BJxtvpkHiBm97gFGSGmYGKunKyF3nNqAXZA=
-github.com/cosmos/ledger-cosmos-go v0.12.2/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
+github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=
+github.com/cosmos/ledger-cosmos-go v0.13.0/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creachadair/taskgroup v0.3.2 h1:zlfutDS+5XG40AOxcHDSThxKzns8Tnr9jnr6VqkYlkM=
@@ -792,8 +792,8 @@ google.golang.org/genproto v0.0.0-20201210142538-e3217bee35cc/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210108203827-ffc7fda8c3d7/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210226172003-ab064af71705/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
-google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f h1:BWUVssLB0HVOSY78gIdvk1dTVYtT1y8SBWtPYuTJ/6w=
-google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f/go.mod h1:RGgjbofJ8xD9Sq1VVhDM1Vok1vRONV+rg+CjzG4SZKM=
+google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 h1:wJT65XLOzhpSPCdAmmKfz94SlmnQzDzjm3Cj9k3fsXY=
+google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5/go.mod h1:RGgjbofJ8xD9Sq1VVhDM1Vok1vRONV+rg+CjzG4SZKM=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=

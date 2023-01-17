@@ -5,13 +5,13 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476
-	cosmossdk.io/core v0.4.0
+	cosmossdk.io/core v0.4.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
-	github.com/bgentry/speakeasy v0.1.0
+	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/cockroachdb/apd/v2 v2.0.2
@@ -24,7 +24,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/cosmos/iavl v0.20.0-alpha1
-	github.com/cosmos/ledger-cosmos-go v0.12.2
+	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/gofuzz v1.2.0
@@ -57,7 +57,7 @@ require (
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f
+	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5
 	google.golang.org/grpc v1.52.0
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0

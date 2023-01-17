@@ -18,7 +18,7 @@ require (
 
 require (
 	cosmossdk.io/api v0.2.6 // indirect
-	cosmossdk.io/core v0.3.2 // indirect
+	cosmossdk.io/core v0.4.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -37,7 +37,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.4 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.1 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
@@ -102,7 +102,7 @@ require (
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/tidwall/btree v1.5.2 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
-	github.com/zondax/ledger-go v0.14.0 // indirect
+	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
@@ -110,7 +110,7 @@ require (
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
+	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

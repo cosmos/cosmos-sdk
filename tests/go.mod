@@ -10,7 +10,7 @@ require (
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
-	github.com/cosmos/cosmos-sdk/x/nft v0.1.0-alpha1
+	github.com/cosmos/cosmos-sdk/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -30,7 +30,7 @@ require (
 	cloud.google.com/go/storage v1.27.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58 // indirect
 	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476 // indirect
-	cosmossdk.io/core v0.4.0 // indirect
+	cosmossdk.io/core v0.4.1 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -42,7 +42,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.45 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
@@ -61,7 +61,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0-alpha1 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -169,7 +169,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
+	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 // indirect
 	google.golang.org/grpc v1.52.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -184,7 +184,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
-	github.com/cosmos/cosmos-sdk/x/nft => .././x/nft // todo remove after pr merged
+	github.com/cosmos/cosmos-sdk/x/nft => ../x/nft
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

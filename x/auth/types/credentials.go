@@ -32,25 +32,22 @@ const ModuleCredentialType = "ModuleCredential"
 
 var _ cryptotypes.PubKey = &ModuleCredential{}
 
-func NewModuleCredential(moduleName string, derivationKeys [][]byte) *ModuleCredential {
+// NewModuleCredential creates new module credential key.
+// All derivation keys must be non-empty.
+func NewModuleCredential(moduleName string, derivationKeys ...[]byte) (*ModuleCredential, error) {
+	for i := range derivationKeys {
+		if len(derivationKeys[i]) == 0 {
+			return nil, fmt.Errorf("module credential derivation keys at index %d is empty", i)
+		}
+	}
 	return &ModuleCredential{
 		ModuleName:     moduleName,
 		DerivationKeys: derivationKeys,
-	}
+	}, nil
 }
 
 func (m *ModuleCredential) Address() cryptotypes.Address {
-	var addr []byte
-	for i, dk := range m.DerivationKeys {
-		if i == 0 {
-			addr = address.Module(m.ModuleName, dk)
-			continue
-		}
-
-		addr = address.Derive(addr, dk)
-	}
-
-	return addr
+	return address.Module(m.ModuleName, m.DerivationKeys...)
 }
 
 func (m *ModuleCredential) Bytes() []byte {

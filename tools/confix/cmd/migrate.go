@@ -26,8 +26,6 @@ In case of any error in updating the file, no output is written.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var filename string
-			targetVersion := args[0]
-
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			if len(args) > 1 {
 				filename = args[1]
@@ -37,6 +35,7 @@ In case of any error in updating the file, no output is written.`,
 				return fmt.Errorf("must provide a path to the app.toml file")
 			}
 
+			targetVersion := args[0]
 			plan, ok := confix.Migrations[targetVersion]
 			if !ok {
 				return fmt.Errorf("unknown version %q, supported versions are: %q", targetVersion, maps.Keys(confix.Migrations))

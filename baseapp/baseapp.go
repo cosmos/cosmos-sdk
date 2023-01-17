@@ -25,12 +25,12 @@ import (
 )
 
 const (
-	runTxModeCheck    runTxMode = iota // Check a transaction
-	runTxModeReCheck                   // Recheck a (pending) transaction after a commit
-	runTxModeSimulate                  // Simulate a transaction
-	runTxModeDeliver                   // Deliver a transaction
-	runTxPrepareProposal
-	runTxProcessProposal
+	runTxModeCheck       runTxMode = iota // Check a transaction
+	runTxModeReCheck                      // Recheck a (pending) transaction after a commit
+	runTxModeSimulate                     // Simulate a transaction
+	runTxModeDeliver                      // Deliver a transaction
+	runTxPrepareProposal                  // Prepare a TM block proposal
+	runTxProcessProposal                  // Process a TM block proposal
 )
 
 var _ abci.Application = (*BaseApp)(nil)
@@ -724,8 +724,12 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		//
 		// Note: If the postHandler fails, we also revert the runMsgs state.
 		if app.postHandler != nil {
-			// Follow-up Ref: https://github.com/cosmos/cosmos-sdk/pull/13941
-			newCtx, err := app.postHandler(runMsgCtx, tx, mode == runTxModeSimulate, err == nil)
+			// The runMsgCtx context currently contains events emitted by the ante handler.
+			// We clear this to correctly order events without duplicates.
+			// Note that the state is still preserved.
+			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
+
+			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
 			if err != nil {
 				return gInfo, nil, anteEvents, priority, err
 			}

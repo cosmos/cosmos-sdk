@@ -100,11 +100,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
@@ -119,7 +114,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
+	_, err = k.Keeper.Delegate(ctx, sdk.AccAddress(valAddr), msg.Value.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}

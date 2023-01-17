@@ -3,7 +3,7 @@ syntax = "proto3";
 package cosmos.streaming.abci.v1;
 
 import "tendermint/abci/types.proto";
-import "cosmos/base/store/v1beta1/listening.proto";
+import "cosmos/store/v1beta1/listening.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/store/streaming/plugins/abci/v1";
 
@@ -39,9 +39,9 @@ message ListenDeliverTxResponse {}
 // ListenCommitRequest is the request type for the ListenCommit RPC method
 message ListenCommitRequest {
   // explicitly pass in block height as ResponseCommit does not contain this info
-  int64                          block_height               = 1;
-  tendermint.abci.ResponseCommit res                        = 2;
-  repeated cosmos.base.store.v1beta1.StoreKVPair change_set = 3;
+  int64                          block_height          = 1;
+  tendermint.abci.ResponseCommit res                   = 2;
+  repeated cosmos.store.v1beta1.StoreKVPair change_set = 3;
 }
 
 // ListenBeginBlockResponse is the response type for the ListenCommit RPC method

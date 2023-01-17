@@ -221,7 +221,7 @@ message QueryFoundationTaxResponse {
   option (gogoproto.goproto_getters) = false;
 
   // withdraw_address defines the delegator address to query for.
-  string tax = 1;
+  string tax                = 1;
   string foundation_address = 2;
 }
 

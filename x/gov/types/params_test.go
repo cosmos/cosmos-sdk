@@ -71,13 +71,13 @@ func TestVotingParamsGetVotingTime(t *testing.T) {
 		},
 		{
 			name:          "custom expedited",
-			votingParams:  types.NewVotingParams(types.DefaultPeriod, time.Hour, types.DefaultProposalVotingPeriods),
+			votingParams:  types.NewVotingParams(types.DefaultPeriod, time.Hour),
 			expectedValue: time.Hour,
 			isExpedited:   true,
 		},
 		{
 			name:          "default not expedited",
-			votingParams:  types.NewVotingParams(time.Hour, types.DefaultExpeditedPeriod, types.DefaultProposalVotingPeriods),
+			votingParams:  types.NewVotingParams(time.Hour, types.DefaultExpeditedPeriod),
 			expectedValue: time.Hour,
 			isExpedited:   false,
 		},

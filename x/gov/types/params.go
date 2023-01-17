@@ -214,6 +214,11 @@ func validateVotingParams(i interface{}) error {
 	return nil
 }
 
+// Equal checks equality of VotingParams
+func (vp VotingParams) Equal(other VotingParams) bool {
+	return vp.VotingPeriod == other.VotingPeriod && vp.ExpeditedVotingPeriod == other.ExpeditedVotingPeriod
+}
+
 // Params returns all of the governance params
 type Params struct {
 	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`

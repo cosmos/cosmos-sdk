@@ -83,6 +83,17 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 	}
 }
 
+// NewResponseResultBlock returns a BlockResponse given a ResultBlock from tendermint
+func NewResponseResultBlock(res *coretypes.ResultBlock) *BlockResponse {
+	if res == nil {
+		return nil
+	}
+
+	return &BlockResponse{
+		Height: res.Block.Height,
+	}
+}
+
 // NewResponseFormatBroadcastTx returns a TxResponse given a ResultBroadcastTx from tendermint
 func NewResponseFormatBroadcastTx(res *coretypes.ResultBroadcastTx) *TxResponse {
 	if res == nil {

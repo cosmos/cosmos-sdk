@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	authblock "github.com/cosmos/cosmos-sdk/x/auth/block"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -26,6 +27,7 @@ const (
 	typeHash   = "hash"
 	typeAccSeq = "acc_seq"
 	typeSig    = "signature"
+	typeHeight = "height"
 
 	eventFormat = "{eventType}.{eventAttribute}={value}"
 )
@@ -425,6 +427,101 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
+
+	return cmd
+}
+
+// QueryTxCmd implements the default command for a tx query.
+func QueryBlockCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "block --type=[height|hash] [height|hash]",
+		Short: "Query for a committed block by height or hash",
+		Long: strings.TrimSpace(fmt.Sprintf(`
+Example:
+$ %s query block <height>
+$ %s query block --%s=%s <hash>
+`,
+			version.AppName,
+			version.AppName, flagType, typeHeight)),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			typ, _ := cmd.Flags().GetString(flagType)
+
+			switch typ {
+			case typeHeight:
+				{
+					if args[0] == "" {
+						return fmt.Errorf("argument should be a block height")
+					}
+
+					var height *int64
+
+					// optional height
+					if len(args) > 0 {
+						h, err := strconv.Atoi(args[0])
+						if err != nil {
+							return err
+						}
+						if h > 0 {
+							tmp := int64(h)
+							height = &tmp
+						}
+					}
+
+					output, err := authblock.GetBlockByHeight(clientCtx, height)
+					if err != nil {
+						return err
+					}
+
+					if output.Empty() {
+						return fmt.Errorf("no transaction found with hash %s", args[0])
+					}
+
+					return clientCtx.PrintProto(output)
+				}
+			case typeHash:
+				{
+					if args[0] == "" {
+						return fmt.Errorf("argument should be a tx hash")
+					}
+
+					// If hash is given, then query the tx by hash.
+					output, err := authblock.GetBlockByHash(clientCtx, args[0])
+					if err != nil {
+						return err
+					}
+
+					if output.Empty() {
+						return fmt.Errorf("no transaction found with hash %s", args[0])
+					}
+
+					return clientCtx.PrintProto(output)
+
+					// // If hash is given, then query the tx by hash.
+					// output, err := authtx.QueryTx(clientCtx, args[0])
+					// if err != nil {
+					// 	return err
+					// }
+
+					// if output.Empty() {
+					// 	return fmt.Errorf("no transaction found with hash %s", args[0])
+					// }
+
+					// return clientCtx.PrintProto(output)
+				}
+			default:
+				return fmt.Errorf("unknown --%s value %s", flagType, typ)
+			}
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", typeHeight, typeHash))
 
 	return cmd
 }

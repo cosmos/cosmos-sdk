@@ -24,6 +24,8 @@ type collection interface {
 
 	// getPrefix is the unique prefix of the collection within a schema.
 	getPrefix() []byte
+
+	genesisHandler
 }
 
 // Prefix defines a segregation namespace
@@ -87,6 +89,10 @@ type KeyCodec[T any] interface {
 	// to return the maximum varint bytes buffer length, at the risk of
 	// over-estimating in order to pick the most performant path.
 	Size(key T) int
+	// EncodeJSON encodes the value as JSON.
+	EncodeJSON(value T) ([]byte, error)
+	// DecodeJSON decodes the provided JSON bytes into an instance of T.
+	DecodeJSON(b []byte) (T, error)
 	// Stringify returns a string representation of T.
 	Stringify(key T) string
 	// KeyType returns a string identifier for the type of the key.
@@ -119,6 +125,10 @@ type ValueCodec[T any] interface {
 	Encode(value T) ([]byte, error)
 	// Decode returns the type T given its binary representation.
 	Decode(b []byte) (T, error)
+	// EncodeJSON encodes the value as JSON.
+	EncodeJSON(value T) ([]byte, error)
+	// DecodeJSON decodes the provided JSON bytes into an instance of T.
+	DecodeJSON(b []byte) (T, error)
 	// Stringify returns a string representation of T.
 	Stringify(value T) string
 	// ValueType returns the identifier for the type.

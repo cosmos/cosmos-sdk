@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/tools/rosetta/lib/errors"
 	"github.com/coinbase/rosetta-sdk-go/types"
 
-	"cosmossdk.io/tools/rosetta/lib/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ConstructionCombine Combine creates a network-specific transaction from an unsigned transaction
@@ -96,7 +96,7 @@ func (on OnlineNetwork) ConstructionMetadata(ctx context.Context, request *types
 		if gasLimit == 0 { // gas_limit is unset. skip fee suggestion
 			return response, nil
 		}
-		gas := sdk.NewIntFromUint64(uint64(gasLimit))
+		gas := sdkmath.NewIntFromUint64(uint64(gasLimit))
 
 		suggestedFee := types.Amount{
 			Value: strconv.FormatInt(price.Amount.MulInt64(gas.Int64()).Ceil().TruncateInt64(), 10),

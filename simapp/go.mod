@@ -163,12 +163,7 @@ require (
 )
 
 replace (
-<<<<<<< HEAD
-=======
-	// TODO delete after release of confix
-	cosmossdk.io/tools/confix => ../tools/confix
 	// use cosmos fork of keyring
->>>>>>> 781a4d6d7 (ci: test ledger in build CI (#14642))
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.

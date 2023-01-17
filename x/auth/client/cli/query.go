@@ -431,7 +431,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	return cmd
 }
 
-// QueryTxCmd implements the default command for a tx query.
+// QueryBlockCmd implements the default command for a Block query.
 func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
@@ -479,7 +479,7 @@ $ %s query block --%s=%s <hash>
 					}
 
 					if output.Empty() {
-						return fmt.Errorf("no transaction found with hash %s", args[0])
+						return fmt.Errorf("no block found with hash %s", args[0])
 					}
 
 					return clientCtx.PrintProto(output)
@@ -501,18 +501,6 @@ $ %s query block --%s=%s <hash>
 					}
 
 					return clientCtx.PrintProto(output)
-
-					// // If hash is given, then query the tx by hash.
-					// output, err := authtx.QueryTx(clientCtx, args[0])
-					// if err != nil {
-					// 	return err
-					// }
-
-					// if output.Empty() {
-					// 	return fmt.Errorf("no transaction found with hash %s", args[0])
-					// }
-
-					// return clientCtx.PrintProto(output)
 				}
 			default:
 				return fmt.Errorf("unknown --%s value %s", flagType, typ)

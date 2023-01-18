@@ -2,6 +2,7 @@ package gov
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/stretchr/testify/suite"
@@ -19,10 +20,8 @@ import (
 type DepositTestSuite struct {
 	suite.Suite
 
-	cfg         network.Config
-	network     *network.Network
-	deposits    sdk.Coins
-	proposalIDs []string
+	cfg     network.Config
+	network *network.Network
 }
 
 func NewDepositTestSuite(cfg network.Config) *DepositTestSuite {
@@ -35,38 +34,9 @@ func (s *DepositTestSuite) SetupSuite() {
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
-
-	s.Require().NoError(s.network.WaitForNextBlock())
-
-	val := s.network.Validators[0]
-
-	deposits := sdk.Coins{
-		sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)),
-		sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens),
-		sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50))),
-	}
-	s.deposits = deposits
-
-	// create 2 proposals for testing
-	for i := 0; i < len(deposits); i++ {
-		id := i + 1
-		deposit := deposits[i]
-
-		s.submitProposal(val, deposit, id)
-		s.proposalIDs = append(s.proposalIDs, fmt.Sprintf("%d", id))
-	}
 }
 
-func (s *DepositTestSuite) SetupNewSuite() {
-	s.T().Log("setting up new test suite")
-
-	var err error
-	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
-	s.Require().NoError(s.network.WaitForNextBlock())
-}
-
-func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit sdk.Coin, id int) {
+func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit sdk.Coin, name string) uint64 {
 	var exactArgs []string
 
 	if !initialDeposit.IsZero() {
@@ -76,13 +46,25 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 	_, err := govclitestutil.MsgSubmitLegacyProposal(
 		val.ClientCtx,
 		val.Address.String(),
-		fmt.Sprintf("Text Proposal %d", id),
+		fmt.Sprintf("Text Proposal %s", name),
 		"Where is the title!?",
 		v1beta1.ProposalTypeText,
 		exactArgs...,
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// query proposals, return the last's id
+	cmd := cli.GetCmdQueryProposals()
+	args := []string{fmt.Sprintf("--%s=json", flags.FlagOutput)}
+	res, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
+
+	var proposals v1.QueryProposalsResponse
+	err = s.cfg.Codec.UnmarshalJSON(res.Bytes(), &proposals)
+	s.Require().NoError(err)
+
+	return proposals.Proposals[len(proposals.Proposals)-1].Id
 }
 
 func (s *DepositTestSuite) TearDownSuite() {
@@ -93,7 +75,10 @@ func (s *DepositTestSuite) TearDownSuite() {
 func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx
-	proposalID := s.proposalIDs[0]
+
+	// submit proposal without initial deposit
+	id := s.submitProposal(val, sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(0)), "TestQueryDepositsWithoutInitialDeposit")
+	proposalID := strconv.FormatUint(id, 10)
 
 	// deposit amount
 	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Add(sdk.NewInt(50))).String()
@@ -105,7 +90,6 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(sdk.Coins(deposit.Amount).String(), depositAmount)
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")
@@ -117,12 +101,16 @@ func (s *DepositTestSuite) TestQueryDepositsWithoutInitialDeposit() {
 
 func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	val := s.network.Validators[0]
-	proposalID := s.proposalIDs[1]
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens)
+
+	// submit proposal with an initial deposit
+	id := s.submitProposal(val, depositAmount, "TestQueryDepositsWithInitialDeposit")
+	proposalID := strconv.FormatUint(id, 10)
 
 	// query deposit
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
-	s.Require().Equal(sdk.Coins(deposit.Amount).String(), s.deposits[1].String())
+	s.Require().Equal(sdk.Coins(deposit.Amount).String(), depositAmount.String())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposits
@@ -130,25 +118,33 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	s.Require().NotNil(deposits)
 	s.Require().Len(deposits.Deposits, 1)
 	// verify initial deposit
-	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), s.deposits[1].String())
+	s.Require().Equal(sdk.Coins(deposits.Deposits[0].Amount).String(), depositAmount.String())
 }
 
 func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	val := s.network.Validators[0]
-	clientCtx := val.ClientCtx
-	proposalID := s.proposalIDs[2]
+	depositAmount := sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens.Sub(sdk.NewInt(50)))
+
+	// submit proposal with an initial deposit
+	id := s.submitProposal(val, depositAmount, "TestQueryProposalAfterVotingPeriod")
+	proposalID := strconv.FormatUint(id, 10)
+
+	args := []string{fmt.Sprintf("--%s=json", flags.FlagOutput)}
+	cmd := cli.GetCmdQueryProposals()
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	s.Require().NoError(err)
 
 	// query proposal
-	args := []string{proposalID, fmt.Sprintf("--%s=json", flags.FlagOutput)}
-	cmd := cli.GetCmdQueryProposal()
-	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	args = []string{proposalID, fmt.Sprintf("--%s=json", flags.FlagOutput)}
+	cmd = cli.GetCmdQueryProposal()
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().NoError(err)
 
 	// waiting for deposit and voting period to end
-	time.Sleep(20 * time.Second)
+	time.Sleep(25 * time.Second)
 
 	// query proposal
-	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), fmt.Sprintf("proposal %s doesn't exist", proposalID))
 

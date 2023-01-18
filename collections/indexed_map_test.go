@@ -12,7 +12,7 @@ type company struct {
 
 type companyIndexes struct {
 	City *GenericMultiIndex[string, string, string, company]
-	Vat  *UniqueIndex[uint64, string, company]
+	Vat  *GenericUniqueIndex[uint64, string, string, company]
 }
 
 func (c companyIndexes) IndexesList() []Index[string, company] {
@@ -31,8 +31,13 @@ func TestIndexedMap(t *testing.T) {
 					Referred:  pk,
 				}}, nil
 			}),
-			Vat: NewUniqueIndex(schema, NewPrefix(2), "companies_by_vat", Uint64Key, StringKey, func(_ string, v company) (uint64, error) {
-				return v.Vat, nil
+			Vat: NewGenericUniqueIndex(schema, NewPrefix(2), "companies_by_vat", Uint64Key, StringKey, func(pk string, v company) ([]IndexReference[uint64, string], error) {
+				return []IndexReference[uint64, string]{
+					{
+						Referring: v.Vat,
+						Referred:  pk,
+					},
+				}, nil
 			}),
 		},
 	)
@@ -56,7 +61,7 @@ func TestIndexedMap(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pk, err := im.Indexes.Vat.ExactMatch(ctx, 1)
+	pk, err := im.Indexes.Vat.Get(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, "2", pk)
 
@@ -67,17 +72,17 @@ func TestIndexedMap(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	pk, err = im.Indexes.Vat.ExactMatch(ctx, 2)
+	pk, err = im.Indexes.Vat.Get(ctx, 2)
 	require.NoError(t, err)
 	require.Equal(t, "2", pk)
 
-	pk, err = im.Indexes.Vat.ExactMatch(ctx, 1)
+	pk, err = im.Indexes.Vat.Get(ctx, 1)
 	require.ErrorIs(t, err, ErrNotFound)
 
 	// test removal
 	err = im.Remove(ctx, "2")
 	require.NoError(t, err)
-	_, err = im.Indexes.Vat.ExactMatch(ctx, 2)
+	pk, err = im.Indexes.Vat.Get(ctx, 2)
 	require.ErrorIs(t, err, ErrNotFound)
 
 	// test iteration

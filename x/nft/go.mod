@@ -148,9 +148,6 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Temporary until we tag a new version
-replace cosmossdk.io/x/tx => ../tx
-
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

@@ -55,7 +55,7 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	textual := newTextualWithBankKeeper(in.TxBankKeeper)
+	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
 	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
@@ -101,14 +101,14 @@ func ProvideModule(in TxInputs) TxOutputs {
 }
 
 func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, error) {
-	if in.AuthBankKeeper == nil {
+	if in.BankKeeper == nil {
 		return nil, fmt.Errorf("both AccountKeeper and BankKeeper are required")
 	}
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   in.AccountKeeper,
-			BankKeeper:      in.AuthBankKeeper,
+			BankKeeper:      in.BankKeeper,
 			SignModeHandler: txConfig.SignModeHandler(),
 			FeegrantKeeper:  in.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
@@ -121,9 +121,9 @@ func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, err
 	return anteHandler, nil
 }
 
-// newTextualWithBankKeeper creates a new Textual struct using the given
+// NewTextualWithBankKeeper creates a new Textual struct using the given
 // BankKeeper to retrieve coin metadata.
-func newTextualWithBankKeeper(bk BankKeeper) textual.Textual {
+func NewTextualWithBankKeeper(bk BankKeeper) textual.Textual {
 	textual := textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {

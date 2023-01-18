@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -24,7 +26,6 @@ type KeeperTestSuite struct {
 	mockAddr     sdk.AccAddress
 	mockPerms    types.Permissions
 	mockMsgURL   string
-	mockCtx      sdk.Context
 	mockStoreKey storetypes.StoreKey
 }
 
@@ -33,12 +34,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	mockStoreKey := sdk.NewKVStoreKey("test")
 
 	// Define a mock authority address.
-	mockAddr := sdk.AccAddress("mock_address")
+	mockAddr := sdk.AccAddress([]byte("mock_address"))
 
 	// Define a mock set of permissions.
 	mockPerms := types.Permissions{
-		Level: types.Permissions_LEVEL_SUPER_ADMIN,
+		Level: 3,
 	}
+
 	// Define a mock context.
 	mockCtx := testutil.DefaultContextWithDB(suite.T(), mockStoreKey, sdk.NewTransientStoreKey("transient_test"))
 
@@ -68,25 +70,26 @@ func (suite *KeeperTestSuite) TestGetAuthority() {
 }
 
 func (suite *KeeperTestSuite) TestGetPermissions() {
-	// Define a mock set of permissions to set.
-	mockPerms := types.Permissions{
-		Level: types.Permissions_LEVEL_SUPER_ADMIN,
-	}
-
 	// Set the permissions for the mock address.
-	err := suite.keeper.SetPermissions(suite.ctx, suite.mockAddr, &mockPerms)
+	suite.keeper.SetPermissions(suite.ctx, []byte(suite.mockAddr), &suite.mockPerms)
+
+	// Retrieve the permissions for the mock address.
+	perms, err := suite.keeper.GetPermissions(suite.ctx, suite.mockAddr)
 	require.NoError(suite.T(), err)
 
-	// Retrieve the set permissions from the store and check that they match the mock permissions.
-	perms, err := suite.keeper.GetPermissions(suite.ctx, suite.mockAddr.String())
-	require.NoError(suite.T(), err)
-	require.Equal(suite.T(), mockPerms, perms)
+	// Assert that the retrieved permissions match the expected value.
+	require.Equal(suite.T(), suite.mockPerms, perms)
 }
 
 func (suite *KeeperTestSuite) TestSetPermissions() {
-	err := suite.keeper.SetPermissions(suite.mockCtx, suite.mockAddr, &suite.mockPerms)
+	// Set the permissions for the mock address.
+	suite.keeper.SetPermissions(suite.ctx, []byte(suite.mockAddr), &suite.mockPerms)
+
+	// Retrieve the permissions for the mock address.
+	perms, err := suite.keeper.GetPermissions(suite.ctx, suite.mockAddr)
 	require.NoError(suite.T(), err)
-	perms, _ := suite.keeper.GetPermissions(suite.mockCtx, suite.mockAddr.String())
+
+	// Assert that the retrieved permissions match the expected value.
 	require.Equal(suite.T(), suite.mockPerms, perms)
 }
 
@@ -105,18 +108,22 @@ func (suite *KeeperTestSuite) TestIteratePermissions() {
 		sdk.AccAddress("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
-		suite.keeper.SetPermissions(suite.mockCtx, addr, &mockPerms[i])
+		suite.keeper.SetPermissions(suite.ctx, addr, &mockPerms[i])
 	}
 
 	// Define a variable to store the returned permissions
 	var returnedPerms []types.Permissions
 
 	// Iterate through the permissions and append them to the returnedPerms slice
-	suite.keeper.IteratePermissions(suite.mockCtx, func(address []byte, perms types.Permissions) (stop bool) {
+	suite.keeper.IteratePermissions(suite.ctx, func(address []byte, perms types.Permissions) (stop bool) {
 		returnedPerms = append(returnedPerms, perms)
 		return false
 	})
 
 	// Assert that the returned permissions match the set mock permissions
 	require.Equal(suite.T(), mockPerms, returnedPerms)
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

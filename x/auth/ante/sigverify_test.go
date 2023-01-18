@@ -130,6 +130,8 @@ func TestSigVerification(t *testing.T) {
 	suite.txBankKeeper.EXPECT().DenomMetadata(suite.ctx, gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
 
 	enabledSignModes := []signing.SignMode{signing.SignMode_SIGN_MODE_DIRECT, signing.SignMode_SIGN_MODE_TEXTUAL, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON}
+	// Since TEXTUAL is not enabled by default, we create a custom TxConfig
+	// here which includes it.
 	suite.clientCtx.TxConfig = authtx.NewTxConfigWithTextual(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		enabledSignModes,

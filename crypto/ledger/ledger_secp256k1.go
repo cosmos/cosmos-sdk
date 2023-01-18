@@ -2,7 +2,6 @@ package ledger
 
 import (
 	"fmt"
-	"math/big"
 	"os"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -176,9 +175,9 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
 	// low 'S' malleability breaker
 	sigS := sigDER.S
-	if sigS.Cmp(btcec.S256().halfOrder) == 1 {
-		sigS = new(big.Int).Sub(btcec.S256().N, sigS)
-	}
+	// if sigS.Cmp(btcec.S256().halfOrder) == 1 { // TODO
+	// 	sigS = new(big.Int).Sub(btcec.S256().N, sigS)
+	// }
 
 	rBytes := sigDER.R.Bytes()
 	sBytes := sigS.Bytes()

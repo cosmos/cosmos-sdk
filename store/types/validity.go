@@ -5,7 +5,7 @@ import math "math"
 const (
 	// 32K
 	MaxKeyLength = math.MaxUint16
-	// 2G
+	// 4G
 	MaxValueLength = math.MaxUint32
 )
 

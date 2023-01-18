@@ -7,8 +7,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 
-	tmbtcec "github.com/tendermint/btcd/btcec"
-
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -173,8 +171,32 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+<<<<<<< HEAD
 	sigBER := tmbtcec.Signature{R: sigDER.R, S: sigDER.S}
 	return sigBER.Serialize(), nil
+=======
+
+	sigStr := sigDER.Serialize()
+	// The format of a DER encoded signature is as follows:
+	// 0x30 <total length> 0x02 <length of R> <R> 0x02 <length of S> <S>
+	r, s := new(big.Int), new(big.Int)
+	r.SetBytes(sigStr[4 : 4+sigStr[3]])
+	s.SetBytes(sigStr[4+sigStr[3]+2:])
+
+	sModNScalar := new(btcec.ModNScalar)
+	sModNScalar.SetByteSlice(s.Bytes())
+	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
+	if sModNScalar.IsOverHalfOrder() {
+		s = new(big.Int).Sub(btcec.S256().N, s)
+	}
+
+	sigBytes := make([]byte, 64)
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(r.Bytes()):32], r.Bytes())
+	copy(sigBytes[64-len(s.Bytes()):64], s.Bytes())
+
+	return sigBytes, nil
+>>>>>>> 44fbb0df9 (refactor: reduce tendermint deps (#14616))
 }
 
 func getDevice() (SECP256K1, error) {

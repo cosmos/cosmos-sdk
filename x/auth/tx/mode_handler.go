@@ -13,6 +13,12 @@ var DefaultSignModes = []signingtypes.SignMode{
 	signingtypes.SignMode_SIGN_MODE_DIRECT,
 	signingtypes.SignMode_SIGN_MODE_DIRECT_AUX,
 	signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
+	// We currently don't add SIGN_MODE_TEXTUAL as part of the default sign
+	// modes, as it's not released yet (including the Ledger app). However,
+	// textual's sign mode handler is already available in this package. If you
+	// want to use textual for **TESTING** purposes, feel free to create a
+	// handler that includes SIGN_MODE_TEXTUAL.
+	// ref: Tracking issue for SIGN_MODE_TEXTUAL https://github.com/cosmos/cosmos-sdk/issues/11970
 }
 
 // makeSignModeHandler returns the default protobuf SignModeHandler supporting
@@ -31,9 +37,7 @@ func makeSignModeHandler(modes []signingtypes.SignMode, txt textual.Textual) sig
 		case signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
 			handlers[i] = signModeLegacyAminoJSONHandler{}
 		case signingtypes.SignMode_SIGN_MODE_TEXTUAL:
-			handlers[i] = signModeTextualHandler{
-				t: txt,
-			}
+			handlers[i] = signModeTextualHandler{t: txt}
 		case signingtypes.SignMode_SIGN_MODE_DIRECT_AUX:
 			handlers[i] = signModeDirectAuxHandler{}
 		default:

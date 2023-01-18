@@ -3,6 +3,7 @@ package collections
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -37,6 +38,14 @@ func (uint64Key) Decode(buffer []byte) (int, uint64, error) {
 	return 8, binary.BigEndian.Uint64(buffer), nil
 }
 
+func (uint64Key) EncodeJSON(value uint64) ([]byte, error) {
+	return uint64EncodeJSON(value)
+}
+
+func (uint64Key) DecodeJSON(b []byte) (uint64, error) {
+	return uint64DecodeJSON(b)
+}
+
 func (uint64Key) Size(_ uint64) int { return 8 }
 
 func (u uint64Key) EncodeNonTerminal(buffer []byte, key uint64) (int, error) {
@@ -67,6 +76,16 @@ func (stringKey) Encode(buffer []byte, key string) (int, error) {
 
 func (stringKey) Decode(buffer []byte) (int, string, error) {
 	return len(buffer), string(buffer), nil
+}
+
+func (stringKey) EncodeJSON(value string) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func (stringKey) DecodeJSON(b []byte) (string, error) {
+	var value string
+	err := json.Unmarshal(b, &value)
+	return value, err
 }
 
 func (stringKey) Size(key string) int {

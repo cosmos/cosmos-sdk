@@ -39,8 +39,8 @@ type TxInputs struct {
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
 	AccountKeeper ante.AccountKeeper `optional:"true"`
-	// AuthBankKeeper is the expected bank keeper to be passed to AnteHandlers
-	AuthBankKeeper authtypes.BankKeeper `optional:"true"`
+	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
+	BankKeeper authtypes.BankKeeper `optional:"true"`
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
 	TxBankKeeper   BankKeeper
 	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
@@ -55,7 +55,7 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
+	textual := newTextualWithBankKeeper(in.TxBankKeeper)
 	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
@@ -121,9 +121,9 @@ func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, err
 	return anteHandler, nil
 }
 
-// NewTextual creates a new Textual struct using the given
+// newTextualWithBankKeeper creates a new Textual struct using the given
 // BankKeeper to retrieve coin metadata.
-func NewTextualWithBankKeeper(bk BankKeeper) textual.Textual {
+func newTextualWithBankKeeper(bk BankKeeper) textual.Textual {
 	textual := textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
 		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
 		if err != nil {
@@ -144,7 +144,7 @@ func NewTextualWithBankKeeper(bk BankKeeper) textual.Textual {
 		m := &bankv1beta1.Metadata{
 			Base:    res.Metadata.Base,
 			Display: res.Metadata.Display,
-			// fields below this one are not strictly needed by Textual
+			// fields below are not strictly needed by Textual
 			// but added here for completeness.
 			Description: res.Metadata.Description,
 			Name:        res.Metadata.Name,

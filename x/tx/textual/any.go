@@ -33,7 +33,7 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 
 	internalMsg, err := anymsg.UnmarshalNew()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error unmarshalling any %s: %w", anymsg.TypeUrl, err)
 	}
 	vr, err := ar.tr.GetMessageValueRenderer(internalMsg.ProtoReflect().Descriptor())
 	if err != nil {

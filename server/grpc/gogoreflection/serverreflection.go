@@ -34,7 +34,7 @@ To register server reflection on a gRPC server:
 
 	s.Serve(lis)
 */
-package reflection // import "google.golang.org/grpc/reflection"
+package gogoreflection // import "google.golang.org/grpc/reflection"
 
 import (
 	"bytes"

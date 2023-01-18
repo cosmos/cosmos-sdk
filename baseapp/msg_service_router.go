@@ -7,28 +7,12 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/reflect/protodesc"
-	"google.golang.org/protobuf/reflect/protoregistry"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/types/reflection"
 )
-
-var fdFiles *protoregistry.Files
-
-func init() {
-	fdSet, err := reflection.GetFileDescriptorSet()
-	if err != nil {
-		panic(err)
-	}
-	fdFiles, err = protodesc.NewFiles(fdSet)
-	if err != nil {
-		panic(err)
-	}
-}
 
 // MsgServiceRouter routes fully-qualified Msg service methods to their handler.
 type MsgServiceRouter struct {

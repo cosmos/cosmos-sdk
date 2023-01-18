@@ -23,6 +23,8 @@ require (
 	google.golang.org/protobuf v1.28.1
 )
 
+require github.com/tendermint/tm-db v0.6.7
+
 require (
 	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.13.0 // indirect
@@ -156,7 +158,6 @@ require (
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
@@ -185,8 +186,6 @@ require (
 )
 
 replace (
-	// Temporary until we tag a new version
-	cosmossdk.io/api => ../api
 	// TODO delete after release of confix
 	cosmossdk.io/tools/confix => ../tools/confix
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

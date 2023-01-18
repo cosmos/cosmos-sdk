@@ -6,19 +6,11 @@ package ledger
 import (
 	"fmt"
 
-<<<<<<< HEAD
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 
-	secp256k1 "github.com/tendermint/btcd/btcec"
-=======
-	btcec "github.com/btcsuite/btcd/btcec/v2"
-	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	"github.com/cosmos/go-bip39"
->>>>>>> 44fbb0df9 (refactor: reduce tendermint deps (#14616))
 	"github.com/tendermint/tendermint/crypto"
-
-	"github.com/cosmos/go-bip39"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	csecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -64,7 +56,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv)
+	_, pubkeyObject := btcec.PrivKeyFromBytes(btcec.S256(), derivedPriv)
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -78,11 +70,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-<<<<<<< HEAD
-	cmp, err := btcec.ParsePubKey(pk[:], btcec.S256())
-=======
-	cmp, err := btcec.ParsePubKey(pk)
->>>>>>> 44fbb0df9 (refactor: reduce tendermint deps (#14616))
+	cmp, err := btcec.ParsePubKey(pk, btcec.S256())
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -109,21 +97,13 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
-	sig := ecdsa.Sign(priv, crypto.Sha256(message))
-
-<<<<<<< HEAD
+	priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), derivedPriv)
 	sig, err := priv.Sign(crypto.Sha256(message))
 	if err != nil {
 		return nil, err
 	}
 
-	// Need to return DER as the ledger does
-	sig2 := btcec.Signature{R: sig.R, S: sig.S}
-	return sig2.Serialize(), nil
-=======
 	return sig.Serialize(), nil
->>>>>>> 44fbb0df9 (refactor: reduce tendermint deps (#14616))
 }
 
 // ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path

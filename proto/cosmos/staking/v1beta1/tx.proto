@@ -154,7 +154,7 @@ message MsgUndelegateResponse {
   google.protobuf.Timestamp completion_time = 1
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 
-  // amount returns the amount undelegated coins
+  // amount returns the amount of undelegated coins
   //
   // Since: cosmos-sdk 0.48
   cosmos.base.v1beta1.Coin amount            = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];

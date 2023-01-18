@@ -1082,12 +1082,10 @@ func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore
 			continue
 		}
 
-		if !removalMap[key] {
-			si := types.StoreInfo{}
-			si.Name = key.Name()
-			si.CommitId = commitID
-			storeInfos = append(storeInfos, si)
-		}
+		si := types.StoreInfo{}
+		si.Name = key.Name()
+		si.CommitId = commitID
+		storeInfos = append(storeInfos, si)
 	}
 
 	sort.SliceStable(storeInfos, func(i, j int) bool {

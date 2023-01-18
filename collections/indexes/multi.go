@@ -49,27 +49,27 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context
 	return (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Unreference(ctx, pk, value)
 }
 
-func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]]) (MultiIndexIterator[ReferenceKey, PrimaryKey], error) {
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]]) (MultiIterator[ReferenceKey, PrimaryKey], error) {
 	iter, err := (*collections.GenericMultiIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(m).Iterate(ctx, ranger)
-	return (MultiIndexIterator[ReferenceKey, PrimaryKey])(iter), err
+	return (MultiIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
-// ExactMatch returns a MultiIndexIterator containing all the primary keys referenced by the provided reference key.
-func (m *Multi[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Context, refKey ReferenceKey) (MultiIndexIterator[ReferenceKey, PrimaryKey], error) {
+// ExactMatch returns a MultiIterator containing all the primary keys referenced by the provided reference key.
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Context, refKey ReferenceKey) (MultiIterator[ReferenceKey, PrimaryKey], error) {
 	return m.Iterate(ctx, collections.NewPrefixedPairRange[ReferenceKey, PrimaryKey](refKey))
 }
 
-// MultiIndexIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].
-type MultiIndexIterator[ReferenceKey, PrimaryKey any] collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]]
+// MultiIterator is just a KeySetIterator with key as Pair[ReferenceKey, PrimaryKey].
+type MultiIterator[ReferenceKey, PrimaryKey any] collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]]
 
 // PrimaryKey returns the iterator's current primary key.
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKey() (PrimaryKey, error) {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) PrimaryKey() (PrimaryKey, error) {
 	fullKey, err := i.FullKey()
 	return fullKey.K2(), err
 }
 
 // PrimaryKeys fully consumes the iterator and returns the list of primary keys.
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, error) {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, error) {
 	fullKeys, err := i.FullKeys()
 	if err != nil {
 		return nil, err
@@ -82,26 +82,26 @@ func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKe
 }
 
 // FullKey returns the current full reference key as Pair[ReferenceKey, PrimaryKey].
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) FullKey() (collections.Pair[ReferenceKey, PrimaryKey], error) {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) FullKey() (collections.Pair[ReferenceKey, PrimaryKey], error) {
 	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Key()
 }
 
 // FullKeys fully consumes the iterator and returns all the list of full reference keys.
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair[ReferenceKey, PrimaryKey], error) {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) FullKeys() ([]collections.Pair[ReferenceKey, PrimaryKey], error) {
 	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Keys()
 }
 
 // Next advances the iterator.
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) Next() {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) Next() {
 	(collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Next()
 }
 
 // Valid asserts if the iterator is still valid or not.
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) Valid() bool {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) Valid() bool {
 	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Valid()
 }
 
 // Close closes the iterator.
-func (i MultiIndexIterator[ReferenceKey, PrimaryKey]) Close() error {
+func (i MultiIterator[ReferenceKey, PrimaryKey]) Close() error {
 	return (collections.KeySetIterator[collections.Pair[ReferenceKey, PrimaryKey]])(i).Close()
 }

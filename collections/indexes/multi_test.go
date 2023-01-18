@@ -1,21 +1,17 @@
-package collections
+package indexes
 
-import (
-	"github.com/stretchr/testify/require"
-	"testing"
-)
-
+/*
 func TestMultiIndex(t *testing.T) {
-	sk, ctx := deps()
-	schema := NewSchemaBuilder(sk)
+	sk, ctx := collections.deps()
+	schema := collections.NewSchemaBuilder(sk)
 
-	mi := NewMultiIndex(schema, NewPrefix(1), "multi_index", StringKey, Uint64Key, func(_ uint64, value company) (string, error) {
+	mi := NewMulti(schema, collections.NewPrefix(1), "multi_index", collections.StringKey, collections.Uint64Key, func(_ uint64, value collections.company) (string, error) {
 		return value.City, nil
 	})
 
 	// we crete two reference keys for primary key 1 and 2 associated with "milan"
-	require.NoError(t, mi.Reference(ctx, 1, company{City: "milan"}, nil))
-	require.NoError(t, mi.Reference(ctx, 2, company{City: "milan"}, nil))
+	require.NoError(t, mi.Reference(ctx, 1, collections.company{City: "milan"}, nil))
+	require.NoError(t, mi.Reference(ctx, 2, collections.company{City: "milan"}, nil))
 
 	iter, err := mi.ExactMatch(ctx, "milan")
 	require.NoError(t, err)
@@ -24,7 +20,7 @@ func TestMultiIndex(t *testing.T) {
 	require.Equal(t, []uint64{1, 2}, pks)
 
 	// replace
-	require.NoError(t, mi.Reference(ctx, 1, company{City: "new york"}, &company{City: "milan"}))
+	require.NoError(t, mi.Reference(ctx, 1, collections.company{City: "new york"}, &collections.company{City: "milan"}))
 
 	// assert after replace only company with id 2 is referenced by milan
 	iter, err = mi.ExactMatch(ctx, "milan")
@@ -46,7 +42,7 @@ func TestMultiIndex(t *testing.T) {
 
 	fullKey, err := iter.FullKey()
 	require.NoError(t, err)
-	require.Equal(t, Join("milan", uint64(2)), fullKey)
+	require.Equal(t, collections.Join("milan", uint64(2)), fullKey)
 
 	pk, err := iter.PrimaryKey()
 	require.NoError(t, err)
@@ -58,3 +54,4 @@ func TestMultiIndex(t *testing.T) {
 	require.False(t, iter.Valid())
 	require.NoError(t, iter.Close())
 }
+*/

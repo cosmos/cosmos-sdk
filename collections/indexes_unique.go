@@ -5,10 +5,7 @@ import (
 	"fmt"
 )
 
-type UniqueIndex[ReferenceKey, PrimaryKey, Value any] struct {
-	getRefKey func(pk PrimaryKey, value Value) (ReferenceKey, error)
-	refs      Map[ReferenceKey, PrimaryKey]
-}
+type UniqueIndex[ReferenceKey, PrimaryKey, Value any] GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value]
 
 func NewUniqueIndex[ReferenceKey, PrimaryKey, Value any](
 	schema *SchemaBuilder,
@@ -18,40 +15,29 @@ func NewUniqueIndex[ReferenceKey, PrimaryKey, Value any](
 	pkCodec KeyCodec[PrimaryKey],
 	getRefKeyFunc func(pk PrimaryKey, v Value) (ReferenceKey, error),
 ) *UniqueIndex[ReferenceKey, PrimaryKey, Value] {
-	return &UniqueIndex[ReferenceKey, PrimaryKey, Value]{
-		getRefKey: getRefKeyFunc,
-		refs:      NewMap[ReferenceKey, PrimaryKey](schema, prefix, name, refCodec, keyToValueCodec[PrimaryKey]{kc: pkCodec}),
-	}
+	i := NewGenericUniqueIndex(schema, prefix, name, refCodec, pkCodec, func(pk PrimaryKey, value Value) ([]IndexReference[ReferenceKey, PrimaryKey], error) {
+		ref, err := getRefKeyFunc(pk, value)
+		if err != nil {
+			return nil, err
+		}
+
+		return []IndexReference[ReferenceKey, PrimaryKey]{
+			{
+				Referring: ref,
+				Referred:  pk,
+			},
+		}, nil
+	})
+
+	return (*UniqueIndex[ReferenceKey, PrimaryKey, Value])(i)
 }
 
 func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context, pk PrimaryKey, newValue Value, oldValue *Value) error {
-	if oldValue != nil {
-		err := i.Unreference(ctx, pk, *oldValue)
-		if err != nil {
-			return err
-		}
-	}
-	refKey, err := i.getRefKey(pk, newValue)
-	if err != nil {
-		return err
-	}
-	has, err := i.refs.Has(ctx, refKey)
-	if err != nil {
-		return err
-	}
-	if has {
-		return fmt.Errorf("%w: uniqueness contraint violation: key %s already references a primary key", ErrConflict, i.refs.kc.Stringify(refKey))
-	}
-
-	return i.refs.Set(ctx, refKey, pk)
+	return (*GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).Reference(ctx, pk, newValue, oldValue)
 }
 
 func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) Unreference(ctx context.Context, pk PrimaryKey, value Value) error {
-	refKey, err := i.getRefKey(pk, value)
-	if err != nil {
-		return err
-	}
-	return i.refs.Remove(ctx, refKey)
+	return (*GenericUniqueIndex[ReferenceKey, PrimaryKey, PrimaryKey, Value])(i).Unreference(ctx, pk, value)
 }
 
 func (i *UniqueIndex[ReferenceKey, PrimaryKey, Value]) ExactMatch(ctx context.Context, ref ReferenceKey) (PrimaryKey, error) {

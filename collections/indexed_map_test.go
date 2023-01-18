@@ -11,7 +11,7 @@ type company struct {
 }
 
 type companyIndexes struct {
-	City *MultiIndex[string, string, company]
+	City *GenericMultiIndex[string, string, string, company]
 	Vat  *UniqueIndex[uint64, string, company]
 }
 
@@ -25,8 +25,11 @@ func TestIndexedMap(t *testing.T) {
 
 	im := NewIndexedMap(schema, NewPrefix(0), "companies", StringKey, newTestValueCodec[company](),
 		companyIndexes{
-			City: NewMultiIndex(schema, NewPrefix(1), "companies_by_city", StringKey, StringKey, func(_ string, value company) (string, error) {
-				return value.City, nil
+			City: NewGenericMultiIndex(schema, NewPrefix(1), "companies_by_city", StringKey, StringKey, func(pk string, value company) ([]IndexReference[string, string], error) {
+				return []IndexReference[string, string]{{
+					Referring: value.City,
+					Referred:  pk,
+				}}, nil
 			}),
 			Vat: NewUniqueIndex(schema, NewPrefix(2), "companies_by_vat", Uint64Key, StringKey, func(_ string, v company) (uint64, error) {
 				return v.Vat, nil

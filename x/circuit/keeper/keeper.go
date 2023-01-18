@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	proto "github.com/cosmos/gogoproto/proto"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
@@ -9,16 +10,15 @@ import (
 
 // keeper definines the circuit module's keeper.
 type Keeper struct {
-	key       storetypes.StoreKey
-	cdc       codec.Codec //used to marshall and unarshall structs to and from []byte
+	key storetypes.StoreKey
+
 	authority string
 }
 
 // contructs a new Circuit Keeper instance
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, authority string) Keeper {
+func NewKeeper(storeKey storetypes.StoreKey, authority string) Keeper {
 	return Keeper{
 		key:       storeKey,
-		cdc:       cdc,
 		authority: authority,
 	}
 }
@@ -33,7 +33,7 @@ func (k *Keeper) GetPermissions(ctx sdk.Context, address string) (types.Permissi
 	bz := store.Get([]byte(address))
 
 	perms := types.Permissions{}
-	if err := k.cdc.Unmarshal(bz, &perms); err != nil {
+	if err := proto.Unmarshal(bz, &perms); err != nil {
 		return types.Permissions{}, err
 	}
 
@@ -43,7 +43,7 @@ func (k *Keeper) GetPermissions(ctx sdk.Context, address string) (types.Permissi
 func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Permissions) error {
 	store := ctx.KVStore(k.key)
 
-	bz, err := k.cdc.Marshal(perms)
+	bz, err := proto.Marshal(perms)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 
 	for ; iter.Valid(); iter.Next() {
 		var perms types.Permissions
-		k.cdc.Unmarshal(iter.Value(), &perms)
+		proto.Unmarshal(iter.Value(), &perms)
 
 		if cb(iter.Key()[len(types.AccountPermissionPrefix):], perms) {
 			break
@@ -92,7 +92,7 @@ func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(address []byte, pe
 
 	for ; iter.Valid(); iter.Next() {
 		var perms types.Permissions
-		k.cdc.Unmarshal(iter.Value(), &perms)
+		proto.Unmarshal(iter.Value(), &perms)
 
 		if cb(iter.Key()[len(types.DisableListPrefix):], perms) {
 			break

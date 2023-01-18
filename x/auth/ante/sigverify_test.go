@@ -310,7 +310,7 @@ func TestSigVerification_ExplicitAmino(t *testing.T) {
 		suite.txBuilder.SetFeeAmount(feeAmount)
 		suite.txBuilder.SetGasLimit(gasLimit)
 
-		tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+		tx, err := suite.CreateTestTx(suite.ctx, tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 		require.NoError(t, err)
 
 		_, err = antehandler(suite.ctx, tx, false)

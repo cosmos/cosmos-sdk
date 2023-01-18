@@ -613,13 +613,13 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 	}
 
 	switch signMode {
-	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+	case signing.SignMode_SIGN_MODE_TEXTUAL:
 		sig, err = priv.Sign(msg)
 		if err != nil {
 			return nil, nil, err
 		}
-	case signing.SignMode_SIGN_MODE_TEXTUAL:
-		sig, err = priv.SignLedgerTextual(msg)
+	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+		sig, err = priv.SignLedgerAminoJSON(msg)
 		if err != nil {
 			return nil, nil, err
 		}

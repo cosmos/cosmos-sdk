@@ -97,7 +97,7 @@ func SetSkipDERConversion() {
 // This function is marked as unsafe as it will retrieve a pubkey without user verification.
 // It can only be used to verify a pubkey but never to create new accounts/keys. In that case,
 // please refer to NewPrivKeySecp256k1
-func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKeyTextual, error) {
+func NewPrivKeySecp256k1Unsafe(path hd.BIP44Params) (types.LedgerPrivKeyAminoJSON, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (pkl PrivKeyLedgerSecp256k1) PubKey() types.PubKey {
 }
 
 // Sign returns a secp256k1 signature for the corresponding message using
-// SIGN_MODE_LEGACY_AMINO_JSON.
+// SIGN_MODE_TEXTUAL.
 func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	device, err := getDevice()
 	if err != nil {
@@ -143,19 +143,19 @@ func (pkl PrivKeyLedgerSecp256k1) Sign(message []byte) ([]byte, error) {
 	}
 	defer warnIfErrors(device.Close)
 
-	return sign(device, pkl, message, 0)
+	return sign(device, pkl, message, 1)
 }
 
-// SignLedgerTextual returns a secp256k1 signature for the corresponding message using
-// SIGN_MODE_TEXTUAL.
-func (pkl PrivKeyLedgerSecp256k1) SignLedgerTextual(message []byte) ([]byte, error) {
+// SignLedgerAminoJSON returns a secp256k1 signature for the corresponding message using
+// SIGN_MODE_LEGACY_AMINO_JSON.
+func (pkl PrivKeyLedgerSecp256k1) SignLedgerAminoJSON(message []byte) ([]byte, error) {
 	device, err := getDevice()
 	if err != nil {
 		return nil, err
 	}
 	defer warnIfErrors(device.Close)
 
-	return sign(device, pkl, message, 1)
+	return sign(device, pkl, message, 0)
 }
 
 // ShowAddress triggers a ledger device to show the corresponding address.
@@ -276,6 +276,8 @@ func validateKey(device SECP256K1, pkl PrivKeyLedgerSecp256k1) error {
 // Communication is checked on NewPrivKeyLedger and PrivKeyFromBytes, returning
 // an error, so this should only trigger if the private key is held in memory
 // for a while before use.
+//
+// Last byte P2 is 0 for LEGACY_AMINO_JSON, and 1 for TEXTUAL.
 func sign(device SECP256K1, pkl PrivKeyLedgerSecp256k1, msg []byte, p2 byte) ([]byte, error) {
 	err := validateKey(device, pkl)
 	if err != nil {

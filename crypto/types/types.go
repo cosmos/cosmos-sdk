@@ -29,13 +29,15 @@ type LedgerPrivKey interface {
 	Type() string
 }
 
-// LedgerPrivKeyTextual is a Ledger PrivKey type that supports signing with
-// SIGN_MODE_TEXTUAL. It is added as a non-breaking change, instead of directly
-// on the LedgerPrivKey interface.
-type LedgerPrivKeyTextual interface {
+// LedgerPrivKeyAminoJSON is a Ledger PrivKey type that supports signing with
+// SIGN_MODE_LEGACY_AMINO_JSON. It is added as a non-breaking change, instead of directly
+// on the LedgerPrivKey interface (whose Sign method will sign with TEXTUAL),
+// and will be deprecated/removed once LEGACY_AMINO_JSON is removed.
+type LedgerPrivKeyAminoJSON interface {
 	LedgerPrivKey
-	// SignLedgerTextual signs a messages on the Ledger device using Textual.
-	SignLedgerTextual(msg []byte) ([]byte, error)
+	// SignLedgerAminoJSON signs a messages on the Ledger device using
+	// SIGN_MODE_LEGACY_AMINO_JSON.
+	SignLedgerAminoJSON(msg []byte) ([]byte, error)
 }
 
 // PrivKey defines a private key and extends proto.Message. For now, it extends

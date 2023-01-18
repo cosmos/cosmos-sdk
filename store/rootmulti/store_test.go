@@ -271,6 +271,12 @@ func TestMultistoreLoadWithUpgrade(t *testing.T) {
 	require.Equal(t, migratedID.Version, int64(2))
 
 	reload, _ := newMultiStoreWithModifiedMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	// unmount store3 since store3 was deleted
+	unmountStore(reload, "store3")
+
+	rs3, _ := reload.GetStoreByName("store3").(types.KVStore)
+	require.Nil(t, rs3)
+
 	err = reload.LoadLatestVersion()
 	require.Nil(t, err)
 	require.Equal(t, migratedID, reload.LastCommitID())
@@ -888,6 +894,13 @@ func newMultiStoreWithModifiedMounts(db dbm.DB, pruningOpts pruningtypes.Pruning
 	}
 
 	return store, upgrades
+}
+
+func unmountStore(rootStore *Store, storeKeyName string) {
+	sk := rootStore.keysByName[storeKeyName]
+	delete(rootStore.stores, sk)
+	delete(rootStore.storesParams, sk)
+	delete(rootStore.keysByName, storeKeyName)
 }
 
 func checkStore(t *testing.T, store *Store, expect, got types.CommitID) {

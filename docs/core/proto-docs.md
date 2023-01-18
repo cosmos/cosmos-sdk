@@ -282,6 +282,8 @@
     - [QueryFoundationTaxResponse](#cosmos.distribution.v1beta1.QueryFoundationTaxResponse)
     - [QueryParamsRequest](#cosmos.distribution.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#cosmos.distribution.v1beta1.QueryParamsResponse)
+    - [QueryRestakeEntriesRequest](#cosmos.distribution.v1beta1.QueryRestakeEntriesRequest)
+    - [QueryRestakeEntriesResponse](#cosmos.distribution.v1beta1.QueryRestakeEntriesResponse)
     - [QueryRestakeThresholdRequest](#cosmos.distribution.v1beta1.QueryRestakeThresholdRequest)
     - [QueryRestakeThresholdResponse](#cosmos.distribution.v1beta1.QueryRestakeThresholdResponse)
     - [QueryValidatorCommissionRequest](#cosmos.distribution.v1beta1.QueryValidatorCommissionRequest)
@@ -3846,6 +3848,7 @@ Params defines the set of params for the distribution module.
 | `secret_foundation_tax` | [string](#string) |  |  |
 | `secret_foundation_address` | [string](#string) |  |  |
 | `minimum_restake_threshold` | [string](#string) |  |  |
+| `restake_period` | [string](#string) |  |  |
 
 
 
@@ -4349,6 +4352,36 @@ QueryParamsResponse is the response type for the Query/Params RPC method.
 
 
 
+<a name="cosmos.distribution.v1beta1.QueryRestakeEntriesRequest"></a>
+
+### QueryRestakeEntriesRequest
+QueryRestakeThresholdRequest is the request type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="cosmos.distribution.v1beta1.QueryRestakeEntriesResponse"></a>
+
+### QueryRestakeEntriesResponse
+QueryRestakeThresholdResponse is the request type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `validators` | [string](#string) | repeated | threshold = minimum amount in uscrt that you need to have delegated to enable restaking |
+
+
+
+
+
+
 <a name="cosmos.distribution.v1beta1.QueryRestakeThresholdRequest"></a>
 
 ### QueryRestakeThresholdRequest
@@ -4498,6 +4531,7 @@ Query defines the gRPC querier service for distribution module.
 | `CommunityPool` | [QueryCommunityPoolRequest](#cosmos.distribution.v1beta1.QueryCommunityPoolRequest) | [QueryCommunityPoolResponse](#cosmos.distribution.v1beta1.QueryCommunityPoolResponse) | CommunityPool queries the community pool coins. | GET|/cosmos/distribution/v1beta1/community_pool|
 | `FoundationTax` | [QueryFoundationTaxRequest](#cosmos.distribution.v1beta1.QueryFoundationTaxRequest) | [QueryFoundationTaxResponse](#cosmos.distribution.v1beta1.QueryFoundationTaxResponse) | DelegatorWithdrawAddress queries withdraw address of a delegator. | GET|/cosmos/distribution/v1beta1/foundation_tax|
 | `RestakeThreshold` | [QueryRestakeThresholdRequest](#cosmos.distribution.v1beta1.QueryRestakeThresholdRequest) | [QueryRestakeThresholdResponse](#cosmos.distribution.v1beta1.QueryRestakeThresholdResponse) | RestakeThreshold queries the community pool coins. | GET|/cosmos/distribution/v1beta1/restake_threshold|
+| `RestakingEntries` | [QueryRestakeEntriesRequest](#cosmos.distribution.v1beta1.QueryRestakeEntriesRequest) | [QueryRestakeEntriesResponse](#cosmos.distribution.v1beta1.QueryRestakeEntriesResponse) | RestakeThreshold queries the community pool coins. | GET|/cosmos/distribution/v1beta1/restake_entries|
 
  <!-- end services -->
 

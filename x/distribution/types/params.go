@@ -18,6 +18,7 @@ var (
 	ParamSecretFoundationTax         = []byte("secretfoundationtax")
 	ParamSecretFoundationAddress     = []byte("secretfoundationaddress")
 	ParamMinimumRestakeThreshold     = []byte("minimumrestakethreshold")
+	ParamRestakePeriod               = []byte("restakeperiod")
 )
 
 // ParamKeyTable returns the parameter key table.
@@ -35,6 +36,7 @@ func DefaultParams() Params {
 		BonusProposerReward:     sdk.NewDecWithPrec(4, 2), // 4%
 		WithdrawAddrEnabled:     true,
 		MinimumRestakeThreshold: sdk.NewDec(10_000_000),
+		RestakePeriod:           sdk.NewInt(1000),
 	}
 }
 
@@ -53,6 +55,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(ParamSecretFoundationTax, &p.SecretFoundationTax, validateSecretFoundationTax),
 		paramtypes.NewParamSetPair(ParamSecretFoundationAddress, &p.SecretFoundationAddress, validateSecretFoundationAddress),
 		paramtypes.NewParamSetPair(ParamMinimumRestakeThreshold, &p.MinimumRestakeThreshold, validateMinimumRestakeThreshold),
+		paramtypes.NewParamSetPair(ParamRestakePeriod, &p.RestakePeriod, validateRestakePeriod),
 	}
 }
 
@@ -201,6 +204,25 @@ func validateMinimumRestakeThreshold(i interface{}) error {
 	}
 	if v.IsNegative() {
 		return fmt.Errorf("minimum restake threshold must be positive: %s", v)
+	}
+
+	return nil
+}
+
+func validateRestakePeriod(i interface{}) error {
+	v, ok := i.(sdk.Int)
+	if !ok {
+		return fmt.Errorf("invalid minimum period parameter type: %T", i)
+	}
+
+	if v.IsNil() {
+		return fmt.Errorf("minimum period must be not nil")
+	}
+	if v.IsNegative() {
+		return fmt.Errorf("minimum period must be positive: %s", v)
+	}
+	if v.LT(sdk.NewInt(1000)) {
+		return fmt.Errorf("minimum period must be greater than 1000 blocks")
 	}
 
 	return nil

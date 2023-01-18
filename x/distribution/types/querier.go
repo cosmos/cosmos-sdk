@@ -17,6 +17,8 @@ const (
 	QueryCommunityPool               = "community_pool"
 	QueryFoundationTax               = "foundation_tax"
 	QueryMinimumRestakeThreshold     = "restake_threshold"
+	QueryRestakeEntriesForDelegator  = "restake_entries"
+	QueryRestakePeriod               = "restake_period"
 )
 
 // params for query 'custom/distr/validator_outstanding_rewards'

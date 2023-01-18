@@ -44,8 +44,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		return err != nil
 	}
 
-	// for testing
-	if ctx.BlockHeight()%1000 == 0 {
+	if ctx.BlockHeight()%k.GetRestakePeriod(ctx).Int64() == 0 {
 		k.IterateRestakeEntries(ctx, restakeFunc)
 	}
 

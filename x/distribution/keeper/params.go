@@ -62,6 +62,6 @@ func (k Keeper) GetMinimumRestakeThreshold(ctx sdk.Context) (amount sdk.Dec) {
 
 // GetSecretFoundationTax returns the current secret foundation tax.
 func (k Keeper) GetRestakePeriod(ctx sdk.Context) (amount sdk.Int) {
-	k.paramSpace.Get(ctx, types.ParamMinimumRestakeThreshold, &amount)
+	k.paramSpace.Get(ctx, types.ParamRestakePeriod, &amount)
 	return amount
 }

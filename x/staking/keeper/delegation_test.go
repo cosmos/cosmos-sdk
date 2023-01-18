@@ -335,9 +335,10 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	ctx = ctx.WithBlockTime(blockTime2)
 
 	// unbond some of the other delegation's shares
-	_, amount2, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], math.LegacyNewDec(6))
+	undelegateAmount := math.LegacyNewDec(6)
+	_, undelegatedAmount, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], undelegateAmount)
 	require.NoError(err)
-	require.Equal(amount2, math.NewInt(6))
+	require.Equal(math.LegacyNewDecFromInt(undelegatedAmount), undelegateAmount)
 
 	// retrieve the unbonding delegation
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[1], addrVals[0])

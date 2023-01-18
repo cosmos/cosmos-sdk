@@ -98,9 +98,11 @@ func doUnbondingDelegation(
 	notBondedAmt1 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
 	var err error
-	completionTime, amount, err := stakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], sdk.NewDec(1))
+	undelegateAmount := sdk.NewDec(1)
+	completionTime, undelegatedAmount, err := stakingKeeper.Undelegate(ctx, addrDels[0], addrVals[0], undelegateAmount)
 	assert.NilError(t, err)
-	assert.Assert(math.IntEq(t, math.NewInt(1), amount))
+	// assert.Assert(math.Equal(t, undelegateAmount, math.LegacyNewDecFromInt(undelegatedAmount)))
+	assert.Assert(t, undelegateAmount.Equal(math.LegacyNewDecFromInt(undelegatedAmount)))
 	// check that the unbonding actually happened
 	bondedAmt2 := bankKeeper.GetBalance(ctx, stakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	notBondedAmt2 := bankKeeper.GetBalance(ctx, stakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount

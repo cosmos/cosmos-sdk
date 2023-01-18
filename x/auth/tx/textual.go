@@ -14,7 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// signModeTextualHandler defines the SIGN_MODE_TEXTUAL SignModeHandler
+// signModeTextualHandler defines the SIGN_MODE_TEXTUAL SignModeHandler.
+// It is currently not enabled by default, but you can enable it manually
+// for TESTING purposes. It will be enabled once SIGN_MODE_TEXTUAL is fully
+// released, see https://github.com/cosmos/cosmos-sdk/issues/11970.
 type signModeTextualHandler struct {
 	t textual.Textual
 }

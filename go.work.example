@@ -18,4 +18,5 @@ use (
 	./tools/confix
 	./x/nft
 	./x/circuit
+	./x/feegrant
 )

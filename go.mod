@@ -37,10 +37,15 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
+<<<<<<< HEAD
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/btcd v0.1.1
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
+=======
+	github.com/spf13/viper v1.14.0
+	github.com/stretchr/testify v1.8.1
+>>>>>>> 44fbb0df9 (refactor: reduce tendermint deps (#14616))
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.6

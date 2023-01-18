@@ -2,7 +2,6 @@ package confix
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"strings"
 
@@ -28,26 +27,17 @@ var (
 		// "v0.47.x": PlanBuilder, // add specific migration in case of configuration changes in minor versions
 		// "v0.48": PlanBuilder,
 	}
-
-	//go:embed data
-	data embed.FS
 )
 
 // PlanBuilder is a function that returns a transformation plan for a given diff between two files.
 func PlanBuilder(from *tomledit.Document, to string) transform.Plan {
 	plan := transform.Plan{}
+	deletedSections := map[string]bool{}
 
-	file, err := data.Open(fmt.Sprintf("data/%s-app.toml", to))
-	if err != nil {
-		panic(fmt.Errorf("failed to read file: %w. This file should have been included in confix", err))
-	}
-
-	target, err := tomledit.Parse(file)
+	target, err := LoadLocalConfig(to)
 	if err != nil {
 		panic(fmt.Errorf("failed to parse file: %w. This file should have been valid", err))
 	}
-
-	deletedSections := map[string]bool{}
 
 	diffs := DiffKeys(from, target)
 	for _, diff := range diffs {

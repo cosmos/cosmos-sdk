@@ -1476,6 +1476,8 @@ paths:
       parameters:
         - name: id
           description: |-
+            Deprecated, use account_id instead
+
             id is the account number of the address to be queried. This field
             should have been an uint64 (like all account numbers), and will be
             updated to uint64 in a future version of the auth query.
@@ -1483,6 +1485,15 @@ paths:
           required: true
           type: string
           format: int64
+        - name: account_id
+          description: |-
+            account_id is the account number of the address to be queried.
+
+            Since: cosmos-sdk 0.47
+          in: query
+          required: false
+          type: string
+          format: uint64
       tags:
         - Query
   /cosmos/auth/v1beta1/bech32:
@@ -8941,7 +8952,7 @@ paths:
   /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards:
     get:
       summary: |-
-        DelegationTotalRewards queries the total rewards accrued by each
+        DelegationTotalRewards queries the total rewards accrued by a each
         validator.
       operationId: DelegationTotalRewards
       responses:
@@ -52932,9 +52943,7 @@ definitions:
       verified with raw bytes from Tx.
        - SIGN_MODE_TEXTUAL: SIGN_MODE_TEXTUAL is a future signing mode that will verify some
       human-readable textual representation on top of the binary representation
-      from SIGN_MODE_DIRECT. It is currently experimental, and should be used
-      for testing purposes only, until Textual is fully released. Please follow
-      the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
+      from SIGN_MODE_DIRECT. It is currently not supported.
        - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
       SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
       require signers signing over other signers' `signer_info`. It also allows
@@ -54774,14 +54783,7 @@ definitions:
               human-readable textual representation on top of the binary
               representation
 
-              from SIGN_MODE_DIRECT. It is currently experimental, and should be
-              used
-
-              for testing purposes only, until Textual is fully released. Please
-              follow
-
-              the tracking issue
-              https://github.com/cosmos/cosmos-sdk/issues/11970.
+              from SIGN_MODE_DIRECT. It is currently not supported.
                - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
               SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode
               does not
@@ -54885,13 +54887,7 @@ definitions:
           human-readable textual representation on top of the binary
           representation
 
-          from SIGN_MODE_DIRECT. It is currently experimental, and should be
-          used
-
-          for testing purposes only, until Textual is fully released. Please
-          follow
-
-          the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
+          from SIGN_MODE_DIRECT. It is currently not supported.
            - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
           SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does
           not

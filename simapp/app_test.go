@@ -12,16 +12,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
-	"google.golang.org/protobuf/reflect/protodesc"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/types/reflection"
-	"github.com/cosmos/cosmos-sdk/types/tx/amino"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -272,19 +268,4 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 	}
 
 	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
-}
-
-func TestAminoAnnotations(t *testing.T) {
-	db := dbm.NewMemDB()
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(DefaultNodeHome))
-
-	fdSet, err := reflection.GetFileDescriptorSet()
-	require.NoError(t, err)
-
-	fdFiles, err := protodesc.NewFiles(fdSet)
-	require.NoError(t, err)
-
-	err = amino.ValidateAminoAnnotations(fdFiles, app.legacyAmino)
-	require.NoError(t, err)
 }

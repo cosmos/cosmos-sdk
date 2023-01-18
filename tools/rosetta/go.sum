@@ -123,8 +123,8 @@ github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
 github.com/cosmos/iavl v0.19.4 h1:t82sN+Y0WeqxDLJRSpNd8YFX5URIrT+p8n6oJbJ2Dok=
 github.com/cosmos/iavl v0.19.4/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=
-github.com/cosmos/ledger-cosmos-go v0.13.0/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
+github.com/cosmos/ledger-cosmos-go v0.12.1 h1:sMBxza5p/rNK/06nBSNmsI/WDqI0pVJFVNihy1Y984w=
+github.com/cosmos/ledger-cosmos-go v0.12.1/go.mod h1:dhO6kj+Y+AHIOgAe4L9HL/6NDdyyth4q238I9yFpD2g=
 github.com/cosmos/rosetta-sdk-go v0.10.0 h1:E5RhTruuoA7KTIXUcMicL76cffyeoyvNybzUGSKFTcM=
 github.com/cosmos/rosetta-sdk-go v0.10.0/go.mod h1:SImAZkb96YbwvoRkzSMQB6noNJXFgWl/ENIznEoYQI4=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
@@ -503,8 +503,8 @@ github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/zondax/hid v0.9.1 h1:gQe66rtmyZ8VeGFcOpbuH3r7erYtNEAezCAYu8LdkJo=
 github.com/zondax/hid v0.9.1/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
-github.com/zondax/ledger-go v0.14.1 h1:Pip65OOl4iJ84WTpA4BKChvOufMhhbxED3BaihoZN4c=
-github.com/zondax/ledger-go v0.14.1/go.mod h1:fZ3Dqg6qcdXWSOJFKMG8GCTnD7slO/RL2feOQv8K320=
+github.com/zondax/ledger-go v0.14.0 h1:dlMC7aO8Wss1CxBq2I96kZ69Nh1ligzbs8UWOtq/AsA=
+github.com/zondax/ledger-go v0.14.0/go.mod h1:fZ3Dqg6qcdXWSOJFKMG8GCTnD7slO/RL2feOQv8K320=
 go.etcd.io/bbolt v1.3.6 h1:/ecaJf0sk1l4l6V4awd65v2C3ILy7MSj+s/x1ADCIMU=
 go.etcd.io/bbolt v1.3.6/go.mod h1:qXsaaIqmgQH0T+OPdb99Bf+PKfBBQVAdyD6TY9G8XM4=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
@@ -823,8 +823,8 @@ google.golang.org/genproto v0.0.0-20201210142538-e3217bee35cc/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210108203827-ffc7fda8c3d7/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
 google.golang.org/genproto v0.0.0-20210226172003-ab064af71705/go.mod h1:FWY/as6DDZQgahTzZj3fqbO1CbirC29ZNUFHwi0/+no=
-google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 h1:wJT65XLOzhpSPCdAmmKfz94SlmnQzDzjm3Cj9k3fsXY=
-google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5/go.mod h1:RGgjbofJ8xD9Sq1VVhDM1Vok1vRONV+rg+CjzG4SZKM=
+google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9 h1:ru6tJGasqJpgjM4q3Qq2fS3FKQ6CPPSRqgolUVBc994=
+google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9/go.mod h1:RGgjbofJ8xD9Sq1VVhDM1Vok1vRONV+rg+CjzG4SZKM=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.1/go.mod h1:10oTOabMzJvdu6/UiuZezV6QK5dSlG84ov/aaiqXj38=
 google.golang.org/grpc v1.21.1/go.mod h1:oYelfM1adQP15Ek0mdvEgi9Df8B9CZIaU1084ijfRaM=

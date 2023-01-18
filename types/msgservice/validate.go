@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msg "cosmossdk.io/api/cosmos/msg/v1"
+	"cosmossdk.io/errors"
 )
 
 // ValidateServiceAnnotations validates that all Msg services have the
@@ -22,7 +23,7 @@ func ValidateServiceAnnotations(fileResolver protodesc.Resolver, serviceName str
 
 	sd, err := fileResolver.FindDescriptorByName(protoreflect.FullName(serviceName))
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error while validating service annotations for %s", serviceName)
 	}
 
 	ext := proto.GetExtension(sd.Options(), msg.E_Service)
@@ -49,7 +50,7 @@ func ValidateMsgAnnotations(fileResolver protodesc.Resolver, fqName string) erro
 
 	d, err := fileResolver.FindDescriptorByName(protoreflect.FullName(fqName))
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error while validating msg annotations for %s", fqName)
 	}
 	md := d.(protoreflect.MessageDescriptor)
 

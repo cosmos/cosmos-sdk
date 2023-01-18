@@ -14,8 +14,31 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
+var fdFiles *protoregistry.Files
+
+// GetProtodescResolver returns the protodesc.Resolver that is combined by
+// merging gogo's file descriptor set and protoregistry's one.
+func GetProtodescResolver() protodesc.Resolver {
+	// See if there's a cache already
+	if fdFiles != nil {
+		return fdFiles
+	}
+
+	fdSet, err := GetFileDescriptorSet()
+	if err != nil {
+		panic(err)
+	}
+	fdFiles, err = protodesc.NewFiles(fdSet)
+	if err != nil {
+		panic(err)
+	}
+
+	return fdFiles
+}
+
 // GetFileDescriptorSet returns the global file descriptor set by merging
 // the one from gogoproto global registry and from protoregistry.GlobalFiles.
+// If there's a name conflict, gogo's descriptor is chosen
 func GetFileDescriptorSet() (*descriptorpb.FileDescriptorSet, error) {
 	fds := &descriptorpb.FileDescriptorSet{}
 

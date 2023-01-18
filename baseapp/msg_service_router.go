@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server/grpc/gogoreflection"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -51,11 +52,12 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+	protoFiles := gogoreflection.GetProtodescResolver()
 	// Make sure the Msg services has the `cosmos.msg.service` proto annotation.
-	err := msgservice.ValidateServiceAnnotations(fdFiles, sd.ServiceName)
+	err := msgservice.ValidateServiceAnnotations(protoFiles, sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of simply logging.
-		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)
+		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %s\n", err)
 	}
 
 	// Adds a top-level query handler based on the gRPC service name.
@@ -78,10 +80,10 @@ func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler inter
 			}
 
 			// Make sure Msg annotations are correct, like the `cosmos.msg.signer` one.
-			err := msgservice.ValidateMsgAnnotations(fdFiles, proto.MessageName(msg))
+			err := msgservice.ValidateMsgAnnotations(protoFiles, proto.MessageName(msg))
 			if err != nil {
 				// We might panic here in the future, instead of logging.
-				fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %+v\n", err)
+				fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %s\n", err)
 			}
 
 			requestTypeName = sdk.MsgTypeURL(msg)

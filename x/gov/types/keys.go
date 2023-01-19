@@ -62,7 +62,7 @@ func GetProposalIDFromBytes(bz []byte) (proposalID uint64) {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// ProposalKey gets a specific proposal from the store
+// ProposalKey returns a store prefix for a proposal with proposalId.
 func ProposalKey(proposalID uint64) []byte {
 	return append(ProposalsKeyPrefix, GetProposalIDBytes(proposalID)...)
 }

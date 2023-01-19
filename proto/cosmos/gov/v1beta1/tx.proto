@@ -40,7 +40,8 @@ message MsgSubmitProposal {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.moretags)     = "yaml:\"initial_deposit\""
   ];
-  string proposer = 3;
+  string proposer     = 3;
+  bool   is_expedited = 4;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

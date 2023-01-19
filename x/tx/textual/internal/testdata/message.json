@@ -58,7 +58,7 @@
         },
         "screens": [
             {"content": "Foo object"},
-            {"content": "Nickname: empty children", "indent": 1},
+            {"title": "Nickname", "content": "empty children", "indent": 1},
             {"title": "Left", "content": "Foo object", "indent": 1},
             {"title": "Right", "content": "Foo object", "indent": 1},
             {"title": "Bar", "content": "Bar object", "indent": 1}

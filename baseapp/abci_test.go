@@ -190,7 +190,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 		Path: "/testdata.Query/SayHello",
 	})
 	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
-	require.Contains(t, resQuery.Log, "the app has no block yet. please wait...")
+	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
 
 	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
 	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})

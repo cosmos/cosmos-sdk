@@ -11,7 +11,7 @@ import (
 )
 
 func TestValidateServiceAnnotations(t *testing.T) {
-	// We didn't add the `msg.service = true` annotation on testdata.
+	// We didn't add the `msg.service = true` annotation on testdata's Msg.
 	err := msgservice.ValidateServiceAnnotations(nil, "testdata.Msg")
 	require.Error(t, err)
 

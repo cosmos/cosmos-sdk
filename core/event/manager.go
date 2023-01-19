@@ -17,11 +17,11 @@ type Service interface {
 
 // Manager represents an event manager.
 type Manager interface {
-	// EmitProto emits events represented as a protobuf message (as described in ADR 032).
-	EmitProto(event protoiface.MessageV1) error
+	// EmitProtoEvent emits events represented as a protobuf message (as described in ADR 032).
+	EmitProtoEvent(event protoiface.MessageV1) error
 
-	// EmitKV emits an event based on an event and kv-pair attributes.
-	EmitKV(eventType string, attrs ...KVEventAttribute) error
+	// EmitKVEvent emits an event based on an event and kv-pair attributes.
+	EmitKVEvent(eventType string, attrs ...KVEventAttribute) error
 }
 
 // KVEventAttribute is a kv-pair event attribute.

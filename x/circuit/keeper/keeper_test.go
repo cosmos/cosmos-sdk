@@ -1,25 +1,20 @@
 package keeper_test
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
 	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 )
 
-// Define a test suite for the circuit breaker keeper.
-type KeeperTestSuite struct {
-	suite.Suite
+type fixture struct {
 	cdc          codec.Codec
 	ctx          sdk.Context
 	keeper       keeper.Keeper
@@ -29,71 +24,54 @@ type KeeperTestSuite struct {
 	mockStoreKey storetypes.StoreKey
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	// Define a mock store key.
+func initFixture(t *testing.T) *fixture {
 	mockStoreKey := sdk.NewKVStoreKey("test")
-
-	// Define a mock authority address.
 	mockAddr := sdk.AccAddress([]byte("mock_address"))
-
-	// Define a mock set of permissions.
+	keeperX := keeper.NewKeeper(mockStoreKey, string(mockAddr))
+	mockMsgURL := "mock_url"
+	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, sdk.NewTransientStoreKey("transient_test"))
+	ctx := mockCtx.Ctx.WithBlockHeader(tmproto.Header{})
 	mockPerms := types.Permissions{
 		Level: 3,
 	}
 
-	// Define a mock context.
-	mockCtx := testutil.DefaultContextWithDB(suite.T(), mockStoreKey, sdk.NewTransientStoreKey("transient_test"))
-
-	ctx := mockCtx.Ctx.WithBlockHeader(tmproto.Header{})
-
-	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
-	//Define codec
-
-	// Define a mock message URL.
-	mockMsgURL := "mock_url"
-
-	// Create a new keeper instance.
-	keeper := keeper.NewKeeper(encCfg.Codec, mockStoreKey, mockAddr.String())
-
-	// Set the test suite variables.
-	suite.ctx = ctx
-	suite.cdc = encCfg.Codec
-	suite.keeper = keeper
-	suite.mockAddr = mockAddr
-	suite.mockPerms = mockPerms
-	suite.mockMsgURL = mockMsgURL
-	suite.mockStoreKey = mockStoreKey
+	return &fixture{
+		ctx:          ctx,
+		keeper:       keeperX,
+		mockAddr:     mockAddr,
+		mockPerms:    mockPerms,
+		mockMsgURL:   mockMsgURL,
+		mockStoreKey: mockStoreKey,
+	}
 }
 
-func (suite *KeeperTestSuite) TestGetAuthority() {
-	require.Equal(suite.T(), suite.mockAddr.String(), suite.keeper.GetAuthority())
+func TestGetAuthority(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
+	authority := f.keeper.GetAuthority()
+	assert.Equal(t, f.mockAddr, authority)
 }
 
-func (suite *KeeperTestSuite) TestGetPermissions() {
+// require.Equal(suite.T(), suite.mockAddr.String(), suite.keeper.GetAuthority())
+func TestGetAndSetPermissions(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 	// Set the permissions for the mock address.
-	suite.keeper.SetPermissions(suite.ctx, []byte(suite.mockAddr), &suite.mockPerms)
 
-	// Retrieve the permissions for the mock address.
-	perms, err := suite.keeper.GetPermissions(suite.ctx, suite.mockAddr)
-	require.NoError(suite.T(), err)
+	err := f.keeper.SetPermissions(f.ctx, f.mockAddr, &f.mockPerms)
 
-	// Assert that the retrieved permissions match the expected value.
-	require.Equal(suite.T(), suite.mockPerms, perms)
+	//// Retrieve the permissions for the mock address.
+	perms, err := f.keeper.GetPermissions(f.ctx, f.mockAddr)
+	require.NoError(t, err)
+
+	//// Assert that the retrieved permissions match the expected value.
+	require.Equal(t, &f.mockPerms, perms)
+
 }
 
-func (suite *KeeperTestSuite) TestSetPermissions() {
-	// Set the permissions for the mock address.
-	suite.keeper.SetPermissions(suite.ctx, []byte(suite.mockAddr), &suite.mockPerms)
-
-	// Retrieve the permissions for the mock address.
-	perms, err := suite.keeper.GetPermissions(suite.ctx, suite.mockAddr)
-	require.NoError(suite.T(), err)
-
-	// Assert that the retrieved permissions match the expected value.
-	require.Equal(suite.T(), suite.mockPerms, perms)
-}
-
-func (suite *KeeperTestSuite) TestIteratePermissions() {
+func TestIteratePermissions(t *testing.T) {
+	t.Parallel()
+	f := initFixture(t)
 	// Define a set of mock permissions
 	mockPerms := []types.Permissions{
 		{Level: types.Permissions_LEVEL_SOME_MSGS, LimitTypeUrls: []string{"url1", "url2"}},
@@ -108,22 +86,18 @@ func (suite *KeeperTestSuite) TestIteratePermissions() {
 		sdk.AccAddress("mock_address_3"),
 	}
 	for i, addr := range mockAddrs {
-		suite.keeper.SetPermissions(suite.ctx, addr, &mockPerms[i])
+		f.keeper.SetPermissions(f.ctx, addr, &mockPerms[i])
 	}
 
 	// Define a variable to store the returned permissions
 	var returnedPerms []types.Permissions
 
 	// Iterate through the permissions and append them to the returnedPerms slice
-	suite.keeper.IteratePermissions(suite.ctx, func(address []byte, perms types.Permissions) (stop bool) {
+	f.keeper.IteratePermissions(f.ctx, func(address []byte, perms types.Permissions) (stop bool) {
 		returnedPerms = append(returnedPerms, perms)
 		return false
 	})
 
 	// Assert that the returned permissions match the set mock permissions
-	require.Equal(suite.T(), mockPerms, returnedPerms)
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+	require.Equal(t, mockPerms, returnedPerms)
 }

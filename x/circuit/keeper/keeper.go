@@ -27,14 +27,15 @@ func (k *Keeper) GetAuthority() string /* string */ {
 	return k.authority
 }
 
-func (k *Keeper) GetPermissions(ctx sdk.Context, address string) (types.Permissions, error) {
+func (k *Keeper) GetPermissions(ctx sdk.Context, address []byte) (*types.Permissions, error) {
 	store := ctx.KVStore(k.key)
 
-	bz := store.Get([]byte(address))
+	key := types.CreateAddressPrefix(address)
+	bz := store.Get(key)
 
-	perms := types.Permissions{}
-	if err := proto.Unmarshal(bz, &perms); err != nil {
-		return types.Permissions{}, err
+	perms := &types.Permissions{}
+	if err := proto.Unmarshal(bz, perms); err != nil {
+		return &types.Permissions{}, err
 	}
 
 	return perms, nil
@@ -49,7 +50,6 @@ func (k *Keeper) SetPermissions(ctx sdk.Context, address []byte, perms *types.Pe
 	}
 
 	key := types.CreateAddressPrefix(address)
-
 	store.Set(key, bz)
 
 	return nil

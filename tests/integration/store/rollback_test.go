@@ -4,26 +4,63 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/simapp"
 	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
+
+func createApp(t *testing.T, db dbm.DB) runtime.App {
+	config := simtestutil.DefaultStartUpConfig()
+	config.DB = db
+	config.AtGenesis = true
+
+	app, err := simtestutil.SetupWithConfiguration(
+		configurator.NewAppConfig(
+			configurator.AuthModule(),
+			configurator.BankModule(),
+			configurator.StakingModule(),
+			configurator.TxModule(),
+			configurator.ConsensusModule(),
+			configurator.ParamsModule(),
+		),
+		config,
+	)
+	assert.NilError(t, err)
+
+	return *app
+}
+
+func getBankKey(app runtime.App) types.StoreKey {
+	var storeKey types.StoreKey
+	for _, key := range app.GetStoreKeys() {
+		if key.Name() == "bank" {
+			storeKey = key
+			break
+		}
+	}
+	return storeKey
+}
 
 func TestRollback(t *testing.T) {
 	db := dbm.NewMemDB()
-	options := simapp.SetupOptions{
-		Logger:  log.NewNopLogger(),
-		DB:      db,
-		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
-	}
-	app := simapp.NewSimappWithCustomOptions(t, false, options)
-	app.Commit()
+	app := createApp(t, db)
 	ver0 := app.LastBlockHeight()
+
+	storeKey := getBankKey(app)
+
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {
 		header := tmproto.Header{
@@ -32,13 +69,13 @@ func TestRollback(t *testing.T) {
 		}
 		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 		ctx := app.NewContext(false, header)
-		store := ctx.KVStore(app.GetKey("bank"))
+		store := ctx.KVStore(storeKey)
 		store.Set([]byte("key"), []byte(fmt.Sprintf("value%d", i)))
 		app.Commit()
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
-	store := app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
+	store := app.NewContext(true, tmproto.Header{}).KVStore(storeKey)
 	assert.DeepEqual(t, []byte("value10"), store.Get([]byte("key")))
 
 	// rollback 5 blocks
@@ -47,8 +84,10 @@ func TestRollback(t *testing.T) {
 	assert.Equal(t, target, app.LastBlockHeight())
 
 	// recreate app to have clean check state
-	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
+	app = createApp(t, db)
+	storeKey = getBankKey(app)
+
+	store = app.NewContext(true, tmproto.Header{}).KVStore(storeKey)
 	assert.DeepEqual(t, []byte("value5"), store.Get([]byte("key")))
 
 	// commit another 5 blocks with different values
@@ -59,12 +98,12 @@ func TestRollback(t *testing.T) {
 		}
 		app.BeginBlock(abci.RequestBeginBlock{Header: header})
 		ctx := app.NewContext(false, header)
-		store := ctx.KVStore(app.GetKey("bank"))
+		store := ctx.KVStore(storeKey)
 		store.Set([]byte("key"), []byte(fmt.Sprintf("VALUE%d", i)))
 		app.Commit()
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
-	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
+	store = app.NewContext(true, tmproto.Header{}).KVStore(storeKey)
 	assert.DeepEqual(t, []byte("VALUE10"), store.Get([]byte("key")))
 }

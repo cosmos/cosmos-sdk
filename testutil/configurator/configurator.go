@@ -7,6 +7,7 @@ import (
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
+	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
@@ -207,6 +208,15 @@ func ConsensusModule() ModuleOption {
 		config.moduleConfigs["consensus"] = &appv1alpha1.ModuleConfig{
 			Name:   "consensus",
 			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+		}
+	}
+}
+
+func EvidenceModule() ModuleOption {
+	return func(config *appConfig) {
+		config.moduleConfigs["evidence"] = &appv1alpha1.ModuleConfig{
+			Name:   "evidence",
+			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
 		}
 	}
 }

@@ -2,9 +2,16 @@ package collections
 
 import "context"
 
+func NewIndexReference[ReferencingKey, ReferencedKey any](referencing ReferencingKey, referenced ReferencedKey) IndexReference[ReferencingKey, ReferencedKey] {
+	return IndexReference[ReferencingKey, ReferencedKey]{
+		Referring: referencing,
+		Referred:  referenced,
+	}
+}
+
 // IndexReference defines a generic index reference.
 type IndexReference[ReferencingKey, ReferencedKey any] struct {
-	// Referring is the key that refers points to the Referred key.
+	// Referring is the key that refers, points to the Referred key.
 	Referring ReferencingKey
 	// Referred is the key that is being pointed to by the Referring key.
 	Referred ReferencedKey
@@ -53,12 +60,22 @@ func NewGenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value any](
 	}
 }
 
-// Iterate allows to iterate over the index.
+// Iterate allows to iterate over the index. It returns a KeySetIterator of Pair[ReferencingKey, ReferencedKey].
+// K1 of the Pair is the key (referencing) pointing to K2 (referenced).
 func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Iterate(
 	ctx context.Context,
 	ranger Ranger[Pair[ReferencingKey, ReferencedKey]],
 ) (KeySetIterator[Pair[ReferencingKey, ReferencedKey]], error) {
 	return i.refs.Iterate(ctx, ranger)
+}
+
+// Has reports is there is a relationship in the index between the referencing and the referenced key.
+func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Has(
+	ctx context.Context,
+	referencing ReferencingKey,
+	referenced ReferencedKey,
+) (bool, error) {
+	return i.refs.Has(ctx, Join(referencing, referenced))
 }
 
 // Reference implements the Index interface.
@@ -69,7 +86,7 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Re
 	oldValue *Value,
 ) error {
 	if oldValue != nil {
-		err := i.Unreference(ctx, pk, value)
+		err := i.Unreference(ctx, pk, *oldValue)
 		if err != nil {
 			return err
 		}

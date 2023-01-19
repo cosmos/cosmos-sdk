@@ -16,7 +16,7 @@ import (
 
 var fdFiles *protoregistry.Files
 
-// GetProtodescResolver returns the protodesc.Resolver that is combined by
+// GetProtodescResolver returns a protodesc.Resolver that is combined by
 // merging gogo's file descriptor set and protoregistry's one.
 func GetProtodescResolver() protodesc.Resolver {
 	// See if there's a cache already
@@ -38,7 +38,7 @@ func GetProtodescResolver() protodesc.Resolver {
 
 // GetFileDescriptorSet returns the global file descriptor set by merging
 // the one from gogoproto global registry and from protoregistry.GlobalFiles.
-// If there's a name conflict, gogo's descriptor is chosen
+// If there's a name conflict, gogo's descriptor is chosen.
 func GetFileDescriptorSet() (*descriptorpb.FileDescriptorSet, error) {
 	fds := &descriptorpb.FileDescriptorSet{}
 

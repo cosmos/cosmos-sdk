@@ -1,31 +1,33 @@
 package remote
 
 import (
-	"encoding/json"
+	"bytes"
+	"fmt"
 	"os"
 	"path"
 
+	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 )
 
 type Config struct {
-	Chains map[string]*ChainConfig `json:"chains"`
+	Chains map[string]*ChainConfig `toml:"chains"`
 }
 
 type ChainConfig struct {
-	TrustedGRPCEndpoints []GRPCEndpoint `json:"trusted_grpc_endpoints"`
+	GRPCEndpoints []GRPCEndpoint `toml:"trusted-grpc-endpoints"`
 }
 
 type GRPCEndpoint struct {
-	Endpoint string `json:"endpoint"`
-	Insecure bool   `json:"insecure"`
+	Endpoint string `toml:"endpoint"`
+	Insecure bool   `toml:"insecure"`
 }
 
 func LoadConfig(configDir string) (*Config, error) {
-	configPath := path.Join(configDir, "config.json")
-	if _, err := os.Stat(configPath); err != nil {
+	configPath := configFilename(configDir)
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		// file doesn't exist
-		return &Config{}, nil
+		return &Config{Chains: map[string]*ChainConfig{}}, nil
 	}
 
 	bz, err := os.ReadFile(configPath)
@@ -34,10 +36,38 @@ func LoadConfig(configDir string) (*Config, error) {
 	}
 
 	config := &Config{}
-	err = json.Unmarshal(bz, config)
+	err = toml.Unmarshal(bz, config)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can't load config file: %s", configPath)
 	}
 
 	return config, err
+}
+
+func SaveConfig(configDir string, config *Config) error {
+	configPath := configFilename(configDir)
+	buf := &bytes.Buffer{}
+	enc := toml.NewEncoder(buf)
+	err := enc.Encode(config)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(configDir, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(configPath, buf.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Saved config in %s\n", configPath)
+
+	return nil
+}
+
+func configFilename(configDir string) string {
+	return path.Join(configDir, "config.toml")
 }

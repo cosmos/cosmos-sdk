@@ -39,18 +39,26 @@ func GetChainRegistryEntry(chain string) (*ChainRegistryEntry, error) {
 		return nil, err
 	}
 
+	fmt.Printf("Found data for %s in the chain registry\n", chain)
+
 	return data, nil
 }
 
 func SelectGRPCEndpoints(chain string) (string, error) {
 	entry, err := GetChainRegistryEntry(chain)
 	if err != nil {
-		return "", err
+		fmt.Printf("Unable to load data for %s in the chain registry. You'll have to specify a gRPC endpoint manually.\n", chain)
+		prompt := &promptui.Prompt{
+			Label: "Enter a gRPC endpoint that you trust",
+		}
+		return prompt.Run()
 	}
 
 	var items []string
-	for _, apiEntry := range entry.APIs.GRPC {
-		items = append(items, fmt.Sprintf("%s: %s", apiEntry.Provider, apiEntry.Address))
+	if entry != nil {
+		for _, apiEntry := range entry.APIs.GRPC {
+			items = append(items, fmt.Sprintf("%s: %s", apiEntry.Provider, apiEntry.Address))
+		}
 	}
 	prompt := promptui.SelectWithAdd{
 		Label:    fmt.Sprintf("Select a gRPC endpoint that you trust for the %s network", chain),

@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/x/feegrant
+module cosmossdk.io/x/feegrant
 
 go 1.19
 
@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/cosmos-sdk/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -16,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.37.0-rc2
-	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5
+	google.golang.org/genproto v0.0.0-20230117162540-28d6b9783ac4
 	google.golang.org/grpc v1.52.0
 	google.golang.org/protobuf v1.28.1
 )
@@ -149,6 +150,8 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk => ../..
+
+replace github.com/cosmos/cosmos-sdk/x/feegrant => ./
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

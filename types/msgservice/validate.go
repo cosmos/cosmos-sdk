@@ -75,8 +75,21 @@ func ValidateMsgAnnotations(fileResolver protodesc.Resolver, fqName string) erro
 			return fmt.Errorf("sdk.Msg %s has incorrect signer %s", fqName, signer)
 		}
 
-		if fd.Kind() != protoreflect.StringKind {
-			return fmt.Errorf("sdk.Msg %s has signer %s of incorrect type; expected string, got %s", fqName, signer, fd.Kind())
+		// The signer annotation should point to:
+		// - either be a string field,
+		// - or a message field who recursively has a "signer" string field.
+		switch fd.Kind() {
+		case protoreflect.StringKind:
+			continue
+		case protoreflect.MessageKind:
+			err := ValidateMsgAnnotations(fileResolver, string(fd.Message().FullName()))
+			if err != nil {
+				return err
+			}
+
+			continue
+		default:
+			return fmt.Errorf("sdk.Msg %s has signer %s of incorrect type; expected string or message, got %s", fqName, signer, fd.Kind())
 		}
 	}
 

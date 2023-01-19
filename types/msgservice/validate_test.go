@@ -20,10 +20,25 @@ func TestValidateServiceAnnotations(t *testing.T) {
 }
 
 func TestValidateMsgAnnotations(t *testing.T) {
-	// We didn't add any signer on MsgCreateDog.
-	err := msgservice.ValidateMsgAnnotations(nil, "testdata.MsgCreateDog")
-	require.Error(t, err)
+	testcases := []struct {
+		name    string
+		typeURL string
+		expErr  bool
+	}{
+		{"no signer annotation", "testdata.MsgCreateDog", true},
+		{"valid signer", "cosmos.bank.v1beta1.MsgSend", false},
+		{"valid signer as message", "cosmos.bank.v1beta1.MsgMultiSend", false},
+	}
 
-	err = msgservice.ValidateMsgAnnotations(nil, "cosmos.bank.v1beta1.MsgSend")
-	require.NoError(t, err)
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			err := msgservice.ValidateMsgAnnotations(nil, tc.typeURL)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

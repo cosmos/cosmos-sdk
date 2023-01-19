@@ -45,23 +45,23 @@ func TestGenericMultiIndex(t *testing.T) {
 	require.NoError(t, err)
 
 	// we must find relations between cosmosaddr1 and the denom atom and osmo
-	exists, err := mi.Has(ctx, "atom", "cosmosAddr1")
+	iter, err := mi.Iterate(ctx, nil)
 	require.NoError(t, err)
-	require.True(t, exists)
 
-	exists, err = mi.Has(ctx, "osmo", "cosmosAddr1")
+	keys, err := iter.Keys()
 	require.NoError(t, err)
-	require.True(t, exists)
+	require.Len(t, keys, 2)
+	require.Equal(t, keys[0].K1(), "atom") // assert relationship with atom created
+	require.Equal(t, keys[1].K1(), "osmo") // assert relationship with osmo created
 
 	// if we update the reference to remove osmo as balance
 	// then we must not find it anymore
-
 	err = mi.Reference(ctx, "cosmosAddr1", balance{coins: []coin{{"atom", 1000}}}, // this is the update which does not have osmo
 		&balance{coins: []coin{{"atom", 1000}, {"osmo", 5000}}}, // this is the previous record
 	)
 	require.NoError(t, err)
 
-	exists, err = mi.Has(ctx, "osmo", "cosmosAddr1") // osmo must not exist anymore
+	exists, err := mi.Has(ctx, "osmo", "cosmosAddr1") // osmo must not exist anymore
 	require.NoError(t, err)
 	require.False(t, exists)
 

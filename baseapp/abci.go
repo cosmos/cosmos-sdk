@@ -721,6 +721,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	lastBlockHeight := qms.LatestVersion()
+	if lastBlockHeight == 0 {
+		return sdk.Context{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
+	}
+
 	if height > lastBlockHeight {
 		return sdk.Context{},
 			sdkerrors.Wrap(
@@ -752,9 +756,9 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// branch the commit-multistore for safety
-	ctx := sdk.NewContext(
-		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
-	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
+	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
+		WithMinGasPrices(app.minGasPrices).
+		WithBlockHeight(height)
 
 	return ctx, nil
 }

@@ -42,7 +42,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 	}
 
 	screens := make([]Screen, 1)
-	screens[0].Title = mr.header()
+	screens[0].Content = mr.header()
 
 	for _, fd := range mr.fds {
 		if !v.Message().Has(fd) {
@@ -122,8 +122,9 @@ func (mr *messageValueRenderer) formatRepeated(ctx context.Context, v protorefle
 		}
 
 		headerScreen := Screen{
-			// <field_name> (<int>/<int>): <value rendered 1st line>
-			Title:   fmt.Sprintf("%s (%d/%d)", toSentenceCase(string(fd.Name())), i+1, l.Len()),
+			// <field_name> (<int>/<int>)
+			Title: fmt.Sprintf("%s (%d/%d)", toSentenceCase(string(fd.Name())), i+1, l.Len()),
+			// <value rendered 1st line>
 			Content: subscreens[0].Content,
 			Indent:  subscreens[0].Indent + 1,
 			Expert:  subscreens[0].Expert,
@@ -179,7 +180,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 	}
 
 	wantHeader := fmt.Sprintf("%s object", mr.msgDesc.Name())
-	if screens[0].Title != wantHeader {
+	if screens[0].Content != wantHeader {
 		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, wantHeader, screens[0].Title)
 	}
 	if screens[0].Indent != 0 {

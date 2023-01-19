@@ -10,6 +10,7 @@ require (
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
+	github.com/cosmos/cosmos-sdk/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	github.com/cosmos/cosmos-sdk/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
@@ -21,8 +22,6 @@ require (
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
 )
-
-require github.com/cosmos/cosmos-sdk/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 
 require (
 	cloud.google.com/go v0.105.0 // indirect

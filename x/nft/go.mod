@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230109172818-c9acb1bd72b3
+	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.37.0-rc2
-	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9
+	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5
 	google.golang.org/grpc v1.52.0
 )
 
@@ -45,11 +45,12 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32 // indirect
+	github.com/cosmos/cosmos-sdk/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0-alpha1 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

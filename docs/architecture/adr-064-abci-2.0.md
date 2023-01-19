@@ -13,17 +13,65 @@ PROPOSED
 This ADR outlines the continuation of the efforts to implement ABCI++ in the Cosmos
 SDK outlined in [ADR 060: ABCI 1.0 (Phase I)](adr-060-abci-1.0.md).
 
-Specifically, this ADR outlines implementation and design of `VoteExtensions` and
-`FinalizeBlock`.
+Specifically, this ADR outlines the design and implementation of ABCI 2.0, which
+includes `ExtendVote`, `VerifyVoteExtension` and `FinalizeBlock`.
 
 ## Context
 
-> This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts. It should clearly explain the problem and motivation that the proposal aims to resolve.
-> {context body}
+ABCI 2.0 continues the promised updates from ABCI++, specifically three additional
+ABCI methods that the application can implement in order to gain further control,
+insight and customization of the consensus process, unlocking many novel use-cases
+that previously not possible. We describe these three new methods below:
 
-## Alternatives
+### `ExtendVote`
 
-> This section describes alternative designs to the chosen design. This section is important and if an adr does not have any alternatives then it should be considered that the ADR was not thought through. 
+This method allows each validator process to extend the pre-commit phase of the
+Tendermint consensus process. Specifically, it allows the application to perform
+custom business logic that extends the pre-commit vote and supply additional data
+as part of the vote.
+
+The data, called vote extension, will be broadcast and received together with the
+vote it is extending, and will be made available to the application in the next
+height. Specifically, the proposer of the next block will receive the vote extensions
+in `RequestPrepareProposal.local_last_commit.votes`.
+
+If the application does not have vote extension information to provide,
+it returns a 0-length byte array as its vote extension.
+
+**NOTE**: 
+
+* Although each validator process submits its own vote extension, ONLY the *proposer*
+  of the *next* block will receive all the vote extensions included as part of the
+  pre-commit phase of the previous block. This means only the proposer will
+  implicitly have access to all the vote extensions, via `RequestPrepareProposal`,
+  and that not all vote extensions may be included, since a validator does not
+  have to wait for all pre-commits.
+* The pre-commit vote is signed independently from the vote extension.
+
+### `VerifyVoteExtension`
+
+This method allows validators to validate the vote extension data attached to
+each pre-commit message it receives. If the validation fails, the whole pre-commit
+message will be deemed invalid and ignored by Tendermint.
+
+Tendermint uses `VerifyVoteExtension` when validating a pre-commit vote. Specifically,
+for a pre-commit, Tendermint will:
+
+* Reject the message if it doesn't contain a signed vote AND a signed vote extension
+* Reject the message if the vote's signature OR the vote extension's signature fails to verify
+* Reject the message if `VerifyVoteExtension` was rejected
+
+Otherwise, Tendermint will accept the pre-commit message.
+
+Note, this has important consequences on liveness, i.e., if vote extensions repeatedly
+cannot be verified by correct validators, Tendermint may not be able to finalize
+a block even if sufficiently many (+2/3) validators send pre-commit votes for
+that block. Thus, `VerifyVoteExtension` should be used with special care.
+
+Tendermint recommends that an application that detects an invalid vote extension
+SHOULD accept it in `ResponseVerifyVoteExtension` and ignore it in its own logic.
+
+### `FinalizeBlock`
 
 ## Decision
 
@@ -54,10 +102,6 @@ Specifically, this ADR outlines implementation and design of `VoteExtensions` an
 
 While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
 Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
-
-## Test Cases [optional]
-
-Test cases for an implementation are mandatory for ADRs that are affecting consensus changes. Other ADRs can choose to include links to test cases if applicable.
 
 ## References
 

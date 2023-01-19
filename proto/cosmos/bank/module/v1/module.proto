@@ -17,4 +17,9 @@ message Module {
 
   // authority defines the custom module authority. If not set, defaults to the governance module.
   string authority = 2;
+
+  // hooks_order specifies the order of bank hooks and should be a list
+  // of module names which provide a send hooks instance. If no order is
+  // provided, then hooks will be applied in alphabetical order of module names.
+  repeated string send_hooks_order = 3;
 }

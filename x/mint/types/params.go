@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// NewParams returns Params instance with the given values.
 func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdk.Dec, blocksPerYear uint64) Params {
 	return Params{
 		MintDenom:           mintDenom,
@@ -34,7 +34,7 @@ func DefaultParams() Params {
 	}
 }
 
-// validate params
+// Validate does the sanity check on the params.
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
@@ -64,12 +64,6 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
 func validateMintDenom(i interface{}) error {
 	v, ok := i.(string)
 	if !ok {
@@ -92,6 +86,9 @@ func validateInflationRateChange(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("inflation rate change cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("inflation rate change cannot be negative: %s", v)
 	}
@@ -108,6 +105,9 @@ func validateInflationMax(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("max inflation cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("max inflation cannot be negative: %s", v)
 	}
@@ -124,6 +124,9 @@ func validateInflationMin(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("min inflation cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min inflation cannot be negative: %s", v)
 	}
@@ -140,6 +143,9 @@ func validateGoalBonded(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("goal bonded cannot be nil: %s", v)
+	}
 	if v.IsNegative() || v.IsZero() {
 		return fmt.Errorf("goal bonded must be positive: %s", v)
 	}

@@ -3,9 +3,8 @@ package cli
 import (
 	"fmt"
 
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -22,7 +21,7 @@ func CheckTxCode(network *network.Network, clientCtx client.Context, txHash stri
 	}
 
 	cmd := authcli.QueryTxCmd()
-	out, err := ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err := ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	if err != nil {
 		return err
 	}
@@ -50,7 +49,7 @@ func GetTxResponse(network *network.Network, clientCtx client.Context, txHash st
 	}
 
 	cmd := authcli.QueryTxCmd()
-	out, err := ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", tmcli.OutputFlag)})
+	out, err := ExecTestCLICmd(clientCtx, cmd, []string{txHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
 	if err != nil {
 		return sdk.TxResponse{}, err
 	}

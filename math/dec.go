@@ -143,19 +143,15 @@ func LegacyNewDecFromIntWithPrec(i Int, prec int64) LegacyDec {
 //
 // CONTRACT - This function does not mutate the input str.
 func LegacyNewDecFromStr(str string) (LegacyDec, error) {
-	if len(str) == 0 {
-		return LegacyDec{}, fmt.Errorf("%s: %w", str, ErrLegacyEmptyDecimalStr)
-	}
-
 	// first extract any negative symbol
 	neg := false
-	if str[0] == '-' {
+	if len(str) > 0 && str[0] == '-' {
 		neg = true
 		str = str[1:]
 	}
 
 	if len(str) == 0 {
-		return LegacyDec{}, fmt.Errorf("%s: %w", str, ErrLegacyEmptyDecimalStr)
+		return LegacyDec{}, ErrLegacyEmptyDecimalStr
 	}
 
 	strs := strings.Split(str, ".")
@@ -178,7 +174,7 @@ func LegacyNewDecFromStr(str string) (LegacyDec, error) {
 
 	// add some extra zero's to correct to the Precision factor
 	zerosToAdd := LegacyPrecision - lenDecs
-	zeros := fmt.Sprintf(`%0`+strconv.Itoa(zerosToAdd)+`s`, "")
+	zeros := strings.Repeat("0", zerosToAdd)
 	combinedStr += zeros
 
 	combined, ok := new(big.Int).SetString(combinedStr, 10) // base 10
@@ -893,4 +889,36 @@ func LegacyDecEq(t *testing.T, exp, got LegacyDec) (*testing.T, bool, string, st
 func LegacyDecApproxEq(t *testing.T, d1 LegacyDec, d2 LegacyDec, tol LegacyDec) (*testing.T, bool, string, string, string) {
 	diff := d1.Sub(d2).Abs()
 	return t, diff.LTE(tol), "expected |d1 - d2| <:\t%v\ngot |d1 - d2| = \t\t%v", tol.String(), diff.String()
+}
+
+// FormatDec formats a decimal (as encoded in protobuf) into a value-rendered
+// string following ADR-050. This function operates with string manipulation
+// (instead of manipulating the sdk.Dec object).
+func FormatDec(v string) (string, error) {
+	parts := strings.Split(v, ".")
+	if len(parts) > 2 {
+		return "", fmt.Errorf("invalid decimal: too many points in %s", v)
+	}
+
+	intPart, err := FormatInt(parts[0])
+	if err != nil {
+		return "", err
+	}
+
+	if len(parts) == 1 {
+		return intPart, nil
+	}
+
+	decPart := strings.TrimRight(parts[1], "0")
+	if len(decPart) == 0 {
+		return intPart, nil
+	}
+
+	// Ensure that the decimal part has only digits.
+	// https://github.com/cosmos/cosmos-sdk/issues/12811
+	if !hasOnlyDigits(decPart) {
+		return "", fmt.Errorf("non-digits detected after decimal point in: %q", decPart)
+	}
+
+	return intPart + "." + decPart, nil
 }

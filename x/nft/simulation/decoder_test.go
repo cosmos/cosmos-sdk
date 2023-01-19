@@ -50,11 +50,11 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: []byte(keeper.ClassKey), Value: classBz},
-			{Key: []byte(keeper.NFTKey), Value: nftBz},
-			{Key: []byte(keeper.NFTOfClassByOwnerKey), Value: nftOfClassByOwnerValue},
-			{Key: []byte(keeper.OwnerKey), Value: ownerAddr1},
-			{Key: []byte(keeper.ClassTotalSupply), Value: totalSupplyBz},
+			{Key: keeper.ClassKey, Value: classBz},
+			{Key: keeper.NFTKey, Value: nftBz},
+			{Key: keeper.NFTOfClassByOwnerKey, Value: nftOfClassByOwnerValue},
+			{Key: keeper.OwnerKey, Value: ownerAddr1},
+			{Key: keeper.ClassTotalSupply, Value: totalSupplyBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

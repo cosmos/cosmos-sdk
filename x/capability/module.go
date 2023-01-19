@@ -14,10 +14,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -103,6 +103,14 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppMod
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the capability module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
@@ -160,7 +168,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for capability module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
@@ -170,21 +178,16 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 //
-// New App Wiring Setup
+// App Wiring Setup
 //
 
 func init() {
 	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			ProvideModuleBasic,
-			ProvideModule,
-		))
+		appmodule.Provide(ProvideModule),
+	)
 }
 
-func ProvideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
+//nolint:revive
 type CapabilityInputs struct {
 	depinject.In
 
@@ -195,11 +198,12 @@ type CapabilityInputs struct {
 	Cdc         codec.Codec
 }
 
+//nolint:revive
 type CapabilityOutputs struct {
 	depinject.Out
 
 	CapabilityKeeper *keeper.Keeper
-	Module           runtime.AppModuleWrapper
+	Module           appmodule.AppModule
 }
 
 func ProvideModule(in CapabilityInputs) CapabilityOutputs {
@@ -208,6 +212,6 @@ func ProvideModule(in CapabilityInputs) CapabilityOutputs {
 
 	return CapabilityOutputs{
 		CapabilityKeeper: k,
-		Module:           runtime.WrapAppModule(m),
+		Module:           m,
 	}
 }

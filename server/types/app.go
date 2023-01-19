@@ -5,18 +5,19 @@ import (
 	"io"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // ServerStartTime defines the time duration that the server need to stay running after startup
@@ -57,8 +58,8 @@ type (
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context)
 
-		// Return the multistore instance
-		CommitMultiStore() sdk.CommitMultiStore
+		// CommitMultiStore return the multistore instance
+		CommitMultiStore() storetypes.CommitMultiStore
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an

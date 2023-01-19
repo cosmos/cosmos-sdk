@@ -4,24 +4,22 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
-	"github.com/golang/mock/gomock"
-	"github.com/tendermint/tendermint/libs/log"
-
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestQueryGroupsByMember(t *testing.T) {
@@ -30,13 +28,11 @@ func TestQueryGroupsByMember(t *testing.T) {
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	key := sdk.NewKVStoreKey(group.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(group.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
 	ctx := testCtx.Ctx
-
-	sdkCtx := sdk.WrapSDKContext(ctx)
 
 	bApp := baseapp.NewBaseApp(
 		"group",
@@ -64,7 +60,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 		{Address: addrs[2].String(), Weight: "1"}, {Address: addrs[3].String(), Weight: "2"},
 	}
 
-	_, err := groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[0].String(),
 		Members: members,
 	})
@@ -73,7 +69,7 @@ func TestQueryGroupsByMember(t *testing.T) {
 	members = []group.MemberRequest{
 		{Address: addrs[3].String(), Weight: "1"}, {Address: addrs[4].String(), Weight: "2"},
 	}
-	_, err = groupKeeper.CreateGroup(sdkCtx, &group.MsgCreateGroup{
+	_, err = groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[1].String(),
 		Members: members,
 	})

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -12,8 +13,20 @@ import (
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata string) (v1.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress) (v1.Proposal, error) {
 	err := keeper.assertMetadataLength(metadata)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+
+	// assert summary is no longer than predefined max length of metadata
+	err = keeper.assertMetadataLength(summary)
+	if err != nil {
+		return v1.Proposal{}, err
+	}
+
+	// assert title is no longer than predefined max length of metadata
+	err = keeper.assertMetadataLength(title)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -72,7 +85,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod), title, summary, proposer)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -122,6 +135,13 @@ func (keeper Keeper) SetProposal(ctx sdk.Context, proposal v1.Proposal) {
 	}
 
 	store := ctx.KVStore(keeper.storeKey)
+
+	if proposal.Status == v1.StatusVotingPeriod {
+		store.Set(types.VotingPeriodProposalKey(proposal.Id), []byte{1})
+	} else {
+		store.Delete(types.VotingPeriodProposalKey(proposal.Id))
+	}
+
 	store.Set(types.ProposalKey(proposal.Id), bz)
 }
 
@@ -144,12 +164,12 @@ func (keeper Keeper) DeleteProposal(ctx sdk.Context, proposalID uint64) {
 	store.Delete(types.ProposalKey(proposalID))
 }
 
-// IterateProposals iterates over the all the proposals and performs a callback function.
+// IterateProposals iterates over all the proposals and performs a callback function.
 // Panics when the iterator encounters a proposal which can't be unmarshaled.
 func (keeper Keeper) IterateProposals(ctx sdk.Context, cb func(proposal v1.Proposal) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ProposalsKeyPrefix)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -238,6 +258,7 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 	store.Set(types.ProposalIDKey, types.GetProposalIDBytes(proposalID))
 }
 
+// ActivateVotingPeriod activates the voting period of a proposal
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {
 	startTime := ctx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
@@ -251,6 +272,7 @@ func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal)
 	keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 }
 
+// MarshalProposal marshals the proposal and returns binary encoded bytes.
 func (keeper Keeper) MarshalProposal(proposal v1.Proposal) ([]byte, error) {
 	bz, err := keeper.cdc.Marshal(&proposal)
 	if err != nil {
@@ -259,6 +281,7 @@ func (keeper Keeper) MarshalProposal(proposal v1.Proposal) ([]byte, error) {
 	return bz, nil
 }
 
+// UnmarshalProposal unmarshals the proposal.
 func (keeper Keeper) UnmarshalProposal(bz []byte, proposal *v1.Proposal) error {
 	err := keeper.cdc.Unmarshal(bz, proposal)
 	if err != nil {

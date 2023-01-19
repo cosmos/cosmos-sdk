@@ -15,12 +15,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -118,6 +118,47 @@ func TestExportCmd_Height(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expHeight, exportedGenDoc.InitialHeight)
+		})
+	}
+}
+
+func TestExportCmd_Output(t *testing.T) {
+	testCases := []struct {
+		name           string
+		flags          []string
+		outputDocument string
+	}{
+		{
+			"should export state to the specified file",
+			[]string{
+				fmt.Sprintf("--%s=%s", server.FlagOutputDocument, "foobar.json"),
+			},
+			"foobar.json",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			_, ctx, _, cmd := setupApp(t, tempDir)
+
+			output := &bytes.Buffer{}
+			cmd.SetOut(output)
+			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
+			cmd.SetArgs(args)
+			require.NoError(t, cmd.ExecuteContext(ctx))
+
+			var exportedGenDoc tmtypes.GenesisDoc
+			f, err := os.ReadFile(tc.outputDocument)
+			if err != nil {
+				t.Fatalf("error reading exported genesis doc: %s", err)
+			}
+			require.NoError(t, tmjson.Unmarshal(f, &exportedGenDoc))
+
+			// Cleanup
+			if err = os.Remove(tc.outputDocument); err != nil {
+				t.Fatalf("error removing exported genesis doc: %s", err)
+			}
 		})
 	}
 }

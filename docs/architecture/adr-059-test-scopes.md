@@ -17,7 +17,7 @@ language for talking about test scopes and proposes an ideal state of tests at e
 ## Context
 
 [ADR-053: Go Module Refactoring](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-053-go-module-refactoring.md) expresses our desire for an SDK composed of many
-independently versioned Go modules, and [ADR-057: App Wiring Part I](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-057-app-wiring-1.md) offers a methodology
+independently versioned Go modules, and [ADR-057: App Wiring](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-057-app-wiring.md) offers a methodology
 for breaking apart inter-module dependencies through the use of dependency injection. As
 described in [EPIC: Separate all SDK modules into standalone go modules](https://github.com/cosmos/cosmos-sdk/issues/11899), module
 dependencies are particularly complected in the test phase, where simapp is used as

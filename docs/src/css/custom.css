@@ -151,7 +151,7 @@ html {
   .navbar-sidebar {
     @apply w-full;
     &__brand {
-      @apply pb-7 pt-9 px-6 h-auto;
+      @apply px-6 h-auto;
     }
     &__item {
       @apply px-6 w-full;
@@ -426,7 +426,7 @@ html {
 
   /* MARKDOWN */
   .theme-code-block {
-    @apply font-jetbrain;
+    @apply font-jetbrain mt-3;
   }
 
   .markdown {
@@ -443,7 +443,13 @@ html {
       @apply text-6 font-bold leading-9 tracking-tight;
     }
     h3 {
-      @apply text-4 font-semibold leading-7 tracking-tight;
+      @apply text-4 font-semibold leading-8 tracking-tight;
+    }
+    h4 {
+      @apply text-3 font-semibold leading-7 tracking-tight;
+    }
+    h5 {
+      @apply text-3 font-semibold leading-6 tracking-wide;
     }
     p {
       @apply leading-relaxed;
@@ -451,7 +457,6 @@ html {
     p,
     ul,
     ol,
-    code,
     blockquote {
       @apply text-[1rem];
     }
@@ -503,9 +508,6 @@ html {
       & > ul,
       & > ol {
         @apply my-5;
-      }
-      & > p + .theme-code-block {
-        @apply mt-3;
       }
     }
   }

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 	govcodec "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	groupcodec "github.com/cosmos/cosmos-sdk/x/group/codec"
 )
 
@@ -22,6 +23,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgFundCommunityPool{}, "cosmos-sdk/MsgFundCommunityPool")
 	legacy.RegisterAminoMsg(cdc, &MsgUpdateParams{}, "cosmos-sdk/distribution/MsgUpdateParams")
 	legacy.RegisterAminoMsg(cdc, &MsgCommunityPoolSpend{}, "cosmos-sdk/distr/MsgCommunityPoolSpend")
+	legacy.RegisterAminoMsg(cdc, &MsgDepositValidatorRewardsPool{}, "cosmos-sdk/distr/MsgDepositValRewards")
 
 	cdc.RegisterConcrete(Params{}, "cosmos-sdk/x/distribution/Params", nil)
 }
@@ -35,6 +37,12 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgFundCommunityPool{},
 		&MsgUpdateParams{},
 		&MsgCommunityPoolSpend{},
+		&MsgDepositValidatorRewardsPool{},
+	)
+
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&CommunityPoolSpendProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

@@ -1,15 +1,15 @@
 package testutil
 
 import (
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/module"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module"
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"            // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"  // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"    // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"            // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"       // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"          // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"         // import as blank for app wiring
 
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,7 +31,7 @@ import (
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 )
 
@@ -43,23 +43,13 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				AppName: "AuthApp",
 				BeginBlockers: []string{
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
 					feegrant.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
-					vestingtypes.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
-					authtypes.ModuleName,
-					banktypes.ModuleName,
 					genutiltypes.ModuleName,
 					feegrant.ModuleName,
-					paramstypes.ModuleName,
-					consensustypes.ModuleName,
-					vestingtypes.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
@@ -109,7 +99,7 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		},
 		{
 			Name:   "tx",
-			Config: appconfig.WrapAny(&txmodulev1.Module{}),
+			Config: appconfig.WrapAny(&txconfigv1.Config{}),
 		},
 		{
 			Name:   genutiltypes.ModuleName,

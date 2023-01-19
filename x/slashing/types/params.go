@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -45,7 +46,7 @@ func DefaultParams() Params {
 	)
 }
 
-// validate params
+// Validate validates the params
 func (p Params) Validate() error {
 	if err := validateSignedBlocksWindow(p.SignedBlocksWindow); err != nil {
 		return err
@@ -84,6 +85,9 @@ func validateMinSignedPerWindow(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("min signed per window cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("min signed per window cannot be negative: %s", v)
 	}
@@ -113,6 +117,9 @@ func validateSlashFractionDoubleSign(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("double sign slash fraction cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("double sign slash fraction cannot be negative: %s", v)
 	}
@@ -129,6 +136,9 @@ func validateSlashFractionDowntime(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
+	if v.IsNil() {
+		return fmt.Errorf("downtime slash fraction cannot be nil: %s", v)
+	}
 	if v.IsNegative() {
 		return fmt.Errorf("downtime slash fraction cannot be negative: %s", v)
 	}

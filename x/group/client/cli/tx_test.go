@@ -13,11 +13,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -37,37 +33,13 @@ const validMetadata = "metadata"
 
 var tooLongMetadata = strings.Repeat("A", 256)
 
-var _ client.TendermintRPC = (*mockTendermintRPC)(nil)
-
-type mockTendermintRPC struct {
-	rpcclientmock.Client
-
-	responseQuery abci.ResponseQuery
-}
-
-func newMockTendermintRPC(respQuery abci.ResponseQuery) mockTendermintRPC {
-	return mockTendermintRPC{responseQuery: respQuery}
-}
-
-func (mockTendermintRPC) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return &coretypes.ResultBroadcastTx{}, nil
-}
-
-func (m mockTendermintRPC) ABCIQueryWithOptions(
-	_ context.Context,
-	_ string, _ tmbytes.HexBytes,
-	_ rpcclient.ABCIQueryOptions,
-) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
-}
-
 type CLITestSuite struct {
 	suite.Suite
 
-	kr      keyring.Keyring
-	encCfg  testutilmod.TestEncodingConfig
-	baseCtx client.Context
-
+	kr          keyring.Keyring
+	encCfg      testutilmod.TestEncodingConfig
+	baseCtx     client.Context
+	clientCtx   client.Context
 	group       *group.GroupInfo
 	commonFlags []string
 }
@@ -83,7 +55,7 @@ func (s *CLITestSuite) SetupSuite() {
 		WithKeyring(s.kr).
 		WithTxConfig(s.encCfg.TxConfig).
 		WithCodec(s.encCfg.Codec).
-		WithClient(mockTendermintRPC{Client: rpcclientmock.Client{}}).
+		WithClient(clitestutil.MockTendermintRPC{Client: rpcclientmock.Client{}}).
 		WithAccountRetriever(client.MockAccountRetriever{}).
 		WithOutput(io.Discard).
 		WithChainID("test-chain")
@@ -100,23 +72,23 @@ func (s *CLITestSuite) SetupSuite() {
 	var outBuf bytes.Buffer
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := newMockTendermintRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
 	}
-	clientCtx := ctxGen().WithOutput(&outBuf)
+	s.clientCtx = ctxGen().WithOutput(&outBuf)
 
 	// create a new account
-	info, _, err := clientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	info, _, err := s.clientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
 	pk, err := info.GetPubKey()
 	s.Require().NoError(err)
 
 	account := sdk.AccAddress(pk.Address())
-	_, err = cli.MsgSendExec(
-		clientCtx,
+	_, err = clitestutil.MsgSendExec(
+		s.clientCtx,
 		val.Address,
 		account,
 		sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(2000))), fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -138,7 +110,7 @@ func (s *CLITestSuite) SetupSuite() {
 		]
 	}`, val.Address.String(), memberWeight, validMetadata)
 	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-	out, err := cli.ExecTestCLICmd(clientCtx, groupcli.MsgCreateGroupCmd(),
+	out, err := clitestutil.ExecTestCLICmd(s.clientCtx, groupcli.MsgCreateGroupCmd(),
 		append(
 			[]string{
 				val.Address.String(),
@@ -151,7 +123,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	s.Require().NoError(err, out.String())
 	txResp := sdk.TxResponse{}
-	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
+	s.Require().NoError(s.clientCtx.Codec.UnmarshalJSON(out.Bytes(), &txResp), out.String())
 	s.Require().Equal(uint32(0), txResp.Code, out.String())
 
 	s.group = &group.GroupInfo{Id: 1, Admin: val.Address.String(), Metadata: validMetadata, TotalWeight: "3", Version: 1}
@@ -195,7 +167,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -217,7 +189,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -240,7 +212,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			"invalid members address",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -262,7 +234,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 			"invalid members weight",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -300,7 +272,7 @@ func (s *CLITestSuite) TestTxCreateGroup() {
 				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
 			}
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().Contains(out.String(), tc.expectErrMsg)
@@ -322,7 +294,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := newMockTendermintRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -342,7 +314,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 		"metadata": "%s"
 	}]}`, accounts[0].Address.String(), validMetadata)
 		validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
-		out, err := cli.ExecTestCLICmd(clientCtx, groupcli.MsgCreateGroupCmd(),
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, groupcli.MsgCreateGroupCmd(),
 			append(
 				[]string{
 					accounts[0].Address.String(),
@@ -369,7 +341,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -391,7 +363,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -414,7 +386,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"group id invalid",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -452,7 +424,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
 			}
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().Contains(out.String(), tc.expectErrMsg)
@@ -480,7 +452,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -499,7 +471,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -519,7 +491,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMetadata() {
 			"group metadata too long",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -593,7 +565,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -612,7 +584,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -632,7 +604,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 			"group member metadata too long",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -651,7 +623,7 @@ func (s *CLITestSuite) TestTxUpdateGroupMembers() {
 			"group doesn't exist",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -729,7 +701,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -754,7 +726,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			"group-policy-as-admin is true",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -779,7 +751,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -805,7 +777,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			"invalid members address",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -830,7 +802,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 			"invalid members weight",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -870,7 +842,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
 			}
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().Contains(out.String(), tc.expectErrMsg)
@@ -910,7 +882,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -933,7 +905,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"correct data with percentage decision policy",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -956,7 +928,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -980,7 +952,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"wrong admin",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1003,7 +975,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"invalid percentage decision policy with negative value",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1026,7 +998,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 			"invalid percentage decision policy with value greater than 1",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1065,7 +1037,7 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
 			}
 
-			out, err := cli.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Require().Contains(out.String(), tc.expectErrMsg)
@@ -1099,7 +1071,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1118,7 +1090,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1138,7 +1110,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 			"wrong admin",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1157,7 +1129,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyAdmin() {
 			"wrong group policy",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1222,7 +1194,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1241,7 +1213,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"correct data with percentage decision policy",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1260,7 +1232,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1280,7 +1252,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"wrong admin",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1299,7 +1271,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"wrong group policy",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1318,7 +1290,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"invalid percentage decision policy with negative value",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1337,7 +1309,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 			"invalid percentage decision policy with value greater than 1",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1396,7 +1368,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1415,7 +1387,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1435,7 +1407,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 			"long metadata",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1454,7 +1426,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 			"wrong admin",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1473,7 +1445,7 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyMetadata() {
 			"wrong group policy",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1538,7 +1510,7 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1555,7 +1527,7 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 			"with try exec",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1573,7 +1545,7 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 			"with try exec, not enough yes votes for proposal to pass",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1591,7 +1563,7 @@ func (s *CLITestSuite) TestTxSubmitProposal() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1649,7 +1621,7 @@ func (s *CLITestSuite) TestTxVote() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1669,7 +1641,7 @@ func (s *CLITestSuite) TestTxVote() {
 			"with try exec",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1690,7 +1662,7 @@ func (s *CLITestSuite) TestTxVote() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1711,7 +1683,7 @@ func (s *CLITestSuite) TestTxVote() {
 			"metadata too long",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1770,7 +1742,7 @@ func (s *CLITestSuite) TestTxWithdrawProposal() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -1788,7 +1760,7 @@ func (s *CLITestSuite) TestTxWithdrawProposal() {
 			"wrong admin",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := newMockTendermintRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockTendermintRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)

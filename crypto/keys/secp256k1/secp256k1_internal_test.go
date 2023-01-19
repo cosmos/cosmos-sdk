@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	btcSecp256k1 "github.com/btcsuite/btcd/btcec"
+	btcSecp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +16,7 @@ func Test_genPrivKey(t *testing.T) {
 	copy(onePadded[32-len(oneB):32], oneB)
 	t.Logf("one padded: %v, len=%v", onePadded, len(onePadded))
 
-	validOne := append(empty, onePadded...)
+	validOne := append(empty, onePadded...) //nolint:gocritic // append is fine here
 	tests := []struct {
 		name        string
 		notSoRand   []byte
@@ -36,7 +36,7 @@ func Test_genPrivKey(t *testing.T) {
 				return
 			}
 			got := genPrivKey(bytes.NewReader(tt.notSoRand))
-			fe := new(big.Int).SetBytes(got[:])
+			fe := new(big.Int).SetBytes(got)
 			require.True(t, fe.Cmp(btcSecp256k1.S256().N) < 0)
 			require.True(t, fe.Sign() > 0)
 		})

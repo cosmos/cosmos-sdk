@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
+func TestE2ETestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, testutil.NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewE2ETestSuite(cfg))
 }
 
 func TestDepositTestSuite(t *testing.T) {
@@ -33,5 +33,5 @@ func TestDepositTestSuite(t *testing.T) {
 	bz, err := cfg.Codec.MarshalJSON(genesisState)
 	require.NoError(t, err)
 	cfg.GenesisState["gov"] = bz
-	suite.Run(t, testutil.NewDepositTestSuite(cfg))
+	suite.Run(t, NewDepositTestSuite(cfg))
 }

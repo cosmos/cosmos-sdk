@@ -4,14 +4,18 @@ use (
 	.
 	./api
 	./client/v2
+	./collections
 	./core
-	./cosmovisor
 	./depinject
 	./errors
 	./math
 	./orm
-	./store/tools/ics23
 	./tx
 	./simapp
 	./tests
+	./tools/rosetta
+	./tools/cosmovisor
+	./tools/confix
+	./x/nft
+	./x/circuit
 )

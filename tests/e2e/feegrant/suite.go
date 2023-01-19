@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -31,7 +30,7 @@ const (
 	oneHour  = 60 * 60
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg          network.Config
@@ -41,12 +40,12 @@ type IntegrationTestSuite struct {
 	addedGrant   feegrant.Grant
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	if testing.Short() {
 		s.T().Skip("skipping test in unit-tests mode.")
@@ -75,7 +74,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 }
 
 // createGrant creates a new basic allowance fee grant from granter to grantee.
-func (s *IntegrationTestSuite) createGrant(granter, grantee sdk.Address) {
+func (s *E2ETestSuite) createGrant(granter, grantee sdk.Address) {
 	val := s.network.Validators[0]
 
 	clientCtx := val.ClientCtx
@@ -103,15 +102,14 @@ func (s *IntegrationTestSuite) createGrant(granter, grantee sdk.Address) {
 	_, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
+func (s *E2ETestSuite) TestCmdGetFeeGrant() {
 	val := s.network.Validators[0]
 	granter := val.Address
 	grantee := s.addedGrantee
@@ -130,7 +128,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				"wrong_granter",
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"decoding bech32 failed",
 			true, nil, nil,
@@ -140,7 +138,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				granter.String(),
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"decoding bech32 failed",
 			true, nil, nil,
@@ -150,7 +148,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"fee-grant not found",
 			true, nil, nil,
@@ -160,7 +158,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 			[]string{
 				granter.String(),
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			"",
 			false,
@@ -197,7 +195,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
+func (s *E2ETestSuite) TestCmdGetFeeGrantsByGrantee() {
 	val := s.network.Validators[0]
 	grantee := s.addedGrantee
 	clientCtx := val.ClientCtx
@@ -213,7 +211,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"wrong grantee",
 			[]string{
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil, 0,
 		},
@@ -221,7 +219,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"non existent grantee",
 			[]string{
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesResponse{}, 0,
 		},
@@ -229,7 +227,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 			"valid req",
 			[]string{
 				grantee.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesResponse{}, 1,
 		},
@@ -254,7 +252,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGrantee() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
+func (s *E2ETestSuite) TestCmdGetFeeGrantsByGranter() {
 	val := s.network.Validators[0]
 	granter := s.addedGranter
 	clientCtx := val.ClientCtx
@@ -270,7 +268,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 			"wrong grantee",
 			[]string{
 				"wrong_grantee",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			true, nil, 0,
 		},
@@ -278,7 +276,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 			"non existent grantee",
 			[]string{
 				"cosmos1nph3cfzk6trsmfxkeu943nvach5qw4vwstnvkl",
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesByGranterResponse{}, 0,
 		},
@@ -286,7 +284,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 			"valid req",
 			[]string{
 				granter.String(),
-				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
 			},
 			false, &feegrant.QueryAllowancesByGranterResponse{}, 1,
 		},
@@ -310,7 +308,7 @@ func (s *IntegrationTestSuite) TestCmdGetFeeGrantsByGranter() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
+func (s *E2ETestSuite) TestNewCmdFeeGrant() {
 	val := s.network.Validators[0]
 	granter := val.Address
 	alreadyExistedGrantee := s.addedGrantee
@@ -605,7 +603,7 @@ func (s *IntegrationTestSuite) TestNewCmdFeeGrant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
+func (s *E2ETestSuite) TestNewCmdRevokeFeegrant() {
 	val := s.network.Validators[0]
 	granter := s.addedGranter
 	grantee := s.addedGrantee
@@ -712,7 +710,7 @@ func (s *IntegrationTestSuite) TestNewCmdRevokeFeegrant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
+func (s *E2ETestSuite) TestTxWithFeeGrant() {
 	s.T().Skip() // TODO to re-enable in #12274
 
 	val := s.network.Validators[0]
@@ -802,7 +800,7 @@ func (s *IntegrationTestSuite) TestTxWithFeeGrant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
+func (s *E2ETestSuite) TestFilteredFeeAllowance() {
 	s.T().Skip() // TODO to re-enable in #12274
 
 	val := s.network.Validators[0]
@@ -898,7 +896,7 @@ func (s *IntegrationTestSuite) TestFilteredFeeAllowance() {
 	args := []string{
 		granter.String(),
 		grantee.String(),
-		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+		fmt.Sprintf("--%s=json", flags.FlagOutput),
 	}
 
 	// get filtered fee allowance and check info

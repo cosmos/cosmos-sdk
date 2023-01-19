@@ -4,9 +4,6 @@
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
-// const lastVersion = "v0.47";
-const lastVersion = "current";
-
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Cosmos SDK",
@@ -40,17 +37,16 @@ const config = {
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
           routeBasePath: "/",
-          lastVersion: lastVersion,
+          lastVersion: "v0.47",
           versions: {
             current: {
               path: "main",
-              // banner: "unreleased",
+              banner: "unreleased",
             },
-            // "v0.47": {
-            //   label: "v0.47",
-            //   path: "v0.47",
-            //   banner: "none",
-            // },
+            "v0.47": {
+              path: "v0.47",
+              label: "v0.47",
+            },
           },
         },
         theme: {
@@ -184,9 +180,9 @@ const config = {
         additionalLanguages: ["protobuf", "go-module"], // https://prismjs.com/#supported-languages
       },
       algolia: {
-        appId: "BH4D9OD16A",
-        apiKey: "ac317234e6a42074175369b2f42e9754",
-        indexName: "cosmos-sdk",
+        appId: "QLS2QSP47E",
+        apiKey: "067b84458bfa80c295e1d4f12c461911",
+        indexName: "cosmos_network",
         contextualSearch: false,
       },
     }),
@@ -234,7 +230,7 @@ const config = {
           },
           {
             from: "/main/modules/auth/05_vesting",
-            to: "/main/modules/vesting",
+            to: "/main/modules/auth/vesting",
           },
           {
             from: [
@@ -395,6 +391,10 @@ const config = {
               "/main/modules/upgrade/04_client",
             ],
             to: "/main/modules/upgrade/",
+          },
+          {
+            from: ["/main/run-node/cosmovisor"],
+            to: "/main/tooling/cosmovisor",
           },
         ],
       },

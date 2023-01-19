@@ -18,7 +18,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestParseSubmitLegacyProposalFlags(t *testing.T) {
+func TestParseSubmitLegacyProposal(t *testing.T) {
 	okJSON := testutil.WriteToNewTempFile(t, `
 {
   "title": "Test Proposal",
@@ -33,17 +33,17 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 
 	// nonexistent json
 	fs.Set(FlagProposal, "fileDoesNotExist")
-	_, err := parseSubmitLegacyProposalFlags(fs)
+	_, err := parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// invalid json
 	fs.Set(FlagProposal, badJSON.Name())
-	_, err = parseSubmitLegacyProposalFlags(fs)
+	_, err = parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// ok json
 	fs.Set(FlagProposal, okJSON.Name())
-	proposal1, err := parseSubmitLegacyProposalFlags(fs)
+	proposal1, err := parseSubmitLegacyProposal(fs)
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, "Test Proposal", proposal1.Title)
 	require.Equal(t, "My awesome proposal", proposal1.Description)
@@ -53,7 +53,7 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 	// flags that can't be used with --proposal
 	for _, incompatibleFlag := range ProposalFlags {
 		fs.Set(incompatibleFlag, "some value")
-		_, err := parseSubmitLegacyProposalFlags(fs)
+		_, err := parseSubmitLegacyProposal(fs)
 		require.Error(t, err)
 		fs.Set(incompatibleFlag, "")
 	}
@@ -97,7 +97,7 @@ func TestParseSubmitLegacyProposalFlags(t *testing.T) {
 			fs.Set(FlagDescription, tc.pDescription)
 			fs.Set(FlagProposalType, tc.pType)
 			fs.Set(FlagDeposit, proposal1.Deposit)
-			proposal2, err := parseSubmitLegacyProposalFlags(fs)
+			proposal2, err := parseSubmitLegacyProposal(fs)
 
 			if tc.expErr {
 				require.Error(t, err)
@@ -154,6 +154,8 @@ func TestParseSubmitProposal(t *testing.T) {
 		}
   	],
 	"metadata": "%s",
+	"title": "My awesome title",
+	"summary": "My awesome summary",
 	"deposit": "1000test"
 }
 `, addr, addr, addr, addr, addr, base64.StdEncoding.EncodeToString(expectedMetadata)))
@@ -161,15 +163,15 @@ func TestParseSubmitProposal(t *testing.T) {
 	badJSON := testutil.WriteToNewTempFile(t, "bad json")
 
 	// nonexistent json
-	_, _, _, err := parseSubmitProposal(cdc, "fileDoesNotExist")
+	_, _, _, _, _, err := parseSubmitProposal(cdc, "fileDoesNotExist") //nolint: dogsled
 	require.Error(t, err)
 
 	// invalid json
-	_, _, _, err = parseSubmitProposal(cdc, badJSON.Name())
+	_, _, _, _, _, err = parseSubmitProposal(cdc, badJSON.Name()) //nolint: dogsled
 	require.Error(t, err)
 
 	// ok json
-	msgs, metadata, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
+	msgs, metadata, title, summary, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
 	require.NoError(t, err, "unexpected error")
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000))), deposit)
 	require.Equal(t, base64.StdEncoding.EncodeToString(expectedMetadata), metadata)
@@ -191,6 +193,8 @@ func TestParseSubmitProposal(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, "My awesome title", textProp.Title)
 	require.Equal(t, "My awesome description", textProp.Description)
+	require.Equal(t, "My awesome title", title)
+	require.Equal(t, "My awesome summary", summary)
 
 	err = okJSON.Close()
 	require.Nil(t, err, "unexpected error")

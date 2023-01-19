@@ -14,4 +14,7 @@ message Module {
   // If left empty it defaults to the list of account names supplied in the auth module configuration as
   // module_account_permissions
   repeated string blocked_module_accounts_override = 1;
+
+  // authority defines the custom module authority. If not set, defaults to the governance module.
+  string authority = 2;
 }

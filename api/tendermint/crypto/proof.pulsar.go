@@ -2919,7 +2919,7 @@ func (x *DominoOp) GetOutput() string {
 }
 
 // ProofOp defines an operation used for calculating Merkle root
-// The data could be arbitrary format, providing necessary data
+// The data could be arbitrary format, providing nessecary data
 // for example neighbouring node hash
 type ProofOp struct {
 	state         protoimpl.MessageState

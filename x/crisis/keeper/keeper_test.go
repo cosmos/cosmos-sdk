@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -19,8 +20,8 @@ func TestLogger(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
 
@@ -33,22 +34,23 @@ func TestInvariants(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
 	require.Equal(t, keeper.InvCheckPeriod(), uint(5))
 
 	orgInvRoutes := keeper.Routes()
 	keeper.RegisterRoute("testModule", "testRoute", func(sdk.Context) (string, bool) { return "", false })
-	require.Equal(t, len(keeper.Routes()), len(orgInvRoutes)+1)
+	invar := keeper.Invariants()
+	require.Equal(t, len(invar), len(orgInvRoutes)+1)
 }
 
 func TestAssertInvariants(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	keeper := keeper.NewKeeper(encCfg.Codec, key, 5, supplyKeeper, "", "")
 

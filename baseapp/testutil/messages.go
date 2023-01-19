@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -17,6 +18,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_Counter2_serviceDesc)
 	msgservice.RegisterMsgServiceDesc(registry, &_KeyValue_serviceDesc)
+
+	codec.RegisterInterfaces(registry)
 }
 
 var _ sdk.Msg = &MsgCounter{}
@@ -42,6 +45,10 @@ func (msg *MsgCounter2) ValidateBasic() error {
 var _ sdk.Msg = &MsgKeyValue{}
 
 func (msg *MsgKeyValue) GetSigners() []sdk.AccAddress {
+	if len(msg.Signer) == 0 {
+		return []sdk.AccAddress{}
+	}
+
 	return []sdk.AccAddress{sdk.MustAccAddressFromBech32(msg.Signer)}
 }
 

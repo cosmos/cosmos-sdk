@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/simapp"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -29,13 +30,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	authtest "github.com/cosmos/cosmos-sdk/x/auth/client/testutil"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var bankMsgSendEventAction = fmt.Sprintf("message.action='%s'", sdk.MsgTypeURL(&banktypes.MsgSend{}))
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -46,8 +48,8 @@ type IntegrationTestSuite struct {
 	txRes       sdk.TxResponse
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
@@ -99,18 +101,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
-	height, err := s.network.LatestHeight()
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
-	s.txHeight = height
+	s.txHeight = resp.Height
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryBySig() {
+func (s *E2ETestSuite) TestQueryBySig() {
 	// broadcast tx
 	txb := s.mkTxBuilder()
 	txbz, err := s.cfg.TxConfig.TxEncoder()(txb.GetTx())
@@ -119,7 +120,6 @@ func (s *IntegrationTestSuite) TestQueryBySig() {
 	s.Require().NoError(err)
 	s.Require().NotEmpty(resp.TxResponse.TxHash)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder
@@ -162,6 +162,11 @@ func TestEventRegex(t *testing.T) {
 			match: true,
 		},
 		{
+			name:  "valid: with underscores",
+			event: "claim_reward.message_action='something'",
+			match: true,
+		},
+		{
 			name:  "valid: no quotes",
 			event: "tx.message=something",
 			match: true,
@@ -186,7 +191,7 @@ func TestEventRegex(t *testing.T) {
 	}
 }
 
-func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
+func (s E2ETestSuite) TestSimulateTx_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -221,19 +226,19 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPC() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				//
-				// The 13 events are:
+				// The 12 events are:
 				// - Sending Fee to the pool: coin_spent, coin_received, transfer and message.sender=<val1>
 				// - tx.* events: tx.fee, tx.acc_seq, tx.signature
 				// - Sending Amount to recipient: coin_spent, coin_received, transfer and message.sender=<val1>
-				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend
-				s.Require().Equal(len(res.GetResult().GetEvents()), 13) // 1 coin recv 1 coin spent, 1 transfer, 3 messages.
-				s.Require().True(res.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
+				// - Msg events: message.module=bank and message.action=/cosmos.bank.v1beta1.MsgSend (in one message)
+				s.Require().Equal(12, len(res.GetResult().GetEvents()))
+				s.Require().True(res.GetGasInfo().GetGasUsed() > 0) // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
 }
 
-func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
+func (s E2ETestSuite) TestSimulateTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	// Convert the txBuilder to a tx.Tx.
@@ -268,14 +273,14 @@ func (s IntegrationTestSuite) TestSimulateTx_GRPCGateway() {
 				s.Require().NoError(err)
 				// Check the result and gas used are correct.
 				s.Require().Len(result.GetResult().MsgResponses, 1)
-				s.Require().Equal(len(result.GetResult().GetEvents()), 13) // See TestSimulateTx_GRPC for the 13 events.
-				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, jus
+				s.Require().Equal(12, len(result.GetResult().GetEvents())) // See TestSimulateTx_GRPC for the 12 events.
+				s.Require().True(result.GetGasInfo().GetGasUsed() > 0)     // Gas used sometimes change, just check it's not empty.
 			}
 		})
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
+func (s E2ETestSuite) TestGetTxEvents_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxsEventRequest
@@ -352,7 +357,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
+func (s E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -429,7 +434,7 @@ func (s IntegrationTestSuite) TestGetTxEvents_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTx_GRPC() {
+func (s E2ETestSuite) TestGetTx_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetTxRequest
@@ -456,7 +461,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
+func (s E2ETestSuite) TestGetTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -503,7 +508,7 @@ func (s IntegrationTestSuite) TestGetTx_GRPCGateway() {
 	}
 }
 
-func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
+func (s E2ETestSuite) TestBroadcastTx_GRPC() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -541,7 +546,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
+func (s E2ETestSuite) TestBroadcastTx_GRPCGateway() {
 	val := s.network.Validators[0]
 	txBuilder := s.mkTxBuilder()
 	txBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
@@ -579,7 +584,7 @@ func (s IntegrationTestSuite) TestBroadcastTx_GRPCGateway() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestSimMultiSigTx() {
+func (s *E2ETestSuite) TestSimMultiSigTx() {
 	val1 := *s.network.Validators[0]
 
 	kr := val1.ClientCtx.Keyring
@@ -686,7 +691,7 @@ func (s *IntegrationTestSuite) TestSimMultiSigTx() {
 	s.Require().Greater(res.GasInfo.GasUsed, uint64(0))
 }
 
-func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
+func (s E2ETestSuite) TestGetBlockWithTxs_GRPC() {
 	testCases := []struct {
 		name      string
 		req       *tx.GetBlockWithTxsRequest
@@ -724,7 +729,7 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPC() {
 	}
 }
 
-func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
+func (s E2ETestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -765,11 +770,344 @@ func (s IntegrationTestSuite) TestGetBlockWithTxs_GRPCGateway() {
 	}
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func (s E2ETestSuite) TestTxEncode_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxEncode(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetTxBytes())
+
+				tx, err := val.ClientCtx.TxConfig.TxDecoder()(res.TxBytes)
+				s.Require().NoError(err)
+				s.Require().Equal(protoTx.GetMsgs(), tx.GetMsgs())
+			}
+		})
+	}
 }
 
-func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
+func (s *E2ETestSuite) TestTxEncode_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	protoTx, err := txBuilderToProtoTx(txBuilder)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxEncodeRequest{}, true, "invalid empty tx"},
+		{"valid tx request", &tx.TxEncodeRequest{Tx: protoTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxEncodeResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+
+				tx, err := val.ClientCtx.TxConfig.TxDecoder()(result.TxBytes)
+				s.Require().NoError(err)
+				s.Require().Equal(protoTx.GetMsgs(), tx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s E2ETestSuite) TestTxDecode_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+
+	encodedTx, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxDecodeRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeRequest{TxBytes: invalidTxBytes}, true, "tx parse error"},
+		{"valid request with tx bytes", &tx.TxDecodeRequest{TxBytes: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxDecode(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetTx())
+
+				txb := authtx.WrapTx(res.Tx)
+				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
+				s.Require().NoError(err)
+				s.Require().Equal(encodedTx, tx)
+			}
+		})
+	}
+}
+
+func (s E2ETestSuite) TestTxDecode_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+
+	encodedTxBytes, err := val.ClientCtx.TxConfig.TxEncoder()(txBuilder.GetTx())
+	s.Require().NoError(err)
+
+	invalidTxBytes := append(encodedTxBytes, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxDecodeRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeRequest{TxBytes: invalidTxBytes}, true, "tx parse error"},
+		{"valid request with tx_bytes", &tx.TxDecodeRequest{TxBytes: encodedTxBytes}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxDecodeResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+
+				txb := authtx.WrapTx(result.Tx)
+				tx, err := val.ClientCtx.TxConfig.TxEncoder()(txb.GetTx())
+				s.Require().NoError(err)
+				s.Require().Equal(encodedTxBytes, tx)
+			}
+		})
+	}
+}
+
+func (s E2ETestSuite) TestTxEncodeAmino_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxEncodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetAminoBinary())
+
+				var tx legacytx.StdTx
+				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+				stdTxConfig.Cdc.Unmarshal(res.AminoBinary, &tx)
+				s.Require().Equal(tx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	txJSONBytes, err := val.ClientCtx.LegacyAmino.MarshalJSON(stdTx)
+	s.Require().NoError(err)
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxEncodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxEncodeAminoRequest{}, true, "invalid empty tx json"},
+		{"invalid request", &tx.TxEncodeAminoRequest{AminoJson: "invalid tx json"}, true, "invalid request"},
+		{"valid request with amino-json", &tx.TxEncodeAminoRequest{AminoJson: string(txJSONBytes)}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/encode/amino", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxEncodeAminoResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+
+				var newStdTx legacytx.StdTx
+				stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+				stdTxConfig.Cdc.Unmarshal(result.AminoBinary, &newStdTx)
+				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s E2ETestSuite) TestTxDecodeAmino_GRPC() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	encodedTx, err := stdTxConfig.Cdc.Marshal(stdTx)
+	s.Require().NoError(err)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"nil request", nil, true, "request cannot be nil"},
+		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			res, err := s.queryClient.TxDecodeAmino(context.Background(), tc.req)
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expErrMsg)
+				s.Require().Empty(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotEmpty(res.GetAminoJson())
+
+				var tx legacytx.StdTx
+				err := stdTxConfig.Cdc.UnmarshalJSON([]byte(res.GetAminoJson()), &tx)
+				s.Require().NoError(err)
+				s.Require().Equal(stdTx.GetMsgs(), tx.GetMsgs())
+			}
+		})
+	}
+}
+
+func (s E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
+	val := s.network.Validators[0]
+	txBuilder := s.mkTxBuilder()
+
+	stdTx, err := clienttx.ConvertTxToStdTx(val.ClientCtx.LegacyAmino, txBuilder.GetTx())
+	s.Require().NoError(err)
+	stdTxConfig := legacytx.StdTxConfig{Cdc: val.ClientCtx.LegacyAmino}
+	encodedTx, err := stdTxConfig.Cdc.Marshal(stdTx)
+	s.Require().NoError(err)
+
+	invalidTxBytes := append(encodedTx, byte(0o00))
+
+	testCases := []struct {
+		name      string
+		req       *tx.TxDecodeAminoRequest
+		expErr    bool
+		expErrMsg string
+	}{
+		{"empty request", &tx.TxDecodeAminoRequest{}, true, "invalid empty tx bytes"},
+		{"invalid tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: invalidTxBytes}, true, "invalid request"},
+		{"valid request with tx bytes", &tx.TxDecodeAminoRequest{AminoBinary: encodedTx}, false, ""},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			req, err := val.ClientCtx.Codec.MarshalJSON(tc.req)
+			s.Require().NoError(err)
+
+			res, err := testutil.PostRequest(fmt.Sprintf("%s/cosmos/tx/v1beta1/decode/amino", val.APIAddress), "application/json", req)
+			s.Require().NoError(err)
+			if tc.expErr {
+				s.Require().Contains(string(res), tc.expErrMsg)
+			} else {
+				var result tx.TxDecodeAminoResponse
+				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+				s.Require().NoError(err)
+
+				var newStdTx legacytx.StdTx
+				stdTxConfig.Cdc.UnmarshalJSON([]byte(result.AminoJson), &newStdTx)
+				s.Require().Equal(newStdTx.GetMsgs(), stdTx.GetMsgs())
+			}
+		})
+	}
+}
+
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
+}
+
+func (s E2ETestSuite) mkTxBuilder() client.TxBuilder {
 	val := s.network.Validators[0]
 	s.Require().NoError(s.network.WaitForNextBlock())
 
@@ -787,6 +1125,7 @@ func (s IntegrationTestSuite) mkTxBuilder() client.TxBuilder {
 	txBuilder.SetFeeAmount(feeAmount)
 	txBuilder.SetGasLimit(gasLimit)
 	txBuilder.SetMemo("foobar")
+	s.Require().Equal([]sdk.AccAddress{val.Address}, txBuilder.GetTx().GetSigners())
 
 	// setup txFactory
 	txFactory := clienttx.Factory{}.
@@ -811,8 +1150,8 @@ type protoTxProvider interface {
 }
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
+// Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
+// using a proto Tx field and for testing the TxEncode endpoint.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {

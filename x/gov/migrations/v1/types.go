@@ -1,6 +1,6 @@
 package v1
 
-// Package v040 is copy-pasted from:
+// Package v1 (v0.40) is copy-pasted from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.41.0/x/gov/types/keys.go
 
 import (
@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	v042auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v042"
+	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 )
 
 const (
@@ -154,7 +154,7 @@ func splitKeyWithTime(key []byte) (proposalID uint64, endTime time.Time) {
 }
 
 func splitKeyWithAddress(key []byte) (proposalID uint64, addr sdk.AccAddress) {
-	kv.AssertKeyLength(key[1:], 8+v042auth.AddrLen)
+	kv.AssertKeyLength(key[1:], 8+v1auth.AddrLen)
 
 	kv.AssertKeyAtLeastLength(key, 10)
 	proposalID = GetProposalIDFromBytes(key[1:9])

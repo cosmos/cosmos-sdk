@@ -1,6 +1,8 @@
 package nft
 
 import (
+	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -14,27 +16,27 @@ var _ sdk.Msg = &MsgSend{}
 
 // ValidateBasic implements the Msg.ValidateBasic method.
 func (m MsgSend) ValidateBasic() error {
-	if err := ValidateClassID(m.ClassId); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidID, "Invalid class id (%s)", m.ClassId)
+	if len(m.ClassId) == 0 {
+		return ErrEmptyClassID
 	}
 
-	if err := ValidateNFTID(m.Id); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidID, "Invalid nft id (%s)", m.Id)
+	if len(m.Id) == 0 {
+		return ErrEmptyNFTID
 	}
 
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", m.Sender)
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", m.Sender)
 	}
 
 	_, err = sdk.AccAddressFromBech32(m.Receiver)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", m.Receiver)
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid receiver address (%s)", m.Receiver)
 	}
 	return nil
 }
 
-// GetSigners implements Msg
+// GetSigners returns the expected signers for MsgSend.
 func (m MsgSend) GetSigners() []sdk.AccAddress {
 	signer, _ := sdk.AccAddressFromBech32(m.Sender)
 	return []sdk.AccAddress{signer}

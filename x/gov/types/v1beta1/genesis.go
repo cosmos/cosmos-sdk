@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -27,6 +28,7 @@ func DefaultGenesisState() *GenesisState {
 	)
 }
 
+// Equal returns true if the GenesisStates are equal
 func (data GenesisState) Equal(other GenesisState) bool {
 	return data.StartingProposalId == other.StartingProposalId &&
 		data.Deposits.Equal(other.Deposits) &&

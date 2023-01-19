@@ -40,14 +40,6 @@ func (k msgServer) SetWithdrawAddress(goCtx context.Context, msg *types.MsgSetWi
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	)
-
 	return &types.MsgSetWithdrawAddressResponse{}, nil
 }
 
@@ -79,13 +71,6 @@ func (k msgServer) WithdrawDelegatorReward(goCtx context.Context, msg *types.Msg
 		}
 	}()
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
-		),
-	)
 	return &types.MsgWithdrawDelegatorRewardResponse{Amount: amount}, nil
 }
 
@@ -113,14 +98,6 @@ func (k msgServer) WithdrawValidatorCommission(goCtx context.Context, msg *types
 		}
 	}()
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
-		),
-	)
-
 	return &types.MsgWithdrawValidatorCommissionResponse{Amount: amount}, nil
 }
 
@@ -135,14 +112,6 @@ func (k msgServer) FundCommunityPool(goCtx context.Context, msg *types.MsgFundCo
 		return nil, err
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.Depositor),
-		),
-	)
-
 	return &types.MsgFundCommunityPoolResponse{}, nil
 }
 
@@ -151,18 +120,15 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
 	}
 
+	if (!req.Params.BaseProposerReward.IsNil() && !req.Params.BaseProposerReward.IsZero()) || //nolint:staticcheck
+		(!req.Params.BonusProposerReward.IsNil() && !req.Params.BonusProposerReward.IsZero()) { //nolint:staticcheck
+		return nil, errors.Wrapf(errors.ErrInvalidRequest, "cannot update base or bonus proposer reward because these are deprecated fields")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, req.Authority),
-		),
-	)
 
 	return &types.MsgUpdateParamsResponse{}, nil
 }
@@ -190,13 +156,44 @@ func (k msgServer) CommunityPoolSpend(goCtx context.Context, req *types.MsgCommu
 	logger := k.Logger(ctx)
 	logger.Info("transferred from the community pool to recipient", "amount", req.Amount.String(), "recipient", req.Recipient)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, req.Authority),
-		),
+	return &types.MsgCommunityPoolSpendResponse{}, nil
+}
+
+func (k msgServer) DepositValidatorRewardsPool(goCtx context.Context, req *types.MsgDepositValidatorRewardsPool) (*types.MsgDepositValidatorRewardsPoolResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	authority, err := sdk.AccAddressFromBech32(req.Authority)
+	if err != nil {
+		return nil, err
+	}
+
+	// deposit coins from sender's account to the distribution module
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, authority, types.ModuleName, req.Amount); err != nil {
+		return nil, err
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, valAddr.String())
+	}
+
+	// Allocate tokens from the distribution module to the validator, which are
+	// then distributed to the validator's delegators.
+	reward := sdk.NewDecCoinsFromCoins(req.Amount...)
+	k.AllocateTokensToValidator(ctx, validator, reward)
+
+	logger := k.Logger(ctx)
+	logger.Info(
+		"transferred from rewards to validator rewards pool",
+		"authority", req.Authority,
+		"amount", req.Amount.String(),
+		"validator", req.ValidatorAddress,
 	)
 
-	return &types.MsgCommunityPoolSpendResponse{}, nil
+	return &types.MsgDepositValidatorRewardsPoolResponse{}, nil
 }

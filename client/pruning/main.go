@@ -8,20 +8,20 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const FlagAppDBBackend = "app-db-backend"
 
-// PruningCmd prunes the sdk root multi store history versions based on the pruning options
+// Cmd prunes the sdk root multi store history versions based on the pruning options
 // specified by command flags.
-func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
+func Cmd(appCreator servertypes.AppCreator) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune",
 		Short: "Prune app history states by keeping the recent heights and deleting old heights",
@@ -36,7 +36,7 @@ func PruningCmd(appCreator servertypes.AppCreator) *cobra.Command {
 		custom: allow pruning options to be manually specified through 'pruning-keep-recent'.
 		besides pruning options, database home directory and database backend type should also be specified via flags
 		'--home' and '--app-db-backend'.
-		valid app-db-backend type includes 'goleveldb', 'cleveldb', 'rocksdb', 'boltdb', and 'badgerdb'.
+		valid app-db-backend type includes 'goleveldb', 'rocksdb', 'pebbledb'.
 		`,
 		Example: "prune --home './' --app-db-backend 'goleveldb' --pruning 'custom' --pruning-keep-recent 100",
 		RunE: func(cmd *cobra.Command, _ []string) error {

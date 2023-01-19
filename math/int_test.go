@@ -1,12 +1,16 @@
 package math_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
+	"os"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -420,6 +424,86 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 			}
 			if !rt.Equal(iv) {
 				t.Fatalf("roundtrip=%q != original=%q", rt, iv)
+			}
+		})
+	}
+}
+
+func TestFormatInt(t *testing.T) {
+	type integerTest []string
+	var testcases []integerTest
+	raw, err := os.ReadFile("../tx/textual/internal/testdata/integers.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		out, err := math.FormatInt(tc[0])
+		require.NoError(t, err)
+		require.Equal(t, tc[1], out)
+	}
+}
+
+func TestFormatIntNonDigits(t *testing.T) {
+	badCases := []string{
+		"a10",
+		"1a10",
+		"p1a10",
+		"10p",
+		"--10",
+		"😎😎",
+		"11111111111133333333333333333333333333333a",
+		"11111111111133333333333333333333333333333 192892",
+	}
+
+	for _, value := range badCases {
+		value := value
+		t.Run(value, func(t *testing.T) {
+			s, err := math.FormatInt(value)
+			if err == nil {
+				t.Fatal("Expected an error")
+			}
+			if g, w := err.Error(), "but got non-digits in"; !strings.Contains(g, w) {
+				t.Errorf("Error mismatch\nGot:  %q\nWant substring: %q", g, w)
+			}
+			if s != "" {
+				t.Fatalf("Got a non-empty string: %q", s)
+			}
+		})
+	}
+}
+
+func TestFormatIntCorrectness(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"0", "0"},
+		{"-2", "-2"},
+		{"10", "10"},
+		{"123", "123"},
+		{"1234", "1'234"},
+		{"12345", "12'345"},
+		{"123456", "123'456"},
+		{"-123456", "-123'456"},
+		{"1234567", "1'234'567"},
+		{"12345678", "12'345'678"},
+		{"123456789", "123'456'789"},
+		{"12345678910", "12'345'678'910"},
+		{"9999999999999999", "9'999'999'999'999'999"},
+		{"-9999999999999999", "-9'999'999'999'999'999"},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.in, func(t *testing.T) {
+			got, err := math.FormatInt(tt.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if got != tt.want {
+				t.Fatalf("Mismatch:\n\tGot:  %q\n\tWant: %q", got, tt.want)
 			}
 		})
 	}

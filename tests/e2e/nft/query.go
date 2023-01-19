@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-func (s *IntegrationTestSuite) TestQueryClass() {
+func (s *E2ETestSuite) TestQueryClass() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -48,7 +48,7 @@ func (s *IntegrationTestSuite) TestQueryClass() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryClasses() {
+func (s *E2ETestSuite) TestQueryClasses() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name      string
@@ -76,7 +76,7 @@ func (s *IntegrationTestSuite) TestQueryClasses() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryNFT() {
+func (s *E2ETestSuite) TestQueryNFT() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -136,7 +136,7 @@ func (s *IntegrationTestSuite) TestQueryNFT() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryNFTs() {
+func (s *E2ETestSuite) TestQueryNFTs() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -209,7 +209,7 @@ func (s *IntegrationTestSuite) TestQueryNFTs() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryOwner() {
+func (s *E2ETestSuite) TestQueryOwner() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -222,19 +222,6 @@ func (s *IntegrationTestSuite) TestQueryOwner() {
 		expectResult string
 	}{
 		{
-			name: "class id is invalid",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: "invalid_class_id",
-				ID:      testID,
-			},
-			expectErr:    true,
-			errorMsg:     "invalid class id",
-			expectResult: "",
-		},
-		{
 			name: "class id does not exist",
 			args: struct {
 				ClassID string
@@ -244,18 +231,6 @@ func (s *IntegrationTestSuite) TestQueryOwner() {
 				ID:      testID,
 			},
 			expectErr:    false,
-			expectResult: "",
-		},
-		{
-			name: "nft id is invalid",
-			args: struct {
-				ClassID string
-				ID      string
-			}{
-				ClassID: testClassID,
-				ID:      "invalid_nft_id",
-			},
-			expectErr:    true,
 			expectResult: "",
 		},
 		{
@@ -299,7 +274,7 @@ func (s *IntegrationTestSuite) TestQueryOwner() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryBalance() {
+func (s *E2ETestSuite) TestQueryBalance() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -311,19 +286,6 @@ func (s *IntegrationTestSuite) TestQueryBalance() {
 		errorMsg     string
 		expectResult uint64
 	}{
-		{
-			name: "class id is invalid",
-			args: struct {
-				ClassID string
-				Owner   string
-			}{
-				ClassID: "invalid_class_id",
-				Owner:   val.Address.String(),
-			},
-			expectErr:    true,
-			errorMsg:     "invalid class id",
-			expectResult: 0,
-		},
 		{
 			name: "class id does not exist",
 			args: struct {
@@ -377,7 +339,7 @@ func (s *IntegrationTestSuite) TestQueryBalance() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQuerySupply() {
+func (s *E2ETestSuite) TestQuerySupply() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -389,14 +351,14 @@ func (s *IntegrationTestSuite) TestQuerySupply() {
 		expectResult uint64
 	}{
 		{
-			name: "class id is invalid",
+			name: "class id is empty",
 			args: struct {
 				ClassID string
 			}{
-				ClassID: "invalid_class_id",
+				ClassID: "",
 			},
 			expectErr:    true,
-			errorMsg:     "invalid class id",
+			errorMsg:     nft.ErrEmptyClassID.Error(),
 			expectResult: 0,
 		},
 		{

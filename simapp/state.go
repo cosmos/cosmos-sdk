@@ -13,6 +13,7 @@ import (
 
 	"cosmossdk.io/math"
 	simappparams "cosmossdk.io/simapp/params"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -144,7 +145,7 @@ func AppStateRandomizedFn(
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	genesisState := NewDefaultGenesisState(cdc)
+	genesisState := ModuleBasics.DefaultGenesis(cdc)
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
@@ -182,6 +183,7 @@ func AppStateRandomizedFn(
 		Accounts:     accs,
 		InitialStake: initialStake,
 		NumBonded:    numInitiallyBonded,
+		BondDenom:    sdk.DefaultBondDenom,
 		GenTimestamp: genesisTimestamp,
 	}
 

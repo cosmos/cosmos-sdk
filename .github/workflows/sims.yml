@@ -15,29 +15,13 @@ jobs:
   build:
     permissions:
       contents: read # for actions/checkout to fetch code
-      pull-requests: read # for technote-space/get-diff-action to get git reference
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
-      - uses: technote-space/get-diff-action@v6.1.0
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: Get data from Go build cache
-        if: ${{ false }}
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/golangci-lint
-            ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+          go-version: 1.19.4
       - run: make build
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
@@ -47,14 +31,14 @@ jobs:
           key: ${{ runner.os }}-go-runsim-binary
 
   test-sim-import-export:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     needs: [build]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.19.4
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -64,13 +48,13 @@ jobs:
           make test-sim-import-export
 
   test-sim-after-import:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     needs: [build]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.19.4
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -80,14 +64,14 @@ jobs:
           make test-sim-after-import
 
   test-sim-multi-seed-short:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     needs: [build]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.19.4
       - uses: actions/cache@v3
         with:
           path: ~/go/bin
@@ -112,7 +96,7 @@ jobs:
 
       - name: Notify Slack on success
         if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
+        uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: cosmos-sdk-sims
@@ -131,7 +115,7 @@ jobs:
     if: ${{ failure() }}
     steps:
       - name: Notify Slack on failure
-        uses: rtCamp/action-slack-notify@12e36fc18b0689399306c2e0b3e0f2978b7f1ee7
+        uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: cosmos-sdk-sims

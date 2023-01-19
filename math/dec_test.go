@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 	"testing"
 
@@ -665,4 +666,51 @@ func BenchmarkLegacyQuoRoundupMut(b *testing.B) {
 		b.Fatal("Benchmark did not run")
 	}
 	sink = (interface{})(nil)
+}
+
+func TestFormatDec(t *testing.T) {
+	type decimalTest []string
+	var testcases []decimalTest
+	raw, err := os.ReadFile("../tx/textual/internal/testdata/decimals.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(raw, &testcases)
+	require.NoError(t, err)
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc[0], func(t *testing.T) {
+			out, err := math.FormatDec(tc[0])
+			require.NoError(t, err)
+			require.Equal(t, tc[1], out)
+		})
+	}
+}
+
+func TestFormatDecNonDigits(t *testing.T) {
+	badCases := []string{
+		"10.a",
+		"1a.10",
+		"p1a10.",
+		"0.10p",
+		"--10",
+		"12.😎😎",
+		"11111111111133333333333333333333333333333a",
+		"11111111111133333333333333333333333333333 192892",
+	}
+
+	for _, value := range badCases {
+		value := value
+		t.Run(value, func(t *testing.T) {
+			s, err := math.FormatDec(value)
+			if err == nil {
+				t.Fatal("Expected an error")
+			}
+			if g, w := err.Error(), "non-digits"; !strings.Contains(g, w) {
+				t.Errorf("Error mismatch\nGot:  %q\nWant substring: %q", g, w)
+			}
+			if s != "" {
+				t.Fatalf("Got a non-empty string: %q", s)
+			}
+		})
+	}
 }

@@ -22,12 +22,13 @@ import (
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txmodulev1 "cosmossdk.io/api/cosmos/tx/module/v1"
+	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -77,7 +78,7 @@ var (
 	AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
-				Name: "runtime",
+				Name: runtime.ModuleName,
 				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
 					AppName: "SimApp",
 					// During begin block slashing happens after distr.BeginBlocker so that
@@ -93,39 +94,16 @@ var (
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
-						authtypes.ModuleName,
-						banktypes.ModuleName,
-						govtypes.ModuleName,
-						crisistypes.ModuleName,
 						genutiltypes.ModuleName,
 						authz.ModuleName,
-						feegrant.ModuleName,
-						nft.ModuleName,
-						group.ModuleName,
-						paramstypes.ModuleName,
-						vestingtypes.ModuleName,
-						consensustypes.ModuleName,
 					},
 					EndBlockers: []string{
 						crisistypes.ModuleName,
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
-						capabilitytypes.ModuleName,
-						authtypes.ModuleName,
-						banktypes.ModuleName,
-						distrtypes.ModuleName,
-						slashingtypes.ModuleName,
-						minttypes.ModuleName,
 						genutiltypes.ModuleName,
-						evidencetypes.ModuleName,
-						authz.ModuleName,
 						feegrant.ModuleName,
-						nft.ModuleName,
 						group.ModuleName,
-						paramstypes.ModuleName,
-						consensustypes.ModuleName,
-						upgradetypes.ModuleName,
-						vestingtypes.ModuleName,
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -133,6 +111,38 @@ var (
 							KvStoreKey: "acc",
 						},
 					},
+					// NOTE: The genutils module must occur after staking so that pools are
+					// properly initialized with tokens from genesis accounts.
+					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+					// NOTE: Capability module must occur first so that it can initialize any capabilities
+					// so that other modules that want to create or claim capabilities afterwards in InitChain
+					// can do so safely.
+					InitGenesis: []string{
+						capabilitytypes.ModuleName,
+						authtypes.ModuleName,
+						banktypes.ModuleName,
+						distrtypes.ModuleName,
+						stakingtypes.ModuleName,
+						slashingtypes.ModuleName,
+						govtypes.ModuleName,
+						minttypes.ModuleName,
+						crisistypes.ModuleName,
+						genutiltypes.ModuleName,
+						evidencetypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						paramstypes.ModuleName,
+						upgradetypes.ModuleName,
+						vestingtypes.ModuleName,
+						consensustypes.ModuleName,
+					},
+					// When ExportGenesis is not specified, the export genesis module order
+					// is equal to the init genesis order
+					// ExportGenesis: []string{},
+					// Uncomment if you want to set a custom migration order here.
+					// OrderMigrations: []string{},
 				}),
 			},
 			{
@@ -140,6 +150,9 @@ var (
 				Config: appconfig.WrapAny(&authmodulev1.Module{
 					Bech32Prefix:             "cosmos",
 					ModuleAccountPermissions: moduleAccPerms,
+					// By default modules authority is the governance module. This is configurable with the following:
+					// Authority: "group", // A custom module authority can be set using a module name
+					// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address
 				}),
 			},
 			{
@@ -166,7 +179,7 @@ var (
 			},
 			{
 				Name:   "tx",
-				Config: appconfig.WrapAny(&txmodulev1.Module{}),
+				Config: appconfig.WrapAny(&txconfigv1.Config{}),
 			},
 			{
 				Name:   genutiltypes.ModuleName,

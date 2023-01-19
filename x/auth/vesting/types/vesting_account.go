@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"sigs.k8s.io/yaml"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -15,7 +13,7 @@ import (
 
 // Compile-time type assertions
 var (
-	_ authtypes.AccountI          = (*BaseVestingAccount)(nil)
+	_ sdk.AccountI                = (*BaseVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*ContinuousVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*PeriodicVestingAccount)(nil)
 	_ vestexported.VestingAccount = (*DelayedVestingAccount)(nil)
@@ -152,46 +150,6 @@ func (bva BaseVestingAccount) Validate() error {
 	return bva.BaseAccount.Validate()
 }
 
-type vestingAccountYAML struct {
-	Address          sdk.AccAddress `json:"address"`
-	PubKey           string         `json:"public_key"`
-	AccountNumber    uint64         `json:"account_number"`
-	Sequence         uint64         `json:"sequence"`
-	OriginalVesting  sdk.Coins      `json:"original_vesting"`
-	DelegatedFree    sdk.Coins      `json:"delegated_free"`
-	DelegatedVesting sdk.Coins      `json:"delegated_vesting"`
-	EndTime          int64          `json:"end_time"`
-
-	// custom fields based on concrete vesting type which can be omitted
-	StartTime      int64   `json:"start_time,omitempty"`
-	VestingPeriods Periods `json:"vesting_periods,omitempty"`
-}
-
-func (bva BaseVestingAccount) String() string {
-	out, _ := bva.MarshalYAML()
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of a BaseVestingAccount.
-func (bva BaseVestingAccount) MarshalYAML() (interface{}, error) {
-	accAddr, err := sdk.AccAddressFromBech32(bva.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	out := vestingAccountYAML{
-		Address:          accAddr,
-		AccountNumber:    bva.AccountNumber,
-		PubKey:           getPKString(bva),
-		Sequence:         bva.Sequence,
-		OriginalVesting:  bva.OriginalVesting,
-		DelegatedFree:    bva.DelegatedFree,
-		DelegatedVesting: bva.DelegatedVesting,
-		EndTime:          bva.EndTime,
-	}
-	return marshalYaml(out)
-}
-
 // Continuous Vesting Account
 
 var (
@@ -280,32 +238,6 @@ func (cva ContinuousVestingAccount) Validate() error {
 	}
 
 	return cva.BaseVestingAccount.Validate()
-}
-
-func (cva ContinuousVestingAccount) String() string {
-	out, _ := cva.MarshalYAML()
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of a ContinuousVestingAccount.
-func (cva ContinuousVestingAccount) MarshalYAML() (interface{}, error) {
-	accAddr, err := sdk.AccAddressFromBech32(cva.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	out := vestingAccountYAML{
-		Address:          accAddr,
-		AccountNumber:    cva.AccountNumber,
-		PubKey:           getPKString(cva),
-		Sequence:         cva.Sequence,
-		OriginalVesting:  cva.OriginalVesting,
-		DelegatedFree:    cva.DelegatedFree,
-		DelegatedVesting: cva.DelegatedVesting,
-		EndTime:          cva.EndTime,
-		StartTime:        cva.StartTime,
-	}
-	return marshalYaml(out)
 }
 
 // Periodic Vesting Account
@@ -427,33 +359,6 @@ func (pva PeriodicVestingAccount) Validate() error {
 	return pva.BaseVestingAccount.Validate()
 }
 
-func (pva PeriodicVestingAccount) String() string {
-	out, _ := pva.MarshalYAML()
-	return out.(string)
-}
-
-// MarshalYAML returns the YAML representation of a PeriodicVestingAccount.
-func (pva PeriodicVestingAccount) MarshalYAML() (interface{}, error) {
-	accAddr, err := sdk.AccAddressFromBech32(pva.Address)
-	if err != nil {
-		return nil, err
-	}
-
-	out := vestingAccountYAML{
-		Address:          accAddr,
-		AccountNumber:    pva.AccountNumber,
-		PubKey:           getPKString(pva),
-		Sequence:         pva.Sequence,
-		OriginalVesting:  pva.OriginalVesting,
-		DelegatedFree:    pva.DelegatedFree,
-		DelegatedVesting: pva.DelegatedVesting,
-		EndTime:          pva.EndTime,
-		StartTime:        pva.StartTime,
-		VestingPeriods:   pva.VestingPeriods,
-	}
-	return marshalYaml(out)
-}
-
 // Delayed Vesting Account
 
 var (
@@ -518,11 +423,6 @@ func (dva DelayedVestingAccount) Validate() error {
 	return dva.BaseVestingAccount.Validate()
 }
 
-func (dva DelayedVestingAccount) String() string {
-	out, _ := dva.MarshalYAML()
-	return out.(string)
-}
-
 //-----------------------------------------------------------------------------
 // Permanent Locked Vesting Account
 
@@ -585,28 +485,4 @@ func (plva PermanentLockedAccount) Validate() error {
 	}
 
 	return plva.BaseVestingAccount.Validate()
-}
-
-func (plva PermanentLockedAccount) String() string {
-	out, _ := plva.MarshalYAML()
-	return out.(string)
-}
-
-type getPK interface {
-	GetPubKey() cryptotypes.PubKey
-}
-
-func getPKString(g getPK) string {
-	if pk := g.GetPubKey(); pk != nil {
-		return pk.String()
-	}
-	return ""
-}
-
-func marshalYaml(i interface{}) (interface{}, error) {
-	bz, err := yaml.Marshal(i)
-	if err != nil {
-		return nil, err
-	}
-	return string(bz), nil
 }

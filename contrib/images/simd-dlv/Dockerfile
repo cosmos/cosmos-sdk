@@ -10,7 +10,6 @@ COPY math/go.mod math/go.sum /work/math/
 COPY api/go.mod api/go.sum /work/api/
 COPY core/go.mod core/go.sum /work/core/
 COPY depinject/go.mod depinject/go.sum /work/depinject/
-COPY store/tools/ics23/go.mod store/tools/ics23/go.sum /work/store/tools/ics23/
 
 RUN go mod download
 COPY ./ /work

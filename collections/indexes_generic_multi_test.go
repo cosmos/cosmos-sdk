@@ -38,7 +38,7 @@ func TestGenericMultiIndex(t *testing.T) {
 		},
 	)
 
-	// let's create the relationship
+	// let's create the relationships
 	err := mi.Reference(ctx, "cosmosAddr1", balance{coins: []coin{
 		{"atom", 1000}, {"osmo", 5000},
 	}}, nil)
@@ -76,5 +76,4 @@ func TestGenericMultiIndex(t *testing.T) {
 	exists, err = mi.Has(ctx, "atom", "cosmosAddr1") // atom is not part of the index anymore because cosmosAddr1 was removed.
 	require.NoError(t, err)
 	require.False(t, exists)
-
 }

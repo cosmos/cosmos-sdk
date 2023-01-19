@@ -3,7 +3,6 @@ package testdata;
 
 import "gogoproto/gogo.proto";
 import "testdata.proto";
-import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/testutil/testdata";
 

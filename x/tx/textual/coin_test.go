@@ -91,7 +91,7 @@ func TestCoinJsonTestcases(t *testing.T) {
 
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
-				require.Equal(t, tc.Text, screens[0].Text)
+				require.Equal(t, tc.Text, screens[0].Content)
 
 				// Round trip.
 				value, err := vr.Parse(ctx, screens)

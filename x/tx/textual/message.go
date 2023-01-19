@@ -42,7 +42,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 	}
 
 	screens := make([]Screen, 1)
-	screens[0].Text = mr.header()
+	screens[0].Title = mr.header()
 
 	for _, fd := range mr.fds {
 		if !v.Message().Has(fd) {
@@ -76,17 +76,18 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 		}
 
 		headerScreen := Screen{
-			Text:   fmt.Sprintf("%s: %s", toSentenceCase(string(fd.Name())), subscreens[0].Text),
-			Indent: subscreens[0].Indent + 1,
-			Expert: subscreens[0].Expert,
+			Title:   toSentenceCase(string(fd.Name())),
+			Content: subscreens[0].Content,
+			Indent:  subscreens[0].Indent + 1,
+			Expert:  subscreens[0].Expert,
 		}
 		screens = append(screens, headerScreen)
 
 		for i := 1; i < len(subscreens); i++ {
 			extraScreen := Screen{
-				Text:   subscreens[i].Text,
-				Indent: subscreens[i].Indent + 1,
-				Expert: subscreens[i].Expert,
+				Content: subscreens[i].Content,
+				Indent:  subscreens[i].Indent + 1,
+				Expert:  subscreens[i].Expert,
 			}
 			screens = append(screens, extraScreen)
 		}
@@ -108,7 +109,7 @@ func (mr *messageValueRenderer) formatRepeated(ctx context.Context, v protorefle
 
 	screens := make([]Screen, 1)
 	// <field_name>: <int> <field_kind>
-	screens[0].Text = fmt.Sprintf("%d %s", l.Len(), toSentenceCase(getKind(fd)))
+	screens[0].Content = fmt.Sprintf("%d %s", l.Len(), toSentenceCase(getKind(fd)))
 
 	for i := 0; i < l.Len(); i++ {
 		subscreens, err := vr.Format(ctx, l.Get(i))
@@ -122,18 +123,19 @@ func (mr *messageValueRenderer) formatRepeated(ctx context.Context, v protorefle
 
 		headerScreen := Screen{
 			// <field_name> (<int>/<int>): <value rendered 1st line>
-			Text:   fmt.Sprintf("%s (%d/%d): %s", toSentenceCase(string(fd.Name())), i+1, l.Len(), subscreens[0].Text),
-			Indent: subscreens[0].Indent + 1,
-			Expert: subscreens[0].Expert,
+			Title:   fmt.Sprintf("%s (%d/%d)", toSentenceCase(string(fd.Name())), i+1, l.Len()),
+			Content: subscreens[0].Content,
+			Indent:  subscreens[0].Indent + 1,
+			Expert:  subscreens[0].Expert,
 		}
 		screens = append(screens, headerScreen)
 
 		// <optional value rendered in the next lines>
 		for i := 1; i < len(subscreens); i++ {
 			extraScreen := Screen{
-				Text:   subscreens[i].Text,
-				Indent: subscreens[i].Indent + 1,
-				Expert: subscreens[i].Expert,
+				Content: subscreens[i].Content,
+				Indent:  subscreens[i].Indent + 1,
+				Expert:  subscreens[i].Expert,
 			}
 			screens = append(screens, extraScreen)
 		}
@@ -141,7 +143,7 @@ func (mr *messageValueRenderer) formatRepeated(ctx context.Context, v protorefle
 
 	// End of <field_name>
 	terminalScreen := Screen{
-		Text: fmt.Sprintf("End of %s", toSentenceCase(string(fd.Name()))),
+		Content: fmt.Sprintf("End of %s", toSentenceCase(string(fd.Name()))),
 	}
 	screens = append(screens, terminalScreen)
 	return screens, nil
@@ -177,8 +179,8 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 	}
 
 	wantHeader := fmt.Sprintf("%s object", mr.msgDesc.Name())
-	if screens[0].Text != wantHeader {
-		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, wantHeader, screens[0].Text)
+	if screens[0].Title != wantHeader {
+		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, wantHeader, screens[0].Title)
 	}
 	if screens[0].Indent != 0 {
 		return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)
@@ -207,7 +209,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		}
 
 		prefix := toSentenceCase(string(fd.Name())) + ": "
-		if !strings.HasPrefix(screens[idx].Text, prefix) {
+		if !strings.HasPrefix(screens[idx].Title, prefix) {
 			// we must have skipped this fd because of a default value
 			continue
 		}
@@ -215,7 +217,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		// Make a new screen without the prefix
 		subscreens := make([]Screen, 1)
 		subscreens[0] = screens[idx]
-		subscreens[0].Text = strings.TrimPrefix(screens[idx].Text, prefix)
+		subscreens[0].Content = strings.TrimPrefix(screens[idx].Content, prefix)
 		subscreens[0].Indent--
 		idx++
 
@@ -259,7 +261,7 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 
 	// <int> <field_kind>
 	headerRegex := *regexp.MustCompile(`(\d+) .+`)
-	res := headerRegex.FindAllStringSubmatch(screens[0].Text, -1)
+	res := headerRegex.FindAllStringSubmatch(screens[0].Title, -1)
 
 	if res == nil {
 		return errors.New("failed to match <int> <field_kind>")
@@ -277,7 +279,7 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 
 	// <field_name> (<int>/<int>): <value rendered 1st line>
 	elementRegex := regexp.MustCompile(`(.+) \(\d+\/\d+\): (.+)`)
-	elementRes := elementRegex.FindAllStringSubmatch(screens[idx].Text, -1)
+	elementRes := elementRegex.FindAllStringSubmatch(screens[idx].Title, -1)
 	if elementRes == nil {
 		return errors.New("element malformed")
 	}
@@ -288,7 +290,7 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 		// Make a new screen without the prefix
 		subscreens := make([]Screen, 1)
 		subscreens[0] = screens[idx]
-		subscreens[0].Text = strings.TrimPrefix(screens[idx].Text, prefix)
+		subscreens[0].Content = strings.TrimPrefix(screens[idx].Content, prefix)
 		subscreens[0].Indent--
 		idx++
 

@@ -60,7 +60,7 @@ type BaseSendKeeper struct {
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
-	hooks     types.SendHooks
+	hooks     types.SendCoinsHooks
 }
 
 func NewBaseSendKeeper(
@@ -127,21 +127,21 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	return nil
 }
 
-// Hooks gets the hooks for base send *Keeper {
-func (k *BaseSendKeeper) Hooks() types.SendHooks {
+// Hooks gets the hooks for the base send keeper.
+func (k *BaseSendKeeper) Hooks() types.SendCoinsHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set
-		return types.MultiSendHooks{}
+		return types.MultiSendCoinsHooks{}
 	}
 
 	return k.hooks
 }
 
-// SetHooks sets the send hooks. In contrast to other receivers, this method must take a pointer due to nature
+// SetHooks Set the send coins hooks.  In contrast to other receivers, this method must take a pointer due to nature
 // of the hooks interface and SDK start up sequence.
-func (k *BaseSendKeeper) SetHooks(sh types.SendHooks) {
+func (k *BaseSendKeeper) SetHooks(sh types.SendCoinsHooks) {
 	if k.hooks != nil {
-		panic("cannot set bank send hooks twice")
+		panic("cannot set base send keeper hooks twice")
 	}
 
 	k.hooks = sh
@@ -164,7 +164,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		}
 
 		// Run send hooks if present.
-		if err := k.Hooks().BeforeSend(ctx, inAddress, inAddress, in.Coins); err != nil {
+		if err := k.Hooks().BeforeSendCoins(ctx, inAddress, inAddress, in.Coins); err != nil {
 			return err
 		}
 
@@ -188,7 +188,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		}
 
 		// Run After Send hooks if present.
-		if err := k.Hooks().AfterSend(ctx, outAddress, outAddress, out.Coins); err != nil {
+		if err := k.Hooks().AfterSendCoins(ctx, outAddress, outAddress, out.Coins); err != nil {
 			return err
 		}
 
@@ -222,7 +222,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 // An error is returned upon failure.
 func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	// Run send hooks if present.
-	if err := k.Hooks().BeforeSend(ctx, fromAddr, toAddr, amt); err != nil {
+	if err := k.Hooks().BeforeSendCoins(ctx, fromAddr, toAddr, amt); err != nil {
 		return err
 	}
 
@@ -247,7 +247,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 	}
 
 	// Run After Send hooks if present.
-	if err := k.Hooks().AfterSend(ctx, fromAddr, toAddr, amt); err != nil {
+	if err := k.Hooks().BeforeSendCoins(ctx, fromAddr, toAddr, amt); err != nil {
 		return err
 	}
 

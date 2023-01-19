@@ -52,9 +52,13 @@ func (msr *MsgServiceRouter) HandlerByTypeURL(typeURL string) MsgServiceHandler 
 //     RegisterInterfaces,
 //   - or if a service is being registered twice.
 func (msr *MsgServiceRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
-	protoFiles := gogoreflection.GetProtodescResolver()
+	protoFiles, err := gogoreflection.GetProtodescResolver()
+	if err != nil {
+		panic(err)
+	}
+
 	// Make sure the Msg services has the `cosmos.msg.service` proto annotation.
-	err := msgservice.ValidateServiceAnnotations(protoFiles, sd.ServiceName)
+	err = msgservice.ValidateServiceAnnotations(protoFiles, sd.ServiceName)
 	if err != nil {
 		// We might panic here in the future, instead of simply logging.
 		fmt.Printf("The SDK is requiring protobuf annotation on Msgs; %s\n", err)

@@ -18,22 +18,22 @@ var fdFiles *protoregistry.Files
 
 // GetProtodescResolver returns a protodesc.Resolver that is combined by
 // merging gogo's file descriptor set and protoregistry's one.
-func GetProtodescResolver() protodesc.Resolver {
+func GetProtodescResolver() (protodesc.Resolver, error) {
 	// See if there's a cache already
 	if fdFiles != nil {
-		return fdFiles
+		return fdFiles, nil
 	}
 
 	fdSet, err := GetFileDescriptorSet()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	fdFiles, err = protodesc.NewFiles(fdSet)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return fdFiles
+	return fdFiles, nil
 }
 
 // GetFileDescriptorSet returns the global file descriptor set by merging

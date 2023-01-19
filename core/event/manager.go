@@ -17,21 +17,14 @@ type Service interface {
 
 // Manager represents an event manager.
 type Manager interface {
-	// Emit emits typed events to both clients and state machine listeners
-	// (if supported). These events MUST be emitted deterministically
-	// and should be assumed to be part of blockchain consensus.
-	Emit(protoiface.MessageV1) error
+	// EmitProto emits events represented as a protobuf message (as described in ADR 032).
+	EmitProto(event protoiface.MessageV1) error
 
-	// EmitLegacy emits legacy untyped events to clients only. These events do not need to be emitted deterministically
-	// and are not part of blockchain consensus.
-	EmitLegacy(eventType string, attrs ...LegacyEventAttribute) error
-
-	// EmitClientOnly emits events only to clients. These events do not need to be emitted deterministically
-	// and are not part of blockchain consensus.
-	EmitClientOnly(protoiface.MessageV1) error
+	// EmitKV emits an event based on an event and kv-pair attributes.
+	EmitKV(eventType string, attrs ...KVEventAttribute) error
 }
 
-// LegacyEventAttribute is a legacy (untyped) event attribute.
-type LegacyEventAttribute struct {
+// KVEventAttribute is a kv-pair event attribute.
+type KVEventAttribute struct {
 	Key, Value string
 }

@@ -73,6 +73,18 @@ SHOULD accept it in `ResponseVerifyVoteExtension` and ignore it in its own logic
 
 ### `FinalizeBlock`
 
+This method delivers a decided block to the application. The application must
+execute the transactions in the block deterministically and update its state
+accordingly. Cryptographic commitments to the block and transaction results,
+returned via the corresponding parameters in `ResponseFinalizeBlock`, are
+included in the header of the next block. Tendermint calls it when a new block
+is decided.
+
+In other words, `FinalizeBlock` encapsulates the current ABCI execution flow of
+`BeginBlock`, one or more `DeliverTx`, and `EndBlock` into a single ABCI method.
+Tendermint will no longer execute requests for these legacy methods and instead
+will just simply call `FinalizeBlock`.
+
 ## Decision
 
 > This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."

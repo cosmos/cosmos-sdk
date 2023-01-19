@@ -108,5 +108,5 @@ func (msg *TestMsg) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateDog{}
 
-func (msg *MsgCreateDog) GetSigners() []sdk.AccAddress { return nil }
+func (msg *MsgCreateDog) GetSigners() []sdk.AccAddress { return []sdk.AccAddress }
 func (msg *MsgCreateDog) ValidateBasic() error         { return nil }

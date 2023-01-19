@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
@@ -12,6 +13,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -202,6 +204,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 func init() {
 	appmodule.Register(&modulev1.Module{},
 		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeSetStakingHooks),
 	)
 }
 
@@ -259,4 +262,44 @@ func ProvideModule(in BankInputs) BankOutputs {
 	m := NewAppModule(in.Cdc, bankKeeper, in.AccountKeeper, in.LegacySubspace)
 
 	return BankOutputs{BankKeeper: bankKeeper, Module: m}
+}
+
+func InvokeSetStakingHooks(
+	config *modulev1.Module,
+	keeper *keeper.BaseSendKeeper,
+	sendCoinsHooks map[string]types.SendCoinsHooksWrapper,
+) error {
+	// all arguments to invokers are optional, so we need to check if they are nil
+	if keeper == nil || config == nil {
+		return nil
+	}
+
+	modNames := maps.Keys(sendCoinsHooks)
+	order := config.SendHooksOrder
+	// if order is empty, use default order
+	if len(order) == 0 {
+		order = modNames
+		sort.Strings(order)
+	}
+
+	if len(order) != len(modNames) {
+		return fmt.Errorf("len(hooks_order: %v) != len(hooks modules: %v)", order, modNames)
+	}
+
+	if len(modNames) == 0 {
+		return nil
+	}
+
+	var multiHooks types.MultiSendCoinsHooks
+	for _, modName := range order {
+		hook, ok := sendCoinsHooks[modName]
+		if !ok {
+			return fmt.Errorf("can't find staking hooks for module %s", modName)
+		}
+
+		multiHooks = append(multiHooks, hook)
+	}
+
+	keeper.SetHooks(multiHooks)
+	return nil
 }

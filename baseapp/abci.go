@@ -723,7 +723,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 
 	lastBlockHeight := qms.LatestVersion()
 	if lastBlockHeight == 0 {
-		return sdk.Context{}, sdkerrors.Wrap(sdkerrors.ErrInvalidHeight, "the app has no block yet. please wait...")
+		return sdk.Context{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
 	}
 
 	if height > lastBlockHeight {

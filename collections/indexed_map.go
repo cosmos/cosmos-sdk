@@ -99,6 +99,23 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Has(ctx context.Context, pk Primary
 	return m.m.Has(ctx, pk)
 }
 
+// CollectValues collects all the values given an index iterator. Unstable. Consumes and closes the iterator.
+func (m *IndexedMap[PrimaryKey, Value, Idx]) CollectValues(ctx context.Context, iter interface{ PrimaryKeys() ([]PrimaryKey, error) }) ([]Value, error) {
+	pks, err := iter.PrimaryKeys()
+	if err != nil {
+		return nil, err
+	}
+	values := make([]Value, len(pks))
+	for i, pk := range pks {
+		value, err := m.m.Get(ctx, pk)
+		if err != nil {
+			return nil, err
+		}
+		values[i] = value
+	}
+	return values, nil
+}
+
 func (m *IndexedMap[PrimaryKey, Value, Idx]) ref(ctx context.Context, pk PrimaryKey, value Value, oldValue *Value) error {
 	for _, index := range m.Indexes.IndexesList() {
 		err := index.Reference(ctx, pk, value, oldValue)

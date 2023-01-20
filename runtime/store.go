@@ -14,7 +14,7 @@ type kvStoreService struct {
 }
 
 func (k kvStoreService) OpenKVStore(ctx context.Context) store.KVStore {
-	return NewKVStore(sdk.UnwrapSDKContext(ctx).KVStore(k.key))
+	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(k.key))
 }
 
 type memStoreService struct {
@@ -22,7 +22,7 @@ type memStoreService struct {
 }
 
 func (m memStoreService) OpenMemoryStore(ctx context.Context) store.KVStore {
-	return NewKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
+	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(m.key))
 }
 
 type transientStoreService struct {
@@ -30,39 +30,39 @@ type transientStoreService struct {
 }
 
 func (t transientStoreService) OpenTransientStore(ctx context.Context) store.KVStore {
-	return NewKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
+	return newKVStore(sdk.UnwrapSDKContext(ctx).KVStore(t.key))
 }
 
 // CoreKVStore is a wrapper of Core/Store kvstore interface
 // Remove after https://github.com/cosmos/cosmos-sdk/issues/14714 is closed
-type CoreKVStore struct {
+type coreKVStore struct {
 	kvStore storetypes.KVStore
 }
 
 // NewKVStore returns a wrapper of Core/Store kvstore interface
 // Remove once store migrates to core/store kvstore interface
-func NewKVStore(store storetypes.KVStore) store.KVStore {
-	return CoreKVStore{kvStore: store}
+func newKVStore(store storetypes.KVStore) store.KVStore {
+	return coreKVStore{kvStore: store}
 }
 
 // Get returns nil iff key doesn't exist. Errors on nil key.
-func (store CoreKVStore) Get(key []byte) ([]byte, error) {
+func (store coreKVStore) Get(key []byte) ([]byte, error) {
 	return store.kvStore.Get(key), nil
 }
 
 // Has checks if a key exists. Errors on nil key.
-func (store CoreKVStore) Has(key []byte) (bool, error) {
+func (store coreKVStore) Has(key []byte) (bool, error) {
 	return store.kvStore.Has(key), nil
 }
 
 // Set sets the key. Errors on nil key or value.
-func (store CoreKVStore) Set(key, value []byte) error {
+func (store coreKVStore) Set(key, value []byte) error {
 	store.kvStore.Set(key, value)
 	return nil
 }
 
 // Delete deletes the key. Errors on nil key.
-func (store CoreKVStore) Delete(key []byte) error {
+func (store coreKVStore) Delete(key []byte) error {
 	store.kvStore.Delete(key)
 	return nil
 }
@@ -73,7 +73,7 @@ func (store CoreKVStore) Delete(key []byte) error {
 // To iterate over entire domain, use store.Iterator(nil, nil)
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
-func (store CoreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
+func (store coreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
 	return store.kvStore.Iterator(start, end), nil
 }
 
@@ -82,6 +82,6 @@ func (store CoreKVStore) Iterator(start, end []byte) (store.Iterator, error) {
 // Iterator must be closed by caller.
 // CONTRACT: No writes may happen within a domain while an iterator exists over it.
 // Exceptionally allowed for cachekv.Store, safe to write in the modules.
-func (store CoreKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
+func (store coreKVStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
 	return store.kvStore.ReverseIterator(start, end), nil
 }

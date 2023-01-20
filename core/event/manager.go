@@ -11,17 +11,11 @@ import (
 // event.Service is a core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
-	// GetEventManager returns the event manager for the context or a no-op event manager if one isn't attached.
-	GetEventManager(context.Context) Manager
-}
-
-// Manager represents an event manager.
-type Manager interface {
 	// EmitProtoEvent emits events represented as a protobuf message (as described in ADR 032).
-	EmitProtoEvent(event protoiface.MessageV1) error
+	EmitProtoEvent(ctx context.Context, event protoiface.MessageV1) error
 
 	// EmitKVEvent emits an event based on an event and kv-pair attributes.
-	EmitKVEvent(eventType string, attrs ...KVEventAttribute) error
+	EmitKVEvent(ctx context.Context, eventType string, attrs ...KVEventAttribute) error
 }
 
 // KVEventAttribute is a kv-pair event attribute.

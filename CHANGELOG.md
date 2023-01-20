@@ -225,6 +225,9 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (snapshots) [14048](https://github.com/cosmos/cosmos-sdk/pull/14048) Move the Snapshot package to the store package. This is done in an effort group all storage related logic under one package.
 * (baseapp) [#14050](https://github.com/cosmos/cosmos-sdk/pull/14050) refactor `ABCIListener` interface to accept go contexts
 * (store/streaming)[#14603](https://github.com/cosmos/cosmos-sdk/pull/14603) `StoreDecoderRegistry` moved from store to `types/simulations` this breaks the `AppModuleSimulation` interface. 
+* (store) [#14444](https://github.com/cosmos/cosmos-sdk/pull/14444) Refactor cache store to improve performance in iteration and nesting cases.
+  - `Context` holds a `CacheMultiStore` instead of `MultiStore` now.
+  - Add new methods `Clone` and `Restore` on `CacheMultiStore` and `CacheKVStore` interfaces.
 
 ### CLI Breaking Changes
 

@@ -149,7 +149,11 @@ func (cms Store) Restore(s types.CacheMultiStore) {
 	ms := s.(Store)
 	cms.db.Restore(ms.db)
 	for key, store := range cms.stores {
-		store.Restore(ms.stores[key])
+		otherStore, ok := ms.stores[key]
+		if !ok {
+			panic("Invariant violation: Restore should only be called on a store cloned from itself")
+		}
+		store.Restore(otherStore)
 	}
 }
 

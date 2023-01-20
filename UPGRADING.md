@@ -4,7 +4,23 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
-### Database configuration
+### Configuration
+
+A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+
+```bash
+simd config migrate v0.48
+```
+
+More information about [confix](https://docs.cosmos.network/main/tooling/confix).
+
+#### gRPC-Web
+
+gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
+The possibility to listen to a different address has been removed, as well as its settings.
+Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
+
+#### Database
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
@@ -31,6 +47,21 @@ References to `types/store.go` which contained aliases for store types have been
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+
+### Modules
+
+#### `x/gov`
+
+##### Cancelling Proposals
+
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
+
+```text
+	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
+```
+
+By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -200,17 +231,6 @@ func (app SimApp) RegisterUpgradeHandlers() {
 }
 
 ```
-
-#####  New Feature: Cancelling Proposals
-
-The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
-
-```
-	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
-	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
-```
-
-By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
 
 #### `x/consensus`
 

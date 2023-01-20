@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -69,11 +68,10 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
-	flagGRPCOnly       = "grpc-only"
-	flagGRPCEnable     = "grpc.enable"
-	flagGRPCAddress    = "grpc.address"
-	flagGRPCWebEnable  = "grpc-web.enable"
-	flagGRPCWebAddress = "grpc-web.address"
+	flagGRPCOnly      = "grpc-only"
+	flagGRPCEnable    = "grpc.enable"
+	flagGRPCAddress   = "grpc.address"
+	flagGRPCWebEnable = "grpc-web.enable"
 
 	// mempool flags
 	FlagMempoolMaxTxs = "mempool.max-txs"
@@ -181,7 +179,6 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
 
 	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled)")
-	cmd.Flags().String(flagGRPCWebAddress, serverconfig.DefaultGRPCWebAddress, "The gRPC-Web server address to listen on")
 
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
@@ -364,7 +361,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	var apiSrv *api.Server
+	var (
+		apiSrv  *api.Server
+		grpcSrv *grpc.Server
+	)
+
 	if config.API.Enable {
 		genDoc, err := genDocProvider()
 		if err != nil {
@@ -407,9 +408,17 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 
 			clientCtx = clientCtx.WithGRPCClient(grpcClient)
 			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
+
+			// start grpc server
+			grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+			if err != nil {
+				return err
+			}
+			defer grpcSrv.Stop()
 		}
 
-		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"))
+		// configure api server
+		apiSrv = api.New(clientCtx, ctx.Logger.With("module", "api-server"), grpcSrv)
 		app.RegisterAPIRoutes(apiSrv, config.API)
 		if config.Telemetry.Enabled {
 			apiSrv.SetTelemetry(metrics)
@@ -427,31 +436,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			return err
 
 		case <-time.After(types.ServerStartTime): // assume server started successfully
-		}
-	}
-
-	var (
-		grpcSrv    *grpc.Server
-		grpcWebSrv *http.Server
-	)
-
-	if config.GRPC.Enable {
-		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
-		if err != nil {
-			return err
-		}
-		defer grpcSrv.Stop()
-		if config.GRPCWeb.Enable {
-			grpcWebSrv, err = servergrpc.StartGRPCWeb(grpcSrv, config)
-			if err != nil {
-				ctx.Logger.Error("failed to start grpc-web http server: ", err)
-				return err
-			}
-			defer func() {
-				if err := grpcWebSrv.Close(); err != nil {
-					ctx.Logger.Error("failed to close grpc-web http server: ", err)
-				}
-			}()
 		}
 	}
 

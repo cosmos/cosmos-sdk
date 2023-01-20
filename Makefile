@@ -408,11 +408,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-<<<<<<< HEAD
-protoVer=0.11.2
-=======
 protoVer=0.11.5
->>>>>>> c8f2f1d59 (docs: set buf commit for v0.47.x (#14675))
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 

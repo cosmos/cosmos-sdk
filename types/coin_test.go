@@ -554,16 +554,34 @@ func (s *coinTestSuite) TestAddCoins() {
 		{"set + empty list", cA0M1, s.emptyCoins, sdk.Coins{s.cm1}, "zero coins should be removed"},
 		{"set + empty list", cA1M1, s.emptyCoins, cA1M1, "a_non_zero + zero  = a_non_zero"},
 		// {"set + empty list", cA0M1, s.emptyCoins, cA0M1},
-		{"{1atom,1muon}+{1atom,1muon}", cA1M1, cA1M1, sdk.Coins{s.ca2, s.cm2},
-			"a + a = 2a"},
-		{"{0atom,1muon}+{0atom,0muon}", cA0M1, cA0M0, sdk.Coins{s.cm1},
-			"zero coins should be reoved"},
-		{"{2atom}+{0muon}", sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2},
-			"zero coins should be removed"},
-		{"{1atom}+{1atom,2muon}", sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2},
-			"should be correctly added"},
-		{"{0atom,0muon}+{0atom,0muon}", cA0M0, cA0M0, s.emptyCoins,
-			"sets with zero coins should return empty set"},
+		{
+			"{1atom,1muon}+{1atom,1muon}", cA1M1, cA1M1,
+			sdk.Coins{s.ca2, s.cm2},
+			"a + a = 2a",
+		},
+		{
+			"{0atom,1muon}+{0atom,0muon}", cA0M1, cA0M0,
+			sdk.Coins{s.cm1},
+			"zero coins should be reoved",
+		},
+		{
+			"{2atom}+{0muon}",
+			sdk.Coins{s.ca2},
+			sdk.Coins{s.cm0},
+			sdk.Coins{s.ca2},
+			"zero coins should be removed",
+		},
+		{
+			"{1atom}+{1atom,2muon}",
+			sdk.Coins{s.ca1},
+			sdk.Coins{s.ca1, s.cm2},
+			sdk.Coins{s.ca2, s.cm2},
+			"should be correctly added",
+		},
+		{
+			"{0atom,0muon}+{0atom,0muon}", cA0M0, cA0M0, s.emptyCoins,
+			"sets with zero coins should return empty set",
+		},
 	}
 
 	for _, tc := range cases {

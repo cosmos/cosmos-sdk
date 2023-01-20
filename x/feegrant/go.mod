@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.46.7
+	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/cosmos/cosmos-sdk/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0

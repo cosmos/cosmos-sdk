@@ -48,11 +48,22 @@ message TxResponse {
   repeated tendermint.abci.Event events = 13 [(gogoproto.nullable) = false];
 }
 
-// BlockResponse placeholder - still needs work
+// BlockResponse
 message BlockResponse {
   option (gogoproto.goproto_getters) = false;
   // The block height
   int64 height = 1;
+  string time =  2;
+  string chain_id = 3;
+  string last_commit = 4;
+  string data = 5;
+  string validators = 6;
+  string next_validators = 7;
+  string app = 8;
+  string consensus = 9;
+  string results = 10;
+  string evidence = 11;
+  string proposer = 12;
 }
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
@@ -163,3 +174,23 @@ message SearchTxsResult {
   // List of txs in current page
   repeated TxResponse txs = 6;
 }
+
+// SearchBlocksResult defines a structure for querying blocks pageable
+message SearchBlocksResult {
+  option (gogoproto.stringer) = true;
+
+  // Count of all blocks
+  uint64 total_count = 1;
+  // Count of blocks in current page
+  uint64 count = 2;
+  // Index of current page, start from 1
+  uint64 page_number = 3;
+  // Count of total pages
+  uint64 page_total = 4;
+  // Max count blocks per page
+  uint64 limit = 5;
+  // List of blocks in current page
+  repeated BlockResponse blocks = 6;
+}
+
+

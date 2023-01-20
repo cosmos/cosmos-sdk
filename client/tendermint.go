@@ -26,4 +26,10 @@ type TendermintRPC interface {
 		page, perPage *int,
 		orderBy string,
 	) (*coretypes.ResultTxSearch, error)
+	BlockSearch(
+		ctx context.Context,
+		query string,
+		page, perPage *int,
+		orderBy string,
+	) (*coretypes.ResultBlockSearch, error)
 }

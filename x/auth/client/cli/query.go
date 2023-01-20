@@ -329,6 +329,77 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 	return cmd
 }
 
+// QueryBlocksByEventsCmd returns a command to search through blocks by events.
+func QueryBlocksByEventsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "blocks",
+		Short: "Query for paginated blocks that match a set of events",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`
+Search for blocks that match the exact given events where results are paginated.
+Each event takes the form of '%s'. Please refer
+to each module's documentation for the full set of events to query for. Each module
+documents its respective events under 'xx_events.md'.
+
+Example:
+$ %s query blocks --%s 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
+`, eventFormat, version.AppName, flagEvents),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
+			eventsStr := strings.Trim(eventsRaw, "'")
+
+			var events []string
+			if strings.Contains(eventsStr, "&") {
+				events = strings.Split(eventsStr, "&")
+			} else {
+				events = append(events, eventsStr)
+			}
+
+			var tmEvents []string
+
+			for _, event := range events {
+				if !strings.Contains(event, "=") {
+					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
+				} else if strings.Count(event, "=") > 1 {
+					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
+				}
+
+				tokens := strings.Split(event, "=")
+				if tokens[0] == tmtypes.TxHeightKey {
+					event = fmt.Sprintf("%s=%s", tokens[0], tokens[1])
+				} else {
+					event = fmt.Sprintf("%s='%s'", tokens[0], tokens[1])
+				}
+
+				tmEvents = append(tmEvents, event)
+			}
+
+			page, _ := cmd.Flags().GetInt(flags.FlagPage)
+			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+
+			blocks, err := authblock.QueryBlocksByEvents(clientCtx, tmEvents, page, limit, "")
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(blocks)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
+	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
+	cmd.MarkFlagRequired(flagEvents)
+
+	return cmd
+}
+
 // QueryTxCmd implements the default command for a tx query.
 func QueryTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -435,14 +506,14 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
-		Short: "Query for a committed block by height or hash",
+		Short: "Query for a committed block by height, hash, or event(s)",
 		Long: strings.TrimSpace(fmt.Sprintf(`
 Example:
-$ %s query block <height>
+$ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
-			version.AppName,
-			version.AppName, flagType, typeHeight)),
+			version.AppName, flagType, typeHeight,
+			version.AppName, flagType, typeHash)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

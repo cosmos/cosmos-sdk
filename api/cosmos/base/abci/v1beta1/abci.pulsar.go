@@ -1303,14 +1303,36 @@ func (x *fastReflection_TxResponse) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_BlockResponse        protoreflect.MessageDescriptor
-	fd_BlockResponse_height protoreflect.FieldDescriptor
+	md_BlockResponse                 protoreflect.MessageDescriptor
+	fd_BlockResponse_height          protoreflect.FieldDescriptor
+	fd_BlockResponse_time            protoreflect.FieldDescriptor
+	fd_BlockResponse_chain_id        protoreflect.FieldDescriptor
+	fd_BlockResponse_last_commit     protoreflect.FieldDescriptor
+	fd_BlockResponse_data            protoreflect.FieldDescriptor
+	fd_BlockResponse_validators      protoreflect.FieldDescriptor
+	fd_BlockResponse_next_validators protoreflect.FieldDescriptor
+	fd_BlockResponse_app             protoreflect.FieldDescriptor
+	fd_BlockResponse_consensus       protoreflect.FieldDescriptor
+	fd_BlockResponse_results         protoreflect.FieldDescriptor
+	fd_BlockResponse_evidence        protoreflect.FieldDescriptor
+	fd_BlockResponse_proposer        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_cosmos_base_abci_v1beta1_abci_proto_init()
 	md_BlockResponse = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("BlockResponse")
 	fd_BlockResponse_height = md_BlockResponse.Fields().ByName("height")
+	fd_BlockResponse_time = md_BlockResponse.Fields().ByName("time")
+	fd_BlockResponse_chain_id = md_BlockResponse.Fields().ByName("chain_id")
+	fd_BlockResponse_last_commit = md_BlockResponse.Fields().ByName("last_commit")
+	fd_BlockResponse_data = md_BlockResponse.Fields().ByName("data")
+	fd_BlockResponse_validators = md_BlockResponse.Fields().ByName("validators")
+	fd_BlockResponse_next_validators = md_BlockResponse.Fields().ByName("next_validators")
+	fd_BlockResponse_app = md_BlockResponse.Fields().ByName("app")
+	fd_BlockResponse_consensus = md_BlockResponse.Fields().ByName("consensus")
+	fd_BlockResponse_results = md_BlockResponse.Fields().ByName("results")
+	fd_BlockResponse_evidence = md_BlockResponse.Fields().ByName("evidence")
+	fd_BlockResponse_proposer = md_BlockResponse.Fields().ByName("proposer")
 }
 
 var _ protoreflect.Message = (*fastReflection_BlockResponse)(nil)
@@ -1384,6 +1406,72 @@ func (x *fastReflection_BlockResponse) Range(f func(protoreflect.FieldDescriptor
 			return
 		}
 	}
+	if x.Time != "" {
+		value := protoreflect.ValueOfString(x.Time)
+		if !f(fd_BlockResponse_time, value) {
+			return
+		}
+	}
+	if x.ChainId != "" {
+		value := protoreflect.ValueOfString(x.ChainId)
+		if !f(fd_BlockResponse_chain_id, value) {
+			return
+		}
+	}
+	if x.LastCommit != "" {
+		value := protoreflect.ValueOfString(x.LastCommit)
+		if !f(fd_BlockResponse_last_commit, value) {
+			return
+		}
+	}
+	if x.Data != "" {
+		value := protoreflect.ValueOfString(x.Data)
+		if !f(fd_BlockResponse_data, value) {
+			return
+		}
+	}
+	if x.Validators != "" {
+		value := protoreflect.ValueOfString(x.Validators)
+		if !f(fd_BlockResponse_validators, value) {
+			return
+		}
+	}
+	if x.NextValidators != "" {
+		value := protoreflect.ValueOfString(x.NextValidators)
+		if !f(fd_BlockResponse_next_validators, value) {
+			return
+		}
+	}
+	if x.App != "" {
+		value := protoreflect.ValueOfString(x.App)
+		if !f(fd_BlockResponse_app, value) {
+			return
+		}
+	}
+	if x.Consensus != "" {
+		value := protoreflect.ValueOfString(x.Consensus)
+		if !f(fd_BlockResponse_consensus, value) {
+			return
+		}
+	}
+	if x.Results != "" {
+		value := protoreflect.ValueOfString(x.Results)
+		if !f(fd_BlockResponse_results, value) {
+			return
+		}
+	}
+	if x.Evidence != "" {
+		value := protoreflect.ValueOfString(x.Evidence)
+		if !f(fd_BlockResponse_evidence, value) {
+			return
+		}
+	}
+	if x.Proposer != "" {
+		value := protoreflect.ValueOfString(x.Proposer)
+		if !f(fd_BlockResponse_proposer, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1401,6 +1489,28 @@ func (x *fastReflection_BlockResponse) Has(fd protoreflect.FieldDescriptor) bool
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.BlockResponse.height":
 		return x.Height != int64(0)
+	case "cosmos.base.abci.v1beta1.BlockResponse.time":
+		return x.Time != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.chain_id":
+		return x.ChainId != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.last_commit":
+		return x.LastCommit != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.data":
+		return x.Data != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.validators":
+		return x.Validators != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.next_validators":
+		return x.NextValidators != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.app":
+		return x.App != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.consensus":
+		return x.Consensus != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.results":
+		return x.Results != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.evidence":
+		return x.Evidence != ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.proposer":
+		return x.Proposer != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockResponse"))
@@ -1419,6 +1529,28 @@ func (x *fastReflection_BlockResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.BlockResponse.height":
 		x.Height = int64(0)
+	case "cosmos.base.abci.v1beta1.BlockResponse.time":
+		x.Time = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.chain_id":
+		x.ChainId = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.last_commit":
+		x.LastCommit = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.data":
+		x.Data = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.validators":
+		x.Validators = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.next_validators":
+		x.NextValidators = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.app":
+		x.App = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.consensus":
+		x.Consensus = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.results":
+		x.Results = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.evidence":
+		x.Evidence = ""
+	case "cosmos.base.abci.v1beta1.BlockResponse.proposer":
+		x.Proposer = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockResponse"))
@@ -1438,6 +1570,39 @@ func (x *fastReflection_BlockResponse) Get(descriptor protoreflect.FieldDescript
 	case "cosmos.base.abci.v1beta1.BlockResponse.height":
 		value := x.Height
 		return protoreflect.ValueOfInt64(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.time":
+		value := x.Time
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.chain_id":
+		value := x.ChainId
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.last_commit":
+		value := x.LastCommit
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.data":
+		value := x.Data
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.validators":
+		value := x.Validators
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.next_validators":
+		value := x.NextValidators
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.app":
+		value := x.App
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.consensus":
+		value := x.Consensus
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.results":
+		value := x.Results
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.evidence":
+		value := x.Evidence
+		return protoreflect.ValueOfString(value)
+	case "cosmos.base.abci.v1beta1.BlockResponse.proposer":
+		value := x.Proposer
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockResponse"))
@@ -1460,6 +1625,28 @@ func (x *fastReflection_BlockResponse) Set(fd protoreflect.FieldDescriptor, valu
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.BlockResponse.height":
 		x.Height = value.Int()
+	case "cosmos.base.abci.v1beta1.BlockResponse.time":
+		x.Time = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.chain_id":
+		x.ChainId = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.last_commit":
+		x.LastCommit = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.data":
+		x.Data = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.validators":
+		x.Validators = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.next_validators":
+		x.NextValidators = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.app":
+		x.App = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.consensus":
+		x.Consensus = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.results":
+		x.Results = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.evidence":
+		x.Evidence = value.Interface().(string)
+	case "cosmos.base.abci.v1beta1.BlockResponse.proposer":
+		x.Proposer = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockResponse"))
@@ -1482,6 +1669,28 @@ func (x *fastReflection_BlockResponse) Mutable(fd protoreflect.FieldDescriptor) 
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.BlockResponse.height":
 		panic(fmt.Errorf("field height of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.time":
+		panic(fmt.Errorf("field time of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.chain_id":
+		panic(fmt.Errorf("field chain_id of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.last_commit":
+		panic(fmt.Errorf("field last_commit of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.data":
+		panic(fmt.Errorf("field data of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.validators":
+		panic(fmt.Errorf("field validators of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.next_validators":
+		panic(fmt.Errorf("field next_validators of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.app":
+		panic(fmt.Errorf("field app of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.consensus":
+		panic(fmt.Errorf("field consensus of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.results":
+		panic(fmt.Errorf("field results of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.evidence":
+		panic(fmt.Errorf("field evidence of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockResponse.proposer":
+		panic(fmt.Errorf("field proposer of message cosmos.base.abci.v1beta1.BlockResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockResponse"))
@@ -1497,6 +1706,28 @@ func (x *fastReflection_BlockResponse) NewField(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "cosmos.base.abci.v1beta1.BlockResponse.height":
 		return protoreflect.ValueOfInt64(int64(0))
+	case "cosmos.base.abci.v1beta1.BlockResponse.time":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.chain_id":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.last_commit":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.data":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.validators":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.next_validators":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.app":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.consensus":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.results":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.evidence":
+		return protoreflect.ValueOfString("")
+	case "cosmos.base.abci.v1beta1.BlockResponse.proposer":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockResponse"))
@@ -1569,6 +1800,50 @@ func (x *fastReflection_BlockResponse) ProtoMethods() *protoiface.Methods {
 		if x.Height != 0 {
 			n += 1 + runtime.Sov(uint64(x.Height))
 		}
+		l = len(x.Time)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ChainId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.LastCommit)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Data)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Validators)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.NextValidators)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.App)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Consensus)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Results)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Evidence)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Proposer)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1597,6 +1872,83 @@ func (x *fastReflection_BlockResponse) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Proposer) > 0 {
+			i -= len(x.Proposer)
+			copy(dAtA[i:], x.Proposer)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Proposer)))
+			i--
+			dAtA[i] = 0x62
+		}
+		if len(x.Evidence) > 0 {
+			i -= len(x.Evidence)
+			copy(dAtA[i:], x.Evidence)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Evidence)))
+			i--
+			dAtA[i] = 0x5a
+		}
+		if len(x.Results) > 0 {
+			i -= len(x.Results)
+			copy(dAtA[i:], x.Results)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Results)))
+			i--
+			dAtA[i] = 0x52
+		}
+		if len(x.Consensus) > 0 {
+			i -= len(x.Consensus)
+			copy(dAtA[i:], x.Consensus)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Consensus)))
+			i--
+			dAtA[i] = 0x4a
+		}
+		if len(x.App) > 0 {
+			i -= len(x.App)
+			copy(dAtA[i:], x.App)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.App)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.NextValidators) > 0 {
+			i -= len(x.NextValidators)
+			copy(dAtA[i:], x.NextValidators)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.NextValidators)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if len(x.Validators) > 0 {
+			i -= len(x.Validators)
+			copy(dAtA[i:], x.Validators)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Validators)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Data) > 0 {
+			i -= len(x.Data)
+			copy(dAtA[i:], x.Data)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Data)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.LastCommit) > 0 {
+			i -= len(x.LastCommit)
+			copy(dAtA[i:], x.LastCommit)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.LastCommit)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.ChainId) > 0 {
+			i -= len(x.ChainId)
+			copy(dAtA[i:], x.ChainId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ChainId)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Time) > 0 {
+			i -= len(x.Time)
+			copy(dAtA[i:], x.Time)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Time)))
+			i--
+			dAtA[i] = 0x12
 		}
 		if x.Height != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Height))
@@ -1671,6 +2023,358 @@ func (x *fastReflection_BlockResponse) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Time = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ChainId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastCommit", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.LastCommit = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Data = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Validators", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Validators = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NextValidators", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.NextValidators = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field App", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.App = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 9:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Consensus", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Consensus = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 10:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Results", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Results = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 11:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Evidence", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Evidence = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 12:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Proposer = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -6934,6 +7638,2163 @@ func (x *fastReflection_SearchTxsResult) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_SearchBlocksResult_6_list)(nil)
+
+type _SearchBlocksResult_6_list struct {
+	list *[]*BlockResponse
+}
+
+func (x *_SearchBlocksResult_6_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_SearchBlocksResult_6_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_SearchBlocksResult_6_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BlockResponse)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_SearchBlocksResult_6_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BlockResponse)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_SearchBlocksResult_6_list) AppendMutable() protoreflect.Value {
+	v := new(BlockResponse)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_SearchBlocksResult_6_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_SearchBlocksResult_6_list) NewElement() protoreflect.Value {
+	v := new(BlockResponse)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_SearchBlocksResult_6_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_SearchBlocksResult             protoreflect.MessageDescriptor
+	fd_SearchBlocksResult_total_count protoreflect.FieldDescriptor
+	fd_SearchBlocksResult_count       protoreflect.FieldDescriptor
+	fd_SearchBlocksResult_page_number protoreflect.FieldDescriptor
+	fd_SearchBlocksResult_page_total  protoreflect.FieldDescriptor
+	fd_SearchBlocksResult_limit       protoreflect.FieldDescriptor
+	fd_SearchBlocksResult_blocks      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_SearchBlocksResult = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("SearchBlocksResult")
+	fd_SearchBlocksResult_total_count = md_SearchBlocksResult.Fields().ByName("total_count")
+	fd_SearchBlocksResult_count = md_SearchBlocksResult.Fields().ByName("count")
+	fd_SearchBlocksResult_page_number = md_SearchBlocksResult.Fields().ByName("page_number")
+	fd_SearchBlocksResult_page_total = md_SearchBlocksResult.Fields().ByName("page_total")
+	fd_SearchBlocksResult_limit = md_SearchBlocksResult.Fields().ByName("limit")
+	fd_SearchBlocksResult_blocks = md_SearchBlocksResult.Fields().ByName("blocks")
+}
+
+var _ protoreflect.Message = (*fastReflection_SearchBlocksResult)(nil)
+
+type fastReflection_SearchBlocksResult SearchBlocksResult
+
+func (x *SearchBlocksResult) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_SearchBlocksResult)(x)
+}
+
+func (x *SearchBlocksResult) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_SearchBlocksResult_messageType fastReflection_SearchBlocksResult_messageType
+var _ protoreflect.MessageType = fastReflection_SearchBlocksResult_messageType{}
+
+type fastReflection_SearchBlocksResult_messageType struct{}
+
+func (x fastReflection_SearchBlocksResult_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_SearchBlocksResult)(nil)
+}
+func (x fastReflection_SearchBlocksResult_messageType) New() protoreflect.Message {
+	return new(fastReflection_SearchBlocksResult)
+}
+func (x fastReflection_SearchBlocksResult_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_SearchBlocksResult
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_SearchBlocksResult) Descriptor() protoreflect.MessageDescriptor {
+	return md_SearchBlocksResult
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_SearchBlocksResult) Type() protoreflect.MessageType {
+	return _fastReflection_SearchBlocksResult_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_SearchBlocksResult) New() protoreflect.Message {
+	return new(fastReflection_SearchBlocksResult)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_SearchBlocksResult) Interface() protoreflect.ProtoMessage {
+	return (*SearchBlocksResult)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_SearchBlocksResult) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.TotalCount != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.TotalCount)
+		if !f(fd_SearchBlocksResult_total_count, value) {
+			return
+		}
+	}
+	if x.Count != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Count)
+		if !f(fd_SearchBlocksResult_count, value) {
+			return
+		}
+	}
+	if x.PageNumber != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.PageNumber)
+		if !f(fd_SearchBlocksResult_page_number, value) {
+			return
+		}
+	}
+	if x.PageTotal != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.PageTotal)
+		if !f(fd_SearchBlocksResult_page_total, value) {
+			return
+		}
+	}
+	if x.Limit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Limit)
+		if !f(fd_SearchBlocksResult_limit, value) {
+			return
+		}
+	}
+	if len(x.Blocks) != 0 {
+		value := protoreflect.ValueOfList(&_SearchBlocksResult_6_list{list: &x.Blocks})
+		if !f(fd_SearchBlocksResult_blocks, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_SearchBlocksResult) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.total_count":
+		return x.TotalCount != uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.count":
+		return x.Count != uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_number":
+		return x.PageNumber != uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_total":
+		return x.PageTotal != uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.limit":
+		return x.Limit != uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.blocks":
+		return len(x.Blocks) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.SearchBlocksResult"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.SearchBlocksResult does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SearchBlocksResult) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.total_count":
+		x.TotalCount = uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.count":
+		x.Count = uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_number":
+		x.PageNumber = uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_total":
+		x.PageTotal = uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.limit":
+		x.Limit = uint64(0)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.blocks":
+		x.Blocks = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.SearchBlocksResult"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.SearchBlocksResult does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_SearchBlocksResult) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.total_count":
+		value := x.TotalCount
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.count":
+		value := x.Count
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_number":
+		value := x.PageNumber
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_total":
+		value := x.PageTotal
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.limit":
+		value := x.Limit
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.blocks":
+		if len(x.Blocks) == 0 {
+			return protoreflect.ValueOfList(&_SearchBlocksResult_6_list{})
+		}
+		listValue := &_SearchBlocksResult_6_list{list: &x.Blocks}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.SearchBlocksResult"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.SearchBlocksResult does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SearchBlocksResult) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.total_count":
+		x.TotalCount = value.Uint()
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.count":
+		x.Count = value.Uint()
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_number":
+		x.PageNumber = value.Uint()
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_total":
+		x.PageTotal = value.Uint()
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.limit":
+		x.Limit = value.Uint()
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.blocks":
+		lv := value.List()
+		clv := lv.(*_SearchBlocksResult_6_list)
+		x.Blocks = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.SearchBlocksResult"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.SearchBlocksResult does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SearchBlocksResult) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.blocks":
+		if x.Blocks == nil {
+			x.Blocks = []*BlockResponse{}
+		}
+		value := &_SearchBlocksResult_6_list{list: &x.Blocks}
+		return protoreflect.ValueOfList(value)
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.total_count":
+		panic(fmt.Errorf("field total_count of message cosmos.base.abci.v1beta1.SearchBlocksResult is not mutable"))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.count":
+		panic(fmt.Errorf("field count of message cosmos.base.abci.v1beta1.SearchBlocksResult is not mutable"))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_number":
+		panic(fmt.Errorf("field page_number of message cosmos.base.abci.v1beta1.SearchBlocksResult is not mutable"))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_total":
+		panic(fmt.Errorf("field page_total of message cosmos.base.abci.v1beta1.SearchBlocksResult is not mutable"))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.limit":
+		panic(fmt.Errorf("field limit of message cosmos.base.abci.v1beta1.SearchBlocksResult is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.SearchBlocksResult"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.SearchBlocksResult does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_SearchBlocksResult) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.total_count":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.count":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_number":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.page_total":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.SearchBlocksResult.blocks":
+		list := []*BlockResponse{}
+		return protoreflect.ValueOfList(&_SearchBlocksResult_6_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.SearchBlocksResult"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.SearchBlocksResult does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_SearchBlocksResult) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.SearchBlocksResult", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_SearchBlocksResult) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SearchBlocksResult) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_SearchBlocksResult) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_SearchBlocksResult) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*SearchBlocksResult)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.TotalCount != 0 {
+			n += 1 + runtime.Sov(uint64(x.TotalCount))
+		}
+		if x.Count != 0 {
+			n += 1 + runtime.Sov(uint64(x.Count))
+		}
+		if x.PageNumber != 0 {
+			n += 1 + runtime.Sov(uint64(x.PageNumber))
+		}
+		if x.PageTotal != 0 {
+			n += 1 + runtime.Sov(uint64(x.PageTotal))
+		}
+		if x.Limit != 0 {
+			n += 1 + runtime.Sov(uint64(x.Limit))
+		}
+		if len(x.Blocks) > 0 {
+			for _, e := range x.Blocks {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*SearchBlocksResult)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Blocks) > 0 {
+			for iNdEx := len(x.Blocks) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Blocks[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x32
+			}
+		}
+		if x.Limit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Limit))
+			i--
+			dAtA[i] = 0x28
+		}
+		if x.PageTotal != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.PageTotal))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.PageNumber != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.PageNumber))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.Count != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Count))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.TotalCount != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.TotalCount))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*SearchBlocksResult)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: SearchBlocksResult: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: SearchBlocksResult: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalCount", wireType)
+				}
+				x.TotalCount = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.TotalCount |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Count", wireType)
+				}
+				x.Count = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Count |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PageNumber", wireType)
+				}
+				x.PageNumber = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.PageNumber |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PageTotal", wireType)
+				}
+				x.PageTotal = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.PageTotal |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+				}
+				x.Limit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Limit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Blocks", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Blocks = append(x.Blocks, &BlockResponse{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Blocks[len(x.Blocks)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_BlockVersion       protoreflect.MessageDescriptor
+	fd_BlockVersion_block protoreflect.FieldDescriptor
+	fd_BlockVersion_app   protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_BlockVersion = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("BlockVersion")
+	fd_BlockVersion_block = md_BlockVersion.Fields().ByName("block")
+	fd_BlockVersion_app = md_BlockVersion.Fields().ByName("app")
+}
+
+var _ protoreflect.Message = (*fastReflection_BlockVersion)(nil)
+
+type fastReflection_BlockVersion BlockVersion
+
+func (x *BlockVersion) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_BlockVersion)(x)
+}
+
+func (x *BlockVersion) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_BlockVersion_messageType fastReflection_BlockVersion_messageType
+var _ protoreflect.MessageType = fastReflection_BlockVersion_messageType{}
+
+type fastReflection_BlockVersion_messageType struct{}
+
+func (x fastReflection_BlockVersion_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_BlockVersion)(nil)
+}
+func (x fastReflection_BlockVersion_messageType) New() protoreflect.Message {
+	return new(fastReflection_BlockVersion)
+}
+func (x fastReflection_BlockVersion_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_BlockVersion
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_BlockVersion) Descriptor() protoreflect.MessageDescriptor {
+	return md_BlockVersion
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_BlockVersion) Type() protoreflect.MessageType {
+	return _fastReflection_BlockVersion_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_BlockVersion) New() protoreflect.Message {
+	return new(fastReflection_BlockVersion)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_BlockVersion) Interface() protoreflect.ProtoMessage {
+	return (*BlockVersion)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_BlockVersion) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Block != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Block)
+		if !f(fd_BlockVersion_block, value) {
+			return
+		}
+	}
+	if x.App != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.App)
+		if !f(fd_BlockVersion_app, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_BlockVersion) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.BlockVersion.block":
+		return x.Block != uint64(0)
+	case "cosmos.base.abci.v1beta1.BlockVersion.app":
+		return x.App != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockVersion"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.BlockVersion does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BlockVersion) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.BlockVersion.block":
+		x.Block = uint64(0)
+	case "cosmos.base.abci.v1beta1.BlockVersion.app":
+		x.App = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockVersion"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.BlockVersion does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_BlockVersion) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.BlockVersion.block":
+		value := x.Block
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.BlockVersion.app":
+		value := x.App
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockVersion"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.BlockVersion does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BlockVersion) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.BlockVersion.block":
+		x.Block = value.Uint()
+	case "cosmos.base.abci.v1beta1.BlockVersion.app":
+		x.App = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockVersion"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.BlockVersion does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BlockVersion) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.BlockVersion.block":
+		panic(fmt.Errorf("field block of message cosmos.base.abci.v1beta1.BlockVersion is not mutable"))
+	case "cosmos.base.abci.v1beta1.BlockVersion.app":
+		panic(fmt.Errorf("field app of message cosmos.base.abci.v1beta1.BlockVersion is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockVersion"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.BlockVersion does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_BlockVersion) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.BlockVersion.block":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.BlockVersion.app":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.BlockVersion"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.BlockVersion does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_BlockVersion) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.BlockVersion", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_BlockVersion) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BlockVersion) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_BlockVersion) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_BlockVersion) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*BlockVersion)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Block != 0 {
+			n += 1 + runtime.Sov(uint64(x.Block))
+		}
+		if x.App != 0 {
+			n += 1 + runtime.Sov(uint64(x.App))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*BlockVersion)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.App != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.App))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Block != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Block))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*BlockVersion)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BlockVersion: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BlockVersion: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Block", wireType)
+				}
+				x.Block = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Block |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field App", wireType)
+				}
+				x.App = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.App |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_LastBlockID       protoreflect.MessageDescriptor
+	fd_LastBlockID_hash  protoreflect.FieldDescriptor
+	fd_LastBlockID_parts protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_LastBlockID = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("LastBlockID")
+	fd_LastBlockID_hash = md_LastBlockID.Fields().ByName("hash")
+	fd_LastBlockID_parts = md_LastBlockID.Fields().ByName("parts")
+}
+
+var _ protoreflect.Message = (*fastReflection_LastBlockID)(nil)
+
+type fastReflection_LastBlockID LastBlockID
+
+func (x *LastBlockID) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_LastBlockID)(x)
+}
+
+func (x *LastBlockID) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_LastBlockID_messageType fastReflection_LastBlockID_messageType
+var _ protoreflect.MessageType = fastReflection_LastBlockID_messageType{}
+
+type fastReflection_LastBlockID_messageType struct{}
+
+func (x fastReflection_LastBlockID_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_LastBlockID)(nil)
+}
+func (x fastReflection_LastBlockID_messageType) New() protoreflect.Message {
+	return new(fastReflection_LastBlockID)
+}
+func (x fastReflection_LastBlockID_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_LastBlockID
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_LastBlockID) Descriptor() protoreflect.MessageDescriptor {
+	return md_LastBlockID
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_LastBlockID) Type() protoreflect.MessageType {
+	return _fastReflection_LastBlockID_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_LastBlockID) New() protoreflect.Message {
+	return new(fastReflection_LastBlockID)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_LastBlockID) Interface() protoreflect.ProtoMessage {
+	return (*LastBlockID)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_LastBlockID) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Hash) != 0 {
+		value := protoreflect.ValueOfBytes(x.Hash)
+		if !f(fd_LastBlockID_hash, value) {
+			return
+		}
+	}
+	if x.Parts != nil {
+		value := protoreflect.ValueOfMessage(x.Parts.ProtoReflect())
+		if !f(fd_LastBlockID_parts, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_LastBlockID) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LastBlockID.hash":
+		return len(x.Hash) != 0
+	case "cosmos.base.abci.v1beta1.LastBlockID.parts":
+		return x.Parts != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LastBlockID"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LastBlockID does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LastBlockID) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LastBlockID.hash":
+		x.Hash = nil
+	case "cosmos.base.abci.v1beta1.LastBlockID.parts":
+		x.Parts = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LastBlockID"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LastBlockID does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_LastBlockID) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.LastBlockID.hash":
+		value := x.Hash
+		return protoreflect.ValueOfBytes(value)
+	case "cosmos.base.abci.v1beta1.LastBlockID.parts":
+		value := x.Parts
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LastBlockID"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LastBlockID does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LastBlockID) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LastBlockID.hash":
+		x.Hash = value.Bytes()
+	case "cosmos.base.abci.v1beta1.LastBlockID.parts":
+		x.Parts = value.Message().Interface().(*PartSetHeader)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LastBlockID"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LastBlockID does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LastBlockID) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LastBlockID.parts":
+		if x.Parts == nil {
+			x.Parts = new(PartSetHeader)
+		}
+		return protoreflect.ValueOfMessage(x.Parts.ProtoReflect())
+	case "cosmos.base.abci.v1beta1.LastBlockID.hash":
+		panic(fmt.Errorf("field hash of message cosmos.base.abci.v1beta1.LastBlockID is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LastBlockID"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LastBlockID does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_LastBlockID) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.LastBlockID.hash":
+		return protoreflect.ValueOfBytes(nil)
+	case "cosmos.base.abci.v1beta1.LastBlockID.parts":
+		m := new(PartSetHeader)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.LastBlockID"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.LastBlockID does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_LastBlockID) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.LastBlockID", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_LastBlockID) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_LastBlockID) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_LastBlockID) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_LastBlockID) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*LastBlockID)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Hash)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Parts != nil {
+			l = options.Size(x.Parts)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*LastBlockID)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Parts != nil {
+			encoded, err := options.Marshal(x.Parts)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Hash) > 0 {
+			i -= len(x.Hash)
+			copy(dAtA[i:], x.Hash)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Hash)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*LastBlockID)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LastBlockID: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: LastBlockID: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Hash = append(x.Hash[:0], dAtA[iNdEx:postIndex]...)
+				if x.Hash == nil {
+					x.Hash = []byte{}
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Parts", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Parts == nil {
+					x.Parts = &PartSetHeader{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Parts); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_PartSetHeader       protoreflect.MessageDescriptor
+	fd_PartSetHeader_total protoreflect.FieldDescriptor
+	fd_PartSetHeader_hash  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_base_abci_v1beta1_abci_proto_init()
+	md_PartSetHeader = File_cosmos_base_abci_v1beta1_abci_proto.Messages().ByName("PartSetHeader")
+	fd_PartSetHeader_total = md_PartSetHeader.Fields().ByName("total")
+	fd_PartSetHeader_hash = md_PartSetHeader.Fields().ByName("hash")
+}
+
+var _ protoreflect.Message = (*fastReflection_PartSetHeader)(nil)
+
+type fastReflection_PartSetHeader PartSetHeader
+
+func (x *PartSetHeader) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PartSetHeader)(x)
+}
+
+func (x *PartSetHeader) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_PartSetHeader_messageType fastReflection_PartSetHeader_messageType
+var _ protoreflect.MessageType = fastReflection_PartSetHeader_messageType{}
+
+type fastReflection_PartSetHeader_messageType struct{}
+
+func (x fastReflection_PartSetHeader_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PartSetHeader)(nil)
+}
+func (x fastReflection_PartSetHeader_messageType) New() protoreflect.Message {
+	return new(fastReflection_PartSetHeader)
+}
+func (x fastReflection_PartSetHeader_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PartSetHeader
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_PartSetHeader) Descriptor() protoreflect.MessageDescriptor {
+	return md_PartSetHeader
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_PartSetHeader) Type() protoreflect.MessageType {
+	return _fastReflection_PartSetHeader_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_PartSetHeader) New() protoreflect.Message {
+	return new(fastReflection_PartSetHeader)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_PartSetHeader) Interface() protoreflect.ProtoMessage {
+	return (*PartSetHeader)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_PartSetHeader) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Total != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Total)
+		if !f(fd_PartSetHeader_total, value) {
+			return
+		}
+	}
+	if len(x.Hash) != 0 {
+		value := protoreflect.ValueOfBytes(x.Hash)
+		if !f(fd_PartSetHeader_hash, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_PartSetHeader) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.PartSetHeader.total":
+		return x.Total != uint64(0)
+	case "cosmos.base.abci.v1beta1.PartSetHeader.hash":
+		return len(x.Hash) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.PartSetHeader"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.PartSetHeader does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PartSetHeader) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.PartSetHeader.total":
+		x.Total = uint64(0)
+	case "cosmos.base.abci.v1beta1.PartSetHeader.hash":
+		x.Hash = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.PartSetHeader"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.PartSetHeader does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_PartSetHeader) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.base.abci.v1beta1.PartSetHeader.total":
+		value := x.Total
+		return protoreflect.ValueOfUint64(value)
+	case "cosmos.base.abci.v1beta1.PartSetHeader.hash":
+		value := x.Hash
+		return protoreflect.ValueOfBytes(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.PartSetHeader"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.PartSetHeader does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PartSetHeader) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.PartSetHeader.total":
+		x.Total = value.Uint()
+	case "cosmos.base.abci.v1beta1.PartSetHeader.hash":
+		x.Hash = value.Bytes()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.PartSetHeader"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.PartSetHeader does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PartSetHeader) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.PartSetHeader.total":
+		panic(fmt.Errorf("field total of message cosmos.base.abci.v1beta1.PartSetHeader is not mutable"))
+	case "cosmos.base.abci.v1beta1.PartSetHeader.hash":
+		panic(fmt.Errorf("field hash of message cosmos.base.abci.v1beta1.PartSetHeader is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.PartSetHeader"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.PartSetHeader does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_PartSetHeader) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.base.abci.v1beta1.PartSetHeader.total":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "cosmos.base.abci.v1beta1.PartSetHeader.hash":
+		return protoreflect.ValueOfBytes(nil)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.abci.v1beta1.PartSetHeader"))
+		}
+		panic(fmt.Errorf("message cosmos.base.abci.v1beta1.PartSetHeader does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_PartSetHeader) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.base.abci.v1beta1.PartSetHeader", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_PartSetHeader) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PartSetHeader) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_PartSetHeader) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_PartSetHeader) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*PartSetHeader)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Total != 0 {
+			n += 1 + runtime.Sov(uint64(x.Total))
+		}
+		l = len(x.Hash)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*PartSetHeader)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Hash) > 0 {
+			i -= len(x.Hash)
+			copy(dAtA[i:], x.Hash)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Hash)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.Total != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Total))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*PartSetHeader)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PartSetHeader: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PartSetHeader: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
+				}
+				x.Total = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Total |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Hash = append(x.Hash[:0], dAtA[iNdEx:postIndex]...)
+				if x.Hash == nil {
+					x.Hash = []byte{}
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -7101,14 +9962,25 @@ func (x *TxResponse) GetEvents() []*abci.Event {
 	return nil
 }
 
-// BlockResponse placeholder - still needs work
+// BlockResponse
 type BlockResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// The block height
-	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	Height         int64  `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
+	Time           string `protobuf:"bytes,2,opt,name=time,proto3" json:"time,omitempty"`
+	ChainId        string `protobuf:"bytes,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	LastCommit     string `protobuf:"bytes,4,opt,name=last_commit,json=lastCommit,proto3" json:"last_commit,omitempty"`
+	Data           string `protobuf:"bytes,5,opt,name=data,proto3" json:"data,omitempty"`
+	Validators     string `protobuf:"bytes,6,opt,name=validators,proto3" json:"validators,omitempty"`
+	NextValidators string `protobuf:"bytes,7,opt,name=next_validators,json=nextValidators,proto3" json:"next_validators,omitempty"`
+	App            string `protobuf:"bytes,8,opt,name=app,proto3" json:"app,omitempty"`
+	Consensus      string `protobuf:"bytes,9,opt,name=consensus,proto3" json:"consensus,omitempty"`
+	Results        string `protobuf:"bytes,10,opt,name=results,proto3" json:"results,omitempty"`
+	Evidence       string `protobuf:"bytes,11,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	Proposer       string `protobuf:"bytes,12,opt,name=proposer,proto3" json:"proposer,omitempty"`
 }
 
 func (x *BlockResponse) Reset() {
@@ -7136,6 +10008,83 @@ func (x *BlockResponse) GetHeight() int64 {
 		return x.Height
 	}
 	return 0
+}
+
+func (x *BlockResponse) GetTime() string {
+	if x != nil {
+		return x.Time
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetChainId() string {
+	if x != nil {
+		return x.ChainId
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetLastCommit() string {
+	if x != nil {
+		return x.LastCommit
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetData() string {
+	if x != nil {
+		return x.Data
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetValidators() string {
+	if x != nil {
+		return x.Validators
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetNextValidators() string {
+	if x != nil {
+		return x.NextValidators
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetApp() string {
+	if x != nil {
+		return x.App
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetConsensus() string {
+	if x != nil {
+		return x.Consensus
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetResults() string {
+	if x != nil {
+		return x.Results
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetEvidence() string {
+	if x != nil {
+		return x.Evidence
+	}
+	return ""
+}
+
+func (x *BlockResponse) GetProposer() string {
+	if x != nil {
+		return x.Proposer
+	}
+	return ""
 }
 
 // ABCIMessageLog defines a structure containing an indexed tx ABCI message log.
@@ -7627,6 +10576,220 @@ func (x *SearchTxsResult) GetTxs() []*TxResponse {
 	return nil
 }
 
+// SearchBlocksResult defines a structure for querying blocks pageable
+type SearchBlocksResult struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Count of all blocks
+	TotalCount uint64 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	// Count of blocks in current page
+	Count uint64 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	// Index of current page, start from 1
+	PageNumber uint64 `protobuf:"varint,3,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	// Count of total pages
+	PageTotal uint64 `protobuf:"varint,4,opt,name=page_total,json=pageTotal,proto3" json:"page_total,omitempty"`
+	// Max count blocks per page
+	Limit uint64 `protobuf:"varint,5,opt,name=limit,proto3" json:"limit,omitempty"`
+	// List of blocks in current page
+	Blocks []*BlockResponse `protobuf:"bytes,6,rep,name=blocks,proto3" json:"blocks,omitempty"`
+}
+
+func (x *SearchBlocksResult) Reset() {
+	*x = SearchBlocksResult{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SearchBlocksResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchBlocksResult) ProtoMessage() {}
+
+// Deprecated: Use SearchBlocksResult.ProtoReflect.Descriptor instead.
+func (*SearchBlocksResult) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SearchBlocksResult) GetTotalCount() uint64 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+func (x *SearchBlocksResult) GetCount() uint64 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *SearchBlocksResult) GetPageNumber() uint64 {
+	if x != nil {
+		return x.PageNumber
+	}
+	return 0
+}
+
+func (x *SearchBlocksResult) GetPageTotal() uint64 {
+	if x != nil {
+		return x.PageTotal
+	}
+	return 0
+}
+
+func (x *SearchBlocksResult) GetLimit() uint64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *SearchBlocksResult) GetBlocks() []*BlockResponse {
+	if x != nil {
+		return x.Blocks
+	}
+	return nil
+}
+
+// BlockVersion defines the version of the block.
+type BlockVersion struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Block uint64 `protobuf:"varint,1,opt,name=block,proto3" json:"block,omitempty"`
+	App   uint64 `protobuf:"varint,2,opt,name=app,proto3" json:"app,omitempty"`
+}
+
+func (x *BlockVersion) Reset() {
+	*x = BlockVersion{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BlockVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlockVersion) ProtoMessage() {}
+
+// Deprecated: Use BlockVersion.ProtoReflect.Descriptor instead.
+func (*BlockVersion) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *BlockVersion) GetBlock() uint64 {
+	if x != nil {
+		return x.Block
+	}
+	return 0
+}
+
+func (x *BlockVersion) GetApp() uint64 {
+	if x != nil {
+		return x.App
+	}
+	return 0
+}
+
+// LastBlockID defines the last block ID.
+type LastBlockID struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Hash  []byte         `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
+	Parts *PartSetHeader `protobuf:"bytes,2,opt,name=parts,proto3" json:"parts,omitempty"`
+}
+
+func (x *LastBlockID) Reset() {
+	*x = LastBlockID{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LastBlockID) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LastBlockID) ProtoMessage() {}
+
+// Deprecated: Use LastBlockID.ProtoReflect.Descriptor instead.
+func (*LastBlockID) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *LastBlockID) GetHash() []byte {
+	if x != nil {
+		return x.Hash
+	}
+	return nil
+}
+
+func (x *LastBlockID) GetParts() *PartSetHeader {
+	if x != nil {
+		return x.Parts
+	}
+	return nil
+}
+
+// PartSetHeader defines the part set header.
+type PartSetHeader struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Total uint64 `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Hash  []byte `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
+}
+
+func (x *PartSetHeader) Reset() {
+	*x = PartSetHeader{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PartSetHeader) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PartSetHeader) ProtoMessage() {}
+
+// Deprecated: Use PartSetHeader.ProtoReflect.Descriptor instead.
+func (*PartSetHeader) Descriptor() ([]byte, []int) {
+	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *PartSetHeader) GetTotal() uint64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *PartSetHeader) GetHash() []byte {
+	if x != nil {
+		return x.Hash
+	}
+	return nil
+}
+
 var File_cosmos_base_abci_v1beta1_abci_proto protoreflect.FileDescriptor
 
 var file_cosmos_base_abci_v1beta1_abci_proto_rawDesc = []byte{
@@ -7667,10 +10830,29 @@ var file_cosmos_base_abci_v1beta1_abci_proto_rawDesc = []byte{
 	0x12, 0x34, 0x0a, 0x06, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x16, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x61, 0x62,
 	0x63, 0x69, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06,
-	0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0x2d, 0x0a, 0x0d,
-	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a,
-	0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68,
-	0x65, 0x69, 0x67, 0x68, 0x74, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xa9, 0x01, 0x0a, 0x0e,
+	0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xdc, 0x02, 0x0a,
+	0x0d, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16,
+	0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06,
+	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x63, 0x68,
+	0x61, 0x69, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x68,
+	0x61, 0x69, 0x6e, 0x49, 0x64, 0x12, 0x1f, 0x0a, 0x0b, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6c, 0x61, 0x73, 0x74,
+	0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x1e, 0x0a, 0x0a, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x27, 0x0a, 0x0f, 0x6e, 0x65,
+	0x78, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x18, 0x07, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0e, 0x6e, 0x65, 0x78, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x73, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x70, 0x70, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x03, 0x61, 0x70, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73,
+	0x75, 0x73, 0x18, 0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
+	0x73, 0x75, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x0a,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x1a, 0x0a,
+	0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x65, 0x72, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x65, 0x72, 0x3a, 0x04, 0x88, 0xa0, 0x1f, 0x00, 0x22, 0xa9, 0x01, 0x0a, 0x0e,
 	0x41, 0x42, 0x43, 0x49, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4c, 0x6f, 0x67, 0x12, 0x2a,
 	0x0a, 0x09, 0x6d, 0x73, 0x67, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0d, 0x42, 0x0d, 0xea, 0xde, 0x1f, 0x09, 0x6d, 0x73, 0x67, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78,
@@ -7743,7 +10925,35 @@ var file_cosmos_base_abci_v1beta1_abci_proto_rawDesc = []byte{
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
 	0x73, 0x65, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
 	0x54, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x03, 0x74, 0x78, 0x73, 0x3a,
-	0x04, 0x80, 0xdc, 0x20, 0x01, 0x42, 0xe7, 0x01, 0x0a, 0x1c, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
+	0x04, 0x80, 0xdc, 0x20, 0x01, 0x22, 0xe8, 0x01, 0x0a, 0x12, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68,
+	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x1f, 0x0a, 0x0b,
+	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x63, 0x6f,
+	0x75, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x6e, 0x75, 0x6d, 0x62,
+	0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x65, 0x4e, 0x75,
+	0x6d, 0x62, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x6f, 0x74,
+	0x61, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x70, 0x61, 0x67, 0x65, 0x54, 0x6f,
+	0x74, 0x61, 0x6c, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x3f, 0x0a, 0x06, 0x62, 0x6c, 0x6f,
+	0x63, 0x6b, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x52, 0x06, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x3a, 0x04, 0x80, 0xdc, 0x20, 0x01,
+	0x22, 0x36, 0x0a, 0x0c, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+	0x12, 0x14, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x70, 0x70, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x03, 0x61, 0x70, 0x70, 0x22, 0x60, 0x0a, 0x0b, 0x4c, 0x61, 0x73, 0x74,
+	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61, 0x73, 0x68, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x12, 0x3d, 0x0a, 0x05, 0x70,
+	0x61, 0x72, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x72, 0x74, 0x53, 0x65, 0x74, 0x48, 0x65, 0x61,
+	0x64, 0x65, 0x72, 0x52, 0x05, 0x70, 0x61, 0x72, 0x74, 0x73, 0x22, 0x39, 0x0a, 0x0d, 0x50, 0x61,
+	0x72, 0x74, 0x53, 0x65, 0x74, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x74,
+	0x6f, 0x74, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x74, 0x6f, 0x74, 0x61,
+	0x6c, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x04, 0x68, 0x61, 0x73, 0x68, 0x42, 0xe7, 0x01, 0x0a, 0x1c, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76,
 	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x42, 0x09, 0x41, 0x62, 0x63, 0x69, 0x50, 0x72, 0x6f, 0x74,
 	0x6f, 0x50, 0x01, 0x5a, 0x35, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
@@ -7773,7 +10983,7 @@ func file_cosmos_base_abci_v1beta1_abci_proto_rawDescGZIP() []byte {
 	return file_cosmos_base_abci_v1beta1_abci_proto_rawDescData
 }
 
-var file_cosmos_base_abci_v1beta1_abci_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_cosmos_base_abci_v1beta1_abci_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_cosmos_base_abci_v1beta1_abci_proto_goTypes = []interface{}{
 	(*TxResponse)(nil),         // 0: cosmos.base.abci.v1beta1.TxResponse
 	(*BlockResponse)(nil),      // 1: cosmos.base.abci.v1beta1.BlockResponse
@@ -7786,27 +10996,33 @@ var file_cosmos_base_abci_v1beta1_abci_proto_goTypes = []interface{}{
 	(*MsgData)(nil),            // 8: cosmos.base.abci.v1beta1.MsgData
 	(*TxMsgData)(nil),          // 9: cosmos.base.abci.v1beta1.TxMsgData
 	(*SearchTxsResult)(nil),    // 10: cosmos.base.abci.v1beta1.SearchTxsResult
-	(*anypb.Any)(nil),          // 11: google.protobuf.Any
-	(*abci.Event)(nil),         // 12: tendermint.abci.Event
+	(*SearchBlocksResult)(nil), // 11: cosmos.base.abci.v1beta1.SearchBlocksResult
+	(*BlockVersion)(nil),       // 12: cosmos.base.abci.v1beta1.BlockVersion
+	(*LastBlockID)(nil),        // 13: cosmos.base.abci.v1beta1.LastBlockID
+	(*PartSetHeader)(nil),      // 14: cosmos.base.abci.v1beta1.PartSetHeader
+	(*anypb.Any)(nil),          // 15: google.protobuf.Any
+	(*abci.Event)(nil),         // 16: tendermint.abci.Event
 }
 var file_cosmos_base_abci_v1beta1_abci_proto_depIdxs = []int32{
 	2,  // 0: cosmos.base.abci.v1beta1.TxResponse.logs:type_name -> cosmos.base.abci.v1beta1.ABCIMessageLog
-	11, // 1: cosmos.base.abci.v1beta1.TxResponse.tx:type_name -> google.protobuf.Any
-	12, // 2: cosmos.base.abci.v1beta1.TxResponse.events:type_name -> tendermint.abci.Event
+	15, // 1: cosmos.base.abci.v1beta1.TxResponse.tx:type_name -> google.protobuf.Any
+	16, // 2: cosmos.base.abci.v1beta1.TxResponse.events:type_name -> tendermint.abci.Event
 	3,  // 3: cosmos.base.abci.v1beta1.ABCIMessageLog.events:type_name -> cosmos.base.abci.v1beta1.StringEvent
 	4,  // 4: cosmos.base.abci.v1beta1.StringEvent.attributes:type_name -> cosmos.base.abci.v1beta1.Attribute
-	12, // 5: cosmos.base.abci.v1beta1.Result.events:type_name -> tendermint.abci.Event
-	11, // 6: cosmos.base.abci.v1beta1.Result.msg_responses:type_name -> google.protobuf.Any
+	16, // 5: cosmos.base.abci.v1beta1.Result.events:type_name -> tendermint.abci.Event
+	15, // 6: cosmos.base.abci.v1beta1.Result.msg_responses:type_name -> google.protobuf.Any
 	5,  // 7: cosmos.base.abci.v1beta1.SimulationResponse.gas_info:type_name -> cosmos.base.abci.v1beta1.GasInfo
 	6,  // 8: cosmos.base.abci.v1beta1.SimulationResponse.result:type_name -> cosmos.base.abci.v1beta1.Result
 	8,  // 9: cosmos.base.abci.v1beta1.TxMsgData.data:type_name -> cosmos.base.abci.v1beta1.MsgData
-	11, // 10: cosmos.base.abci.v1beta1.TxMsgData.msg_responses:type_name -> google.protobuf.Any
+	15, // 10: cosmos.base.abci.v1beta1.TxMsgData.msg_responses:type_name -> google.protobuf.Any
 	0,  // 11: cosmos.base.abci.v1beta1.SearchTxsResult.txs:type_name -> cosmos.base.abci.v1beta1.TxResponse
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	1,  // 12: cosmos.base.abci.v1beta1.SearchBlocksResult.blocks:type_name -> cosmos.base.abci.v1beta1.BlockResponse
+	14, // 13: cosmos.base.abci.v1beta1.LastBlockID.parts:type_name -> cosmos.base.abci.v1beta1.PartSetHeader
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_base_abci_v1beta1_abci_proto_init() }
@@ -7947,6 +11163,54 @@ func file_cosmos_base_abci_v1beta1_abci_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SearchBlocksResult); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BlockVersion); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LastBlockID); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_base_abci_v1beta1_abci_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PartSetHeader); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -7954,7 +11218,7 @@ func file_cosmos_base_abci_v1beta1_abci_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_base_abci_v1beta1_abci_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

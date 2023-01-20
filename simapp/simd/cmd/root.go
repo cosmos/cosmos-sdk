@@ -223,6 +223,7 @@ func queryCommand() *cobra.Command {
 		rpc.ValidatorCommand(),
 		authcmd.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
+		authcmd.QueryBlocksByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
 

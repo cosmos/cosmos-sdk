@@ -84,13 +84,24 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 }
 
 // NewResponseResultBlock returns a BlockResponse given a ResultBlock from tendermint
-func NewResponseResultBlock(res *coretypes.ResultBlock) *BlockResponse {
+func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *BlockResponse {
 	if res == nil {
 		return nil
 	}
 
 	return &BlockResponse{
-		Height: res.Block.Height,
+		Height:         res.Block.Height,
+		Time:           timestamp,
+		ChainId:        res.Block.ChainID,
+		LastCommit:     res.Block.LastCommitHash.String(),
+		Data:           res.Block.DataHash.String(),
+		Validators:     res.Block.ValidatorsHash.String(),
+		NextValidators: res.Block.NextValidatorsHash.String(),
+		Consensus:      res.Block.ConsensusHash.String(),
+		App:            res.Block.AppHash.String(),
+		Results:        res.Block.LastResultsHash.String(),
+		Evidence:       res.Block.EvidenceHash.String(),
+		Proposer:       res.Block.ProposerAddress.String(),
 	}
 }
 
@@ -130,6 +141,17 @@ func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse
 		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
 		Limit:      limit,
 		Txs:        txs,
+	}
+}
+
+func NewSearchBlocksResult(totalCount, count, page, limit uint64, blocks []*BlockResponse) *SearchBlocksResult {
+	return &SearchBlocksResult{
+		TotalCount: totalCount,
+		Count:      count,
+		PageNumber: page,
+		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
+		Limit:      limit,
+		Blocks:     blocks,
 	}
 }
 

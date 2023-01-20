@@ -148,7 +148,6 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 	default:
 		return Iterator[K, V]{}, errOrder
 	}
-
 	if err != nil {
 		return Iterator[K, V]{}, err
 	}

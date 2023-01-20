@@ -180,6 +180,7 @@ replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	cosmossdk.io/collections => ./collections
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	github.com/cosmos/cosmos-sdk/x/nft => ../x/nft

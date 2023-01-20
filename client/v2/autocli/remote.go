@@ -40,7 +40,7 @@ func (options RemoteCommandOptions) Command() (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Long: `To configure a new chain just run this command using the --init flag and the name of the chain as it's listed in the chain registry (https://github.com/cosmos/chain-registry).
 If the chain is not listed in the chain registry, you can use any unique name.`,
-		Example: "cosmcli --init cosmoshub",
+		Example: "cosmcli --init foochain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if initChain != "" {
 				return options.reconfigure(configDir, initChain, config)
@@ -50,7 +50,7 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&initChain, "init", "", "Initialize a new chain with the specified name")
+	cmd.Flags().StringVar(&initChain, "init", "", "initialize a new chain with the specified name")
 
 	for chain, chainConfig := range config.Chains {
 		chainInfo, err := remote.LoadChainInfo(configDir, chain, chainConfig, false)
@@ -100,8 +100,8 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 				}
 			},
 		}
-		chainCmd.Flags().BoolVar(&update, "update", false, "update the autocli data for the selected chain")
-		chainCmd.Flags().BoolVar(&reconfig, "config", false, "re-configure the selected chain")
+		chainCmd.Flags().BoolVar(&update, "update", false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
+		chainCmd.Flags().BoolVar(&reconfig, "config", false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data)")
 
 		err = appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder)
 		if err != nil {

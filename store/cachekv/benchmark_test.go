@@ -119,7 +119,7 @@ func (cs *CacheStack) CommitToRevision(target int) error {
 // Snapshot pushes a new cached context to the stack,
 // and returns the index of it.
 func (cs *CacheStack) Snapshot() int {
-	cs.cacheStores = append(cs.cacheStores, cachekv.NewStore(cs.CurrentStore()))
+	cs.cacheStores = append(cs.cacheStores, cs.CurrentStore().Clone())
 	return len(cs.cacheStores) - 1
 }
 

@@ -136,6 +136,9 @@ type MultiStore interface {
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
+
+	Clone() CacheMultiStore  // only returns the self type
+	Restore(CacheMultiStore) // only accepts the self type
 }
 
 // CommitMultiStore is an interface for a MultiStore without cache capabilities.
@@ -252,6 +255,9 @@ type CacheKVStore interface {
 
 	// Writes operations to underlying KVStore
 	Write()
+
+	Clone() CacheKVStore  // only returns the self type
+	Restore(CacheKVStore) // only accepts the self type
 }
 
 // CommitKVStore is an interface for MultiStore.

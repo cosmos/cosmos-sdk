@@ -45,7 +45,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	suite.NoError(err)
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
-	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms.CacheMultiStore(), tmproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 

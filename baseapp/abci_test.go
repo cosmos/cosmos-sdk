@@ -866,6 +866,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.Codespace(), space, err)
 				require.EqualValues(t, sdkerrors.ErrInvalidSequence.ABCICode(), code, err)
 			} else {
+				require.NoError(t, err)
 				require.NotNil(t, result)
 			}
 		}

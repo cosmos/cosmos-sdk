@@ -67,21 +67,23 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			// Messages may mutate state thus we use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			cacheCtx, writeCache := ctx.CacheContext()
-			messages, err := proposal.GetMsgs()
-			if err == nil {
-				for idx, msg = range messages {
-					handler := keeper.Router().Handler(msg)
+			err := ctx.RunAtomic(func(cacheCtx sdk.Context) error {
+				messages, err := proposal.GetMsgs()
+				if err == nil {
+					for idx, msg = range messages {
+						handler := keeper.Router().Handler(msg)
 
-					var res *sdk.Result
-					res, err = handler(cacheCtx, msg)
-					if err != nil {
-						break
+						var res *sdk.Result
+						res, err = handler(cacheCtx, msg)
+						if err != nil {
+							break
+						}
+
+						events = append(events, res.GetEvents()...)
 					}
-
-					events = append(events, res.GetEvents()...)
 				}
-			}
+				return err
+			})
 
 			// `err == nil` when all handlers passed.
 			// Or else, `idx` and `err` are populated with the msg index and error.
@@ -89,9 +91,6 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				proposal.Status = v1.StatusPassed
 				tagValue = types.AttributeValueProposalPassed
 				logMsg = "passed"
-
-				// write state to the underlying multi-store
-				writeCache()
 
 				// propagate the msg events to the current context
 				ctx.EventManager().EmitEvents(events)

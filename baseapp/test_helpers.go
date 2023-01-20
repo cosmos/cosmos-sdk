@@ -46,8 +46,9 @@ func (app *BaseApp) NewContext(isCheckTx bool, header tmproto.Header) sdk.Contex
 	return sdk.NewContext(app.deliverState.ms, header, false, app.logger)
 }
 
+// NewUncachedContext is used in unit test to bypass the `deliverState.ms`.
 func (app *BaseApp) NewUncachedContext(isCheckTx bool, header tmproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
+	return sdk.NewContext(app.cms.CacheMultiStore(), header, isCheckTx, app.logger)
 }
 
 func (app *BaseApp) GetContextForDeliverTx(txBytes []byte) sdk.Context {

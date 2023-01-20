@@ -756,28 +756,31 @@ func (k Keeper) Exec(goCtx context.Context, req *group.MsgExec) (*group.MsgExecR
 	// Execute proposal payload.
 	var logs string
 	if proposal.Status == group.PROPOSAL_STATUS_ACCEPTED && proposal.ExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
-		// Caching context so that we don't update the store in case of failure.
-		cacheCtx, flush := ctx.CacheContext()
-
 		addr, err := sdk.AccAddressFromBech32(policyInfo.Address)
 		if err != nil {
 			return nil, err
 		}
 
 		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
-		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
-			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
-			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
-			k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
-		} else {
-			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
-			flush()
 
+		// RunAtomic so that we don't update the store in case of failure.
+		_ = ctx.RunAtomic(func(cacheCtx sdk.Context) error {
+			results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy)
+			if err != nil {
+				proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
+				logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", id, err.Error())
+				k.Logger(ctx).Info("proposal execution failed", "cause", err, "proposalID", id)
+				return err
+			}
+
+			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_SUCCESS
 			for _, res := range results {
 				// NOTE: The sdk msg handler creates a new EventManager, so events must be correctly propagated back to the current context
 				ctx.EventManager().EmitEvents(res.GetEvents())
 			}
-		}
+
+			return nil
+		})
 	}
 
 	// Update proposal in proposalTable

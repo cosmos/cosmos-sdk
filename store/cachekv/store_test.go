@@ -11,11 +11,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
 	"github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func newCacheKVStore() types.CacheKVStore {
+	// create two layer of cache store to better emulate the real world.
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
-	return cachekv.NewStore(mem)
+	deliverState := cachekv.NewStore(mem)
+	return deliverState.Clone()
 }
 
 func keyFmt(i int) []byte { return bz(fmt.Sprintf("key%0.8d", i)) }
@@ -682,5 +685,23 @@ func BenchmarkCacheKVStoreGetKeyFound(b *testing.B) {
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
 		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	}
+}
+
+//--------------------------------------------------------
+
+func BenchmarkCacheKVStoreSetAndCommit(b *testing.B) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		store := cachekv.NewStore(mem)
+		store1 := store.Clone()
+		for j := 0; j < 10; j++ {
+			store1.Set(sdk.Uint64ToBigEndian(uint64(i+j)), []byte{byte(i)})
+		}
+		store.Restore(store1)
+		store.Write()
 	}
 }

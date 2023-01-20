@@ -12,7 +12,7 @@ import (
 func TestStoreGetKVStore(t *testing.T) {
 	require := require.New(t)
 
-	s := Store{stores: map[types.StoreKey]types.CacheWrap{}}
+	s := Store{stores: map[types.StoreKey]types.CacheKVStore{}}
 	key := types.NewKVStoreKey("abc")
 	errMsg := fmt.Sprintf("kv store with key %v has not been registered in stores", key)
 

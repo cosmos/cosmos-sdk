@@ -24,7 +24,7 @@ and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
 	baseCtx              context.Context
-	ms                   storetypes.MultiStore
+	ms                   storetypes.CacheMultiStore
 	header               tmproto.Header
 	headerHash           tmbytes.HexBytes
 	chainID              string
@@ -48,7 +48,7 @@ type Request = Context
 
 // Read-only accessors
 func (c Context) Context() context.Context                   { return c.baseCtx }
-func (c Context) MultiStore() storetypes.MultiStore          { return c.ms }
+func (c Context) MultiStore() storetypes.CacheMultiStore     { return c.ms }
 func (c Context) BlockHeight() int64                         { return c.header.Height }
 func (c Context) BlockTime() time.Time                       { return c.header.Time }
 func (c Context) ChainID() string                            { return c.chainID }
@@ -95,7 +95,7 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.MultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(ms storetypes.CacheMultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
@@ -120,7 +120,7 @@ func (c Context) WithContext(ctx context.Context) Context {
 }
 
 // WithMultiStore returns a Context with an updated MultiStore.
-func (c Context) WithMultiStore(ms storetypes.MultiStore) Context {
+func (c Context) WithMultiStore(ms storetypes.CacheMultiStore) Context {
 	c.ms = ms
 	return c
 }
@@ -300,6 +300,18 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	}
 
 	return cc, writeCache
+}
+
+// RunAtomic runs the fn atomically, if fn returns error or panic, partial state won't be saved.
+func (c Context) RunAtomic(fn func(Context) error) error {
+	cacheCtx := c.WithMultiStore(c.ms.Clone()).WithEventManager(NewEventManager())
+	if err := fn(cacheCtx); err != nil {
+		return err
+	}
+
+	c.ms.Restore(cacheCtx.ms)
+	c.EventManager().EmitEvents(cacheCtx.EventManager().Events())
+	return nil
 }
 
 var _ context.Context = Context{}

@@ -11,17 +11,20 @@ func TestGetSetDelete(t *testing.T) {
 	db := NewBTree()
 
 	// A nonexistent key should return nil.
-	value := db.Get([]byte("a"))
+	value, found := db.Get([]byte("a"))
 	require.Nil(t, value)
+	require.False(t, found)
 
 	// Set and get a value.
-	db.Set([]byte("a"), []byte{0x01})
-	db.Set([]byte("b"), []byte{0x02})
-	value = db.Get([]byte("a"))
+	db.Set([]byte("a"), []byte{0x01}, true)
+	db.Set([]byte("b"), []byte{0x02}, true)
+	value, found = db.Get([]byte("a"))
 	require.Equal(t, []byte{0x01}, value)
+	require.True(t, found)
 
-	value = db.Get([]byte("b"))
+	value, found = db.Get([]byte("b"))
 	require.Equal(t, []byte{0x02}, value)
+	require.True(t, found)
 
 	// Deleting a non-existent value is fine.
 	db.Delete([]byte("x"))
@@ -29,13 +32,15 @@ func TestGetSetDelete(t *testing.T) {
 	// Delete a value.
 	db.Delete([]byte("a"))
 
-	value = db.Get([]byte("a"))
+	value, found = db.Get([]byte("a"))
 	require.Nil(t, value)
+	require.False(t, found)
 
 	db.Delete([]byte("b"))
 
-	value = db.Get([]byte("b"))
+	value, found = db.Get([]byte("b"))
 	require.Nil(t, value)
+	require.False(t, found)
 }
 
 func TestDBIterator(t *testing.T) {
@@ -43,7 +48,7 @@ func TestDBIterator(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		if i != 6 { // but skip 6.
-			db.Set(int642Bytes(int64(i)), []byte{})
+			db.Set(int642Bytes(int64(i)), []byte{}, true)
 		}
 	}
 

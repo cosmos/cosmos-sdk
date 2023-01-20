@@ -44,19 +44,24 @@ func (store *Store) Clone() types.CacheKVStore {
 	}
 }
 
-// Restore restores the store cache to a given snapshot.
-func (store *Store) Restore(s types.CacheKVStore) {
+// swapCache swap out the internal cache store and leave the current store in a unusable state.
+func (store *Store) swapCache() internal.BTree {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	ss := s.(*Store)
-	ss.mtx.Lock()
-	defer ss.mtx.Unlock()
+	cache := store.cache
+	store.cache = internal.BTree{}
+	return cache
+}
 
-	store.cache = ss.cache
+// Restore restores the store cache to a given snapshot.
+func (store *Store) Restore(s types.CacheKVStore) {
+	cache := s.(*Store).swapCache()
 
-	// the from store should not be used anymore.
-	ss.cache = internal.BTree{}
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
+	store.cache = cache
 }
 
 // Get implements types.KVStore.

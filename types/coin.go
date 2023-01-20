@@ -343,6 +343,9 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 			coalesced = append(coalesced, comboCoin)
 		}
 	}
+	if coalesced == nil {
+		return Coins{}
+	}
 	return coalesced.Sort()
 }
 

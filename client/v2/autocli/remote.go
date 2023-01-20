@@ -55,7 +55,14 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 	for chain, chainConfig := range config.Chains {
 		chainInfo, err := remote.LoadChainInfo(configDir, chain, chainConfig, false)
 		if err != nil {
-			fmt.Printf("Unable to load data for %s\n", chain)
+			cmd.AddCommand(&cobra.Command{
+				Use:   chain,
+				Short: "Unable to load data",
+				Long:  "Unable to load data, reconfiguration needed.",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					return options.reconfigure(configDir, chain, config)
+				},
+			})
 			continue
 		}
 
@@ -79,7 +86,8 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 		var update bool
 		var reconfig bool
 		chainCmd := &cobra.Command{
-			Use: chain,
+			Use:   chain,
+			Short: fmt.Sprintf("Commands for the %s chain", chain),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				if reconfig {
 					return options.reconfigure(configDir, chain, config)
@@ -123,13 +131,12 @@ func (options RemoteCommandOptions) reconfigure(configDir, chain string, config 
 	}
 	config.Chains[chain] = chainConfig
 
-	err = remote.SaveConfig(configDir, config)
+	_, err = remote.LoadChainInfo(configDir, chain, chainConfig, true)
 	if err != nil {
 		return err
 	}
 
-	_, err = remote.LoadChainInfo(configDir, chain, chainConfig, true)
-	return err
+	return remote.SaveConfig(configDir, config)
 }
 
 type dynamicTypeResolver struct {
@@ -171,5 +178,20 @@ func (d dynamicTypeResolver) FindExtensionByName(field protoreflect.FullName) (p
 }
 
 func (d dynamicTypeResolver) FindExtensionByNumber(message protoreflect.FullName, field protoreflect.FieldNumber) (protoreflect.ExtensionType, error) {
-	panic("TODO")
+	desc, err := d.files.FindDescriptorByName(message)
+	if err != nil {
+		return nil, err
+	}
+
+	messageDesc := desc.(protoreflect.MessageDescriptor)
+	exts := messageDesc.Extensions()
+	n := exts.Len()
+	for i := 0; i < n; i++ {
+		ext := exts.Get(i)
+		if ext.Number() == field {
+			return dynamicpb.NewExtensionType(ext), nil
+		}
+	}
+
+	return nil, protoregistry.NotFound
 }

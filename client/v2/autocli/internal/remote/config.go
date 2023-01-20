@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml/v2"
 	"github.com/pkg/errors"
 )
 

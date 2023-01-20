@@ -9,6 +9,7 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -81,7 +82,7 @@ func LoadChainInfo(configDir, chain string, config *ChainConfig, reload bool) (*
 
 	files, err := protodesc.FileOptions{AllowUnresolvable: true}.NewFiles(fdSet)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "error building protoregistry.Files")
 	}
 
 	var appOpts map[string]*autocliv1.ModuleOptions
@@ -141,7 +142,7 @@ func LoadChainInfo(configDir, chain string, config *ChainConfig, reload bool) (*
 }
 
 func openClient(config *ChainConfig) (*grpc.ClientConn, error) {
-	var errors error
+	var res error
 	for _, endpoint := range config.GRPCEndpoints {
 		var err error
 		var creds credentials.TransportCredentials
@@ -154,12 +155,12 @@ func openClient(config *ChainConfig) (*grpc.ClientConn, error) {
 		}
 		client, err := grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
-			errors = multierror.Append(errors, err)
+			res = multierror.Append(res, err)
 			continue
 		}
 
 		return client, nil
 	}
 
-	return nil, errors
+	return nil, errors.Wrapf(res, "error loading gRPC client")
 }

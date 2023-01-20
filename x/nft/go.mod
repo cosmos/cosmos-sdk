@@ -151,5 +151,5 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 
 replace (
 	github.com/cosmos/cosmos-sdk => ../..
-	cosmossdk.io/collections => ../collections
+	cosmossdk.io/collections => ../../collections
 )

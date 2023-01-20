@@ -37,12 +37,12 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposalMsgs, err := msg.GetMsgs()
+	proposer, err := sdk.AccAddressFromBech32(msg.GetProposer())
 	if err != nil {
 		return nil, err
 	}
 
-	proposer, err := sdk.AccAddressFromBech32(msg.GetProposer())
+	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +80,33 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	return &v1.MsgSubmitProposalResponse{
 		ProposalId: proposal.Id,
+	}, nil
+}
+
+// CancelProposals implements the MsgServer.CancelProposal method.
+func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := sdk.AccAddressFromBech32(msg.Proposer)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.CancelProposal(ctx, msg.ProposalId, msg.Proposer); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			govtypes.EventTypeCancelProposal,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
+			sdk.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
+		),
+	)
+
+	return &v1.MsgCancelProposalResponse{
+		ProposalId:     msg.ProposalId,
+		CanceledTime:   ctx.BlockTime(),
+		CanceledHeight: uint64(ctx.BlockHeight()),
 	}, nil
 }
 

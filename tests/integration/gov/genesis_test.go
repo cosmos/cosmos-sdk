@@ -22,7 +22,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -106,7 +106,7 @@ func TestImportExportQueues(t *testing.T) {
 	genesisState[banktypes.ModuleName] = s1.cdc.MustMarshalJSON(bankGenState)
 	genesisState[types.ModuleName] = s1.cdc.MustMarshalJSON(govGenState)
 	genesisState[stakingtypes.ModuleName] = s1.cdc.MustMarshalJSON(stakingGenState)
-	genesisState[distributiontypes.ModuleName] = s1.cdc.MustMarshalJSON(distributionGenState)
+	genesisState[disttypes.ModuleName] = s1.cdc.MustMarshalJSON(distributionGenState)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)

@@ -1,19 +1,25 @@
 package module_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"testing"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/golang/mock/gomock"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -28,30 +34,50 @@ func TestBasicManager(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
+	expDefaultGenesis := map[string]json.RawMessage{
+		"mockAppModuleBasic1": json.RawMessage(``),
+		"mockCoreAppModule2":  json.RawMessage(`null`),
+		"MockCoreAppModule": json.RawMessage(`{
+  "someField": "asd"
+}`),
+	}
 
 	mockAppModuleBasic1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
-	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
+	// Allow ValidateGenesis to be called any times because other module can fail before this one is called.
+	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(expDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
-	mm := module.NewBasicManager(mockAppModuleBasic1)
-	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
+	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mockCoreAppModule2.EXPECT().Name().AnyTimes().Return("mockCoreAppModule2")
+	mockCoreAppModule2.EXPECT().DefaultGenesis(gomock.Any()).Times(1).Return(nil)
+	mockCoreAppModule2.EXPECT().ValidateGenesis(gomock.Any()).Times(1).Return(nil)
+	mockCoreAppModule2.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
+	mockCoreAppModule2.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
+	mockCoreAppModule2.EXPECT().GetTxCmd().Times(1).Return(nil)
+	mockCoreAppModule2.EXPECT().GetQueryCmd().Times(1).Return(nil)
+
+	mockCoreAppModule3 := MockCoreAppModule{}
+
+	mm := module.NewBasicManager(mockAppModuleBasic1, mockCoreAppModule2, mockCoreAppModule3)
+
+	require.Equal(t, mockAppModuleBasic1, mm["mockAppModuleBasic1"])
+	require.Equal(t, mockCoreAppModule2, mm["mockCoreAppModule2"])
+	require.Equal(t, mockCoreAppModule3, mm["MockCoreAppModule"])
 
 	mm.RegisterLegacyAminoCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
 
-	require.Equal(t, wantDefaultGenesis, mm.DefaultGenesis(cdc))
+	require.Equal(t, expDefaultGenesis, mm.DefaultGenesis(cdc))
 
 	var data map[string]string
 	require.Equal(t, map[string]string(nil), data)
 
-	require.True(t, errors.Is(errFoo, mm.ValidateGenesis(cdc, nil, wantDefaultGenesis)))
+	require.ErrorIs(t, mm.ValidateGenesis(cdc, nil, expDefaultGenesis), errFoo)
 
 	mockCmd := &cobra.Command{Use: "root"}
 	mm.AddTxCommands(mockCmd)
@@ -59,7 +85,7 @@ func TestBasicManager(t *testing.T) {
 	mm.AddQueryCommands(mockCmd)
 
 	// validate genesis returns nil
-	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, wantDefaultGenesis))
+	require.Nil(t, module.NewBasicManager().ValidateGenesis(cdc, nil, expDefaultGenesis))
 }
 
 func TestGenesisOnlyAppModule(t *testing.T) {
@@ -182,11 +208,12 @@ func TestManager_ExportGenesis(t *testing.T) {
 
 	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockCoreAppModule := MockCoreAppModule{}
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, mockCoreAppModule)
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
@@ -197,7 +224,11 @@ func TestManager_ExportGenesis(t *testing.T) {
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`),
+		"MockCoreAppModule": json.RawMessage(`{
+  "someField": "asd"
+}`),
 	}
+
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 	require.Equal(t, want, mm.ExportGenesisForModules(ctx, cdc, []string{}))
 	require.Equal(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, mm.ExportGenesisForModules(ctx, cdc, []string{"module1"}))
@@ -251,3 +282,59 @@ func TestManager_EndBlock(t *testing.T) {
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
 }
+
+// Core API tests
+func TestCoreAPIManager(t *testing.T) {
+}
+
+// MockCoreAppModule allows us to test functions like DefaultGenesis
+type MockCoreAppModule struct{}
+
+func (MockCoreAppModule) Name() string        { return "MockCoreAppModule" }
+func (MockCoreAppModule) IsOnePerModuleType() {}
+func (MockCoreAppModule) IsAppModule()        {}
+func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
+	someFieldWriter, err := target("someField")
+	if err != nil {
+		return err
+	}
+	someFieldWriter.Write([]byte(`"asd"`))
+	return someFieldWriter.Close()
+}
+func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {
+	rdr, err := src("someField")
+	if err != nil {
+		return err
+	}
+	data, err := ioutil.ReadAll(rdr)
+	if err != nil {
+		return err
+	}
+
+	// this check will always fail, but it's just an example
+	if string(data) != `"dummy validation"` {
+		return errFoo
+	}
+
+	return nil
+}
+func (MockCoreAppModule) InitGenesis(context.Context, appmodule.GenesisSource) error { return nil }
+func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
+	wrt, err := target("someField")
+	if err != nil {
+		return err
+	}
+	wrt.Write([]byte(`"asd"`))
+	return wrt.Close()
+}
+func (MockCoreAppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino)                 {}
+func (MockCoreAppModule) RegisterInterfaces(codectypes.InterfaceRegistry)             {}
+func (MockCoreAppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
+func (MockCoreAppModule) GetTxCmd() *cobra.Command                                    { return nil }
+func (MockCoreAppModule) GetQueryCmd() *cobra.Command                                 { return nil }
+
+var (
+	_ appmodule.AppModule   = MockCoreAppModule{}
+	_ appmodule.HasGenesis  = MockCoreAppModule{}
+	_ module.AppModuleBasic = MockCoreAppModule{}
+)

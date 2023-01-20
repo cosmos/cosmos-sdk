@@ -440,7 +440,6 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.OrderExportGenesis
 	}
-
 	// verify modules exists in app, so that we don't panic in the middle of an export
 	if err := m.checkModulesExists(modulesToExport); err != nil {
 		panic(err)
@@ -452,18 +451,22 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 
 		if module, ok := mod.(appmodule.HasGenesis); ok {
 			// core API genesis
-			target := genesis.RawJSONTarget{}
-			err := module.ExportGenesis(ctx, target.Target())
-			if err != nil {
-				panic(err)
-			}
+			channels[moduleName] = make(chan json.RawMessage)
+			go func(module appmodule.HasGenesis, ch chan json.RawMessage) {
+				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+				target := genesis.RawJSONTarget{}
+				err := module.ExportGenesis(ctx, target.Target())
+				if err != nil {
+					panic(err)
+				}
 
-			rawJSON, err := target.JSON()
-			if err != nil {
-				panic(err)
-			}
+				rawJSON, err := target.JSON()
+				if err != nil {
+					panic(err)
+				}
 
-			channels[moduleName] <- rawJSON
+				channels[moduleName] <- rawJSON
+			}(module, channels[moduleName])
 		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan json.RawMessage)
 			go func(module HasGenesis, ch chan json.RawMessage) {
@@ -476,6 +479,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 
 	genesisData := make(map[string]json.RawMessage)
 	for moduleName := range channels {
+
 		genesisData[moduleName] = <-channels[moduleName]
 	}
 

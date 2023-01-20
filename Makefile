@@ -408,6 +408,7 @@ proto-gen:
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
 	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+	$(MAKE) update-swagger-docs
 
 proto-format:
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;

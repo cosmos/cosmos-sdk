@@ -1,4 +1,4 @@
-package autocli
+package internal
 
 import (
 	"fmt"
@@ -12,26 +12,20 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 
+	"cosmossdk.io/client/v2/autocli"
+
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/autocli/internal/remote"
 )
 
-type RemoteCommandOptions struct {
-	ConfigDir string
-}
-
-func (options RemoteCommandOptions) Command() (*cobra.Command, error) {
-	configDir := options.ConfigDir
-	if configDir == "" {
-		userCfgDir, err := os.UserHomeDir()
-		if err != nil {
-			return nil, err
-		}
-
-		configDir = path.Join(userCfgDir, remote.DefaultDirName)
+func RootCommand() (*cobra.Command, error) {
+	userCfgDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
 	}
 
-	config, err := remote.LoadConfig(configDir)
+	configDir := path.Join(userCfgDir, DefaultDirName)
+
+	config, err := LoadConfig(configDir)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +37,7 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 		Example: "cosmcli --init foochain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if initChain != "" {
-				return options.reconfigure(configDir, initChain, config)
+				return reconfigure(configDir, initChain, config)
 			}
 
 			return cmd.Help()
@@ -53,7 +47,7 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 	cmd.Flags().StringVar(&initChain, "init", "", "initialize a new chain with the specified name")
 
 	for chain, chainConfig := range config.Chains {
-		chainInfo := remote.NewChainInfo(configDir, chain, chainConfig)
+		chainInfo := NewChainInfo(configDir, chain, chainConfig)
 		err = chainInfo.Load(false)
 		if err != nil {
 			cmd.AddCommand(&cobra.Command{
@@ -62,17 +56,17 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 				Long:  "Unable to load data, reconfiguration needed.",
 				RunE: func(cmd *cobra.Command, args []string) error {
 					fmt.Printf("Error loading chain data for %s: %+v\n", chain, err)
-					return options.reconfigure(configDir, chain, config)
+					return reconfigure(configDir, chain, config)
 				},
 			})
 			continue
 		}
 
-		appOpts := AppOptions{
+		appOpts := autocli.AppOptions{
 			ModuleOptions: chainInfo.ModuleOptions,
 		}
 
-		builder := &Builder{
+		builder := &autocli.Builder{
 			Builder: flag.Builder{
 				TypeResolver: &dynamicTypeResolver{chainInfo},
 				FileResolver: chainInfo.ProtoFiles,
@@ -90,10 +84,10 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 			Short: fmt.Sprintf("Commands for the %s chain", chain),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				if reconfig {
-					return options.reconfigure(configDir, chain, config)
+					return reconfigure(configDir, chain, config)
 				} else if update {
 					fmt.Printf("Updating autocli data for %s\n", chain)
-					chainInfo := remote.NewChainInfo(configDir, chain, chainConfig)
+					chainInfo := NewChainInfo(configDir, chain, chainConfig)
 					err := chainInfo.Load(true)
 					return err
 				} else {
@@ -115,16 +109,16 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 	return cmd, nil
 }
 
-func (options RemoteCommandOptions) reconfigure(configDir, chain string, config *remote.Config) error {
+func reconfigure(configDir, chain string, config *Config) error {
 	fmt.Printf("Configuring %s\n", chain)
-	endpoint, err := remote.SelectGRPCEndpoints(chain)
+	endpoint, err := SelectGRPCEndpoints(chain)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Selected: %s\n", endpoint)
-	chainConfig := &remote.ChainConfig{
-		GRPCEndpoints: []remote.GRPCEndpoint{
+	chainConfig := &ChainConfig{
+		GRPCEndpoints: []GRPCEndpoint{
 			{
 				Endpoint: endpoint,
 			},
@@ -132,17 +126,17 @@ func (options RemoteCommandOptions) reconfigure(configDir, chain string, config 
 	}
 	config.Chains[chain] = chainConfig
 
-	chainInfo := remote.NewChainInfo(configDir, chain, chainConfig)
+	chainInfo := NewChainInfo(configDir, chain, chainConfig)
 	err = chainInfo.Load(true)
 	if err != nil {
 		return err
 	}
 
-	return remote.SaveConfig(configDir, config)
+	return SaveConfig(configDir, config)
 }
 
 type dynamicTypeResolver struct {
-	*remote.ChainInfo
+	*ChainInfo
 }
 
 var _ protoregistry.MessageTypeResolver = dynamicTypeResolver{}

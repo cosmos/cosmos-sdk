@@ -1,9 +1,11 @@
 package main
 
-import "cosmossdk.io/client/v2/autocli"
+import (
+	"cosmossdk.io/tools/cosmcli/internal"
+)
 
 func main() {
-	cmd, err := autocli.RemoteCommandOptions{}.Command()
+	cmd, err := internal.RootCommand()
 	if err != nil {
 		panic(err)
 	}

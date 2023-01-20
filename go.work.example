@@ -10,7 +10,7 @@ use (
 	./errors
 	./math
 	./orm
-	./tx
+	./x/tx
 	./simapp
 	./tests
 	./tools/rosetta

@@ -108,6 +108,57 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	return proposal, nil
 }
 
+// CancelProposal will cancel proposal before the voting period ends
+func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	if !ok {
+		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
+	}
+
+	// Checking proposal have proposer or not because old proposal doesn't have proposer field,
+	// https://github.com/cosmos/cosmos-sdk/blob/v0.46.2/proto/cosmos/gov/v1/gov.proto#L43
+	if proposal.Proposer == "" {
+		return types.ErrInvalidProposal.Wrapf("proposal %d doesn't have proposer %s, so cannot be canceled", proposalID, proposer)
+	}
+
+	// Check creator of the proposal
+	if proposal.Proposer != proposer {
+		return types.ErrInvalidProposer.Wrapf("invalid proposer %s", proposer)
+	}
+
+	// Check if proposal is active or not
+	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
+		return types.ErrInvalidProposal.Wrap("proposal should be in the deposit or voting period")
+	}
+
+	// Check proposal voting period is ended.
+	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(ctx.BlockTime()) {
+		return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)
+	}
+
+	// burn the (deposits * proposal_cancel_rate) amount or sent to cancellation destination address.
+	// and deposits * (1 - proposal_cancel_rate) will be sent to depositors.
+	params := keeper.GetParams(ctx)
+	err := keeper.ChargeDeposit(ctx, proposal.Id, params.ProposalCancelDest, params.ProposalCancelRatio)
+	if err != nil {
+		return err
+	}
+
+	if proposal.VotingStartTime != nil {
+		keeper.deleteVotes(ctx, proposal.Id)
+	}
+
+	keeper.DeleteProposal(ctx, proposal.Id)
+
+	keeper.Logger(ctx).Info(
+		"proposal is canceled by proposer",
+		"proposal", proposal.Id,
+		"proposer", proposal.Proposer,
+	)
+
+	return nil
+}
+
 // GetProposal gets a proposal from store by ProposalID.
 // Panics if can't unmarshal the proposal.
 func (keeper Keeper) GetProposal(ctx sdk.Context, proposalID uint64) (v1.Proposal, bool) {

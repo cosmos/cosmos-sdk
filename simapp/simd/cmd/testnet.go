@@ -84,7 +84,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 
 	// support old flags name for backwards compatibility
-	cmd.PersistentFlags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
 		if name == "algo" {
 			name = flags.FlagKeyType
 		}

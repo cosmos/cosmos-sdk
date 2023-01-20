@@ -44,15 +44,7 @@ func loadFileDescriptorsCompat(ctx context.Context, client *grpc.ClientConn) (*d
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_ListServicesResponse:
 				waitListServiceRes <- res.ListServicesResponse
 			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
-				for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
-					fd := &descriptorpb.FileDescriptorProto{}
-					err = proto.Unmarshal(bz, fd)
-					if err != nil {
-						panic(err)
-					}
-
-					fdMap[fd.GetName()] = fd
-				}
+				processFileDescriptorsResponse(res, fdMap)
 			}
 		}
 	}()
@@ -84,12 +76,107 @@ func loadFileDescriptorsCompat(ctx context.Context, client *grpc.ClientConn) (*d
 
 	<-waitc
 
+	// we loop through all the file descriptor dependencies to capture any file descriptors we haven't loaded yet
+	cantFind := map[string]bool{}
+	for {
+		missing := missingFileDescriptors(fdMap, cantFind)
+		if len(missing) == 0 {
+			break
+		}
+
+		err = addMissingFileDescriptors(ctx, client, fdMap, missing)
+		if err != nil {
+			return nil, err
+		}
+
+		// mark all deps that we aren't able to resolve as can't find, so we don't keep looping and get a 429 error
+		for _, dep := range missing {
+			if fdMap[dep] == nil {
+				cantFind[dep] = true
+			}
+		}
+	}
+
+	for dep := range cantFind {
+		fmt.Printf("Warning: can't find %s.\n", dep)
+	}
+
 	fdSet := &descriptorpb.FileDescriptorSet{}
 	for _, descriptorProto := range fdMap {
 		fdSet.File = append(fdSet.File, descriptorProto)
 	}
 
 	return fdSet, nil
+}
+
+func processFileDescriptorsResponse(res *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse, fdMap map[string]*descriptorpb.FileDescriptorProto) {
+	for _, bz := range res.FileDescriptorResponse.FileDescriptorProto {
+		fd := &descriptorpb.FileDescriptorProto{}
+		err := proto.Unmarshal(bz, fd)
+		if err != nil {
+			panic(err)
+		}
+
+		fdMap[fd.GetName()] = fd
+	}
+}
+
+func missingFileDescriptors(fdMap map[string]*descriptorpb.FileDescriptorProto, cantFind map[string]bool) []string {
+	var missing []string
+	for _, descriptorProto := range fdMap {
+		for _, dep := range descriptorProto.Dependency {
+			if fdMap[dep] == nil && !cantFind[dep] /* skip deps we've marked as can't find */ {
+				missing = append(missing, dep)
+			}
+		}
+	}
+	return missing
+}
+
+func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdMap map[string]*descriptorpb.FileDescriptorProto, missingFiles []string) error {
+	reflectClient, err := grpc_reflection_v1alpha.NewServerReflectionClient(client).ServerReflectionInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	waitc := make(chan struct{})
+	go func() {
+		for {
+			in, err := reflectClient.Recv()
+			if err == io.EOF {
+				// read done.
+				close(waitc)
+				return
+			}
+			if err != nil {
+				panic(err)
+			}
+
+			switch res := in.MessageResponse.(type) {
+			case *grpc_reflection_v1alpha.ServerReflectionResponse_FileDescriptorResponse:
+				processFileDescriptorsResponse(res, fdMap)
+			}
+		}
+	}()
+
+	for _, file := range missingFiles {
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileByFilename{
+				FileByFilename: file,
+			},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = reflectClient.CloseSend()
+	if err != nil {
+		return err
+	}
+
+	<-waitc
+	return nil
 }
 
 func guessAutocli(files *protoregistry.Files) *autocliv1.AppOptionsResponse {

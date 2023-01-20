@@ -602,12 +602,19 @@ func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
 }
 
 func (s *coinTestSuite) TestSubCoins() {
+	cA0M0 := sdk.Coins{s.ca0, s.cm0}
+	cA0M1 := sdk.Coins{s.ca0, s.cm1}
 	testCases := []struct {
 		inputOne    sdk.Coins
 		inputTwo    sdk.Coins
 		expected    sdk.Coins
 		shouldPanic bool
 	}{
+		{s.emptyCoins, s.emptyCoins, s.emptyCoins, false},
+		{cA0M0, s.emptyCoins, s.emptyCoins, false},
+		{cA0M0, sdk.Coins{s.cm0}, s.emptyCoins, false},
+		{sdk.Coins{s.cm0}, cA0M0, s.emptyCoins, false},
+		{cA0M1, s.emptyCoins, sdk.Coins{s.cm1}, false},
 		// denoms are not sorted - should panic
 		{sdk.Coins{s.ca2}, sdk.Coins{s.cm2, s.ca1}, sdk.Coins{}, true},
 		{sdk.Coins{s.cm2, s.ca2}, sdk.Coins{s.ca1}, sdk.Coins{}, true},

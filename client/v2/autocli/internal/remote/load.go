@@ -23,37 +23,64 @@ import (
 const DefaultDirName = ".cosmcli"
 
 type ChainInfo struct {
-	ModuleOptions     map[string]*autocliv1.ModuleOptions
-	OpenClient        func() (*grpc.ClientConn, error)
-	FileDescriptorSet *protoregistry.Files
-	Context           context.Context
+	ConfigDir     string
+	Chain         string
+	ModuleOptions map[string]*autocliv1.ModuleOptions
+	ProtoFiles    *protoregistry.Files
+	Context       context.Context
+	Config        *ChainConfig
+	client        *grpc.ClientConn
 }
 
-func LoadChainInfo(configDir, chain string, config *ChainConfig, reload bool) (*ChainInfo, error) {
-	var client *grpc.ClientConn
-	ctx := context.Background()
+func NewChainInfo(configDir string, chain string, config *ChainConfig) *ChainInfo {
+	return &ChainInfo{
+		ConfigDir: configDir,
+		Chain:     chain,
+		Config:    config,
+		Context:   context.Background(),
+	}
+}
 
-	cacheDir := path.Join(configDir, "cache")
-	err := os.MkdirAll(cacheDir, 0755)
+func (c *ChainInfo) getCacheDir() (string, error) {
+	cacheDir := path.Join(c.ConfigDir, "cache")
+	return cacheDir, os.MkdirAll(cacheDir, 0755)
+}
+
+func (c *ChainInfo) fdsCacheFilename() (string, error) {
+	cacheDir, err := c.getCacheDir()
 	if err != nil {
-		return nil, err
+		return "", err
+	}
+	return path.Join(cacheDir, fmt.Sprintf("%s.fds", c.Chain)), nil
+}
+
+func (c *ChainInfo) appOptsCacheFilename() (string, error) {
+	cacheDir, err := c.getCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return path.Join(cacheDir, fmt.Sprintf("%s.autocli", c.Chain)), nil
+}
+
+func (c *ChainInfo) Load(reload bool) error {
+	fdSet := &descriptorpb.FileDescriptorSet{}
+	fdsFilename, err := c.fdsCacheFilename()
+	if err != nil {
+		return err
 	}
 
-	fdSet := &descriptorpb.FileDescriptorSet{}
-	//var listServicesRes *grpc_reflection_v1alpha.ListServiceResponse
-	fdsFilename := path.Join(cacheDir, fmt.Sprintf("%s.fds", chain))
 	if _, err := os.Stat(fdsFilename); os.IsNotExist(err) || reload {
-		client, err = openClient(config)
+		client, err := c.OpenClient()
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		reflectionClient := reflectionv1.NewReflectionServiceClient(client)
-		fdRes, err := reflectionClient.FileDescriptors(ctx, &reflectionv1.FileDescriptorsRequest{})
+		fdRes, err := reflectionClient.FileDescriptors(c.Context, &reflectionv1.FileDescriptorsRequest{})
 		if err != nil {
-			fdSet, err = loadFileDescriptorsCompat(ctx, client)
+			fdSet, err = loadFileDescriptorsGRPCReflection(c.Context, client)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		} else {
 			fdSet = &descriptorpb.FileDescriptorSet{File: fdRes.Files}
@@ -61,89 +88,83 @@ func LoadChainInfo(configDir, chain string, config *ChainConfig, reload bool) (*
 
 		bz, err := proto.Marshal(fdSet)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = os.WriteFile(fdsFilename, bz, 0644)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	} else {
 		bz, err := os.ReadFile(fdsFilename)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = proto.Unmarshal(bz, fdSet)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	files, err := protodesc.FileOptions{AllowUnresolvable: true}.NewFiles(fdSet)
+	c.ProtoFiles, err = protodesc.FileOptions{AllowUnresolvable: true}.NewFiles(fdSet)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error building protoregistry.Files")
+		return errors.Wrapf(err, "error building protoregistry.Files")
 	}
 
-	var appOpts map[string]*autocliv1.ModuleOptions
-	appOptsFilename := path.Join(cacheDir, fmt.Sprintf("%s.autocli", chain))
+	appOptsFilename, err := c.appOptsCacheFilename()
+	if err != nil {
+		return err
+	}
+
 	if _, err := os.Stat(appOptsFilename); os.IsNotExist(err) || reload {
-		if client == nil {
-			client, err = openClient(config)
-			if err != nil {
-				return nil, err
-			}
+		client, err := c.OpenClient()
+		if err != nil {
+			return err
 		}
 
 		autocliQueryClient := autocliv1.NewQueryClient(client)
-		appOptionsRes, err := autocliQueryClient.AppOptions(ctx, &autocliv1.AppOptionsRequest{})
+		appOptionsRes, err := autocliQueryClient.AppOptions(c.Context, &autocliv1.AppOptionsRequest{})
 		if err != nil {
-			appOptionsRes = guessAutocli(files)
+			appOptionsRes = guessAutocli(c.ProtoFiles)
 		}
 
 		bz, err := proto.Marshal(appOptionsRes)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		err = os.WriteFile(appOptsFilename, bz, 0644)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		appOpts = appOptionsRes.ModuleOptions
+		c.ModuleOptions = appOptionsRes.ModuleOptions
 	} else {
 		bz, err := os.ReadFile(appOptsFilename)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		var appOptsRes autocliv1.AppOptionsResponse
 		err = proto.Unmarshal(bz, &appOptsRes)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		appOpts = appOptsRes.ModuleOptions
+		c.ModuleOptions = appOptsRes.ModuleOptions
 	}
 
-	return &ChainInfo{
-		ModuleOptions: appOpts,
-		OpenClient: func() (*grpc.ClientConn, error) {
-			if client != nil {
-				return client, nil
-			}
-
-			return openClient(config)
-		},
-		Context:           ctx,
-		FileDescriptorSet: files,
-	}, nil
+	return nil
 }
 
-func openClient(config *ChainConfig) (*grpc.ClientConn, error) {
+func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
+	if c.client != nil {
+		return c.client, nil
+	}
+
 	var res error
-	for _, endpoint := range config.GRPCEndpoints {
+	for _, endpoint := range c.Config.GRPCEndpoints {
 		var err error
 		var creds credentials.TransportCredentials
 		if endpoint.Insecure {
@@ -153,13 +174,13 @@ func openClient(config *ChainConfig) (*grpc.ClientConn, error) {
 				MinVersion: tls.VersionTLS12,
 			})
 		}
-		client, err := grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
+		c.client, err = grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			res = multierror.Append(res, err)
 			continue
 		}
 
-		return client, nil
+		return c.client, nil
 	}
 
 	return nil, errors.Wrapf(res, "error loading gRPC client")

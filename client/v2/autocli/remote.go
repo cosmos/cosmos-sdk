@@ -53,13 +53,15 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 	cmd.Flags().StringVar(&initChain, "init", "", "initialize a new chain with the specified name")
 
 	for chain, chainConfig := range config.Chains {
-		chainInfo, err := remote.LoadChainInfo(configDir, chain, chainConfig, false)
+		chainInfo := remote.NewChainInfo(configDir, chain, chainConfig)
+		err = chainInfo.Load(false)
 		if err != nil {
 			cmd.AddCommand(&cobra.Command{
 				Use:   chain,
 				Short: "Unable to load data",
 				Long:  "Unable to load data, reconfiguration needed.",
 				RunE: func(cmd *cobra.Command, args []string) error {
+					fmt.Printf("Error loading chain data for %s: %+v\n", chain, err)
 					return options.reconfigure(configDir, chain, config)
 				},
 			})
@@ -72,10 +74,8 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 
 		builder := &Builder{
 			Builder: flag.Builder{
-				TypeResolver: &dynamicTypeResolver{
-					files: chainInfo.FileDescriptorSet,
-				},
-				FileResolver: chainInfo.FileDescriptorSet,
+				TypeResolver: &dynamicTypeResolver{chainInfo},
+				FileResolver: chainInfo.ProtoFiles,
 			},
 			GetClientConn: func(command *cobra.Command) (grpc.ClientConnInterface, error) {
 				return chainInfo.OpenClient()
@@ -93,7 +93,8 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 					return options.reconfigure(configDir, chain, config)
 				} else if update {
 					fmt.Printf("Updating autocli data for %s\n", chain)
-					_, err := remote.LoadChainInfo(configDir, chain, chainConfig, true)
+					chainInfo := remote.NewChainInfo(configDir, chain, chainConfig)
+					err := chainInfo.Load(true)
 					return err
 				} else {
 					return cmd.Help()
@@ -131,7 +132,8 @@ func (options RemoteCommandOptions) reconfigure(configDir, chain string, config 
 	}
 	config.Chains[chain] = chainConfig
 
-	_, err = remote.LoadChainInfo(configDir, chain, chainConfig, true)
+	chainInfo := remote.NewChainInfo(configDir, chain, chainConfig)
+	err = chainInfo.Load(true)
 	if err != nil {
 		return err
 	}
@@ -140,14 +142,14 @@ func (options RemoteCommandOptions) reconfigure(configDir, chain string, config 
 }
 
 type dynamicTypeResolver struct {
-	files *protoregistry.Files
+	*remote.ChainInfo
 }
 
 var _ protoregistry.MessageTypeResolver = dynamicTypeResolver{}
 var _ protoregistry.ExtensionTypeResolver = dynamicTypeResolver{}
 
 func (d dynamicTypeResolver) FindMessageByName(message protoreflect.FullName) (protoreflect.MessageType, error) {
-	desc, err := d.files.FindDescriptorByName(message)
+	desc, err := d.ProtoFiles.FindDescriptorByName(message)
 	if err != nil {
 		return nil, err
 	}
@@ -160,16 +162,11 @@ func (d dynamicTypeResolver) FindMessageByURL(url string) (protoreflect.MessageT
 		url = url[i+len("/"):]
 	}
 
-	desc, err := d.files.FindDescriptorByName(protoreflect.FullName(url))
-	if err != nil {
-		return nil, err
-	}
-
-	return dynamicpb.NewMessageType(desc.(protoreflect.MessageDescriptor)), nil
+	return d.FindMessageByName(protoreflect.FullName(url))
 }
 
 func (d dynamicTypeResolver) FindExtensionByName(field protoreflect.FullName) (protoreflect.ExtensionType, error) {
-	desc, err := d.files.FindDescriptorByName(field)
+	desc, err := d.ProtoFiles.FindDescriptorByName(field)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +175,7 @@ func (d dynamicTypeResolver) FindExtensionByName(field protoreflect.FullName) (p
 }
 
 func (d dynamicTypeResolver) FindExtensionByNumber(message protoreflect.FullName, field protoreflect.FieldNumber) (protoreflect.ExtensionType, error) {
-	desc, err := d.files.FindDescriptorByName(message)
+	desc, err := d.ProtoFiles.FindDescriptorByName(message)
 	if err != nil {
 		return nil, err
 	}

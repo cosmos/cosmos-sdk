@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1beta1 "cosmossdk.io/api/cosmos/base/reflection/v1beta1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection/grpc_reflection_v1alpha"
 	"google.golang.org/protobuf/proto"
@@ -15,10 +16,26 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-// loadFileDescriptorsCompat attempts to load the file descriptor set using gRPC reflection when cosmos.reflection.v1
+// loadFileDescriptorsGRPCReflection attempts to load the file descriptor set using gRPC reflection when cosmos.reflection.v1
 // is unavailable.
-func loadFileDescriptorsCompat(ctx context.Context, client *grpc.ClientConn) (*descriptorpb.FileDescriptorSet, error) {
+func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientConn) (*descriptorpb.FileDescriptorSet, error) {
 	fmt.Printf("This chain does not support cosmos.reflection.v1 yet, we will attempt to use a fallback.\n")
+
+	var interfaceImplNames []string
+	cosmosReflectBetaClient := reflectionv1beta1.NewReflectionServiceClient(client)
+	interfacesRes, err := cosmosReflectBetaClient.ListAllInterfaces(ctx, &reflectionv1beta1.ListAllInterfacesRequest{})
+	if err == nil {
+		for _, iface := range interfacesRes.InterfaceNames {
+			implRes, err := cosmosReflectBetaClient.ListImplementations(ctx, &reflectionv1beta1.ListImplementationsRequest{
+				InterfaceName: iface,
+			})
+			if err == nil {
+				for _, name := range implRes.ImplementationMessageNames {
+					interfaceImplNames = append(interfaceImplNames, name)
+				}
+			}
+		}
+	}
 
 	reflectClient, err := grpc_reflection_v1alpha.NewServerReflectionClient(client).ServerReflectionInfo(ctx)
 	if err != nil {
@@ -67,6 +84,18 @@ func loadFileDescriptorsCompat(ctx context.Context, client *grpc.ClientConn) (*d
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	for _, msgName := range interfaceImplNames {
+		err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+			MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_FileContainingSymbol{
+				FileContainingSymbol: msgName,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	err = reflectClient.CloseSend()
@@ -199,25 +228,28 @@ func guessAutocli(files *protoregistry.Files) *autocliv1.AppOptionsResponse {
 
 				modOpts := res[parts[0]]
 				if modOpts == nil {
-					modOpts = &autocliv1.ModuleOptions{
-						Query: &autocliv1.ServiceCommandDescriptor{
-							SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{},
-						},
-						Tx: &autocliv1.ServiceCommandDescriptor{
-							SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{},
-						},
-					}
+					modOpts = &autocliv1.ModuleOptions{}
 					res[parts[0]] = modOpts
 				}
 
 				switch parts[1] {
 				case "query":
+					if modOpts.Query == nil {
+						modOpts.Query = &autocliv1.ServiceCommandDescriptor{
+							SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{},
+						}
+					}
 					if numParts == 3 {
 						modOpts.Query.SubCommands[parts[2]] = &autocliv1.ServiceCommandDescriptor{Service: string(serviceName)}
 					} else {
 						modOpts.Query.Service = string(serviceName)
 					}
 				case "tx":
+					if modOpts.Tx == nil {
+						modOpts.Tx = &autocliv1.ServiceCommandDescriptor{
+							SubCommands: map[string]*autocliv1.ServiceCommandDescriptor{},
+						}
+					}
 					if numParts == 3 {
 						modOpts.Tx.SubCommands[parts[2]] = &autocliv1.ServiceCommandDescriptor{Service: string(serviceName)}
 					} else {

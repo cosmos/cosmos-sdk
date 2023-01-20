@@ -72,7 +72,13 @@ The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to 
 This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
 This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
 
+<<<<<<< HEAD
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.2`) for generating protobuf files.
+=======
+Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
+
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md)
+>>>>>>> c8f2f1d59 (docs: set buf commit for v0.47.x (#14675))
 
 #### `{accepts,implements}_interface` proto annotations
 

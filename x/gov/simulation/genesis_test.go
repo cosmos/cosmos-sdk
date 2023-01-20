@@ -44,15 +44,15 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	const (
-		tallyQuorum          = "0.400000000000000000"
-		tallyThreshold       = "0.539000000000000000"
-		tallyVetoThreshold   = "0.314000000000000000"
+		tallyQuorum          = "0.375000000000000000"
+		tallyThreshold       = "0.478000000000000000"
+		tallyVetoThreshold   = "0.324000000000000000"
 		minInitialDepositDec = "0.590000000000000000"
 	)
 
 	require.Equal(t, "905stake", govGenesis.Params.MinDeposit[0].String())
 	require.Equal(t, "77h26m10s", govGenesis.Params.MaxDepositPeriod.String())
-	require.Equal(t, float64(275567), govGenesis.Params.VotingPeriod.Seconds())
+	require.Equal(t, float64(135894), govGenesis.Params.VotingPeriod.Seconds())
 	require.Equal(t, tallyQuorum, govGenesis.Params.Quorum)
 	require.Equal(t, tallyThreshold, govGenesis.Params.Threshold)
 	require.Equal(t, tallyVetoThreshold, govGenesis.Params.VetoThreshold)

@@ -688,7 +688,8 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// Attempt to execute all messages and only update state if all messages pass
 	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
 	// Result if any single message fails or does not have a registered Handler.
-	_ = ctx.RunAtomic(func(runMsgCtx sdk.Context) error {
+	err = ctx.RunAtomic(func(runMsgCtx sdk.Context) error {
+		var err error
 		result, err = app.runMsgs(runMsgCtx, msgs, mode)
 		if err != nil {
 			return err

@@ -587,7 +587,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	var gasWanted uint64
 
 	ctx := app.getContextForTx(mode, txBytes)
-	ms := ctx.MultiStore()
+	cms := ctx.CacheMultiStore()
 
 	// only run the tx if there is block gas remaining
 	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
@@ -642,7 +642,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		// NOTE: Alternatively, we could require that AnteHandler ensures that
 		// writes do not happen if aborted/failed.  This may have some
 		// performance benefits, but it'll be more difficult to get right.
-		anteCtx := ctx.WithMultiStore(ctx.MultiStore().Clone()).
+		anteCtx := ctx.WithCacheMultiStore(ctx.CacheMultiStore().Clone()).
 			WithEventManager(sdk.NewEventManager())
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == runTxModeSimulate)
 
@@ -653,7 +653,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 			// Also, in the case of the tx aborting, we need to track gas consumed via
 			// the instantiated gas meter in the AnteHandler, so we update the context
 			// prior to returning.
-			ctx = newCtx.WithMultiStore(ms)
+			ctx = newCtx.WithCacheMultiStore(cms)
 		}
 
 		events := ctx.EventManager().Events()
@@ -666,7 +666,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		}
 
 		// commit the cloned multistore.
-		ms.Restore(anteCtx.MultiStore())
+		cms.Restore(anteCtx.CacheMultiStore())
 
 		priority = ctx.Priority()
 		anteEvents = events.ToABCIEvents()

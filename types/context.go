@@ -24,7 +24,7 @@ and standard additions here would be better just to add to the Context struct
 */
 type Context struct {
 	baseCtx              context.Context
-	ms                   storetypes.CacheMultiStore
+	cms                  storetypes.CacheMultiStore
 	header               tmproto.Header
 	headerHash           tmbytes.HexBytes
 	chainID              string
@@ -47,23 +47,24 @@ type Context struct {
 type Request = Context
 
 // Read-only accessors
-func (c Context) Context() context.Context                   { return c.baseCtx }
-func (c Context) MultiStore() storetypes.CacheMultiStore     { return c.ms }
-func (c Context) BlockHeight() int64                         { return c.header.Height }
-func (c Context) BlockTime() time.Time                       { return c.header.Time }
-func (c Context) ChainID() string                            { return c.chainID }
-func (c Context) TxBytes() []byte                            { return c.txBytes }
-func (c Context) Logger() log.Logger                         { return c.logger }
-func (c Context) VoteInfos() []abci.VoteInfo                 { return c.voteInfo }
-func (c Context) GasMeter() storetypes.GasMeter              { return c.gasMeter }
-func (c Context) BlockGasMeter() storetypes.GasMeter         { return c.blockGasMeter }
-func (c Context) IsCheckTx() bool                            { return c.checkTx }
-func (c Context) IsReCheckTx() bool                          { return c.recheckTx }
-func (c Context) MinGasPrices() DecCoins                     { return c.minGasPrice }
-func (c Context) EventManager() EventManagerI                { return c.eventManager }
-func (c Context) Priority() int64                            { return c.priority }
-func (c Context) KVGasConfig() storetypes.GasConfig          { return c.kvGasConfig }
-func (c Context) TransientKVGasConfig() storetypes.GasConfig { return c.transientKVGasConfig }
+func (c Context) Context() context.Context                    { return c.baseCtx }
+func (c Context) MultiStore() storetypes.MultiStore           { return c.cms }
+func (c Context) CacheMultiStore() storetypes.CacheMultiStore { return c.cms }
+func (c Context) BlockHeight() int64                          { return c.header.Height }
+func (c Context) BlockTime() time.Time                        { return c.header.Time }
+func (c Context) ChainID() string                             { return c.chainID }
+func (c Context) TxBytes() []byte                             { return c.txBytes }
+func (c Context) Logger() log.Logger                          { return c.logger }
+func (c Context) VoteInfos() []abci.VoteInfo                  { return c.voteInfo }
+func (c Context) GasMeter() storetypes.GasMeter               { return c.gasMeter }
+func (c Context) BlockGasMeter() storetypes.GasMeter          { return c.blockGasMeter }
+func (c Context) IsCheckTx() bool                             { return c.checkTx }
+func (c Context) IsReCheckTx() bool                           { return c.recheckTx }
+func (c Context) MinGasPrices() DecCoins                      { return c.minGasPrice }
+func (c Context) EventManager() EventManagerI                 { return c.eventManager }
+func (c Context) Priority() int64                             { return c.priority }
+func (c Context) KVGasConfig() storetypes.GasConfig           { return c.kvGasConfig }
+func (c Context) TransientKVGasConfig() storetypes.GasConfig  { return c.transientKVGasConfig }
 
 // clone the header before returning
 func (c Context) BlockHeader() tmproto.Header {
@@ -95,12 +96,12 @@ func (c Context) Err() error {
 }
 
 // create a new context
-func NewContext(ms storetypes.CacheMultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
+func NewContext(cms storetypes.CacheMultiStore, header tmproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
 	return Context{
 		baseCtx:              context.Background(),
-		ms:                   ms,
+		cms:                  cms,
 		header:               header,
 		chainID:              header.ChainID,
 		checkTx:              isCheckTx,
@@ -119,9 +120,9 @@ func (c Context) WithContext(ctx context.Context) Context {
 	return c
 }
 
-// WithMultiStore returns a Context with an updated MultiStore.
-func (c Context) WithMultiStore(ms storetypes.CacheMultiStore) Context {
-	c.ms = ms
+// WithCacheMultiStore returns a Context with an updated MultiStore.
+func (c Context) WithCacheMultiStore(cms storetypes.CacheMultiStore) Context {
+	c.cms = cms
 	return c
 }
 
@@ -256,7 +257,7 @@ func (c Context) WithPriority(p int64) Context {
 
 // TODO: remove???
 func (c Context) IsZero() bool {
-	return c.ms == nil
+	return c.cms == nil
 }
 
 func (c Context) WithValue(key, value interface{}) Context {
@@ -278,12 +279,12 @@ func (c Context) Value(key interface{}) interface{} {
 
 // KVStore fetches a KVStore from the MultiStore.
 func (c Context) KVStore(key storetypes.StoreKey) storetypes.KVStore {
-	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.kvGasConfig)
+	return gaskv.NewStore(c.cms.GetKVStore(key), c.gasMeter, c.kvGasConfig)
 }
 
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
-	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
+	return gaskv.NewStore(c.cms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new
@@ -291,8 +292,8 @@ func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
 // is called. Note, events are automatically emitted on the parent context's
 // EventManager when the caller executes the write.
 func (c Context) CacheContext() (cc Context, writeCache func()) {
-	cms := c.ms.CacheMultiStore()
-	cc = c.WithMultiStore(cms).WithEventManager(NewEventManager())
+	cms := c.cms.CacheMultiStore()
+	cc = c.WithCacheMultiStore(cms).WithEventManager(NewEventManager())
 
 	writeCache = func() {
 		c.EventManager().EmitEvents(cc.EventManager().Events())
@@ -304,12 +305,12 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 
 // RunAtomic runs the fn atomically, if fn returns error or panic, partial state won't be saved.
 func (c Context) RunAtomic(fn func(Context) error) error {
-	cacheCtx := c.WithMultiStore(c.ms.Clone()).WithEventManager(NewEventManager())
+	cacheCtx := c.WithCacheMultiStore(c.cms.Clone()).WithEventManager(NewEventManager())
 	if err := fn(cacheCtx); err != nil {
 		return err
 	}
 
-	c.ms.Restore(cacheCtx.ms)
+	c.cms.Restore(cacheCtx.cms)
 	c.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	return nil
 }

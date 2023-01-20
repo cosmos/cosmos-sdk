@@ -279,7 +279,7 @@ func (suite KeeperTestSuite) TestRevertCapability() { //nolint:govet // this is 
 	ms := suite.ctx.MultiStore()
 
 	msCache := ms.CacheMultiStore()
-	cacheCtx := suite.ctx.WithMultiStore(msCache)
+	cacheCtx := suite.ctx.WithCacheMultiStore(msCache)
 
 	capName := "revert"
 	// Create capability on cached context

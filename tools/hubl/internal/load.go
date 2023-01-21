@@ -20,7 +20,7 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-const DefaultDirName = ".cosmcli"
+const DefaultDirName = ".hubl"
 
 type ChainInfo struct {
 	ConfigDir     string

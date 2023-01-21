@@ -1,4 +1,4 @@
-module cosmossdk.io/tools/cosmcli
+module cosmossdk.io/tools/hubl
 
 go 1.19
 

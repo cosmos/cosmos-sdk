@@ -144,12 +144,12 @@ func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse
 	}
 }
 
-func NewSearchBlocksResult(totalCount, count, page, limit uint64, blocks []*BlockResponse) *SearchBlocksResult {
+func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*BlockResponse) *SearchBlocksResult {
 	return &SearchBlocksResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
+		PageTotal:  int64(math.Ceil(float64(totalCount) / float64(limit))),
 		Limit:      limit,
 		Blocks:     blocks,
 	}

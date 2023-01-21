@@ -51,7 +51,7 @@ func QueryBlocksByEvents(clientCtx client.Context, events []string, page, limit 
 		return nil, err
 	}
 
-	result := sdk.NewSearchBlocksResult(uint64(resBlocks.TotalCount), uint64(len(blocks)), uint64(page), uint64(limit), blocks)
+	result := sdk.NewSearchBlocksResult(int64(resBlocks.TotalCount), int64(len(blocks)), int64(page), int64(limit), blocks)
 
 	return result, nil
 }

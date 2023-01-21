@@ -393,8 +393,8 @@ $ %s query blocks --%s 'message.sender=cosmos1...&message.action=withdraw_delega
 
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
+	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of block results per page returned")
+	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of block events in the form of %s", eventFormat))
 	cmd.MarkFlagRequired(flagEvents)
 
 	return cmd
@@ -549,7 +549,7 @@ $ %s query block --%s=%s <hash>
 						return err
 					}
 
-					if output.Empty() {
+					if output.Time == "" {
 						return fmt.Errorf("no block found with hash %s", args[0])
 					}
 
@@ -567,7 +567,7 @@ $ %s query block --%s=%s <hash>
 						return err
 					}
 
-					if output.Empty() {
+					if output.Time == "" {
 						return fmt.Errorf("no transaction found with hash %s", args[0])
 					}
 

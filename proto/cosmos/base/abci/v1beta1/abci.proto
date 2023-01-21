@@ -50,6 +50,7 @@ message TxResponse {
 
 // BlockResponse
 message BlockResponse {
+  option (gogoproto.stringer) = true;
   option (gogoproto.goproto_getters) = false;
   // The block height
   int64  height          = 1;
@@ -180,15 +181,15 @@ message SearchBlocksResult {
   option (gogoproto.stringer) = true;
 
   // Count of all blocks
-  uint64 total_count = 1;
+  int64 total_count = 1;
   // Count of blocks in current page
-  uint64 count = 2;
+  int64 count = 2;
   // Index of current page, start from 1
-  uint64 page_number = 3;
+  int64 page_number = 3;
   // Count of total pages
-  uint64 page_total = 4;
+  int64 page_total = 4;
   // Max count blocks per page
-  uint64 limit = 5;
+  int64 limit = 5;
   // List of blocks in current page
   repeated BlockResponse blocks = 6;
 }

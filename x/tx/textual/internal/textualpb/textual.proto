@@ -58,7 +58,7 @@ message SignerData {
 }
 
 // Envelope is an internal data structure used to generate the tx envelope
-// screens. It is derived from the TextualData struct (also internal) which 
+// screens. It is derived from the TextualData struct (also internal) which
 // contains the three following fields:
 // - body_bytes (from the original tx),
 // - auth_info_bytes (from the original tx),
@@ -67,23 +67,22 @@ message SignerData {
 // If any of the three structs above is modified, then this Envelope message
 // also needs to be updated.
 message Envelope {
-  string chain_id = 1;
-  uint64 account_number = 2;
-  uint64 sequence = 3;
-  string address = 4;
-  google.protobuf.Any public_key = 5;
-  repeated google.protobuf.Any message = 6;
-  string memo = 7;
-  repeated cosmos.base.v1beta1.Coin fees = 8;
-  string fee_payer = 9;
-  string fee_granter = 10;
-  repeated cosmos.base.v1beta1.Coin tip = 11;
-  string tipper = 12;
-  uint64 gas_limit = 13;
-  uint64 timeout_height = 14;
-  repeated cosmos.tx.v1beta1.SignerInfo other_signer = 15;
-  repeated google.protobuf.Any extension_options = 16;
+  string              chain_id                                = 1;
+  uint64              account_number                          = 2;
+  uint64              sequence                                = 3;
+  string              address                                 = 4;
+  google.protobuf.Any public_key                              = 5;
+  repeated google.protobuf.Any message                        = 6;
+  string                       memo                           = 7;
+  repeated cosmos.base.v1beta1.Coin fees                      = 8;
+  string                            fee_payer                 = 9;
+  string                            fee_granter               = 10;
+  repeated cosmos.base.v1beta1.Coin tip                       = 11;
+  string                            tipper                    = 12;
+  uint64                            gas_limit                 = 13;
+  uint64                            timeout_height            = 14;
+  repeated cosmos.tx.v1beta1.SignerInfo other_signer          = 15;
+  repeated google.protobuf.Any extension_options              = 16;
   repeated google.protobuf.Any non_critical_extension_options = 17;
-  string hash_of_raw_bytes = 18;
+  string                       hash_of_raw_bytes              = 18;
 }
-

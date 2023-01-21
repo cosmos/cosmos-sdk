@@ -81,7 +81,6 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*sdk.BlockRespon
 }
 
 func GetBlockByHash(clientCtx client.Context, hashHexString string) (*sdk.BlockResponse, error) {
-
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
 		return nil, err

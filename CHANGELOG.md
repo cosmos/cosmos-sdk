@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
+* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by either height/hash `simd q block --type=height|hash <height|hash>`. Also added ability to query blocks by events similar to the existing tx query `simd q blocks --events 'message.sender=cosmos...' --page 1 --limit 30`
 * (x/auth) [#14650](https://github.com/cosmos/cosmos-sdk/pull/14650) Add Textual SignModeHandler. It is however **NOT** enabled by default, and should only be used for **TESTING** purposes until `SIGN_MODE_TEXTUAL` is fully released.
 * (cli) [#14655](https://github.com/cosmos/cosmos-sdk/pull/14655) Add a new command to list supported algos.
 * (x/crisis) [#14588](https://github.com/cosmos/cosmos-sdk/pull/14588) Use CacheContext() in AssertInvariants()
@@ -233,6 +234,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 
 ### CLI Breaking Changes
 
+* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  `simd q block <height>` is removed as it just output json. The new command allows either height/hash and is `simd q block --type=height|hash <height|hash>`. 
 * (grpc-web) [#14652](https://github.com/cosmos/cosmos-sdk/pull/14652) Remove `grpc-web.address` flag.
 * (client) [#14342](https://github.com/cosmos/cosmos-sdk/pull/14342) `simd config` command is now a sub-command. Use `simd config --help` to learn more.
 * (x/genutil) [#13535](https://github.com/cosmos/cosmos-sdk/pull/13535) Replace in `simd init`, the `--staking-bond-denom` flag with `--default-denom` which is used for all default denomination in the genesis, instead of only staking.

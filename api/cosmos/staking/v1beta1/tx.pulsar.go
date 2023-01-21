@@ -7046,7 +7046,8 @@ type MsgCreateValidator struct {
 	Commission        *CommissionRates `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission,omitempty"`
 	MinSelfDelegation string           `protobuf:"bytes,3,opt,name=min_self_delegation,json=minSelfDelegation,proto3" json:"min_self_delegation,omitempty"`
 	// Deprecated: Use of Delegator Address in MsgCreateValidator is deprecated.
-	// The validator address and delegator address are always same while creating validator.
+	// The validator address bytes and delegator address bytes refer to the same account while creating validator (defer
+	// only in bech32 notation).
 	//
 	// Deprecated: Do not use.
 	DelegatorAddress string        `protobuf:"bytes,4,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`

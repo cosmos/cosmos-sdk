@@ -34,7 +34,7 @@ func RootCommand() (*cobra.Command, error) {
 	cmd := &cobra.Command{
 		Long: `To configure a new chain just run this command using the --init flag and the name of the chain as it's listed in the chain registry (https://github.com/cosmos/chain-registry).
 If the chain is not listed in the chain registry, you can use any unique name.`,
-		Example: "cosmcli --init foochain",
+		Example: "hubl --init foochain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if initChain != "" {
 				return reconfigure(configDir, initChain, config)

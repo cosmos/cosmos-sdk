@@ -70,10 +70,11 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 // Get returns the value associated with the provided key,
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
-func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
+func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
+	var v V
+
 	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
-		var v V
 		return v, err
 	}
 

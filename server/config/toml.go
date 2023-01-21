@@ -176,13 +176,8 @@ max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 # GRPCWebEnable defines if the gRPC-web should be enabled.
 # NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
+# NOTE: gRPC-Web uses the same address as the API server.
 enable = {{ .GRPCWeb.Enable }}
-
-# Address defines the gRPC-web server address to bind to.
-address = "{{ .GRPCWeb.Address }}"
-
-# EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
-enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
 
 ###############################################################################
 ###                        State Sync Configuration                         ###

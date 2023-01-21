@@ -16,7 +16,6 @@ const (
 	StreamingABCIPluginTomlKey        = "plugin"
 	StreamingABCIKeysTomlKey          = "keys"
 	StreamingABCIStopNodeOnErrTomlKey = "stop-node-on-err"
-	StreamingABCIAsync                = "async"
 )
 
 // RegisterStreamingPlugin registers streaming plugins with the App.
@@ -41,8 +40,6 @@ func registerABCIListenerPlugin(
 	keys map[string]*storetypes.KVStoreKey,
 	abciListener storetypes.ABCIListener,
 ) {
-	asyncKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIAsync)
-	async := cast.ToBool(appOpts.Get(asyncKey))
 	stopNodeOnErrKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIStopNodeOnErrTomlKey)
 	stopNodeOnErr := cast.ToBool(appOpts.Get(stopNodeOnErrKey))
 	keysKey := fmt.Sprintf("%s.%s.%s", StreamingTomlKey, StreamingABCITomlKey, StreamingABCIKeysTomlKey)
@@ -51,7 +48,6 @@ func registerABCIListenerPlugin(
 	bApp.cms.AddListeners(exposedKeys)
 	bApp.streamingManager = storetypes.StreamingManager{
 		AbciListeners: []storetypes.ABCIListener{abciListener},
-		Async:         async,
 		StopNodeOnErr: stopNodeOnErr,
 	}
 }

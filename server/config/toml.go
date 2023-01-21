@@ -212,12 +212,7 @@ keys = [{{ range .Streaming.ABCI.Keys }}{{ printf "%q, " . }}{{end}}]
 # Supported plugins: abci_v1
 plugin = "{{ .Streaming.ABCI.Plugin }}"
 
-# async specifies whether ABCI listener service(s) will run asynchronously.
-async = {{ .Streaming.ABCI.Async }}
-
-# stop-node-on-err specifies whether to stop the node when the 
-# ABCI listener service receives an error when message deliver acknowledgment fails.
-# stop-node-on-err=true MUST be paired with async=false, otherwise it will be ignored.
+# stop-node-on-err specifies whether to stop the node on message delivery error
 stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 
 # Legacy streaming support

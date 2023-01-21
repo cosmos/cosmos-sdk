@@ -22,88 +22,48 @@ func (m GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBegi
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenBeginBlockRequest{Req: &req, Res: &res}
-
-	if sm.Async {
-		go func(ctx sdk.Context) {
-			_, err := m.client.ListenBeginBlock(ctx, request)
-			ctx.Logger().Error("BeginBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
-		}(ctx)
-	} else {
-		_, err := m.client.ListenBeginBlock(ctx, request)
-		if err != nil && sm.StopNodeOnErr {
-			ctx.Logger().Error("BeginBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
-			cleanupAndExit()
-		}
-		return err
+	_, err := m.client.ListenBeginBlock(ctx, request)
+	if err != nil && sm.StopNodeOnErr {
+		ctx.Logger().Error("BeginBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
+		cleanupAndExit()
 	}
-
-	return nil
+	return err
 }
 
 func (m GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenEndBlockRequest{Req: &req, Res: &res}
-
-	if sm.Async {
-		go func(ctx sdk.Context) {
-			_, err := m.client.ListenEndBlock(ctx, request)
-			ctx.Logger().Error("EndBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
-		}(ctx)
-	} else {
-		_, err := m.client.ListenEndBlock(ctx, request)
-		if err != nil && sm.StopNodeOnErr {
-			ctx.Logger().Error("EndBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
-			cleanupAndExit()
-		}
-		return err
+	_, err := m.client.ListenEndBlock(ctx, request)
+	if err != nil && sm.StopNodeOnErr {
+		ctx.Logger().Error("EndBlock listening hook failed", "height", ctx.BlockHeight(), "err", err)
+		cleanupAndExit()
 	}
-
-	return nil
+	return err
 }
 
 func (m GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: &req, Res: &res}
-
-	if sm.Async {
-		go func(ctx sdk.Context) {
-			_, err := m.client.ListenDeliverTx(ctx, request)
-			ctx.Logger().Error("DeliverTx listening hook failed", "height", ctx.BlockHeight(), "err", err)
-		}(ctx)
-	} else {
-		_, err := m.client.ListenDeliverTx(ctx, request)
-		if err != nil && sm.StopNodeOnErr {
-			ctx.Logger().Error("DeliverTx listening hook failed", "height", ctx.BlockHeight(), "err", err)
-			cleanupAndExit()
-		}
-		return err
+	_, err := m.client.ListenDeliverTx(ctx, request)
+	if err != nil && sm.StopNodeOnErr {
+		ctx.Logger().Error("DeliverTx listening hook failed", "height", ctx.BlockHeight(), "err", err)
+		cleanupAndExit()
 	}
-
-	return nil
+	return err
 }
 
 func (m GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: &res, ChangeSet: changeSet}
-
-	if sm.Async {
-		go func(ctx sdk.Context) {
-			_, err := m.client.ListenCommit(ctx, request)
-			ctx.Logger().Error("Commit listening hook failed", "height", ctx.BlockHeight(), "err", err)
-		}(ctx)
-	} else {
-		_, err := m.client.ListenCommit(ctx, request)
-		if err != nil && sm.StopNodeOnErr {
-			ctx.Logger().Error("Commit listening hook failed", "height", ctx.BlockHeight(), "err", err)
-			cleanupAndExit()
-		}
-		return err
+	_, err := m.client.ListenCommit(ctx, request)
+	if err != nil && sm.StopNodeOnErr {
+		ctx.Logger().Error("Commit listening hook failed", "height", ctx.BlockHeight(), "err", err)
+		cleanupAndExit()
 	}
-
-	return nil
+	return err
 }
 
 func cleanupAndExit() {

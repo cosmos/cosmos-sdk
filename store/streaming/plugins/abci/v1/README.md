@@ -343,12 +343,7 @@ keys = ["*"]
 # Supported plugins: abci_v1
 plugin = "abci_v1"
 
-# async specifies whether ABCI listener service(s) will run asynchronously.
-async = false
-
 # stop-node-on-err specifies whether to stop the node when the 
-# ABCI listener service receives an error when message deliver acknowledgment fails.
-# stop-node-on-err=true MUST be paired with async=false, otherwise it will be ignored.
 stop-node-on-err = true
 ```
 

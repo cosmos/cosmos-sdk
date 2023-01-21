@@ -113,7 +113,6 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 
 		s.loggerCtx = s.loggerCtx.WithStreamingManager(storetypes.StreamingManager{
 			AbciListeners: []storetypes.ABCIListener{abciListener},
-			Async:         false,
 			StopNodeOnErr: true,
 		})
 

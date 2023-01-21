@@ -27,10 +27,6 @@ type StreamingManager struct {
 	// and exposing the requests and responses to external consumers
 	AbciListeners []ABCIListener
 
-	// Async for determining if AbciListeners will run asynchronously.
-	Async bool
-
 	// StopNodeOnErr halts the node when ABCI streaming service listening results in an error.
-	// stopNodeOnErr=true MUST be paired with async=false, otherwise it will be ignored.
 	StopNodeOnErr bool
 }

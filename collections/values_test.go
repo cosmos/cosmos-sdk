@@ -16,3 +16,13 @@ func TestUint64Value(t *testing.T) {
 		require.ErrorIs(t, err, ErrEncoding)
 	})
 }
+
+func TestUInt64JSON(t *testing.T) {
+	var x uint64 = 3076
+	bz, err := uint64EncodeJSON(x)
+	require.NoError(t, err)
+	require.Equal(t, []byte(`"3076"`), bz)
+	y, err := uint64DecodeJSON(bz)
+	require.NoError(t, err)
+	require.Equal(t, x, y)
+}

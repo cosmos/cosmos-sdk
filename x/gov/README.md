@@ -16,12 +16,12 @@ on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
 * **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, proposal enters voting period
+minimum deposit is reached, the proposal enters voting period.
 * **Vote:** Participants can vote on proposals that reached MinDeposit
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
-deposits if the proposal was accepted OR if the proposal never entered voting period.
+deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period, the deposit is burned.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 Features that may be added in the future are described in [Future Improvements](#future-improvements).
@@ -138,18 +138,7 @@ Cosmos Hub, participants are bonded Atom holders. Unbonded Atom holders and
 other users do not get the right to participate in governance. However, they
 can submit and deposit on proposals.
 
-Note that some *participants* can be forbidden to vote on a proposal under a
-certain validator if:
-
-* *participant* bonded or unbonded Atoms to said validator after proposal
-  entered voting period.
-* *participant* became validator after proposal entered voting period.
-
-This does not prevent *participant* to vote with Atoms bonded to other
-validators. For example, if a *participant* bonded some Atoms to validator A
-before a proposal entered voting period and other Atoms to validator B after
-proposal entered voting period, only the vote under validator B will be
-forbidden.
+Note that when *participants* have bonded and unbonded Atoms, their voting power is calculated from their bonded Atom holdings only.
 
 #### Voting period
 
@@ -873,16 +862,27 @@ Example Output:
 
 ```bash
 deposit_params:
-  max_deposit_period: "172800000000000"
+  max_deposit_period: 172800s
   min_deposit:
   - amount: "10000000"
     denom: stake
+params:
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+  voting_period: 172800s
 tally_params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
 voting_params:
-  voting_period: "172800000000000"
+  voting_period: 172800s
 ```
 
 ##### proposal
@@ -1222,6 +1222,19 @@ Example (`software-upgrade`):
 
 ```bash
 simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" --description="testing, testing, 1, 2, 3" --upgrade-height 1000000 --from cosmos1..
+```
+
+#### cancel-proposal
+
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
+
+```bash
+simd tx gov cancel-proposal [proposal-id] [flags]
+```
+
+Example:
+```bash
+simd tx gov cancel-proposal 1 --from cosmos1...
 ```
 
 ##### vote

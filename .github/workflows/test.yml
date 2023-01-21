@@ -238,9 +238,9 @@ jobs:
         run: |
           make test-sim-nondeterminism
 
-  ##################################
-  #### Cosmos SDK Go Submodules ####
-  ##################################
+  ###############################
+  #### Cosmos SDK Submodules ####
+  ###############################
 
   # NOTE: The following jobs are used to test the Cosmos SDK Go submodules.
   # They run when there is a diff in their respective directories.
@@ -428,36 +428,6 @@ jobs:
         with:
           projectBaseDir: simapp/
 
-  test-tx:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.4
-          cache: true
-          cache-dependency-path: tx/go.sum
-      - uses: technote-space/get-diff-action@v6.1.2
-        id: git_diff
-        with:
-          PATTERNS: |
-            tx/**/*.go
-            tx/go.mod
-            tx/go.sum
-      - name: tests
-        if: env.GIT_DIFF
-        run: |
-          cd tx
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
-      - name: sonarcloud
-        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: tx/
-
   test-rosetta:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -552,6 +522,73 @@ jobs:
         with:
           projectBaseDir: tools/cosmovisor/
 
+  test-confix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.4
+          cache: true
+          cache-dependency-path: tools/confix/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            tools/confix/**/*.go
+            tools/confix/go.mod
+            tools/confix/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd tools/confix
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
+      - name: sonarcloud
+        if: env.GIT_DIFF
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: tools/confix/
+
+  #############################
+  ### Cosmos SDK x/{module} ###
+  #############################
+
+  # NOTE: The following jobs are used to test the Cosmos SDK Go submodules present under x/{module}.
+  # They run when there is a diff in their respective directories.
+
+  test-x-tx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.4
+          cache: true
+          cache-dependency-path: x/tx/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            x/tx/**/*.go
+            x/tx/go.mod
+            x/tx/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd x/tx
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
+      - name: sonarcloud
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: x/tx/
+
   test-x-nft:
     runs-on: ubuntu-latest
     steps:
@@ -582,7 +619,7 @@ jobs:
         with:
           projectBaseDir: x/nft/
 
-  test-confix:
+  test-x-circuit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -590,24 +627,24 @@ jobs:
         with:
           go-version: 1.19.4
           cache: true
-          cache-dependency-path: tools/confix/go.sum
+          cache-dependency-path: x/circuit/go.sum
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
-            tools/confix/**/*.go
-            tools/confix/go.mod
-            tools/confix/go.sum
+            x/circuit/**/*.go
+            x/circuit/go.mod
+            x/circuit/go.sum
       - name: tests
         if: env.GIT_DIFF
         run: |
-          cd tools/confix
+          cd x/circuit
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
       - name: sonarcloud
-        if: env.GIT_DIFF
+        if: ${{ env.GIT_DIFF && !github.event.pull_request.draft }}
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: tools/confix/
+          projectBaseDir: x/circuit/

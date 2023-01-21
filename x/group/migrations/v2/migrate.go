@@ -21,7 +21,7 @@ const (
 )
 
 // Migrate migrates the x/group module state from the consensus version 1 to version 2.
-// Specifically, it changes the group policy account to from module account to base account.
+// Specifically, it changes the group policy account from module account to base account.
 func Migrate(
 	ctx sdk.Context,
 	storeKey storetypes.StoreKey,
@@ -32,11 +32,11 @@ func Migrate(
 	store := ctx.KVStore(storeKey)
 	curAccVal := groupPolicySeq.CurVal(store)
 	groupPolicyAccountDerivationKey := make(map[string][]byte, 0)
+	policyKey := []byte{GroupPolicyTablePrefix}
 	for i := uint64(0); i <= curAccVal; i++ {
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, i)
-		parentAcc := address.Module(group.ModuleName, []byte{GroupPolicyTablePrefix})
-		groupPolicyAcc := sdk.AccAddress(address.Derive(parentAcc, derivationKey))
+		groupPolicyAcc := sdk.AccAddress(address.Module(group.ModuleName, policyKey, derivationKey))
 		groupPolicyAccountDerivationKey[groupPolicyAcc.String()] = derivationKey
 	}
 
@@ -59,8 +59,11 @@ func Migrate(
 			panic(fmt.Errorf("group policy account %s derivation key not found", policy.Address))
 		}
 
-		accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey})
-		baseAccount, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+		ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
+		if err != nil {
+			return err
+		}
+		baseAccount, err := authtypes.NewBaseAccountWithPubKey(ac)
 		if err != nil {
 			return fmt.Errorf("failed to create new group policy account: %w", err)
 		}

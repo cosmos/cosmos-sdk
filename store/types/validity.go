@@ -9,10 +9,10 @@ const (
 	MaxValueLength = math.MaxUint32
 )
 
-// AssertValidKey checks if the key is valid(key is not nil and within length limit)
+// AssertValidKey checks if the key is valid(key is not nil, not empty and within length limit)
 func AssertValidKey(key []byte) {
 	if len(key) == 0 {
-		panic("key is nil")
+		panic("key is nil or empty")
 	}
 	if len(key) > MaxKeyLength {
 		panic("key is too large")

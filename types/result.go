@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/hex"
 	"encoding/json"
-	"math"
 	"strings"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -133,23 +132,50 @@ func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Logs == nil
 }
 
+// Empty returns true if the response is empty
+func (r BlockResponse) Empty() bool {
+	return r.Time == "" && r.Height == 0
+}
+
 func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
+
+	// calculate total pages in an overflow safe manner
+	totalPages := uint64(0)
+	if totalCount != 0 && limit != 0 {
+		if totalCount%limit > 0 {
+			totalPages = totalCount/limit + 1
+		} else {
+			totalPages = totalCount / limit
+		}
+	}
+
 	return &SearchTxsResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  uint64(math.Ceil(float64(totalCount) / float64(limit))),
+		PageTotal:  totalPages,
 		Limit:      limit,
 		Txs:        txs,
 	}
 }
 
 func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*BlockResponse) *SearchBlocksResult {
+
+	// calculate total pages in an overflow safe manner
+	totalPages := int64(0)
+	if totalCount != 0 && limit != 0 {
+		if totalCount%limit > 0 {
+			totalPages = totalCount/limit + 1
+		} else {
+			totalPages = totalCount / limit
+		}
+	}
+
 	return &SearchBlocksResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  int64(math.Ceil(float64(totalCount) / float64(limit))),
+		PageTotal:  totalPages,
 		Limit:      limit,
 		Blocks:     blocks,
 	}

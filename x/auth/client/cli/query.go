@@ -549,7 +549,7 @@ $ %s query block --%s=%s <hash>
 						return err
 					}
 
-					if output.Time == "" {
+					if output.Empty() {
 						return fmt.Errorf("no block found with hash %s", args[0])
 					}
 
@@ -567,7 +567,7 @@ $ %s query block --%s=%s <hash>
 						return err
 					}
 
-					if output.Time == "" {
+					if output.Empty() {
 						return fmt.Errorf("no transaction found with hash %s", args[0])
 					}
 

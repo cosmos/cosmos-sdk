@@ -138,7 +138,6 @@ func (r BlockResponse) Empty() bool {
 }
 
 func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
-
 	// calculate total pages in an overflow safe manner
 	totalPages := uint64(0)
 	if totalCount != 0 && limit != 0 {
@@ -160,7 +159,6 @@ func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse
 }
 
 func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*BlockResponse) *SearchBlocksResult {
-
 	// calculate total pages in an overflow safe manner
 	totalPages := int64(0)
 	if totalCount != 0 && limit != 0 {

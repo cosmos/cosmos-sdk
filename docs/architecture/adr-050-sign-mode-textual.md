@@ -129,7 +129,7 @@ The SignDoc for `SIGN_MODE_TEXTUAL` is formed from a data structure like:
 
 ```go
 type Screen struct {
-  Title string   // possibly size limited to, e.g. 255 characters
+  Title string   // possibly size limited to, e.g. 64 characters
   Content string // possibly size limited to, e.g. 255 characters
   Indent uint8   // size limited to something small like 16 or 32
   Expert bool

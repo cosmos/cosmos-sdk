@@ -553,7 +553,6 @@ func (s *coinTestSuite) TestAddCoins() {
 		{"empty list + set", s.emptyCoins, cA1M1, cA1M1, "zero + a_non_zero = a_non_zero"},
 		{"set + empty list", cA0M1, s.emptyCoins, sdk.Coins{s.cm1}, "zero coins should be removed"},
 		{"set + empty list", cA1M1, s.emptyCoins, cA1M1, "a_non_zero + zero  = a_non_zero"},
-		// {"set + empty list", cA0M1, s.emptyCoins, cA0M1},
 		{
 			"{1atom,1muon}+{1atom,1muon}", cA1M1, cA1M1,
 			sdk.Coins{s.ca2, s.cm2},
@@ -562,7 +561,7 @@ func (s *coinTestSuite) TestAddCoins() {
 		{
 			"{0atom,1muon}+{0atom,0muon}", cA0M1, cA0M0,
 			sdk.Coins{s.cm1},
-			"zero coins should be reoved",
+			"zero coins should be removed",
 		},
 		{
 			"{2atom}+{0muon}",

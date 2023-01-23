@@ -11,36 +11,38 @@ type company struct {
 }
 
 type companyIndexes struct {
+	// City is an index of the company indexed map. It indexes a company
+	// given its city. The index is multi, meaning that there can be multiple
+	// companies from the same city.
 	City *GenericMultiIndex[string, string, string, company]
-	Vat  *GenericUniqueIndex[uint64, string, string, company]
+	// Vat is an index of the company indexed map. It indexes a company
+	// given its VAT number. The index is unique, meaning that there can be
+	// only one VAT number for a company.
+	Vat *GenericUniqueIndex[uint64, string, string, company]
 }
 
 func (c companyIndexes) IndexesList() []Index[string, company] {
 	return []Index[string, company]{c.City, c.Vat}
 }
 
+func newTestIndexedMap(schema *SchemaBuilder) *IndexedMap[string, company, companyIndexes] {
+	return NewIndexedMap(schema, NewPrefix(0), "companies", StringKey, newTestValueCodec[company](),
+		companyIndexes{
+			City: NewGenericMultiIndex(schema, NewPrefix(1), "companies_by_city", StringKey, StringKey, func(pk string, value company) ([]IndexReference[string, string], error) {
+				return []IndexReference[string, string]{NewIndexReference(value.City, pk)}, nil
+			}),
+			Vat: NewGenericUniqueIndex(schema, NewPrefix(2), "companies_by_vat", Uint64Key, StringKey, func(pk string, v company) ([]IndexReference[uint64, string], error) {
+				return []IndexReference[uint64, string]{NewIndexReference(v.Vat, pk)}, nil
+			}),
+		},
+	)
+}
+
 func TestIndexedMap(t *testing.T) {
 	sk, ctx := deps()
 	schema := NewSchemaBuilder(sk)
 
-	im := NewIndexedMap(schema, NewPrefix(0), "companies", StringKey, newTestValueCodec[company](),
-		companyIndexes{
-			City: NewGenericMultiIndex(schema, NewPrefix(1), "companies_by_city", StringKey, StringKey, func(pk string, value company) ([]IndexReference[string, string], error) {
-				return []IndexReference[string, string]{{
-					Referring: value.City,
-					Referred:  pk,
-				}}, nil
-			}),
-			Vat: NewGenericUniqueIndex(schema, NewPrefix(2), "companies_by_vat", Uint64Key, StringKey, func(pk string, v company) ([]IndexReference[uint64, string], error) {
-				return []IndexReference[uint64, string]{
-					{
-						Referring: v.Vat,
-						Referred:  pk,
-					},
-				}, nil
-			}),
-		},
-	)
+	im := newTestIndexedMap(schema)
 
 	// test insertion
 	err := im.Set(ctx, "1", company{

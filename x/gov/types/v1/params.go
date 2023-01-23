@@ -16,11 +16,13 @@ const (
 
 // Default governance params
 var (
-	DefaultMinDepositTokens       = sdk.NewInt(10000000)
-	DefaultQuorum                 = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold              = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold          = sdk.NewDecWithPrec(334, 3)
-	DefaultMinInitialDepositRatio = sdk.ZeroDec()
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
+	DefaultProposalCancelRatio       = sdk.MustNewDecFromStr("0.5")
+	DefaultProposalCancelDestAddress = ""
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -50,7 +52,7 @@ func NewVotingParams(votingPeriod *time.Duration) VotingParams {
 // NewParams creates a new Params instance with given values.
 func NewParams(
 	minDeposit sdk.Coins, maxDepositPeriod time.Duration, votingPeriod time.Duration,
-	quorum string, threshold string, vetoThreshold string, minInitialDepositRatio string,
+	quorum, threshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string,
 ) Params {
 	return Params{
 		MinDeposit:             minDeposit,
@@ -60,6 +62,8 @@ func NewParams(
 		Threshold:              threshold,
 		VetoThreshold:          vetoThreshold,
 		MinInitialDepositRatio: minInitialDepositRatio,
+		ProposalCancelRatio:    proposalCancelRatio,
+		ProposalCancelDest:     proposalCancelDest,
 	}
 }
 
@@ -73,6 +77,8 @@ func DefaultParams() Params {
 		DefaultThreshold.String(),
 		DefaultVetoThreshold.String(),
 		DefaultMinInitialDepositRatio.String(),
+		DefaultProposalCancelRatio.String(),
+		DefaultProposalCancelDestAddress,
 	)
 }
 
@@ -129,6 +135,35 @@ func (p Params) ValidateBasic() error {
 
 	if p.VotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)
+	}
+
+	minInitialDepositRatio, err := sdk.NewDecFromStr(p.MinInitialDepositRatio)
+	if err != nil {
+		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
+	}
+	if minInitialDepositRatio.IsNegative() {
+		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
+	}
+	if minInitialDepositRatio.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
+	}
+
+	proposalCancelRate, err := sdk.NewDecFromStr(p.ProposalCancelRatio)
+	if err != nil {
+		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
+	}
+	if proposalCancelRate.IsNegative() {
+		return fmt.Errorf("burn rate of cancel proposal must be positive: %s", proposalCancelRate)
+	}
+	if proposalCancelRate.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelRate)
+	}
+
+	if len(p.ProposalCancelDest) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.ProposalCancelDest)
+		if err != nil {
+			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
+		}
 	}
 
 	return nil

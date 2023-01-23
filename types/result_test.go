@@ -154,9 +154,8 @@ func (s *resultTestSuite) TestNewSearchBlocksResult() {
 }
 
 func (s *resultTestSuite) TestResponseResultBlock() {
-
 	timestamp := time.Now()
-	timestamp_str := timestamp.UTC().Format(time.RFC3339)
+	timestampStr := timestamp.UTC().Format(time.RFC3339)
 
 	//  create a block
 	resultBlock := &coretypes.ResultBlock{Block: &tmtypes.Block{
@@ -168,10 +167,10 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 
 	want := &sdk.BlockResponse{
 		Height: 10,
-		Time:   timestamp_str,
+		Time:   timestampStr,
 	}
 
-	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestamp_str))
+	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))
 }
 
 func TestWrapServiceResult(t *testing.T) {

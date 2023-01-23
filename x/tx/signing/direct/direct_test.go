@@ -1,22 +1,32 @@
-package direct
+package direct_test
 
 import (
+	"context"
 	"testing"
 
+	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/cosmos/cosmos-proto/any"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/direct"
 )
 
 func TestDirectModeHandler(t *testing.T) {
 	memo := "sometestmemo"
 
+	msg, err := any.New(&bankv1beta1.MsgSend{})
+	require.NoError(t, err)
+
 	pk, err := any.New(&secp256k1.PubKey{})
 	require.NoError(t, err)
+
 	accSeq := uint64(2) // Arbitrary account sequence
 
 	signerInfo := []*txv1beta1.SignerInfo{
@@ -32,45 +42,51 @@ func TestDirectModeHandler(t *testing.T) {
 			Sequence: accSeq,
 		},
 	}
-	sigData := &signing.SingleSignatureData{
-		SignMode: signingv1beta1.SignMode_SIGN_MODE_DIRECT,
-	}
-	sig := signing.Signature{
-		PubKey:   pk,
-		Data:     sigData,
-		Sequence: accSeq,
+
+	fee := &txv1beta1.Fee{Amount: []*basev1beta1.Coin{{Denom: "uatom", Amount: "1000"}}, GasLimit: 20000}
+	txBody := &txv1beta1.TxBody{
+		Messages: []*anypb.Any{msg},
+		Memo:     memo,
 	}
 
-	//fee := &txv1beta1.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
-	//
-	//err = txBuilder.SetMsgs(msgs...)
-	//require.NoError(t, err)
-	//txBuilder.SetMemo(memo)
-	//txBuilder.SetFeeAmount(fee.Amount)
-	//txBuilder.SetGasLimit(fee.GasLimit)
-	//
-	//err = txBuilder.SetSignatures(sig)
-	//require.NoError(t, err)
-	//
-	//t.Log("verify modes and default-mode")
-	//modeHandler := txConfig.SignModeHandler()
-	//require.Equal(t, modeHandler.DefaultMode(), signingtypes.SignMode_SIGN_MODE_DIRECT)
-	//require.Len(t, modeHandler.Modes(), 1)
-	//
-	//signingData := signing.SignerData{
-	//	Address:       addr.String(),
-	//	ChainID:       "test-chain",
-	//	AccountNumber: 1,
-	//	PubKey:        pubkey,
-	//}
-	//
-	//signBytes, err := modeHandler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_DIRECT, signingData, txBuilder.GetTx())
-	//
-	//require.NoError(t, err)
-	//require.NotNil(t, signBytes)
-	//
-	//authInfo := &txtypes.AuthInfo{
-	//	Fee:         &fee,
+	authInfo := &txv1beta1.AuthInfo{
+		Fee:         fee,
+		SignerInfos: signerInfo,
+	}
+
+	directHandler := direct.SignModeHandler{}
+
+	signingData := signing.SignerData{
+		Address:       "",
+		ChainId:       "test-chain",
+		AccountNumber: 1,
+		PubKey:        pk,
+	}
+
+	bodyBz, err := proto.Marshal(txBody)
+	require.NoError(t, err)
+
+	authInfoBz, err := proto.Marshal(authInfo)
+	require.NoError(t, err)
+
+	txData := signing.TxData{
+		Tx: &txv1beta1.Tx{
+			Body:     txBody,
+			AuthInfo: authInfo,
+		},
+		TxRaw: &txv1beta1.TxRaw{
+			BodyBytes:     bodyBz,
+			AuthInfoBytes: authInfoBz,
+		},
+		BodyHasUnknownNonCriticals: false,
+	}
+
+	signBytes, err := directHandler.GetSignBytes(context.Background(), signingData, txData)
+	require.NoError(t, err)
+	require.NotNil(t, signBytes)
+
+	//authInfo := &txv1beta1.AuthInfo{
+	//	Fee:         fee,
 	//	SignerInfos: signerInfo,
 	//}
 	//

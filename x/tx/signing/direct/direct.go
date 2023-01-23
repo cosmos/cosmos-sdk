@@ -10,14 +10,14 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-type signModeDirectHandler struct{}
+type SignModeHandler struct{}
 
-func (h signModeDirectHandler) Mode() signingv1beta1.SignMode {
+func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 	return signingv1beta1.SignMode_SIGN_MODE_DIRECT
 }
 
 // GetSignBytes implements SignModeHandler.GetSignBytes
-func (signModeDirectHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
+func (SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	return proto.Marshal(&txv1beta1.SignDoc{
 		BodyBytes:     txData.TxRaw.BodyBytes,
 		AuthInfoBytes: txData.TxRaw.AuthInfoBytes,
@@ -26,4 +26,4 @@ func (signModeDirectHandler) GetSignBytes(_ context.Context, signerData signing.
 	})
 }
 
-var _ signing.SignModeHandler = signModeDirectHandler{}
+var _ signing.SignModeHandler = SignModeHandler{}

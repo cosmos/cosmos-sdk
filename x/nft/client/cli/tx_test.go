@@ -11,6 +11,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
+	"cosmossdk.io/x/nft"
+	nftmodule "cosmossdk.io/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -20,11 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
-	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	"cosmossdk.io/x/nft/client/cli"
+	nfttestutil "cosmossdk.io/x/nft/testutil"
 )
 
 const (

@@ -12,6 +12,7 @@ type (
 
 		Title       string         `json:"title" yaml:"title"`
 		Description string         `json:"description" yaml:"description"`
+		IsExpedited bool           `json:"is_expedited" yaml:"is_expedited"`
 		Recipient   sdk.AccAddress `json:"recipient" yaml:"recipient"`
 		Amount      sdk.Coins      `json:"amount" yaml:"amount"`
 		Proposer    sdk.AccAddress `json:"proposer" yaml:"proposer"`

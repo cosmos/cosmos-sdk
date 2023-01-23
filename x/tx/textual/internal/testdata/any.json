@@ -16,7 +16,7 @@
         "screens": [
             {"content": "/Foo"},
             {"content": "Foo object", "indent": 1},
-            {"content": "Full name: testing", "indent": 2}
+            {"title": "Full name", "content": "testing", "indent": 2}
         ]
     },
     {
@@ -54,7 +54,7 @@
             {"content": "/google.protobuf.Any"},
             {"content": "/Foo", "indent": 1},
             {"content": "Foo object", "indent": 2},
-            {"content": "Full name: testing", "indent": 3}
+            {"title": "Full name", "content": "testing", "indent": 3}
         ]
     },
     {
@@ -68,9 +68,9 @@
         "screens": [
             {"content": "/A"},
             {"content": "A object", "indent": 1},
-            {"content": "ANY: /Foo", "indent": 2},
+            {"title": "ANY", "content": "/Foo", "indent": 2},
             {"content": "Foo object", "indent": 3},
-            {"content": "Full name: testing", "indent": 4}
+            {"title": "Full name", "content": "testing", "indent": 4}
         ]
     }
 ]

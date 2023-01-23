@@ -74,7 +74,7 @@ service Query {
   }
 
   // RestakeThreshold queries the community pool coins.
-  rpc RestakingEntries(QueryRestakeEntriesRequest) returns (QueryRestakeEntriesResponse) {
+  rpc RestakingEntries(QueryRestakeEntriesRequest) returns (QueryRestakingEntriesResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/restake_entries";
   }
 }
@@ -85,7 +85,7 @@ message QueryRestakeEntriesRequest {
 }
 
 // QueryRestakeThresholdResponse is the request type for the Query/Params RPC method.
-message QueryRestakeEntriesResponse {
+message QueryRestakingEntriesResponse {
   // threshold = minimum amount in uscrt that you need to have delegated to enable restaking
   repeated string validators = 1;
 }

@@ -118,7 +118,7 @@ func (k Keeper) AllocateTokens(
 	}
 
 	// Send the foundation tax sum to the foundation tax address. Note, the taxes
-	// collected are decimals and when coverted to integer coins, we must truncate.
+	// collected are decimals and when converted to integer coins, we must truncate.
 	// The remainder is given back to the community pool.
 	if !foundationTaxSum.IsZero() {
 		foundationTaxSumTrunc, rem := foundationTaxSum.TruncateDecimal()

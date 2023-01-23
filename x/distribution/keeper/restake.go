@@ -126,12 +126,12 @@ func addressesFromRestakeKeyStore(key []byte) (delegatorAddr sdk.AccAddress, val
 	return delegatorAddr, validatorAddr
 }
 
-// delegatorAddressFromRestakeKeyStore parses the delegator address only - will be useful for iterating by delegator
-// (probably)
-func delegatorAddressFromRestakeKeyStore(key []byte) sdk.AccAddress {
-	addrLen := key[0]
-	return sdk.AccAddress(key[1 : 1+addrLen])
-}
+//// delegatorAddressFromRestakeKeyStore parses the delegator address only - will be useful for iterating by delegator
+//// (probably)
+//func delegatorAddressFromRestakeKeyStore(key []byte) sdk.AccAddress {
+//	addrLen := key[0]
+//	return sdk.AccAddress(key[1 : 1+addrLen])
+//}
 
 // delegatorAddressFromRestakeKeyStore parses the delegator address only - will be useful for iterating by delegator
 // (probably)

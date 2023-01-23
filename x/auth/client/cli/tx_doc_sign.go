@@ -95,24 +95,24 @@ func readStdSignDocFromFile(filename string) (doc legacytx.StdSignDoc, err error
 // SignStdTxWithSignerAddress attaches a signature to a StdTx and returns a copy of a it.
 // Don't perform online validation or lookups if offline is true, else
 // populate account and sequence numbers from a foreign account.
-func signStdSignDoc(ctx client.Context, keybase keyring.Keyring, doc legacytx.StdSignDoc) (sig legacytx.StdSignature, err error) {
+func signStdSignDoc(ctx client.Context, keybase keyring.Keyring, doc legacytx.StdSignDoc) (sig legacytx.StdSignature, err error) { //nolint:staticcheck // this will be removed when proto is ready
 
 	sig, err = makeSignature(keybase, ctx.GetFromName(), doc)
 	if err != nil {
-		return legacytx.StdSignature{}, err
+		return legacytx.StdSignature{}, err //nolint:staticcheck // this will be removed when proto is ready
 	}
 
 	return sig, nil
 }
 
-func makeSignature(keybase keyring.Keyring, name string, doc legacytx.StdSignDoc) (legacytx.StdSignature, error) {
+func makeSignature(keybase keyring.Keyring, name string, doc legacytx.StdSignDoc) (legacytx.StdSignature, error) { //nolint:staticcheck // this will be removed when proto is ready
 	bz := sdk.MustSortJSON(legacy.Cdc.MustMarshalJSON(doc))
 
 	sigBytes, pubkey, err := keybase.Sign(name, bz)
 	if err != nil {
-		return legacytx.StdSignature{}, err
+		return legacytx.StdSignature{}, err //nolint:staticcheck // this will be removed when proto is ready
 	}
-	return legacytx.StdSignature{
+	return legacytx.StdSignature{ //nolint:staticcheck // this will be removed when proto is ready
 		PubKey:    pubkey,
 		Signature: sigBytes,
 	}, nil

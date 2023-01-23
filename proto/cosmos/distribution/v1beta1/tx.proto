@@ -25,6 +25,8 @@ service Msg {
   // fund the community pool.
   rpc FundCommunityPool(MsgFundCommunityPool) returns (MsgFundCommunityPoolResponse);
 
+  // SetAutoRestake enables or disables automatic restaking for a delegator
+  // validator pair
   rpc SetAutoRestake(MsgSetAutoRestake) returns (MsgSetAutoRestakeResponse);
 }
 

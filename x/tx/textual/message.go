@@ -135,6 +135,7 @@ func (mr *messageValueRenderer) formatRepeated(ctx context.Context, v protorefle
 		// <optional value rendered in the next lines>
 		for i := 1; i < len(subscreens); i++ {
 			extraScreen := Screen{
+				Title:   subscreens[i].Title,
 				Content: subscreens[i].Content,
 				Indent:  subscreens[i].Indent + 1,
 				Expert:  subscreens[i].Expert,
@@ -211,7 +212,6 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		}
 
 		expectedTitle := toSentenceCase(string(fd.Name()))
-		fmt.Println("expectedTitle=", expectedTitle, "screens[idx].Title=", screens[idx].Title)
 		if screens[idx].Title != expectedTitle {
 			// we must have skipped this fd because of a default value
 			continue
@@ -262,10 +262,9 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 }
 
 func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Screen, l protoreflect.List, vr ValueRenderer) error {
-
 	// <int> <field_kind>
 	headerRegex := *regexp.MustCompile(`(\d+) .+`)
-	res := headerRegex.FindAllStringSubmatch(screens[0].Title, -1)
+	res := headerRegex.FindAllStringSubmatch(screens[0].Content, -1)
 
 	if res == nil {
 		return errors.New("failed to match <int> <field_kind>")
@@ -282,7 +281,7 @@ func (mr *messageValueRenderer) parseRepeated(ctx context.Context, screens []Scr
 	elementIndex := 1
 
 	// <field_name> (<int>/<int>): <value rendered 1st line>
-	elementRegex := regexp.MustCompile(`(.+) \(\d+\/\d+\): (.+)`)
+	elementRegex := regexp.MustCompile(`(.+) \(\d+\/\d+\)`)
 	elementRes := elementRegex.FindAllStringSubmatch(screens[idx].Title, -1)
 	if elementRes == nil {
 		return errors.New("element malformed")

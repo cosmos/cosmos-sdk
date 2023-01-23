@@ -387,19 +387,25 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
-// the expected signer needs to sign.
-func (m *MsgUpdateParams) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(m)
-	return sdk.MustSortJSON(bz)
-}
-
 // ValidateBasic executes sanity validation on the provided data
 func (m *MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return sdkerrors.Wrap(err, "invalid authority address")
 	}
 	return m.Params.Validate()
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgUpdateParams) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
+
+// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
+// the expected signer needs to sign.
+func (m *MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(m)
+	return sdk.MustSortJSON(bz)
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message

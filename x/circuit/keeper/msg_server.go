@@ -24,7 +24,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(goCtx context.Context, msg *types.M
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Check that the authorizer has the permission level of "super admin"
-	perms, err := srv.GetPermissions(ctx, msg.Granter)
+	perms, err := srv.GetPermissions(ctx, []byte(msg.Granter))
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (srv msgServer) TripCircuitBreaker(goCtx context.Context, msg *types.MsgTri
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Check that the account has the permissions
-	perms, err := srv.GetPermissions(ctx, msg.Authority)
+	perms, err := srv.GetPermissions(ctx, []byte(msg.Authority))
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (srv msgServer) ResetCircuitBreaker(goCtx context.Context, msg *types.MsgRe
 	keeper := srv.Keeper
 
 	// Get the permissions for the account specified in the msg.Authority field
-	accountPerms, err := keeper.GetPermissions(ctx, msg.Authority)
+	accountPerms, err := keeper.GetPermissions(ctx, []byte(msg.Authority))
 	if err != nil {
 		return nil, err
 	}

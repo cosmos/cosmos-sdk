@@ -92,12 +92,9 @@ func (coin Coin) IsLTE(other Coin) bool {
 }
 
 // IsEqual returns true if the two sets of Coins have the same value
+// Deprecated: Use Coin.Equal instead.
 func (coin Coin) IsEqual(other Coin) bool {
-	if coin.Denom != other.Denom {
-		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
-	}
-
-	return coin.Amount.Equal(other.Amount)
+	return coin.Equal(other)
 }
 
 // Add adds amounts of two coins with same denom. If the coins differ in denom then

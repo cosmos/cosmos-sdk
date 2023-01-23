@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/x/evidence
+module cosmossdk.io/x/evidence
 
 go 1.19
 

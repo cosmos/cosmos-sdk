@@ -8,22 +8,21 @@ require (
 	cosmossdk.io/core v0.4.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/tools/confix v0.0.0-20230110102841-9742029158ad
+	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
+	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
-	github.com/cosmos/cosmos-sdk/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tendermint v0.37.0-rc2
 	google.golang.org/protobuf v1.28.1
 )
-
-require github.com/spf13/pflag v1.0.5
 
 require (
 	cloud.google.com/go v0.105.0 // indirect
@@ -184,13 +183,12 @@ require (
 )
 
 replace (
-	// TODO delete after release of confix
-	cosmossdk.io/tools/confix => ../tools/confix
+	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/x/nft => ../x/nft
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
-	github.com/cosmos/cosmos-sdk/x/nft => ../x/nft
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

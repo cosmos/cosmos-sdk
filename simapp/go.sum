@@ -52,8 +52,8 @@ cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58 h1:q0AkHBZnYhsnnS3AmTU
 cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58/go.mod h1:ztqtfnFSD3edvhNOAShzKod13nfKLM1sZj0uu0fo56w=
 cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476 h1:dszme7EMNp/qxjgZKjhY4lm5SN+g1Tz95UlX/qZUK64=
 cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476/go.mod h1:q4avveOJ2Cbgab/Hm/yXDHFPM7NW9InEVysd8TzNPCE=
-cosmossdk.io/core v0.4.1 h1:5icpjPmw8J4uFp6w8OoLJPxsw6X3kRi9nAtTr3qp2Ok=
-cosmossdk.io/core v0.4.1/go.mod h1:Zqd1GB+krTF3bzhTnPNwzy3NTtXu+MKLX/9sPQXTIDE=
+cosmossdk.io/core v0.5.0 h1:37BkURamssr1FQkE6ZNSjgesLYMflREiykK/Z3k4l7Q=
+cosmossdk.io/core v0.5.0/go.mod h1:QVJT+YsJWs0pD/HuczGY5y/WEc9JCn1ycLsuCDUvFlc=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
 cosmossdk.io/depinject v1.0.0-alpha.3/go.mod h1:eRbcdQ7MRpIPEM5YUJh8k97nxHpYbc3sMUnEtt8HPWU=
 cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w=

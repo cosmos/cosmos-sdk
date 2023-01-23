@@ -30,7 +30,7 @@ require (
 	cloud.google.com/go/storage v1.27.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58 // indirect
 	cosmossdk.io/collections v0.0.0-20230106101515-aeac21494476 // indirect
-	cosmossdk.io/core v0.4.1 // indirect
+	cosmossdk.io/core v0.5.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -182,6 +182,7 @@ replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	cosmossdk.io/collections => ../collections
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

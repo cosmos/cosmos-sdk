@@ -43,8 +43,21 @@ hubl --init [chain-name]
 hubl --init regen
 ```
 
-The configuration is stored in `~/.hubl/config.json`.
+The chain configuration is stored in `~/.hubl/config.json`.
+
+:::tip
+
 When using an unsecure gRPC endpoint, change the `insecure` field to `true` in the config file.
+
+```toml
+[chains]
+[chains.regen]
+[[chains.regen.trusted-grpc-endpoints]]
+endpoint = 'localhost:9090'
+insecure = true
+```
+
+:::
 
 ### Query
 

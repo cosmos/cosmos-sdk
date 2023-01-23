@@ -269,7 +269,7 @@ func (k Keeper) RestakeThreshold(c context.Context, req *types.QueryRestakeThres
 }
 
 // RestakingEntries queries the restake threshold
-func (k Keeper) RestakingEntries(c context.Context, req *types.QueryRestakeEntriesRequest) (*types.QueryRestakeEntriesResponse, error) {
+func (k Keeper) RestakingEntries(c context.Context, req *types.QueryRestakeEntriesRequest) (*types.QueryRestakingEntriesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	addr, err := sdk.AccAddressFromBech32(req.Delegator)
@@ -279,5 +279,5 @@ func (k Keeper) RestakingEntries(c context.Context, req *types.QueryRestakeEntri
 
 	validators := k.GetRestakeValidatorsForDelegator(ctx, addr)
 
-	return &types.QueryRestakeEntriesResponse{Validators: validators}, nil
+	return &types.QueryRestakingEntriesResponse{Validators: validators}, nil
 }

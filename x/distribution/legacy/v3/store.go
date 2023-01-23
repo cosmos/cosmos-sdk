@@ -10,8 +10,8 @@ import (
 // increased to 5000 OSMO. The proposal will have 24 hours to achieve
 // a two-thirds majority of all staked OSMO voting power voting YES.
 var (
-	minimumRestakeThreshold = sdk.NewDec(10_000_000)
-	restakePeriod           = sdk.NewInt(1000)
+	MinimumRestakeThreshold = sdk.NewDec(10_000_000)
+	RestakePeriod           = sdk.NewInt(1000)
 )
 
 // MigrateStore performs in-place store migrations for consensus version 4
@@ -25,6 +25,6 @@ func MigrateStore(ctx sdk.Context, subspace paramtypes.Subspace) error {
 }
 
 func migrateParamsStore(ctx sdk.Context, subspace paramtypes.Subspace) {
-	subspace.Set(ctx, types.ParamRestakePeriod, restakePeriod)
-	subspace.Set(ctx, types.ParamMinimumRestakeThreshold, minimumRestakeThreshold)
+	subspace.Set(ctx, types.ParamRestakePeriod, RestakePeriod)
+	subspace.Set(ctx, types.ParamMinimumRestakeThreshold, MinimumRestakeThreshold)
 }

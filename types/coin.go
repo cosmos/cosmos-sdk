@@ -463,7 +463,7 @@ func (coins Coins) SafeQuoInt(x Int) (Coins, bool) {
 //	a.IsAllLTE(a.Max(b))
 //	b.IsAllLTE(a.Max(b))
 //	a.IsAllLTE(c) && b.IsAllLTE(c) == a.Max(b).IsAllLTE(c)
-//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Max({4A, 2B, 2C} == {4A, 3B, 2C})
@@ -509,7 +509,7 @@ func (coins Coins) Max(coinsB Coins) Coins {
 //	a.Min(b).IsAllLTE(a)
 //	a.Min(b).IsAllLTE(b)
 //	c.IsAllLTE(a) && c.IsAllLTE(b) == c.IsAllLTE(a.Min(b))
-//	a.Add(b...).IsEqual(a.Min(b).Add(a.Max(b)...))
+//	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
 // {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
@@ -652,8 +652,8 @@ func (coins Coins) IsZero() bool {
 	return true
 }
 
-// IsEqual returns true if the two sets of Coins have the same value
-func (coins Coins) IsEqual(coinsB Coins) bool {
+// Equal returns true if the two sets of Coins have the same value
+func (coins Coins) Equal(coinsB Coins) bool {
 	if len(coins) != len(coinsB) {
 		return false
 	}

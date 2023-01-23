@@ -186,7 +186,7 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 	}
 
 	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
+	if !totalIn.Equal(totalOut) {
 		return ErrInputOutputMismatch
 	}
 

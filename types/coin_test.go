@@ -524,7 +524,7 @@ func (s *coinTestSuite) TestEqualCoins() {
 	}
 
 	for tcnum, tc := range cases {
-		res := tc.inputOne.IsEqual(tc.inputTwo)
+		res := tc.inputOne.Equal(tc.inputTwo)
 		s.Require().Equal(tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 	}
 }
@@ -573,7 +573,7 @@ func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
 		{"den", sdk.NewInt(11)},
 	}
 
-	if !got.IsEqual(want) {
+	if !got.Equal(want) {
 		t.Fatalf("Wrong result\n\tGot:   %s\n\tWant: %s", got, want)
 	}
 }
@@ -865,8 +865,8 @@ func (s *coinTestSuite) TestMinMax() {
 	for _, tc := range cases {
 		min := tc.input1.Min(tc.input2)
 		max := tc.input1.Max(tc.input2)
-		s.Require().True(min.IsEqual(tc.min), tc.name)
-		s.Require().True(max.IsEqual(tc.max), tc.name)
+		s.Require().True(min.Equal(tc.min), tc.name)
+		s.Require().True(max.Equal(tc.max), tc.name)
 	}
 }
 
@@ -1168,7 +1168,7 @@ func (s *coinTestSuite) TestNewCoins() {
 			continue
 		}
 		got := sdk.NewCoins(tt.coins...)
-		s.Require().True(got.IsEqual(tt.want))
+		s.Require().True(got.Equal(tt.want))
 	}
 }
 

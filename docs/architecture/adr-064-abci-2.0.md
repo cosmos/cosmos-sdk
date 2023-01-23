@@ -87,8 +87,66 @@ will just simply call `FinalizeBlock`.
 
 ## Decision
 
-> This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."
-> {decision body}
+We will discuss changes to the Cosmos SDK to implement ABCI 2.0 in two distinct
+phases, `VoteExtensions` and `FinalizeBlock`.
+
+### `VoteExtensions`
+
+### `FinalizeBlock`
+
+The existing ABCI methods `BeginBlock`, `DeliverTx`, and `EndBlock` have existed
+since the dawn of ABCI-based applications. Thus, applications, tooling, and developers
+have grown used to these methods and their use-cases. Specifically, `BeginBlock`
+and `EndBlock` have grown to be pretty integral and powerful within ABCI-based
+applications. E.g. an application might want to run distribution and inflation
+related operations prior to executing transactions and then have staking related
+changes to happen after executing all transactions.
+
+We propose to keep `BeginBlock` and `EndBlock` within the SDK's core module
+interfaces only so application developers can continue to build against existing
+execution flows. However, we will remove `BeginBlock`, `DeliverTx` and `EndBlock`
+from the SDK's `BaseApp` implementation and thus the ABCI surface area.
+
+What will exist is a single `FinalizeBlock` execution flow. Specifically, in
+`FinalizeBlock` we will execute the application's `BeginBlock`, followed by
+execution of all the transactions, finally followed by execution of the application's
+`EndBlock`.
+
+Note, we will still keep the existing transaction execution mechanics within
+`BaseApp`, but all notion of `DeliverTx` will be removed, i.e. `deliverState`
+will be replace with `finalizeState`, which will be committed on `Commit`.
+
+However, there are current parameters and fields that exist in the existing
+`BeginBlock` and `EndBlock` ABCI types, such as votes that are used in distribution
+and byzantine validators used in evidence handling. These parameters exist in the
+`FinalizeBlock` request type, and will need to be passed to the application's
+implementations of `BeginBlock` and `EndBlock`.
+
+This means the Cosmos SDK's core module interfaces will need to be updated to
+reflect these parameters. The easiest and most straightforward way to achieve
+this is to just pass `RequestFinalizeBlock` to `BeginBlock` and `EndBlock`.
+
+```go
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
+	beginBlockResp := app.beginBlock(req)
+
+	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
+	for _, tx := range req.Txs {
+		result := app.runTx(runTxModeFinalize, tx)
+		txExecResults = append(txExecResults, result)
+	}
+
+	endBlockResp := app.endBlock(req)
+
+	return abci.ResponseFinalizeBlock{
+		TxResults:             txExecResults,
+		Events:                joinEvents(beginBlockResp.Events, endBlockResp.Events),
+		ValidatorUpdates:      endBlockResp.ValidatorUpdates,
+		ConsensusParamUpdates: endBlockResp.ConsensusParamUpdates,
+		AppHash:               nil,
+	}
+}
+```
 
 ## Consequences
 
@@ -112,8 +170,8 @@ will just simply call `FinalizeBlock`.
 
 ## Further Discussions
 
-While an ADR is in the DRAFT or PROPOSED stage, this section should contain a summary of issues to be solved in future iterations (usually referencing comments from a pull-request discussion).
-Later, this section can optionally list ideas or improvements the author or reviewers found during the analysis of this ADR.
+Future discussions include design and implementation of ABCI 3.0, which is a
+continuation of ABCI++ and the general discussion of optimistic execution.
 
 ## References
 

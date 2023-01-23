@@ -26,7 +26,6 @@ func NewTextualWithGRPCConn(grpcConn grpc.ClientConnInterface) textual.Textual {
 		res, err := bankQueryClient.DenomMetadata(ctx, &bankv1beta1.QueryDenomMetadataRequest{
 			Denom: denom,
 		})
-
 		if err != nil {
 			return nil, metadataExists(err)
 		}

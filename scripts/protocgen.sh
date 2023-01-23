@@ -31,8 +31,7 @@ cd ..
 # move proto files to the right places
 cp -r github.com/cosmos/cosmos-sdk/* ./
 cp -r cosmossdk.io/** ./
-rm -rf github.com
-rm -rf cosmossdk.io
+rm -rf github.com cosmossdk.io
 
 go mod tidy
 

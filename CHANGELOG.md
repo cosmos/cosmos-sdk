@@ -44,6 +44,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#270](https://github.com/provenance-io/cosmos-sdk/pull/270) Add functionality to update denom metadata via gov proposal.
 * (x/gov,cli) [#434](https://github.com/provenance-io/cosmos-sdk/pull/434) Added `AddGovPropFlagsToCmd` and `ReadGovPropFlags` functions.
 
+### Improvements
+
+* Bring in Cosmos-SDK [v0.46.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.8) changes [#441](https://github.com/provenance-io/cosmos-sdk/pull/441).
+
 ### Bug Fixes
 
 * [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184) Pull in Cosmos-SDK authz validate basic fix.

@@ -1,7 +1,6 @@
 [
     {
         "proto": {},
-        "parses": true,
         "screens": [
             {"content": "Qux object", "indent": 0}
         ]
@@ -15,7 +14,6 @@
                 }
             ]
         },
-        "parses": true,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "Messages", "content": "1 Foo", "indent": 1},
@@ -38,7 +36,6 @@
                 }
             ]
         },
-        "parses": true,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "Messages", "content": "2 Foo", "indent": 1},
@@ -58,7 +55,6 @@
                 "/OmniFlix.onft.v1beta1.MsgTransferONFT"
             ]
         },
-        "parses": true,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "String messages", "content": "1 String", "indent": 1},
@@ -74,7 +70,6 @@
                 "/OmniFlix.marketplace.v1beta1.MsgListNFT"
             ]
         },
-        "parses": true,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "String messages", "content": "3 String", "indent": 1},
@@ -101,7 +96,6 @@
                 ]
             }
         },
-        "parses": false,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "Vote", "content": "Ballot object", "indent": 1},
@@ -124,7 +118,6 @@
                 { "amount": "3", "denom": "ustake" }
             ]
         },
-        "parses": false,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "Price", "content": "1 ucosm, 3 ustake", "indent": 1}
@@ -143,7 +136,6 @@
                 {"seconds": 0, "nanos": 10000000}
             ]
         },
-        "parses": true,
         "screens": [
             {"content": "Qux object", "indent": 0},
             {"title": "Expirations", "content": "8 Timestamp", "indent": 1},

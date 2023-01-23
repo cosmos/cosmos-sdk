@@ -150,23 +150,27 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 
 ## Consequences
 
-> This section describes the resulting context, after applying the decision. All consequences should be listed here, not just the "positive" ones. A particular decision may have positive, negative, and neutral consequences, but all of them affect the team and project in the future.
-
 ### Backwards Compatibility
 
-> All ADRs that introduce backwards incompatibilities must include a section describing these incompatibilities and their severity. The ADR must explain how the author proposes to deal with these incompatibilities. ADR submissions without a sufficient backwards compatibility treatise may be rejected outright.
+ABCI 2.0 is naturally not backwards compatible with prior versions of the Cosmos SDK
+and Tendermint. For example, an application that requests `RequestFinalizeBlock`
+to the same application that does not speak ABCI 2.0 will naturally fail.
+
+In addition, `BeginBlock`, `DeliverTx` and `EndBlock` will be removed from the
+application ABCI interfaces and along with the inputs and outputs being modified
+in the module interfaces.
 
 ### Positive
 
-{positive consequences}
+* `BeginBlock` and `EndBlock` semantics remain, so burden on application developers
+  should be limited.
+* Less communication overhead as multiple ABCI requests are condensed into a single
+  request.
+* Sets the groundwork for optimistic execution.
 
 ### Negative
 
-{negative consequences}
-
 ### Neutral
-
-{neutral consequences}
 
 ## Further Discussions
 

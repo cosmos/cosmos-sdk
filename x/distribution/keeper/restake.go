@@ -69,7 +69,7 @@ func (k Keeper) PerformRestake(ctx sdk.Context, delegator sdk.AccAddress, valida
 	coinsToRedelegate := coins.AmountOf(baseDenom)
 
 	if coinsToRedelegate.IsZero() {
-
+		return sdkerrors.ErrInsufficientFunds
 	}
 
 	val := k.stakingKeeper.Validator(ctx, validator)

@@ -28,6 +28,8 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		tp.Threshold,
 		tp.VetoThreshold,
 		sdk.ZeroDec().String(),
+		sdk.ZeroDec().String(),
+		"",
 	)
 
 	bz, err := cdc.Marshal(&params)

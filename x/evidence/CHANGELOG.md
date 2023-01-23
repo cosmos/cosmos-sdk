@@ -28,7 +28,3 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (x/evidence) [14724](https://github.com/cosmos/cosmos-sdk/pull/14724) The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
-
-### API Breaking Changes
-
-* (x/evidence) [14724](https://github.com/cosmos/cosmos-sdk/pull/14724) Use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` as evidence is extracted to be a standalone module.

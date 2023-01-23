@@ -74,7 +74,7 @@ All the evidence imports are now renamed to use `cosmossdk.io/evidence` instead 
 
 ##### Extract nft to a standalone module
 
-The `x/nft` module has now extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/nft` module is extracted to have a separate go.mod file which allows it be a standalone module. 
 
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)

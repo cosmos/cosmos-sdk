@@ -385,7 +385,7 @@ func (k Keeper) DeleteAllValidatorSlashEvents(ctx sdk.Context) {
 }
 
 // iterate over all restake entries
-func (k Keeper) IterateRestakeEntries(ctx sdk.Context, handler func(delegator sdk.AccAddress, validator sdk.ValAddress) (stop bool)) {
+func (k Keeper) IterateRestakeEntries(ctx sdk.Context, handler func(delegator sdk.AccAddress, validator sdk.ValAddress) (toRemove bool)) (staleKeys [][]byte) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.AutoRestakeEntryPrefix)
 	defer iter.Close()
@@ -397,7 +397,8 @@ func (k Keeper) IterateRestakeEntries(ctx sdk.Context, handler func(delegator sd
 		//k.Logger(ctx).Info(fmt.Sprintf("from iter - %s %s - %s", delegator, validator, hex.EncodeToString(key)))
 
 		if handler(delegator, validator) {
-			break
+			staleKeys = append(staleKeys, key)
 		}
 	}
+	return staleKeys
 }

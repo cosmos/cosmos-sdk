@@ -80,6 +80,10 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 
 	kvStore := m.sa(ctx)
 	valueBytes, err := kvStore.Get(bytesKey)
+	if valueBytes == nil {
+		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
+	}
+
 	if err != nil {
 		return v, err
 	}

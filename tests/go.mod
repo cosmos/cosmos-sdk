@@ -10,6 +10,7 @@ require (
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
+	github.com/cosmos/cosmos-sdk/x/evidence v0.0.0-20230117113717-50e7c4a4ceff
 	github.com/cosmos/cosmos-sdk/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
@@ -167,7 +168,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.107.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9 // indirect
+	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 // indirect
 	google.golang.org/grpc v1.52.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -182,6 +183,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
+	github.com/cosmos/cosmos-sdk/x/evidence => ../x/evidence
 	github.com/cosmos/cosmos-sdk/x/nft => ../x/nft
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

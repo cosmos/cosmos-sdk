@@ -85,6 +85,7 @@ func (mr *messageValueRenderer) Format(ctx context.Context, v protoreflect.Value
 
 		for i := 1; i < len(subscreens); i++ {
 			extraScreen := Screen{
+				Title:   subscreens[i].Title,
 				Content: subscreens[i].Content,
 				Indent:  subscreens[i].Indent + 1,
 				Expert:  subscreens[i].Expert,
@@ -209,8 +210,9 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			return nilValue, fmt.Errorf("bad message indentation: want 1, got %d", screens[idx].Indent)
 		}
 
-		prefix := toSentenceCase(string(fd.Name())) + ": "
-		if !strings.HasPrefix(screens[idx].Title, prefix) {
+		expectedTitle := toSentenceCase(string(fd.Name()))
+		fmt.Println("expectedTitle=", expectedTitle, "screens[idx].Title=", screens[idx].Title)
+		if screens[idx].Title != expectedTitle {
 			// we must have skipped this fd because of a default value
 			continue
 		}
@@ -218,7 +220,8 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		// Make a new screen without the prefix
 		subscreens := make([]Screen, 1)
 		subscreens[0] = screens[idx]
-		subscreens[0].Content = strings.TrimPrefix(screens[idx].Content, prefix)
+		subscreens[0].Title = screens[idx].Title
+		subscreens[0].Content = screens[idx].Content
 		subscreens[0].Indent--
 		idx++
 

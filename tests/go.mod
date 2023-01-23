@@ -182,7 +182,7 @@ replace (
 	cosmossdk.io/simapp => ../simapp
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
-  cosmossdk.io/x/evidence => ../x/evidence
+  	cosmossdk.io/x/evidence => ../x/evidence
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

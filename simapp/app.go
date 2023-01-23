@@ -18,10 +18,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	simappparams "cosmossdk.io/simapp/params"
-  "cosmossdk.io/x/evidence"
-  evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	"cosmossdk.io/x/evidence"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	evidencetypes "cosmossdk.io/x/evidence/types"
-  "cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft"
 	nftkeeper "cosmossdk.io/x/nft/keeper"
 	nftmodule "cosmossdk.io/x/nft/module"
 

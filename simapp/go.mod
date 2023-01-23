@@ -184,9 +184,9 @@ require (
 )
 
 replace (
+	cosmossdk.io/x/evidence => ../x/evidence
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
-  cosmossdk.io/x/evidence => ../x/evidence
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

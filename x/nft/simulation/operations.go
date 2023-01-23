@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
 )
 
 //nolint:gosec // these are not hardcoded credentials.

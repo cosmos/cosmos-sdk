@@ -258,7 +258,7 @@ func (app *BaseApp) SetQueryMultiStore(ms sdk.MultiStore) {
 // SetFeeHandler sets the FeeHandler which if set will change the behavior of fee handling
 func (app *BaseApp) SetFeeHandler(feeHandler sdk.FeeHandler) {
 	if app.sealed {
-		panic("SetKeeperHandler() on sealed BaseApp")
+		panic("SetFeeHandler() on sealed BaseApp")
 	}
 
 	app.feeHandler = feeHandler

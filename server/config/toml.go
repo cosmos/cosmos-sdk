@@ -249,7 +249,7 @@ keys = [{{ range .Streamers.File.Keys }}{{ printf "%q, " . }}{{end}}]
 write_dir = "{{ .Streamers.File.WriteDir }}"
 prefix = "{{ .Streamers.File.Prefix }}"
 
-# output-metadata specifies if output the metadata file which includes the abci request/responses
+# output-metadata specifies if output the metadata file which includes the abci request/responses 
 # during processing the block.
 output-metadata = "{{ .Streamers.File.OutputMetadata }}"
 

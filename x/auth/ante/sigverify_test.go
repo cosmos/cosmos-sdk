@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -135,7 +134,7 @@ func TestSigVerification(t *testing.T) {
 	suite.clientCtx.TxConfig = authtx.NewTxConfigWithTextual(
 		codec.NewProtoCodec(suite.encCfg.InterfaceRegistry),
 		enabledSignModes,
-		clienttx.NewTextualWithClientCtx(suite.clientCtx),
+		txmodule.NewTextualWithGRPCConn(suite.clientCtx),
 	)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

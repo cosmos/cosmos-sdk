@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
-	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
@@ -32,6 +31,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -88,7 +88,7 @@ func NewRootCmd() *cobra.Command {
 			txConfigWithTextual := tx.NewTxConfigWithTextual(
 				codec.NewProtoCodec(encodingConfig.InterfaceRegistry),
 				encodingConfig.TxConfig.SignModeHandler().Modes(),
-				clienttx.NewTextualWithClientCtx(initClientCtx),
+				txmodule.NewTextualWithGRPCConn(initClientCtx),
 			)
 			initClientCtx = initClientCtx.WithTxConfig(txConfigWithTextual)
 

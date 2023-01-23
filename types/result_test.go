@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
@@ -12,6 +13,7 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -137,6 +139,39 @@ txhash: "74657374"
 		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTx(nil))
+}
+
+func (s *resultTestSuite) TestNewSearchBlocksResult() {
+	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*sdk.BlockResponse{})
+	s.Require().Equal(&sdk.SearchBlocksResult{
+		TotalCount: 150,
+		Count:      20,
+		PageNumber: 2,
+		PageTotal:  8,
+		Limit:      20,
+		Blocks:     []*sdk.BlockResponse{},
+	}, got)
+}
+
+func (s *resultTestSuite) TestResponseResultBlock() {
+
+	timestamp := time.Now()
+	timestamp_str := timestamp.UTC().Format(time.RFC3339)
+
+	//  create a block
+	resultBlock := &coretypes.ResultBlock{Block: &tmtypes.Block{
+		Header: tmtypes.Header{
+			Height: 10,
+			Time:   timestamp,
+		},
+	}}
+
+	want := &sdk.BlockResponse{
+		Height: 10,
+		Time:   timestamp_str,
+	}
+
+	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestamp_str))
 }
 
 func TestWrapServiceResult(t *testing.T) {

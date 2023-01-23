@@ -21,7 +21,7 @@ import (
 
 var (
 	// msgRe is a regex matching the beginning of the TxBody msgs in the envelope.
-	msgRe = regexp.MustCompile("Message: ([0-9]+) Any")
+	msgRe = regexp.MustCompile("([0-9]+) Any")
 	// inverseMsgRe is a regex matching the textual output of the TxBody msgs
 	// header.
 	inverseMsgRe = regexp.MustCompile("This transaction has ([0-9]+) Messages?")
@@ -146,13 +146,17 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 			// "Message: <N> Any"
 			// with:
 			// "This transaction has <N> Message"
-			matches := msgRe.FindStringSubmatch(screens[i].Content)
-			if len(matches) > 0 {
-				screens[i].Content = fmt.Sprintf("This transaction has %s Message", matches[1])
-				if matches[1] != "1" {
-					screens[i].Content += "s"
+			if screens[i].Title == "Message" {
+				matches := msgRe.FindStringSubmatch(screens[i].Content)
+				if len(matches) > 0 {
+					screens[i].Title = ""
+					screens[i].Content = fmt.Sprintf("This transaction has %s Message", matches[1])
+					if matches[1] != "1" {
+						screens[i].Content += "s"
+					}
 				}
 			}
+
 		}
 	}
 

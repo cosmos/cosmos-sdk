@@ -43,7 +43,7 @@ type txJsonTest struct {
 	Screens    []textual.Screen
 }
 
-func TestTxJsonTestcases(t *testing.T) {
+func TestEnvelopeJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/tx.json")
 	require.NoError(t, err)
 

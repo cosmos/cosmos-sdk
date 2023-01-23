@@ -26,6 +26,7 @@ var (
 	TypeMsgVoteWeighted   = sdk.MsgTypeURL(&v1.MsgVoteWeighted{})
 	TypeMsgSubmitProposal = sdk.MsgTypeURL(&v1.MsgSubmitProposal{})
 	TypeMsgCancelProposal = sdk.MsgTypeURL(&v1.MsgCancelProposal{})
+	TypeMsgUpdateParams   = sdk.MsgTypeURL(&v1.MsgUpdateParams{})
 )
 
 // Simulation operation weights constants
@@ -36,12 +37,14 @@ const (
 	OpWeightMsgVote           = "op_weight_msg_vote"
 	OpWeightMsgVoteWeighted   = "op_weight_msg_weighted_vote"
 	OpWeightMsgCancelProposal = "op_weight_msg_cancel_proposal"
+	OpWeightMsgUpdateParams   = "op_weight_msg_update_params"
 
 	DefaultWeightMsgDeposit        = 100
 	DefaultWeightMsgVote           = 67
 	DefaultWeightMsgVoteWeighted   = 33
 	DefaultWeightTextProposal      = 5
 	DefaultWeightMsgCancelProposal = 5
+	DefaultWeightMsgUpdateParams   = 5
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -51,6 +54,7 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		weightMsgVote           int
 		weightMsgVoteWeighted   int
 		weightMsgCancelProposal int
+		weightMsgUpdateParams   int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
@@ -74,6 +78,12 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelProposal, &weightMsgCancelProposal, nil,
 		func(_ *rand.Rand) {
 			weightMsgCancelProposal = DefaultWeightMsgCancelProposal
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
 		},
 	)
 
@@ -112,9 +122,21 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 			weightMsgCancelProposal,
 			SimulateMsgCancelProposal(ak, bk, k),
 		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateParams,
+			SimulateMsgUpdateParams(ak, k),
+		),
 	}
 
 	return append(wProposalOps, wGovOps...)
+}
+
+func SimulateMsgUpdateParams(ak types.AccountKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.OperationMsg{}, nil, nil
+	}
 }
 
 // SimulateMsgSubmitProposal simulates creating a msg Submit Proposal

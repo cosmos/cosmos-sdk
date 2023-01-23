@@ -25,11 +25,13 @@ const (
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
 	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
 	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
+	OpWeightMsgUpdateParams                = "op_weight_msg_update_params"
 
 	DefaultWeightMsgSetWithdrawAddress          int = 50
 	DefaultWeightMsgWithdrawDelegationReward    int = 50
 	DefaultWeightMsgWithdrawValidatorCommission int = 50
 	DefaultWeightMsgFundCommunityPool           int = 50
+	DefaultWeightMsgUpdateParams                int = 50
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -62,6 +64,13 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		},
 	)
 
+	var weightMsgUpdateParams int
+	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
+		},
+	)
+
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	txConfig := tx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), tx.DefaultSignModes)
 
@@ -81,6 +90,10 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(txConfig, ak, bk, k, sk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateParams,
+			SimulateMsgUpdateParams(ak, k),
 		),
 	}
 }
@@ -252,5 +265,13 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
+	}
+}
+
+func SimulateMsgUpdateParams(ak types.AccountKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.OperationMsg{}, nil, nil
 	}
 }

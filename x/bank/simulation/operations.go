@@ -20,17 +20,20 @@ import (
 //
 //nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgSend           = "op_weight_msg_send"
-	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
-	DefaultWeightMsgSend      = 100 // from simappparams.DefaultWeightMsgSend
-	DefaultWeightMsgMultiSend = 10  // from simappparams.DefaultWeightMsgMultiSend
+	OpWeightMsgSend              = "op_weight_msg_send"
+	OpWeightMsgMultiSend         = "op_weight_msg_multisend"
+	OpWeightMsgUpdateParams      = "op_weight_msg_update_params"
+	DefaultWeightMsgSend         = 100 // from simappparams.DefaultWeightMsgSend
+	DefaultWeightMsgMultiSend    = 10  // from simappparams.DefaultWeightMsgMultiSend
+	DefaultWeightMsgUpdateParams = 100
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
-	var weightMsgSend, weightMsgMultiSend int
+	var weightMsgSend, weightMsgMultiSend, weightMsgUpdateParams int
+
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
 			weightMsgSend = DefaultWeightMsgSend
@@ -43,6 +46,12 @@ func WeightedOperations(
 		},
 	)
 
+	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSend,
@@ -51,6 +60,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgMultiSend,
 			SimulateMsgMultiSend(ak, bk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateParams,
+			SimulateMsgUpdateParams(ak, bk),
 		),
 	}
 }
@@ -316,6 +329,14 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
 		}
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
+func SimulateMsgUpdateParams(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.OperationMsg{}, nil, nil
 	}
 }
 

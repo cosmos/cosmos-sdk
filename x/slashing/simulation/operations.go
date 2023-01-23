@@ -21,8 +21,11 @@ import (
 //
 //nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgUnjail      = "op_weight_msg_unjail"
-	DefaultWeightMsgUnjail = 100
+	OpWeightMsgUnjail       = "op_weight_msg_unjail"
+	OpWeightMsgUpdateParams = "op_weight_msg_update_params"
+
+	DefaultWeightMsgUnjail           = 100
+	DefaultWeightMsgUpdateParams int = 100
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -31,6 +34,7 @@ func WeightedOperations(
 	bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
+
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
 		func(_ *rand.Rand) {
@@ -38,10 +42,21 @@ func WeightedOperations(
 		},
 	)
 
+	var weightMsgUpdateParams int
+	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgUnjail,
 			SimulateMsgUnjail(codec.NewProtoCodec(interfaceRegistry), ak, bk, k, sk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgUpdateParams,
+			SimulateMsgUpdateParams(ak, k),
 		),
 	}
 }
@@ -136,5 +151,13 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
+	}
+}
+
+func SimulateMsgUpdateParams(ak types.AccountKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.OperationMsg{}, nil, nil
 	}
 }

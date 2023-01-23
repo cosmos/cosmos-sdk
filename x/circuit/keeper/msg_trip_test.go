@@ -4,15 +4,17 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTrip(t *testing.T) {
 	t.Skip("TODO: uncomment this after implementing")
-	gocuke.NewRunner(t, &authorizeSuite{}).Path("../features/msg_authorize.feature").Run()
+	gocuke.NewRunner(t, &tripSuite{}).Path("../features/msg_authorize.feature").Run()
 }
 
 type tripSuite struct {
-	t gocuke.TestingT
+	t   gocuke.TestingT
+	err error
 }
 
 func (s *tripSuite) HasPermission(a string, b string) {
@@ -28,11 +30,11 @@ func (s *tripSuite) AttemptsToTripCircuit(a string, b string, c gocuke.DocString
 }
 
 func (s *tripSuite) ExpectSuccess() {
-	panic("PENDING")
+	require.NoError(s.t, s.err)
 }
 
 func (s *tripSuite) ExpectAnError(a string) {
-	panic("PENDING")
+	require.EqualError(s.t, s.err, a)
 }
 
 func (s *tripSuite) ExpectThatHasNoPermissions(a string) {

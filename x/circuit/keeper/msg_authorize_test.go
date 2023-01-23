@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAuthorize(t *testing.T) {
@@ -12,7 +13,8 @@ func TestAuthorize(t *testing.T) {
 }
 
 type authorizeSuite struct {
-	t gocuke.TestingT
+	t   gocuke.TestingT
+	err error
 }
 
 func (s *authorizeSuite) HasPermission(a string, b string) {
@@ -28,11 +30,11 @@ func (s *authorizeSuite) AttemptsToGrantThePermissions(a string, b string, c goc
 }
 
 func (s *authorizeSuite) ExpectSuccess() {
-	panic("PENDING")
+	require.NoError(s.t, s.err)
 }
 
 func (s *authorizeSuite) ExpectAnError(a string) {
-	panic("PENDING")
+	require.Error(s.t, s.err)
 }
 
 func (s *authorizeSuite) ExpectThatHasNoPermissions(a string) {

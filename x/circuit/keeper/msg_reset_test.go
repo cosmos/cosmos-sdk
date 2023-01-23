@@ -4,15 +4,17 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReset(t *testing.T) {
 	t.Skip("TODO: uncomment this after implementing")
-	gocuke.NewRunner(t, &authorizeSuite{}).Path("../features/msg_authorize.feature").Run()
+	gocuke.NewRunner(t, &resetSuite{}).Path("../features/msg_authorize.feature").Run()
 }
 
 type resetSuite struct {
-	t gocuke.TestingT
+	t   gocuke.TestingT
+	err error
 }
 
 func (s *resetSuite) HasPermission(a string, b string) {
@@ -28,11 +30,11 @@ func (s *resetSuite) AttemptsToResetCircuit(a string, b string, c gocuke.DocStri
 }
 
 func (s *resetSuite) ExpectSuccess() {
-	panic("PENDING")
+	require.NoError(s.t, s.err)
 }
 
 func (s *resetSuite) ExpectAnError(a string) {
-	panic("PENDING")
+	require.EqualError(s.t, s.err, a)
 }
 
 func (s *resetSuite) ExpectThatHasNoPermissions(a string) {

@@ -1164,11 +1164,12 @@ func (s *E2ETestSuite) TestCLIMultisign() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
-	s.Require().NoError(err)
-
 	var balRes banktypes.QueryAllBalancesResponse
 	err = s.network.RetryForBlocks(func() error {
+		resp, err := clitestutil.QueryBalancesExec(val1.ClientCtx, addr)
+		if err != nil {
+			return err
+		}
 		return val1.ClientCtx.Codec.UnmarshalJSON(resp.Bytes(), &balRes)
 	}, 3)
 	s.Require().NoError(err)

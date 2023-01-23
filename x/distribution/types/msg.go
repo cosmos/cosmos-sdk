@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 )
 
 // distribution message types
@@ -199,3 +200,12 @@ func (msg MsgSetAutoRestake) Route() string { return ModuleName }
 
 // Type returns the MsgFundCommunityPool message type.
 func (msg MsgSetAutoRestake) Type() string { return TypeMsgSetAutoRestake }
+
+// GetSignBytes returns the raw bytes for a MsgSetAutoRestake message that
+// the expected signer needs to sign.
+func (msg MsgSetAutoRestake) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+var _ legacytx.LegacyMsg = (*MsgSetAutoRestake)(nil)

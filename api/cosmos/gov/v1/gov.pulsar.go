@@ -5370,6 +5370,8 @@ var (
 	fd_Params_threshold                 protoreflect.FieldDescriptor
 	fd_Params_veto_threshold            protoreflect.FieldDescriptor
 	fd_Params_min_initial_deposit_ratio protoreflect.FieldDescriptor
+	fd_Params_proposal_cancel_ratio     protoreflect.FieldDescriptor
+	fd_Params_proposal_cancel_dest      protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -5382,6 +5384,8 @@ func init() {
 	fd_Params_threshold = md_Params.Fields().ByName("threshold")
 	fd_Params_veto_threshold = md_Params.Fields().ByName("veto_threshold")
 	fd_Params_min_initial_deposit_ratio = md_Params.Fields().ByName("min_initial_deposit_ratio")
+	fd_Params_proposal_cancel_ratio = md_Params.Fields().ByName("proposal_cancel_ratio")
+	fd_Params_proposal_cancel_dest = md_Params.Fields().ByName("proposal_cancel_dest")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -5491,6 +5495,18 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.ProposalCancelRatio != "" {
+		value := protoreflect.ValueOfString(x.ProposalCancelRatio)
+		if !f(fd_Params_proposal_cancel_ratio, value) {
+			return
+		}
+	}
+	if x.ProposalCancelDest != "" {
+		value := protoreflect.ValueOfString(x.ProposalCancelDest)
+		if !f(fd_Params_proposal_cancel_dest, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -5520,6 +5536,10 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.VetoThreshold != ""
 	case "cosmos.gov.v1.Params.min_initial_deposit_ratio":
 		return x.MinInitialDepositRatio != ""
+	case "cosmos.gov.v1.Params.proposal_cancel_ratio":
+		return x.ProposalCancelRatio != ""
+	case "cosmos.gov.v1.Params.proposal_cancel_dest":
+		return x.ProposalCancelDest != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.Params"))
@@ -5550,6 +5570,10 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.VetoThreshold = ""
 	case "cosmos.gov.v1.Params.min_initial_deposit_ratio":
 		x.MinInitialDepositRatio = ""
+	case "cosmos.gov.v1.Params.proposal_cancel_ratio":
+		x.ProposalCancelRatio = ""
+	case "cosmos.gov.v1.Params.proposal_cancel_dest":
+		x.ProposalCancelDest = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.Params"))
@@ -5590,6 +5614,12 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "cosmos.gov.v1.Params.min_initial_deposit_ratio":
 		value := x.MinInitialDepositRatio
 		return protoreflect.ValueOfString(value)
+	case "cosmos.gov.v1.Params.proposal_cancel_ratio":
+		value := x.ProposalCancelRatio
+		return protoreflect.ValueOfString(value)
+	case "cosmos.gov.v1.Params.proposal_cancel_dest":
+		value := x.ProposalCancelDest
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.Params"))
@@ -5626,6 +5656,10 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.VetoThreshold = value.Interface().(string)
 	case "cosmos.gov.v1.Params.min_initial_deposit_ratio":
 		x.MinInitialDepositRatio = value.Interface().(string)
+	case "cosmos.gov.v1.Params.proposal_cancel_ratio":
+		x.ProposalCancelRatio = value.Interface().(string)
+	case "cosmos.gov.v1.Params.proposal_cancel_dest":
+		x.ProposalCancelDest = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.Params"))
@@ -5670,6 +5704,10 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field veto_threshold of message cosmos.gov.v1.Params is not mutable"))
 	case "cosmos.gov.v1.Params.min_initial_deposit_ratio":
 		panic(fmt.Errorf("field min_initial_deposit_ratio of message cosmos.gov.v1.Params is not mutable"))
+	case "cosmos.gov.v1.Params.proposal_cancel_ratio":
+		panic(fmt.Errorf("field proposal_cancel_ratio of message cosmos.gov.v1.Params is not mutable"))
+	case "cosmos.gov.v1.Params.proposal_cancel_dest":
+		panic(fmt.Errorf("field proposal_cancel_dest of message cosmos.gov.v1.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.Params"))
@@ -5699,6 +5737,10 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 	case "cosmos.gov.v1.Params.veto_threshold":
 		return protoreflect.ValueOfString("")
 	case "cosmos.gov.v1.Params.min_initial_deposit_ratio":
+		return protoreflect.ValueOfString("")
+	case "cosmos.gov.v1.Params.proposal_cancel_ratio":
+		return protoreflect.ValueOfString("")
+	case "cosmos.gov.v1.Params.proposal_cancel_dest":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -5799,6 +5841,14 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.ProposalCancelRatio)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ProposalCancelDest)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -5827,6 +5877,20 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ProposalCancelDest) > 0 {
+			i -= len(x.ProposalCancelDest)
+			copy(dAtA[i:], x.ProposalCancelDest)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ProposalCancelDest)))
+			i--
+			dAtA[i] = 0x4a
+		}
+		if len(x.ProposalCancelRatio) > 0 {
+			i -= len(x.ProposalCancelRatio)
+			copy(dAtA[i:], x.ProposalCancelRatio)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ProposalCancelRatio)))
+			i--
+			dAtA[i] = 0x42
 		}
 		if len(x.MinInitialDepositRatio) > 0 {
 			i -= len(x.MinInitialDepositRatio)
@@ -6182,6 +6246,70 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.MinInitialDepositRatio = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalCancelRatio", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ProposalCancelRatio = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 9:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalCancelDest", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ProposalCancelDest = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -6914,6 +7042,15 @@ type Params struct {
 	VetoThreshold string `protobuf:"bytes,6,opt,name=veto_threshold,json=vetoThreshold,proto3" json:"veto_threshold,omitempty"`
 	// The ratio representing the proportion of the deposit value that must be paid at proposal submission.
 	MinInitialDepositRatio string `protobuf:"bytes,7,opt,name=min_initial_deposit_ratio,json=minInitialDepositRatio,proto3" json:"min_initial_deposit_ratio,omitempty"`
+	// The cancel ratio which will not be returned back to the depositors when a proposal is cancelled.
+	//
+	// Since: cosmos-sdk 0.48
+	ProposalCancelRatio string `protobuf:"bytes,8,opt,name=proposal_cancel_ratio,json=proposalCancelRatio,proto3" json:"proposal_cancel_ratio,omitempty"`
+	// The address which will receive (proposal_cancel_ratio * deposit) proposal deposits.
+	// If empty, the (proposal_cancel_ratio * deposit) proposal deposits will be burned.
+	//
+	// Since: cosmos-sdk 0.48
+	ProposalCancelDest string `protobuf:"bytes,9,opt,name=proposal_cancel_dest,json=proposalCancelDest,proto3" json:"proposal_cancel_dest,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -6981,6 +7118,20 @@ func (x *Params) GetVetoThreshold() string {
 func (x *Params) GetMinInitialDepositRatio() string {
 	if x != nil {
 		return x.MinInitialDepositRatio
+	}
+	return ""
+}
+
+func (x *Params) GetProposalCancelRatio() string {
+	if x != nil {
+		return x.ProposalCancelRatio
+	}
+	return ""
+}
+
+func (x *Params) GetProposalCancelDest() string {
+	if x != nil {
+		return x.ProposalCancelDest
 	}
 	return ""
 }
@@ -7118,7 +7269,7 @@ var file_cosmos_gov_v1_gov_proto_rawDesc = []byte{
 	0x65, 0x74, 0x6f, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20,
 	0x01, 0x28, 0x09, 0x42, 0x0e, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x44, 0x65, 0x63, 0x52, 0x0d, 0x76, 0x65, 0x74, 0x6f, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f,
-	0x6c, 0x64, 0x22, 0xbc, 0x03, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x45, 0x0a,
+	0x6c, 0x64, 0x22, 0xcc, 0x04, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x45, 0x0a,
 	0x0b, 0x6d, 0x69, 0x6e, 0x5f, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x18, 0x01, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
 	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x09, 0xc8,
@@ -7146,7 +7297,16 @@ var file_cosmos_gov_v1_gov_proto_rawDesc = []byte{
 	0x74, 0x69, 0x6f, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x42, 0x0e, 0xd2, 0xb4, 0x2d, 0x0a, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x16, 0x6d, 0x69, 0x6e, 0x49, 0x6e,
 	0x69, 0x74, 0x69, 0x61, 0x6c, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x61, 0x74, 0x69,
-	0x6f, 0x2a, 0x89, 0x01, 0x0a, 0x0a, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
+	0x6f, 0x12, 0x42, 0x0a, 0x15, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x63, 0x61,
+	0x6e, 0x63, 0x65, 0x6c, 0x5f, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x0e, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63,
+	0x52, 0x13, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c,
+	0x52, 0x61, 0x74, 0x69, 0x6f, 0x12, 0x4a, 0x0a, 0x14, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
+	0x6c, 0x5f, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18, 0x09, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x12, 0x70,
+	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x44, 0x65, 0x73,
+	0x74, 0x2a, 0x89, 0x01, 0x0a, 0x0a, 0x56, 0x6f, 0x74, 0x65, 0x4f, 0x70, 0x74, 0x69, 0x6f, 0x6e,
 	0x12, 0x1b, 0x0a, 0x17, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f,
 	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x13, 0x0a,
 	0x0f, 0x56, 0x4f, 0x54, 0x45, 0x5f, 0x4f, 0x50, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x59, 0x45, 0x53,

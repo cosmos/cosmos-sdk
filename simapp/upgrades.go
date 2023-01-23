@@ -27,6 +27,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 			// dedicated x/consensus module.
 			baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
 
+			// Note: this migration is optional,
+			// You can include x/gov proposal migration documented at [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md)
+
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)

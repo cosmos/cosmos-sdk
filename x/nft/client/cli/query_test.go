@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
 )
 
 func (s *CLITestSuite) TestQueryClass() {

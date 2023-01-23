@@ -126,7 +126,8 @@ This means the Cosmos SDK's core module interfaces will need to be updated to
 reflect these parameters. The easiest and most straightforward way to achieve
 this is to just pass `RequestFinalizeBlock` to `BeginBlock` and `EndBlock`.
 Alternatively, we can create dedicated proxy types in the SDK that reflect these
-legacy ABCI types, e.g. `LegacyBeginBlockRequest` and `LegacyEndBlockRequest`.
+legacy ABCI types, e.g. `LegacyBeginBlockRequest` and `LegacyEndBlockRequest`. Or,
+we can come up with new types and names altogether.
 
 ```go
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {

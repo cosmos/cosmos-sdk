@@ -27,9 +27,9 @@ func TestDecodeStore(t *testing.T) {
 
 	endTime := time.Now().UTC()
 	content := types.ContentFromProposalType("test", "test", types.ProposalTypeText)
-	proposalA, err := types.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour))
+	proposalA, err := types.NewProposal(content, 1, endTime, endTime.Add(24*time.Hour), false)
 	require.NoError(t, err)
-	proposalB, err := types.NewProposal(content, 2, endTime, endTime.Add(24*time.Hour))
+	proposalB, err := types.NewProposal(content, 2, endTime, endTime.Add(24*time.Hour), false)
 	require.NoError(t, err)
 
 	proposalIDBz := make([]byte, 8)

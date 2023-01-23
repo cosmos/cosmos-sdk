@@ -19,13 +19,14 @@ func TestParamChanges(t *testing.T) {
 		simValue    string
 		subspace    string
 	}{
-		{"gov/votingparams", "votingparams", "{\"voting_period\": \"82639000000000\"}", "gov"},
-		{"gov/depositparams", "depositparams", "{\"max_deposit_period\": \"47332000000000\"}", "gov"},
-		{"gov/tallyparams", "tallyparams", "{\"threshold\":\"0.509000000000000000\"}", "gov"},
+		{"gov/votingparams", "votingparams", "{\"voting_period\": \"251681000000000\"}", "gov"},
+		{"gov/votingparams", "votingparams", "{\"expedited_voting_period\": \"53176000000000\"}", "gov"},
+		{"gov/depositparams", "depositparams", "{\"max_deposit_period\": \"153577000000000\"}", "gov"},
+		{"gov/tallyparams", "tallyparams", "{\"quorum\":\"0.429000000000000000\",\"veto\":\"0.323000000000000000\"}", "gov"},
 	}
 
 	paramChanges := simulation.ParamChanges(r)
-	require.Len(t, paramChanges, 3)
+	require.Len(t, paramChanges, 4)
 
 	for i, p := range paramChanges {
 

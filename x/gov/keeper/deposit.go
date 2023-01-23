@@ -130,7 +130,8 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
 
-	if proposal.Status == types.StatusDepositPeriod && proposal.TotalDeposit.IsAllGTE(keeper.GetDepositParams(ctx).MinDeposit) {
+	minDepositAmount := proposal.GetMinDepositFromParams(keeper.GetDepositParams(ctx))
+	if proposal.Status == types.StatusDepositPeriod && proposal.TotalDeposit.IsAllGTE(minDepositAmount) {
 		keeper.ActivateVotingPeriod(ctx, proposal)
 
 		activatedVotingPeriod = true

@@ -1,5 +1,3 @@
 package client
 
-var (
-	SelectHeight = selectHeight
-)
+var SelectHeight = selectHeight

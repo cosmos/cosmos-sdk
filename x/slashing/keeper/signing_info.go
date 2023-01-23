@@ -40,7 +40,8 @@ func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 
 // IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
 func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
-	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool)) {
+	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
+) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
 	defer iter.Close()

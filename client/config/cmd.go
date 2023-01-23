@@ -3,9 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

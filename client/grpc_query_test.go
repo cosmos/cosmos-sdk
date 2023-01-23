@@ -3,9 +3,10 @@ package client_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"

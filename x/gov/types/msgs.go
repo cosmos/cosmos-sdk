@@ -44,11 +44,11 @@ func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sd
 // NewMsgSubmitProposalWithExpedited creates a new MsgSubmitProposal. It can optionally be used to create an expedited proposal
 //
 //nolint:interfacer
-func NewMsgSubmitProposalWithExpedited(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress, IsExpedited bool) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposalWithExpedited(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress, isExpedited bool) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
-		IsExpedited:    IsExpedited,
+		IsExpedited:    isExpedited,
 	}
 	err := m.SetContent(content)
 	if err != nil {

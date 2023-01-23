@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.18
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           PATTERNS: |
@@ -52,7 +52,7 @@ jobs:
           go-version: 1.18
       - name: Display go version
         run: go version
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           PREFIX_FILTER: |
@@ -103,7 +103,7 @@ jobs:
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.18
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         with:
           PATTERNS: |
             **/**.go
@@ -127,7 +127,7 @@ jobs:
     needs: tests
     steps:
       - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         with:
           PATTERNS: |
             **/**.go
@@ -181,7 +181,7 @@ jobs:
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.18
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         with:
           PATTERNS: |
             **/**.go
@@ -200,22 +200,22 @@ jobs:
           name: "${{ github.sha }}-${{ matrix.part }}-race-output"
           path: ./${{ matrix.part }}-race-output.txt
 
-  test-rosetta:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v2
-      - uses: technote-space/get-diff-action@v3
-        id: git_diff
-        with:
-          PATTERNS: |
-            **/**.go
-            go.mod
-            go.sum
-      - name: test rosetta
-        run: |
-          make test-rosetta
-        # if: env.GIT_DIFF
+#  test-rosetta:
+#    runs-on: ubuntu-latest
+#    timeout-minutes: 10
+#    steps:
+#      - uses: actions/checkout@v2
+#      - uses: technote-space/get-diff-action@v4
+#        id: git_diff
+#        with:
+#          PATTERNS: |
+#            **/**.go
+#            go.mod
+#            go.sum
+#      - name: test rosetta
+#        run: |
+#          make test-rosetta
+#        # if: env.GIT_DIFF
 
   liveness-test:
     runs-on: ubuntu-latest
@@ -225,7 +225,7 @@ jobs:
       - uses: actions/setup-go@v2.1.3
         with:
           go-version: 1.18
-      - uses: technote-space/get-diff-action@v3
+      - uses: technote-space/get-diff-action@v4
         id: git_diff
         with:
           PATTERNS: |

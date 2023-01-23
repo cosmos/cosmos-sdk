@@ -13,10 +13,12 @@ import (
 )
 
 const (
-	keyCommunityTax        = "communitytax"
-	keyBaseProposerReward  = "baseproposerreward"
-	keyBonusProposerReward = "bonusproposerreward"
-	keySecretFoundationTax = "secretfoundationtax"
+	keyCommunityTax            = "communitytax"
+	keyBaseProposerReward      = "baseproposerreward"
+	keyBonusProposerReward     = "bonusproposerreward"
+	keySecretFoundationTax     = "secretfoundationtax"
+	keyMinimumRestakeThreshold = "minimumrestakethreshold"
+	keyRestakePeriod           = "restakeperiod"
 )
 
 // ParamChanges defines the parameters that can be modified by param change proposals
@@ -41,6 +43,18 @@ func ParamChanges(r *rand.Rand) []simtypes.ParamChange {
 		simulation.NewSimParamChange(types.ModuleName, keyBonusProposerReward,
 			func(r *rand.Rand) string {
 				return fmt.Sprintf("\"%s\"", GenBonusProposerReward(r))
+			},
+		),
+
+		simulation.NewSimParamChange(types.ModuleName, keyMinimumRestakeThreshold,
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenMinimumRestakeThreshold(r))
+			},
+		),
+
+		simulation.NewSimParamChange(types.ModuleName, keyRestakePeriod,
+			func(r *rand.Rand) string {
+				return fmt.Sprintf("\"%s\"", GenRestakePeriod(r))
 			},
 		),
 	}

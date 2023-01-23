@@ -33,10 +33,8 @@ func VerifySignature(pubKey cryptotypes.PubKey, signerData SignerData, sigData s
 			if !secp256k1PubKey.VerifySignatureEip191(signBytes, data.Signature) {
 				return fmt.Errorf("unable to verify single signer eip191 signature %s for signBytes %s", hex.EncodeToString(data.Signature), hex.EncodeToString(signBytes))
 			}
-		} else {
-			if !pubKey.VerifySignature(signBytes, data.Signature) {
-				return fmt.Errorf("unable to verify single signer signature %s for signBytes %s", hex.EncodeToString(data.Signature), hex.EncodeToString(signBytes))
-			}
+		} else if !pubKey.VerifySignature(signBytes, data.Signature) {
+			return fmt.Errorf("unable to verify single signer signature %s for signBytes %s", hex.EncodeToString(data.Signature), hex.EncodeToString(signBytes))
 		}
 		return nil
 

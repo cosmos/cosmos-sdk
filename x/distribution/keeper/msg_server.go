@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/armon/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"

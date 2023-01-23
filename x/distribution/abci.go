@@ -34,9 +34,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	}
 
 	restakeFunc := func(delegator sdk.AccAddress, validator sdk.ValAddress) (stop bool) {
-
 		err := k.PerformRestake(ctx, delegator, validator)
-
 		if err != nil {
 			k.Logger(ctx).Info(fmt.Sprintf("Err: %s, Failed to perform restake for delegator-validator %s - %s", err, delegator, validator))
 		}

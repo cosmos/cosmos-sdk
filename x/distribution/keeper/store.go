@@ -392,9 +392,9 @@ func (k Keeper) IterateRestakeEntries(ctx sdk.Context, handler func(delegator sd
 	for ; iter.Valid(); iter.Next() {
 
 		key := iter.Key()
-		//k.Logger(ctx).Info(fmt.Sprintf("from iter - %s", hex.EncodeToString(key)))
+		// k.Logger(ctx).Info(fmt.Sprintf("from iter - %s", hex.EncodeToString(key)))
 		delegator, validator := addressesFromRestakeKeyStore(key)
-		//k.Logger(ctx).Info(fmt.Sprintf("from iter - %s %s - %s", delegator, validator, hex.EncodeToString(key)))
+		// k.Logger(ctx).Info(fmt.Sprintf("from iter - %s %s - %s", delegator, validator, hex.EncodeToString(key)))
 
 		if handler(delegator, validator) {
 			staleKeys = append(staleKeys,

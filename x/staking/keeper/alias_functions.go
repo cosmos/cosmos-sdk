@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -109,8 +110,8 @@ func (k Keeper) GetValidatorSet() types.ValidatorSet {
 // )
 // Delegation get the delegation interface for a particular set of delegator and validator addresses
 func (k Keeper) DoDelegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int,
-	tokenSrc types.BondStatus, validator types.ValidatorI, subtractAccount bool) (newShares sdk.Dec, err error) {
-
+	tokenSrc types.BondStatus, validator types.ValidatorI, subtractAccount bool,
+) (newShares sdk.Dec, err error) {
 	address := validator.GetOperator()
 
 	val, found := k.GetValidator(ctx, address)

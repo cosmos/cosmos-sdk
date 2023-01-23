@@ -2,9 +2,10 @@ package grpc
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	"net"
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/server/config"
 
 	"google.golang.org/grpc"
 

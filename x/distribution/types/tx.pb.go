@@ -608,6 +608,8 @@ type MsgClient interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(ctx context.Context, in *MsgFundCommunityPool, opts ...grpc.CallOption) (*MsgFundCommunityPoolResponse, error)
+	// SetAutoRestake enables or disables automatic restaking for a delegator
+	// validator pair
 	SetAutoRestake(ctx context.Context, in *MsgSetAutoRestake, opts ...grpc.CallOption) (*MsgSetAutoRestakeResponse, error)
 }
 
@@ -678,6 +680,8 @@ type MsgServer interface {
 	// FundCommunityPool defines a method to allow an account to directly
 	// fund the community pool.
 	FundCommunityPool(context.Context, *MsgFundCommunityPool) (*MsgFundCommunityPoolResponse, error)
+	// SetAutoRestake enables or disables automatic restaking for a delegator
+	// validator pair
 	SetAutoRestake(context.Context, *MsgSetAutoRestake) (*MsgSetAutoRestakeResponse, error)
 }
 

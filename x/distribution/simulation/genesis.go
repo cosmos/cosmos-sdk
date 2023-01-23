@@ -5,8 +5,9 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"math/rand"
+
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -21,6 +22,7 @@ const (
 	WithdrawEnabled         = "withdraw_enabled"
 	FoundationTax           = "foundation_tax"
 	MinimumRestakeThreshold = "minimum_restake_threshold"
+	RestakePeriod           = "restake_period"
 )
 
 // GenSecretFoundationTax returns a randomized secret foundation tax parameter.
@@ -31,6 +33,11 @@ func GenSecretFoundationTax(r *rand.Rand) sdk.Dec {
 // GenMinimumRestakeThreshold returns a randomized restake threshold.
 func GenMinimumRestakeThreshold(r *rand.Rand) sdk.Dec {
 	return sdk.NewDec(int64(r.Intn(100_000_000)))
+}
+
+// GenMinimumRestakeThreshold returns a randomized restake threshold.
+func GenRestakePeriod(r *rand.Rand) sdk.Int {
+	return sdk.NewInt(int64(r.Intn(100_000_000)))
 }
 
 // GenCommunityTax randomized CommunityTax
@@ -90,6 +97,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { restakeThreshold = GenMinimumRestakeThreshold(r) },
 	)
 
+	var restakePeriod sdk.Int
+	simState.AppParams.GetOrGenerate(
+		simState.Cdc, RestakePeriod, &restakePeriod, simState.Rand,
+		func(r *rand.Rand) { restakePeriod = GenRestakePeriod(r) },
+	)
+
 	foundationTaxAcc, _ := simulation.RandomAcc(simState.Rand, simState.Accounts)
 
 	distrGenesis := types.GenesisState{
@@ -102,6 +115,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			BonusProposerReward:     bonusProposerReward,
 			WithdrawAddrEnabled:     withdrawEnabled,
 			MinimumRestakeThreshold: restakeThreshold,
+			RestakePeriod:           restakePeriod,
 		},
 	}
 

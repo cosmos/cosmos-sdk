@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -47,7 +47,6 @@ func makeSignDocCmd() func(cmd *cobra.Command, args []string) error {
 
 		keybase := tx.NewFactoryCLI(ctx, cmd.Flags()).Keybase()
 		sig, err := signStdSignDoc(ctx, keybase, doc)
-
 		if err != nil {
 			return err
 		}
@@ -60,7 +59,7 @@ func makeSignDocCmd() func(cmd *cobra.Command, args []string) error {
 		}
 
 		fp, err := os.OpenFile(
-			viper.GetString(flags.FlagOutputDocument), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644,
+			viper.GetString(flags.FlagOutputDocument), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644,
 		)
 		if err != nil {
 			return err
@@ -78,9 +77,9 @@ func readStdSignDocFromFile(filename string) (doc legacytx.StdSignDoc, err error
 	var bytes []byte
 
 	if filename == "-" {
-		bytes, err = ioutil.ReadAll(os.Stdin)
+		bytes, err = io.ReadAll(os.Stdin)
 	} else {
-		bytes, err = ioutil.ReadFile(filename)
+		bytes, err = os.ReadFile(filename)
 	}
 
 	if err != nil {

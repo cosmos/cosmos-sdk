@@ -354,7 +354,6 @@ $ %s query distribution restake-entries secret1xnjxbsdbsbfsbdfbshdfbhsdfhsfdh
 			}
 
 			res, err := queryClient.RestakingEntries(cmd.Context(), &req)
-
 			if err != nil {
 				return err
 			}

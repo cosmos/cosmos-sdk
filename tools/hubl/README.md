@@ -43,7 +43,7 @@ hubl --init [chain-name]
 hubl --init regen
 ```
 
-The chain configuration is stored in `~/.hubl/config.json`.
+The chain configuration is stored in `~/.hubl/config.toml`.
 
 :::tip
 

@@ -2,14 +2,14 @@ package ledger
 
 import (
 	"fmt"
+	"math/big"
 	"os"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/pkg/errors"
 
-	tmbtcec "github.com/tendermint/btcd/btcec"
-
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
@@ -173,8 +173,22 @@ func convertDERtoBER(signatureDER []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	sigBER := tmbtcec.Signature{R: sigDER.R, S: sigDER.S}
-	return sigBER.Serialize(), nil
+
+	// based on https://github.com/tendermint/btcd/blob/ec996c5/btcec/signature.go#L33-L50
+	// low 'S' malleability breaker
+	sigS := sigDER.S
+	if keys.IsOverHalfOrder(sigS) {
+		sigS = new(big.Int).Sub(btcec.S256().N, sigS)
+	}
+
+	rBytes := sigDER.R.Bytes()
+	sBytes := sigS.Bytes()
+	sigBytes := make([]byte, 64)
+	// 0 pad the byte arrays from the left if they aren't big enough.
+	copy(sigBytes[32-len(rBytes):32], rBytes)
+	copy(sigBytes[64-len(sBytes):64], sBytes)
+
+	return sigBytes, nil
 }
 
 func getDevice() (SECP256K1, error) {

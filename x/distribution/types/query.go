@@ -41,3 +41,8 @@ func NewDelegationDelegatorReward(valAddr sdk.ValAddress,
 ) DelegationDelegatorReward {
 	return DelegationDelegatorReward{ValidatorAddress: valAddr.String(), Reward: reward}
 }
+
+// NewRestakingEntriesResponse constructs a QueryRestakeEntriesResponse
+func NewRestakingEntriesResponse(validators []string) QueryRestakeEntriesResponse {
+	return QueryRestakeEntriesResponse{Validators: validators}
+}

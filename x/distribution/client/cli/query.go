@@ -31,6 +31,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryValidatorSlashes(),
 		GetCmdQueryDelegatorRewards(),
 		GetCmdQueryCommunityPool(),
+		GetAutoRestakeEntries(),
 	)
 
 	return distQueryCmd
@@ -308,6 +309,52 @@ $ %s query distribution community-pool
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.CommunityPool(cmd.Context(), &types.QueryCommunityPoolRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+// GetAutoRestakeEntries returns the command for fetching community pool info.
+func GetAutoRestakeEntries() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "restake-entries [delegator]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Query all the validators for which this delegator is auto re-staking",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query all the validators for which this delegator is auto re-staking.
+
+Example:
+$ %s query distribution restake-entries secret1xnjxbsdbsbfsbdfbshdfbhsdfhsfdh
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// this is just here to validate the parameter
+			_, err = sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			req := types.QueryRestakeEntriesRequest{
+				Delegator: args[0],
+			}
+
+			res, err := queryClient.RestakingEntries(cmd.Context(), &req)
+
 			if err != nil {
 				return err
 			}

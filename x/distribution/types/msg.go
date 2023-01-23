@@ -11,6 +11,7 @@ const (
 	TypeMsgWithdrawDelegatorReward     = "withdraw_delegator_reward"
 	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
 	TypeMsgFundCommunityPool           = "fund_community_pool"
+	TypeMsgSetAutoRestake              = "set_auto_restake"
 )
 
 // Verify interface at compile time
@@ -164,3 +165,37 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 
 	return nil
 }
+
+// NewMsgFundCommunityPool returns a new MsgFundCommunityPool with a sender and
+// a funding amount.
+func NewMsgSetAutoRestake(delegator sdk.AccAddress, validator sdk.ValAddress, toggle bool) *MsgSetAutoRestake {
+	return &MsgSetAutoRestake{
+		delegator.String(),
+		validator.String(),
+		toggle,
+	}
+}
+
+func (msg MsgSetAutoRestake) ValidateBasic() error {
+	if msg.ValidatorAddress == "" {
+		return ErrEmptyValidatorAddr
+	}
+	if msg.DelegatorAddress == "" {
+		return ErrEmptyDelegatorAddr
+	}
+	return nil
+}
+
+func (msg MsgSetAutoRestake) GetSigners() []sdk.AccAddress {
+	delegatorAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegatorAddr}
+}
+
+// Route returns the MsgFundCommunityPool message route.
+func (msg MsgSetAutoRestake) Route() string { return ModuleName }
+
+// Type returns the MsgFundCommunityPool message type.
+func (msg MsgSetAutoRestake) Type() string { return TypeMsgSetAutoRestake }

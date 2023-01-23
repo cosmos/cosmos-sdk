@@ -51,9 +51,17 @@ type StakingKeeper interface {
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 
+	// BondDenom gets the denom used for bondage
+	BondDenom(ctx sdk.Context) string
+
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
 	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
+
+	DoDelegate(
+		sdk.Context, sdk.AccAddress, sdk.Int, stakingtypes.BondStatus,
+		stakingtypes.ValidatorI, bool,
+	) (sdk.Dec, error)
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32

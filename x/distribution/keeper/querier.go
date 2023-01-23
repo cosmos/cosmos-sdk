@@ -44,6 +44,15 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryFoundationTax:
 			return queryFoundationTax(ctx, path[1:], req, k, legacyQuerierCdc)
 
+		case types.QueryMinimumRestakeThreshold:
+			return queryMinimumRestakeThreshold(ctx, path[1:], req, k, legacyQuerierCdc)
+
+		case types.QueryRestakeEntriesForDelegator:
+			return queryRestakeEntriesForDelegator(ctx, path[1:], req, k, legacyQuerierCdc)
+
+		case types.QueryRestakePeriod:
+			return queryRestakePeriod(ctx, path[1:], req, k, legacyQuerierCdc)
+
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown query path: %s", path[0])
 		}
@@ -275,6 +284,47 @@ func queryFoundationTax(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keep
 	}
 
 	bz, err := legacyQuerierCdc.MarshalJSON(resp)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryMinimumRestakeThreshold(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	amount := k.GetMinimumRestakeThreshold(ctx)
+	bz, err := legacyQuerierCdc.MarshalJSON(amount)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryRestakeEntriesForDelegator(ctx sdk.Context, _ []string, req abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	var params types.QueryRestakeEntriesRequest
+	err := legacyQuerierCdc.UnmarshalJSON(req.Data, &params)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
+	}
+
+	addr, err := sdk.AccAddressFromBech32(params.Delegator)
+
+	validators := k.GetRestakeValidatorsForDelegator(ctx, addr)
+
+	resp := types.NewRestakingEntriesResponse(validators)
+
+	bz, err := legacyQuerierCdc.MarshalJSON(resp)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+func queryRestakePeriod(ctx sdk.Context, _ []string, _ abci.RequestQuery, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	amount := k.GetRestakePeriod(ctx)
+	bz, err := legacyQuerierCdc.MarshalJSON(amount)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 	}

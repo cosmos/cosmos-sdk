@@ -1,6 +1,7 @@
 package distribution
 
 import (
+	"fmt"
 	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -30,6 +31,21 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	if ctx.BlockHeight() > 1 {
 		previousProposer := k.GetPreviousProposerConsAddr(ctx)
 		k.AllocateTokens(ctx, sumPreviousPrecommitPower, previousTotalPower, previousProposer, req.LastCommitInfo.GetVotes())
+	}
+
+	restakeFunc := func(delegator sdk.AccAddress, validator sdk.ValAddress) (stop bool) {
+
+		err := k.PerformRestake(ctx, delegator, validator)
+
+		if err != nil {
+			k.Logger(ctx).Info(fmt.Sprintf("Err: %s, Failed to perform restake for delegator-validator %s - %s", err, delegator, validator))
+		}
+
+		return err != nil
+	}
+
+	if ctx.BlockHeight()%k.GetRestakePeriod(ctx).Int64() == 0 {
+		k.IterateRestakeEntries(ctx, restakeFunc)
 	}
 
 	// record the proposer for when we payout on the next block

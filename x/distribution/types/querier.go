@@ -16,6 +16,9 @@ const (
 	QueryWithdrawAddr                = "withdraw_addr"
 	QueryCommunityPool               = "community_pool"
 	QueryFoundationTax               = "foundation_tax"
+	QueryMinimumRestakeThreshold     = "restake_threshold"
+	QueryRestakeEntriesForDelegator  = "restake_entries"
+	QueryRestakePeriod               = "restake_period"
 )
 
 // params for query 'custom/distr/validator_outstanding_rewards'
@@ -98,12 +101,4 @@ func NewQueryDelegatorWithdrawAddrParams(delegatorAddr sdk.AccAddress) QueryDele
 type FoundationTaxResponseParams struct {
 	FoundationAddress sdk.AccAddress `json:"foundation_address" yaml:"foundation_address"`
 	Tax               sdk.Dec        `json:"tax" yaml:"tax"`
-}
-
-// creates a new instance of FoundationTaxResponseParams
-func NewFoundationTaxResponseParams(address sdk.AccAddress, tax sdk.Dec) FoundationTaxResponseParams {
-	return FoundationTaxResponseParams{
-		FoundationAddress: address,
-		Tax:               tax,
-	}
 }

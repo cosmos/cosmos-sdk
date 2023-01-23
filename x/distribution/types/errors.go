@@ -18,4 +18,6 @@ var (
 	ErrEmptyProposalRecipient  = sdkerrors.Register(ModuleName, 11, "invalid community pool spend proposal recipient")
 	ErrNoValidatorExists       = sdkerrors.Register(ModuleName, 12, "validator does not exist")
 	ErrNoDelegationExists      = sdkerrors.Register(ModuleName, 13, "delegation does not exist")
+
+	ErrNotEnoughStakeForAuto = sdkerrors.Register(ModuleName, 201, "Not enough stake for auto-restaking")
 )

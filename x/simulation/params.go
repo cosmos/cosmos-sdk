@@ -86,39 +86,39 @@ func RandomParams(r *rand.Rand) Params {
 	}
 }
 
-// Param change proposals
+// Legacy param change proposals
 
-// ParamChange defines the object used for simulating parameter change proposals
-type ParamChange struct {
+// LegacyParamChange defines the object used for simulating parameter change proposals
+type LegacyParamChange struct {
 	subspace string
 	key      string
 	simValue simulation.SimValFn
 }
 
-func (spc ParamChange) Subspace() string {
+func (spc LegacyParamChange) Subspace() string {
 	return spc.subspace
 }
 
-func (spc ParamChange) Key() string {
+func (spc LegacyParamChange) Key() string {
 	return spc.key
 }
 
-func (spc ParamChange) SimValue() simulation.SimValFn {
+func (spc LegacyParamChange) SimValue() simulation.SimValFn {
 	return spc.simValue
 }
 
-// NewSimParamChange creates a new ParamChange instance
-func NewSimParamChange(subspace, key string, simVal simulation.SimValFn) simulation.ParamChange {
-	return ParamChange{
+// ComposedKey creates a new composed key for the legacy param change proposal
+func (spc LegacyParamChange) ComposedKey() string {
+	return spc.Subspace() + "/" + spc.Key()
+}
+
+// NewSimLegacyParamChange creates a new LegacyParamChange instance
+func NewSimLegacyParamChange(subspace, key string, simVal simulation.SimValFn) simulation.LegacyParamChange {
+	return LegacyParamChange{
 		subspace: subspace,
 		key:      key,
 		simValue: simVal,
 	}
-}
-
-// ComposedKey creates a new composed key for the param change proposal
-func (spc ParamChange) ComposedKey() string {
-	return spc.Subspace() + "/" + spc.Key()
 }
 
 // Proposal Contents

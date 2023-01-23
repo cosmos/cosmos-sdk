@@ -12,13 +12,13 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-func TestParamChange(t *testing.T) {
+func TestLegacyParamChange(t *testing.T) {
 	subspace, key := "theSubspace", "key"
 	f := func(r *rand.Rand) string {
 		return "theResult"
 	}
 
-	pChange := NewSimParamChange(subspace, key, f)
+	pChange := NewSimLegacyParamChange(subspace, key, f)
 
 	require.Equal(t, subspace, pChange.Subspace())
 	require.Equal(t, key, pChange.Key())

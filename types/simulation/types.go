@@ -31,7 +31,7 @@ type Content interface {
 
 type SimValFn func(r *rand.Rand) string
 
-type ParamChange interface {
+type LegacyParamChange interface {
 	Subspace() string
 	Key() string
 	SimValue() SimValFn

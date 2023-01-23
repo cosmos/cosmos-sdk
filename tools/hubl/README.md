@@ -11,7 +11,6 @@ It takes advantage of the new [AutoCLI](https://pkg.go.dev/github.com/cosmos/cos
 
 Hubl can be installed using `go install`:
 
-
 ```shell
 go install cosmossdk.io/tools/hubl/cmd/hubl@latest
 ```

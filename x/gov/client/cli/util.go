@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type legacyProposal struct {
@@ -112,4 +115,36 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.C
 	}
 
 	return msgs, proposal.Metadata, deposit, nil
+}
+
+// AddGovPropFlagsToCmd adds flags for defining MsgSubmitProposal fields.
+func AddGovPropFlagsToCmd(cmd *cobra.Command) {
+	cmd.Flags().String(FlagDeposit, "", "The deposit to include with the governance proposal")
+	cmd.Flags().String(FlagMetadata, "", "The metadata to include with the governance proposal")
+}
+
+// ReadGovPropFlags parses a MsgSubmitProposal from the provided context and flags.
+// Setting the messages is up to the caller.
+func ReadGovPropFlags(clientCtx client.Context, flagSet *pflag.FlagSet) (*govv1.MsgSubmitProposal, error) {
+	rv := &govv1.MsgSubmitProposal{}
+
+	deposit, err := flagSet.GetString(FlagDeposit)
+	if err != nil {
+		return nil, fmt.Errorf("could not read deposit: %w", err)
+	}
+	if len(deposit) > 0 {
+		rv.InitialDeposit, err = sdk.ParseCoinsNormalized(deposit)
+		if err != nil {
+			return nil, fmt.Errorf("invalid deposit: %w", err)
+		}
+	}
+
+	rv.Metadata, err = flagSet.GetString(FlagMetadata)
+	if err != nil {
+		return nil, fmt.Errorf("could not read metadata: %w", err)
+	}
+
+	rv.Proposer = clientCtx.GetFromAddress().String()
+
+	return rv, nil
 }

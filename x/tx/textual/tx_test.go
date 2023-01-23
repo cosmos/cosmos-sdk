@@ -3,7 +3,6 @@ package textual_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -44,7 +43,7 @@ type txJsonTest struct {
 	Screens    []textual.Screen
 }
 
-func TestEnvelopeJsonTestcases(t *testing.T) {
+func TestTxJsonTestcases(t *testing.T) {
 	raw, err := os.ReadFile("./internal/testdata/tx.json")
 	require.NoError(t, err)
 
@@ -90,7 +89,6 @@ func TestEnvelopeJsonTestcases(t *testing.T) {
 			// they don't need to be. Instead, we check that the semantic
 			// proto objects are equal.
 			parsedTextualData := parsedVal.Message().Interface().(*textualpb.TextualData)
-			fmt.Println(parsedTextualData)
 
 			parsedBody := &txv1beta1.TxBody{}
 			err = proto.Unmarshal(parsedTextualData.BodyBytes, parsedBody)

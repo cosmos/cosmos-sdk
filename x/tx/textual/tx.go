@@ -210,8 +210,10 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		// "Message: <N> Any"
 		matches := inverseMsgRe.FindStringSubmatch(screens[i].Content)
 		if len(matches) > 0 {
-			parsable[i+1].Content = fmt.Sprintf("Message: %s Any", matches[1])
+			parsable[i+1].Title = "Message"
+			parsable[i+1].Content = fmt.Sprintf("%s Any", matches[1])
 		} else {
+			parsable[i+1].Title = screens[i].Title
 			parsable[i+1].Content = screens[i].Content
 		}
 	}

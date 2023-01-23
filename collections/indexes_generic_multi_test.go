@@ -15,22 +15,26 @@ type balance struct {
 }
 
 func TestGenericMultiIndex(t *testing.T) {
-	// we simulate we have a balance
-	// which has multiple coins.
-	// we want to maintain a relationship
-	// between the owner of the balance
-	// and the denoms of the balance.
-	// the secondary key is a string (denom), and is the one referencing.
-	// the primary key (the key being referenced) is a string ID (eg: stringified acc address).
+	// we are simulating a context in which we have the following mapping:
+	//
+	// address (represented as string) => balance (slice of coins).
+	//
+	// we want to create an index that creates a relationship between the coin
+	// denom, which is part of the balance structure, and the address. This means
+	// we know given a denom who are the addresses holding that denom.
+	// From GenericMultiIndex point of view, the denom field of the array becomes
+	// the referencing key which points to the address (string), which is the key
+	// being referenced.
 	sk, ctx := deps()
 	sb := NewSchemaBuilder(sk)
 	mi := NewGenericMultiIndex(
 		sb, NewPrefix("denoms"), "denom_to_owner", StringKey, StringKey,
 		func(pk string, value balance) ([]IndexReference[string, string], error) {
-			// the references are all the denoms
+			// the referencing keys are all the denoms.
 			refs := make([]IndexReference[string, string], len(value.coins))
-			// this is saying, create a relationship between all the denoms
-			// and the owner of the balance.
+			// the index reference being created, generates a relationship
+			// between denom (the key that references) and pk (address, the key
+			// that is being referenced).
 			for i, coin := range value.coins {
 				refs[i] = NewIndexReference(coin.denom, pk)
 			}
@@ -54,8 +58,7 @@ func TestGenericMultiIndex(t *testing.T) {
 	require.Equal(t, keys[0].K1(), "atom") // assert relationship with atom created
 	require.Equal(t, keys[1].K1(), "osmo") // assert relationship with osmo created
 
-	// if we update the reference to remove osmo as balance
-	// then we must not find it anymore
+	// if we update the reference to remove osmo as balance then we must not find it anymore
 	err = mi.Reference(ctx, "cosmosAddr1", balance{coins: []coin{{"atom", 1000}}}, // this is the update which does not have osmo
 		&balance{coins: []coin{{"atom", 1000}, {"osmo", 5000}}}, // this is the previous record
 	)

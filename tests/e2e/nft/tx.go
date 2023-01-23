@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 const (

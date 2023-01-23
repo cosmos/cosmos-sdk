@@ -862,16 +862,27 @@ Example Output:
 
 ```bash
 deposit_params:
-  max_deposit_period: "172800000000000"
+  max_deposit_period: 172800s
   min_deposit:
   - amount: "10000000"
     denom: stake
+params:
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+  voting_period: 172800s
 tally_params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
 voting_params:
-  voting_period: "172800000000000"
+  voting_period: 172800s
 ```
 
 ##### proposal
@@ -1211,6 +1222,19 @@ Example (`software-upgrade`):
 
 ```bash
 simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" --description="testing, testing, 1, 2, 3" --upgrade-height 1000000 --from cosmos1..
+```
+
+#### cancel-proposal
+
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
+
+```bash
+simd tx gov cancel-proposal [proposal-id] [flags]
+```
+
+Example:
+```bash
+simd tx gov cancel-proposal 1 --from cosmos1...
 ```
 
 ##### vote

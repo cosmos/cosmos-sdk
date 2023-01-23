@@ -81,5 +81,5 @@ func (k Keeper1) GetDelegationsOfDelegator(ctx context.Context, del AccAddress) 
 		return nil, err
 	}
 
-	return k.Delegations.CollectValues(ctx, iter)
+	return indexes.CollectValues(ctx, k.Delegations, iter)
 }

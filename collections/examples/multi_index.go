@@ -56,5 +56,5 @@ func (k Keeper2) GetValidatorWithPowerEqualTo(ctx context.Context, power uint64)
 	if err != nil {
 		return nil, err
 	}
-	return k.Validators.CollectValues(ctx, iter)
+	return indexes.CollectValues(ctx, k.Validators, iter)
 }

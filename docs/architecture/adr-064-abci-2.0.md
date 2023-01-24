@@ -131,7 +131,7 @@ we can come up with new types and names altogether.
 
 ```go
 func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
-	beginBlockResp := app.beginBlock(req)
+	beginBlockResp := app.beginBlock(ctx, req)
 
 	txExecResults := make([]abci.ExecTxResult, 0, len(req.Txs))
 	for _, tx := range req.Txs {
@@ -139,7 +139,7 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 		txExecResults = append(txExecResults, result)
 	}
 
-	endBlockResp := app.endBlock(req)
+	endBlockResp := app.endBlock(ctx, req)
 
 	return abci.ResponseFinalizeBlock{
 		TxResults:             txExecResults,

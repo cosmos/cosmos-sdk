@@ -164,6 +164,14 @@ func (*TestEvidence) String() string {
 	return "test-string"
 }
 
+func (*TestEvidence) Route() string {
+	return "test-route"
+}
+
+func (*TestEvidence) Type() string {
+	return "test-type"
+}
+
 func (*TestEvidence) ProtoMessage() {}
 func (*TestEvidence) Reset()        {}
 

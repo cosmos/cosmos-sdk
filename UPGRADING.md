@@ -68,6 +68,20 @@ The `gov` module has been updated to support the ability to cancel governance pr
 
 By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
 
+#### `x/evidence`
+
+##### Extract evidence to a standalone module
+
+The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the evidence imports are now renamed to use `cosmossdk.io/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
+
+#### `x/nft`
+
+##### Extract nft to a standalone module
+
+The `x/nft` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+
+
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation

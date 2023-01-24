@@ -4,10 +4,11 @@
 
 * 2022-08-18 First Draft
 * 2022-12-08 First Draft
+* 2023-01-24 Updates
 
 ## Status
 
-PROPOSED Not Implemented
+ACCEPTED Partially Implemented
 
 ## Abstract
 

@@ -42,7 +42,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -52,7 +53,7 @@ import (
 type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
-	RegisterInterfaces(codectypes.InterfaceRegistry)
+	RegisterInterfaces(types.InterfaceRegistry)
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
@@ -93,7 +94,7 @@ func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
+func (bm BasicManager) RegisterInterfaces(registry types.InterfaceRegistry) {
 	for _, m := range bm {
 		m.RegisterInterfaces(registry)
 	}
@@ -103,16 +104,19 @@ func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry)
 func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMessage {
 	genesisData := make(map[string]json.RawMessage)
 	for _, b := range bm {
-		if mod, ok := b.(appmodule.HasGenesis); ok {
-			target := genesis.RawJSONTarget{}
-			err := mod.DefaultGenesis(target.Target())
-			if err != nil {
-				panic(err)
-			}
+		// first check if the module is an adapted Core API Module
+		if mod, ok := b.(coreAppModuleBasicAdapator); ok {
+			if mod, ok := mod.module.(appmodule.HasGenesis); ok {
+				target := genesis.RawJSONTarget{}
+				err := mod.DefaultGenesis(target.Target())
+				if err != nil {
+					panic(err)
+				}
 
-			genesisData[b.Name()], err = target.JSON()
-			if err != nil {
-				panic(err)
+				genesisData[b.Name()], err = target.JSON()
+				if err != nil {
+					panic(err)
+				}
 			}
 		} else if mod, ok := b.(HasGenesisBasics); ok {
 			genesisData[b.Name()] = mod.DefaultGenesis(cdc)
@@ -125,14 +129,17 @@ func (bm BasicManager) DefaultGenesis(cdc codec.JSONCodec) map[string]json.RawMe
 // ValidateGenesis performs genesis state validation for all modules
 func (bm BasicManager) ValidateGenesis(cdc codec.JSONCodec, txEncCfg client.TxEncodingConfig, genesisData map[string]json.RawMessage) error {
 	for _, b := range bm {
-		if mod, ok := b.(appmodule.HasGenesis); ok {
-			source, err := genesis.SourceFromRawJSON(genesisData[b.Name()])
-			if err != nil {
-				return err
-			}
+		// first check if the module is an adapted Core API Module
+		if mod, ok := b.(coreAppModuleBasicAdapator); ok {
+			if mod, ok := mod.module.(appmodule.HasGenesis); ok {
+				source, err := genesis.SourceFromRawJSON(genesisData[b.Name()])
+				if err != nil {
+					return err
+				}
 
-			if err := mod.ValidateGenesis(source); err != nil {
-				return err
+				if err := mod.ValidateGenesis(source); err != nil {
+					return err
+				}
 			}
 		} else if mod, ok := b.(HasGenesisBasics); ok {
 			if err := mod.ValidateGenesis(cdc, txEncCfg, genesisData[b.Name()]); err != nil {
@@ -317,6 +324,11 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderInitGenesis", moduleNames, func(moduleName string) bool {
 		module := m.Modules[moduleName]
+		if mod, ok := module.(coreAppModuleBasicAdapator); ok {
+			_, hasGenesis := mod.module.(appmodule.HasGenesis)
+			return !hasGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
@@ -395,7 +407,21 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 		ctx.Logger().Debug("running initialization for module", "module", moduleName)
 
-		if module, ok := mod.(appmodule.HasGenesis); ok {
+		// we might get an adapted module, a native core API module or a legacy module
+		if module, ok := mod.(coreAppModuleBasicAdapator); ok {
+			if module, ok := module.module.(appmodule.HasGenesis); ok {
+				// core API genesis
+				source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
+				if err != nil {
+					panic(err)
+				}
+
+				err = module.InitGenesis(ctx, source)
+				if err != nil {
+					panic(err)
+				}
+			}
+		} else if module, ok := mod.(appmodule.HasGenesis); ok {
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
@@ -449,7 +475,26 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	for _, moduleName := range modulesToExport {
 		mod := m.Modules[moduleName]
 
-		if module, ok := mod.(appmodule.HasGenesis); ok {
+		if module, ok := mod.(coreAppModuleBasicAdapator); ok {
+			if module, ok := module.module.(appmodule.HasGenesis); ok {
+				channels[moduleName] = make(chan json.RawMessage)
+				go func(module appmodule.HasGenesis, ch chan json.RawMessage) {
+					ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
+					target := genesis.RawJSONTarget{}
+					err := module.ExportGenesis(ctx, target.Target())
+					if err != nil {
+						panic(err)
+					}
+
+					rawJSON, err := target.JSON()
+					if err != nil {
+						panic(err)
+					}
+
+					channels[moduleName] <- rawJSON
+				}(module, channels[moduleName])
+			}
+		} else if module, ok := mod.(appmodule.HasGenesis); ok {
 			// core API genesis
 			channels[moduleName] = make(chan json.RawMessage)
 			go func(module appmodule.HasGenesis, ch chan json.RawMessage) {

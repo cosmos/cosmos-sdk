@@ -9,17 +9,14 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"github.com/golang/mock/gomock"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -34,14 +31,17 @@ func TestBasicManager(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
+	// Test with a legacy module, a mock core module that doesn't return anything,
+	// and a core module defined in this file
 	expDefaultGenesis := map[string]json.RawMessage{
 		"mockAppModuleBasic1": json.RawMessage(``),
 		"mockCoreAppModule2":  json.RawMessage(`null`),
-		"MockCoreAppModule": json.RawMessage(`{
+		"mockCoreAppModule3": json.RawMessage(`{
   "someField": "asd"
 }`),
 	}
 
+	// legacy module
 	mockAppModuleBasic1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
@@ -52,22 +52,20 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
+	// mock core API module
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
-	mockCoreAppModule2.EXPECT().Name().AnyTimes().Return("mockCoreAppModule2")
 	mockCoreAppModule2.EXPECT().DefaultGenesis(gomock.Any()).Times(1).Return(nil)
 	mockCoreAppModule2.EXPECT().ValidateGenesis(gomock.Any()).Times(1).Return(nil)
-	mockCoreAppModule2.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
-	mockCoreAppModule2.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
-	mockCoreAppModule2.EXPECT().GetTxCmd().Times(1).Return(nil)
-	mockCoreAppModule2.EXPECT().GetQueryCmd().Times(1).Return(nil)
+	mockAppModule2 := module.UseCoreAPIModule("mockCoreAppModule2", mockCoreAppModule2)
 
-	mockCoreAppModule3 := MockCoreAppModule{}
+	// mock core API module (but all methods are implemented)
+	mockCoreAppModule3 := module.UseCoreAPIModule("mockCoreAppModule3", MockCoreAppModule{})
 
-	mm := module.NewBasicManager(mockAppModuleBasic1, mockCoreAppModule2, mockCoreAppModule3)
+	mm := module.NewBasicManager(mockAppModuleBasic1, mockAppModule2, mockCoreAppModule3)
 
 	require.Equal(t, mockAppModuleBasic1, mm["mockAppModuleBasic1"])
-	require.Equal(t, mockCoreAppModule2, mm["mockCoreAppModule2"])
-	require.Equal(t, mockCoreAppModule3, mm["MockCoreAppModule"])
+	require.Equal(t, mockAppModule2, mm["mockCoreAppModule2"])
+	require.Equal(t, mockCoreAppModule3, mm["mockCoreAppModule3"])
 
 	mm.RegisterLegacyAminoCodec(legacyAmino)
 	mm.RegisterInterfaces(interfaceRegistry)
@@ -105,28 +103,29 @@ func TestManagerOrderSetters(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 	mockAppModule1 := mock.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mock.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderInitGenesis)
-	mm.SetOrderInitGenesis("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderInitGenesis)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderInitGenesis)
+	mm.SetOrderInitGenesis("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderInitGenesis)
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderExportGenesis)
-	mm.SetOrderExportGenesis("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderExportGenesis)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
+	mm.SetOrderExportGenesis("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderBeginBlockers)
-	mm.SetOrderBeginBlockers("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderBeginBlockers)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
+	mm.SetOrderBeginBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderEndBlockers)
-	mm.SetOrderEndBlockers("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderEndBlockers)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
+	mm.SetOrderEndBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
 }
 
 func TestManager_RegisterInvariants(t *testing.T) {
@@ -135,11 +134,13 @@ func TestManager_RegisterInvariants(t *testing.T) {
 
 	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	// TODO: This is not working for Core API modules yet
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("mockAppModule3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	// test RegisterInvariants
 	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
@@ -154,11 +155,13 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 
 	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	// TODO: This is not working for Core API modules yet
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("mockAppModule3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	msgRouter := mock.NewMockServer(mockCtrl)
 	queryRouter := mock.NewMockServer(mockCtrl)
@@ -177,11 +180,12 @@ func TestManager_InitGenesis(t *testing.T) {
 
 	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
@@ -196,10 +200,19 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`),
+		"module3": json.RawMessage(`{"key": "value"}`),
 	}
+
+	// panic because more than one module returns validator set updates
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+
+	// happy path
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{})
+	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
+	mm.InitGenesis(ctx, cdc, genesisData)
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
@@ -211,7 +224,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 	mockCoreAppModule := MockCoreAppModule{}
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2, mockCoreAppModule)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("mockCoreAppModule", mockCoreAppModule))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
@@ -224,7 +237,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`),
-		"MockCoreAppModule": json.RawMessage(`{
+		"mockCoreAppModule": json.RawMessage(`{
   "someField": "asd"
 }`),
 	}
@@ -290,7 +303,6 @@ func TestCoreAPIManager(t *testing.T) {
 // MockCoreAppModule allows us to test functions like DefaultGenesis
 type MockCoreAppModule struct{}
 
-func (MockCoreAppModule) Name() string        { return "MockCoreAppModule" }
 func (MockCoreAppModule) IsOnePerModuleType() {}
 func (MockCoreAppModule) IsAppModule()        {}
 func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
@@ -327,14 +339,8 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	wrt.Write([]byte(`"asd"`))
 	return wrt.Close()
 }
-func (MockCoreAppModule) RegisterLegacyAminoCodec(*codec.LegacyAmino)                 {}
-func (MockCoreAppModule) RegisterInterfaces(codectypes.InterfaceRegistry)             {}
-func (MockCoreAppModule) RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux) {}
-func (MockCoreAppModule) GetTxCmd() *cobra.Command                                    { return nil }
-func (MockCoreAppModule) GetQueryCmd() *cobra.Command                                 { return nil }
 
 var (
-	_ appmodule.AppModule   = MockCoreAppModule{}
-	_ appmodule.HasGenesis  = MockCoreAppModule{}
-	_ module.AppModuleBasic = MockCoreAppModule{}
+	_ appmodule.AppModule  = MockCoreAppModule{}
+	_ appmodule.HasGenesis = MockCoreAppModule{}
 )

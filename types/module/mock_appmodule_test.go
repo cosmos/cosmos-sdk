@@ -21,8 +21,6 @@ type AppModuleWithAllExtensions interface {
 // CoreAppModule is solely here for the purpose of generating
 // mocks to be used in module tests.
 type CoreAppModule interface {
-	// TODO: remove module.AppModuleBasic
-	module.AppModuleBasic
 	appmodule.AppModule
 	appmodule.HasGenesis
 }

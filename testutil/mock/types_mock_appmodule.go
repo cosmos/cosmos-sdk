@@ -293,34 +293,6 @@ func (mr *MockCoreAppModuleMockRecorder) ExportGenesis(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).ExportGenesis), arg0, arg1)
 }
 
-// GetQueryCmd mocks base method.
-func (m *MockCoreAppModule) GetQueryCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQueryCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetQueryCmd indicates an expected call of GetQueryCmd.
-func (mr *MockCoreAppModuleMockRecorder) GetQueryCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQueryCmd", reflect.TypeOf((*MockCoreAppModule)(nil).GetQueryCmd))
-}
-
-// GetTxCmd mocks base method.
-func (m *MockCoreAppModule) GetTxCmd() *cobra.Command {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTxCmd")
-	ret0, _ := ret[0].(*cobra.Command)
-	return ret0
-}
-
-// GetTxCmd indicates an expected call of GetTxCmd.
-func (mr *MockCoreAppModuleMockRecorder) GetTxCmd() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTxCmd", reflect.TypeOf((*MockCoreAppModule)(nil).GetTxCmd))
-}
-
 // InitGenesis mocks base method.
 func (m *MockCoreAppModule) InitGenesis(arg0 context.Context, arg1 appmodule.GenesisSource) error {
 	m.ctrl.T.Helper()
@@ -357,56 +329,6 @@ func (m *MockCoreAppModule) IsOnePerModuleType() {
 func (mr *MockCoreAppModuleMockRecorder) IsOnePerModuleType() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockCoreAppModule)(nil).IsOnePerModuleType))
-}
-
-// Name mocks base method.
-func (m *MockCoreAppModule) Name() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Name")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Name indicates an expected call of Name.
-func (mr *MockCoreAppModuleMockRecorder) Name() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockCoreAppModule)(nil).Name))
-}
-
-// RegisterGRPCGatewayRoutes mocks base method.
-func (m *MockCoreAppModule) RegisterGRPCGatewayRoutes(arg0 client.Context, arg1 *runtime.ServeMux) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterGRPCGatewayRoutes", arg0, arg1)
-}
-
-// RegisterGRPCGatewayRoutes indicates an expected call of RegisterGRPCGatewayRoutes.
-func (mr *MockCoreAppModuleMockRecorder) RegisterGRPCGatewayRoutes(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterGRPCGatewayRoutes", reflect.TypeOf((*MockCoreAppModule)(nil).RegisterGRPCGatewayRoutes), arg0, arg1)
-}
-
-// RegisterInterfaces mocks base method.
-func (m *MockCoreAppModule) RegisterInterfaces(arg0 types.InterfaceRegistry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterInterfaces", arg0)
-}
-
-// RegisterInterfaces indicates an expected call of RegisterInterfaces.
-func (mr *MockCoreAppModuleMockRecorder) RegisterInterfaces(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterInterfaces", reflect.TypeOf((*MockCoreAppModule)(nil).RegisterInterfaces), arg0)
-}
-
-// RegisterLegacyAminoCodec mocks base method.
-func (m *MockCoreAppModule) RegisterLegacyAminoCodec(arg0 *codec.LegacyAmino) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RegisterLegacyAminoCodec", arg0)
-}
-
-// RegisterLegacyAminoCodec indicates an expected call of RegisterLegacyAminoCodec.
-func (mr *MockCoreAppModuleMockRecorder) RegisterLegacyAminoCodec(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLegacyAminoCodec", reflect.TypeOf((*MockCoreAppModule)(nil).RegisterLegacyAminoCodec), arg0)
 }
 
 // ValidateGenesis mocks base method.

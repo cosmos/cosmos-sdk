@@ -47,6 +47,9 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
+	if len(req.Query) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "query cannot be empty")
+	}
 
 	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
 	// so we default to 1 if not provided in the request.

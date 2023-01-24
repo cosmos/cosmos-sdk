@@ -1,0 +1,20 @@
+syntax = "proto3";
+package cosmos.quarantine.v1beta1;
+
+import "cosmos/quarantine/v1beta1/quarantine.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+
+// GenesisState defines the quarantine module's genesis state.
+message GenesisState {
+  // quarantined_addresses defines account addresses that are opted into quarantine.
+  repeated string quarantined_addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // auto_responses defines the quarantine auto-responses for addresses.
+  repeated AutoResponseEntry auto_responses = 2;
+
+  // quarantined_funds defines funds that are quarantined.
+  repeated QuarantinedFunds quarantined_funds = 3;
+}

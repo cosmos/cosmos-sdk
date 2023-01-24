@@ -1,0 +1,96 @@
+syntax = "proto3";
+package cosmos.quarantine.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/quarantine/v1beta1/quarantine.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+
+// Query defines the quarantine gRPC query service.
+service Query {
+  // IsQuarantined checks if an account has opted into quarantine.
+  rpc IsQuarantined(QueryIsQuarantinedRequest) returns (QueryIsQuarantinedResponse) {
+    option (google.api.http).get = "/cosmos/quarantine/v1beta1/active/{to_address}";
+  }
+
+  // QuarantinedFunds gets information about funds that have been quarantined.
+  //
+  // If both a to_address and from_address are provided, any such quarantined funds will be returned regardless of
+  // whether they've been declined. If only a to_address is provided, the unaccepted and undeclined funds waiting on a
+  // response from to_address will be returned. If neither a to_address nor from_address is provided, all non-declined
+  // quarantined funds for any address will be returned. The request is invalid if only a from_address is provided.
+  rpc QuarantinedFunds(QueryQuarantinedFundsRequest) returns (QueryQuarantinedFundsResponse) {
+    option (google.api.http) = {
+      get: "/cosmos/quarantine/v1beta1/funds"
+      additional_bindings: [
+        {get: "/cosmos/quarantine/v1beta1/funds/{to_address}"},
+        {get: "/cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}"}
+      ]
+    };
+  }
+
+  // AutoResponses gets the auto-response settings for a quarantined account.
+  //
+  // The to_address is required. If a from_address is provided only the auto response for that from_address will be
+  // returned. If no from_address is provided, all auto-response settings for the given to_address will be returned.
+  rpc AutoResponses(QueryAutoResponsesRequest) returns (QueryAutoResponsesResponse) {
+    option (google.api.http) = {
+      get: "/cosmos/quarantine/v1beta1/auto/{to_address}"
+      additional_bindings: [{get: "/cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}"}]
+    };
+  }
+}
+
+// QueryIsQuarantinedRequest defines the RPC request for checking if an account has opted into quarantine.
+message QueryIsQuarantinedRequest {
+  // to_address is the address to check.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryIsQuarantinedResponse defines the RPC response of an IsQuarantined query.
+message QueryIsQuarantinedResponse {
+  // is_quarantined is true if the to_address has opted into quarantine.
+  bool is_quarantined = 1;
+}
+
+// QueryQuarantinedFundsRequest defines the RPC request for looking up quarantined funds.
+message QueryQuarantinedFundsRequest {
+  // to_address is the intended recipient of the coins that have been quarantined.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // from_address is the sender of the coins. If provided, a to_address must also be provided.
+  string from_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryQuarantinedFundsResponse defines the RPC response of a QuarantinedFunds query.
+message QueryQuarantinedFundsResponse {
+  // quarantinedFunds is info about coins sitting in quarantine.
+  repeated QuarantinedFunds quarantinedFunds = 1;
+
+  // pagination defines the pagination parameters of the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryAutoResponsesRequest defines the RPC request for getting auto-response settings for an address.
+message QueryAutoResponsesRequest {
+  // to_address is the quarantined account to get info on.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // from_address is an optional sender address to limit results.
+  string from_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines optional pagination parameters for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryAutoResponsesResponse defines the RPC response of a AutoResponses query.
+message QueryAutoResponsesResponse {
+  // auto_responses are the auto-response entries from the provided query.
+  repeated AutoResponseEntry auto_responses = 1;
+
+  // pagination defines the pagination parameters of the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}

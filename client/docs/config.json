@@ -86,6 +86,14 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/quarantine/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "Quarantine"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/slashing/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {

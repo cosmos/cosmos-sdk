@@ -24,7 +24,7 @@ const govModuleName = "gov"
 // between accounts.
 type Keeper interface {
 	SendKeeper
-	WithMintCoinsRestriction(MintingRestrictionFn) BaseKeeper
+	WithMintCoinsRestriction(MintingRestrictionFn) *BaseKeeper
 
 	InitGenesis(sdk.Context, *types.GenesisState)
 	ExportGenesis(sdk.Context) *types.GenesisState
@@ -105,13 +105,13 @@ func NewBaseKeeper(
 	ak types.AccountKeeper,
 	paramSpace paramtypes.Subspace,
 	blockedAddrs map[string]bool,
-) BaseKeeper {
+) *BaseKeeper {
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
 		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return BaseKeeper{
+	return &BaseKeeper{
 		BaseSendKeeper:         NewBaseSendKeeper(cdc, storeKey, ak, paramSpace, blockedAddrs),
 		ak:                     ak,
 		cdc:                    cdc,
@@ -127,7 +127,7 @@ func NewBaseKeeper(
 // Previous restriction functions can be nested as such:
 //
 //	bankKeeper.WithMintCoinsRestriction(restriction1).WithMintCoinsRestriction(restriction2)
-func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKeeper {
+func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) *BaseKeeper {
 	oldRestrictionFn := k.mintCoinsRestrictionFn
 	k.mintCoinsRestrictionFn = func(ctx sdk.Context, coins sdk.Coins) error {
 		err := check(ctx, coins)
@@ -140,7 +140,7 @@ func (k BaseKeeper) WithMintCoinsRestriction(check MintingRestrictionFn) BaseKee
 		}
 		return nil
 	}
-	return k
+	return &k
 }
 
 // DelegateCoins performs delegation by deducting amt coins from an account with

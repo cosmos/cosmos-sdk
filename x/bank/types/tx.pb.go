@@ -199,6 +199,7 @@ func (m *MsgMultiSendResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgMultiSendResponse proto.InternalMessageInfo
 
+// MsgUpdateDenomMetadata represents a message to update denom metadata
 type MsgUpdateDenomMetadata struct {
 	FromAddress string    `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
 	Title       string    `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
@@ -239,6 +240,7 @@ func (m *MsgUpdateDenomMetadata) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateDenomMetadata proto.InternalMessageInfo
 
+// MsgUpdateDenomMetadataResponse defines the Msg/UpdateDenomMetadata response type.
 type MsgUpdateDenomMetadataResponse struct {
 }
 
@@ -341,7 +343,7 @@ type MsgClient interface {
 	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
-	// UpdateDenomMetadata defines a method for updating the fee denom metadata
+	// UpdateDenomMetadata defines a method for updating the denom metadata. Only usable in x/gov proposal.
 	UpdateDenomMetadata(ctx context.Context, in *MsgUpdateDenomMetadata, opts ...grpc.CallOption) (*MsgUpdateDenomMetadataResponse, error)
 }
 
@@ -386,7 +388,7 @@ type MsgServer interface {
 	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
-	// UpdateDenomMetadata defines a method for updating the fee denom metadata
+	// UpdateDenomMetadata defines a method for updating the denom metadata. Only usable in x/gov proposal.
 	UpdateDenomMetadata(context.Context, *MsgUpdateDenomMetadata) (*MsgUpdateDenomMetadataResponse, error)
 }
 

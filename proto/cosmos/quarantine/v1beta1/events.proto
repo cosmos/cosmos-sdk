@@ -1,0 +1,32 @@
+syntax = "proto3";
+package cosmos.quarantine.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+
+// EventOptIn is an event emitted when an address opts into quarantine.
+message EventOptIn {
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventOptOut is an event emitted when an address opts out of quarantine.
+message EventOptOut {
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventFundsQuarantined is an event emitted when funds are quarantined.
+message EventFundsQuarantined {
+  string   to_address                     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin coins = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}
+
+// EventFundsReleased is an event emitted when quarantined funds are accepted and released.
+message EventFundsReleased {
+  string   to_address                     = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated cosmos.base.v1beta1.Coin coins = 2
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+}

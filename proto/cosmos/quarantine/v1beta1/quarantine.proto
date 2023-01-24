@@ -1,0 +1,73 @@
+syntax = "proto3";
+package cosmos.quarantine.v1beta1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/quarantine";
+
+// QuarantinedFunds defines structure that represents coins that have been quarantined.
+message QuarantinedFunds {
+  // to_address is the intended recipient of the coins that have been quarantined.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // unaccepted_from_addresses are the senders that have not been part of an accept yet for these coins.
+  repeated string unaccepted_from_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // coins is the amount currently in quarantined for the two addresses.
+  repeated cosmos.base.v1beta1.Coin coins = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // declined is true if these funds were previously declined.
+  bool declined = 4;
+}
+
+// AutoResponseEntry defines the auto response to one address from another.
+message AutoResponseEntry {
+  // to_address is the receiving address.
+  string to_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // from_address is the sending address.
+  string from_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // response is the auto-response setting for these two addresses.
+  AutoResponse response = 3;
+}
+
+// AutoResponseUpdate defines a quarantine auto response update that should be applied.
+message AutoResponseUpdate {
+  // from_address is the address that funds would be coming from.
+  string from_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // response is the automatic action to take on funds sent from from_address.
+  // Provide AUTO_RESPONSE_UNSPECIFIED to turn off an auto-response.
+  AutoResponse response = 2;
+}
+
+// AutoResponse enumerates the quarantine auto-response options.
+enum AutoResponse {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // AUTO_RESPONSE_UNSPECIFIED defines that an automatic response has not been specified.
+  // This means that no automatic action should be taken, i.e. this auto-response is off,
+  // and default quarantine behavior is used.
+  AUTO_RESPONSE_UNSPECIFIED = 0;
+  // AUTO_RESPONSE_ACCEPT defines that sends should be automatically accepted, bypassing quarantine.
+  AUTO_RESPONSE_ACCEPT = 1;
+  // AUTO_RESPONSE_DECLINE defines that sends should be automatically declined.
+  AUTO_RESPONSE_DECLINE = 2;
+}
+
+// QuarantineRecord defines information regarding quarantined funds that is stored in state.
+message QuarantineRecord {
+  // unaccepted_from_addresses are the senders that have not been part of an accept yet for these coins.
+  repeated bytes unaccepted_from_addresses = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  // accepted_from_addresses are the senders that have already been part of an accept for these coins.
+  repeated bytes accepted_from_addresses = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  // coins is the amount that has been quarantined.
+  repeated cosmos.base.v1beta1.Coin coins = 3
+      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  // declined is whether these funds have been declined.
+  bool declined = 4;
+}
+
+// QuarantineRecordSuffixIndex defines a list of record suffixes that can be stored in state and used as an index.
+message QuarantineRecordSuffixIndex {
+  repeated bytes record_suffixes = 1;
+}

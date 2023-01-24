@@ -18,6 +18,7 @@ Here are some production-grade modules that can be used in Cosmos SDK applicatio
 * [Governance](gov/spec/README.md) - On-chain proposals and voting.
 * [Mint](mint/spec/README.md) - Creation of new units of staking token.
 * [Params](params/spec/README.md) - Globally available parameter store.
+* [Quarantine](quarantine/spec/README.md) - Protect an account from unwanted sends.
 * [Slashing](slashing/spec/README.md) - Validator punishment mechanisms.
 * [Staking](staking/spec/README.md) - Proof-of-Stake layer for public blockchains.
 * [Upgrade](upgrade/spec/README.md) - Software upgrades handling and coordination.

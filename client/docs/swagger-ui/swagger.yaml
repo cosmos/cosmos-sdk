@@ -15552,6 +15552,930 @@ paths:
                       format: byte
       tags:
         - Query
+  /cosmos/quarantine/v1beta1/active/{to_address}:
+    get:
+      summary: IsQuarantined checks if an account has opted into quarantine.
+      operationId: IsQuarantined
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              is_quarantined:
+                type: boolean
+                description: >-
+                  is_quarantined is true if the to_address has opted into
+                  quarantine.
+            description: >-
+              QueryIsQuarantinedResponse defines the RPC response of an
+              IsQuarantined query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: to_address
+          description: to_address is the address to check.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /cosmos/quarantine/v1beta1/auto/{to_address}:
+    get:
+      summary: AutoResponses gets the auto-response settings for a quarantined account.
+      description: >-
+        The to_address is required. If a from_address is provided only the auto
+        response for that from_address will be
+
+        returned. If no from_address is provided, all auto-response settings for
+        the given to_address will be returned.
+      operationId: AutoResponses
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              auto_responses:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    to_address:
+                      type: string
+                      description: to_address is the receiving address.
+                    from_address:
+                      type: string
+                      description: from_address is the sending address.
+                    response:
+                      description: >-
+                        response is the auto-response setting for these two
+                        addresses.
+                      type: string
+                      enum:
+                        - AUTO_RESPONSE_UNSPECIFIED
+                        - AUTO_RESPONSE_ACCEPT
+                        - AUTO_RESPONSE_DECLINE
+                      default: AUTO_RESPONSE_UNSPECIFIED
+                  description: >-
+                    AutoResponseEntry defines the auto response to one address
+                    from another.
+                description: >-
+                  auto_responses are the auto-response entries from the provided
+                  query.
+              pagination:
+                description: pagination defines the pagination parameters of the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryAutoResponsesResponse defines the RPC response of a
+              AutoResponses query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: to_address
+          description: to_address is the quarantined account to get info on.
+          in: path
+          required: true
+          type: string
+        - name: from_address
+          description: from_address is an optional sender address to limit results.
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /cosmos/quarantine/v1beta1/auto/{to_address}/{from_address}:
+    get:
+      summary: AutoResponses gets the auto-response settings for a quarantined account.
+      description: >-
+        The to_address is required. If a from_address is provided only the auto
+        response for that from_address will be
+
+        returned. If no from_address is provided, all auto-response settings for
+        the given to_address will be returned.
+      operationId: AutoResponses2
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              auto_responses:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    to_address:
+                      type: string
+                      description: to_address is the receiving address.
+                    from_address:
+                      type: string
+                      description: from_address is the sending address.
+                    response:
+                      description: >-
+                        response is the auto-response setting for these two
+                        addresses.
+                      type: string
+                      enum:
+                        - AUTO_RESPONSE_UNSPECIFIED
+                        - AUTO_RESPONSE_ACCEPT
+                        - AUTO_RESPONSE_DECLINE
+                      default: AUTO_RESPONSE_UNSPECIFIED
+                  description: >-
+                    AutoResponseEntry defines the auto response to one address
+                    from another.
+                description: >-
+                  auto_responses are the auto-response entries from the provided
+                  query.
+              pagination:
+                description: pagination defines the pagination parameters of the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryAutoResponsesResponse defines the RPC response of a
+              AutoResponses query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: to_address
+          description: to_address is the quarantined account to get info on.
+          in: path
+          required: true
+          type: string
+        - name: from_address
+          description: from_address is an optional sender address to limit results.
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /cosmos/quarantine/v1beta1/funds:
+    get:
+      summary: >-
+        QuarantinedFunds gets information about funds that have been
+        quarantined.
+      description: >-
+        If both a to_address and from_address are provided, any such quarantined
+        funds will be returned regardless of
+
+        whether they've been declined. If only a to_address is provided, the
+        unaccepted and undeclined funds waiting on a
+
+        response from to_address will be returned. If neither a to_address nor
+        from_address is provided, all non-declined
+
+        quarantined funds for any address will be returned. The request is
+        invalid if only a from_address is provided.
+      operationId: QuarantinedFunds
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              quarantinedFunds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    to_address:
+                      type: string
+                      description: >-
+                        to_address is the intended recipient of the coins that
+                        have been quarantined.
+                    unaccepted_from_addresses:
+                      type: array
+                      items:
+                        type: string
+                      description: >-
+                        unaccepted_from_addresses are the senders that have not
+                        been part of an accept yet for these coins.
+                    coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                      description: >-
+                        coins is the amount currently in quarantined for the two
+                        addresses.
+                    declined:
+                      type: boolean
+                      description: >-
+                        declined is true if these funds were previously
+                        declined.
+                  description: >-
+                    QuarantinedFunds defines structure that represents coins
+                    that have been quarantined.
+                description: quarantinedFunds is info about coins sitting in quarantine.
+              pagination:
+                description: pagination defines the pagination parameters of the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryQuarantinedFundsResponse defines the RPC response of a
+              QuarantinedFunds query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: to_address
+          description: >-
+            to_address is the intended recipient of the coins that have been
+            quarantined.
+          in: query
+          required: false
+          type: string
+        - name: from_address
+          description: >-
+            from_address is the sender of the coins. If provided, a to_address
+            must also be provided.
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /cosmos/quarantine/v1beta1/funds/{to_address}:
+    get:
+      summary: >-
+        QuarantinedFunds gets information about funds that have been
+        quarantined.
+      description: >-
+        If both a to_address and from_address are provided, any such quarantined
+        funds will be returned regardless of
+
+        whether they've been declined. If only a to_address is provided, the
+        unaccepted and undeclined funds waiting on a
+
+        response from to_address will be returned. If neither a to_address nor
+        from_address is provided, all non-declined
+
+        quarantined funds for any address will be returned. The request is
+        invalid if only a from_address is provided.
+      operationId: QuarantinedFunds2
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              quarantinedFunds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    to_address:
+                      type: string
+                      description: >-
+                        to_address is the intended recipient of the coins that
+                        have been quarantined.
+                    unaccepted_from_addresses:
+                      type: array
+                      items:
+                        type: string
+                      description: >-
+                        unaccepted_from_addresses are the senders that have not
+                        been part of an accept yet for these coins.
+                    coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                      description: >-
+                        coins is the amount currently in quarantined for the two
+                        addresses.
+                    declined:
+                      type: boolean
+                      description: >-
+                        declined is true if these funds were previously
+                        declined.
+                  description: >-
+                    QuarantinedFunds defines structure that represents coins
+                    that have been quarantined.
+                description: quarantinedFunds is info about coins sitting in quarantine.
+              pagination:
+                description: pagination defines the pagination parameters of the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryQuarantinedFundsResponse defines the RPC response of a
+              QuarantinedFunds query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: to_address
+          description: >-
+            to_address is the intended recipient of the coins that have been
+            quarantined.
+          in: path
+          required: true
+          type: string
+        - name: from_address
+          description: >-
+            from_address is the sender of the coins. If provided, a to_address
+            must also be provided.
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /cosmos/quarantine/v1beta1/funds/{to_address}/{from_address}:
+    get:
+      summary: >-
+        QuarantinedFunds gets information about funds that have been
+        quarantined.
+      description: >-
+        If both a to_address and from_address are provided, any such quarantined
+        funds will be returned regardless of
+
+        whether they've been declined. If only a to_address is provided, the
+        unaccepted and undeclined funds waiting on a
+
+        response from to_address will be returned. If neither a to_address nor
+        from_address is provided, all non-declined
+
+        quarantined funds for any address will be returned. The request is
+        invalid if only a from_address is provided.
+      operationId: QuarantinedFunds3
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              quarantinedFunds:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    to_address:
+                      type: string
+                      description: >-
+                        to_address is the intended recipient of the coins that
+                        have been quarantined.
+                    unaccepted_from_addresses:
+                      type: array
+                      items:
+                        type: string
+                      description: >-
+                        unaccepted_from_addresses are the senders that have not
+                        been part of an accept yet for these coins.
+                    coins:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                      description: >-
+                        coins is the amount currently in quarantined for the two
+                        addresses.
+                    declined:
+                      type: boolean
+                      description: >-
+                        declined is true if these funds were previously
+                        declined.
+                  description: >-
+                    QuarantinedFunds defines structure that represents coins
+                    that have been quarantined.
+                description: quarantinedFunds is info about coins sitting in quarantine.
+              pagination:
+                description: pagination defines the pagination parameters of the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryQuarantinedFundsResponse defines the RPC response of a
+              QuarantinedFunds query.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: to_address
+          description: >-
+            to_address is the intended recipient of the coins that have been
+            quarantined.
+          in: path
+          required: true
+          type: string
+        - name: from_address
+          description: >-
+            from_address is the sender of the coins. If provided, a to_address
+            must also be provided.
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
   /cosmos/slashing/v1beta1/params:
     get:
       summary: Params queries the parameters of slashing module
@@ -45781,6 +46705,199 @@ definitions:
       the subspace.
 
       Since: cosmos-sdk 0.46
+  cosmos.quarantine.v1beta1.AutoResponse:
+    type: string
+    enum:
+      - AUTO_RESPONSE_UNSPECIFIED
+      - AUTO_RESPONSE_ACCEPT
+      - AUTO_RESPONSE_DECLINE
+    default: AUTO_RESPONSE_UNSPECIFIED
+    description: |-
+      AutoResponse enumerates the quarantine auto-response options.
+
+       - AUTO_RESPONSE_UNSPECIFIED: AUTO_RESPONSE_UNSPECIFIED defines that no automatic action should be taken.
+       - AUTO_RESPONSE_ACCEPT: AUTO_RESPONSE_ACCEPT defines that sends should be automatically accepted.
+       - AUTO_RESPONSE_DECLINE: AUTO_RESPONSE_DECLINE defines that sends should be automatically declined.
+  cosmos.quarantine.v1beta1.AutoResponseEntry:
+    type: object
+    properties:
+      to_address:
+        type: string
+        description: to_address is the receiving address.
+      from_address:
+        type: string
+        description: from_address is the sending address.
+      response:
+        description: response is the auto-response setting for these two addresses.
+        type: string
+        enum:
+          - AUTO_RESPONSE_UNSPECIFIED
+          - AUTO_RESPONSE_ACCEPT
+          - AUTO_RESPONSE_DECLINE
+        default: AUTO_RESPONSE_UNSPECIFIED
+    description: AutoResponseEntry defines the auto response to one address from another.
+  cosmos.quarantine.v1beta1.QuarantinedFunds:
+    type: object
+    properties:
+      to_address:
+        type: string
+        description: >-
+          to_address is the intended recipient of the coins that have been
+          quarantined.
+      unaccepted_from_addresses:
+        type: array
+        items:
+          type: string
+        description: >-
+          unaccepted_from_addresses are the senders that have not been part of
+          an accept yet for these coins.
+      coins:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        description: coins is the amount currently in quarantined for the two addresses.
+      declined:
+        type: boolean
+        description: declined is true if these funds were previously declined.
+    description: >-
+      QuarantinedFunds defines structure that represents coins that have been
+      quarantined.
+  cosmos.quarantine.v1beta1.QueryAutoResponsesResponse:
+    type: object
+    properties:
+      auto_responses:
+        type: array
+        items:
+          type: object
+          properties:
+            to_address:
+              type: string
+              description: to_address is the receiving address.
+            from_address:
+              type: string
+              description: from_address is the sending address.
+            response:
+              description: response is the auto-response setting for these two addresses.
+              type: string
+              enum:
+                - AUTO_RESPONSE_UNSPECIFIED
+                - AUTO_RESPONSE_ACCEPT
+                - AUTO_RESPONSE_DECLINE
+              default: AUTO_RESPONSE_UNSPECIFIED
+          description: >-
+            AutoResponseEntry defines the auto response to one address from
+            another.
+        description: auto_responses are the auto-response entries from the provided query.
+      pagination:
+        description: pagination defines the pagination parameters of the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryAutoResponsesResponse defines the RPC response of a AutoResponses
+      query.
+  cosmos.quarantine.v1beta1.QueryIsQuarantinedResponse:
+    type: object
+    properties:
+      is_quarantined:
+        type: boolean
+        description: is_quarantined is true if the to_address has opted into quarantine.
+    description: >-
+      QueryIsQuarantinedResponse defines the RPC response of an IsQuarantined
+      query.
+  cosmos.quarantine.v1beta1.QueryQuarantinedFundsResponse:
+    type: object
+    properties:
+      quarantinedFunds:
+        type: array
+        items:
+          type: object
+          properties:
+            to_address:
+              type: string
+              description: >-
+                to_address is the intended recipient of the coins that have been
+                quarantined.
+            unaccepted_from_addresses:
+              type: array
+              items:
+                type: string
+              description: >-
+                unaccepted_from_addresses are the senders that have not been
+                part of an accept yet for these coins.
+            coins:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+              description: >-
+                coins is the amount currently in quarantined for the two
+                addresses.
+            declined:
+              type: boolean
+              description: declined is true if these funds were previously declined.
+          description: >-
+            QuarantinedFunds defines structure that represents coins that have
+            been quarantined.
+        description: quarantinedFunds is info about coins sitting in quarantine.
+      pagination:
+        description: pagination defines the pagination parameters of the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryQuarantinedFundsResponse defines the RPC response of a
+      QuarantinedFunds query.
   cosmos.slashing.v1beta1.Params:
     type: object
     properties:

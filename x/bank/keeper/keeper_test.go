@@ -75,7 +75,7 @@ type IntegrationTestSuite struct {
 	queryClient types.QueryClient
 }
 
-func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, keeper.BaseKeeper) {
+func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) (authkeeper.AccountKeeper, *keeper.BaseKeeper) {
 	app := suite.app
 	maccPerms := simapp.GetMaccPerms()
 	appCodec := simapp.MakeTestEncodingConfig().Codec
@@ -425,6 +425,335 @@ func (suite *IntegrationTestSuite) TestInputOutputCoins() {
 	suite.Require().Equal(expected, acc3Balances)
 }
 
+func (suite *IntegrationTestSuite) TestInputOutputCoinsWithQuarantine() {
+	app, ctx := suite.app, suite.ctx
+
+	// makeAndFundAccount makes and (if balance isn't zero) funds an account.
+	makeAndFundAccount := func(i uint8, balance sdk.Coins) sdk.AccAddress {
+		addr := sdk.AccAddress(fmt.Sprintf("testaddr%03d_________", i))
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		app.AccountKeeper.SetAccount(ctx, acc)
+		if !balance.IsZero() {
+			suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr, balance), "funding account %d with %q", i, balance.String())
+		}
+		return addr
+	}
+
+	// cz converts the string to a Coins.
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		suite.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	// makeInput makes an Input.
+	makeInput := func(addr sdk.AccAddress, coins string) types.Input {
+		return types.Input{
+			Address: addr.String(),
+			Coins:   cz(coins),
+		}
+	}
+
+	// makeOutput makes an Output.
+	makeOutput := func(addr sdk.AccAddress, coins string) types.Output {
+		return types.Output{
+			Address: addr.String(),
+			Coins:   cz(coins),
+		}
+	}
+
+	// makeInEvent makes an event expected from an input.
+	makeInEvent := func(addr sdk.AccAddress) sdk.Event {
+		return sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, addr.String()),
+		)
+	}
+
+	// makeOutEvent makes an event expected from an output.
+	makeOutEvent := func(addr sdk.AccAddress, amt string) sdk.Event {
+		return sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, addr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt),
+		)
+	}
+
+	type expectedBalance struct {
+		addr    sdk.AccAddress
+		balance sdk.Coins
+	}
+
+	makeExpectedBalance := func(addr sdk.AccAddress, coins string) *expectedBalance {
+		return &expectedBalance{
+			addr:    addr,
+			balance: cz(coins),
+		}
+	}
+
+	makeQc := func(coins string, toAddr sdk.AccAddress, fromAddrs ...sdk.AccAddress) *QuarantinedCoins {
+		return &QuarantinedCoins{
+			coins:     cz(coins),
+			toAddr:    toAddr,
+			fromAddrs: fromAddrs,
+		}
+	}
+
+	fundsHolder := sdk.AccAddress("quarantinefundholder")
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, fundsHolder))
+
+	addr1 := makeAndFundAccount(1, cz("500acoin,500bcoin,500ccoin"))
+	addr2 := makeAndFundAccount(2, cz("500acoin,500bcoin,500ccoin"))
+	addr3 := makeAndFundAccount(3, cz("500acoin,500bcoin,500ccoin"))
+
+	tests := []struct {
+		name      string
+		inputs    []types.Input
+		outputs   []types.Output
+		qk        types.QuarantineKeeper
+		expInErr  []string
+		expEvents sdk.Events
+		expBals   []*expectedBalance
+		expQ      []*QuarantinedCoins
+	}{
+		{
+			name: "nil quarantine keeper",
+			inputs: []types.Input{
+				makeInput(addr1, "5acoin"),
+				makeInput(addr2, "5acoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10acoin"),
+			},
+			qk:       nil,
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("5acoin")),
+				makeInEvent(addr1),
+				types.NewCoinSpentEvent(addr2, cz("5acoin")),
+				makeInEvent(addr2),
+				types.NewCoinReceivedEvent(addr3, cz("10acoin")),
+				makeOutEvent(addr3, "10acoin"),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "510acoin,500bcoin,500ccoin"),
+			},
+			expQ: nil,
+		},
+		{
+			name:    "no funds holder",
+			inputs:  []types.Input{makeInput(addr1, "5acoin")},
+			outputs: []types.Output{makeOutput(addr2, "5acoin")},
+			qk: NewMockMockQuarantineKeeper(nil).
+				WithIsQuarantinedAddrResponse(addr2, true),
+			expInErr:  []string{"no quarantine holder account defined", "unknown address"},
+			expEvents: nil,
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "490acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "495acoin,500bcoin,500ccoin"),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+		{
+			name: "with quarantine keeper but not quarantined",
+			inputs: []types.Input{
+				makeInput(addr3, "10acoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr1, "6acoin"),
+				makeOutput(addr2, "4acoin"),
+			},
+			qk:       NewMockMockQuarantineKeeper(fundsHolder),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr3, cz("10acoin")),
+				makeInEvent(addr3),
+				types.NewCoinReceivedEvent(addr1, cz("6acoin")),
+				makeOutEvent(addr1, "6acoin"),
+				types.NewCoinReceivedEvent(addr2, cz("4acoin")),
+				makeOutEvent(addr2, "4acoin"),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "496acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "499acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "500acoin,500bcoin,500ccoin"),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+		{
+			name: "quarantined with auto-accept",
+			inputs: []types.Input{
+				makeInput(addr1, "16acoin"),
+				makeInput(addr2, "9acoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "25acoin"),
+			},
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr3, true).
+				WithIsAutoAcceptResponse(addr3, []sdk.AccAddress{addr1, addr2}, true),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("16acoin")),
+				makeInEvent(addr1),
+				types.NewCoinSpentEvent(addr2, cz("9acoin")),
+				makeInEvent(addr2),
+				types.NewCoinReceivedEvent(addr3, cz("25acoin")),
+				makeOutEvent(addr3, "25acoin"),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "480acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "490acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "525acoin,500bcoin,500ccoin"),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+		{
+			name: "one output that is quarantined",
+			inputs: []types.Input{
+				makeInput(addr1, "5bcoin"),
+				makeInput(addr2, "5ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "5bcoin,5ccoin"),
+			},
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr3, true),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("5bcoin")),
+				makeInEvent(addr1),
+				types.NewCoinSpentEvent(addr2, cz("5ccoin")),
+				makeInEvent(addr2),
+				types.NewCoinReceivedEvent(fundsHolder, cz("5bcoin,5ccoin")),
+				makeOutEvent(fundsHolder, "5bcoin,5ccoin"),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "480acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "490acoin,500bcoin,495ccoin"),
+				makeExpectedBalance(addr3, "525acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(fundsHolder, "5bcoin,5ccoin"),
+			},
+			expQ: []*QuarantinedCoins{makeQc("5bcoin,5ccoin", addr3, addr1, addr2)},
+		},
+		{
+			name: "two outputs one that is quarantined",
+			inputs: []types.Input{
+				makeInput(addr3, "5bcoin,5ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr1, "5bcoin"),
+				makeOutput(addr2, "5ccoin"),
+			},
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr1, true),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr3, cz("5bcoin,5ccoin")),
+				makeInEvent(addr3),
+				types.NewCoinReceivedEvent(fundsHolder, cz("5bcoin")),
+				makeOutEvent(fundsHolder, "5bcoin"),
+				types.NewCoinReceivedEvent(addr2, cz("5ccoin")),
+				makeOutEvent(addr2, "5ccoin"),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "480acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "490acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "525acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(fundsHolder, "10bcoin,5ccoin"),
+			},
+			expQ: []*QuarantinedCoins{makeQc("5bcoin", addr1, addr3)},
+		},
+		{
+			name: "two outputs both quarantined",
+			inputs: []types.Input{
+				makeInput(addr2, "11acoin,22ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr1, "11acoin"),
+				makeOutput(addr3, "22ccoin"),
+			},
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr1, true).
+				WithIsQuarantinedAddrResponse(addr3, true),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr2, cz("11acoin,22ccoin")),
+				makeInEvent(addr2),
+				types.NewCoinReceivedEvent(fundsHolder, cz("11acoin")),
+				makeOutEvent(fundsHolder, "11acoin"),
+				types.NewCoinReceivedEvent(fundsHolder, cz("22ccoin")),
+				makeOutEvent(fundsHolder, "22ccoin"),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "480acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "479acoin,500bcoin,478ccoin"),
+				makeExpectedBalance(addr3, "525acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(fundsHolder, "11acoin,10bcoin,27ccoin"),
+			},
+			expQ: []*QuarantinedCoins{
+				makeQc("11acoin", addr1, addr2),
+				makeQc("22ccoin", addr3, addr2),
+			},
+		},
+		{
+			name:    "add quarantined coins returns error",
+			inputs:  []types.Input{makeInput(addr1, "5acoin")},
+			outputs: []types.Output{makeOutput(addr2, "5acoin")},
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr2, true).
+				WithQueuedAddQuarantinedCoinsErrors(fmt.Errorf("this is a mocked error")),
+			expInErr:  []string{"this is a mocked error"},
+			expEvents: nil,
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "475acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "479acoin,500bcoin,478ccoin"),
+				makeExpectedBalance(addr3, "525acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(fundsHolder, "11acoin,10bcoin,27ccoin"),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			defer app.BankKeeper.SetQuarantineKeeper(nil)
+			bk := app.BankKeeper
+			bk.SetQuarantineKeeper(tc.qk)
+			em := sdk.NewEventManager()
+			tctx := ctx.WithEventManager(em)
+			err := bk.InputOutputCoins(tctx, tc.inputs, tc.outputs)
+			if len(tc.expInErr) > 0 {
+				if suite.Assert().Error(err, "InputOutputCoins error") {
+					for _, exp := range tc.expInErr {
+						suite.Assert().ErrorContains(err, exp, "InputOutputCoins error")
+					}
+				}
+			} else {
+				suite.Assert().NoError(err, "InputOutputCoins error")
+			}
+
+			if tc.expEvents != nil {
+				events := em.Events()
+				suite.Assert().Equal(tc.expEvents, events, "InputOutputCoins emitted events")
+			}
+
+			for i, expBal := range tc.expBals {
+				actual := bk.GetAllBalances(ctx, expBal.addr)
+				suite.Assert().Equal(expBal.balance.String(), actual.String(), "expected balance %d for %s", i, string(expBal.addr))
+			}
+
+			if tc.expQ != nil {
+				qk := tc.qk.(*MockQuarantineKeeper)
+				actual := qk.AddedQuarantinedCoins
+				suite.Assert().Equal(tc.expQ, actual, "calls made to AddQuarantinedCoins")
+			}
+		})
+	}
+}
+
 func (suite *IntegrationTestSuite) TestSendCoins() {
 	app, ctx := suite.app, suite.ctx
 	balances := sdk.NewCoins(newFooCoin(100), newBarCoin(50))
@@ -460,6 +789,244 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	})
 	suite.Require().Len(coins, 1)
 	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
+}
+
+func (suite *IntegrationTestSuite) TestSendCoinsWithQuarantine() {
+	app, ctx := suite.app, suite.ctx
+
+	// makeAndFundAccount makes and (if balance isn't zero) funds an account.
+	makeAndFundAccount := func(i uint8, balance sdk.Coins) sdk.AccAddress {
+		addr := sdk.AccAddress(fmt.Sprintf("addr%03d_____________", i))
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		app.AccountKeeper.SetAccount(ctx, acc)
+		if !balance.IsZero() {
+			suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr, balance), "funding account %d with %q", i, balance.String())
+		}
+		return addr
+	}
+
+	// cz converts the string to a Coins.
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		suite.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	// makeInEvent makes an event expected from an input.
+	makeInEvent := func(addr sdk.AccAddress) sdk.Event {
+		return sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(types.AttributeKeySender, addr.String()),
+		)
+	}
+
+	// makeTransferEvent makes an event expeced for a transfer.
+	makeTransferEvent := func(to, from sdk.AccAddress, amt string) sdk.Event {
+		return sdk.NewEvent(
+			types.EventTypeTransfer,
+			sdk.NewAttribute(types.AttributeKeyRecipient, to.String()),
+			sdk.NewAttribute(types.AttributeKeySender, from.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, amt),
+		)
+	}
+
+	type expectedBalance struct {
+		addr    sdk.AccAddress
+		balance sdk.Coins
+	}
+
+	makeExpectedBalance := func(addr sdk.AccAddress, coins string) *expectedBalance {
+		return &expectedBalance{
+			addr:    addr,
+			balance: cz(coins),
+		}
+	}
+
+	makeQc := func(coins string, toAddr sdk.AccAddress, fromAddrs ...sdk.AccAddress) *QuarantinedCoins {
+		return &QuarantinedCoins{
+			coins:     cz(coins),
+			toAddr:    toAddr,
+			fromAddrs: fromAddrs,
+		}
+	}
+
+	fundsHolder := sdk.AccAddress("holdsquarantinefunds")
+	app.AccountKeeper.SetAccount(ctx, app.AccountKeeper.NewAccountWithAddress(ctx, fundsHolder))
+
+	addr1 := makeAndFundAccount(1, cz("500acoin,500bcoin,500ccoin"))
+	addr2 := makeAndFundAccount(2, cz("500acoin,500bcoin,500ccoin"))
+
+	tests := []struct {
+		name      string
+		fromAddr  sdk.AccAddress
+		toAddr    sdk.AccAddress
+		amt       sdk.Coins
+		qk        types.QuarantineKeeper
+		expInErr  []string
+		expEvents sdk.Events
+		expBals   []*expectedBalance
+		expQ      []*QuarantinedCoins
+	}{
+		{
+			name:     "nil quarantine keeper",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5acoin"),
+			qk:       nil,
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("5acoin")),
+				types.NewCoinReceivedEvent(addr2, cz("5acoin")),
+				makeTransferEvent(addr2, addr1, "5acoin"),
+				makeInEvent(addr1),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(fundsHolder, ""),
+			},
+			expQ: nil,
+		},
+		{
+			name:     "no funds holder",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("10acoin"),
+			qk: NewMockMockQuarantineKeeper(nil).
+				WithIsQuarantinedAddrResponse(addr2, true),
+			expInErr:  []string{"no quarantine holder account defined", "unknown address"},
+			expEvents: sdk.Events{},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(fundsHolder, ""),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+		{
+			name:     "with quarantine keeper but not quarantined",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5ccoin"),
+			qk:       NewMockMockQuarantineKeeper(fundsHolder),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("5ccoin")),
+				types.NewCoinReceivedEvent(addr2, cz("5ccoin")),
+				makeTransferEvent(addr2, addr1, "5ccoin"),
+				makeInEvent(addr1),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,505ccoin"),
+				makeExpectedBalance(fundsHolder, ""),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+		{
+			name:     "quarantined with auto-accept",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5bcoin"),
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr2, true).
+				WithIsAutoAcceptResponse(addr2, []sdk.AccAddress{addr1}, true),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("5bcoin")),
+				types.NewCoinReceivedEvent(addr2, cz("5bcoin")),
+				makeTransferEvent(addr2, addr1, "5bcoin"),
+				makeInEvent(addr1),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "505acoin,505bcoin,505ccoin"),
+				makeExpectedBalance(fundsHolder, ""),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+		{
+			name:     "quarantined",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("7acoin"),
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr2, true),
+			expInErr: nil,
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("7acoin")),
+				types.NewCoinReceivedEvent(fundsHolder, cz("7acoin")),
+				makeTransferEvent(fundsHolder, addr1, "7acoin"),
+				makeInEvent(addr1),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "488acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "505acoin,505bcoin,505ccoin"),
+				makeExpectedBalance(fundsHolder, "7acoin"),
+			},
+			expQ: []*QuarantinedCoins{
+				makeQc("7acoin", addr2, addr1),
+			},
+		},
+		{
+			name:     "add quarantined coins returns error",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("8bcoin"),
+			qk: NewMockMockQuarantineKeeper(fundsHolder).
+				WithIsQuarantinedAddrResponse(addr2, true).
+				WithQueuedAddQuarantinedCoinsErrors(fmt.Errorf("this is a mocked test error")),
+			expInErr: []string{"this is a mocked test error"},
+			expEvents: sdk.Events{
+				types.NewCoinSpentEvent(addr1, cz("8bcoin")),
+				types.NewCoinReceivedEvent(fundsHolder, cz("8bcoin")),
+				makeTransferEvent(fundsHolder, addr1, "8bcoin"),
+				makeInEvent(addr1),
+			},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "488acoin,487bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "505acoin,505bcoin,505ccoin"),
+				makeExpectedBalance(fundsHolder, "7acoin,8bcoin"),
+			},
+			expQ: []*QuarantinedCoins{},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			defer app.BankKeeper.SetQuarantineKeeper(nil)
+			bk := app.BankKeeper
+			bk.SetQuarantineKeeper(tc.qk)
+			em := sdk.NewEventManager()
+			tctx := ctx.WithEventManager(em)
+			err := bk.SendCoins(tctx, tc.fromAddr, tc.toAddr, tc.amt)
+			if len(tc.expInErr) > 0 {
+				if suite.Assert().Error(err, "SendCoins error") {
+					for _, exp := range tc.expInErr {
+						suite.Assert().ErrorContains(err, exp, "SendCoins error")
+					}
+				}
+			} else {
+				suite.Assert().NoError(err, "SendCoins error")
+			}
+
+			if tc.expEvents != nil {
+				events := em.Events()
+				suite.Assert().Equal(tc.expEvents, events, "SendCoins emitted events")
+			}
+
+			for i, expBal := range tc.expBals {
+				actual := bk.GetAllBalances(ctx, expBal.addr)
+				suite.Assert().Equal(expBal.balance.String(), actual.String(), "expected balance %d for %s", i, string(expBal.addr))
+			}
+
+			if tc.expQ != nil {
+				qk := tc.qk.(*MockQuarantineKeeper)
+				actual := qk.AddedQuarantinedCoins
+				suite.Assert().Equal(tc.expQ, actual, "calls made to AddQuarantinedCoins")
+			}
+		})
+	}
 }
 
 func (suite *IntegrationTestSuite) TestValidateBalance() {
@@ -1588,7 +2155,8 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		params := types.Params{DefaultSendEnabled: def}
 		bankKeeper.SetParams(ctx, params)
 		suite.T().Run(fmt.Sprintf("default %t does not change", def), func(t *testing.T) {
-			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper))
+			kp := bankKeeper.(*keeper.BaseKeeper)
+			migrator := keeper.NewMigrator(*kp)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			actual := bankKeeper.GetParams(ctx)
 			assert.Equal(t, params.DefaultSendEnabled, actual.DefaultSendEnabled)
@@ -1604,7 +2172,8 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate3to4() {
 		}
 		bankKeeper.SetParams(ctx, params)
 		suite.T().Run(fmt.Sprintf("default %t send enabled info moved to store", def), func(t *testing.T) {
-			migrator := keeper.NewMigrator(bankKeeper.(keeper.BaseKeeper))
+			kp := bankKeeper.(*keeper.BaseKeeper)
+			migrator := keeper.NewMigrator(*kp)
 			require.NoError(t, migrator.Migrate3to4(ctx))
 			newParams := bankKeeper.GetParams(ctx)
 			assert.Len(t, newParams.SendEnabled, 0)

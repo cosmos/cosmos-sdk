@@ -395,12 +395,6 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 	return msg.Params.Validate()
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgUpdateParams) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
-
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
 func (msg MsgUpdateParams) GetSignBytes() []byte {

@@ -11,6 +11,7 @@ require (
 	cosmossdk.io/store v0.1.0
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
+	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
@@ -63,7 +64,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.3 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0-alpha1 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.9.0 // indirect
 	github.com/creachadair/atomicfile v0.2.7 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -186,6 +187,7 @@ require (
 // TODO tag all extracted modules after SDK refactor
 replace (
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/nft => ../x/nft
 )
 

@@ -42,6 +42,8 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -96,6 +98,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -120,6 +124,8 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -179,6 +185,8 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 5)},
 		addrs[0].String(),
 		"",
+		"Proposal",
+		"description of proposal",
 	)
 	require.NoError(t, err)
 
@@ -232,7 +240,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	activeQueue.Close()
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
-	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "")
+	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal")
 	require.NoError(t, err)
 
 	res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
@@ -291,6 +299,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
+	proposer := addrs[0]
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, suite.StakingKeeper)
@@ -299,7 +308,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
@@ -314,7 +323,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	moduleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
-	require.True(t, moduleAccCoins.IsEqual(deposits))
+	require.True(t, moduleAccCoins.Equal(deposits))
 
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
@@ -327,7 +336,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).Equal(initialModuleAccCoins))
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {
@@ -343,12 +352,13 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	valAddr := sdk.ValAddress(addrs[0])
+	proposer := addrs[0]
 
 	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
 	staking.EndBlocker(ctx, suite.StakingKeeper)
 
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "")
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))

@@ -336,8 +336,11 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, nextAccVal)
 
-		accountCredentials := authtypes.NewModuleCredential(group.ModuleName, [][]byte{{GroupPolicyTablePrefix}, derivationKey})
-		accountAddr = sdk.AccAddress(accountCredentials.Address())
+		ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
+		if err != nil {
+			return nil, err
+		}
+		accountAddr = sdk.AccAddress(ac.Address())
 		if k.accKeeper.GetAccount(ctx, accountAddr) != nil {
 			// handle a rare collision, in which case we just go on to the
 			// next sequence value and derive a new address.
@@ -345,7 +348,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, req *group.MsgCreateGro
 		}
 
 		// group policy accounts are unclaimable base accounts
-		account, err := authtypes.NewBaseAccountWithPubKey(accountCredentials)
+		account, err := authtypes.NewBaseAccountWithPubKey(ac)
 		if err != nil {
 			return nil, sdkerrors.Wrap(err, "could not create group policy account")
 		}
@@ -471,6 +474,14 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		return nil, err
 	}
 
+	if err := k.assertMetadataLength(req.Summary, "proposal summary"); err != nil {
+		return nil, err
+	}
+
+	if err := k.assertMetadataLength(req.Title, "proposal Title"); err != nil {
+		return nil, err
+	}
+
 	policyAcc, err := k.getGroupPolicyInfo(ctx, req.GroupPolicyAddress)
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "load group policy")
@@ -516,6 +527,8 @@ func (k Keeper) SubmitProposal(goCtx context.Context, req *group.MsgSubmitPropos
 		ExecutorResult:     group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		VotingPeriodEnd:    ctx.BlockTime().Add(policy.GetVotingPeriod()), // The voting window begins as soon as the proposal is submitted.
 		FinalTallyResult:   group.DefaultTallyResult(),
+		Title:              req.Title,
+		Summary:            req.Summary,
 	}
 
 	if err := m.SetMsgs(msgs); err != nil {
@@ -911,8 +924,7 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, groupPolicy string, admin s
 		return err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: admin})
-	if err != nil {
+	if err = ctx.EventManager().EmitTypedEvent(&group.EventUpdateGroupPolicy{Address: groupPolicyInfo.Address}); err != nil {
 		return err
 	}
 

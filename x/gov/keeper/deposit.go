@@ -3,8 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -71,7 +73,7 @@ func (keeper Keeper) DeleteAndBurnDeposits(ctx sdk.Context, proposalID uint64) {
 // IterateAllDeposits iterates over all the stored deposits and performs a callback function.
 func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
+	iterator := storetypes.KVStorePrefixIterator(store, types.DepositsKeyPrefix)
 
 	defer iterator.Close()
 
@@ -89,7 +91,7 @@ func (keeper Keeper) IterateAllDeposits(ctx sdk.Context, cb func(deposit v1.Depo
 // IterateDeposits iterates over all the proposals deposits and performs a callback function
 func (keeper Keeper) IterateDeposits(ctx sdk.Context, proposalID uint64, cb func(deposit v1.Deposit) (stop bool)) {
 	store := ctx.KVStore(keeper.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
+	iterator := storetypes.KVStorePrefixIterator(store, types.DepositsKey(proposalID))
 
 	defer iterator.Close()
 
@@ -160,6 +162,77 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 	keeper.SetDeposit(ctx, deposit)
 
 	return activatedVotingPeriod, nil
+}
+
+// ChargeDeposit will charge proposal cancellation fee (deposits * proposal_cancel_burn_rate)  and
+// send to a destAddress if defined or burn otherwise.
+// Remaining funds are send back to the depositor.
+func (keeper Keeper) ChargeDeposit(ctx sdk.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
+	store := ctx.KVStore(keeper.storeKey)
+	rate := sdk.MustNewDecFromStr(proposalCancelRate)
+	var cancellationCharges sdk.Coins
+
+	for _, deposits := range keeper.GetDeposits(ctx, proposalID) {
+		depositerAddress := sdk.MustAccAddressFromBech32(deposits.Depositor)
+		var remainingAmount sdk.Coins
+
+		for _, deposit := range deposits.Amount {
+			burnAmount := sdk.NewDecFromInt(deposit.Amount).Mul(rate).TruncateInt()
+			// remaining amount = deposits amount - burn amount
+			remainingAmount = remainingAmount.Add(
+				sdk.NewCoin(
+					deposit.Denom,
+					deposit.Amount.Sub(burnAmount),
+				),
+			)
+			cancellationCharges = cancellationCharges.Add(
+				sdk.NewCoin(
+					deposit.Denom,
+					burnAmount,
+				),
+			)
+		}
+
+		if !remainingAmount.IsZero() {
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(
+				ctx, types.ModuleName, depositerAddress, remainingAmount,
+			)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// burn the cancellation fee or sent the cancellation charges to destination address.
+	if !cancellationCharges.IsZero() {
+		// get the distribution module account address
+		distributionAddress := keeper.authKeeper.GetModuleAddress(disttypes.ModuleName)
+		switch {
+		case len(destAddress) == 0:
+			// burn the cancellation charges from deposits
+			err := keeper.bankKeeper.BurnCoins(ctx, types.ModuleName, cancellationCharges)
+			if err != nil {
+				return err
+			}
+		case distributionAddress.String() == destAddress:
+			err := keeper.distrkeeper.FundCommunityPool(ctx, cancellationCharges, keeper.ModuleAccountAddress())
+			if err != nil {
+				return err
+			}
+		default:
+			destAccAddress := sdk.MustAccAddressFromBech32(destAddress)
+			err := keeper.bankKeeper.SendCoinsFromModuleToAccount(
+				ctx, types.ModuleName, destAccAddress, cancellationCharges,
+			)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	store.Delete(types.DepositsKey(proposalID))
+
+	return nil
 }
 
 // RefundAndDeleteDeposits refunds and deletes all the deposits on a specific proposal.

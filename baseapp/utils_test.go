@@ -14,25 +14,43 @@ import (
 	"testing"
 	"unsafe"
 
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/mint"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var (
-	ParamStoreKey = []byte("paramstore")
-)
+var ParamStoreKey = []byte("paramstore")
 
 func defaultLogger() log.Logger {
 	if testing.Verbose() {
@@ -40,6 +58,53 @@ func defaultLogger() log.Logger {
 	}
 
 	return log.NewNopLogger()
+}
+
+// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
+// that also act as delegators.
+func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *runtime.AppBuilder) map[string]json.RawMessage {
+	t.Helper()
+
+	privVal := mock.NewPV()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
+
+	// create validator set with single validator
+	validator := tmtypes.NewValidator(pubKey, 1)
+	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+
+	// generate genesis account
+	senderPrivKey := secp256k1.GenPrivKey()
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	balances := []banktypes.Balance{
+		{
+			Address: acc.GetAddress().String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
+		},
+	}
+
+	genesisState := builder.DefaultGenesis()
+	// sus
+	genesisState, err = simtestutil.GenesisStateWithValSet(codec, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
+	require.NoError(t, err)
+
+	return genesisState
+}
+
+func makeMinimalConfig() depinject.Config {
+	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+	return depinject.Configs(
+		depinject.Supply(mempoolOpt),
+		appconfig.Compose(&appv1alpha1.Config{
+			Modules: []*appv1alpha1.ModuleConfig{
+				{
+					Name: "runtime",
+					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+						AppName: "BaseAppApp",
+					}),
+				},
+			},
+		}))
 }
 
 type MsgKeyValueImpl struct{}
@@ -166,14 +231,14 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
-func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
 	return &sdk.Result{}, nil
 }
 
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 	bz := make([]byte, 8)
 	n := binary.PutVarint(bz, i)
 	store.Set(key, bz[:n])
@@ -283,7 +348,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	return builder.GetTx()
 }
 
-func getIntFromStore(t *testing.T, store sdk.KVStore, key []byte) int64 {
+func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0

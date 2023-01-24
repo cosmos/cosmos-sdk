@@ -16,18 +16,18 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestIntegrationTestSuite(t *testing.T) {
+func TestE2ETestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-	suite.Run(t, NewIntegrationTestSuite(cfg))
+	suite.Run(t, NewE2ETestSuite(cfg))
 }
 
 func TestDepositTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
 	genesisState := v1.DefaultGenesisState()
-	maxDepPeriod := time.Duration(15) * time.Second
-	votingPeriod := time.Duration(5) * time.Second
+	maxDepPeriod := time.Duration(20) * time.Second
+	votingPeriod := time.Duration(8) * time.Second
 	genesisState.Params.MaxDepositPeriod = &maxDepPeriod
 	genesisState.Params.VotingPeriod = &votingPeriod
 	bz, err := cfg.Codec.MarshalJSON(genesisState)

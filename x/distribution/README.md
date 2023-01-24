@@ -151,7 +151,7 @@ type DecCoin struct {
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L92-L96
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L116-L123
 ```
 
 ### Validator Distribution
@@ -196,7 +196,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x09 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/distribution.proto#L11-L30
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L42
 ```
 
 ## Begin Block
@@ -282,7 +282,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L31-L41
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L49-L60
 ```
 
 ```go
@@ -334,7 +334,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/proto/cosmos/distribution/v1beta1/tx.proto#L46-L56
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L66-L77
 ```
 
 ### WithdrawValidatorCommission
@@ -398,7 +398,7 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/8822ef2695a1eb8cb30b7432f58f631c73951f1d/proto/cosmos/distribution/v1beta1/tx.proto#L106-L119
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L133-L147
 ```
 
 The message handling can fail if:
@@ -512,12 +512,10 @@ The distribution module contains the following parameters:
 | Key                 | Type         | Example                    |
 | ------------------- | ------------ | -------------------------- |
 | communitytax        | string (dec) | "0.020000000000000000" [0] |
-| baseproposerreward  | string (dec) | "0.010000000000000000" [0] |
-| bonusproposerreward | string (dec) | "0.040000000000000000" [0] |
 | withdrawaddrenabled | bool         | true                       |
 
-* [0] `communitytax`, `baseproposerreward` and `bonusproposerreward` must be
-  positive and their sum cannot exceed 1.00.
+* [0] `communitytax` must be positive and cannot exceed 1.00.
+* `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
 
 ## Client
 
@@ -594,8 +592,8 @@ simd query distribution params
 Example Output:
 
 ```yml
-base_proposer_reward: "0.010000000000000000"
-bonus_proposer_reward: "0.040000000000000000"
+base_proposer_reward: "0.000000000000000000"
+bonus_proposer_reward: "0.000000000000000000"
 community_tax: "0.020000000000000000"
 withdraw_addr_enabled: true
 ```
@@ -781,8 +779,8 @@ Example Output:
 {
   "params": {
     "communityTax": "20000000000000000",
-    "baseProposerReward": "10000000000000000",
-    "bonusProposerReward": "40000000000000000",
+    "baseProposerReward": "00000000000000000",
+    "bonusProposerReward": "00000000000000000",
     "withdrawAddrEnabled": true
   }
 }

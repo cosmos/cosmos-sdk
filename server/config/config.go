@@ -22,9 +22,6 @@ const (
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "localhost:9090"
 
-	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "localhost:9091"
-
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.
 	DefaultGRPCMaxRecvMsgSize = 1024 * 1024 * 10
@@ -147,12 +144,6 @@ type GRPCConfig struct {
 type GRPCWebConfig struct {
 	// Enable defines if the gRPC-web should be enabled.
 	Enable bool `mapstructure:"enable"`
-
-	// Address defines the gRPC-web server to listen on
-	Address string `mapstructure:"address"`
-
-	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
-	EnableUnsafeCORS bool `mapstructure:"enable-unsafe-cors"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -166,7 +157,8 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
-// MempoolConfig defines the configurations for the appside mempool
+// MempoolConfig defines the configurations for the SDK built-in app-side mempool
+// implementations.
 type MempoolConfig struct {
 	// MaxTxs defines the behavior of the mempool. A negative value indicates
 	// the mempool is disabled entirely, zero indicates that the mempool is
@@ -259,7 +251,7 @@ func DefaultConfig() *Config {
 			PruningInterval:     "0",
 			MinRetainBlocks:     0,
 			IndexEvents:         make([]string, 0),
-			IAVLCacheSize:       781250, // 50 MB
+			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			AppDBBackend:        "",
 		},
@@ -282,8 +274,7 @@ func DefaultConfig() *Config {
 			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
 		GRPCWeb: GRPCWebConfig{
-			Enable:  true,
-			Address: DefaultGRPCWebAddress,
+			Enable: true,
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,
@@ -295,10 +286,10 @@ func DefaultConfig() *Config {
 		Streamers: StreamersConfig{
 			File: FileStreamerConfig{
 				Keys:            []string{"*"},
-				WriteDir:        "data/file_streamer",
+				WriteDir:        "",
 				OutputMetadata:  true,
 				StopNodeOnError: true,
-				// NOTICE: the default config don't protect the streamer data integrity
+				// NOTICE: The default config doesn't protect the streamer data integrity
 				// in face of system crash.
 				Fsync: false,
 			},

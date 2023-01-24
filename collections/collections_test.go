@@ -5,38 +5,80 @@ import (
 	"math"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/mem"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/core/store"
+	db "github.com/cosmos/cosmos-db"
+
 	"github.com/stretchr/testify/require"
 )
 
-var _ StorageProvider = (*mockStorageProvider)(nil)
-
-type mockStorageProvider struct {
-	context.Context
-	store types.KVStore
+type testStore struct {
+	db db.DB
 }
 
-func (m mockStorageProvider) KVStore(key types.StoreKey) types.KVStore {
-	return m.store
+func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
+	return t
 }
 
-func deps() (types.StoreKey, context.Context) {
-	kv := mem.NewStore()
-	key := types.NewKVStoreKey("test")
-	return key, mockStorageProvider{store: kv}
+func (t testStore) Get(key []byte) ([]byte, error) {
+
+	return t.db.Get(key)
+}
+
+func (t testStore) Has(key []byte) (bool, error) {
+	return t.db.Has(key)
+}
+
+func (t testStore) Set(key, value []byte) error {
+	return t.db.Set(key, value)
+
+}
+
+func (t testStore) Delete(key []byte) error {
+	return t.db.Delete(key)
+}
+
+func (t testStore) Iterator(start, end []byte) (store.Iterator, error) {
+	return t.db.Iterator(start, end)
+}
+
+func (t testStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
+	return t.db.ReverseIterator(start, end)
+}
+
+var _ store.KVStore = testStore{}
+
+func deps() (store.KVStoreService, context.Context) {
+	kv := db.NewMemDB()
+	return &testStore{kv}, context.Background()
 }
 
 // checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
-func checkKeyCodec[T any](t *testing.T, encoder KeyCodec[T], key T) {
-	buffer := make([]byte, encoder.Size(key))
-	written, err := encoder.Encode(buffer, key)
+func checkKeyCodec[T any](t *testing.T, keyCodec KeyCodec[T], key T) {
+	buffer := make([]byte, keyCodec.Size(key))
+	written, err := keyCodec.Encode(buffer, key)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), written)
-	read, decodedKey, err := encoder.Decode(buffer)
+	read, decodedKey, err := keyCodec.Decode(buffer)
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
 	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")
+	// test if terminality is correctly applied
+	pairCodec := PairKeyCodec(keyCodec, StringKey)
+	pairKey := Join(key, "TEST")
+	buffer = make([]byte, pairCodec.Size(pairKey))
+	written, err = pairCodec.Encode(buffer, pairKey)
+	require.NoError(t, err)
+	read, decodedPairKey, err := pairCodec.Decode(buffer)
+	require.NoError(t, err)
+	require.Equal(t, len(buffer), read, "encoded non terminal key and pair key read bytes must have same size")
+	require.Equal(t, pairKey, decodedPairKey, "encoding and decoding produces different keys with non terminal encoding")
+
+	// check JSON
+	keyJSON, err := keyCodec.EncodeJSON(key)
+	require.NoError(t, err)
+	decoded, err := keyCodec.DecodeJSON(keyJSON)
+	require.NoError(t, err)
+	require.Equal(t, key, decoded, "json encoding and decoding did not produce the same results")
 }
 
 // checkValueCodec asserts the correct behaviour of a ValueCodec over the type T.

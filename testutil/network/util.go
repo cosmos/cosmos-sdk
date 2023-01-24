@@ -3,10 +3,12 @@ package network
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"time"
 
+	sdkerrors "cosmossdk.io/errors"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -74,8 +76,17 @@ func startInProcess(cfg Config, val *Validator) error {
 		app.RegisterNodeService(val.ClientCtx)
 	}
 
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+		if err != nil {
+			return err
+		}
+
+		val.grpc = grpcSrv
+	}
+
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		errCh := make(chan error)
@@ -95,21 +106,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.api = apiSrv
 	}
 
-	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
-		if err != nil {
-			return err
-		}
-
-		val.grpc = grpcSrv
-
-		if val.AppConfig.GRPCWeb.Enable {
-			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
@@ -201,4 +197,22 @@ func writeFile(name string, dir string, contents []byte) error {
 	}
 
 	return nil
+}
+
+// Get a free address for a test tendermint server
+// protocol is either tcp, http, etc
+func FreeTCPAddr() (addr, port string, err error) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return "", "", err
+	}
+
+	if err := l.Close(); err != nil {
+		return "", "", sdkerrors.Wrap(err, "couldn't close the listener")
+	}
+
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	return
 }

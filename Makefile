@@ -140,7 +140,13 @@ cosmovisor:
 rosetta:
 	$(MAKE) -C tools/rosetta rosetta
 
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta
+confix:
+	$(MAKE) -C tools/confix confix
+
+hubl:
+	$(MAKE) -C tools/hubl hubl
+
+.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor rosetta confix
 
 
 mocks: $(MOCKS_DIR)
@@ -392,7 +398,7 @@ devdoc-update:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.2
+protoVer=0.11.5
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -405,6 +411,7 @@ proto-gen:
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
 	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+	$(MAKE) update-swagger-docs
 
 proto-format:
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;

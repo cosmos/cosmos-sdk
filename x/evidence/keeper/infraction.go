@@ -3,9 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/x/evidence/types"
 
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -120,7 +120,7 @@ func (k Keeper) HandleEquivocationEvidence(ctx sdk.Context, evidence *types.Equi
 	// to/by Tendermint. This value is validator.Tokens as sent to Tendermint via
 	// ABCI, and now received as evidence. The fraction is passed in to separately
 	// to slash unbonding and rebonding delegations.
-	k.slashingKeeper.Slash(
+	k.slashingKeeper.SlashWithInfractionReason(
 		ctx,
 		consAddr,
 		k.slashingKeeper.SlashFractionDoubleSign(ctx),

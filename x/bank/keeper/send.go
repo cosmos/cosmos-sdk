@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -100,12 +102,15 @@ func (k BaseSendKeeper) GetParams(ctx sdk.Context) (params types.Params) {
 
 // SetParams sets the total set of bank parameters.
 //
-//nolint:staticcheck // params.SendEnabled is deprecated but it should be here regardless.
+// Note: params.SendEnabled is deprecated but it should be here regardless.
+
 func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
-	// normally SendEnabled is deprecated but we still support it for backwards compatibility
-	// using params.Validate() would fail due to the SendEnabled deprecation
-	if len(params.SendEnabled) > 0 {
-		k.SetAllSendEnabled(ctx, params.SendEnabled)
+	// Normally SendEnabled is deprecated but we still support it for backwards
+	// compatibility. Using params.Validate() would fail due to the SendEnabled
+	// deprecation.
+	if len(params.SendEnabled) > 0 { //nolint:staticcheck // SA1019: params.SendEnabled is deprecated
+		k.SetAllSendEnabled(ctx, params.SendEnabled) //nolint:staticcheck // SA1019: params.SendEnabled is deprecated
+
 		// override params without SendEnabled
 		params = types.NewParams(params.DefaultSendEnabled)
 	}
@@ -115,6 +120,7 @@ func (k BaseSendKeeper) SetParams(ctx sdk.Context, params types.Params) error {
 	if err != nil {
 		return err
 	}
+
 	store.Set(types.ParamsKey, bz)
 	return nil
 }
@@ -139,6 +145,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
+
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				sdk.EventTypeMessage,
@@ -152,8 +159,8 @@ func (k BaseSendKeeper) InputOutputCoins(ctx sdk.Context, inputs []types.Input, 
 		if err != nil {
 			return err
 		}
-		err = k.addCoins(ctx, outAddress, out.Coins)
-		if err != nil {
+
+		if err := k.addCoins(ctx, outAddress, out.Coins); err != nil {
 			return err
 		}
 
@@ -213,7 +220,7 @@ func (k BaseSendKeeper) SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAd
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
-			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
+			sdk.NewAttribute(types.AttributeKeySender, fromAddr.String()),
 		),
 	})
 
@@ -255,15 +262,15 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, a
 		}
 	}
 
-	// emit coin spent event
 	ctx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(addr, amt),
 	)
+
 	return nil
 }
 
-// addCoins increase the addr balance by the given amt. Fails if the provided amt is invalid.
-// It emits a coin received event.
+// addCoins increase the addr balance by the given amt. Fails if the provided
+// amt is invalid. It emits a coin received event.
 func (k BaseSendKeeper) addCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
@@ -343,6 +350,7 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 		if err != nil {
 			return err
 		}
+
 		accountStore.Set([]byte(balance.Denom), amount)
 
 		// Store a reverse index from denomination to account address with a
@@ -356,28 +364,23 @@ func (k BaseSendKeeper) setBalance(ctx sdk.Context, addr sdk.AccAddress, balance
 	return nil
 }
 
-// IsSendEnabledCoins checks the coins provide and returns an ErrSendDisabled if
-// any of the coins are not configured for sending.  Returns nil if sending is enabled
-// for all provided coin
+// IsSendEnabledCoins checks the coins provided and returns an ErrSendDisabled
+// if any of the coins are not configured for sending. Returns nil if sending is
+// enabled for all provided coins.
 func (k BaseSendKeeper) IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error {
 	if len(coins) == 0 {
 		return nil
 	}
+
 	store := ctx.KVStore(k.storeKey)
-	haveDefault := false
-	var defaultVal bool
-	getDefault := func() bool {
-		if !haveDefault {
-			defaultVal = k.GetParams(ctx).DefaultSendEnabled
-			haveDefault = true
-		}
-		return defaultVal
-	}
+	defaultVal := k.GetParams(ctx).DefaultSendEnabled
+
 	for _, coin := range coins {
-		if !k.getSendEnabledOrDefault(store, coin.Denom, getDefault) {
+		if !k.getSendEnabledOrDefault(store, coin.Denom, defaultVal) {
 			return types.ErrSendDisabled.Wrapf("%s transfers are currently disabled", coin.Denom)
 		}
 	}
+
 	return nil
 }
 
@@ -399,7 +402,7 @@ func (k BaseSendKeeper) GetBlockedAddresses() map[string]bool {
 
 // IsSendEnabledDenom returns the current SendEnabled status of the provided denom.
 func (k BaseSendKeeper) IsSendEnabledDenom(ctx sdk.Context, denom string) bool {
-	return k.getSendEnabledOrDefault(ctx.KVStore(k.storeKey), denom, func() bool { return k.GetParams(ctx).DefaultSendEnabled })
+	return k.getSendEnabledOrDefault(ctx.KVStore(k.storeKey), denom, k.GetParams(ctx).DefaultSendEnabled)
 }
 
 // GetSendEnabledEntry gets a SendEnabled entry for the given denom.
@@ -409,6 +412,7 @@ func (k BaseSendKeeper) GetSendEnabledEntry(ctx sdk.Context, denom string) (type
 	if !found {
 		return types.SendEnabled{}, false
 	}
+
 	return types.SendEnabled{Denom: denom, Enabled: sendEnabled}, true
 }
 
@@ -419,18 +423,19 @@ func (k BaseSendKeeper) SetSendEnabled(ctx sdk.Context, denom string, value bool
 }
 
 // SetAllSendEnabled sets all the provided SendEnabled entries in the bank store.
-func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, sendEnableds []*types.SendEnabled) {
+func (k BaseSendKeeper) SetAllSendEnabled(ctx sdk.Context, entries []*types.SendEnabled) {
 	store := ctx.KVStore(k.storeKey)
-	for _, se := range sendEnableds {
-		k.setSendEnabledEntry(store, se.Denom, se.Enabled)
+	for _, entry := range entries {
+		k.setSendEnabledEntry(store, entry.Denom, entry.Enabled)
 	}
 }
 
 // setSendEnabledEntry sets SendEnabled for the given denom to the give value in the provided store.
-func (k BaseSendKeeper) setSendEnabledEntry(store sdk.KVStore, denom string, value bool) {
+func (k BaseSendKeeper) setSendEnabledEntry(store storetypes.KVStore, denom string, value bool) {
 	key := types.CreateSendEnabledKey(denom)
-	val := types.ToBoolB(value)
-	store.Set(key, []byte{val})
+
+	bz := k.cdc.MustMarshal(&gogotypes.BoolValue{Value: value})
+	store.Set(key, bz)
 }
 
 // DeleteSendEnabled deletes the SendEnabled flags for one or more denoms.
@@ -443,7 +448,7 @@ func (k BaseSendKeeper) DeleteSendEnabled(ctx sdk.Context, denoms ...string) {
 }
 
 // getSendEnabledPrefixStore gets a prefix store for the SendEnabled entries.
-func (k BaseSendKeeper) getSendEnabledPrefixStore(ctx sdk.Context) sdk.KVStore {
+func (k BaseSendKeeper) getSendEnabledPrefixStore(ctx sdk.Context) storetypes.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.SendEnabledPrefix)
 }
 
@@ -456,25 +461,30 @@ func (k BaseSendKeeper) IterateSendEnabledEntries(ctx sdk.Context, cb func(denom
 
 	for ; iterator.Valid(); iterator.Next() {
 		denom := string(iterator.Key())
-		val := types.IsTrueB(iterator.Value())
-		if cb(denom, val) {
+
+		var enabled gogotypes.BoolValue
+		k.cdc.MustUnmarshal(iterator.Value(), &enabled)
+
+		if cb(denom, enabled.Value) {
 			break
 		}
 	}
 }
 
 // GetAllSendEnabledEntries gets all the SendEnabled entries that are stored.
-// Any denoms not returned use the default value (set in Params).
+// Any denominations not returned use the default value (set in Params).
 func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEnabled {
 	var rv []types.SendEnabled
 	k.IterateSendEnabledEntries(ctx, func(denom string, sendEnabled bool) bool {
 		rv = append(rv, types.SendEnabled{Denom: denom, Enabled: sendEnabled})
 		return false
 	})
+
 	return rv
 }
 
-// getSendEnabled returns whether send is enabled and whether that flag was set for a denom.
+// getSendEnabled returns whether send is enabled and whether that flag was set
+// for a denom.
 //
 // Example usage:
 //
@@ -483,30 +493,30 @@ func (k BaseSendKeeper) GetAllSendEnabledEntries(ctx sdk.Context) []types.SendEn
 //	if !found {
 //	    sendEnabled = DefaultSendEnabled
 //	}
-func (k BaseSendKeeper) getSendEnabled(store sdk.KVStore, denom string) (bool, bool) {
+func (k BaseSendKeeper) getSendEnabled(store storetypes.KVStore, denom string) (bool, bool) {
 	key := types.CreateSendEnabledKey(denom)
 	if !store.Has(key) {
 		return false, false
 	}
-	v := store.Get(key)
-	if len(v) != 1 {
+
+	bz := store.Get(key)
+	if bz == nil {
 		return false, false
 	}
-	switch v[0] {
-	case types.TrueB:
-		return true, true
-	case types.FalseB:
-		return false, true
-	default:
-		return false, false
-	}
+
+	var enabled gogotypes.BoolValue
+	k.cdc.MustUnmarshal(bz, &enabled)
+
+	return enabled.Value, true
 }
 
-// getSendEnabledOrDefault gets the send_enabled value for a denom. If it's not in the store, this will return the result of the getDefault function.
-func (k BaseSendKeeper) getSendEnabledOrDefault(store sdk.KVStore, denom string, getDefault func() bool) bool {
+// getSendEnabledOrDefault gets the SendEnabled value for a denom. If it's not
+// in the store, this will return defaultVal.
+func (k BaseSendKeeper) getSendEnabledOrDefault(store storetypes.KVStore, denom string, defaultVal bool) bool {
 	sendEnabled, found := k.getSendEnabled(store, denom)
 	if found {
 		return sendEnabled
 	}
-	return getDefault()
+
+	return defaultVal
 }

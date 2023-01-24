@@ -15,6 +15,7 @@ import (
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -117,7 +118,7 @@ func TestAnteHandlerSigErrors(t *testing.T) {
 
 				// Create tx manually to test the tx's signers
 				require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
-				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 
 				// tx.GetSigners returns addresses in correct order: addr1, addr2, addr3
@@ -1140,7 +1141,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				suite.txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 				require.NoError(t, err)
@@ -1186,7 +1187,7 @@ func TestAnteHandlerSetPubKey(t *testing.T) {
 				suite.txBuilder.SetGasLimit(gasLimit)
 
 				// Manually create tx, and remove signature.
-				tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+				tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 				require.NoError(t, err)
 				txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 				require.NoError(t, err)
@@ -1249,9 +1250,9 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 		// TODO: also generate ed25519 keys as below when ed25519 keys are
 		//  actually supported, https://github.com/cosmos/cosmos-sdk/issues/4789
 		// for now this fails:
-		//if rand.Int63()%2 == 0 {
+		// if rand.Int63()%2 == 0 {
 		//	privkey = ed25519.GenPrivKey()
-		//} else {
+		// } else {
 		//	privkey = secp256k1.GenPrivKey()
 		//}
 
@@ -1368,7 +1369,7 @@ func TestCustomSignatureVerificationGasConsumer(t *testing.T) {
 						BankKeeper:      suite.bankKeeper,
 						FeegrantKeeper:  suite.feeGrantKeeper,
 						SignModeHandler: suite.clientCtx.TxConfig.SignModeHandler(),
-						SigGasConsumer: func(meter sdk.GasMeter, sig signing.SignatureV2, params authtypes.Params) error {
+						SigGasConsumer: func(meter storetypes.GasMeter, sig signing.SignatureV2, params authtypes.Params) error {
 							switch pubkey := sig.PubKey.(type) {
 							case *ed25519.PubKey:
 								meter.ConsumeGas(params.SigVerifyCostED25519, "ante verify: ed25519")
@@ -1434,7 +1435,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 
 	// test that operations skipped on recheck do not run
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
-	tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// make signature array empty which would normally cause ValidateBasicDecorator and SigVerificationDecorator fail
@@ -1446,7 +1447,7 @@ func TestAnteHandlerReCheck(t *testing.T) {
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	require.Nil(t, err, "AnteHandler errored on recheck unexpectedly: %v", err)
 
-	tx, err = suite.CreateTestTx(privs, accNums, accSeqs, suite.ctx.ChainID())
+	tx, err = suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 	txBytes, err := json.Marshal(tx)
 	require.Nil(t, err, "Error marshalling tx: %v", err)

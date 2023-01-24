@@ -7,20 +7,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/tendermint/tendermint/crypto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 var (
-	_ AccountI                           = (*BaseAccount)(nil)
+	_ sdk.AccountI                       = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*BaseAccount)(nil)
 	_ codectypes.UnpackInterfacesMessage = (*BaseAccount)(nil)
 	_ GenesisAccount                     = (*ModuleAccount)(nil)
-	_ ModuleAccountI                     = (*ModuleAccount)(nil)
+	_ sdk.ModuleAccountI                 = (*ModuleAccount)(nil)
 )
 
 // NewBaseAccount creates a new BaseAccount object
@@ -42,7 +42,7 @@ func NewBaseAccount(address sdk.AccAddress, pubKey cryptotypes.PubKey, accountNu
 }
 
 // ProtoBaseAccount - a prototype function for BaseAccount
-func ProtoBaseAccount() AccountI {
+func ProtoBaseAccount() sdk.AccountI {
 	return &BaseAccount{}
 }
 
@@ -157,7 +157,7 @@ func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
 
 // NewModuleAddress creates an AccAddress from the hash of the module's name
 func NewModuleAddress(name string) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(name)))
+	return address.Module(name)
 }
 
 // NewEmptyModuleAccount creates a empty ModuleAccount from a string
@@ -273,33 +273,18 @@ func (ma *ModuleAccount) UnmarshalJSON(bz []byte) error {
 // and a pubkey for authentication purposes.
 //
 // Many complex conditions can be used in the concrete struct which implements AccountI.
+//
+// Deprecated: Use `AccountI` from types package instead.
 type AccountI interface {
-	proto.Message
-
-	GetAddress() sdk.AccAddress
-	SetAddress(sdk.AccAddress) error // errors if already set.
-
-	GetPubKey() cryptotypes.PubKey // can return nil.
-	SetPubKey(cryptotypes.PubKey) error
-
-	GetAccountNumber() uint64
-	SetAccountNumber(uint64) error
-
-	GetSequence() uint64
-	SetSequence(uint64) error
-
-	// Ensure that account implements stringer
-	String() string
+	sdk.AccountI
 }
 
 // ModuleAccountI defines an account interface for modules that hold tokens in
 // an escrow.
+//
+// Deprecated: Use `ModuleAccountI` from types package instead.
 type ModuleAccountI interface {
-	AccountI
-
-	GetName() string
-	GetPermissions() []string
-	HasPermission(string) bool
+	sdk.ModuleAccountI
 }
 
 // GenesisAccounts defines a slice of GenesisAccount objects
@@ -319,7 +304,7 @@ func (ga GenesisAccounts) Contains(addr sdk.Address) bool {
 
 // GenesisAccount defines a genesis account that embeds an AccountI with validation capabilities.
 type GenesisAccount interface {
-	AccountI
+	sdk.AccountI
 
 	Validate() error
 }

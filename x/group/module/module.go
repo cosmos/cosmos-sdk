@@ -9,9 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"cosmossdk.io/core/appmodule"
-
 	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -180,7 +179,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for group module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[group.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

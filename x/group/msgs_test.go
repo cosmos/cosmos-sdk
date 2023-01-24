@@ -1,7 +1,7 @@
 package group_test
 
 import (
-	fmt "fmt"
+	"fmt"
 	"testing"
 	"time"
 
@@ -936,6 +936,8 @@ func TestMsgSubmitProposal(t *testing.T) {
 			"proposers required",
 			&group.MsgSubmitProposal{
 				GroupPolicyAddress: admin.String(),
+				Title:              "Title",
+				Summary:            "Summary",
 			},
 			true,
 			"proposers: value is empty",
@@ -945,9 +947,31 @@ func TestMsgSubmitProposal(t *testing.T) {
 			&group.MsgSubmitProposal{
 				GroupPolicyAddress: admin.String(),
 				Proposers:          []string{member1.String(), member2.String()},
+				Title:              "Title",
+				Summary:            "Summary",
 			},
 			false,
 			"",
+		},
+		{
+			"missing title",
+			&group.MsgSubmitProposal{
+				GroupPolicyAddress: admin.String(),
+				Proposers:          []string{member1.String(), member2.String()},
+				Summary:            "Summary",
+			},
+			true,
+			"title: value is empty",
+		},
+		{
+			"missing summary",
+			&group.MsgSubmitProposal{
+				GroupPolicyAddress: admin.String(),
+				Proposers:          []string{member1.String(), member2.String()},
+				Title:              "title",
+			},
+			true,
+			"summary: value is empty",
 		},
 	}
 
@@ -975,13 +999,13 @@ func TestMsgSubmitProposalGetSignBytes(t *testing.T) {
 		{
 			"MsgSend",
 			[]sdk.Msg{banktypes.NewMsgSend(member1, member1, sdk.NewCoins())},
-			fmt.Sprintf(`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposers":[""]}}`, member1, member1),
+			fmt.Sprintf(`{"type":"cosmos-sdk/group/MsgSubmitProposal","value":{"messages":[{"type":"cosmos-sdk/MsgSend","value":{"amount":[],"from_address":"%s","to_address":"%s"}}],"proposers":[""],"summary":"This is a test","title":"MsgSend"}}`, member1, member1),
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			msg, err := group.NewMsgSubmitProposal(sdk.AccAddress{}.String(), []string{sdk.AccAddress{}.String()}, tc.proposal, "", group.Exec_EXEC_UNSPECIFIED)
+			msg, err := group.NewMsgSubmitProposal(sdk.AccAddress{}.String(), []string{sdk.AccAddress{}.String()}, tc.proposal, "", group.Exec_EXEC_UNSPECIFIED, "MsgSend", "This is a test")
 			require.NoError(t, err)
 			var bz []byte
 			require.NotPanics(t, func() {

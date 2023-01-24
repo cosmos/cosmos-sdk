@@ -8,12 +8,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 // Testing ORM with arbitrary metadata length
@@ -24,7 +23,7 @@ func TestKeeperEndToEndWithAutoUInt64Table(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	k := NewTestKeeper(cdc)
 
@@ -102,7 +101,7 @@ func TestKeeperEndToEndWithPrimaryKeyTable(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	k := NewTestKeeper(cdc)
 
@@ -188,7 +187,7 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	k := NewTestKeeper(cdc)
 
@@ -273,7 +272,9 @@ func TestGasCostsPrimaryKeyTable(t *testing.T) {
 	for i, m := range tms {
 		gCtx.ResetGasMeter()
 
+		m := m
 		err = k.primaryKeyTable.Delete(gCtx.KVStore(store), &m)
+
 		require.NoError(t, err)
 		t.Logf("%d: gas consumed on delete: %d", i, gCtx.GasConsumed())
 	}
@@ -284,7 +285,7 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	k := NewTestKeeper(cdc)
 
@@ -307,7 +308,7 @@ func TestExportImportStateAutoUInt64Table(t *testing.T) {
 
 	// when a new db seeded
 	ctx = NewMockContext()
-	store = ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store = ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	err = k.autoUInt64Table.Import(store, tms, seqVal)
 	require.NoError(t, err)
@@ -344,7 +345,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
 	ctx := NewMockContext()
-	store := ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	k := NewTestKeeper(cdc)
 
@@ -368,7 +369,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 
 	// when a new db seeded
 	ctx = NewMockContext()
-	store = ctx.KVStore(sdk.NewKVStoreKey("test"))
+	store = ctx.KVStore(storetypes.NewKVStoreKey("test"))
 
 	err = k.primaryKeyTable.Import(store, tms, 0)
 	require.NoError(t, err)
@@ -392,7 +393,7 @@ func TestExportImportStatePrimaryKeyTable(t *testing.T) {
 	}
 }
 
-func assertIndex(t *testing.T, store sdk.KVStore, index Index, v testdata.TableModel, searchKey interface{}) {
+func assertIndex(t *testing.T, store storetypes.KVStore, index Index, v testdata.TableModel, searchKey interface{}) {
 	it, err := index.Get(store, searchKey)
 	require.NoError(t, err)
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -42,13 +42,17 @@ func (s *resultTestSuite) TestParseABCILog() {
 
 func (s *resultTestSuite) TestABCIMessageLog() {
 	cdc := codec.NewLegacyAmino()
-	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
+	events := sdk.Events{
+		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo")),
+		sdk.NewEvent("transfer", sdk.NewAttribute("sender", "bar")),
+	}
 	msgLog := sdk.NewABCIMessageLog(0, "", events)
 	msgLogs := sdk.ABCIMessageLogs{msgLog}
 	bz, err := cdc.MarshalJSON(msgLogs)
 
 	s.Require().NoError(err)
 	s.Require().Equal(string(bz), msgLogs.String())
+	s.Require().Equal(`[{"msg_index":0,"events":[{"type":"transfer","attributes":[{"key":"sender","value":"foo"}]},{"type":"transfer","attributes":[{"key":"sender","value":"bar"}]}]}]`, msgLogs.String())
 }
 
 func (s *resultTestSuite) TestNewSearchTxsResult() {

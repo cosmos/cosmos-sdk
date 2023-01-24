@@ -4,16 +4,19 @@ package simapp
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
+	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/evidence"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
+	nftmodule "cosmossdk.io/x/nft/module"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -24,10 +27,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -47,8 +48,6 @@ import (
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -60,8 +59,6 @@ import (
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -125,6 +122,7 @@ type SimApp struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry codectypes.InterfaceRegistry
+	autoCliOpts       autocli.AppOptions
 
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -136,7 +134,7 @@ type SimApp struct {
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
 	CrisisKeeper          *crisiskeeper.Keeper
-	UpgradeKeeper         upgradekeeper.Keeper
+	UpgradeKeeper         *upgradekeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
@@ -225,6 +223,7 @@ func NewSimApp(
 		&app.legacyAmino,
 		&app.txConfig,
 		&app.interfaceRegistry,
+		&app.autoCliOpts,
 		&app.AccountKeeper,
 		&app.BankKeeper,
 		&app.CapabilityKeeper,
@@ -248,19 +247,12 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
-	// load state streaming if enabled
-	if _, _, err := streaming.LoadStreamingServices(app.App.BaseApp, appOpts, app.appCodec, logger, app.kvStoreKeys()); err != nil {
-		fmt.Printf("failed to load state streaming: %s", err)
+	if err := app.App.BaseApp.SetStreamingService(appOpts, app.appCodec, app.kvStoreKeys()); err != nil {
+		logger.Error("failed to load state streaming", "err", err)
 		os.Exit(1)
 	}
 
 	/****  Module Options ****/
-
-	// Set upgrade module options
-	app.UpgradeKeeper.SetVersionSetter(app.BaseApp)
-
-	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
-	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
@@ -281,8 +273,16 @@ func NewSimApp(
 
 	app.sm.RegisterStoreDecoders()
 
-	// initialize BaseApp
-	app.SetInitChainer(app.InitChainer)
+	// A custom InitChainer can be set if extra pre-init-genesis logic is required.
+	// By default, when using app wiring enabled module, this is not required.
+	// For instance, the upgrade module will set automatically the module version map in its init genesis thanks to app wiring.
+	// However, when registering a module manually (i.e. that does not support app wiring), the module version map
+	// must be set manually as follow. The upgrade module will de-duplicate the module version map.
+	//
+	// app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	// 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
+	// 	return app.App.InitChainer(ctx, req)
+	// })
 
 	if err := app.Load(loadLatest); err != nil {
 		panic(err)
@@ -293,12 +293,6 @@ func NewSimApp(
 
 // Name returns the name of the App
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
-
-// InitChainer application update at chain initialization
-func (app *SimApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
-	return app.App.InitChainer(ctx, req)
-}
 
 // LegacyAmino returns SimApp's amino codec.
 //
@@ -324,6 +318,11 @@ func (app *SimApp) InterfaceRegistry() codectypes.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *SimApp) AutoCliOpts() autocli.AppOptions {
+	return app.autoCliOpts
 }
 
 // GetKey returns the KVStoreKey for the provided store key.

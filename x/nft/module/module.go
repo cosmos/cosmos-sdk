@@ -22,10 +22,10 @@ import (
 
 	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft/simulation"
 )
 
 var (
@@ -168,7 +168,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for nft module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[keeper.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

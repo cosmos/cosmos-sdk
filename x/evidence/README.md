@@ -220,7 +220,7 @@ The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.46.1/proto/cosmos/evidence/v1beta1/evidence.proto#L11-L22
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/evidence/v1beta1/evidence.proto#L12-L32
 ```
 
 For some `Equivocation` submitted in `block` to be valid, it must satisfy:
@@ -244,7 +244,7 @@ validator to ever re-enter the validator set.
 The `Equivocation` evidence is handled as follows:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/83260b0c2f9afcc7ec94a102f83906e8e56ef18e/x/evidence/keeper/infraction.go#L26-L140
+https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/evidence/keeper/infraction.go#L26-L140
 ```
 
 **Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module

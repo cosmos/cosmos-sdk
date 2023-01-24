@@ -26,7 +26,7 @@ import (
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -34,12 +34,12 @@ type IntegrationTestSuite struct {
 	grantee []sdk.AccAddress
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
@@ -127,7 +127,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, response.TxHash, 0))
 }
 
-func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
+func (s *E2ETestSuite) createAccount(uid string) sdk.AccAddress {
 	val := s.network.Validators[0]
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
@@ -139,7 +139,7 @@ func (s *IntegrationTestSuite) createAccount(uid string) sdk.AccAddress {
 	return addr
 }
 
-func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
+func (s *E2ETestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := s.network.Validators[0]
 	// Send some funds to the new account.
 	out, err := clitestutil.MsgSendExec(
@@ -155,8 +155,8 @@ func (s *IntegrationTestSuite) msgSendExec(grantee sdk.AccAddress) {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
@@ -166,7 +166,7 @@ var (
 	typeMsgSubmitProposal = sdk.MsgTypeURL(&govv1.MsgSubmitProposal{})
 )
 
-func (s *IntegrationTestSuite) TestCLITxGrantAuthorization() {
+func (s *E2ETestSuite) TestCLITxGrantAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 
@@ -532,7 +532,7 @@ func execDelegate(val *network.Validator, args []string) (testutil.BufferWriter,
 	return clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 }
 
-func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
+func (s *E2ETestSuite) TestCmdRevokeAuthorizations() {
 	val := s.network.Validators[0]
 
 	grantee := s.grantee[0]
@@ -682,7 +682,7 @@ func (s *IntegrationTestSuite) TestCmdRevokeAuthorizations() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
+func (s *E2ETestSuite) TestExecAuthorizationWithExpiration() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	tenSeconds := time.Now().Add(time.Second * time.Duration(10)).Unix()
@@ -725,7 +725,7 @@ func (s *IntegrationTestSuite) TestExecAuthorizationWithExpiration() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, response.TxHash, authz.ErrNoAuthorizationFound.ABCICode()))
 }
 
-func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
+func (s *E2ETestSuite) TestNewExecGenericAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
@@ -828,7 +828,7 @@ func (s *IntegrationTestSuite) TestNewExecGenericAuthorized() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
+func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	grantee1 := s.grantee[2]
@@ -939,7 +939,7 @@ func (s *IntegrationTestSuite) TestNewExecGrantAuthorized() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
+func (s *E2ETestSuite) TestExecSendAuthzWithAllowList() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[3]
 	allowedAddr := s.grantee[4]
@@ -1024,12 +1024,15 @@ func (s *IntegrationTestSuite) TestExecSendAuthzWithAllowList() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query tx and check result
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		return err
+	}, 3)
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot send to %s address", notAllowedAddr))
 }
 
-func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
+func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()
@@ -1241,12 +1244,15 @@ func (s *IntegrationTestSuite) TestExecDelegateAuthorization() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
 
 	// query tx and check result
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, authcli.QueryTxCmd(), []string{response.TxHash, fmt.Sprintf("--%s=json", flags.FlagOutput)})
+		return err
+	}, 3)
 	s.Require().NoError(err)
 	s.Contains(out.String(), fmt.Sprintf("cannot delegate/undelegate to %s validator", val.ValAddress.String()))
 }
 
-func (s *IntegrationTestSuite) TestExecUndelegateAuthorization() {
+func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 	val := s.network.Validators[0]
 	grantee := s.grantee[0]
 	twoHours := time.Now().Add(time.Minute * time.Duration(120)).Unix()

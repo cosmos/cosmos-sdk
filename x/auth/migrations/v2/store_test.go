@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,8 +44,8 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := sdk.NewKVStoreKey(v1.ModuleName)
-	tKey := sdk.NewTransientStoreKey("transient_test")
+	storeKey := storetypes.NewKVStoreKey(v1.ModuleName)
+	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	store := ctx.KVStore(storeKey)
 
@@ -544,7 +545,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 
 				// un-delegation of the original vesting
-				_, err = stakingKeeper.Undelegate(ctx, delegatorAddr, valAddr, sdk.NewDecFromInt(sdk.NewInt(300)))
+				_, _, err = stakingKeeper.Undelegate(ctx, delegatorAddr, valAddr, sdk.NewDecFromInt(sdk.NewInt(300)))
 				require.NoError(t, err)
 			},
 			cleartTrackingFields,
@@ -644,8 +645,8 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, a
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)
 
-	vestedOk := expDelVesting.IsEqual(vDA.GetDelegatedVesting())
-	freeOk := expDelFree.IsEqual(vDA.GetDelegatedFree())
+	vestedOk := expDelVesting.Equal(vDA.GetDelegatedVesting())
+	freeOk := expDelFree.Equal(vDA.GetDelegatedFree())
 	require.True(t, vestedOk, vDA.GetDelegatedVesting().String())
 	require.True(t, freeOk, vDA.GetDelegatedFree().String())
 }

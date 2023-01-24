@@ -200,6 +200,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type StakingInputs struct {
 	depinject.In
 
@@ -214,6 +215,8 @@ type StakingInputs struct {
 }
 
 // Dependency Injection Outputs
+//
+//nolint:revive
 type StakingOutputs struct {
 	depinject.Out
 
@@ -291,7 +294,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for staking module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -21,7 +21,6 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -36,9 +35,7 @@ var (
 	delegatorAddr2    = sdk.MustAccAddressFromBech32(delegator2)
 )
 
-type DeterministicTestSuite struct {
-	suite.Suite
-
+type deterministicFixture struct {
 	ctx           sdk.Context
 	stakingKeeper *stakingkeeper.Keeper
 	bankKeeper    bankkeeper.BaseKeeper
@@ -48,31 +45,30 @@ type DeterministicTestSuite struct {
 	amt2          math.Int
 }
 
-func (s *DeterministicTestSuite) SetupTest() {
+func initDeterministicFixture(t *testing.T) *deterministicFixture {
+	f := &deterministicFixture{}
+
 	var interfaceRegistry codectypes.InterfaceRegistry
 
 	app, err := simtestutil.Setup(
 		stakingtestutil.AppConfig,
-		&s.bankKeeper,
-		&s.accountKeeper,
-		&s.stakingKeeper,
+		&f.bankKeeper,
+		&f.accountKeeper,
+		&f.stakingKeeper,
 		&interfaceRegistry,
 	)
-	s.Require().NoError(err)
+	assert.NilError(t, err)
 
-	// s.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1, Time: time.Now()}).WithGasMeter(sdk.NewInfiniteGasMeter())
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
 
-	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
-	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: s.stakingKeeper})
-	s.queryClient = stakingtypes.NewQueryClient(queryHelper)
+	queryHelper := baseapp.NewQueryServerTestHelper(f.ctx, interfaceRegistry)
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: f.stakingKeeper})
+	f.queryClient = stakingtypes.NewQueryClient(queryHelper)
 
-	s.amt1 = s.stakingKeeper.TokensFromConsensusPower(s.ctx, 101)
-	s.amt2 = s.stakingKeeper.TokensFromConsensusPower(s.ctx, 102)
-}
+	f.amt1 = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 101)
+	f.amt2 = f.stakingKeeper.TokensFromConsensusPower(f.ctx, 102)
 
-func TestDeterministicTestSuite(t *testing.T) {
-	suite.Run(t, new(DeterministicTestSuite))
+	return f
 }
 
 func durationGenerator() *rapid.Generator[time.Duration] {
@@ -99,69 +95,69 @@ func bondTypeGenerator() *rapid.Generator[stakingtypes.BondStatus] {
 }
 
 // createValidator creates a validator with random values.
-func (suite *DeterministicTestSuite) createValidator(t *rapid.T) stakingtypes.Validator {
-	pubkey := pubKeyGenerator().Draw(t, "pubkey")
+func createValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) stakingtypes.Validator {
+	pubkey := pubKeyGenerator().Draw(rt, "pubkey")
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 	return stakingtypes.Validator{
-		OperatorAddress: sdk.ValAddress(testdata.AddressGenerator(t).Draw(t, "address")).String(),
+		OperatorAddress: sdk.ValAddress(testdata.AddressGenerator(rt).Draw(rt, "address")).String(),
 		ConsensusPubkey: pubkeyAny,
-		Jailed:          rapid.Bool().Draw(t, "jailed"),
-		Status:          bondTypeGenerator().Draw(t, "bond-status"),
-		Tokens:          sdk.NewInt(rapid.Int64Min(10000).Draw(t, "tokens")),
-		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(1, 100).Draw(t, "commission"), 2),
+		Jailed:          rapid.Bool().Draw(rt, "jailed"),
+		Status:          bondTypeGenerator().Draw(rt, "bond-status"),
+		Tokens:          sdk.NewInt(rapid.Int64Min(10000).Draw(rt, "tokens")),
+		DelegatorShares: sdk.NewDecWithPrec(rapid.Int64Range(1, 100).Draw(rt, "commission"), 2),
 		Description: stakingtypes.NewDescription(
-			rapid.StringN(5, 250, 255).Draw(t, "moniker"),
-			rapid.StringN(5, 250, 255).Draw(t, "identity"),
-			rapid.StringN(5, 250, 255).Draw(t, "website"),
-			rapid.StringN(5, 250, 255).Draw(t, "securityContact"),
-			rapid.StringN(5, 250, 255).Draw(t, "details"),
+			rapid.StringN(5, 250, 255).Draw(rt, "moniker"),
+			rapid.StringN(5, 250, 255).Draw(rt, "identity"),
+			rapid.StringN(5, 250, 255).Draw(rt, "website"),
+			rapid.StringN(5, 250, 255).Draw(rt, "securityContact"),
+			rapid.StringN(5, 250, 255).Draw(rt, "details"),
 		),
-		UnbondingHeight: rapid.Int64Min(1).Draw(t, "unbonding-height"),
-		UnbondingTime:   time.Now().Add(durationGenerator().Draw(t, "duration")),
+		UnbondingHeight: rapid.Int64Min(1).Draw(rt, "unbonding-height"),
+		UnbondingTime:   time.Now().Add(durationGenerator().Draw(rt, "duration")),
 		Commission: stakingtypes.NewCommission(
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-rate"), 2),
-			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "max-change-rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-rate"), 2),
+			sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "max-change-rate"), 2),
 		),
-		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(t, "tokens")),
+		MinSelfDelegation: sdk.NewInt(rapid.Int64Min(1).Draw(rt, "tokens")),
 	}
 }
 
 // createAndSetValidatorWithStatus creates a validator with random values but with given status and sets to the state
-func (suite *DeterministicTestSuite) createAndSetValidatorWithStatus(t *rapid.T, status stakingtypes.BondStatus) stakingtypes.Validator {
-	val := suite.createValidator(t)
+func createAndSetValidatorWithStatus(rt *rapid.T, f *deterministicFixture, t *testing.T, status stakingtypes.BondStatus) stakingtypes.Validator {
+	val := createValidator(rt, f, t)
 	val.Status = status
-	suite.setValidator(val)
+	setValidator(f, t, val)
 	return val
 }
 
 // createAndSetValidator creates a validator with random values and sets to the state
-func (suite *DeterministicTestSuite) createAndSetValidator(t *rapid.T) stakingtypes.Validator {
-	val := suite.createValidator(t)
-	suite.setValidator(val)
+func createAndSetValidator(rt *rapid.T, f *deterministicFixture, t *testing.T) stakingtypes.Validator {
+	val := createValidator(rt, f, t)
+	setValidator(f, t, val)
 	return val
 }
 
-func (suite *DeterministicTestSuite) setValidator(validator stakingtypes.Validator) {
-	suite.stakingKeeper.SetValidator(suite.ctx, validator)
-	suite.stakingKeeper.SetValidatorByPowerIndex(suite.ctx, validator)
-	suite.stakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	suite.Require().NoError(suite.stakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, validator.GetOperator()))
+func setValidator(f *deterministicFixture, t *testing.T, validator stakingtypes.Validator) {
+	f.stakingKeeper.SetValidator(f.ctx, validator)
+	f.stakingKeeper.SetValidatorByPowerIndex(f.ctx, validator)
+	f.stakingKeeper.SetValidatorByConsAddr(f.ctx, validator)
+	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, validator.GetOperator()))
 
 	delegatorAddress := sdk.AccAddress(validator.GetOperator())
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
-	banktestutil.FundAccount(suite.bankKeeper, suite.ctx, delegatorAddress, coins)
+	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegatorAddress, coins)
 
-	_, err := suite.stakingKeeper.Delegate(suite.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
-	suite.Require().NoError(err)
+	_, err := f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
+	assert.NilError(t, err)
 }
 
 // getStaticValidator creates a validator with hard-coded values and sets to the state.
-func (suite *DeterministicTestSuite) getStaticValidator() stakingtypes.Validator {
+func getStaticValidator(f *deterministicFixture, t *testing.T) stakingtypes.Validator {
 	pubkey := ed25519.PubKey{Key: []byte{24, 179, 242, 2, 151, 3, 34, 6, 1, 11, 0, 194, 202, 201, 77, 1, 167, 40, 249, 115, 32, 97, 18, 1, 1, 127, 255, 103, 13, 1, 34, 1}}
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
 	validator := stakingtypes.Validator{
 		OperatorAddress: validator1,
@@ -187,15 +183,15 @@ func (suite *DeterministicTestSuite) getStaticValidator() stakingtypes.Validator
 		MinSelfDelegation: sdk.NewInt(10),
 	}
 
-	suite.setValidator(validator)
+	setValidator(f, t, validator)
 	return validator
 }
 
 // getStaticValidator2 creates a validator with hard-coded values and sets to the state.
-func (suite *DeterministicTestSuite) getStaticValidator2() stakingtypes.Validator {
+func getStaticValidator2(f *deterministicFixture, t *testing.T) stakingtypes.Validator {
 	pubkey := ed25519.PubKey{Key: []byte{40, 249, 115, 32, 97, 18, 1, 1, 127, 255, 103, 13, 1, 34, 1, 24, 179, 242, 2, 151, 3, 34, 6, 1, 11, 0, 194, 202, 201, 77, 1, 167}}
 	pubkeyAny, err := codectypes.NewAnyWithValue(&pubkey)
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
 	validator := stakingtypes.Validator{
 		OperatorAddress: validator2,
@@ -220,321 +216,351 @@ func (suite *DeterministicTestSuite) getStaticValidator2() stakingtypes.Validato
 		),
 		MinSelfDelegation: sdk.NewInt(1),
 	}
-	suite.setValidator(validator)
+	setValidator(f, t, validator)
 
 	return validator
 }
 
 // createDelegationAndDelegate funds the delegator account with a random delegation in range 100-1000 and delegates.
-func (suite *DeterministicTestSuite) createDelegationAndDelegate(t *rapid.T, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
-	amt := suite.stakingKeeper.TokensFromConsensusPower(suite.ctx, rapid.Int64Range(100, 1000).Draw(t, "amount"))
-	return suite.fundAccountAndDelegate(delegator, validator, amt)
+func createDelegationAndDelegate(rt *rapid.T, f *deterministicFixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator) (newShares math.LegacyDec, err error) {
+	amt := f.stakingKeeper.TokensFromConsensusPower(f.ctx, rapid.Int64Range(100, 1000).Draw(rt, "amount"))
+	return fundAccountAndDelegate(f, t, delegator, validator, amt)
 }
 
 // fundAccountAndDelegate funds the delegator account with the specified delegation and delegates.
-func (suite *DeterministicTestSuite) fundAccountAndDelegate(delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
+func fundAccountAndDelegate(f *deterministicFixture, t *testing.T, delegator sdk.AccAddress, validator stakingtypes.Validator, amt math.Int) (newShares math.LegacyDec, err error) {
 	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, amt))
 
-	suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins))
-	banktestutil.FundAccount(suite.bankKeeper, suite.ctx, delegator, coins)
+	assert.NilError(t, f.bankKeeper.MintCoins(f.ctx, minttypes.ModuleName, coins))
+	banktestutil.FundAccount(f.bankKeeper, f.ctx, delegator, coins)
 
-	shares, err := suite.stakingKeeper.Delegate(suite.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
+	shares, err := f.stakingKeeper.Delegate(f.ctx, delegator, amt, stakingtypes.Unbonded, validator, true)
 	return shares, err
 }
 
-func (suite *DeterministicTestSuite) TestGRPCValidator() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		val := suite.createAndSetValidator(t)
+func TestGRPCValidator(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		val := createAndSetValidator(rt, f, t)
 		req := &stakingtypes.QueryValidatorRequest{
 			ValidatorAddr: val.OperatorAddress,
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validator, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Validator, 0, true)
 	})
 
-	suite.SetupTest() // reset
-	val := suite.getStaticValidator()
+	f = initDeterministicFixture(t) // reset
+	val := getStaticValidator(f, t)
 	req := &stakingtypes.QueryValidatorRequest{
 		ValidatorAddr: val.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validator, 1915, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Validator, 1915, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCValidators() {
-	validatorStatus := []string{stakingtypes.BondStatusBonded, stakingtypes.BondStatusUnbonded, stakingtypes.BondStatusUnbonding, ""}
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		valsCount := rapid.IntRange(1, 3).Draw(t, "num-validators")
+func TestGRPCValidators(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	validatorStatus := []string{stakingtypes.BondStatusBonded, stakingtypes.BondStatusUnbonded, stakingtypes.BondStatusUnbonding}
+	rapid.Check(t, func(rt *rapid.T) {
+		valsCount := rapid.IntRange(1, 3).Draw(rt, "num-validators")
 		for i := 0; i < valsCount; i++ {
-			suite.createAndSetValidator(t)
+			createAndSetValidator(rt, f, t)
 		}
 
 		req := &stakingtypes.QueryValidatorsRequest{
-			Status:     validatorStatus[rapid.IntRange(0, 3).Draw(t, "status")],
-			Pagination: testdata.PaginationGenerator(t, uint64(valsCount)).Draw(t, "pagination"),
+			Status:     validatorStatus[rapid.IntRange(0, 2).Draw(rt, "status")],
+			Pagination: testdata.PaginationGenerator(rt, uint64(valsCount)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Validators, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Validators, 0, true)
 	})
 
-	suite.SetupTest() // reset
-	suite.getStaticValidator()
-	suite.getStaticValidator2()
+	f = initDeterministicFixture(t) // reset
+	getStaticValidator(f, t)
+	getStaticValidator2(f, t)
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryValidatorsRequest{}, suite.queryClient.Validators, 3525, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryValidatorsRequest{}, f.queryClient.Validators, 3525, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCValidatorDelegations() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-		numDels := rapid.IntRange(1, 5).Draw(t, "num-dels")
+func TestGRPCValidatorDelegations(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")
 
 		for i := 0; i < numDels; i++ {
-			delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
-			_, err := suite.createDelegationAndDelegate(t, delegator, validator)
-			suite.Require().NoError(err)
+			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+			_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+			assert.NilError(t, err)
 		}
 
 		req := &stakingtypes.QueryValidatorDelegationsRequest{
 			ValidatorAddr: validator.OperatorAddress,
-			Pagination:    testdata.PaginationGenerator(t, uint64(numDels)).Draw(t, "pagination"),
+			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorDelegations, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
+	validator := getStaticValidator(f, t)
 
-	_, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
-	_, err = suite.fundAccountAndDelegate(delegatorAddr2, validator, suite.amt2)
-	suite.Require().NoError(err)
+	_, err = fundAccountAndDelegate(f, t, delegatorAddr2, validator, f.amt2)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryValidatorDelegationsRequest{
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorDelegations, 11985, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 11985, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCValidatorUnbondingDelegations() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-		numDels := rapid.IntRange(1, 3).Draw(t, "num-dels")
+func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+		numDels := rapid.IntRange(1, 3).Draw(rt, "num-dels")
 
 		for i := 0; i < numDels; i++ {
-			delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
-			shares, err := suite.createDelegationAndDelegate(t, delegator, validator)
-			suite.Require().NoError(err)
+			delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+			assert.NilError(t, err)
 
-			_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator, validator.GetOperator(), shares)
-			suite.Require().NoError(err)
+			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+			assert.NilError(t, err)
 		}
 
 		req := &stakingtypes.QueryValidatorUnbondingDelegationsRequest{
 			ValidatorAddr: validator.OperatorAddress,
-			Pagination:    testdata.PaginationGenerator(t, uint64(numDels)).Draw(t, "pagination"),
+			Pagination:    testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorUnbondingDelegations, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorUnbondingDelegations, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
-	shares1, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	validator := getStaticValidator(f, t)
+	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
-	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegatorAddr1, validatorAddr1, shares1)
-	suite.Require().NoError(err)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
+	assert.NilError(t, err)
 
-	shares2, err := suite.fundAccountAndDelegate(delegatorAddr2, validator, suite.amt2)
-	suite.Require().NoError(err)
+	shares2, err := fundAccountAndDelegate(f, t, delegatorAddr2, validator, f.amt2)
+	assert.NilError(t, err)
 
-	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegatorAddr2, validatorAddr1, shares2)
-	suite.Require().NoError(err)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr2, validatorAddr1, shares2)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryValidatorUnbondingDelegationsRequest{
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.ValidatorUnbondingDelegations, 3719, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorUnbondingDelegations, 3719, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCDelegation() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
-		_, err := suite.createDelegationAndDelegate(t, delegator, validator)
-		suite.Require().NoError(err)
+func TestGRPCDelegation(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryDelegationRequest{
 			ValidatorAddr: validator.OperatorAddress,
 			DelegatorAddr: delegator.String(),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Delegation, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
-	_, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	validator := getStaticValidator(f, t)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegationRequest{
 		ValidatorAddr: validator.OperatorAddress,
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Delegation, 4635, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4635, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCUnbondingDelegation() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
-		shares, err := suite.createDelegationAndDelegate(t, delegator, validator)
-		suite.Require().NoError(err)
+func TestGRPCUnbondingDelegation(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
 
-		_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator, validator.GetOperator(), shares)
-		suite.Require().NoError(err)
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+		assert.NilError(t, err)
+
+		_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryUnbondingDelegationRequest{
 			ValidatorAddr: validator.OperatorAddress,
 			DelegatorAddr: delegator.String(),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.UnbondingDelegation, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.UnbondingDelegation, 0, true)
 	})
 
-	suite.SetupTest() // reset
-	validator := suite.getStaticValidator()
+	f = initDeterministicFixture(t) // reset
+	validator := getStaticValidator(f, t)
 
-	shares1, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
-	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegatorAddr1, validatorAddr1, shares1)
-	suite.Require().NoError(err)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryUnbondingDelegationRequest{
 		ValidatorAddr: validator.OperatorAddress,
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.UnbondingDelegation, 1621, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.UnbondingDelegation, 1621, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCDelegatorDelegations() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		numVals := rapid.IntRange(1, 3).Draw(t, "num-dels")
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+func TestGRPCDelegatorDelegations(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		numVals := rapid.IntRange(1, 3).Draw(rt, "num-dels")
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 
 		for i := 0; i < numVals; i++ {
-			validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-			_, err := suite.createDelegationAndDelegate(t, delegator, validator)
-			suite.Require().NoError(err)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+			_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+			assert.NilError(t, err)
 		}
 
 		req := &stakingtypes.QueryDelegatorDelegationsRequest{
 			DelegatorAddr: delegator.String(),
-			Pagination:    testdata.PaginationGenerator(t, uint64(numVals)).Draw(t, "pagination"),
+			Pagination:    testdata.PaginationGenerator(rt, uint64(numVals)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorDelegations, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
-	_, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	validator := getStaticValidator(f, t)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorDelegationsRequest{
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorDelegations, 4238, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4238, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCDelegatorValidator() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
+func TestGRPCDelegatorValidator(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
 
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
-		_, err := suite.createDelegationAndDelegate(t, delegator, validator)
-		suite.Require().NoError(err)
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+		assert.NilError(t, err)
 
 		req := &stakingtypes.QueryDelegatorValidatorRequest{
 			DelegatorAddr: delegator.String(),
 			ValidatorAddr: validator.OperatorAddress,
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidator, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorValidator, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
-	_, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
+	validator := getStaticValidator(f, t)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
 
-	suite.Require().NoError(err)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorValidatorRequest{
 		DelegatorAddr: delegator1,
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidator, 3563, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorValidator, 3563, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCDelegatorUnbondingDelegations() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		numVals := rapid.IntRange(1, 5).Draw(t, "num-vals")
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+func TestGRPCDelegatorUnbondingDelegations(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 
 		for i := 0; i < numVals; i++ {
-			validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-			shares, err := suite.createDelegationAndDelegate(t, delegator, validator)
-			suite.Require().NoError(err)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+			shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+			assert.NilError(t, err)
 
-			_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegator, validator.GetOperator(), shares)
-			suite.Require().NoError(err)
+			_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegator, validator.GetOperator(), shares)
+			assert.NilError(t, err)
 		}
 
 		req := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
 			DelegatorAddr: delegator.String(),
-			Pagination:    testdata.PaginationGenerator(t, uint64(numVals)).Draw(t, "pagination"),
+			Pagination:    testdata.PaginationGenerator(rt, uint64(numVals)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorUnbondingDelegations, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorUnbondingDelegations, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
-	shares1, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	validator := getStaticValidator(f, t)
+	shares1, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
-	_, err = suite.stakingKeeper.Undelegate(suite.ctx, delegatorAddr1, validatorAddr1, shares1)
-	suite.Require().NoError(err)
+	_, _, err = f.stakingKeeper.Undelegate(f.ctx, delegatorAddr1, validatorAddr1, shares1)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorUnbondingDelegationsRequest{
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorUnbondingDelegations, 1302, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorUnbondingDelegations, 1302, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		numVals := rapid.IntRange(1, 5).Draw(t, "num-vals")
+func TestGRPCHistoricalInfo(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		numVals := rapid.IntRange(1, 5).Draw(rt, "num-vals")
 		vals := make(stakingtypes.Validators, 0, numVals)
 		for i := 0; i < numVals; i++ {
-			validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 			vals = append(vals, validator)
 		}
 
@@ -543,10 +569,10 @@ func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
 			Valset: vals,
 		}
 
-		height := rapid.Int64Min(0).Draw(t, "height")
+		height := rapid.Int64Min(0).Draw(rt, "height")
 
-		suite.stakingKeeper.SetHistoricalInfo(
-			suite.ctx,
+		f.stakingKeeper.SetHistoricalInfo(
+			f.ctx,
 			height,
 			&historicalInfo,
 		)
@@ -555,12 +581,12 @@ func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
 			Height: height,
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.HistoricalInfo, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
+	validator := getStaticValidator(f, t)
 
 	historicalInfo := stakingtypes.HistoricalInfo{
 		Header: tmproto.Header{},
@@ -569,8 +595,8 @@ func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
 
 	height := int64(127)
 
-	suite.stakingKeeper.SetHistoricalInfo(
-		suite.ctx,
+	f.stakingKeeper.SetHistoricalInfo(
+		f.ctx,
 		height,
 		&historicalInfo,
 	)
@@ -579,73 +605,82 @@ func (suite *DeterministicTestSuite) TestGRPCHistoricalInfo() {
 		Height: height,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.HistoricalInfo, 1930, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.HistoricalInfo, 1930, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCDelegatorValidators() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		numVals := rapid.IntRange(1, 3).Draw(t, "num-dels")
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
+func TestGRPCDelegatorValidators(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		numVals := rapid.IntRange(1, 3).Draw(rt, "num-dels")
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
 
 		for i := 0; i < numVals; i++ {
-			validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
-			_, err := suite.createDelegationAndDelegate(t, delegator, validator)
-			suite.Require().NoError(err)
+			validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
+			_, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+			assert.NilError(t, err)
 		}
 
 		req := &stakingtypes.QueryDelegatorValidatorsRequest{
 			DelegatorAddr: delegator.String(),
-			Pagination:    testdata.PaginationGenerator(t, uint64(numVals)).Draw(t, "pagination"),
+			Pagination:    testdata.PaginationGenerator(rt, uint64(numVals)).Draw(rt, "pagination"),
 		}
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidators, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorValidators, 0, true)
 	})
 
-	suite.SetupTest() // reset
+	f = initDeterministicFixture(t) // reset
 
-	validator := suite.getStaticValidator()
+	validator := getStaticValidator(f, t)
 
-	_, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	_, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryDelegatorValidatorsRequest{DelegatorAddr: delegator1}
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.DelegatorValidators, 3166, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorValidators, 3166, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCPool() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		suite.createAndSetValidator(t)
+func TestGRPCPool(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryPoolRequest{}, suite.queryClient.Pool, 0, true)
+	rapid.Check(t, func(rt *rapid.T) {
+		createAndSetValidator(rt, f, t)
+
+		testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 0, true)
 	})
 
-	suite.SetupTest() // reset
-	suite.getStaticValidator()
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryPoolRequest{}, suite.queryClient.Pool, 6185, false)
+	f = initDeterministicFixture(t) // reset
+	getStaticValidator(f, t)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6185, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
-		validator := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
+func TestGRPCRedelegations(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
+		validator := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		srcValAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
-		suite.Require().NoError(err)
+		assert.NilError(t, err)
 
-		validator2 := suite.createAndSetValidatorWithStatus(t, stakingtypes.Bonded)
+		validator2 := createAndSetValidatorWithStatus(rt, f, t, stakingtypes.Bonded)
 		dstValAddr, err := sdk.ValAddressFromBech32(validator2.OperatorAddress)
-		suite.Require().NoError(err)
+		assert.NilError(t, err)
 
-		numDels := rapid.IntRange(1, 5).Draw(t, "num-dels")
+		numDels := rapid.IntRange(1, 5).Draw(rt, "num-dels")
 
-		delegator := testdata.AddressGenerator(t).Draw(t, "delegator")
-		shares, err := suite.createDelegationAndDelegate(t, delegator, validator)
-		suite.Require().NoError(err)
+		delegator := testdata.AddressGenerator(rt).Draw(rt, "delegator")
+		shares, err := createDelegationAndDelegate(rt, f, t, delegator, validator)
+		assert.NilError(t, err)
 
-		_, err = suite.stakingKeeper.BeginRedelegation(suite.ctx, delegator, srcValAddr, dstValAddr, shares)
-		suite.Require().NoError(err)
+		_, err = f.stakingKeeper.BeginRedelegation(f.ctx, delegator, srcValAddr, dstValAddr, shares)
+		assert.NilError(t, err)
 
 		var req *stakingtypes.QueryRedelegationsRequest
 
-		reqType := rapid.IntRange(0, 2).Draw(t, "req-type")
+		reqType := rapid.IntRange(0, 2).Draw(rt, "req-type")
 		switch reqType {
 		case 0: // queries redelegation with delegator, source and destination validators combination.
 			req = &stakingtypes.QueryRedelegationsRequest{
@@ -663,19 +698,19 @@ func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
 			}
 		}
 
-		req.Pagination = testdata.PaginationGenerator(t, uint64(numDels)).Draw(t, "pagination")
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 0, true)
+		req.Pagination = testdata.PaginationGenerator(rt, uint64(numDels)).Draw(rt, "pagination")
+		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Redelegations, 0, true)
 	})
 
-	suite.SetupTest() // reset
-	validator := suite.getStaticValidator()
-	_ = suite.getStaticValidator2()
+	f = initDeterministicFixture(t) // reset
+	validator := getStaticValidator(f, t)
+	_ = getStaticValidator2(f, t)
 
-	shares, err := suite.fundAccountAndDelegate(delegatorAddr1, validator, suite.amt1)
-	suite.Require().NoError(err)
+	shares, err := fundAccountAndDelegate(f, t, delegatorAddr1, validator, f.amt1)
+	assert.NilError(t, err)
 
-	_, err = suite.stakingKeeper.BeginRedelegation(suite.ctx, delegatorAddr1, validatorAddr1, validatorAddr2, shares)
-	suite.Require().NoError(err)
+	_, err = f.stakingKeeper.BeginRedelegation(f.ctx, delegatorAddr1, validatorAddr1, validatorAddr2, shares)
+	assert.NilError(t, err)
 
 	req := &stakingtypes.QueryRedelegationsRequest{
 		DelegatorAddr:    delegator1,
@@ -683,24 +718,27 @@ func (suite *DeterministicTestSuite) TestGRPCRedelegations() {
 		DstValidatorAddr: validator2,
 	}
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), req, suite.queryClient.Redelegations, 3920, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Redelegations, 3920, false)
 }
 
-func (suite *DeterministicTestSuite) TestGRPCParams() {
-	rapid.Check(suite.T(), func(t *rapid.T) {
+func TestGRPCParams(t *testing.T) {
+	t.Parallel()
+	f := initDeterministicFixture(t)
+
+	rapid.Check(t, func(rt *rapid.T) {
 		params := stakingtypes.Params{
-			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(t, "bond-denom"),
-			UnbondingTime:     durationGenerator().Draw(t, "duration"),
-			MaxValidators:     rapid.Uint32Min(1).Draw(t, "max-validators"),
-			MaxEntries:        rapid.Uint32Min(1).Draw(t, "max-entries"),
-			HistoricalEntries: rapid.Uint32Min(1).Draw(t, "historical-entries"),
-			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(t, "commission"), 2),
+			BondDenom:         rapid.StringMatching(sdk.DefaultCoinDenomRegex()).Draw(rt, "bond-denom"),
+			UnbondingTime:     durationGenerator().Draw(rt, "duration"),
+			MaxValidators:     rapid.Uint32Min(1).Draw(rt, "max-validators"),
+			MaxEntries:        rapid.Uint32Min(1).Draw(rt, "max-entries"),
+			HistoricalEntries: rapid.Uint32Min(1).Draw(rt, "historical-entries"),
+			MinCommissionRate: sdk.NewDecWithPrec(rapid.Int64Range(0, 100).Draw(rt, "commission"), 2),
 		}
 
-		err := suite.stakingKeeper.SetParams(suite.ctx, params)
-		suite.Require().NoError(err)
+		err := f.stakingKeeper.SetParams(f.ctx, params)
+		assert.NilError(t, err)
 
-		testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryParamsRequest{}, suite.queryClient.Params, 0, true)
+		testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 0, true)
 	})
 
 	params := stakingtypes.Params{
@@ -712,8 +750,8 @@ func (suite *DeterministicTestSuite) TestGRPCParams() {
 		MinCommissionRate: sdk.NewDecWithPrec(5, 2),
 	}
 
-	err := suite.stakingKeeper.SetParams(suite.ctx, params)
-	suite.Require().NoError(err)
+	err := f.stakingKeeper.SetParams(f.ctx, params)
+	assert.NilError(t, err)
 
-	testdata.DeterministicIterations(suite.ctx, suite.Require(), &stakingtypes.QueryParamsRequest{}, suite.queryClient.Params, 1114, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1114, false)
 }

@@ -26,8 +26,11 @@ import (
 	upgrademodulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	"cosmossdk.io/x/nft"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -36,13 +39,11 @@ import (
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -50,21 +51,6 @@ import (
 )
 
 var (
-
-	// NOTE: The genutils module must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
-	genesisModuleOrder = []string{
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName,
-		distrtypes.ModuleName, stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName,
-		minttypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
-		feegrant.ModuleName, nft.ModuleName, group.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
-		vestingtypes.ModuleName, consensustypes.ModuleName,
-	}
-
 	// module account permissions
 	moduleAccPerms = []*authmodulev1.ModuleAccountPermission{
 		{Account: authtypes.FeeCollectorName},
@@ -92,7 +78,7 @@ var (
 	AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		Modules: []*appv1alpha1.ModuleConfig{
 			{
-				Name: "runtime",
+				Name: runtime.ModuleName,
 				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
 					AppName: "SimApp",
 					// During begin block slashing happens after distr.BeginBlocker so that
@@ -108,39 +94,16 @@ var (
 						slashingtypes.ModuleName,
 						evidencetypes.ModuleName,
 						stakingtypes.ModuleName,
-						authtypes.ModuleName,
-						banktypes.ModuleName,
-						govtypes.ModuleName,
-						crisistypes.ModuleName,
 						genutiltypes.ModuleName,
 						authz.ModuleName,
-						feegrant.ModuleName,
-						nft.ModuleName,
-						group.ModuleName,
-						paramstypes.ModuleName,
-						vestingtypes.ModuleName,
-						consensustypes.ModuleName,
 					},
 					EndBlockers: []string{
 						crisistypes.ModuleName,
 						govtypes.ModuleName,
 						stakingtypes.ModuleName,
-						capabilitytypes.ModuleName,
-						authtypes.ModuleName,
-						banktypes.ModuleName,
-						distrtypes.ModuleName,
-						slashingtypes.ModuleName,
-						minttypes.ModuleName,
 						genutiltypes.ModuleName,
-						evidencetypes.ModuleName,
-						authz.ModuleName,
 						feegrant.ModuleName,
-						nft.ModuleName,
 						group.ModuleName,
-						paramstypes.ModuleName,
-						consensustypes.ModuleName,
-						upgradetypes.ModuleName,
-						vestingtypes.ModuleName,
 					},
 					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
 						{
@@ -148,12 +111,38 @@ var (
 							KvStoreKey: "acc",
 						},
 					},
-					// InitGenesis: genesisModuleOrder,
+					// NOTE: The genutils module must occur after staking so that pools are
+					// properly initialized with tokens from genesis accounts.
+					// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
+					// NOTE: Capability module must occur first so that it can initialize any capabilities
+					// so that other modules that want to create or claim capabilities afterwards in InitChain
+					// can do so safely.
+					InitGenesis: []string{
+						capabilitytypes.ModuleName,
+						authtypes.ModuleName,
+						banktypes.ModuleName,
+						distrtypes.ModuleName,
+						stakingtypes.ModuleName,
+						slashingtypes.ModuleName,
+						govtypes.ModuleName,
+						minttypes.ModuleName,
+						crisistypes.ModuleName,
+						genutiltypes.ModuleName,
+						evidencetypes.ModuleName,
+						authz.ModuleName,
+						feegrant.ModuleName,
+						nft.ModuleName,
+						group.ModuleName,
+						paramstypes.ModuleName,
+						upgradetypes.ModuleName,
+						vestingtypes.ModuleName,
+						consensustypes.ModuleName,
+					},
 					// When ExportGenesis is not specified, the export genesis module order
 					// is equal to the init genesis order
-					// ExportGenesis: genesisModuleOrder,
+					// ExportGenesis: []string{},
 					// Uncomment if you want to set a custom migration order here.
-					// OrderMigrations: nil,
+					// OrderMigrations: []string{},
 				}),
 			},
 			{

@@ -21,8 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 const (
@@ -160,8 +160,9 @@ func TestKeyManagementKeyRing(t *testing.T) {
 	newPath := filepath.Join(tempDir, "random")
 	require.NoError(t, os.Mkdir(newPath, 0o755))
 	items, err := os.ReadDir(tempDir)
+	require.NoError(t, err)
 	require.GreaterOrEqual(t, len(items), 2)
-	keyS, err = kb.List()
+	_, err = kb.List()
 	require.NoError(t, err)
 
 	// addr cache gets nuked - and test skip flag
@@ -191,7 +192,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both ..
-	s11, pub1, err := kb.Sign(n1, d1)
+	s11, pub1, err := kb.Sign(n1, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	key1, err := kr1.GetPubKey()
@@ -199,11 +200,11 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NotNil(t, key1)
 	require.Equal(t, key1, pub1)
 
-	s12, pub1, err := kb.Sign(n1, d2)
+	s12, pub1, err := kb.Sign(n1, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key1, pub1)
 
-	s21, pub2, err := kb.Sign(n2, d1)
+	s21, pub2, err := kb.Sign(n2, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 
 	key2, err := kr2.GetPubKey()
@@ -211,7 +212,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NotNil(t, key2)
 	require.Equal(t, key2, pub2)
 
-	s22, pub2, err := kb.Sign(n2, d2)
+	s22, pub2, err := kb.Sign(n2, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -250,7 +251,7 @@ func TestSignVerifyKeyRing(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, i3.Name, n3)
 
-	_, _, err = kb.Sign(n3, d3)
+	_, _, err = kb.Sign(n3, d3, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
@@ -457,14 +458,15 @@ func TestInMemoryLanguage(t *testing.T) {
 }
 
 func TestInMemoryWithKeyring(t *testing.T) {
-	priv := cryptotypes.PrivKey(secp256k1.GenPrivKey())
+	priv := types.PrivKey(secp256k1.GenPrivKey())
 	pub := priv.PubKey()
 
 	cdc := getCodec()
 	_, err := NewLocalRecord("test record", priv, pub)
+	require.NoError(t, err)
 
 	multi := multisig.NewLegacyAminoPubKey(
-		1, []cryptotypes.PubKey{
+		1, []types.PubKey{
 			pub,
 		},
 	)
@@ -641,23 +643,23 @@ func TestInMemorySignVerify(t *testing.T) {
 	d3 := []byte("feels like I forgot something...")
 
 	// try signing both data with both ..
-	s11, pub1, err := cstore.Sign(n1, d1)
+	s11, pub1, err := cstore.Sign(n1, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	key1, err := kr1.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key1, pub1)
 
-	s12, pub1, err := cstore.Sign(n1, d2)
+	s12, pub1, err := cstore.Sign(n1, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key1, pub1)
 
-	s21, pub2, err := cstore.Sign(n2, d1)
+	s21, pub2, err := cstore.Sign(n2, d1, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	key2, err := kr2.GetPubKey()
 	require.NoError(t, err)
 	require.Equal(t, key2, pub2)
 
-	s22, pub2, err := cstore.Sign(n2, d2)
+	s22, pub2, err := cstore.Sign(n2, d2, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Nil(t, err)
 	require.Equal(t, key2, pub2)
 
@@ -697,7 +699,7 @@ func TestInMemorySignVerify(t *testing.T) {
 	require.Equal(t, i3.Name, n3)
 
 	// Now try to sign data with a secret-less key
-	_, _, err = cstore.Sign(n3, d3)
+	_, _, err = cstore.Sign(n3, d3, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.Error(t, err)
 	require.Equal(t, "cannot sign with offline keys", err.Error())
 }
@@ -932,7 +934,7 @@ func ExampleNew() {
 
 	// We need to use passphrase to generate a signature
 	tx := []byte("deadbeef")
-	sig, pub, err := cstore.Sign("Bob", tx)
+	sig, pub, err := cstore.Sign("Bob", tx, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	if err != nil {
 		fmt.Println("don't accept real passphrase")
 	}
@@ -1203,7 +1205,7 @@ func TestAltKeyring_Sign(t *testing.T) {
 
 	msg := []byte("some message")
 
-	sign, key, err := kr.Sign(uid, msg)
+	sign, key, err := kr.Sign(uid, msg, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	require.True(t, key.VerifySignature(msg, sign))
@@ -1222,7 +1224,7 @@ func TestAltKeyring_SignByAddress(t *testing.T) {
 
 	addr, err := mnemonic.GetAddress()
 	require.NoError(t, err)
-	sign, key, err := kr.SignByAddress(addr, msg)
+	sign, key, err := kr.SignByAddress(addr, msg, signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	require.NoError(t, err)
 
 	require.True(t, key.VerifySignature(msg, sign))
@@ -1406,7 +1408,7 @@ func TestRenameKey(t *testing.T) {
 				newRecord, err := kr.Key(newKeyUID) // new key should be in keyring
 				require.NoError(t, err)
 				requireEqualRenamedKey(t, newRecord, oldKeyRecord, false) // oldKeyRecord and newRecord should be the same except name
-				oldKeyRecord, err = kr.Key(oldKeyUID)                     // old key should be gone from keyring
+				_, err = kr.Key(oldKeyUID)                                // old key should be gone from keyring
 				require.Error(t, err)
 			},
 		},

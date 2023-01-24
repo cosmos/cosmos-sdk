@@ -37,11 +37,17 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
+	proposer, err := sdk.AccAddressFromBech32(msg.GetProposer())
+	if err != nil {
+		return nil, err
+	}
+
 	proposalMsgs, err := msg.GetMsgs()
 	if err != nil {
 		return nil, err
 	}
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata)
+
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +65,6 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	defer telemetry.IncrCounter(1, govtypes.ModuleName, "proposal")
 
-	proposer, _ := sdk.AccAddressFromBech32(msg.GetProposer())
 	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
 		return nil, err
@@ -75,6 +80,33 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	return &v1.MsgSubmitProposalResponse{
 		ProposalId: proposal.Id,
+	}, nil
+}
+
+// CancelProposals implements the MsgServer.CancelProposal method.
+func (k msgServer) CancelProposal(goCtx context.Context, msg *v1.MsgCancelProposal) (*v1.MsgCancelProposalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := sdk.AccAddressFromBech32(msg.Proposer)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.CancelProposal(ctx, msg.ProposalId, msg.Proposer); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			govtypes.EventTypeCancelProposal,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Proposer),
+			sdk.NewAttribute(govtypes.AttributeKeyProposalID, fmt.Sprint(msg.ProposalId)),
+		),
+	)
+
+	return &v1.MsgCancelProposalResponse{
+		ProposalId:     msg.ProposalId,
+		CanceledTime:   ctx.BlockTime(),
+		CanceledHeight: uint64(ctx.BlockHeight()),
 	}, nil
 }
 
@@ -221,6 +253,8 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		msg.InitialDeposit,
 		msg.Proposer,
 		"",
+		msg.GetContent().GetTitle(),
+		msg.GetContent().GetDescription(),
 	)
 	if err != nil {
 		return nil, err

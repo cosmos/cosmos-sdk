@@ -160,6 +160,7 @@ func init() {
 		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
+//nolint:revive
 type GovInputs struct {
 	depinject.In
 
@@ -169,14 +170,16 @@ type GovInputs struct {
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter *baseapp.MsgServiceRouter
 
-	AccountKeeper govtypes.AccountKeeper
-	BankKeeper    govtypes.BankKeeper
-	StakingKeeper govtypes.StakingKeeper
+	AccountKeeper      govtypes.AccountKeeper
+	BankKeeper         govtypes.BankKeeper
+	StakingKeeper      govtypes.StakingKeeper
+	DistributionKeeper govtypes.DistributionKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace govtypes.ParamSubspace
 }
 
+//nolint:revive
 type GovOutputs struct {
 	depinject.Out
 
@@ -186,9 +189,9 @@ type GovOutputs struct {
 }
 
 func ProvideModule(in GovInputs) GovOutputs {
-	kConfig := govtypes.DefaultConfig()
+	defaultConfig := govtypes.DefaultConfig()
 	if in.Config.MaxMetadataLen != 0 {
-		kConfig.MaxMetadataLen = in.Config.MaxMetadataLen
+		defaultConfig.MaxMetadataLen = in.Config.MaxMetadataLen
 	}
 
 	// default to governance authority if not provided
@@ -203,8 +206,9 @@ func ProvideModule(in GovInputs) GovOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.StakingKeeper,
+		in.DistributionKeeper,
 		in.MsgServiceRouter,
-		kConfig,
+		defaultConfig,
 		authority.String(),
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
@@ -334,7 +338,7 @@ func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.We
 }
 
 // RegisterStoreDecoder registers a decoder for gov module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[govtypes.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 

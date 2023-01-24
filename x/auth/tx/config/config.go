@@ -24,17 +24,22 @@ func init() {
 	)
 }
 
+//nolint:revive
 type TxInputs struct {
 	depinject.In
 
 	Config              *txconfigv1.Config
 	ProtoCodecMarshaler codec.ProtoCodecMarshaler
 
-	AccountKeeper  ante.AccountKeeper    `optional:"true"`
-	BankKeeper     authtypes.BankKeeper  `optional:"true"`
+	AccountKeeper ante.AccountKeeper `optional:"true"`
+	// BankKeeper is the expected bank keeper to be passed to AnteHandlers
+	BankKeeper authtypes.BankKeeper `optional:"true"`
+	// TxBankKeeper is the expected bank keeper to be passed to Textual
+	TxBankKeeper   BankKeeper
 	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
 }
 
+//nolint:revive
 type TxOutputs struct {
 	depinject.Out
 
@@ -43,7 +48,8 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	txConfig := tx.NewTxConfig(in.ProtoCodecMarshaler, tx.DefaultSignModes)
+	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
+	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
 		// AnteHandlers

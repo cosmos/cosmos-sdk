@@ -3,11 +3,11 @@ package nft
 import (
 	"fmt"
 
+	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
-func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
+func (s *E2ETestSuite) TestQueryBalanceGRPC() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestQueryBalanceGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
+func (s *E2ETestSuite) TestQueryOwnerGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -129,7 +129,7 @@ func (s *IntegrationTestSuite) TestQueryOwnerGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
+func (s *E2ETestSuite) TestQuerySupplyGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -191,7 +191,7 @@ func (s *IntegrationTestSuite) TestQuerySupplyGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
+func (s *E2ETestSuite) TestQueryNFTsGRPC() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -288,7 +288,7 @@ func (s *IntegrationTestSuite) TestQueryNFTsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
+func (s *E2ETestSuite) TestQueryNFTGRPC() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -353,7 +353,7 @@ func (s *IntegrationTestSuite) TestQueryNFTGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryClassGRPC() {
+func (s *E2ETestSuite) TestQueryClassGRPC() {
 	val := s.network.Validators[0]
 	testCases := []struct {
 		name string
@@ -401,7 +401,7 @@ func (s *IntegrationTestSuite) TestQueryClassGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestQueryClassesGRPC() {
+func (s *E2ETestSuite) TestQueryClassesGRPC() {
 	val := s.network.Validators[0]
 	classURL := val.APIAddress + "/cosmos/nft/v1beta1/classes"
 	resp, err := testutil.GetRequest(classURL)

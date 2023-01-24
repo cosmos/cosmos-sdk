@@ -9,9 +9,15 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
+	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/depinject"
+
+	eviclient "cosmossdk.io/x/evidence/client"
+	"cosmossdk.io/x/evidence/client/cli"
+	"cosmossdk.io/x/evidence/keeper"
+	"cosmossdk.io/x/evidence/simulation"
+	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,14 +26,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
-
-	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (
@@ -186,7 +184,7 @@ func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes
 }
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.keeper)
 }
 
@@ -205,6 +203,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type EvidenceInputs struct {
 	depinject.In
 
@@ -215,6 +214,7 @@ type EvidenceInputs struct {
 	SlashingKeeper types.SlashingKeeper
 }
 
+//nolint:revive
 type EvidenceOutputs struct {
 	depinject.Out
 

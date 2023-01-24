@@ -22,6 +22,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
@@ -89,9 +91,10 @@ var (
 )
 
 type suite struct {
-	BankKeeper    bankkeeper.Keeper
-	AccountKeeper types.AccountKeeper
-	App           *runtime.App
+	BankKeeper         bankkeeper.Keeper
+	AccountKeeper      types.AccountKeeper
+	DistributionKeeper distrkeeper.Keeper
+	App                *runtime.App
 }
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {
@@ -113,8 +116,9 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 		configurator.ConsensusModule(),
 		configurator.BankModule(),
 		configurator.GovModule(),
+		configurator.DistributionModule(),
 	),
-		startupCfg, &res.BankKeeper, &res.AccountKeeper)
+		startupCfg, &res.BankKeeper, &res.AccountKeeper, &res.DistributionKeeper)
 
 	res.App = app
 
@@ -125,7 +129,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 // CheckBalance checks the balance of an account.
 func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
 	ctxCheck := baseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(keeper.GetAllBalances(ctxCheck, addr)))
+	require.True(t, balances.Equal(keeper.GetAllBalances(ctxCheck, addr)))
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {
@@ -356,18 +360,22 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),
 		},
-		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
+		sdk.Coins{{Denom: "foocoin", Amount: sdk.NewInt(5)}},
 		addr1Str,
 		"set default send enabled to true",
+		"Change send enabled",
+		"Modify send enabled and set to true",
 	)
 	require.NoError(t, err, "making goodGovProp")
 	badGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
-			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{"bad coin name!", true}}, nil),
+			types.NewMsgSetSendEnabled(govAddr, []*types.SendEnabled{{Denom: "bad coin name!", Enabled: true}}, nil),
 		},
-		sdk.Coins{{"foocoin", sdk.NewInt(5)}},
+		sdk.Coins{{Denom: "foocoin", Amount: sdk.NewInt(5)}},
 		addr1Str,
 		"set default send enabled to true",
+		"Change send enabled",
+		"Modify send enabled and set to true",
 	)
 	require.NoError(t, err, "making badGovProp")
 

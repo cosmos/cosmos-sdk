@@ -94,15 +94,18 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 
 		if err := clientCtx.PrintRaw(json.RawMessage(txBytes)); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", txBytes)
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\n%s\n", err, txBytes)
 		}
 
 		buf := bufio.NewReader(os.Stdin)
 		ok, err := input.GetConfirmation("confirm transaction before signing and broadcasting", buf, os.Stderr)
-
-		if err != nil || !ok {
-			_, _ = fmt.Fprintf(os.Stderr, "%s\n", "cancelled transaction")
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "error: %v\ncancelled transaction\n", err)
 			return err
+		}
+		if !ok {
+			_, _ = fmt.Fprintln(os.Stderr, "cancelled transaction")
+			return nil
 		}
 	}
 
@@ -306,7 +309,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 	}
 
 	// Sign those bytes
-	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign)
+	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign, signMode)
 	if err != nil {
 		return err
 	}
@@ -406,7 +409,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	sig, _, err := clientCtx.Keyring.Sign(name, signBz)
+	sig, _, err := clientCtx.Keyring.Sign(name, signBz, f.signMode)
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}

@@ -5,11 +5,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 const (
@@ -50,7 +50,7 @@ var (
 	}
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg     network.Config
@@ -58,12 +58,12 @@ type IntegrationTestSuite struct {
 	owner   sdk.AccAddress
 }
 
-func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
-	return &IntegrationTestSuite{cfg: cfg}
+func NewE2ETestSuite(cfg network.Config) *E2ETestSuite {
+	return &E2ETestSuite{cfg: cfg}
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
 	genesisState := s.cfg.GenesisState
 	nftGenesis := nft.GenesisState{
@@ -86,12 +86,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestCLITxSend() {
+func (s *E2ETestSuite) TestCLITxSend() {
 	val := s.network.Validators[0]
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, OwnerName),
@@ -138,7 +138,7 @@ func (s *IntegrationTestSuite) TestCLITxSend() {
 	}
 }
 
-func (s *IntegrationTestSuite) initAccount() {
+func (s *E2ETestSuite) initAccount() {
 	val := s.network.Validators[0]
 	ctx := val.ClientCtx
 	err := ctx.Keyring.ImportPrivKey(OwnerName, OwnerArmor, "1234567890")

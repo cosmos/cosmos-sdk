@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-func (s *IntegrationTestSuite) TestGetProposalGRPC() {
+func (s *E2ETestSuite) TestGetProposalGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -54,7 +54,7 @@ func (s *IntegrationTestSuite) TestGetProposalGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
+func (s *E2ETestSuite) TestGetProposalsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -77,7 +77,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 			"valid request",
 			fmt.Sprintf("%s/cosmos/gov/v1/proposals", val.APIAddress),
 			map[string]string{},
-			3,
+			4,
 			false,
 		},
 		{
@@ -108,7 +108,7 @@ func (s *IntegrationTestSuite) TestGetProposalsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
+func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 	val := s.network.Validators[0]
 
 	voterAddressBech32 := val.Address.String()
@@ -180,7 +180,7 @@ func (s *IntegrationTestSuite) TestGetProposalVoteGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
+func (s *E2ETestSuite) TestGetProposalVotesGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -219,7 +219,7 @@ func (s *IntegrationTestSuite) TestGetProposalVotesGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
+func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -268,7 +268,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetProposalDepositsGRPC() {
+func (s *E2ETestSuite) TestGetProposalDepositsGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -308,7 +308,7 @@ func (s *IntegrationTestSuite) TestGetProposalDepositsGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetTallyGRPC() {
+func (s *E2ETestSuite) TestGetTallyGRPC() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -352,7 +352,7 @@ func (s *IntegrationTestSuite) TestGetTallyGRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetParamsGRPC() {
+func (s *E2ETestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
 	params := v1.DefaultParams()

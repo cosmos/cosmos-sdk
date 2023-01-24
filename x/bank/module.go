@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"time"
 
-	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"golang.org/x/exp/maps"
-
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -190,7 +188,7 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
@@ -207,6 +205,7 @@ func init() {
 	)
 }
 
+//nolint:revive
 type BankInputs struct {
 	depinject.In
 
@@ -220,6 +219,7 @@ type BankInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
+//nolint:revive
 type BankOutputs struct {
 	depinject.Out
 
@@ -238,8 +238,7 @@ func ProvideModule(in BankInputs) BankOutputs {
 			blockedAddresses[authtypes.NewModuleAddress(moduleName).String()] = true
 		}
 	} else {
-		permissions := maps.Values(in.AccountKeeper.GetModulePermissions())
-		for _, permission := range permissions {
+		for _, permission := range in.AccountKeeper.GetModulePermissions() {
 			blockedAddresses[permission.GetAddress().String()] = true
 		}
 	}

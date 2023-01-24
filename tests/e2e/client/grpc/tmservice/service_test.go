@@ -8,21 +8,22 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	cfg         network.Config
@@ -30,29 +31,18 @@ type IntegrationTestSuite struct {
 	queryClient tmservice.ServiceClient
 }
 
-func TestIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
 }
 
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.T().Log("setting up integration test suite")
+func (s *E2ETestSuite) SetupSuite() {
+	s.T().Log("setting up e2e test suite")
 
-	appConfig := configurator.NewAppConfig(
-		configurator.AuthModule(),
-		configurator.ParamsModule(),
-		configurator.BankModule(),
-		configurator.GenutilModule(),
-		configurator.StakingModule(),
-		configurator.GovModule(),
-		configurator.ConsensusModule(),
-		configurator.TxModule())
-
-	cfg, err := network.DefaultConfigWithAppConfig(appConfig)
-	s.NoError(err)
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 1
-
 	s.cfg = cfg
 
+	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 
@@ -61,12 +51,12 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
 }
 
-func (s *IntegrationTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+func (s *E2ETestSuite) TearDownSuite() {
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestQueryNodeInfo() {
+func (s *E2ETestSuite) TestQueryNodeInfo() {
 	val := s.network.Validators[0]
 
 	res, err := s.queryClient.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
@@ -80,7 +70,7 @@ func (s *IntegrationTestSuite) TestQueryNodeInfo() {
 	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
 
-func (s *IntegrationTestSuite) TestQuerySyncing() {
+func (s *E2ETestSuite) TestQuerySyncing() {
 	val := s.network.Validators[0]
 
 	_, err := s.queryClient.GetSyncing(context.Background(), &tmservice.GetSyncingRequest{})
@@ -92,7 +82,7 @@ func (s *IntegrationTestSuite) TestQuerySyncing() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &syncingRes))
 }
 
-func (s *IntegrationTestSuite) TestQueryLatestBlock() {
+func (s *E2ETestSuite) TestQueryLatestBlock() {
 	val := s.network.Validators[0]
 
 	_, err := s.queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
@@ -106,7 +96,7 @@ func (s *IntegrationTestSuite) TestQueryLatestBlock() {
 	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
 }
 
-func (s *IntegrationTestSuite) TestQueryBlockByHeight() {
+func (s *E2ETestSuite) TestQueryBlockByHeight() {
 	val := s.network.Validators[0]
 	_, err := s.queryClient.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
@@ -118,7 +108,7 @@ func (s *IntegrationTestSuite) TestQueryBlockByHeight() {
 	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
 }
 
-func (s *IntegrationTestSuite) TestQueryLatestValidatorSet() {
+func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 	val := s.network.Validators[0]
 
 	// nil pagination
@@ -153,7 +143,7 @@ func (s *IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	s.Require().Equal(validatorSetRes.Validators[0].PubKey, anyPub)
 }
 
-func (s *IntegrationTestSuite) TestLatestValidatorSet_GRPC() {
+func (s *E2ETestSuite) TestLatestValidatorSet_GRPC() {
 	vals := s.network.Validators
 	testCases := []struct {
 		name      string
@@ -184,7 +174,7 @@ func (s *IntegrationTestSuite) TestLatestValidatorSet_GRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestLatestValidatorSet_GRPCGateway() {
+func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 	vals := s.network.Validators
 	testCases := []struct {
 		name      string
@@ -216,7 +206,7 @@ func (s *IntegrationTestSuite) TestLatestValidatorSet_GRPCGateway() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPC() {
+func (s *E2ETestSuite) TestValidatorSetByHeight_GRPC() {
 	vals := s.network.Validators
 	testCases := []struct {
 		name      string
@@ -245,7 +235,7 @@ func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPC() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
+func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
 	vals := s.network.Validators
 	testCases := []struct {
 		name      string
@@ -275,7 +265,7 @@ func (s *IntegrationTestSuite) TestValidatorSetByHeight_GRPCGateway() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestABCIQuery() {
+func (s *E2ETestSuite) TestABCIQuery() {
 	testCases := []struct {
 		name         string
 		req          *tmservice.ABCIQueryRequest

@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
 )
 
@@ -25,12 +26,11 @@ type WithdrawAllTestSuite struct {
 }
 
 func (s *WithdrawAllTestSuite) SetupSuite() {
-	cfg, err := network.DefaultConfigWithAppConfig(testutil.AppConfig)
-	s.Require().NoError(err)
+	cfg := network.DefaultConfig(simapp.NewTestNetworkFixture)
 	cfg.NumValidators = 2
 	s.cfg = cfg
 
-	s.T().Log("setting up integration test suite")
+	s.T().Log("setting up e2e test suite")
 	network, err := network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 	s.network = network
@@ -40,11 +40,11 @@ func (s *WithdrawAllTestSuite) SetupSuite() {
 
 // TearDownSuite cleans up the curret test network after _each_ test.
 func (s *WithdrawAllTestSuite) TearDownSuite() {
-	s.T().Log("tearing down integration test suite")
+	s.T().Log("tearing down e2e test suite")
 	s.network.Cleanup()
 }
 
-// This test requires multiple validators, if I add this test to `IntegrationTestSuite` by increasing
+// This test requires multiple validators, if I add this test to `E2ETestSuite` by increasing
 // `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
 func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
@@ -95,21 +95,31 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	}
 	_, err = clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	require.NoError(err)
-	require.NoError(s.network.WaitForNextBlock())
 
-	args = []string{
-		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
-		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-	}
-	cmd = cli.NewWithdrawAllRewardsCmd()
-	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+	var out testutil.BufferWriter
+	err = s.network.RetryForBlocks(func() error {
+		args = []string{
+			fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),
+			fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+			fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+			fmt.Sprintf("--%s=1", cli.FlagMaxMessagesPerTx),
+			fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+			fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+		}
+		cmd = cli.NewWithdrawAllRewardsCmd()
+		out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+		if err != nil {
+			return err
+		}
+
+		// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
+		txLen := len(strings.Split(strings.Trim(out.String(), "\n"), "\n"))
+		if txLen != 2 {
+			return fmt.Errorf("expected 2 transactions in the generated file, got %d", txLen)
+		}
+		return nil
+	}, 3)
 	require.NoError(err)
-	// expect 2 transactions in the generated file when --max-msgs in a tx set 1.
-	s.Require().Equal(2, len(strings.Split(strings.Trim(out.String(), "\n"), "\n")))
 
 	args = []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr.String()),

@@ -15,21 +15,19 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/depinject"
+	sdkmath "cosmossdk.io/math"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
-	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	tmlog "github.com/tendermint/tendermint/libs/log"
-
-	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -43,17 +41,19 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/bank" // import bank as a blank
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import consensus as a blank
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/params"  // import params as a blank
+	_ "github.com/cosmos/cosmos-sdk/x/staking" // import staking as a blank
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -63,7 +63,7 @@ var lock = new(sync.Mutex)
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
 type (
-	AppConstructor     = func(val moduletestutil.Validator) servertypes.Application
+	AppConstructor     = func(val ValidatorI) servertypes.Application
 	TestFixtureFactory = func() TestFixture
 )
 
@@ -90,9 +90,9 @@ type Config struct {
 	Mnemonics        []string                   // custom user-provided validator operator mnemonics
 	BondDenom        string                     // the staking bond denomination
 	MinGasPrices     string                     // the minimum gas prices each validator will accept
-	AccountTokens    math.Int                   // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens    math.Int                   // the amount of tokens each validator has available to stake
-	BondedTokens     math.Int                   // the amount of tokens each validator stakes
+	AccountTokens    sdkmath.Int                // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens    sdkmath.Int                // the amount of tokens each validator has available to stake
+	BondedTokens     sdkmath.Int                // the amount of tokens each validator stakes
 	PruningStrategy  string                     // the pruning strategy each validator will have
 	EnableTMLogging  bool                       // enable Tendermint logging to STDOUT
 	CleanupDir       bool                       // remove base temporary directory during cleanup
@@ -142,7 +142,8 @@ func MinimumAppConfig() depinject.Config {
 		configurator.GenutilModule(),
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
-		configurator.TxModule())
+		configurator.TxModule(),
+	)
 }
 
 func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
@@ -172,7 +173,7 @@ func DefaultConfigWithAppConfig(appConfig depinject.Config) (Config, error) {
 	cfg.LegacyAmino = legacyAmino
 	cfg.InterfaceRegistry = interfaceRegistry
 	cfg.GenesisState = appBuilder.DefaultGenesis()
-	cfg.AppConstructor = func(val moduletestutil.Validator) servertypes.Application {
+	cfg.AppConstructor = func(val ValidatorI) servertypes.Application {
 		// we build a unique app instance for every validator here
 		var appBuilder *runtime.AppBuilder
 		if err := depinject.Inject(appConfig, &appBuilder); err != nil {
@@ -240,19 +241,25 @@ type (
 		grpc    *grpc.Server
 		grpcWeb *http.Server
 	}
+
+	// ValidatorI expose a validator's context and configuration
+	ValidatorI interface {
+		GetCtx() *server.Context
+		GetAppConfig() *srvconfig.Config
+	}
+
+	// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
+	// This is not to be confused with logging that may happen at an individual node or validator level
+	Logger interface {
+		Log(args ...interface{})
+		Logf(format string, args ...interface{})
+	}
 )
 
-// Logger is a network logger interface that exposes testnet-level Log() methods for an in-process testing network
-// This is not to be confused with logging that may happen at an individual node or validator level
-type Logger interface {
-	Log(args ...interface{})
-	Logf(format string, args ...interface{})
-}
-
 var (
-	_ Logger                   = (*testing.T)(nil)
-	_ Logger                   = (*CLILogger)(nil)
-	_ moduletestutil.Validator = Validator{}
+	_ Logger     = (*testing.T)(nil)
+	_ Logger     = (*CLILogger)(nil)
+	_ ValidatorI = Validator{}
 )
 
 func (v Validator) GetCtx() *server.Context {
@@ -335,7 +342,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				apiListenAddr = cfg.APIAddress
 			} else {
 				var err error
-				apiListenAddr, _, err = server.FreeTCPAddr()
+				apiListenAddr, _, err = FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -351,7 +358,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.RPCAddress != "" {
 				tmCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				rpcAddr, _, err := server.FreeTCPAddr()
+				rpcAddr, _, err := FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
@@ -361,19 +368,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				_, grpcPort, err := server.FreeTCPAddr()
+				_, grpcPort, err := FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
 				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
 			}
 			appCfg.GRPC.Enable = true
-
-			_, grpcWebPort, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
-			}
-			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
 			appCfg.GRPCWeb.Enable = true
 		}
 
@@ -403,13 +404,13 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		proxyAddr, _, err := server.FreeTCPAddr()
+		proxyAddr, _, err := FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
 		tmCfg.ProxyApp = proxyAddr
 
-		p2pAddr, _, err := server.FreeTCPAddr()
+		p2pAddr, _, err := FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
@@ -474,7 +475,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: balances.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
-		commission, err := sdk.NewDecFromStr("0.5")
+		commission, err := sdkmath.LegacyNewDecFromStr("0.5")
 		if err != nil {
 			return nil, err
 		}
@@ -484,8 +485,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			valPubKeys[i],
 			sdk.NewCoin(cfg.BondDenom, cfg.BondedTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
-			stakingtypes.NewCommissionRates(commission, math.LegacyOneDec(), math.LegacyOneDec()),
-			math.OneInt(),
+			stakingtypes.NewCommissionRates(commission, sdkmath.LegacyOneDec(), sdkmath.LegacyOneDec()),
+			sdkmath.OneInt(),
 		)
 		if err != nil {
 			return nil, err
@@ -497,7 +498,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdk.NewInt(0)))
+		fee := sdk.NewCoins(sdk.NewCoin(fmt.Sprintf("%stoken", nodeDirName), sdkmath.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		err = txBuilder.SetMsgs(createValMsg)
 		if err != nil {
@@ -596,12 +597,27 @@ func (n *Network) LatestHeight() (int64, error) {
 		return 0, errors.New("no validators available")
 	}
 
-	status, err := n.Validators[0].RPCClient.Status(context.Background())
-	if err != nil {
-		return 0, err
-	}
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
-	return status.SyncInfo.LatestBlockHeight, nil
+	timeout := time.NewTimer(time.Second * 5)
+	defer timeout.Stop()
+
+	var latestHeight int64
+	val := n.Validators[0]
+	queryClient := tmservice.NewServiceClient(val.ClientCtx)
+
+	for {
+		select {
+		case <-timeout.C:
+			return latestHeight, errors.New("timeout exceeded waiting for block")
+		case <-ticker.C:
+			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+			if err == nil && res != nil {
+				return res.SdkBlock.Header.Height, nil
+			}
+		}
+	}
 }
 
 // WaitForHeight performs a blocking check where it waits for a block to be
@@ -626,21 +642,41 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 
 	var latestHeight int64
 	val := n.Validators[0]
+	queryClient := tmservice.NewServiceClient(val.ClientCtx)
 
 	for {
 		select {
 		case <-timeout.C:
 			return latestHeight, errors.New("timeout exceeded waiting for block")
 		case <-ticker.C:
-			status, err := val.RPCClient.Status(context.Background())
-			if err == nil && status != nil {
-				latestHeight = status.SyncInfo.LatestBlockHeight
+
+			res, err := queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+			if err == nil && res != nil {
+				latestHeight = res.GetSdkBlock().Header.Height
 				if latestHeight >= h {
 					return latestHeight, nil
 				}
 			}
 		}
 	}
+}
+
+// RetryForBlocks will wait for the next block and execute the function provided.
+// It will do this until the function returns a nil error or until the number of
+// blocks has been reached.
+func (n *Network) RetryForBlocks(retryFunc func() error, blocks int) error {
+	for i := 0; i < blocks; i++ {
+		n.WaitForNextBlock()
+		err := retryFunc()
+		if err == nil {
+			return nil
+		}
+		// we've reached the last block to wait, return the error
+		if i == blocks-1 {
+			return err
+		}
+	}
+	return nil
 }
 
 // WaitForNextBlock waits for the next block to be committed, returning an error

@@ -18,7 +18,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/slashing/client/cli"
 )
 
@@ -41,7 +41,7 @@ func TestCLITestSuite(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	s.T().Log("setting up integration test suite")
 
-	s.encCfg = testutilmod.MakeTestEncodingConfig(module.AppModuleBasic{})
+	s.encCfg = testutilmod.MakeTestEncodingConfig(slashing.AppModuleBasic{})
 	s.kr = keyring.NewInMemory(s.encCfg.Codec)
 	s.baseCtx = client.Context{}.
 		WithKeyring(s.kr).

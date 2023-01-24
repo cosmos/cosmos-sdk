@@ -43,6 +43,7 @@ The pass backend requires GnuPG: https://gnupg.org/
 		ExportKeyCommand(),
 		ImportKeyCommand(),
 		ListKeysCmd(),
+		ListKeyTypesCmd(),
 		ShowKeysCmd(),
 		DeleteKeyCommand(),
 		RenameKeyCommand(),
@@ -51,9 +52,8 @@ The pass backend requires GnuPG: https://gnupg.org/
 	)
 
 	cmd.PersistentFlags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.PersistentFlags().String(flags.FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
-	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 	cmd.PersistentFlags().String(cli.OutputFlag, "text", "Output format (text|json)")
+	flags.AddKeyringFlags(cmd.PersistentFlags())
 
 	return cmd
 }

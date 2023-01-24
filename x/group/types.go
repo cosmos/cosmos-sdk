@@ -53,14 +53,17 @@ func NewThresholdDecisionPolicy(threshold string, votingPeriod time.Duration, mi
 	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
 }
 
+// GetVotingPeriod returns the voitng period of ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+// GetMinExecutionPeriod returns the minimum execution period of ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) GetMinExecutionPeriod() time.Duration {
 	return p.Windows.MinExecutionPeriod
 }
 
+// ValidateBasic does basic validation on ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) ValidateBasic() error {
 	if _, err := math.NewPositiveDecFromString(p.Threshold); err != nil {
 		return sdkerrors.Wrap(err, "threshold")
@@ -155,14 +158,17 @@ func NewPercentageDecisionPolicy(percentage string, votingPeriod time.Duration, 
 	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
 }
 
+// GetVotingPeriod returns the voitng period of PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
 
+// GetMinExecutionPeriod returns the minimum execution period of PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) GetMinExecutionPeriod() time.Duration {
 	return p.Windows.MinExecutionPeriod
 }
 
+// ValidateBasic does basic validation on PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) ValidateBasic() error {
 	percentage, err := math.NewPositiveDecFromString(p.Percentage)
 	if err != nil {
@@ -179,6 +185,7 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 	return nil
 }
 
+// Validate validates the policy against the group.
 func (p *PercentageDecisionPolicy) Validate(g GroupInfo, config Config) error {
 	if p.Windows.MinExecutionPeriod > p.Windows.VotingPeriod+config.MaxExecutionPeriod {
 		return sdkerrors.Wrap(errors.ErrInvalid, "min_execution_period should be smaller than voting_period + max_execution_period")
@@ -255,6 +262,7 @@ func NewGroupPolicyInfo(address sdk.AccAddress, group uint64, admin sdk.AccAddre
 	return p, nil
 }
 
+// SetDecisionPolicy sets the decision policy for GroupPolicyInfo.
 func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
 	any, err := codectypes.NewAnyWithValue(decisionPolicy)
 	if err != nil {
@@ -264,6 +272,7 @@ func (g *GroupPolicyInfo) SetDecisionPolicy(decisionPolicy DecisionPolicy) error
 	return nil
 }
 
+// GetDecisionPolicy gets the decision policy of GroupPolicyInfo
 func (g GroupPolicyInfo) GetDecisionPolicy() (DecisionPolicy, error) {
 	decisionPolicy, ok := g.DecisionPolicy.GetCachedValue().(DecisionPolicy)
 	if !ok {
@@ -283,6 +292,7 @@ func (g GroupInfo) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.Id}
 }
 
+// ValidateBasic does basic validation on group info.
 func (g GroupInfo) ValidateBasic() error {
 	if g.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group's GroupId")
@@ -312,6 +322,7 @@ func (g Proposal) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.Id}
 }
 
+// ValidateBasic does basic validation on group policy info.
 func (g GroupPolicyInfo) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(g.Admin)
 	if err != nil {
@@ -345,6 +356,7 @@ func (g GroupMember) PrimaryKeyFields() []interface{} {
 	return []interface{}{g.GroupId, addr.Bytes()}
 }
 
+// ValidateBasic does basic validation on group member.
 func (g GroupMember) ValidateBasic() error {
 	if g.GroupId == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "group member's group id")
@@ -369,6 +381,7 @@ func MemberToMemberRequest(m *Member) MemberRequest {
 	}
 }
 
+// ValidateBasic does basic validation on proposal.
 func (g Proposal) ValidateBasic() error {
 	if g.Id == 0 {
 		return sdkerrors.Wrap(errors.ErrEmpty, "proposal id")
@@ -410,6 +423,7 @@ func (v Vote) PrimaryKeyFields() []interface{} {
 
 var _ orm.Validateable = Vote{}
 
+// ValidateBasic does basic validation on vote.
 func (v Vote) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(v.Voter)
 	if err != nil {
@@ -504,6 +518,7 @@ func (t *TallyResult) operation(vote Vote, weight string, op operation) error {
 	return nil
 }
 
+// GetYesCount returns the number of yes counts from tally result.
 func (t TallyResult) GetYesCount() (math.Dec, error) {
 	yesCount, err := math.NewNonNegativeDecFromString(t.YesCount)
 	if err != nil {
@@ -512,6 +527,7 @@ func (t TallyResult) GetYesCount() (math.Dec, error) {
 	return yesCount, nil
 }
 
+// GetNoCount returns the number of no counts from tally result.
 func (t TallyResult) GetNoCount() (math.Dec, error) {
 	noCount, err := math.NewNonNegativeDecFromString(t.NoCount)
 	if err != nil {
@@ -520,6 +536,7 @@ func (t TallyResult) GetNoCount() (math.Dec, error) {
 	return noCount, nil
 }
 
+// GetAbstainCount returns the number of abstain counts from tally result.
 func (t TallyResult) GetAbstainCount() (math.Dec, error) {
 	abstainCount, err := math.NewNonNegativeDecFromString(t.AbstainCount)
 	if err != nil {
@@ -528,6 +545,7 @@ func (t TallyResult) GetAbstainCount() (math.Dec, error) {
 	return abstainCount, nil
 }
 
+// GetNoWithVetoCount returns the number of no with veto counts from tally result.
 func (t TallyResult) GetNoWithVetoCount() (math.Dec, error) {
 	vetoCount, err := math.NewNonNegativeDecFromString(t.NoWithVetoCount)
 	if err != nil {

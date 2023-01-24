@@ -153,7 +153,7 @@ func TestMsgCreateGroup(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroup{}))
+				require.Equal(t, sdk.MsgTypeURL(tc.msg), sdk.MsgTypeURL(&group.MsgCreateGroup{}))
 			}
 		})
 	}
@@ -224,7 +224,7 @@ func TestMsgUpdateGroupAdmin(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupAdmin{}))
+				require.Equal(t, sdk.MsgTypeURL(tc.msg), sdk.MsgTypeURL(&group.MsgUpdateGroupAdmin{}))
 			}
 		})
 	}
@@ -274,7 +274,7 @@ func TestMsgUpdateGroupMetadata(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMetadata{}))
+				require.Equal(t, sdk.MsgTypeURL(tc.msg), sdk.MsgTypeURL(&group.MsgUpdateGroupMetadata{}))
 			}
 		})
 	}
@@ -354,7 +354,7 @@ func TestMsgUpdateGroupMembers(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{}))
+				require.Equal(t, sdk.MsgTypeURL(tc.msg), sdk.MsgTypeURL(&group.MsgUpdateGroupMembers{}))
 			}
 		})
 	}
@@ -533,7 +533,7 @@ func TestMsgCreateGroupWithPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroupWithPolicy{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgCreateGroupWithPolicy{}))
 			}
 		})
 	}
@@ -688,7 +688,7 @@ func TestMsgCreateGroupPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgCreateGroupPolicy{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgCreateGroupPolicy{}))
 			}
 		})
 	}
@@ -788,7 +788,7 @@ func TestMsgUpdateGroupPolicyDecisionPolicy(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyDecisionPolicy{}))
 			}
 		})
 	}
@@ -860,7 +860,7 @@ func TestMsgUpdateGroupPolicyAdmin(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyAdmin{}))
 			}
 		})
 	}
@@ -911,7 +911,7 @@ func TestMsgUpdateGroupPolicyMetadata(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgUpdateGroupPolicyMetadata{}))
 			}
 		})
 	}
@@ -984,7 +984,7 @@ func TestMsgSubmitProposal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgSubmitProposal{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgSubmitProposal{}))
 			}
 		})
 	}
@@ -1069,7 +1069,7 @@ func TestMsgVote(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgVote{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgVote{}))
 			}
 		})
 	}
@@ -1118,7 +1118,7 @@ func TestMsgWithdrawProposal(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgWithdrawProposal{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgWithdrawProposal{}))
 			}
 		})
 	}
@@ -1166,7 +1166,7 @@ func TestMsgExec(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgExec{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgExec{}))
 			}
 		})
 	}
@@ -1214,7 +1214,7 @@ func TestMsgLeaveGroup(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, msg.Type(), sdk.MsgTypeURL(&group.MsgLeaveGroup{}))
+				require.Equal(t, sdk.MsgTypeURL(msg), sdk.MsgTypeURL(&group.MsgLeaveGroup{}))
 			}
 		})
 	}

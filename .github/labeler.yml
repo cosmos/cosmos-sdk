@@ -50,6 +50,8 @@
   - tools/rosetta/**/*
 "C:Confix":
   - tools/confix/**/*
+"C:Hubl":
+  - tools/hubl/**/*
 "C:Keys":
   - client/keys/**/*
 "Type: Build":

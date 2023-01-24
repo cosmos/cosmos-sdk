@@ -71,20 +71,24 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
 func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
+	var v V
+
 	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
-		var v V
 		return v, err
 	}
 
 	kvStore := m.sa(ctx)
-	valueBytes := kvStore.Get(bytesKey)
+	valueBytes, err := kvStore.Get(bytesKey)
 	if valueBytes == nil {
-		var v V
 		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
 	}
 
-	v, err := m.vc.Decode(valueBytes)
+	if err != nil {
+		return v, err
+	}
+
+	v, err = m.vc.Decode(valueBytes)
 	if err != nil {
 		return v, fmt.Errorf("%w: value decode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
@@ -99,7 +103,7 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 		return false, err
 	}
 	kvStore := m.sa(ctx)
-	return kvStore.Has(bytesKey), nil
+	return kvStore.Has(bytesKey)
 }
 
 // Remove removes the key from the storage.
@@ -137,14 +141,20 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 	}
 
 	s := m.sa(ctx)
-	var storeIter store.Iterator
+	var (
+		storeIter store.Iterator
+		err       error
+	)
 	switch order {
 	case OrderAscending:
-		storeIter = s.Iterator(prefixedStart, prefixedEnd)
+		storeIter, err = s.Iterator(prefixedStart, prefixedEnd)
 	case OrderDescending:
-		storeIter = s.ReverseIterator(prefixedStart, prefixedEnd)
+		storeIter, err = s.ReverseIterator(prefixedStart, prefixedEnd)
 	default:
 		return Iterator[K, V]{}, errOrder
+	}
+	if err != nil {
+		return Iterator[K, V]{}, err
 	}
 
 	if !storeIter.Valid() {

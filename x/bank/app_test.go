@@ -129,7 +129,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 // CheckBalance checks the balance of an account.
 func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
 	ctxCheck := baseApp.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(keeper.GetAllBalances(ctxCheck, addr)))
+	require.True(t, balances.Equal(keeper.GetAllBalances(ctxCheck, addr)))
 }
 
 func TestSendNotEnoughBalance(t *testing.T) {

@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
+	"cosmossdk.io/x/evidence/client/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 	"gotest.tools/v3/assert"
 )
 

@@ -1,7 +1,7 @@
 cosmossdk.io/api v0.2.6 h1:AoNwaLLapcLsphhMK6+o0kZl+D6MMUaHVqSdwinASGU=
 cosmossdk.io/api v0.2.6/go.mod h1:u/d+GAxil0nWpl1XnQL8nkziQDIWuBDhv8VnDm/s6dI=
-cosmossdk.io/core v0.4.1 h1:5icpjPmw8J4uFp6w8OoLJPxsw6X3kRi9nAtTr3qp2Ok=
-cosmossdk.io/core v0.4.1/go.mod h1:Zqd1GB+krTF3bzhTnPNwzy3NTtXu+MKLX/9sPQXTIDE=
+cosmossdk.io/core v0.5.0 h1:37BkURamssr1FQkE6ZNSjgesLYMflREiykK/Z3k4l7Q=
+cosmossdk.io/core v0.5.0/go.mod h1:QVJT+YsJWs0pD/HuczGY5y/WEc9JCn1ycLsuCDUvFlc=
 cosmossdk.io/math v1.0.0-beta.4 h1:JtKedVLGzA0vv84xjYmZ75RKG35Kf2WwcFu8IjRkIIw=
 cosmossdk.io/math v1.0.0-beta.4/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1 h1:iDL5qh++NoXxG8hSy93FdYJut4XfgbShIocllGaXx/0=

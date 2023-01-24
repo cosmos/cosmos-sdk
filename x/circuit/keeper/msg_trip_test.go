@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestTrip(t *testing.T) {
@@ -30,11 +30,11 @@ func (s *tripSuite) AttemptsToTripCircuit(a string, b string, c gocuke.DocString
 }
 
 func (s *tripSuite) ExpectSuccess() {
-	require.NoError(s.t, s.err)
+	assert.NoError(s.t, s.err)
 }
 
 func (s *tripSuite) ExpectAnError(a string) {
-	require.EqualError(s.t, s.err, a)
+	assert.EqualError(s.t, s.err, a)
 }
 
 func (s *tripSuite) ExpectThatHasNoPermissions(a string) {

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestReset(t *testing.T) {
@@ -30,11 +30,11 @@ func (s *resetSuite) AttemptsToResetCircuit(a string, b string, c gocuke.DocStri
 }
 
 func (s *resetSuite) ExpectSuccess() {
-	require.NoError(s.t, s.err)
+	assert.NoError(s.t, s.err)
 }
 
 func (s *resetSuite) ExpectAnError(a string) {
-	require.EqualError(s.t, s.err, a)
+	assert.EqualError(s.t, s.err, a)
 }
 
 func (s *resetSuite) ExpectThatHasNoPermissions(a string) {

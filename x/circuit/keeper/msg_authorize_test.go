@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestAuthorize(t *testing.T) {
@@ -30,11 +30,11 @@ func (s *authorizeSuite) AttemptsToGrantThePermissions(a string, b string, c goc
 }
 
 func (s *authorizeSuite) ExpectSuccess() {
-	require.NoError(s.t, s.err)
+	assert.NoError(s.t, s.err)
 }
 
 func (s *authorizeSuite) ExpectAnError(a string) {
-	require.Error(s.t, s.err)
+	assert.Error(s.t, s.err)
 }
 
 func (s *authorizeSuite) ExpectThatHasNoPermissions(a string) {

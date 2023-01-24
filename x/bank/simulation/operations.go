@@ -62,7 +62,6 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		msgType := sdk.MsgTypeURL(&types.MsgSend{})
 		from, to, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 

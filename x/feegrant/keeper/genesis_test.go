@@ -6,6 +6,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/feegrant/module"
+	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -14,10 +18,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
-	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 )
 
 type GenesisTestSuite struct {

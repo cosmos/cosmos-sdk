@@ -22,7 +22,6 @@ require (
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
-	github.com/cosmos/cosmos-sdk/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.3
@@ -58,7 +57,7 @@ require (
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
-	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5
+	google.golang.org/genproto v0.0.0-20230117162540-28d6b9783ac4
 	google.golang.org/grpc v1.52.0
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0

@@ -40,7 +40,6 @@ import (
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/group"

@@ -24,11 +24,6 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
-### Modules
-
-#### x/feegrant
-`x/feegrant` is now having a separate `go.mod`
-
 <!-- TODO: write database migration tool -->
 
 ### Protobuf
@@ -80,6 +75,13 @@ All the evidence imports are now renamed to use `cosmossdk.io/evidence` instead 
 ##### Extract nft to a standalone module
 
 The `x/nft` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+
+#### x/feegrant
+
+##### Extract feegrant to a standalone module
+
+The `x/feegrant` module is extracted to have a separate go.mod file which allows it be a standalone module.
+All the feegrant imports are now renamed to use `cosmossdk.io/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
 
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)

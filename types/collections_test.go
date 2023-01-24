@@ -1,8 +1,9 @@
 package types
 
 import (
-	"cosmossdk.io/collections/colltest"
 	"testing"
+
+	"cosmossdk.io/collections/colltest"
 )
 
 func TestCollectionsCorrectness(t *testing.T) {

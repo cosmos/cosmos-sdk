@@ -961,7 +961,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.NoError(t, err)
 
 	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}
-	require.True(t, rewards.IsEqual(zeroRewards))
+	require.True(t, rewards.Equal(zeroRewards))
 
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]

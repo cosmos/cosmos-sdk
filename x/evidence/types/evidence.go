@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/x/evidence/exported"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Evidence type constants

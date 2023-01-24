@@ -190,7 +190,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
-	cosmos-sdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/collections => ../collections
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

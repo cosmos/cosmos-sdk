@@ -6,6 +6,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -18,13 +19,13 @@ var (
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
 
-	_ sdk.HasAminoSigningCapability = &MsgCreateValidator{}
-	_ sdk.HasAminoSigningCapability = &MsgEditValidator{}
-	_ sdk.HasAminoSigningCapability = &MsgDelegate{}
-	_ sdk.HasAminoSigningCapability = &MsgUndelegate{}
-	_ sdk.HasAminoSigningCapability = &MsgBeginRedelegate{}
-	_ sdk.HasAminoSigningCapability = &MsgCancelUnbondingDelegation{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgCreateValidator{}
+	_ legacytx.LegacyMsg = &MsgEditValidator{}
+	_ legacytx.LegacyMsg = &MsgDelegate{}
+	_ legacytx.LegacyMsg = &MsgUndelegate{}
+	_ legacytx.LegacyMsg = &MsgBeginRedelegate{}
+	_ legacytx.LegacyMsg = &MsgCancelUnbondingDelegation{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -349,13 +350,13 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
-func (m *MsgUpdateParams) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(m)
+func (m MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic executes sanity validation on the provided data
-func (m *MsgUpdateParams) ValidateBasic() error {
+func (m MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return sdkerrors.Wrap(err, "invalid authority address")
 	}
@@ -363,7 +364,7 @@ func (m *MsgUpdateParams) ValidateBasic() error {
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message
-func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
 }

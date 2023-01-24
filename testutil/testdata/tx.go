@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // AddressGenerator creates and returns a random address generator using rapid.
@@ -77,8 +78,8 @@ func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
 }
 
 var (
-	_ sdk.Msg                       = (*TestMsg)(nil)
-	_ sdk.HasAminoSigningCapability = (*TestMsg)(nil)
+	_ sdk.Msg            = (*TestMsg)(nil)
+	_ legacytx.LegacyMsg = (*TestMsg)(nil)
 )
 
 func (msg *TestMsg) GetSignBytes() []byte {

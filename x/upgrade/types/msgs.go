@@ -3,11 +3,12 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_, _ sdk.Msg                       = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
-	_, _ sdk.HasAminoSigningCapability = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
+	_, _ sdk.Msg            = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
+	_, _ legacytx.LegacyMsg = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
 )
 
 // GetSignBytes implements the LegacyMsg interface.

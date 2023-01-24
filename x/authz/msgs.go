@@ -3,6 +3,7 @@ package authz
 import (
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
 	"github.com/cosmos/gogoproto/proto"
@@ -18,9 +19,9 @@ var (
 	_ sdk.Msg = &MsgExec{}
 
 	// For amino support.
-	_ sdk.HasAminoSigningCapability = &MsgGrant{}
-	_ sdk.HasAminoSigningCapability = &MsgRevoke{}
-	_ sdk.HasAminoSigningCapability = &MsgExec{}
+	_ legacytx.LegacyMsg = &MsgGrant{}
+	_ legacytx.LegacyMsg = &MsgRevoke{}
+	_ legacytx.LegacyMsg = &MsgExec{}
 
 	_ cdctypes.UnpackInterfacesMessage = &MsgGrant{}
 	_ cdctypes.UnpackInterfacesMessage = &MsgExec{}

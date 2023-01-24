@@ -6,12 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_, _ sdk.Msg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
 	// For amino support.
-	_, _ sdk.HasAminoSigningCapability = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )

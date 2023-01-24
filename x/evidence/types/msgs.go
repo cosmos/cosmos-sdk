@@ -9,11 +9,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_ sdk.Msg                       = &MsgSubmitEvidence{}
-	_ sdk.HasAminoSigningCapability = &MsgSubmitEvidence{}
+	_ legacytx.LegacyMsg            = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
 	_ exported.MsgSubmitEvidenceI   = &MsgSubmitEvidence{}
 )

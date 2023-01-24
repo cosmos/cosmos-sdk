@@ -3,11 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// slashing message types
-const (
-	TypeMsgUnjail = "unjail"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // verify interface at compile time
@@ -15,8 +11,8 @@ var (
 	_ sdk.Msg = &MsgUnjail{}
 	_ sdk.Msg = &MsgUpdateParams{}
 
-	_ sdk.HasAminoSigningCapability = &MsgUnjail{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgUnjail{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
 
 // NewMsgUnjail creates a new MsgUnjail instance

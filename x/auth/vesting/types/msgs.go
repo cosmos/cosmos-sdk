@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
@@ -12,9 +13,9 @@ var (
 	_ sdk.Msg = &MsgCreatePermanentLockedAccount{}
 	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 
-	_ sdk.HasAminoSigningCapability = &MsgCreateVestingAccount{}
-	_ sdk.HasAminoSigningCapability = &MsgCreatePermanentLockedAccount{}
-	_ sdk.HasAminoSigningCapability = &MsgCreatePeriodicVestingAccount{}
+	_ legacytx.LegacyMsg = &MsgCreateVestingAccount{}
+	_ legacytx.LegacyMsg = &MsgCreatePermanentLockedAccount{}
+	_ legacytx.LegacyMsg = &MsgCreatePeriodicVestingAccount{}
 )
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.

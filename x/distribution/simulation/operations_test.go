@@ -84,7 +84,7 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
 	suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.WithdrawAddress)
-	suite.Require().Equal(types.TypeMsgSetWithdrawAddress, msg.Type())
+	suite.Require().Equal(types.TypeMsgSetWithdrawAddress, sdk.MsgTypeURL(msg))
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
@@ -125,7 +125,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1l4s054098kk9hmr5753c6k3m2kw65h686d3mhr", msg.ValidatorAddress)
 	suite.Require().Equal("cosmos1d6u7zhjwmsucs678d7qn95uqajd4ucl9jcjt26", msg.DelegatorAddress)
-	suite.Require().Equal(types.TypeMsgWithdrawDelegatorReward, msg.Type())
+	suite.Require().Equal(types.TypeMsgWithdrawDelegatorReward, sdk.MsgTypeURL(msg))
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
@@ -185,7 +185,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 
 		suite.Require().True(operationMsg.OK)
 		suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
-		suite.Require().Equal(types.TypeMsgWithdrawValidatorCommission, msg.Type())
+		suite.Require().Equal(types.TypeMsgWithdrawValidatorCommission, sdk.MsgTypeURL(msg))
 		suite.Require().Equal(types.ModuleName, msg.Route())
 		suite.Require().Len(futureOperations, 0)
 	}
@@ -213,7 +213,7 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("4896096stake", msg.Amount.String())
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
-	suite.Require().Equal(types.TypeMsgFundCommunityPool, msg.Type())
+	suite.Require().Equal(types.TypeMsgFundCommunityPool, sdk.MsgTypeURL(msg))
 	suite.Require().Equal(types.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }

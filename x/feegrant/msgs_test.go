@@ -136,7 +136,7 @@ func TestMsgRevokeAllowance(t *testing.T) {
 
 func TestAminoJSON(t *testing.T) {
 	tx := legacytx.StdTx{}
-	var msg sdk.HasAminoSigningCapability
+	var msg legacytx.LegacyMsg
 	allowanceAny, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", sdk.NewInt(100)))})
 	require.NoError(t, err)
 

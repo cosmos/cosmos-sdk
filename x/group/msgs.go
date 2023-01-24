@@ -7,14 +7,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/group/codec"
 	errors "github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
 var (
-	_ sdk.Msg                       = &MsgCreateGroup{}
-	_ sdk.HasAminoSigningCapability = &MsgCreateGroup{}
+	_ sdk.Msg            = &MsgCreateGroup{}
+	_ legacytx.LegacyMsg = &MsgCreateGroup{}
 )
 
 // GetSignBytes Implements Msg.
@@ -58,8 +59,8 @@ func (m MemberRequest) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgUpdateGroupAdmin{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupAdmin{}
+	_ sdk.Msg            = &MsgUpdateGroupAdmin{}
+	_ legacytx.LegacyMsg = &MsgUpdateGroupAdmin{}
 )
 
 // GetSignBytes Implements Msg.
@@ -102,8 +103,8 @@ func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 }
 
 var (
-	_ sdk.Msg                       = &MsgUpdateGroupMetadata{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupMetadata{}
+	_ sdk.Msg            = &MsgUpdateGroupMetadata{}
+	_ legacytx.LegacyMsg = &MsgUpdateGroupMetadata{}
 )
 
 // GetSignBytes Implements Msg.
@@ -137,8 +138,8 @@ func (m *MsgUpdateGroupMetadata) GetGroupID() uint64 {
 }
 
 var (
-	_ sdk.Msg                       = &MsgUpdateGroupMembers{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupMembers{}
+	_ sdk.Msg            = &MsgUpdateGroupMembers{}
+	_ legacytx.LegacyMsg = &MsgUpdateGroupMembers{}
 )
 
 // GetSignBytes Implements Msg.
@@ -181,8 +182,8 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 }
 
 var (
-	_ sdk.Msg                       = &MsgCreateGroupWithPolicy{}
-	_ sdk.HasAminoSigningCapability = &MsgCreateGroupWithPolicy{}
+	_ sdk.Msg            = &MsgCreateGroupWithPolicy{}
+	_ legacytx.LegacyMsg = &MsgCreateGroupWithPolicy{}
 
 	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 )
@@ -257,8 +258,8 @@ func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgCreateGroupPolicy{}
-	_ sdk.HasAminoSigningCapability = &MsgCreateGroupPolicy{}
+	_ sdk.Msg            = &MsgCreateGroupPolicy{}
+	_ legacytx.LegacyMsg = &MsgCreateGroupPolicy{}
 )
 
 // GetSignBytes Implements Msg.
@@ -294,8 +295,8 @@ func (m MsgCreateGroupPolicy) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgUpdateGroupPolicyAdmin{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupPolicyAdmin{}
+	_ sdk.Msg            = &MsgUpdateGroupPolicyAdmin{}
+	_ legacytx.LegacyMsg = &MsgUpdateGroupPolicyAdmin{}
 )
 
 // GetSignBytes Implements Msg.
@@ -334,8 +335,8 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgUpdateGroupPolicyDecisionPolicy{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupPolicyDecisionPolicy{}
+	_ sdk.Msg            = &MsgUpdateGroupPolicyDecisionPolicy{}
+	_ legacytx.LegacyMsg = &MsgUpdateGroupPolicyDecisionPolicy{}
 
 	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
 )
@@ -420,8 +421,8 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyU
 }
 
 var (
-	_ sdk.Msg                       = &MsgUpdateGroupPolicyMetadata{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupPolicyMetadata{}
+	_ sdk.Msg            = &MsgUpdateGroupPolicyMetadata{}
+	_ legacytx.LegacyMsg = &MsgUpdateGroupPolicyMetadata{}
 )
 
 // GetSignBytes Implements Msg.
@@ -452,8 +453,8 @@ func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgCreateGroupPolicy{}
-	_ sdk.HasAminoSigningCapability = &MsgCreateGroupPolicy{}
+	_ sdk.Msg            = &MsgCreateGroupPolicy{}
+	_ legacytx.LegacyMsg = &MsgCreateGroupPolicy{}
 
 	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
 )
@@ -513,8 +514,8 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 }
 
 var (
-	_ sdk.Msg                       = &MsgSubmitProposal{}
-	_ sdk.HasAminoSigningCapability = &MsgSubmitProposal{}
+	_ sdk.Msg            = &MsgSubmitProposal{}
+	_ legacytx.LegacyMsg = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -627,8 +628,8 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgWithdrawProposal{}
-	_ sdk.HasAminoSigningCapability = &MsgWithdrawProposal{}
+	_ sdk.Msg            = &MsgWithdrawProposal{}
+	_ legacytx.LegacyMsg = &MsgWithdrawProposal{}
 )
 
 // GetSignBytes Implements Msg.
@@ -658,8 +659,8 @@ func (m MsgWithdrawProposal) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgVote{}
-	_ sdk.HasAminoSigningCapability = &MsgVote{}
+	_ sdk.Msg            = &MsgVote{}
+	_ legacytx.LegacyMsg = &MsgVote{}
 )
 
 // GetSignBytes Implements Msg.
@@ -693,8 +694,8 @@ func (m MsgVote) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgExec{}
-	_ sdk.HasAminoSigningCapability = &MsgExec{}
+	_ sdk.Msg            = &MsgExec{}
+	_ legacytx.LegacyMsg = &MsgExec{}
 )
 
 // GetSignBytes Implements Msg.
@@ -722,8 +723,8 @@ func (m MsgExec) ValidateBasic() error {
 }
 
 var (
-	_ sdk.Msg                       = &MsgLeaveGroup{}
-	_ sdk.HasAminoSigningCapability = &MsgLeaveGroup{}
+	_ sdk.Msg            = &MsgLeaveGroup{}
+	_ legacytx.LegacyMsg = &MsgLeaveGroup{}
 )
 
 // GetSignBytes Implements Msg

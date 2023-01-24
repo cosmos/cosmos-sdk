@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // Verify interface at compile time
@@ -16,12 +17,12 @@ var (
 	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
 	_ sdk.Msg = (*MsgDepositValidatorRewardsPool)(nil)
 
-	_ sdk.HasAminoSigningCapability = (*MsgSetWithdrawAddress)(nil)
-	_ sdk.HasAminoSigningCapability = (*MsgWithdrawDelegatorReward)(nil)
-	_ sdk.HasAminoSigningCapability = (*MsgWithdrawValidatorCommission)(nil)
-	_ sdk.HasAminoSigningCapability = (*MsgUpdateParams)(nil)
-	_ sdk.HasAminoSigningCapability = (*MsgCommunityPoolSpend)(nil)
-	_ sdk.HasAminoSigningCapability = (*MsgDepositValidatorRewardsPool)(nil)
+	_ legacytx.LegacyMsg = (*MsgSetWithdrawAddress)(nil)
+	_ legacytx.LegacyMsg = (*MsgWithdrawDelegatorReward)(nil)
+	_ legacytx.LegacyMsg = (*MsgWithdrawValidatorCommission)(nil)
+	_ legacytx.LegacyMsg = (*MsgUpdateParams)(nil)
+	_ legacytx.LegacyMsg = (*MsgCommunityPoolSpend)(nil)
+	_ legacytx.LegacyMsg = (*MsgDepositValidatorRewardsPool)(nil)
 )
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {

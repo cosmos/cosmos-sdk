@@ -5,15 +5,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	TypeMsgUpdateParams = "update_params"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_ sdk.Msg                       = &MsgUpdateParams{}
-	_ sdk.HasAminoSigningCapability = &MsgUpdateParams{}
+	_ sdk.Msg            = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
 
 // GetSigners returns the signer addresses that are expected to sign the result

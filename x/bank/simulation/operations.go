@@ -62,27 +62,29 @@ func SimulateMsgSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operatio
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		msgType := sdk.MsgTypeURL(&types.MsgSend{})
 		from, to, coins, skip := randomSendFields(r, ctx, accs, bk, ak)
 
 		// if coins slice is empty, we can not create valid types.MsgSend
 		if len(coins) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "empty coins slice"), nil, nil
 		}
 
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 
 		if skip {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "skip all transfers"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "skip all transfers"), nil, nil
 		}
 
 		msg := types.NewMsgSend(from.Address, to.Address, coins)
 
 		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
@@ -96,27 +98,27 @@ func SimulateMsgSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keeper, mo
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgSend{})
 		from := accs[0]
-
 		to := getModuleAccounts(ak, ctx, moduleAccCount)[0]
 
 		spendable := bk.SpendableCoins(ctx, from.Address)
 		coins := simtypes.RandSubsetCoins(r, spendable)
 		// if coins slice is empty, we can not create valid types.MsgSend
 		if len(coins) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, "empty coins slice"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "empty coins slice"), nil, nil
 		}
 
 		// Check send_enabled status of each coin denom
 		if err := bk.IsSendEnabledCoins(ctx, coins...); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSend, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 
 		msg := types.NewMsgSend(from.Address, to.Address, coins)
 
 		err := sendMsgSend(r, app, bk, ak, msg, ctx, chainID, []cryptotypes.PrivKey{from.PrivKey})
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
@@ -179,6 +181,8 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgMultiSend{})
+
 		// random number of inputs/outputs between [1, 3]
 		inputs := make([]types.Input, r.Intn(1)+1) //nolint:staticcheck // SA4030: (*math/rand.Rand).Intn(n) generates a random value 0 <= x < n; that is, the generated values don't include n; r.Intn(1) therefore always returns 0
 		outputs := make([]types.Output, r.Intn(3)+1)
@@ -200,7 +204,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 			}
 
 			if skip {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, "skip all transfers"), nil, nil
+				return simtypes.NoOpMsg(types.ModuleName, msgType, "skip all transfers"), nil, nil
 			}
 
 			// set input address in used address map
@@ -216,7 +220,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 
 		// Check send_enabled status of each sent coin denom
 		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 
 		for o := range outputs {
@@ -254,7 +258,7 @@ func SimulateMsgMultiSend(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Ope
 		}
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
@@ -267,6 +271,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgMultiSend{})
 		inputs := make([]types.Input, 2)
 		outputs := make([]types.Output, moduleAccCount)
 		// collect signer privKeys
@@ -281,7 +286,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			totalSentCoins = totalSentCoins.Add(coins...)
 		}
 		if err := bk.IsSendEnabledCoins(ctx, totalSentCoins...); err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgMultiSend, err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, err.Error()), nil, nil
 		}
 		moduleAccounts := getModuleAccounts(ak, ctx, moduleAccCount)
 		for i := range outputs {
@@ -313,7 +318,7 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 		}
 		err := sendMsgMultiSend(r, app, bk, ak, msg, ctx, chainID, privs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "invalid transfers"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
 	}

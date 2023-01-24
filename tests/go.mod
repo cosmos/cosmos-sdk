@@ -178,13 +178,13 @@ require (
 )
 
 replace (
+	cosmossdk.io/collections => ../collections
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
+	cosmossdk.io/x/evidence => ../x/evidence
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
-  	cosmossdk.io/x/evidence => ../x/evidence
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	cosmossdk.io/collections => ../collections
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

@@ -8,11 +8,11 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/evidence v0.1.0
+	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
-	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -34,7 +34,6 @@ require (
 	cosmossdk.io/collections v0.0.0-20230124101704-57bedb100648 // indirect
 	cosmossdk.io/core v0.5.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -170,7 +169,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.107.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 // indirect
+	google.golang.org/genproto v0.0.0-20230117162540-28d6b9783ac4 // indirect
 	google.golang.org/grpc v1.52.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -182,8 +181,8 @@ require (
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

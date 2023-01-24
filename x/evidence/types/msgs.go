@@ -8,16 +8,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Message types for the evidence module
 const (
 	TypeMsgSubmitEvidence = "submit_evidence"
+=======
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+>>>>>>> 8dbdfea9e (refactor: remove `.Type()` and `.Route()` from msgs (#14751))
 )
 
 var (
 	_ sdk.Msg                       = &MsgSubmitEvidence{}
+	_ legacytx.LegacyMsg            = &MsgSubmitEvidence{}
 	_ types.UnpackInterfacesMessage = MsgSubmitEvidence{}
 	_ exported.MsgSubmitEvidenceI   = &MsgSubmitEvidence{}
 )
@@ -36,12 +41,6 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	}
 	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
 }
-
-// Route returns the MsgSubmitEvidence's route.
-func (m MsgSubmitEvidence) Route() string { return RouterKey }
-
-// Type returns the MsgSubmitEvidence's type.
-func (m MsgSubmitEvidence) Type() string { return TypeMsgSubmitEvidence }
 
 // ValidateBasic performs basic (non-state-dependant) validation on a MsgSubmitEvidence.
 func (m MsgSubmitEvidence) ValidateBasic() error {

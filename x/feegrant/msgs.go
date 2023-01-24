@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	_, _ sdk.Msg            = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{} // For amino support.
+	_, _ sdk.Msg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	// For amino support.
+	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
@@ -59,16 +60,6 @@ func (msg MsgGrantAllowance) ValidateBasic() error {
 func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
-}
-
-// Type implements the LegacyMsg.Type method.
-func (msg MsgGrantAllowance) Type() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-// Route implements the LegacyMsg.Route method.
-func (msg MsgGrantAllowance) Route() string {
-	return sdk.MsgTypeURL(&msg)
 }
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.
@@ -120,16 +111,6 @@ func (msg MsgRevokeAllowance) ValidateBasic() error {
 func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
 	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
 	return []sdk.AccAddress{granter}
-}
-
-// Type implements the LegacyMsg.Type method.
-func (msg MsgRevokeAllowance) Type() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-// Route implements the LegacyMsg.Route method.
-func (msg MsgRevokeAllowance) Route() string {
-	return sdk.MsgTypeURL(&msg)
 }
 
 // GetSignBytes implements the LegacyMsg.GetSignBytes method.

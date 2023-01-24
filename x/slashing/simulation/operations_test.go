@@ -123,7 +123,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
-	}{{simulation.DefaultWeightMsgUnjail, types.ModuleName, types.TypeMsgUnjail}}
+	}{
+		{simulation.DefaultWeightMsgUnjail, types.ModuleName, sdk.MsgTypeURL(&types.MsgUnjail{})},
+	}
 
 	weightesOps := simulation.WeightedOperations(appParams, suite.codec, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {
@@ -181,7 +183,6 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	suite.Require().True(operationMsg.OK)
-	suite.Require().Equal(types.TypeMsgUnjail, msg.Type())
 	suite.Require().Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddr)
 	suite.Require().Len(futureOperations, 0)
 }

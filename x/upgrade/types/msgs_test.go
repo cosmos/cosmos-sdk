@@ -63,7 +63,6 @@ func TestMsgSoftwareUpgrade(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&types.MsgSoftwareUpgrade{}))
 			}
 		})
 	}
@@ -102,7 +101,6 @@ func TestMsgCancelUpgrade(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&types.MsgCancelUpgrade{}))
 			}
 		})
 	}

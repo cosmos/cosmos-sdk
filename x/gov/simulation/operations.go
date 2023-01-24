@@ -206,10 +206,24 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			simtypes.RandStringOfLength(r, 100),
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate a submit proposal msg"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
+<<<<<<< HEAD
+=======
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		var fees sdk.Coins
+		coins, hasNeg := spendable.SafeSub(deposit...)
+		if !hasNeg {
+			fees, err = simtypes.RandomFees(r, ctx, coins)
+			if err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
+			}
+		}
+
+>>>>>>> 8dbdfea9e (refactor: remove `.Type()` and `.Route()` from msgs (#14751))
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
@@ -223,12 +237,12 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
 		opMsg := simtypes.NewOperationMsg(msg, true, "", nil)
@@ -236,7 +250,7 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate proposalID"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate proposalID"), nil, err
 		}
 
 		// 2) Schedule operations for votes
@@ -294,7 +308,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.K
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -304,7 +318,6 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.K
 			TxGen:         moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,
@@ -354,7 +367,6 @@ func operationSimulateMsgVote(ak types.AccountKeeper, bk types.BankKeeper, k *ke
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -406,7 +418,6 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -419,6 +430,48 @@ func operationSimulateMsgVoteWeighted(ak types.AccountKeeper, bk types.BankKeepe
 	}
 }
 
+<<<<<<< HEAD
+=======
+// SimulateMsgCancelProposal generates a MsgCancelProposal.
+func SimulateMsgCancelProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount := accs[0]
+		proposal := randomProposal(r, k, ctx)
+		if proposal == nil {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "no proposals found"), nil, nil
+		}
+
+		if proposal.Proposer != simAccount.Address.String() {
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgCancelProposal, "invalid proposer"), nil, nil
+		}
+
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		msg := v1.NewMsgCancelProposal(proposal.Id, account.GetAddress().String())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           moduletestutil.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+>>>>>>> 8dbdfea9e (refactor: remove `.Type()` and `.Route()` from msgs (#14751))
 // Pick a random deposit with a random denomination with a
 // deposit amount between (0, min(balance, minDepositAmount))
 // This is to simulate multiple users depositing to get the

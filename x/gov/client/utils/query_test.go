@@ -32,6 +32,28 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 		*perPage = 0
 	}
 
+<<<<<<< HEAD
+=======
+	// Get the `message.action` value from the query.
+	messageAction := regexp.MustCompile(`message\.action='(.*)' .*$`)
+	msgType := messageAction.FindStringSubmatch(query)[1]
+
+	// Filter only the txs that match the query
+	matchingTxs := make([]tmtypes.Tx, 0)
+	for _, tx := range mock.txs {
+		sdkTx, err := mock.txConfig.TxDecoder()(tx)
+		if err != nil {
+			return nil, err
+		}
+		for _, msg := range sdkTx.GetMsgs() {
+			if sdk.MsgTypeURL(msg) == msgType {
+				matchingTxs = append(matchingTxs, tx)
+				break
+			}
+		}
+	}
+
+>>>>>>> 8dbdfea9e (refactor: remove `.Type()` and `.Route()` from msgs (#14751))
 	start, end := client.Paginate(len(mock.txs), *page, *perPage, 100)
 	if start < 0 || end < 0 {
 		// nil result with nil error crashes utils.QueryTxsByEvents

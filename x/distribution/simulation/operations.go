@@ -89,7 +89,7 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if !k.GetWithdrawAddrEnabled(ctx) {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgSetWithdrawAddress, "withdrawal is not enabled"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), "withdrawal is not enabled"), nil, nil
 		}
 
 		simAccount, _ := simtypes.RandomAcc(r, accs)
@@ -106,7 +106,6 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -127,14 +126,14 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		delegations := sk.GetAllDelegatorDelegations(ctx, simAccount.Address)
 		if len(delegations) == 0 {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawDelegatorReward, "number of delegators equal 0"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "number of delegators equal 0"), nil, nil
 		}
 
 		delegation := delegations[r.Intn(len(delegations))]
 
 		validator := sk.Validator(ctx, delegation.GetValidatorAddr())
 		if validator == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawDelegatorReward, "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawDelegatorReward{}), "validator is nil"), nil, fmt.Errorf("validator %s not found", delegation.GetValidatorAddr())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -148,7 +147,6 @@ func SimulateMsgWithdrawDelegatorReward(txConfig client.TxConfig, ak types.Accou
 			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -166,19 +164,21 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgWithdrawValidatorCommission{})
+
 		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "random validator is not ok"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "random validator is not ok"), nil, nil
 		}
 
 		commission := k.GetValidatorAccumulatedCommission(ctx, validator.GetOperator())
 		if commission.Commission.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "validator commission is zero"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator commission is zero"), nil, nil
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawValidatorCommission, "could not find account"), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "could not find account"), nil, fmt.Errorf("validator %s not found", validator.GetOperator())
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
@@ -192,7 +192,6 @@ func SimulateMsgWithdrawValidatorCommission(txConfig client.TxConfig, ak types.A
 			TxGen:           txConfig,
 			Cdc:             nil,
 			Msg:             msg,
-			MsgType:         msg.Type(),
 			Context:         ctx,
 			SimAccount:      simAccount,
 			AccountKeeper:   ak,
@@ -218,7 +217,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 
 		fundAmount := simtypes.RandSubsetCoins(r, spendable)
 		if fundAmount.Empty() {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "fund amount is empty"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), "fund amount is empty"), nil, nil
 		}
 
 		var (
@@ -230,7 +229,7 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgFundCommunityPool, "unable to generate fees"), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgFundCommunityPool{}), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -242,7 +241,6 @@ func SimulateMsgFundCommunityPool(txConfig client.TxConfig, ak types.AccountKeep
 			TxGen:         txConfig,
 			Cdc:           nil,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    funder,
 			AccountKeeper: ak,

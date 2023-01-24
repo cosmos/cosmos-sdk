@@ -57,7 +57,6 @@ The following examples show how to query Events using the Cosmos SDK.
 | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tx.height=23`                                   | Query all transactions at height 23                                                                                                                      |
 | `message.action='/cosmos.bank.v1beta1.Msg/Send'` | Query all transactions containing a x/bank `Send` [Service `Msg`](../building-modules/03-msg-services.md). Note the `'`s around the value.                  |
-| `message.action='send'`                          | Query all transactions containing a x/bank `Send` [legacy `Msg`](../building-modules/03-msg-services.md#legacy-amino-msgs). Note the `'`s around the value. |
 | `message.module='bank'`                          | Query all transactions containing messages from the x/bank module. Note the `'`s around the value.                                                       |
 | `create_validator.validator='cosmosval1...'`     | x/staking-specific Event, see [x/staking SPEC](../modules/staking/README.md).                                                         |
 

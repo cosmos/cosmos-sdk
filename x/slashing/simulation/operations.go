@@ -52,33 +52,35 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msgType := sdk.MsgTypeURL(&types.MsgUnjail{})
+
 		validator, ok := testutil.RandSliceElem(r, sk.GetAllValidators(ctx))
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not ok"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator is not ok"), nil, nil // skip
 		}
 
 		simAccount, found := simtypes.FindAccount(accs, sdk.AccAddress(validator.GetOperator()))
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to find account"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find account"), nil, nil // skip
 		}
 
 		if !validator.IsJailed() {
 			// TODO: due to this condition this message is almost, if not always, skipped !
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "validator is not jailed"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator is not jailed"), nil, nil
 		}
 
 		consAddr, err := validator.GetConsAddr()
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to get validator consensus key"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get validator consensus key"), nil, err
 		}
 		info, found := k.GetValidatorSigningInfo(ctx, consAddr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to find validator signing info"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to find validator signing info"), nil, nil // skip
 		}
 
 		selfDel := sk.Delegation(ctx, simAccount.Address, validator.GetOperator())
 		if selfDel == nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "self delegation is nil"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "self delegation is nil"), nil, nil // skip
 		}
 
 		account := ak.GetAccount(ctx, sdk.AccAddress(validator.GetOperator()))
@@ -86,7 +88,7 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 
 		fees, err := simtypes.RandomFees(r, ctx, spendable)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUnjail, "unable to generate fees"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to generate fees"), nil, err
 		}
 
 		msg := types.NewMsgUnjail(validator.GetOperator())
@@ -104,7 +106,7 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 		}
 
 		_, res, err := app.SimDeliver(txGen.TxEncoder(), tx)
@@ -132,7 +134,7 @@ func SimulateMsgUnjail(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.B
 		}
 
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to deliver tx"), nil, errors.New(res.Log)
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, errors.New(res.Log)
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil

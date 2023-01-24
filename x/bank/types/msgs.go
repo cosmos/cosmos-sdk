@@ -5,18 +5,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// bank message types
-const (
-	TypeMsgSend           = "send"
-	TypeMsgMultiSend      = "multisend"
-	TypeMsgSetSendEnabled = "set_send_enabled"
-	TypeMsgUpdateParams   = "update_params"
-)
-
 var (
 	_ sdk.Msg = &MsgSend{}
 	_ sdk.Msg = &MsgMultiSend{}
 	_ sdk.Msg = &MsgUpdateParams{}
+
+	_ sdk.HasAminoSigningCapability = &MsgSend{}
+	_ sdk.HasAminoSigningCapability = &MsgMultiSend{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateParams{}
 )
 
 // NewMsgSend - construct a msg to send coins from one account to another.
@@ -25,12 +21,6 @@ var (
 func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr.String(), ToAddress: toAddr.String(), Amount: amount}
 }
-
-// Route Implements Msg.
-func (msg MsgSend) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
@@ -68,12 +58,6 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
 	return &MsgMultiSend{Inputs: in, Outputs: out}
 }
-
-// Route Implements Msg
-func (msg MsgMultiSend) Route() string { return RouterKey }
-
-// Type Implements Msg
-func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {

@@ -6,12 +6,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_, _ sdk.Msg            = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
-	_, _ legacytx.LegacyMsg = &MsgGrantAllowance{}, &MsgRevokeAllowance{} // For amino support.
+	_, _ sdk.Msg = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
+	// For amino support.
+	_, _ sdk.HasAminoSigningCapability = &MsgGrantAllowance{}, &MsgRevokeAllowance{}
 
 	_ types.UnpackInterfacesMessage = &MsgGrantAllowance{}
 )
@@ -61,17 +61,7 @@ func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// Type implements the LegacyMsg.Type method.
-func (msg MsgGrantAllowance) Type() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-// Route implements the LegacyMsg.Route method.
-func (msg MsgGrantAllowance) Route() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
+// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
 func (msg MsgGrantAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
@@ -122,17 +112,7 @@ func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// Type implements the LegacyMsg.Type method.
-func (msg MsgRevokeAllowance) Type() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-// Route implements the LegacyMsg.Route method.
-func (msg MsgRevokeAllowance) Route() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-// GetSignBytes implements the LegacyMsg.GetSignBytes method.
+// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
 func (msg MsgRevokeAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

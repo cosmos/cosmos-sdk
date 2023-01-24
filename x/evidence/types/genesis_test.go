@@ -160,14 +160,6 @@ type TestEvidence struct{}
 
 var _ exported.Evidence = &TestEvidence{}
 
-func (*TestEvidence) Route() string {
-	return "test-route"
-}
-
-func (*TestEvidence) Type() string {
-	return "test-type"
-}
-
 func (*TestEvidence) String() string {
 	return "test-string"
 }

@@ -7,17 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// distribution message types
-const (
-	TypeMsgSetWithdrawAddress          = "set_withdraw_address"
-	TypeMsgWithdrawDelegatorReward     = "withdraw_delegator_reward"
-	TypeMsgWithdrawValidatorCommission = "withdraw_validator_commission"
-	TypeMsgFundCommunityPool           = "fund_community_pool"
-	TypeMsgUpdateParams                = "update_params"
-	TypeMsgCommunityPoolSpend          = "community_pool_spend"
-	TypeMsgDepositValidatorRewardsPool = "deposit_validator_rewards_pool"
-)
-
 // Verify interface at compile time
 var (
 	_ sdk.Msg = (*MsgSetWithdrawAddress)(nil)
@@ -26,6 +15,13 @@ var (
 	_ sdk.Msg = (*MsgUpdateParams)(nil)
 	_ sdk.Msg = (*MsgCommunityPoolSpend)(nil)
 	_ sdk.Msg = (*MsgDepositValidatorRewardsPool)(nil)
+
+	_ sdk.HasAminoSigningCapability = (*MsgSetWithdrawAddress)(nil)
+	_ sdk.HasAminoSigningCapability = (*MsgWithdrawDelegatorReward)(nil)
+	_ sdk.HasAminoSigningCapability = (*MsgWithdrawValidatorCommission)(nil)
+	_ sdk.HasAminoSigningCapability = (*MsgUpdateParams)(nil)
+	_ sdk.HasAminoSigningCapability = (*MsgCommunityPoolSpend)(nil)
+	_ sdk.HasAminoSigningCapability = (*MsgDepositValidatorRewardsPool)(nil)
 )
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
@@ -34,9 +30,6 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithd
 		WithdrawAddress:  withdrawAddr.String(),
 	}
 }
-
-func (msg MsgSetWithdrawAddress) Route() string { return ModuleName }
-func (msg MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddress }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
@@ -69,9 +62,6 @@ func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddres
 	}
 }
 
-func (msg MsgWithdrawDelegatorReward) Route() string { return ModuleName }
-func (msg MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDelegatorReward }
-
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -100,9 +90,6 @@ func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValid
 		ValidatorAddress: valAddr.String(),
 	}
 }
-
-func (msg MsgWithdrawValidatorCommission) Route() string { return ModuleName }
-func (msg MsgWithdrawValidatorCommission) Type() string  { return TypeMsgWithdrawValidatorCommission }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
@@ -133,12 +120,6 @@ func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFun
 	}
 }
 
-// Route returns the MsgFundCommunityPool message route.
-func (msg MsgFundCommunityPool) Route() string { return ModuleName }
-
-// Type returns the MsgFundCommunityPool message type.
-func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool }
-
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
 func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
@@ -163,12 +144,6 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 	}
 	return nil
 }
-
-// Route returns the MsgUpdateParams message route.
-func (msg MsgUpdateParams) Route() string { return ModuleName }
-
-// Type returns the MsgUpdateParams message type.
-func (msg MsgUpdateParams) Type() string { return TypeMsgUpdateParams }
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
@@ -197,12 +172,6 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 
 	return msg.Params.ValidateBasic()
 }
-
-// Route returns the MsgCommunityPoolSpend message route.
-func (msg MsgCommunityPoolSpend) Route() string { return ModuleName }
-
-// Type returns the MsgCommunityPoolSpend message type.
-func (msg MsgCommunityPoolSpend) Type() string { return TypeMsgCommunityPoolSpend }
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes, which is the authority.
@@ -236,12 +205,6 @@ func NewMsgDepositValidatorRewardsPool(depositor sdk.AccAddress, valAddr sdk.Val
 		ValidatorAddress: valAddr.String(),
 	}
 }
-
-// Route returns the MsgDepositValidatorRewardsPool message route.
-func (msg MsgDepositValidatorRewardsPool) Route() string { return ModuleName }
-
-// Type returns the MsgDepositValidatorRewardsPool message type.
-func (msg MsgDepositValidatorRewardsPool) Type() string { return TypeMsgDepositValidatorRewardsPool }
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes, which is the authority.

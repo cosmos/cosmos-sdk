@@ -25,6 +25,16 @@ type (
 		GetSigners() []AccAddress
 	}
 
+	// Extension interface for Msg that require Amino Signing
+	// Replaces legacytx.LegacyMsg.
+	// Deprecated: use Msg instead.
+	HasAminoSigningCapability interface {
+		Msg
+
+		// Get the canonical byte representation of the Msg.
+		GetSignBytes() []byte
+	}
+
 	// Fee defines an interface for an application application-defined concrete
 	// transaction type to be able to set and return the transaction fee.
 	Fee interface {

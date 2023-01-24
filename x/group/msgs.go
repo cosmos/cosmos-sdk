@@ -12,13 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 )
 
-var _ sdk.Msg = &MsgCreateGroup{}
-
-// Route Implements Msg.
-func (m MsgCreateGroup) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type Implements Msg.
-func (m MsgCreateGroup) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgCreateGroup{}
+	_ sdk.HasAminoSigningCapability = &MsgCreateGroup{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroup) GetSignBytes() []byte {
@@ -60,15 +57,10 @@ func (m MemberRequest) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupAdmin{}
-
-// Route Implements Msg.
-func (m MsgUpdateGroupAdmin) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgUpdateGroupAdmin) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupAdmin{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupAdmin{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupAdmin) GetSignBytes() []byte {
@@ -109,15 +101,10 @@ func (m *MsgUpdateGroupAdmin) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgUpdateGroupMetadata{}
-
-// Route Implements Msg.
-func (m MsgUpdateGroupMetadata) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgUpdateGroupMetadata) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupMetadata{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupMetadata{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMetadata) GetSignBytes() []byte {
@@ -149,15 +136,10 @@ func (m *MsgUpdateGroupMetadata) GetGroupID() uint64 {
 	return m.GroupId
 }
 
-var _ sdk.Msg = &MsgUpdateGroupMembers{}
-
-// Route Implements Msg.
-func (m MsgUpdateGroupMembers) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgUpdateGroupMembers) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupMembers{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupMembers{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupMembers) GetSignBytes() []byte {
@@ -200,6 +182,8 @@ func (m *MsgUpdateGroupMembers) GetGroupID() uint64 {
 
 var (
 	_ sdk.Msg                       = &MsgCreateGroupWithPolicy{}
+	_ sdk.HasAminoSigningCapability = &MsgCreateGroupWithPolicy{}
+
 	_ types.UnpackInterfacesMessage = MsgCreateGroupWithPolicy{}
 )
 
@@ -244,16 +228,6 @@ func (m MsgCreateGroupWithPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) e
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-// Route Implements Msg.
-func (m MsgCreateGroupWithPolicy) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgCreateGroupWithPolicy) Type() string {
-	return sdk.MsgTypeURL(&m)
-}
-
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupWithPolicy) GetSignBytes() []byte {
 	return sdk.MustSortJSON(codec.ModuleCdc.MustMarshalJSON(&m))
@@ -282,15 +256,10 @@ func (m MsgCreateGroupWithPolicy) ValidateBasic() error {
 	return strictValidateMembers(m.Members)
 }
 
-var _ sdk.Msg = &MsgCreateGroupPolicy{}
-
-// Route Implements Msg.
-func (m MsgCreateGroupPolicy) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgCreateGroupPolicy) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgCreateGroupPolicy{}
+	_ sdk.HasAminoSigningCapability = &MsgCreateGroupPolicy{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgCreateGroupPolicy) GetSignBytes() []byte {
@@ -324,15 +293,10 @@ func (m MsgCreateGroupPolicy) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}
-
-// Route Implements Msg.
-func (m MsgUpdateGroupPolicyAdmin) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgUpdateGroupPolicyAdmin) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupPolicyAdmin{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupPolicyAdmin{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyAdmin) GetSignBytes() []byte {
@@ -371,6 +335,8 @@ func (m MsgUpdateGroupPolicyAdmin) ValidateBasic() error {
 
 var (
 	_ sdk.Msg                       = &MsgUpdateGroupPolicyDecisionPolicy{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupPolicyDecisionPolicy{}
+
 	_ types.UnpackInterfacesMessage = MsgUpdateGroupPolicyDecisionPolicy{}
 )
 
@@ -399,16 +365,6 @@ func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy De
 	}
 	m.DecisionPolicy = any
 	return nil
-}
-
-// Route Implements Msg.
-func (m MsgUpdateGroupPolicyDecisionPolicy) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgUpdateGroupPolicyDecisionPolicy) Type() string {
-	return sdk.MsgTypeURL(&m)
 }
 
 // GetSignBytes Implements Msg.
@@ -463,15 +419,10 @@ func (m MsgUpdateGroupPolicyDecisionPolicy) UnpackInterfaces(unpacker types.AnyU
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgUpdateGroupPolicyMetadata{}
-
-// Route Implements Msg.
-func (m MsgUpdateGroupPolicyMetadata) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgUpdateGroupPolicyMetadata) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgUpdateGroupPolicyMetadata{}
+	_ sdk.HasAminoSigningCapability = &MsgUpdateGroupPolicyMetadata{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgUpdateGroupPolicyMetadata) GetSignBytes() []byte {
@@ -502,6 +453,8 @@ func (m MsgUpdateGroupPolicyMetadata) ValidateBasic() error {
 
 var (
 	_ sdk.Msg                       = &MsgCreateGroupPolicy{}
+	_ sdk.HasAminoSigningCapability = &MsgCreateGroupPolicy{}
+
 	_ types.UnpackInterfacesMessage = MsgCreateGroupPolicy{}
 )
 
@@ -559,7 +512,10 @@ func (m MsgCreateGroupPolicy) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(m.DecisionPolicy, &decisionPolicy)
 }
 
-var _ sdk.Msg = &MsgSubmitProposal{}
+var (
+	_ sdk.Msg                       = &MsgSubmitProposal{}
+	_ sdk.HasAminoSigningCapability = &MsgSubmitProposal{}
+)
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, metadata string, exec Exec, title, summary string) (*MsgSubmitProposal, error) {
@@ -577,14 +533,6 @@ func NewMsgSubmitProposal(address string, proposers []string, msgs []sdk.Msg, me
 	}
 	return m, nil
 }
-
-// Route Implements Msg.
-func (m MsgSubmitProposal) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgSubmitProposal) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes Implements Msg.
 func (m MsgSubmitProposal) GetSignBytes() []byte {
@@ -678,13 +626,10 @@ func (m MsgSubmitProposal) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 	return tx.UnpackInterfaces(unpacker, m.Messages)
 }
 
-var _ sdk.Msg = &MsgWithdrawProposal{}
-
-// Route Implements Msg.
-func (m MsgWithdrawProposal) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type Implements Msg.
-func (m MsgWithdrawProposal) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgWithdrawProposal{}
+	_ sdk.HasAminoSigningCapability = &MsgWithdrawProposal{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgWithdrawProposal) GetSignBytes() []byte {
@@ -712,15 +657,10 @@ func (m MsgWithdrawProposal) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgVote{}
-
-// Route Implements Msg.
-func (m MsgVote) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgVote) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgVote{}
+	_ sdk.HasAminoSigningCapability = &MsgVote{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgVote) GetSignBytes() []byte {
@@ -752,15 +692,10 @@ func (m MsgVote) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgExec{}
-
-// Route Implements Msg.
-func (m MsgExec) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg.
-func (m MsgExec) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgExec{}
+	_ sdk.HasAminoSigningCapability = &MsgExec{}
+)
 
 // GetSignBytes Implements Msg.
 func (m MsgExec) GetSignBytes() []byte {
@@ -786,15 +721,10 @@ func (m MsgExec) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgLeaveGroup{}
-
-// Route Implements Msg
-func (m MsgLeaveGroup) Route() string {
-	return sdk.MsgTypeURL(&m)
-}
-
-// Type Implements Msg
-func (m MsgLeaveGroup) Type() string { return sdk.MsgTypeURL(&m) }
+var (
+	_ sdk.Msg                       = &MsgLeaveGroup{}
+	_ sdk.HasAminoSigningCapability = &MsgLeaveGroup{}
+)
 
 // GetSignBytes Implements Msg
 func (m MsgLeaveGroup) GetSignBytes() []byte {

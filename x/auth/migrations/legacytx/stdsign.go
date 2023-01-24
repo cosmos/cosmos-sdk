@@ -55,9 +55,9 @@ type StdSignDoc struct {
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string, tip *tx.Tip) []byte {
 	msgsBytes := make([]json.RawMessage, 0, len(msgs))
 	for _, msg := range msgs {
-		legacyMsg, ok := msg.(LegacyMsg)
+		legacyMsg, ok := msg.(sdk.HasAminoSigningCapability)
 		if !ok {
-			panic(fmt.Errorf("expected %T when using amino JSON", (*LegacyMsg)(nil)))
+			panic(fmt.Errorf("expected %T when using amino JSON", (*sdk.HasAminoSigningCapability)(nil)))
 		}
 
 		msgsBytes = append(msgsBytes, json.RawMessage(legacyMsg.GetSignBytes()))

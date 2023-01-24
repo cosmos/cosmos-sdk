@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 type WeightedProposalContent interface {
@@ -78,13 +77,11 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 
 // NewOperationMsg - create a new operation message from sdk.Msg
 func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
-	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
-		return NewOperationMsgBasic(legacyMsg.Route(), legacyMsg.Type(), comment, ok, legacyMsg.GetSignBytes())
+	if legacyMsg, okType := msg.(sdk.HasAminoSigningCapability); okType {
+		return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, legacyMsg.GetSignBytes())
 	}
 
-	bz := cdc.MustMarshalJSON(msg)
-
-	return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, bz)
+	return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, cdc.MustMarshalJSON(msg))
 }
 
 // NoOpMsg - create a no-operation message

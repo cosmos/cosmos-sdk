@@ -3,19 +3,12 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
-	_, _ sdk.Msg            = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
-	_, _ legacytx.LegacyMsg = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
+	_, _ sdk.Msg                       = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
+	_, _ sdk.HasAminoSigningCapability = &MsgSoftwareUpgrade{}, &MsgCancelUpgrade{}
 )
-
-// Route implements the LegacyMsg interface.
-func (m MsgSoftwareUpgrade) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type implements the LegacyMsg interface.
-func (m MsgSoftwareUpgrade) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes implements the LegacyMsg interface.
 func (m MsgSoftwareUpgrade) GetSignBytes() []byte {
@@ -40,12 +33,6 @@ func (m *MsgSoftwareUpgrade) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
 }
-
-// Route implements the LegacyMsg interface.
-func (m MsgCancelUpgrade) Route() string { return sdk.MsgTypeURL(&m) }
-
-// Type implements the LegacyMsg interface.
-func (m MsgCancelUpgrade) Type() string { return sdk.MsgTypeURL(&m) }
 
 // GetSignBytes implements the LegacyMsg interface.
 func (m MsgCancelUpgrade) GetSignBytes() []byte {

@@ -165,7 +165,7 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 
 func TestAminoJSON(t *testing.T) {
 	tx := legacytx.StdTx{}
-	var msg legacytx.LegacyMsg
+	var msg sdk.HasAminoSigningCapability
 	blockTime := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 	expiresAt := blockTime.Add(time.Hour)
 	msgSend := banktypes.MsgSend{FromAddress: "cosmos1ghi", ToAddress: "cosmos1jkl"}

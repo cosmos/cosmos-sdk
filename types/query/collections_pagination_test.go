@@ -156,50 +156,28 @@ func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
 	return t
 }
 
-func (t testStore) Get(key []byte) []byte {
-	res, err := t.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) Get(key []byte) ([]byte, error) {
+	return t.db.Get(key)
 }
 
-func (t testStore) Has(key []byte) bool {
-	res, err := t.db.Has(key)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) Has(key []byte) (bool, error) {
+	return t.db.Has(key)
 }
 
-func (t testStore) Set(key, value []byte) {
-	err := t.db.Set(key, value)
-	if err != nil {
-		panic(err)
-	}
+func (t testStore) Set(key, value []byte) error {
+	return t.db.Set(key, value)
 }
 
-func (t testStore) Delete(key []byte) {
-	err := t.db.Delete(key)
-	if err != nil {
-		panic(err)
-	}
+func (t testStore) Delete(key []byte) error {
+	return t.db.Delete(key)
 }
 
-func (t testStore) Iterator(start, end []byte) store.Iterator {
-	res, err := t.db.Iterator(start, end)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) Iterator(start, end []byte) (store.Iterator, error) {
+	return t.db.Iterator(start, end)
 }
 
-func (t testStore) ReverseIterator(start, end []byte) store.Iterator {
-	res, err := t.db.ReverseIterator(start, end)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
+	return t.db.ReverseIterator(start, end)
 }
 
 var _ store.KVStore = testStore{}

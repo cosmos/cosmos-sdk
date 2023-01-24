@@ -613,7 +613,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 	}
 
 	args := append([]string{
-		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),               //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated: use FlagTitle instead
+		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
 		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),   //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated: use FlagDescription instead
 		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType), //nolint:staticcheck // SA1019: govcli.FlagProposalType is deprecated: use FlagProposalType instead
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),

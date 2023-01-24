@@ -45,6 +45,18 @@ func NewReflectionService() (*ReflectionService, error) {
 			return nil, err
 		}
 
+		// The if check below is a temporary fix for https://github.com/cosmos/cosmos-sdk/issues/14713.
+		//
+		// It seems we're registering twice gogo.proto.
+		// See Frojdi's comments in server/grpc/gogoreflection/fix_registration.go.
+		// Skipping here `gogo.proto` and only including `gogoproto/gogo.proto`.
+		if *fd.Name == "gogo.proto" ||
+			// If we don't skip this one, we have the error:
+			// proto: file "descriptor.proto" has a name conflict over google.protobuf.FileDescriptorSet
+			*fd.Name == "descriptor.proto" {
+			continue
+		}
+
 		fds.File = append(fds.File, fd)
 		haveFileDescriptor[*fd.Name] = true
 	}

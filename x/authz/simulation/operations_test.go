@@ -69,10 +69,11 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	expected := []struct {
 		weight     int
 		opMsgRoute string
+		opMsgName  string
 	}{
-		{simulation.WeightGrant, simulation.TypeMsgGrant},
-		{simulation.WeightExec, simulation.TypeMsgExec},
-		{simulation.WeightRevoke, simulation.TypeMsgRevoke},
+		{simulation.WeightGrant, authz.ModuleName, simulation.TypeMsgGrant},
+		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightRevoke, authz.ModuleName, simulation.TypeMsgRevoke},
 	}
 
 	require := suite.Require()
@@ -83,12 +84,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		require.Equal(expected[i].weight, w.Weight(),
-			"weight should be the same. %v", op.Comment)
-		require.Equal(expected[i].opMsgRoute, op.Route,
-			"route should be the same. %v", op.Comment)
-		require.Equal(expected[i].opMsgRoute, op.Name,
-			"operation Msg name should be the same %v", op.Comment)
+		require.Equal(expected[i].weight, w.Weight(), "weight should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgRoute, op.Route, "route should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgName, op.Name, "operation Msg name should be the same %v", op.Comment)
 	}
 }
 

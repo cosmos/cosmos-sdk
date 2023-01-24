@@ -23,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/go-bip39"
 )
 
@@ -103,10 +104,10 @@ type Keyring interface {
 // Signer is implemented by key stores that want to provide signing capabilities.
 type Signer interface {
 	// Sign sign byte messages with a user key.
-	Sign(uid string, msg []byte) ([]byte, types.PubKey, error)
+	Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 
 	// SignByAddress sign byte messages with a user key providing the address.
-	SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error)
+	SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)
 }
 
 // Importer is implemented by key stores that support import of public and private keys.
@@ -356,7 +357,7 @@ func (ks keystore) ImportPubKey(uid string, armor string) error {
 	return nil
 }
 
-func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
+func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
 	k, err := ks.Key(uid)
 	if err != nil {
 		return nil, nil, err
@@ -377,7 +378,7 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 		return sig, priv.PubKey(), nil
 
 	case k.GetLedger() != nil:
-		return SignWithLedger(k, msg)
+		return SignWithLedger(k, msg, signMode)
 
 		// multi or offline record
 	default:
@@ -390,13 +391,13 @@ func (ks keystore) Sign(uid string, msg []byte) ([]byte, types.PubKey, error) {
 	}
 }
 
-func (ks keystore) SignByAddress(address sdk.Address, msg []byte) ([]byte, types.PubKey, error) {
+func (ks keystore) SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error) {
 	k, err := ks.KeyByAddress(address)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return ks.Sign(k.Name, msg)
+	return ks.Sign(k.Name, msg, signMode)
 }
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
@@ -598,7 +599,7 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 // SignWithLedger signs a binary message with the ledger device referenced by an Info object
 // and returns the signed bytes and the public key. It returns an error if the device could
 // not be queried or it returned an error.
-func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err error) {
+func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byte, pub types.PubKey, err error) {
 	ledgerInfo := k.GetLedger()
 	if ledgerInfo == nil {
 		return nil, nil, errors.New("not a ledger object")
@@ -611,9 +612,19 @@ func SignWithLedger(k *Record, msg []byte) (sig []byte, pub types.PubKey, err er
 		return
 	}
 
-	sig, err = priv.Sign(msg)
-	if err != nil {
-		return nil, nil, err
+	switch signMode {
+	case signing.SignMode_SIGN_MODE_TEXTUAL:
+		sig, err = priv.Sign(msg)
+		if err != nil {
+			return nil, nil, err
+		}
+	case signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON:
+		sig, err = priv.SignLedgerAminoJSON(msg)
+		if err != nil {
+			return nil, nil, err
+		}
+	default:
+		return nil, nil, fmt.Errorf("got invalid sign mode %d, expected LEGACY_AMINO_JSON or TEXTUAL", signMode)
 	}
 
 	if !priv.PubKey().VerifySignature(msg, sig) {

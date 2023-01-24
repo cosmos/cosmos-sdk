@@ -59,21 +59,15 @@ func (s *coinTestSuite) TestIsEqualCoin() {
 		inputOne sdk.Coin
 		inputTwo sdk.Coin
 		expected bool
-		panics   bool
 	}{
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true, false},
-		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false, true},
-		{sdk.NewInt64Coin("stake", 1), sdk.NewInt64Coin("stake", 10), false, false},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom1, 1), true},
+		{sdk.NewInt64Coin(testDenom1, 1), sdk.NewInt64Coin(testDenom2, 1), false},
+		{sdk.NewInt64Coin("stake", 1), sdk.NewInt64Coin("stake", 10), false},
 	}
 
 	for tcIndex, tc := range cases {
-		tc := tc
-		if tc.panics {
-			s.Require().Panics(func() { tc.inputOne.IsEqual(tc.inputTwo) })
-		} else {
-			res := tc.inputOne.IsEqual(tc.inputTwo)
-			s.Require().Equal(tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
-		}
+		res := tc.inputOne.IsEqual(tc.inputTwo)
+		s.Require().Equal(tc.expected, res, "coin equality relation is incorrect, tc #%d", tcIndex)
 	}
 }
 
@@ -513,25 +507,19 @@ func (s *coinTestSuite) TestEqualCoins() {
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
 		expected bool
-		panics   bool
 	}{
-		{sdk.Coins{}, sdk.Coins{}, true, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, true, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom2, 0)}, false, true},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 1)}, false, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, false, false},
-		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true, false},
+		{sdk.Coins{}, sdk.Coins{}, true},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, true},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom2, 0)}, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 1)}, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, false},
+		{sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, sdk.Coins{sdk.NewInt64Coin(testDenom1, 0), sdk.NewInt64Coin(testDenom2, 1)}, true},
 	}
 
 	for tcnum, tc := range cases {
-		tc := tc
-		if tc.panics {
-			s.Require().Panics(func() { tc.inputOne.IsEqual(tc.inputTwo) })
-		} else {
-			res := tc.inputOne.IsEqual(tc.inputTwo)
-			s.Require().Equal(tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
-		}
+		res := tc.inputOne.Equal(tc.inputTwo)
+		s.Require().Equal(tc.expected, res, "Equality is differed from exported. tc #%d, expected %b, actual %b.", tcnum, tc.expected, res)
 	}
 }
 
@@ -579,7 +567,7 @@ func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
 		{"den", sdk.NewInt(11)},
 	}
 
-	if !got.IsEqual(want) {
+	if !got.Equal(want) {
 		t.Fatalf("Wrong result\n\tGot:   %s\n\tWant: %s", got, want)
 	}
 }
@@ -871,8 +859,8 @@ func (s *coinTestSuite) TestMinMax() {
 	for _, tc := range cases {
 		min := tc.input1.Min(tc.input2)
 		max := tc.input1.Max(tc.input2)
-		s.Require().True(min.IsEqual(tc.min), tc.name)
-		s.Require().True(max.IsEqual(tc.max), tc.name)
+		s.Require().True(min.Equal(tc.min), tc.name)
+		s.Require().True(max.Equal(tc.max), tc.name)
 	}
 }
 
@@ -1174,7 +1162,7 @@ func (s *coinTestSuite) TestNewCoins() {
 			continue
 		}
 		got := sdk.NewCoins(tt.coins...)
-		s.Require().True(got.IsEqual(tt.want))
+		s.Require().True(got.Equal(tt.want))
 	}
 }
 

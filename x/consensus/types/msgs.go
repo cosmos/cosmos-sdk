@@ -8,11 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-const (
-	TypeMsgUpdateParams = "update_params"
+var (
+	_ sdk.Msg            = &MsgUpdateParams{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
-
-var _ legacytx.LegacyMsg = &MsgUpdateParams{}
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
@@ -25,14 +24,6 @@ func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
 // the expected signer needs to sign.
 func (msg MsgUpdateParams) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-func (msg MsgUpdateParams) Route() string {
-	return sdk.MsgTypeURL(&msg)
-}
-
-func (msg MsgUpdateParams) Type() string {
-	return sdk.MsgTypeURL(&msg)
 }
 
 // ValidateBasic performs basic MsgUpdateParams message validation.

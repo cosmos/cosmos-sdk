@@ -8,6 +8,11 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
+### Modules
+
+#### x/feegrant
+`x/feegrant` is now having a separate `go.mod`
+
 <!-- TODO: write database migration tool -->
 
 ### Protobuf
@@ -349,3 +354,5 @@ message MsgSetWithdrawAddress {
 <!-- todo: cosmos.scalar types -->
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+
+

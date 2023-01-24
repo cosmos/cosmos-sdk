@@ -14,6 +14,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+// Governance message types and routes
+const (
+	TypeMsgDeposit        = "deposit"
+	TypeMsgVote           = "vote"
+	TypeMsgVoteWeighted   = "weighted_vote"
+	TypeMsgSubmitProposal = "submit_proposal"
+)
+
 var (
 	_, _, _, _ sdk.Msg            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
 	_, _, _, _ legacytx.LegacyMsg = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}

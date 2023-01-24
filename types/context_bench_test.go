@@ -3,7 +3,8 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 

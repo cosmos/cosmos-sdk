@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/store
+module cosmossdk.io/store
 
 go 1.19
 

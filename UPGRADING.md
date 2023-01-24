@@ -4,7 +4,23 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
-### Database configuration
+### Configuration
+
+A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+
+```bash
+simd config migrate v0.48
+```
+
+More information about [confix](https://docs.cosmos.network/main/tooling/confix).
+
+#### gRPC-Web
+
+gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
+The possibility to listen to a different address has been removed, as well as its settings.
+Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
+
+#### Database
 
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
@@ -36,6 +52,21 @@ References to `types/store.go` which contained aliases for store types have been
 
 Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
 This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+
+### Modules
+
+#### `x/gov`
+
+##### Cancelling Proposals
+
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
+
+```text
+	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
+```
+
+By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -107,7 +138,9 @@ The SDK has migrated from `gogo/protobuf` (which is currently unmaintained), to 
 This means you should replace all imports of `github.com/gogo/protobuf` to `github.com/cosmos/gogoproto`.
 This allows you to remove the replace directive `replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1` from your `go.mod` file.
 
-Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.0`) for generating protobuf files.
+Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
+
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md)
 
 #### `{accepts,implements}_interface` proto annotations
 
@@ -175,6 +208,34 @@ the necessary proportion of coins needed at the proposal submission time. The mo
 By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
+
+##### New Proposal.Proposer field
+
+The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and this migration is optional.
+
+> This migration is optional, if chain wants to cancel previous proposals which are active (deposit or voting period) they can do this proposals state migration.
+
+```go
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+)
+
+func (app SimApp) RegisterUpgradeHandlers() {
+	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// this migration is optional
+			// add proposal ids with proposers which are active (deposit or voting period)
+			proposals := make(map[uint64]string)
+			proposals[1] = "cosmos1luyncewxk4lm24k6gqy8y5dxkj0klr4tu0lmnj" ...
+			v4.AddProposerAddressToProposal(ctx, sdk.NewKVStoreKey(v4.ModuleName), app.appCodec, proposals)
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		})
+}
+
+```
 
 #### `x/consensus`
 

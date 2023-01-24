@@ -17,6 +17,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -28,6 +29,7 @@ import (
 var (
 	_, _, addr   = testdata.KeyTestPubAddr()
 	govAcct      = authtypes.NewModuleAddress(types.ModuleName)
+	distAcct     = authtypes.NewModuleAddress(disttypes.ModuleName)
 	TestProposal = getTestProposal()
 )
 
@@ -50,6 +52,7 @@ func setupGovKeeper(t *testing.T) (
 	*govtestutil.MockAccountKeeper,
 	*govtestutil.MockBankKeeper,
 	*govtestutil.MockStakingKeeper,
+	*govtestutil.MockDistributionKeeper,
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
@@ -70,9 +73,12 @@ func setupGovKeeper(t *testing.T) (
 	acctKeeper := govtestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := govtestutil.NewMockBankKeeper(ctrl)
 	stakingKeeper := govtestutil.NewMockStakingKeeper(ctrl)
+	distributionKeeper := govtestutil.NewMockDistributionKeeper(ctrl)
+
 	acctKeeper.EXPECT().GetModuleAddress(types.ModuleName).Return(govAcct).AnyTimes()
+	acctKeeper.EXPECT().GetModuleAddress(disttypes.ModuleName).Return(distAcct).AnyTimes()
 	acctKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
-	trackMockBalances(bankKeeper)
+	trackMockBalances(bankKeeper, distributionKeeper)
 	stakingKeeper.EXPECT().TokensFromConsensusPower(ctx, gomock.Any()).DoAndReturn(func(ctx sdk.Context, power int64) math.Int {
 		return sdk.TokensFromConsensusPower(power, math.NewIntFromUint64(1000000))
 	}).AnyTimes()
@@ -80,9 +86,10 @@ func setupGovKeeper(t *testing.T) (
 	stakingKeeper.EXPECT().IterateBondedValidatorsByPower(gomock.Any(), gomock.Any()).AnyTimes()
 	stakingKeeper.EXPECT().IterateDelegations(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	stakingKeeper.EXPECT().TotalBondedTokens(gomock.Any()).Return(math.NewInt(10000000)).AnyTimes()
+	distributionKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	// Gov keeper initializations
-	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, msr, types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, key, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, msr, types.DefaultConfig(), govAcct.String())
 	govKeeper.SetProposalID(ctx, 1)
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)
@@ -94,13 +101,14 @@ func setupGovKeeper(t *testing.T) (
 	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
 	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.
 
-	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx
+	return govKeeper, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, encCfg, ctx
 }
 
 // trackMockBalances sets up expected calls on the Mock BankKeeper, and also
 // locally tracks accounts balances (not modules balances).
-func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) {
+func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper, distributionKeeper *govtestutil.MockDistributionKeeper) {
 	balances := make(map[string]sdk.Coins)
+	balances[distAcct.String()] = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)))
 
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).AnyTimes()
@@ -122,5 +130,26 @@ func trackMockBalances(bankKeeper *govtestutil.MockBankKeeper) {
 	}).AnyTimes()
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, addr sdk.AccAddress) sdk.Coins {
 		return balances[addr.String()]
+	}).AnyTimes()
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), sdk.DefaultBondDenom).DoAndReturn(func(_ sdk.Context, addr sdk.AccAddress, _ string) sdk.Coin {
+		balances := balances[addr.String()]
+		for _, balance := range balances {
+			if balance.Denom == sdk.DefaultBondDenom {
+				return balance
+			}
+		}
+		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0))
+	}).AnyTimes()
+
+	distributionKeeper.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, coins sdk.Coins, sender sdk.AccAddress) error {
+		// sender balance
+		newBalance, negative := balances[sender.String()].SafeSub(coins...)
+		if negative {
+			return fmt.Errorf("not enough balance")
+		}
+		balances[sender.String()] = newBalance
+		// receiver balance
+		balances[distAcct.String()] = balances[distAcct.String()].Add(coins...)
+		return nil
 	}).AnyTimes()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -111,7 +112,6 @@ func (s *DepositTestSuite) TestQueryDepositsWithInitialDeposit() {
 	deposit := s.queryDeposit(val, proposalID, false, "")
 	s.Require().NotNil(deposit)
 	s.Require().Equal(sdk.Coins(deposit.Amount).String(), depositAmount.String())
-	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// query deposits
 	deposits := s.queryDeposits(val, proposalID, false, "")
@@ -157,7 +157,20 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	args := []string{proposalID, fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	var depositsRes *v1.QueryDepositsResponse
 	cmd := cli.GetCmdQueryDeposits()
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+
+	var (
+		out testutil.BufferWriter
+		err error
+	)
+
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+		if err == nil {
+			err = val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositsRes)
+			return err
+		}
+		return err
+	}, 3)
 
 	if exceptErr {
 		s.Require().Error(err)
@@ -166,7 +179,6 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	}
 
 	s.Require().NoError(err)
-	s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(out.Bytes(), &depositsRes))
 	return depositsRes
 }
 
@@ -174,7 +186,16 @@ func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID strin
 	args := []string{proposalID, val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)}
 	var depositRes *v1.Deposit
 	cmd := cli.GetCmdQueryDeposit()
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	var (
+		out testutil.BufferWriter
+		err error
+	)
+
+	err = s.network.RetryForBlocks(func() error {
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+		return err
+	}, 3)
+
 	if exceptErr {
 		s.Require().Error(err)
 		s.Require().Contains(err.Error(), message)

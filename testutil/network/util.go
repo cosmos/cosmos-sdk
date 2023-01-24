@@ -76,8 +76,17 @@ func startInProcess(cfg Config, val *Validator) error {
 		app.RegisterNodeService(val.ClientCtx)
 	}
 
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+		if err != nil {
+			return err
+		}
+
+		val.grpc = grpcSrv
+	}
+
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		errCh := make(chan error)
@@ -97,21 +106,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.api = apiSrv
 	}
 
-	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
-		if err != nil {
-			return err
-		}
-
-		val.grpc = grpcSrv
-
-		if val.AppConfig.GRPCWeb.Enable {
-			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 

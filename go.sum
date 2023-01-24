@@ -177,8 +177,8 @@ github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n
 github.com/celestiaorg/celestia-core v1.12.1-tm-v0.34.23 h1:Y450PTkAP0ezz2qxC1Tdo1JBiXu+uwGP0HxDpVFq7SI=
 github.com/celestiaorg/celestia-core v1.12.1-tm-v0.34.23/go.mod h1:S0QMQWprpLDnBooMFbQYEVUGzZJaLMwOvtG7tbWoAiY=
 github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 h1:CJdIpo8n5MFP2MwK0gSRcOVlDlFdQJO1p+FqdxYzmvc=
-github.com/celestiaorg/nmt v0.12.0 h1:6CmaMPri9FdSiytZP7yCrEq3ewebFiIEjlJhasrS6oQ=
-github.com/celestiaorg/nmt v0.12.0/go.mod h1:NN3W8EEoospv8EHCw50DDNWwPLpJkFHoEFiqCEcNCH4=
+github.com/celestiaorg/nmt v0.13.0 h1:zhuwhvICMJhXy2lzaBydFBYztTuLzV5N3xAa9zTSiCw=
+github.com/celestiaorg/nmt v0.13.0/go.mod h1:b+pwd9cGTSSYLZnUIQSJl07pusJdFeEvCVsVfSRH9gA=
 github.com/celestiaorg/smt v0.3.0 h1:Hc6m8fIVRajrg/Saf8ivX4xw551LHzOs8kqeadd6h9s=
 github.com/celestiaorg/smt v0.3.0/go.mod h1:/sdYDakowo/XaxS2Fl7CBqtuf/O2uTqF2zmAUFAtAiw=
 github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=

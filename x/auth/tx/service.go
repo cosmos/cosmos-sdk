@@ -3,7 +3,6 @@ package tx
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
@@ -41,16 +40,7 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 	}
 }
 
-var (
-	_ txtypes.ServiceServer = txServer{}
-
-	// EventRegex checks that an event string is formatted with {alphabetic}.{alphabetic}={value}
-	EventRegex = regexp.MustCompile(`^[a-zA-Z_]+\.[a-zA-Z_]+=\S+$`)
-)
-
-const (
-	eventFormat = "{eventType}.{eventAttribute}={value}"
-)
+var _ txtypes.ServiceServer = txServer{}
 
 // GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
 func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
@@ -58,9 +48,9 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
 
-	page := int(req.Page)
 	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
 	// so we default to 1 if not provided in the request.
+	page := int(req.Page)
 	if page == 0 {
 		page = 1
 	}
@@ -69,24 +59,38 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	if limit == 0 {
 		limit = query.DefaultLimit
 	}
+
 	orderBy := parseOrderBy(req.OrderBy)
 
-	if len(req.Events) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "must declare at least one event to search")
-	}
-
-	for _, event := range req.Events {
-		if !EventRegex.Match([]byte(event)) {
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid event; event %s should be of the format: %s", event, eventFormat))
-		}
-	}
-
-	result, err := QueryTxsByEvents(s.clientCtx, req.Events, page, limit, orderBy)
+	node, err := s.clientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
-	// Create a proto codec, we need it to unmarshal the tx bytes.
+	resTxs, err := node.TxSearch(context.Background(), query, false, &page, &limit, orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	resBlocks, err := getBlocksForTxResults(s.clientCtx, resTxs.Txs)
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err := formatTxResults(s.clientCtx.TxConfig, resTxs.Txs, resBlocks)
+	if err != nil {
+		return nil, err
+	}
+
+	result := sdk.NewSearchTxsResult(
+		uint64(resTxs.TotalCount),
+		uint64(len(txs)),
+		uint64(page),
+		uint64(limit),
+		txs,
+	)
+
+	// create a proto codec, as we need it to unmarshal the tx bytes
 	txsList := make([]*txtypes.Tx, len(result.Txs))
 
 	for i, tx := range result.Txs {

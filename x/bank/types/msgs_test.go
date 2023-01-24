@@ -11,16 +11,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func TestMsgSendRoute(t *testing.T) {
-	addr1 := sdk.AccAddress([]byte("from"))
-	addr2 := sdk.AccAddress([]byte("to"))
-	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
-	msg := NewMsgSend(addr1, addr2, coins)
-
-	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "send")
-}
-
 func TestMsgSendValidation(t *testing.T) {
 	addr1 := sdk.AccAddress([]byte("from________________"))
 	addr2 := sdk.AccAddress([]byte("to__________________"))
@@ -65,21 +55,6 @@ func TestMsgSendGetSignBytes(t *testing.T) {
 
 	expected := `{"type":"cosmos-sdk/MsgSend","value":{"amount":[{"amount":"10","denom":"atom"}],"from_address":"cosmos1d9h8qat57ljhcm","to_address":"cosmos1da6hgur4wsmpnjyg"}}`
 	require.Equal(t, expected, string(res))
-}
-
-func TestMsgMultiSendRoute(t *testing.T) {
-	// Construct a MsgSend
-	addr1 := sdk.AccAddress([]byte("input"))
-	addr2 := sdk.AccAddress([]byte("output"))
-	coins := sdk.NewCoins(sdk.NewInt64Coin("atom", 10))
-	msg := MsgMultiSend{
-		Inputs:  []Input{NewInput(addr1, coins)},
-		Outputs: []Output{NewOutput(addr2, coins)},
-	}
-
-	// TODO some failures for bad result
-	require.Equal(t, msg.Route(), RouterKey)
-	require.Equal(t, msg.Type(), "multisend")
 }
 
 func TestInputValidation(t *testing.T) {

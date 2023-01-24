@@ -197,7 +197,7 @@ type CommitMultiStore interface {
 	// AddListeners adds q listener for the KVStore belonging to the provided StoreKey
 	AddListeners(keys []StoreKey)
 
-	// PopStateCache returns the accumulated state change messages from MemoryListener
+	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
 	PopStateCache() []*StoreKVPair
 
 	// SetMetrics sets the metrics for the KVStore

@@ -145,6 +145,7 @@ func TestListenKVStoreDelete(t *testing.T) {
 		store := newListenKVStore(listener)
 		store.Delete(tc.key)
 		cache := listener.PopStateCache()
+		require.NotEmpty(t, cache)
 		storeKVPair := cache[len(cache)-1]
 
 		require.Equal(t, tc.expectedOut, storeKVPair)

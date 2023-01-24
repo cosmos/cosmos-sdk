@@ -281,3 +281,8 @@ func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
 
 	app.cms.SetMetrics(gatherer)
 }
+
+// SetStreamingManager sets the streaming manager for the BaseApp.
+func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
+	app.streamingManager = manager
+}

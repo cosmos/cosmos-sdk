@@ -77,6 +77,8 @@ type Store struct {
 	listeners map[types.StoreKey]*types.MemoryListener
 
 	metrics metrics.StoreMetrics
+
+	mtx sync.Mutex
 }
 
 var (
@@ -403,9 +405,11 @@ func (rs *Store) TracingEnabled() bool {
 
 // AddListeners adds state change listener for a specific KVStore
 func (rs *Store) AddListeners(keys []types.StoreKey) {
-	listener := types.NewMemoryListener()
 	for i := range keys {
-		rs.listeners[keys[i]] = listener
+		listener := rs.listeners[keys[i]]
+		if listener == nil {
+			rs.listeners[keys[i]] = types.NewMemoryListener()
+		}
 	}
 }
 
@@ -417,7 +421,12 @@ func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	return false
 }
 
+// PopStateCache returns the accumulated state change messages from the CommitMultiStore
+// Calling PopStateCache destroys the currently accumulated state. This is a mutating
+// and destructive operation. This method has been synchronized.
 func (rs *Store) PopStateCache() []*types.StoreKVPair {
+	rs.mtx.Lock()
+	defer rs.mtx.Unlock()
 	var cache []*types.StoreKVPair
 	for key := range rs.listeners {
 		ls := rs.listeners[key]

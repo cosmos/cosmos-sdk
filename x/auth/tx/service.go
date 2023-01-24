@@ -67,7 +67,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 		return nil, err
 	}
 
-	resTxs, err := node.TxSearch(context.Background(), query, false, &page, &limit, orderBy)
+	resTxs, err := node.TxSearch(context.Background(), req.Query, false, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}

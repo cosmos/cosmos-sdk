@@ -360,14 +360,7 @@ func (m MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return sdkerrors.Wrap(err, "invalid authority address")
 	}
-	return msg.Params.Validate()
-}
-
-// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
-// the expected signer needs to sign.
-func (msg MsgUpdateParams) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(&msg)
-	return sdk.MustSortJSON(bz)
+	return m.Params.Validate()
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message

@@ -2,10 +2,8 @@ package math
 
 import "cosmossdk.io/collections"
 
-var (
-	// IntValue represents a collections.ValueCodec to work with Int.
-	IntValue collections.ValueCodec[Int] = intValueCodec{}
-)
+// IntValue represents a collections.ValueCodec to work with Int.
+var IntValue collections.ValueCodec[Int] = intValueCodec{}
 
 type intValueCodec struct{}
 

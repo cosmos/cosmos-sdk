@@ -1,8 +1,9 @@
 package math
 
 import (
-	"cosmossdk.io/collections/colltest"
 	"testing"
+
+	"cosmossdk.io/collections/colltest"
 )
 
 func TestIntValue(t *testing.T) {

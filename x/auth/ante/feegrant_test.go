@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsign "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -170,27 +171,16 @@ func TestDeductFeesNoDelegation(t *testing.T) {
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
-				assertSuiteError(t, err, tc.err, tc.errMsg)
+				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 
 			_, err = anteHandlerStack(suite.ctx, tx, false) // tests while stack
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
-				assertSuiteError(t, err, tc.err, tc.errMsg)
+				testutil.AssertError(t, err, tc.err, tc.errMsg)
 			}
 		})
-	}
-}
-
-func assertSuiteError(t *testing.T, err error, expectedErr error, expectedErrMsg string) {
-	switch {
-	case expectedErr != nil:
-		require.ErrorIs(t, err, expectedErr)
-	case expectedErrMsg != "":
-		require.ErrorContainsf(t, err, expectedErrMsg, "expected error %s, got %v", expectedErrMsg, err)
-	default:
-		require.Error(t, err)
 	}
 }
 

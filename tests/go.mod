@@ -177,12 +177,15 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// TODO tag all extracted modules after SDK refactor
 replace (
 	cosmossdk.io/collections => ../collections
+	cosmossdk.io/x/nft => ../x/nft
+)
+
+replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	// TODO tag all extracted modules after SDK refactor
-	cosmossdk.io/x/nft => ../x/nft
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

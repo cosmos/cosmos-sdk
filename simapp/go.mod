@@ -183,10 +183,13 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// TODO tag all extracted modules after SDK refactor
 replace (
 	cosmossdk.io/collections => ../collections
-	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
+)
+
+replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

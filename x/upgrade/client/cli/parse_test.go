@@ -23,7 +23,11 @@ func TestParseArgsToContent(t *testing.T) {
 	}
 
 	fs.Set(cli.FlagTitle, proposal.Title)
+<<<<<<< HEAD
 	fs.Set(cli.FlagDescription, proposal.Description)
+=======
+	fs.Set(cli.FlagDescription, proposal.Description) //nolint:staticcheck // SA1019: cli.FlagDescription is deprecated: use cli.FlagProposalDescription instead
+>>>>>>> 667440221 (feat(gov,cli): Create AddGovPropFlagsToCmd and ReadGovPropFlags. (#14718))
 	fs.Set(FlagUpgradeHeight, strconv.FormatInt(proposal.Plan.Height, 10))
 	fs.Set(FlagUpgradeInfo, proposal.Plan.Info)
 

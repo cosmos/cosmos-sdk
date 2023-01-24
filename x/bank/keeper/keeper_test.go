@@ -791,6 +791,211 @@ func (suite *IntegrationTestSuite) TestSendCoins() {
 	suite.Require().Equal(newBarCoin(25), coins[0], "expected only bar coins in the account balance, got: %v", coins)
 }
 
+func (suite *IntegrationTestSuite) TestInputOutputCoinsWithSanction() {
+	app, ctx := suite.app, suite.ctx
+
+	// makeAndFundAccount makes and (if balance isn't zero) funds an account.
+	makeAndFundAccount := func(i uint8, balance sdk.Coins) sdk.AccAddress {
+		addr := sdk.AccAddress(fmt.Sprintf("addr%03d_____________", i))
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		app.AccountKeeper.SetAccount(ctx, acc)
+		if !balance.IsZero() {
+			suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr, balance), "funding account %d with %q", i, balance.String())
+		}
+		return addr
+	}
+
+	// cz converts the string to a Coins.
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		suite.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	// makeInput makes an Input.
+	makeInput := func(addr sdk.AccAddress, coins string) types.Input {
+		return types.Input{
+			Address: addr.String(),
+			Coins:   cz(coins),
+		}
+	}
+
+	// makeOutput makes an Output.
+	makeOutput := func(addr sdk.AccAddress, coins string) types.Output {
+		return types.Output{
+			Address: addr.String(),
+			Coins:   cz(coins),
+		}
+	}
+
+	type expectedBalance struct {
+		addr    sdk.AccAddress
+		balance sdk.Coins
+	}
+
+	makeExpectedBalance := func(addr sdk.AccAddress, coins string) *expectedBalance {
+		return &expectedBalance{
+			addr:    addr,
+			balance: cz(coins),
+		}
+	}
+
+	addr1 := makeAndFundAccount(1, cz("500acoin,500bcoin,500ccoin"))
+	addr2 := makeAndFundAccount(2, cz("500acoin,500bcoin,500ccoin"))
+	addr3 := makeAndFundAccount(3, cz("500acoin,500bcoin,500ccoin"))
+
+	tests := []struct {
+		name     string
+		inputs   []types.Input
+		outputs  []types.Output
+		sk       *MockSanctionKeeper
+		expInErr []string
+		expCalls []sdk.AccAddress
+		expBals  []*expectedBalance
+	}{
+		{
+			name: "nil sanction keeper",
+			inputs: []types.Input{
+				makeInput(addr1, "5acoin"),
+				makeInput(addr2, "5acoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10acoin"),
+			},
+			sk: nil,
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "510acoin,500bcoin,500ccoin"),
+			},
+		},
+		{
+			name: "no sanctioned addresses",
+			inputs: []types.Input{
+				makeInput(addr1, "5bcoin"),
+				makeInput(addr2, "5bcoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10bcoin"),
+			},
+			sk:       NewMockSanctionKeeper(),
+			expCalls: []sdk.AccAddress{addr1, addr2},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "495acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "510acoin,510bcoin,500ccoin"),
+			},
+		},
+		{
+			name: "first input addr sanctioned",
+			inputs: []types.Input{
+				makeInput(addr1, "5ccoin"),
+				makeInput(addr2, "5ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10ccoin"),
+			},
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr1),
+			expInErr: []string{addr1.String(), "account is sanctioned"},
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "495acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "510acoin,510bcoin,500ccoin"),
+			},
+		},
+		{
+			name: "second input addr sanctioned",
+			inputs: []types.Input{
+				makeInput(addr1, "5ccoin"),
+				makeInput(addr2, "5ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10ccoin"),
+			},
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr2),
+			expInErr: []string{addr2.String(), "account is sanctioned"},
+			expCalls: []sdk.AccAddress{addr1, addr2},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "495acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "510acoin,510bcoin,500ccoin"),
+			},
+		},
+		{
+			name: "both input addrs sanctioned",
+			inputs: []types.Input{
+				makeInput(addr1, "5ccoin"),
+				makeInput(addr2, "5ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10ccoin"),
+			},
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr1, addr2),
+			expInErr: []string{addr1.String(), "account is sanctioned"},
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "495acoin,495bcoin,500ccoin"),
+				makeExpectedBalance(addr3, "510acoin,510bcoin,500ccoin"),
+			},
+		},
+		{
+			name: "output addr sanctioned",
+			inputs: []types.Input{
+				makeInput(addr1, "5ccoin"),
+				makeInput(addr2, "5ccoin"),
+			},
+			outputs: []types.Output{
+				makeOutput(addr3, "10ccoin"),
+			},
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr3),
+			expCalls: []sdk.AccAddress{addr1, addr2},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,495bcoin,490ccoin"),
+				makeExpectedBalance(addr2, "495acoin,495bcoin,495ccoin"),
+				makeExpectedBalance(addr3, "510acoin,510bcoin,510ccoin"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			defer app.BankKeeper.SetSanctionKeeper(nil)
+			bk := app.BankKeeper
+			bk.SetSanctionKeeper(nil)
+			if tc.sk != nil {
+				bk.SetSanctionKeeper(tc.sk)
+			}
+			var err error
+			testFunc := func() {
+				err = bk.InputOutputCoins(ctx, tc.inputs, tc.outputs)
+			}
+			suite.Require().NotPanics(testFunc, "InputOutputCoins")
+
+			if len(tc.expInErr) > 0 {
+				if suite.Assert().Error(err, "InputOutputCoins error") {
+					for _, exp := range tc.expInErr {
+						suite.Assert().ErrorContains(err, exp, "InputOutputCoins error")
+					}
+				}
+			} else {
+				suite.Assert().NoError(err, "InputOutputCoins error")
+			}
+
+			if tc.sk != nil {
+				calls := tc.sk.IsSanctionedAddrCalls
+				suite.Assert().Equal(tc.expCalls, calls, "addresses provided to IsSanctionedAddr")
+			}
+
+			for i, expBal := range tc.expBals {
+				actual := bk.GetAllBalances(ctx, expBal.addr)
+				suite.Assert().Equal(expBal.balance.String(), actual.String(), "expected balance %d for %s", i, string(expBal.addr))
+			}
+		})
+	}
+}
+
 func (suite *IntegrationTestSuite) TestSendCoinsWithQuarantine() {
 	app, ctx := suite.app, suite.ctx
 
@@ -1024,6 +1229,153 @@ func (suite *IntegrationTestSuite) TestSendCoinsWithQuarantine() {
 				qk := tc.qk.(*MockQuarantineKeeper)
 				actual := qk.AddedQuarantinedCoins
 				suite.Assert().Equal(tc.expQ, actual, "calls made to AddQuarantinedCoins")
+			}
+		})
+	}
+}
+
+func (suite *IntegrationTestSuite) TestSendCoinsWithSanction() {
+	app, ctx := suite.app, suite.ctx
+
+	// makeAndFundAccount makes and (if balance isn't zero) funds an account.
+	makeAndFundAccount := func(i uint8, balance sdk.Coins) sdk.AccAddress {
+		addr := sdk.AccAddress(fmt.Sprintf("addr%03d_____________", i))
+		acc := app.AccountKeeper.NewAccountWithAddress(ctx, addr)
+		app.AccountKeeper.SetAccount(ctx, acc)
+		if !balance.IsZero() {
+			suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addr, balance), "funding account %d with %q", i, balance.String())
+		}
+		return addr
+	}
+
+	// cz converts the string to a Coins.
+	cz := func(coins string) sdk.Coins {
+		rv, err := sdk.ParseCoinsNormalized(coins)
+		suite.Require().NoError(err, "ParseCoinsNormalized(%q)", coins)
+		return rv
+	}
+
+	type expectedBalance struct {
+		addr    sdk.AccAddress
+		balance sdk.Coins
+	}
+
+	makeExpectedBalance := func(addr sdk.AccAddress, coins string) *expectedBalance {
+		return &expectedBalance{
+			addr:    addr,
+			balance: cz(coins),
+		}
+	}
+
+	addr1 := makeAndFundAccount(1, cz("500acoin,500bcoin,500ccoin"))
+	addr2 := makeAndFundAccount(2, cz("500acoin,500bcoin,500ccoin"))
+
+	tests := []struct {
+		name     string
+		fromAddr sdk.AccAddress
+		toAddr   sdk.AccAddress
+		amt      sdk.Coins
+		sk       *MockSanctionKeeper
+		expInErr []string
+		expCalls []sdk.AccAddress
+		expBals  []*expectedBalance
+	}{
+		{
+			name:     "neither address sanctioned",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5acoin"),
+			sk:       NewMockSanctionKeeper(),
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,500ccoin"),
+			},
+		},
+		{
+			name:     "from address sanctioned",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5bcoin"),
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr1),
+			expInErr: []string{addr1.String(), "account is sanctioned"},
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,500ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,500ccoin"),
+			},
+		},
+		{
+			name:     "to address sanctioned",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5ccoin"),
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr2),
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,505ccoin"),
+			},
+		},
+		{
+			name:     "both addresses sanctioned",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("5bcoin"),
+			sk:       NewMockSanctionKeeper().WithSanctionedAddrs(addr1, addr2),
+			expInErr: []string{addr1.String(), "account is sanctioned"},
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "495acoin,500bcoin,495ccoin"),
+				makeExpectedBalance(addr2, "505acoin,500bcoin,505ccoin"),
+			},
+		},
+		{
+			name:     "nil sanction keeper",
+			fromAddr: addr1,
+			toAddr:   addr2,
+			amt:      cz("3acoin,4bcoin,5ccoin"),
+			sk:       nil,
+			expCalls: []sdk.AccAddress{addr1},
+			expBals: []*expectedBalance{
+				makeExpectedBalance(addr1, "492acoin,496bcoin,490ccoin"),
+				makeExpectedBalance(addr2, "508acoin,504bcoin,510ccoin"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			defer app.BankKeeper.SetSanctionKeeper(nil)
+			bk := app.BankKeeper
+			bk.SetSanctionKeeper(nil)
+			if tc.sk != nil {
+				bk.SetSanctionKeeper(tc.sk)
+			}
+			var err error
+			testFunc := func() {
+				err = bk.SendCoins(ctx, tc.fromAddr, tc.toAddr, tc.amt)
+			}
+			suite.Require().NotPanics(testFunc, "SendCoins")
+
+			if len(tc.expInErr) > 0 {
+				if suite.Assert().Error(err, "SendCoins error") {
+					for _, exp := range tc.expInErr {
+						suite.Assert().ErrorContains(err, exp, "SendCoins error")
+					}
+				}
+			} else {
+				suite.Assert().NoError(err, "SendCoins error")
+			}
+
+			if tc.sk != nil {
+				calls := tc.sk.IsSanctionedAddrCalls
+				suite.Assert().Equal(tc.expCalls, calls, "addresses provided to IsSanctionedAddr")
+			}
+
+			for i, expBal := range tc.expBals {
+				actual := bk.GetAllBalances(ctx, expBal.addr)
+				suite.Assert().Equal(expBal.balance.String(), actual.String(), "expected balance %d for %s", i, string(expBal.addr))
 			}
 		})
 	}

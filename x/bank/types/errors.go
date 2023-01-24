@@ -14,4 +14,5 @@ var (
 	ErrInvalidKey            = sdkerrors.Register(ModuleName, 7, "invalid key")
 	ErrDuplicateEntry        = sdkerrors.Register(ModuleName, 8, "duplicate entry")
 	ErrMultipleSenders       = sdkerrors.Register(ModuleName, 9, "multiple senders not allowed")
+	ErrSanctionedAccount     = sdkerrors.Register(ModuleName, 10, "account is sanctioned")
 )

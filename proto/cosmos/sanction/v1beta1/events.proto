@@ -1,0 +1,29 @@
+syntax = "proto3";
+package cosmos.sanction.v1beta1;
+
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+
+// EventAddressSanctioned is an event emitted when an address is sanctioned.
+message EventAddressSanctioned {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventAddressUnsanctioned is an event emitted when an address is unsanctioned.
+message EventAddressUnsanctioned {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventTempAddressSanctioned is an event emitted when an address is temporarily sanctioned.
+message EventTempAddressSanctioned {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventTempAddressUnsanctioned is an event emitted when an address is temporarily unsanctioned.
+message EventTempAddressUnsanctioned {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventParamsUpdated is an event emitted when the sanction module params are updated.
+message EventParamsUpdated {}

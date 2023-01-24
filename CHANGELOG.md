@@ -44,6 +44,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#270](https://github.com/provenance-io/cosmos-sdk/pull/270) Add functionality to update denom metadata via gov proposal.
 * (x/gov,cli) [#434](https://github.com/provenance-io/cosmos-sdk/pull/434) Added `AddGovPropFlagsToCmd` and `ReadGovPropFlags` functions.
 * (quarantine) [#335](https://github.com/provenance-io/cosmos-sdk/pull/335) Create the `x/quarantine` module.
+* (sanction) [#401](https://github.com/provenance-io/cosmos-sdk/pull/401) Create the `x/sanction` module.
 
 ### Improvements
 

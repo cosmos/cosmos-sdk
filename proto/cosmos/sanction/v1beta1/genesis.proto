@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmos.sanction.v1beta1;
+
+import "cosmos/sanction/v1beta1/sanction.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+
+// GenesisState defines the sanction module's genesis state.
+message GenesisState {
+  // params are the sanction module parameters.
+  Params params = 1;
+  // sanctioned_addresses defines account addresses that are sanctioned.
+  repeated string sanctioned_addresses = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // temporary_entries defines the temporary entries associated with on-going governance proposals.
+  repeated TemporaryEntry temporary_entries = 3;
+}

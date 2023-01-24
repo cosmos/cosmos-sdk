@@ -1,0 +1,65 @@
+syntax = "proto3";
+package cosmos.sanction.v1beta1;
+
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/sanction/v1beta1/sanction.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+
+// Msg defines the sanction Msg service.
+service Msg {
+  // Sanction is a governance operation for sanctioning addresses.
+  rpc Sanction(MsgSanction) returns (MsgSanctionResponse);
+
+  // Unsanction is a governance operation for unsanctioning addresses.
+  rpc Unsanction(MsgUnsanction) returns (MsgUnsanctionResponse);
+
+  // UpdateParams is a governance operation for updating the sanction module params.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+}
+
+// MsgSanction represents a message for the governance operation of sanctioning addresses.
+message MsgSanction {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // addresses are the addresses to sanction.
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // authority is the address of the account with the authority to enact sanctions (most likely the governance module
+  // account).
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgOptInResponse defines the Msg/Sanction response type.
+message MsgSanctionResponse {}
+
+// MsgSanction represents a message for the governance operation of unsanctioning addresses.
+message MsgUnsanction {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // addresses are the addresses to unsanction.
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // authority is the address of the account with the authority to retract sanctions (most likely the governance module
+  // account).
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgOptInResponse defines the Msg/Unsanction response type.
+message MsgUnsanctionResponse {}
+
+// MsgUpdateParams represents a message for the governance operation of updating the sanction module params.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // params are the sanction module parameters.
+  Params params = 1;
+
+  // authority is the address of the account with the authority to update params (most likely the governance module
+  // account).
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateParamsResponse defined the Msg/UpdateParams response type.
+message MsgUpdateParamsResponse {}

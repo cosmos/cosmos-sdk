@@ -1,0 +1,84 @@
+syntax = "proto3";
+package cosmos.sanction.v1beta1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/sanction/v1beta1/sanction.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/sanction";
+
+// Query defines the gRPC querier service.
+service Query {
+  // IsSanctioned checks if an account has been sanctioned.
+  rpc IsSanctioned(QueryIsSanctionedRequest) returns (QueryIsSanctionedResponse) {
+    option (google.api.http).get = "/cosmos/sanction/v1beta1/check/{address}";
+  }
+
+  // SanctionedAddresses returns a list of sanctioned addresses.
+  rpc SanctionedAddresses(QuerySanctionedAddressesRequest) returns (QuerySanctionedAddressesResponse) {
+    option (google.api.http).get = "/cosmos/sanction/v1beta1/all";
+  }
+
+  // TemporaryEntries returns temporary sanction/unsanction info.
+  rpc TemporaryEntries(QueryTemporaryEntriesRequest) returns (QueryTemporaryEntriesResponse) {
+    option (google.api.http).get = "/cosmos/sanction/v1beta1/temp";
+  }
+
+  // Params returns the sanction module's params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/sanction/v1beta1/params";
+  }
+}
+
+// QueryIsSanctionedRequest defines the RPC request for checking if an account is sanctioned.
+message QueryIsSanctionedRequest {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryIsSanctionedResponse defines the RPC response of an IsSanctioned query.
+message QueryIsSanctionedResponse {
+  // is_sanctioned is true if the address is sanctioned.
+  bool is_sanctioned = 1;
+}
+
+// QuerySanctionedAddressesRequest defines the RPC request for listing sanctioned accounts.
+message QuerySanctionedAddressesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QuerySanctionedAddressesResponse defines the RPC response of a SanctionedAddresses query.
+message QuerySanctionedAddressesResponse {
+  // addresses is the list of sanctioned account addresses.
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryTemporaryEntriesRequest defines the RPC request for listing temporary sanction/unsanction entries.
+message QueryTemporaryEntriesRequest {
+  // address is an optional address to restrict results to.
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 99;
+}
+
+// QueryTemporaryEntriesResponse defines the RPC response of a TemporaryEntries query.
+message QueryTemporaryEntriesResponse {
+  repeated TemporaryEntry entries = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 99;
+}
+
+// QueryParamsRequest defines the RPC request for getting the sanction module params.
+message QueryParamsRequest {}
+
+// QueryParamsResponse defines the RPC response of a Params query.
+message QueryParamsResponse {
+  // params are the sanction module parameters.
+  Params params = 1;
+}

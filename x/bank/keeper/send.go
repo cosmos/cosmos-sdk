@@ -18,6 +18,7 @@ type SendKeeper interface {
 	ViewKeeper
 
 	SetQuarantineKeeper(qk types.QuarantineKeeper)
+	SetSanctionKeeper(sk types.SanctionKeeper)
 
 	InputOutputCoins(ctx sdk.Context, inputs []types.Input, outputs []types.Output) error
 	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
@@ -56,6 +57,7 @@ type BaseSendKeeper struct {
 	blockedAddrs map[string]bool
 
 	qk types.QuarantineKeeper
+	sk types.SanctionKeeper
 }
 
 func NewBaseSendKeeper(
@@ -84,6 +86,21 @@ func (k *BaseSendKeeper) SetQuarantineKeeper(qk types.QuarantineKeeper) {
 		panic("the quarantine keeper has already been set")
 	}
 	k.qk = qk
+}
+
+// SetSanctionKeeper sets the sanction keeper to use in this bank keeper.
+//
+// This is done instead of providing it as an argument to NewBaseSendKeeper because the
+// SanctionKeeper is optional.
+// If no SanctionKeeper is ever provided, sanction functionality is disabled.
+func (k *BaseSendKeeper) SetSanctionKeeper(sk types.SanctionKeeper) {
+	// Allow setting it when it's currently not set. Also allow unsetting it.
+	// And if the provided one is the same as what's already set, that's okay too.
+	// But if it's already set, and is being changed, it's probably not on purpose, so panic.
+	if k.sk != nil && sk != nil && k.sk != sk {
+		panic("the sanction keeper has already been set")
+	}
+	k.sk = sk
 }
 
 // GetParams returns the total set of bank parameters.
@@ -254,6 +271,9 @@ func (k BaseSendKeeper) SendCoinsBypassQuarantine(ctx sdk.Context, fromAddr sdk.
 // returned if the resulting balance is negative or the initial amount is invalid.
 // A coin_spent event is emitted after.
 func (k BaseSendKeeper) subUnlockedCoins(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coins) error {
+	if k.sk != nil && k.sk.IsSanctionedAddr(ctx, addr) {
+		return types.ErrSanctionedAccount.Wrap(addr.String())
+	}
 	if !amt.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}

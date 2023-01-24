@@ -34,3 +34,7 @@ type QuarantineKeeper interface {
 	GetFundsHolder() sdk.AccAddress
 	AddQuarantinedCoins(ctx sdk.Context, coins sdk.Coins, toAddr sdk.AccAddress, fromAddrs ...sdk.AccAddress) error
 }
+
+type SanctionKeeper interface {
+	IsSanctionedAddr(ctx sdk.Context, addr sdk.AccAddress) bool
+}

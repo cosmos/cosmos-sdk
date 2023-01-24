@@ -66,7 +66,7 @@ func (msg MsgGrant) ValidateBasic() error {
 	return msg.Grant.ValidateBasic()
 }
 
-// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrant) GetSignBytes() []byte {
 	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
@@ -147,7 +147,7 @@ func (msg MsgRevoke) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevoke) GetSignBytes() []byte {
 	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }
@@ -215,7 +215,7 @@ func (msg MsgExec) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgExec) GetSignBytes() []byte {
 	return sdk.MustSortJSON(authzcodec.ModuleCdc.MustMarshalJSON(&msg))
 }

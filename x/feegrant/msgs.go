@@ -62,7 +62,7 @@ func (msg MsgGrantAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgGrantAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
@@ -113,7 +113,7 @@ func (msg MsgRevokeAllowance) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{granter}
 }
 
-// GetSignBytes implements the HasAminoSigningCapability.GetSignBytes method.
+// GetSignBytes implements the LegacyMsg.GetSignBytes method.
 func (msg MsgRevokeAllowance) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

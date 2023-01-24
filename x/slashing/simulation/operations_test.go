@@ -123,7 +123,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
-	}{{simulation.DefaultWeightMsgUnjail, types.ModuleName, sdk.MsgTypeURL(&types.MsgUnjail{})}}
+	}{
+		{simulation.DefaultWeightMsgUnjail, types.ModuleName, sdk.MsgTypeURL(&types.MsgUnjail{})},
+	}
 
 	weightesOps := simulation.WeightedOperations(appParams, suite.codec, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
 	for i, w := range weightesOps {

@@ -25,8 +25,6 @@ func (s *testMsgSuite) TestMsg() {
 	msg := testdata.NewTestMsg(accAddr)
 	s.Require().NotNil(msg)
 	s.Require().True(accAddr.Equals(msg.GetSigners()[0]))
-	s.Require().Equal("TestMsg", msg.Route())
-	s.Require().Equal("Test message", msg.Type())
 	s.Require().Nil(msg.ValidateBasic())
 	s.Require().NotPanics(func() { msg.GetSignBytes() })
 }

@@ -1,4 +1,4 @@
-module github.com/cosmos/cosmos-sdk/x/upgrade
+module cosmossdk.io/x/upgrade
 
 go 1.19
 

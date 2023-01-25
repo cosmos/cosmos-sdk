@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/types"
 )
 
 func (s *KeeperTestSuite) TestSoftwareUpgrade() {

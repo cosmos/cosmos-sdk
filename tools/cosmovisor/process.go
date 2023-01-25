@@ -16,7 +16,7 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type Launcher struct {

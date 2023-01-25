@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/upgrade"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -35,7 +36,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

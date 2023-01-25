@@ -281,7 +281,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 			orderBy, _ := cmd.Flags().GetString(flagOrderBy)
 
-			txs, err := authtx.GetTxsByEvents(clientCtx, page, limit, query, orderBy)
+			txs, err := authtx.QueryTxsByEvents(clientCtx, page, limit, query, orderBy)
 			if err != nil {
 				return err
 			}
@@ -354,7 +354,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 				query := strings.Join(events, " AND ")
 
-				txs, err := authtx.GetTxsByEvents(clientCtx, querytypes.DefaultPage, querytypes.DefaultLimit, query, "")
+				txs, err := authtx.QueryTxsByEvents(clientCtx, querytypes.DefaultPage, querytypes.DefaultLimit, query, "")
 				if err != nil {
 					return err
 				}
@@ -377,7 +377,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 				query := fmt.Sprintf("%s.%s='%s'", sdk.EventTypeTx, sdk.AttributeKeyAccountSequence, args[0])
 
-				txs, err := authtx.GetTxsByEvents(clientCtx, querytypes.DefaultPage, querytypes.DefaultLimit, query, "")
+				txs, err := authtx.QueryTxsByEvents(clientCtx, querytypes.DefaultPage, querytypes.DefaultLimit, query, "")
 				if err != nil {
 					return err
 				}

@@ -50,7 +50,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 
 	orderBy := parseOrderBy(req.OrderBy)
 
-	result, err := GetTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
+	result, err := QueryTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

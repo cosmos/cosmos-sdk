@@ -25,7 +25,7 @@ const (
 	OpWeightMsgUpdateParams      = "op_weight_msg_update_params"
 	DefaultWeightMsgSend         = 100 // from simappparams.DefaultWeightMsgSend
 	DefaultWeightMsgMultiSend    = 10  // from simappparams.DefaultWeightMsgMultiSend
-	DefaultWeightMsgUpdateParams = 100
+	DefaultWeightMsgUpdateParams = 5
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -340,7 +340,36 @@ func SimulateMsgUpdateParams(ak types.AccountKeeper, bk keeper.Keeper) simtypes.
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.OperationMsg{}, nil, nil
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		account := ak.GetAccount(ctx, simAccount.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		authority := ak.GetModuleAccount(ctx, "gov")
+		msg := &types.MsgUpdateParams{
+			Authority: authority.String(),
+			Params:    randomParams(),
+		}
+
+		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
+		txCtx := simulation.OperationInput{
+			R:             r,
+			App:           app,
+			TxGen:         txConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			Context:       ctx,
+			SimAccount:    simAccount,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTx(txCtx, spendable)
+	}
+}
+
+func randomParams() types.Params {
+	return types.Params{
+		DefaultSendEnabled: false,
 	}
 }
 

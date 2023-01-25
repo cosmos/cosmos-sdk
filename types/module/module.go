@@ -329,6 +329,10 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 			return !hasGenesis
 		}
 
+		if _, hasGenesis := module.(appmodule.HasGenesis); hasGenesis {
+			return !hasGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})
@@ -339,6 +343,15 @@ func (m *Manager) SetOrderInitGenesis(moduleNames ...string) {
 func (m *Manager) SetOrderExportGenesis(moduleNames ...string) {
 	m.assertNoForgottenModules("SetOrderExportGenesis", moduleNames, func(moduleName string) bool {
 		module := m.Modules[moduleName]
+		if mod, ok := module.(coreAppModuleBasicAdapator); ok {
+			_, hasGenesis := mod.module.(appmodule.HasGenesis)
+			return !hasGenesis
+		}
+
+		if _, hasGenesis := module.(appmodule.HasGenesis); hasGenesis {
+			return !hasGenesis
+		}
+
 		_, hasGenesis := module.(HasGenesis)
 		return !hasGenesis
 	})

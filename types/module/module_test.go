@@ -296,8 +296,20 @@ func TestManager_EndBlock(t *testing.T) {
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
 }
 
-// Core API tests
+// Core API exclusive tests
 func TestCoreAPIManager(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	module1 := mock.NewMockCoreAppModule(mockCtrl)
+	module2 := MockCoreAppModule{}
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": module1,
+		"module2": module2,
+	})
+
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, module1, mm.Modules["module1"])
+	require.Equal(t, module2, mm.Modules["module2"])
 }
 
 // MockCoreAppModule allows us to test functions like DefaultGenesis

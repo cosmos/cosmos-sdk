@@ -612,6 +612,8 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	}
 }
 
+// TestUnevenStoresHeightCheck tests if loading root store correctly errors when
+// there's any module store with the wrong height
 func TestUnevenStoresHeightCheck(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))

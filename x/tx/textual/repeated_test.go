@@ -9,10 +9,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/tx/textual"
-	"cosmossdk.io/x/tx/textual/internal/testpb"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/testpb"
 )
 
 type repeatedJsonTest struct {
@@ -32,7 +33,7 @@ func TestRepeatedJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	tr := textual.NewTextual(mockCoinMetadataQuerier)
+	tr := textual.NewSignModeHandler(mockCoinMetadataQuerier)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
 			// Create a context.Context containing all coins metadata, to simulate

@@ -15,11 +15,11 @@ import (
 
 // anyValueRenderer is a ValueRenderer for google.protobuf.Any messages.
 type anyValueRenderer struct {
-	tr *Textual
+	tr *SignModeHandler
 }
 
 // NewAnyValueRenderer returns a ValueRenderer for google.protobuf.Any messages.
-func NewAnyValueRenderer(t *Textual) ValueRenderer {
+func NewAnyValueRenderer(t *SignModeHandler) ValueRenderer {
 	return anyValueRenderer{tr: t}
 }
 

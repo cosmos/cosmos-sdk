@@ -16,6 +16,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
+
 	"cosmossdk.io/x/tx/textual"
 	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
@@ -37,7 +38,7 @@ func TestE2EJsonTestcases(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			_, bodyBz, _, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
-			tr := textual.NewTextual(mockCoinMetadataQuerier)
+			tr := textual.NewSignModeHandler(mockCoinMetadataQuerier)
 			rend := textual.NewTxValueRenderer(&tr)
 			ctx := addMetadataToContext(context.Background(), tc.Metadata)
 

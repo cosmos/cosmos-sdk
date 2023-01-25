@@ -231,9 +231,7 @@ modified to set the new parameter to the desired value.
 
 ##### New Proposal.Proposer field
 
-The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and this migration is optional.
-
-> This migration is optional, if chain wants to cancel previous proposals which are active (deposit or voting period) they can do this proposals state migration.
+The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
 ```go
 import (

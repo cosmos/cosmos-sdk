@@ -47,6 +47,16 @@ The chain configuration is stored in `~/.hubl/config.toml`.
 
 When using an unsecure gRPC endpoint, change the `insecure` field to `true` in the config file.
 
+```toml
+[chains]
+[chains.regen]
+[[chains.regen.trusted-grpc-endpoints]]
+endpoint = 'localhost:9090'
+insecure = true
+```
+
+Or use the `--insecure` flag:
+
 ```shell
 hubl init regen --insecure
 ```

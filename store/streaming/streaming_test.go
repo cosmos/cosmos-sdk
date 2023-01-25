@@ -100,8 +100,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
 		pluginVersion := "abci_v1"
 		// to write data to files, replace stdout => file
-		//pluginPath := fmt.Sprintf("%s/plugins/abci/v1/examples/stdout", s.workDir)
-		pluginPath := fmt.Sprintf("/Users/ergelsgaxhaj/workspace/provenance-abci-listener/build/distributions/provenance-abci-listener-0-SNAPSHOT/bin/provenance-abci-listener")
+		pluginPath := fmt.Sprintf("%s/abci/examples/stdout", s.workDir)
 		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 			t.Fail()
 		}
@@ -118,7 +117,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 		})
 
 		for i := range [50]int{} {
-			s.updateHeight(int64(i))
+			s.updateHeight(int64(i + 1))
 
 			err = abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
 			assert.NoError(t, err, "ListenBeginBlock")

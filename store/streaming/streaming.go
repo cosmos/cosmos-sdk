@@ -9,19 +9,19 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 
-	v1 "github.com/cosmos/cosmos-sdk/store/streaming/plugins/abci/v1"
+	streamingabci "github.com/cosmos/cosmos-sdk/store/streaming/abci"
 )
 
 const pluginEnvKeyPrefix = "COSMOS_SDK"
 
 // HandshakeMap contains a map of each supported streaming's handshake config
 var HandshakeMap = map[string]plugin.HandshakeConfig{
-	"abci_v1": v1.Handshake,
+	"abci_v1": streamingabci.Handshake,
 }
 
 // PluginMap contains a map of supported gRPC plugins
 var PluginMap = map[string]plugin.Plugin{
-	"abci_v1": &v1.ABCIListenerGRPCPlugin{},
+	"abci_v1": &streamingabci.ABCIListenerGRPCPlugin{},
 }
 
 func GetPluginEnvKey(name string) string {

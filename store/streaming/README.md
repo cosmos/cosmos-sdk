@@ -24,4 +24,4 @@ Read the plugin documentation in the [Streaming Plugins](#streaming-plugins) sec
 
 List of support streaming plugins
 
-- [ABCI State Streaming Plugin](plugins/abci/v1/README.md)
+- [ABCI State Streaming Plugin](abci/README.md)

@@ -143,7 +143,14 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "x/evidence"
+    directory: "/x/evidence"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+  - package-ecosystem: gomod
+    directory: "/store"
     schedule:
       interval: weekly
     labels:

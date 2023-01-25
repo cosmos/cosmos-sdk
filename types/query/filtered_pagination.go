@@ -3,9 +3,10 @@ package query
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 	proto "github.com/cosmos/gogoproto/proto"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // FilteredPaginate does pagination of all the results in the PrefixStore based on the

@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
+	cosmossdk.io/store v0.1.0
 	cosmossdk.io/x/tx v0.1.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -16,15 +17,13 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/cockroachdb/apd/v2 v2.0.2
-	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
+	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.3
-	github.com/cosmos/iavl v0.20.0-alpha1
 	github.com/cosmos/ledger-cosmos-go v0.13.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -53,11 +52,10 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0
 	github.com/tendermint/tendermint v0.37.0-rc2
-	github.com/tidwall/btree v1.6.0
 	golang.org/x/crypto v0.5.0
-	golang.org/x/exp v0.0.0-20221019170559-20944726eadf
-	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5
-	google.golang.org/grpc v1.52.0
+	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
+	google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2
+	google.golang.org/grpc v1.52.1
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
@@ -81,11 +79,13 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cockroachdb/errors v1.9.0 // indirect
+	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
+	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
+	github.com/cosmos/iavl v0.20.0-alpha1 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -141,7 +141,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -156,6 +155,7 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/tm-db v0.6.7 // indirect
+	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
@@ -176,6 +176,8 @@ require (
 )
 
 replace (
+	cosmossdk.io/collections => ./collections
+	cosmossdk.io/store => ./store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134

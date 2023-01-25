@@ -3,14 +3,15 @@ package ante_test
 import (
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/require"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSetup(t *testing.T) {

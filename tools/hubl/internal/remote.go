@@ -62,11 +62,11 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			chainName := strings.ToLower(args[0])
 
-			return reconfigure(cmd, configDir, chainName, config)
+			return reconfigure(cmd, config, configDir, chainName)
 		},
 	}
 
-	cmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow insecure gRPC connection")
+	cmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow setting up insecure gRPC connection")
 
 	return cmd
 }
@@ -77,19 +77,10 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 	for chain, chainConfig := range config.Chains {
 		chain, chainConfig := chain, chainConfig
 
+		// load chain info
 		chainInfo := NewChainInfo(configDir, chain, chainConfig)
 		if err := chainInfo.Load(false); err != nil {
-			commands = append(commands, &cobra.Command{
-				Use:   chain,
-				Short: "Unable to load data",
-				Long:  "Unable to load data, reconfiguration needed.",
-				RunE: func(cmd *cobra.Command, args []string) error {
-					cmd.Printf("Error loading chain data for %s: %+v\n", chain, err)
-
-					return reconfigure(cmd, configDir, chain, config)
-				},
-			})
-
+			commands = append(commands, RemoteErrorCommand(config, configDir, chain, chainConfig, err))
 			continue
 		}
 
@@ -117,7 +108,7 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 			Short: fmt.Sprintf("Commands for the %s chain", chain),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				if reconfig {
-					return reconfigure(cmd, configDir, chain, config)
+					return reconfigure(cmd, config, configDir, chain)
 				} else if update {
 					cmd.Printf("Updating autocli data for %s\n", chain)
 					return chainInfo.Load(true)
@@ -139,7 +130,24 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 	return commands, nil
 }
 
-func reconfigure(cmd *cobra.Command, configDir, chain string, config *Config) error {
+func RemoteErrorCommand(config *Config, configDir string, chain string, chainConfig *ChainConfig, err error) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   chain,
+		Short: "Unable to load data",
+		Long:  "Unable to load data, reconfiguration needed.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Printf("Error loading chain data for %s: %+v\n", chain, err)
+
+			return reconfigure(cmd, config, configDir, chain)
+		},
+	}
+
+	cmd.Flags().Bool(flagInsecure, chainConfig.GRPCEndpoints[0].Insecure, "allow setting up insecure gRPC connection")
+
+	return cmd
+}
+
+func reconfigure(cmd *cobra.Command, config *Config, configDir, chain string) error {
 	insecure, _ := cmd.Flags().GetBool(flagInsecure)
 
 	cmd.Printf("Configuring %s\n", chain)
@@ -157,13 +165,13 @@ func reconfigure(cmd *cobra.Command, configDir, chain string, config *Config) er
 			},
 		},
 	}
-	config.Chains[chain] = chainConfig
 
 	chainInfo := NewChainInfo(configDir, chain, chainConfig)
 	if err = chainInfo.Load(true); err != nil {
 		return err
 	}
 
+	config.Chains[chain] = chainConfig
 	if err := SaveConfig(configDir, config); err != nil {
 		return err
 	}

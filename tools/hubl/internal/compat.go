@@ -19,7 +19,7 @@ import (
 // loadFileDescriptorsGRPCReflection attempts to load the file descriptor set using gRPC reflection when cosmos.reflection.v1
 // is unavailable.
 func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientConn) (*descriptorpb.FileDescriptorSet, error) {
-	fmt.Printf("This chain does not support cosmos.reflection.v1 yet, we will attempt to use a fallback. Some features may be unsupported and it may not be possible to read all data.\n")
+	fmt.Printf("This chain does not support cosmos.reflection.v1 yet... attempting to use a fallback. Some features may be unsupported and it may not be possible to read all data.\n")
 
 	var interfaceImplNames []string
 	cosmosReflectBetaClient := reflectionv1beta1.NewReflectionServiceClient(client)
@@ -64,10 +64,9 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 		}
 	}()
 
-	err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
+	if err = reflectClient.Send(&grpc_reflection_v1alpha.ServerReflectionRequest{
 		MessageRequest: &grpc_reflection_v1alpha.ServerReflectionRequest_ListServices{},
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 

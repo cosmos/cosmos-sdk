@@ -39,6 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Improvements
 
+* (x/gov) [#13010](https://github.com/cosmos/cosmos-sdk/pull/13010) Partial cherry-pick of this issue for adding proposer migration.
 * [#14691](https://github.com/cosmos/cosmos-sdk/pull/14691) Change behavior of `sdk.StringifyEvents` to not flatten events attributes by events type.
     * This change only affects ABCI message logs, and not the actual events.
 * [#14692](https://github.com/cosmos/cosmos-sdk/pull/14692) Improve RPC queries error message when app is at height 0.
@@ -49,6 +50,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## State Machine Breaking
 
 * (baseapp, x/auth/posthandler) [#13940](https://github.com/cosmos/cosmos-sdk/pull/13940) Update `PostHandler` to receive the `runTx` success boolean.
+
+
+## API Breaking Changes
+
+* (x/gov) [#14782](https://github.com/cosmos/cosmos-sdk/pull/14782) Move the `metadata` argument in `govv1.NewProposal` alongside `title` and `summary`.
 
 ## [v0.47.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc1) - 2022-01-09
 

@@ -143,6 +143,32 @@ By default, the new `MinInitialDepositRatio` parameter is set to zero during mig
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
 
+##### New Proposal.Proposer field
+
+The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
+
+```go
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+)
+
+func (app SimApp) RegisterUpgradeHandlers() {
+	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// this migration is optional
+			// add proposal ids with proposers which are active (deposit or voting period)
+			proposals := make(map[uint64]string)
+			proposals[1] = "cosmos1luyncewxk4lm24k6gqy8y5dxkj0klr4tu0lmnj" ...
+			v4.AddProposerAddressToProposal(ctx, sdk.NewKVStoreKey(v4.ModuleName), app.appCodec, proposals)
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		})
+}
+
+```
+
 #### `x/consensus`
 
 Introducing a new `x/consensus` module to handle managing Tendermint consensus

@@ -3,9 +3,9 @@ Feature: MsgTripCircuitBreaker
 	- when the caller trips the circuitbreaker for a message or messages
 	- when the permissions are valid
 
-  Rule: a user with LEVEL_SUPER_ADMIN can trip
+  Rule: a user must have permission to trip the circuit breaker for a message or messages
 
-    Example: caller is a super-admin
+    Example: user is a super admin
       Given "acct1" has permission "LEVEL_SUPER_ADMIN"
       When "acct1" attempts to disable msg execution
         """
@@ -15,7 +15,7 @@ Feature: MsgTripCircuitBreaker
         """
       Then expect success
 
-    Example: caller has no permissions
+    Example: user has no permissions
       Given "acct1" has no permissions
       When "acct1" attempts to disable msg execution
         """
@@ -25,9 +25,7 @@ Feature: MsgTripCircuitBreaker
         """
       Then expect an "unauthorized" error
 
-  Rule: a user with LEVEL_ALL_MSGS can trip
-
-    Example: caller has all msg permissions
+    Example: user has permission for all messages
       Given "acct1" has permission "LEVEL_ALL_MSGS"
       When "acct1" attempts to disable msg execution
         """
@@ -37,19 +35,7 @@ Feature: MsgTripCircuitBreaker
         """
       Then expect success
 
-    Example: caller has no permissions
-      Given "acct1" has no permissions
-      When "acct1" attempts to disable msg execution
-        """
-        {
-        	"msg": "cosmos.bank.v1beta1.MsgSend"
-        }
-        """
-      Then expect an "unauthorized" error
-
-  Rule: a user with LEVEL_SOME_MSGS can trip
-
-    Example: caller does not have permission for the list of messages
+    Example: user has permission for the messages
       Given "acct1" has permission to disable "cosmos.bank.v1beta1.MsgSend" and "cosmos.staking.v1beta1.MsgDelegate"
       When "acct1" attempts to disable msg execution
         """
@@ -59,7 +45,7 @@ Feature: MsgTripCircuitBreaker
         """
       Then expect success
 
-    Example: caller does not have permission for the a message in the list of messages
+    Example: user does not have permission for 1 of the messages in the list
       Given "acct1" has permission to diable "cosmos.bank.v1beta1.MsgSend"
       When "acct1" attempts to disable msg execution
         """
@@ -69,7 +55,7 @@ Feature: MsgTripCircuitBreaker
         """
       Then expect an "unauthorized" error
 
-    Example: caller has LEVEL_SOME_MSGS permissions
+    Example: user does not have permission for the message
       Given "acct1" has permission to diable "cosmos.bank.v1beta1.MsgSend"
       When "acct1" attempts to disable msg execution
         """

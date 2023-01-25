@@ -5,12 +5,20 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	// TODO We don't need to import these API types if we use gogo's registry
+	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
+	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
+	_ "github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -21,7 +29,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtestutil "github.com/cosmos/cosmos-sdk/x/auth/testutil"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.
@@ -38,6 +48,7 @@ type AnteTestSuite struct {
 	txBuilder      client.TxBuilder
 	accountKeeper  keeper.AccountKeeper
 	bankKeeper     *authtestutil.MockBankKeeper
+	txBankKeeper   *txtestutil.MockBankKeeper
 	feeGrantKeeper *antetestutil.MockFeegrantKeeper
 	encCfg         moduletestutil.TestEncodingConfig
 }
@@ -47,13 +58,13 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
-
+	suite.txBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1) // app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
-	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	suite.encCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -76,7 +87,8 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	testdata.RegisterInterfaces(suite.encCfg.InterfaceRegistry)
 
 	suite.clientCtx = client.Context{}.
-		WithTxConfig(suite.encCfg.TxConfig)
+		WithTxConfig(suite.encCfg.TxConfig).
+		WithClient(clitestutil.NewMockTendermintRPC(abci.ResponseQuery{}))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
@@ -136,7 +148,7 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
 
-	tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+	tx, txErr := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, chainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, txErr)
 	return suite.anteHandler(suite.ctx, tx, simulate)
 }
@@ -149,7 +161,7 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// Theoretically speaking, ante handler unit tests should only test
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
-	tx, txErr := suite.CreateTestTx(args.privs, args.accNums, args.accSeqs, args.chainID)
+	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, signing.SignMode_SIGN_MODE_DIRECT)
 	newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 	if tc.expPass {
@@ -175,7 +187,11 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []uint64, accSeqs []uint64, chainID string) (xauthsigning.Tx, error) {
+func (suite *AnteTestSuite) CreateTestTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums []uint64, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
+) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -183,7 +199,7 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  signMode,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -200,12 +216,14 @@ func (suite *AnteTestSuite) CreateTestTx(privs []cryptotypes.PrivKey, accNums []
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			nil, suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData, // nolint:staticcheck // SA1019: signing.SignerData is deprecated
+			ctx, signMode, signerData,
 			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err

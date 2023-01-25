@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -443,13 +444,15 @@ func QueryProposalByID(proposalID uint64, clientCtx client.Context, queryRoute s
 // In searching for events, we search for both `Type()`s, and we use the
 // `combineEvents` function here to merge events.
 func combineEvents(clientCtx client.Context, page int, eventGroups ...[]string) (*sdk.SearchTxsResult, error) {
-	// Only the Txs field will be populated in the final SearchTxsResult.
+	// only the Txs field will be populated in the final SearchTxsResult
 	allTxs := []*sdk.TxResponse{}
 	for _, events := range eventGroups {
-		res, err := authtx.QueryTxsByEvents(clientCtx, events, page, defaultLimit, "")
+		q := strings.Join(events, " AND ")
+		res, err := authtx.QueryTxsByEvents(clientCtx, page, defaultLimit, q, "")
 		if err != nil {
 			return nil, err
 		}
+
 		allTxs = append(allTxs, res.Txs...)
 	}
 

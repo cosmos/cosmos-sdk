@@ -1,7 +1,3 @@
-# Upgrading Cosmos SDK
-
-This guide provides instructions for upgrading to specific versions of Cosmos SDK.
-
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation
@@ -74,7 +70,7 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
 
-See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md)
 
 #### `{accepts,implements}_interface` proto annotations
 
@@ -142,6 +138,34 @@ the necessary proportion of coins needed at the proposal submission time. The mo
 By default, the new `MinInitialDepositRatio` parameter is set to zero during migration. The value of zero signifies that this 
 feature is disabled. If chains wish to utilize the minimum proposal deposits at time of submission, the migration logic needs to be 
 modified to set the new parameter to the desired value.
+
+##### New Proposal.Proposer field
+
+The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and this migration is optional.
+
+> This migration is optional, if chain wants to cancel previous proposals which are active (deposit or voting period) they can do this proposals state migration.
+
+```go
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+)
+
+func (app SimApp) RegisterUpgradeHandlers() {
+	app.UpgradeKeeper.SetUpgradeHandler(UpgradeName,
+		func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// this migration is optional
+			// add proposal ids with proposers which are active (deposit or voting period)
+			proposals := make(map[uint64]string)
+			proposals[1] = "cosmos1luyncewxk4lm24k6gqy8y5dxkj0klr4tu0lmnj" ...
+			v4.AddProposerAddressToProposal(ctx, sdk.NewKVStoreKey(v4.ModuleName), app.appCodec, proposals)
+			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		})
+}
+
+```
 
 #### `x/consensus`
 

@@ -1,11 +1,13 @@
 package file
 
 import (
-	"errors"
+	"bytes"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"path"
-	"path/filepath"
+	"sort"
 	"sync"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -14,265 +16,228 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ baseapp.StreamingService = &StreamingService{}
 
-// StreamingService is a concrete implementation of StreamingService that writes state changes out to files
+// StreamingService is a concrete implementation of StreamingService that writes
+// state changes out to files.
 type StreamingService struct {
-	listeners          map[types.StoreKey][]types.WriteListener // the listeners that will be initialized with BaseApp
-	srcChan            <-chan []byte                            // the channel that all the WriteListeners write their data out to
-	filePrefix         string                                   // optional prefix for each of the generated files
-	writeDir           string                                   // directory to write files into
-	codec              codec.BinaryCodec                        // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
-	stateCache         [][]byte                                 // cache the protobuf binary encoded StoreKVPairs in the order they are received
-	stateCacheLock     *sync.Mutex                              // mutex for the state cache
-	currentBlockNumber int64                                    // the current block number
-	currentTxIndex     int64                                    // the index of the current tx
-	quitChan           chan struct{}                            // channel to synchronize closure
+	storeListeners []*types.MemoryListener // a series of KVStore listeners for each KVStore
+	filePrefix     string                  // optional prefix for each of the generated files
+	writeDir       string                  // directory to write files into
+	codec          codec.BinaryCodec       // marshaller used for re-marshalling the ABCI messages to write them out to the destination files
+
+	currentBlockNumber int64
+	blockMetadata      types.BlockMetadata
+
+	// outputMetadata, if true, writes additional metadata to file per block
+	outputMetadata bool
+
+	// stopNodeOnErr, if true, will panic and stop the node during ABCI Commit
+	// to ensure eventual consistency of the output, otherwise, any errors are
+	// logged and ignored which could yield data loss in streamed output.
+	stopNodeOnErr bool
+
+	// fsync, if true, will execute file Sync to make sure the data is persisted
+	// onto disk, otherwise there is a risk of data loss during any crash.
+	fsync bool
 }
 
-// IntermediateWriter is used so that we do not need to update the underlying io.Writer
-// inside the StoreKVPairWriteListener everytime we begin writing to a new file
-type IntermediateWriter struct {
-	outChan chan<- []byte
-}
+func NewStreamingService(
+	writeDir, filePrefix string,
+	storeKeys []types.StoreKey,
+	cdc codec.BinaryCodec,
+	outputMetadata, stopNodeOnErr, fsync bool,
+) (*StreamingService, error) {
+	// sort storeKeys for deterministic output
+	sort.SliceStable(storeKeys, func(i, j int) bool {
+		return storeKeys[i].Name() < storeKeys[j].Name()
+	})
 
-// NewIntermediateWriter create an instance of an intermediateWriter that sends to the provided channel
-func NewIntermediateWriter(outChan chan<- []byte) *IntermediateWriter {
-	return &IntermediateWriter{
-		outChan: outChan,
+	// NOTE: We use the same listener for each store.
+	listeners := make([]*types.MemoryListener, len(storeKeys))
+	for i, key := range storeKeys {
+		listeners[i] = types.NewMemoryListener(key)
 	}
-}
 
-// Write satisfies io.Writer
-func (iw *IntermediateWriter) Write(b []byte) (int, error) {
-	iw.outChan <- b
-	return len(b), nil
-}
-
-// NewStreamingService creates a new StreamingService for the provided writeDir, (optional) filePrefix, and storeKeys
-func NewStreamingService(writeDir, filePrefix string, storeKeys []types.StoreKey, c codec.BinaryCodec) (*StreamingService, error) {
-	listenChan := make(chan []byte)
-	iw := NewIntermediateWriter(listenChan)
-	listener := types.NewStoreKVPairWriteListener(iw, c)
-	listeners := make(map[types.StoreKey][]types.WriteListener, len(storeKeys))
-	// in this case, we are using the same listener for each Store
-	for _, key := range storeKeys {
-		listeners[key] = append(listeners[key], listener)
-	}
-	// check that the writeDir exists and is writeable so that we can catch the error here at initialization if it is not
-	// we don't open a dstFile until we receive our first ABCI message
+	// Check that the writeDir exists and is writable so that we can catch the
+	// error here at initialization. If it is not we don't open a dstFile until we
+	// receive our first ABCI message.
 	if err := isDirWriteable(writeDir); err != nil {
 		return nil, err
 	}
+
 	return &StreamingService{
-		listeners:      listeners,
-		srcChan:        listenChan,
+		storeListeners: listeners,
 		filePrefix:     filePrefix,
 		writeDir:       writeDir,
-		codec:          c,
-		stateCache:     make([][]byte, 0),
-		stateCacheLock: new(sync.Mutex),
+		codec:          cdc,
+		outputMetadata: outputMetadata,
+		stopNodeOnErr:  stopNodeOnErr,
+		fsync:          fsync,
 	}, nil
 }
 
-// Listeners satisfies the baseapp.StreamingService interface
-// It returns the StreamingService's underlying WriteListeners
-// Use for registering the underlying WriteListeners with the BaseApp
+// Listeners satisfies the StreamingService interface. It returns the
+// StreamingService's underlying WriteListeners. Use for registering the
+// underlying WriteListeners with the BaseApp.
 func (fss *StreamingService) Listeners() map[types.StoreKey][]types.WriteListener {
-	return fss.listeners
+	listeners := make(map[types.StoreKey][]types.WriteListener, len(fss.storeListeners))
+	for _, listener := range fss.storeListeners {
+		listeners[listener.StoreKey()] = []types.WriteListener{listener}
+	}
+
+	return listeners
 }
 
-// ListenBeginBlock satisfies the baseapp.ABCIListener interface
-// It writes the received BeginBlock request and response and the resulting state changes
-// out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenBeginBlock(ctx sdk.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
-	// generate the new file
-	dstFile, err := fss.openBeginBlockFile(req)
-	if err != nil {
-		return err
-	}
-	// write req to file
-	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
-	if err != nil {
-		return err
-	}
-	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
-		return err
-	}
-	// write all state changes cached for this stage to file
-	fss.stateCacheLock.Lock()
-	for _, stateChange := range fss.stateCache {
-		if _, err = dstFile.Write(stateChange); err != nil {
-			fss.stateCache = nil
-			fss.stateCacheLock.Unlock()
+// ListenBeginBlock satisfies the ABCIListener interface. It sets the received
+// BeginBlock request, response and the current block number. Note, these are
+// not written to file until ListenCommit is executed and outputMetadata is set,
+// after which it will be reset again on the next block.
+func (fss *StreamingService) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+	fss.blockMetadata.RequestBeginBlock = &req
+	fss.blockMetadata.ResponseBeginBlock = &res
+	fss.currentBlockNumber = req.Header.Height
+	return nil
+}
+
+// ListenDeliverTx satisfies the ABCIListener interface. It appends the received
+// DeliverTx request and response to a list of DeliverTxs objects. Note, these
+// are not written to file until ListenCommit is executed and outputMetadata is
+// set, after which it will be reset again on the next block.
+func (fss *StreamingService) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+	fss.blockMetadata.DeliverTxs = append(fss.blockMetadata.DeliverTxs, &types.BlockMetadata_DeliverTx{
+		Request:  &req,
+		Response: &res,
+	})
+
+	return nil
+}
+
+// ListenEndBlock satisfies the ABCIListener interface. It sets the received
+// EndBlock request, response and the current block number. Note, these are
+// not written to file until ListenCommit is executed and outputMetadata is set,
+// after which it will be reset again on the next block.
+func (fss *StreamingService) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+	fss.blockMetadata.RequestEndBlock = &req
+	fss.blockMetadata.ResponseEndBlock = &res
+	return nil
+}
+
+// ListenCommit satisfies the ABCIListener interface. It is executed during the
+// ABCI Commit request and is responsible for writing all staged data to files.
+// It will only return a non-nil error when stopNodeOnErr is set.
+func (fss *StreamingService) ListenCommit(ctx context.Context, res abci.ResponseCommit) error {
+	if err := fss.doListenCommit(ctx, res); err != nil {
+		if fss.stopNodeOnErr {
 			return err
 		}
 	}
-	// reset cache
-	fss.stateCache = nil
-	fss.stateCacheLock.Unlock()
-	// write res to file
-	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
-	if err != nil {
-		return err
-	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+
+	return nil
 }
 
-func (fss *StreamingService) openBeginBlockFile(req abci.RequestBeginBlock) (*os.File, error) {
-	fss.currentBlockNumber = req.GetHeader().Height
-	fss.currentTxIndex = 0
-	fileName := fmt.Sprintf("block-%d-begin", fss.currentBlockNumber)
+func (fss *StreamingService) doListenCommit(ctx context.Context, res abci.ResponseCommit) (err error) {
+	fss.blockMetadata.ResponseCommit = &res
+
+	// Write to target files, the file size is written at the beginning, which can
+	// be used to detect completeness.
+	metaFileName := fmt.Sprintf("block-%d-meta", fss.currentBlockNumber)
+	dataFileName := fmt.Sprintf("block-%d-data", fss.currentBlockNumber)
+
 	if fss.filePrefix != "" {
-		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
+		metaFileName = fmt.Sprintf("%s-%s", fss.filePrefix, metaFileName)
+		dataFileName = fmt.Sprintf("%s-%s", fss.filePrefix, dataFileName)
 	}
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
-}
 
-// ListenDeliverTx satisfies the baseapp.ABCIListener interface
-// It writes the received DeliverTx request and response and the resulting state changes
-// out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenDeliverTx(ctx sdk.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
-	// generate the new file
-	dstFile, err := fss.openDeliverTxFile()
-	if err != nil {
-		return err
-	}
-	// write req to file
-	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
-	if err != nil {
-		return err
-	}
-	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
-		return err
-	}
-	// write all state changes cached for this stage to file
-	fss.stateCacheLock.Lock()
-	for _, stateChange := range fss.stateCache {
-		if _, err = dstFile.Write(stateChange); err != nil {
-			fss.stateCache = nil
-			fss.stateCacheLock.Unlock()
+	if fss.outputMetadata {
+		bz, err := fss.codec.Marshal(&fss.blockMetadata)
+		if err != nil {
+			return err
+		}
+
+		if err := writeLengthPrefixedFile(path.Join(fss.writeDir, metaFileName), bz, fss.fsync); err != nil {
 			return err
 		}
 	}
-	// reset cache
-	fss.stateCache = nil
-	fss.stateCacheLock.Unlock()
-	// write res to file
-	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
-	if err != nil {
+
+	var buf bytes.Buffer
+	if err := fss.writeBlockData(&buf); err != nil {
 		return err
 	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
+
+	return writeLengthPrefixedFile(path.Join(fss.writeDir, dataFileName), buf.Bytes(), fss.fsync)
 }
 
-func (fss *StreamingService) openDeliverTxFile() (*os.File, error) {
-	fileName := fmt.Sprintf("block-%d-tx-%d", fss.currentBlockNumber, fss.currentTxIndex)
-	if fss.filePrefix != "" {
-		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
-	}
-	fss.currentTxIndex++
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
-}
+func (fss *StreamingService) writeBlockData(writer io.Writer) error {
+	for _, listener := range fss.storeListeners {
+		cache := listener.PopStateCache()
 
-// ListenEndBlock satisfies the baseapp.ABCIListener interface
-// It writes the received EndBlock request and response and the resulting state changes
-// out to a file as described in the above the naming schema
-func (fss *StreamingService) ListenEndBlock(ctx sdk.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
-	// generate the new file
-	dstFile, err := fss.openEndBlockFile()
-	if err != nil {
-		return err
-	}
-	// write req to file
-	lengthPrefixedReqBytes, err := fss.codec.MarshalLengthPrefixed(&req)
-	if err != nil {
-		return err
-	}
-	if _, err = dstFile.Write(lengthPrefixedReqBytes); err != nil {
-		return err
-	}
-	// write all state changes cached for this stage to file
-	fss.stateCacheLock.Lock()
-	for _, stateChange := range fss.stateCache {
-		if _, err = dstFile.Write(stateChange); err != nil {
-			fss.stateCache = nil
-			fss.stateCacheLock.Unlock()
-			return err
-		}
-	}
-	// reset cache
-	fss.stateCache = nil
-	fss.stateCacheLock.Unlock()
-	// write res to file
-	lengthPrefixedResBytes, err := fss.codec.MarshalLengthPrefixed(&res)
-	if err != nil {
-		return err
-	}
-	if _, err = dstFile.Write(lengthPrefixedResBytes); err != nil {
-		return err
-	}
-	// close file
-	return dstFile.Close()
-}
+		for i := range cache {
+			bz, err := fss.codec.MarshalLengthPrefixed(&cache[i])
+			if err != nil {
+				return err
+			}
 
-func (fss *StreamingService) openEndBlockFile() (*os.File, error) {
-	fileName := fmt.Sprintf("block-%d-end", fss.currentBlockNumber)
-	if fss.filePrefix != "" {
-		fileName = fmt.Sprintf("%s-%s", fss.filePrefix, fileName)
-	}
-	return os.OpenFile(filepath.Join(fss.writeDir, fileName), os.O_CREATE|os.O_WRONLY, 0o600)
-}
-
-// Stream satisfies the baseapp.StreamingService interface
-// It spins up a goroutine select loop which awaits length-prefixed binary encoded KV pairs
-// and caches them in the order they were received
-// returns an error if it is called twice
-func (fss *StreamingService) Stream(wg *sync.WaitGroup) error {
-	if fss.quitChan != nil {
-		return errors.New("`Stream` has already been called. The stream needs to be closed before it can be started again")
-	}
-	fss.quitChan = make(chan struct{})
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case <-fss.quitChan:
-				fss.quitChan = nil
-				return
-			case by := <-fss.srcChan:
-				fss.stateCacheLock.Lock()
-				fss.stateCache = append(fss.stateCache, by)
-				fss.stateCacheLock.Unlock()
+			if _, err := writer.Write(bz); err != nil {
+				return err
 			}
 		}
-	}()
+	}
+
 	return nil
 }
 
-// Close satisfies the io.Closer interface, which satisfies the baseapp.StreamingService interface
-func (fss *StreamingService) Close() error {
-	close(fss.quitChan)
-	return nil
-}
+// Stream satisfies the StreamingService interface. It performs a no-op.
+func (fss *StreamingService) Stream(wg *sync.WaitGroup) error { return nil }
+
+// Close satisfies the StreamingService interface. It performs a no-op.
+func (fss *StreamingService) Close() error { return nil }
 
 // isDirWriteable checks if dir is writable by writing and removing a file
-// to dir. It returns nil if dir is writable.
+// to dir. It returns nil if dir is writable. We have to do this as there is no
+// platform-independent way of determining if a directory is writeable.
 func isDirWriteable(dir string) error {
 	f := path.Join(dir, ".touch")
 	if err := os.WriteFile(f, []byte(""), 0o600); err != nil {
 		return err
 	}
+
 	return os.Remove(f)
+}
+
+func writeLengthPrefixedFile(path string, data []byte, fsync bool) (err error) {
+	var f *os.File
+	f, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "open file failed: %s", path)
+	}
+
+	defer func() {
+		// avoid overriding the real error with file close error
+		if err1 := f.Close(); err1 != nil && err == nil {
+			err = sdkerrors.Wrapf(err, "close file failed: %s", path)
+		}
+	}()
+
+	_, err = f.Write(sdk.Uint64ToBigEndian(uint64(len(data))))
+	if err != nil {
+		return sdkerrors.Wrapf(err, "write length prefix failed: %s", path)
+	}
+
+	_, err = f.Write(data)
+	if err != nil {
+		return sdkerrors.Wrapf(err, "write block data failed: %s", path)
+	}
+
+	if fsync {
+		err = f.Sync()
+		if err != nil {
+			return sdkerrors.Wrapf(err, "fsync failed: %s", path)
+		}
+	}
+
+	return err
 }

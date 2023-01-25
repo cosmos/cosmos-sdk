@@ -1,9 +1,13 @@
 package module_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"testing"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
@@ -284,3 +288,48 @@ func TestManager_EndBlock(t *testing.T) {
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
 }
+
+// MockCoreAppModule allows us to test functions like DefaultGenesis
+type MockCoreAppModule struct{}
+
+func (MockCoreAppModule) IsOnePerModuleType() {}
+func (MockCoreAppModule) IsAppModule()        {}
+func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
+	someFieldWriter, err := target("someField")
+	if err != nil {
+		return err
+	}
+	someFieldWriter.Write([]byte(`"asd"`))
+	return someFieldWriter.Close()
+}
+func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {
+	rdr, err := src("someField")
+	if err != nil {
+		return err
+	}
+	data, err := ioutil.ReadAll(rdr)
+	if err != nil {
+		return err
+	}
+
+	// this check will always fail, but it's just an example
+	if string(data) != `"dummy validation"` {
+		return errFoo
+	}
+
+	return nil
+}
+func (MockCoreAppModule) InitGenesis(context.Context, appmodule.GenesisSource) error { return nil }
+func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.GenesisTarget) error {
+	wrt, err := target("someField")
+	if err != nil {
+		return err
+	}
+	wrt.Write([]byte(`"asd"`))
+	return wrt.Close()
+}
+
+var (
+	_ appmodule.AppModule  = MockCoreAppModule{}
+	_ appmodule.HasGenesis = MockCoreAppModule{}
+)

@@ -13,13 +13,13 @@ import (
 	"github.com/99designs/keyring"
 	bip39 "github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
-	"github.com/tendermint/crypto/bcrypt"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -450,11 +450,11 @@ func (ks keystore) Delete(uid string) error {
 func (ks keystore) KeyByAddress(address sdk.Address) (Info, error) {
 	ik, err := ks.db.Get(addrHexKeyAsString(address))
 	if err != nil {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address, " not found"))
 	}
 
 	if len(ik.Data) == 0 {
-		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address", address, "not found"))
+		return nil, wrapKeyNotFound(err, fmt.Sprint("key with address ", address, " not found"))
 	}
 	return ks.key(string(ik.Data))
 }

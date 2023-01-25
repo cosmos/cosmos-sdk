@@ -18,7 +18,7 @@ type GRPCClient struct {
 	client ABCIListenerServiceClient
 }
 
-func (m GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (m *GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenBeginBlockRequest{Req: &req, Res: &res}
@@ -30,7 +30,7 @@ func (m GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBegi
 	return err
 }
 
-func (m GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (m *GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenEndBlockRequest{Req: &req, Res: &res}
@@ -42,7 +42,7 @@ func (m GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlo
 	return err
 }
 
-func (m GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (m *GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: &req, Res: &res}
@@ -54,7 +54,7 @@ func (m GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliv
 	return err
 }
 
-func (m GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sm := ctx.StreamingManager()
 	request := &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: &res, ChangeSet: changeSet}

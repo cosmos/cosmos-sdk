@@ -295,7 +295,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 	cmd.Flags().Int(flags.FlagLimit, querytypes.DefaultLimit, "Query number of transactions results per page returned")
 	cmd.Flags().String(flagQuery, "", "The transactions events query per Tendermint's query semantics")
 	cmd.Flags().String(flagOrderBy, "", "The ordering semantics (asc|dsc)")
-	cmd.MarkFlagRequired(flagQuery)
+	_ = cmd.MarkFlagRequired(flagQuery)
 
 	return cmd
 }

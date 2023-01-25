@@ -32,14 +32,13 @@ hubl --help
 
 ### Add chain
 
-To configure a new chain just run this command using the --init flag and the name of the chain as it's listed in the chain registry (https://github.com/cosmos/chain-registry).
+To configure a new chain just run this command using the --init flag and the name of the chain as it's listed in the chain registry (<https://github.com/cosmos/chain-registry>).
 
 If the chain is not listed in the chain registry, you can use any unique name.
 
-
 ```shell
-hubl --init [chain-name]
-hubl --init regen
+hubl init [chain-name]
+hubl init regen
 ```
 
 The chain configuration is stored in `~/.hubl/config.toml`.
@@ -54,6 +53,12 @@ When using an unsecure gRPC endpoint, change the `insecure` field to `true` in t
 [[chains.regen.trusted-grpc-endpoints]]
 endpoint = 'localhost:9090'
 insecure = true
+```
+
+Or use the `--insecure` flag:
+
+```shell
+hubl init regen --insecure
 ```
 
 :::

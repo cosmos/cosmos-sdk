@@ -68,7 +68,7 @@ func GetChainRegistryEntry(chain string) (*ChainRegistryEntry, error) {
 func SelectGRPCEndpoints(chain string) (string, error) {
 	entry, err := GetChainRegistryEntry(chain)
 	if err != nil {
-		fmt.Printf("Unable to load data for %s in the chain registry. You'll have to specify a gRPC endpoint manually.\n", chain)
+		fmt.Printf("Unable to load data for %s in the chain registry. Specify a custom gRPC endpoint manually.\n", chain)
 		prompt := &promptui.Prompt{
 			Label: "Enter a gRPC endpoint that you trust",
 		}

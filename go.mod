@@ -54,7 +54,7 @@ require (
 	github.com/tendermint/tendermint v0.37.0-rc2
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
-	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5
+	google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2
 	google.golang.org/grpc v1.52.1
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0

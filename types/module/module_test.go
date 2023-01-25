@@ -56,10 +56,10 @@ func TestBasicManager(t *testing.T) {
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
 	mockCoreAppModule2.EXPECT().DefaultGenesis(gomock.Any()).Times(1).Return(nil)
 	mockCoreAppModule2.EXPECT().ValidateGenesis(gomock.Any()).Times(1).Return(nil)
-	mockAppModule2 := module.UseCoreAPIModule("mockCoreAppModule2", mockCoreAppModule2)
+	mockAppModule2 := module.CoreAppModuleBasicAdaptor("mockCoreAppModule2", mockCoreAppModule2)
 
 	// mock core API module (but all methods are implemented)
-	mockCoreAppModule3 := module.UseCoreAPIModule("mockCoreAppModule3", MockCoreAppModule{})
+	mockCoreAppModule3 := module.CoreAppModuleBasicAdaptor("mockCoreAppModule3", MockCoreAppModule{})
 
 	mm := module.NewBasicManager(mockAppModuleBasic1, mockAppModule2, mockCoreAppModule3)
 
@@ -107,7 +107,7 @@ func TestManagerOrderSetters(t *testing.T) {
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("module3", mockAppModule3))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
@@ -138,7 +138,7 @@ func TestManager_RegisterInvariants(t *testing.T) {
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	// TODO: This is not working for Core API modules yet
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("mockAppModule3", mockAppModule3))
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("mockAppModule3", mockAppModule3))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
@@ -159,7 +159,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
 	// TODO: This is not working for Core API modules yet
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("mockAppModule3", mockAppModule3))
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("mockAppModule3", mockAppModule3))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
@@ -183,7 +183,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("module3", mockAppModule3))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
@@ -224,7 +224,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 	mockCoreAppModule := MockCoreAppModule{}
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("mockCoreAppModule", mockCoreAppModule))
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("mockCoreAppModule", mockCoreAppModule))
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 

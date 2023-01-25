@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v0.1.0
 	cosmossdk.io/x/evidence v0.1.0
+	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
@@ -181,6 +182,8 @@ require (
 replace (
 	cosmossdk.io/collections => ../collections
 	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
 )
 

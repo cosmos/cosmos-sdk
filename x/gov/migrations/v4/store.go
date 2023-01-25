@@ -1,9 +1,10 @@
 package v4
 
 import (
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/exported"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
@@ -28,6 +29,8 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 		tp.Threshold,
 		tp.VetoThreshold,
 		sdk.ZeroDec().String(),
+		sdk.ZeroDec().String(),
+		"",
 	)
 
 	bz, err := cdc.Marshal(&params)

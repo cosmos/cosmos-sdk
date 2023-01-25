@@ -13,6 +13,9 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
+	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/client/cli"
+	"cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -21,9 +24,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	govcli "github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -613,7 +613,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 	}
 
 	args := append([]string{
-		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),               //nolint:staticcheck // SA1019: govcli.FlagTitle is deprecated: use FlagTitle instead
+		fmt.Sprintf("--%s=%s", govcli.FlagTitle, title),
 		fmt.Sprintf("--%s=%s", govcli.FlagDescription, description),   //nolint:staticcheck // SA1019: govcli.FlagDescription is deprecated: use FlagDescription instead
 		fmt.Sprintf("--%s=%s", govcli.FlagProposalType, proposalType), //nolint:staticcheck // SA1019: govcli.FlagProposalType is deprecated: use FlagProposalType instead
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, from),

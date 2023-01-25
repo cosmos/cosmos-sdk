@@ -42,8 +42,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -53,7 +52,7 @@ import (
 type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
-	RegisterInterfaces(types.InterfaceRegistry)
+	RegisterInterfaces(codectypes.InterfaceRegistry)
 
 	// client functionality
 	RegisterGRPCGatewayRoutes(client.Context, *runtime.ServeMux)
@@ -94,7 +93,7 @@ func (bm BasicManager) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers all module interface types
-func (bm BasicManager) RegisterInterfaces(registry types.InterfaceRegistry) {
+func (bm BasicManager) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	for _, m := range bm {
 		m.RegisterInterfaces(registry)
 	}

@@ -225,7 +225,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "delegate")
 			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", msg.Type()},
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
@@ -285,7 +285,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
 			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", msg.Type()},
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
@@ -333,16 +333,18 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		)
 	}
 
-	completionTime, err := k.Keeper.Undelegate(ctx, delegatorAddress, addr, shares)
+	completionTime, undelegatedAmt, err := k.Keeper.Undelegate(ctx, delegatorAddress, addr, shares)
 	if err != nil {
 		return nil, err
 	}
+
+	undelegatedCoin := sdk.NewCoin(msg.Amount.Denom, undelegatedAmt)
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
 			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", msg.Type()},
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
@@ -353,13 +355,14 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		sdk.NewEvent(
 			types.EventTypeUnbond,
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
 		),
 	})
 
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
+		Amount:         undelegatedCoin,
 	}, nil
 }
 

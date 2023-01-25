@@ -36,7 +36,7 @@ type TxInputs struct {
 	BankKeeper authtypes.BankKeeper `optional:"true"`
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
 	TxBankKeeper   BankKeeper
-	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
+	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 }
 
 //nolint:revive

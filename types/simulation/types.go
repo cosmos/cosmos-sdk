@@ -66,10 +66,10 @@ type OperationMsg struct {
 }
 
 // NewOperationMsgBasic creates a new operation message from raw input.
-func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) OperationMsg {
+func NewOperationMsgBasic(moduleName, msgType, comment string, ok bool, msg []byte) OperationMsg {
 	return OperationMsg{
-		Route:   route,
-		Name:    name,
+		Route:   moduleName,
+		Name:    msgType,
 		Comment: comment,
 		OK:      ok,
 		Msg:     msg,
@@ -78,18 +78,22 @@ func NewOperationMsgBasic(route, name, comment string, ok bool, msg []byte) Oper
 
 // NewOperationMsg - create a new operation message from sdk.Msg
 func NewOperationMsg(msg sdk.Msg, ok bool, comment string, cdc *codec.ProtoCodec) OperationMsg {
-	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
-		return NewOperationMsgBasic(legacyMsg.Route(), legacyMsg.Type(), comment, ok, legacyMsg.GetSignBytes())
+	msgType := sdk.MsgTypeURL(msg)
+	moduleName := sdk.GetModuleNameFromTypeURL(msgType)
+	if moduleName == "" {
+		moduleName = msgType
 	}
 
-	bz := cdc.MustMarshalJSON(msg)
+	if legacyMsg, okType := msg.(legacytx.LegacyMsg); okType {
+		return NewOperationMsgBasic(moduleName, msgType, comment, ok, legacyMsg.GetSignBytes())
+	}
 
-	return NewOperationMsgBasic(sdk.MsgTypeURL(msg), sdk.MsgTypeURL(msg), comment, ok, bz)
+	return NewOperationMsgBasic(moduleName, msgType, comment, ok, cdc.MustMarshalJSON(msg))
 }
 
 // NoOpMsg - create a no-operation message
-func NoOpMsg(route, msgType, comment string) OperationMsg {
-	return NewOperationMsgBasic(route, msgType, comment, false, nil)
+func NoOpMsg(moduleName, msgType, comment string) OperationMsg {
+	return NewOperationMsgBasic(moduleName, msgType, comment, false, nil)
 }
 
 // log entry text for this operation msg

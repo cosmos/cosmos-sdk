@@ -323,7 +323,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	moduleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
 	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
-	require.True(t, moduleAccCoins.IsEqual(deposits))
+	require.True(t, moduleAccCoins.Equal(deposits))
 
 	err = suite.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
 	require.NoError(t, err)
@@ -336,7 +336,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 
 	macc = suite.GovKeeper.GetGovernanceAccount(ctx)
 	require.NotNil(t, macc)
-	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
+	require.True(t, suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).Equal(initialModuleAccCoins))
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {

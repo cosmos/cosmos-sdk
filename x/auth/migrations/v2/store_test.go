@@ -545,7 +545,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 				require.NoError(t, err)
 
 				// un-delegation of the original vesting
-				_, err = stakingKeeper.Undelegate(ctx, delegatorAddr, valAddr, sdk.NewDecFromInt(sdk.NewInt(300)))
+				_, _, err = stakingKeeper.Undelegate(ctx, delegatorAddr, valAddr, sdk.NewDecFromInt(sdk.NewInt(300)))
 				require.NoError(t, err)
 			},
 			cleartTrackingFields,
@@ -645,8 +645,8 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, a
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)
 
-	vestedOk := expDelVesting.IsEqual(vDA.GetDelegatedVesting())
-	freeOk := expDelFree.IsEqual(vDA.GetDelegatedFree())
+	vestedOk := expDelVesting.Equal(vDA.GetDelegatedVesting())
+	freeOk := expDelFree.Equal(vDA.GetDelegatedFree())
 	require.True(t, vestedOk, vDA.GetDelegatedVesting().String())
 	require.True(t, freeOk, vDA.GetDelegatedFree().String())
 }

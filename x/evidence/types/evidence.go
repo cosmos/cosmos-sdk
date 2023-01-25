@@ -4,27 +4,21 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/x/evidence/exported"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Evidence type constants
-const (
-	RouteEquivocation = "equivocation"
-	TypeEquivocation  = "equivocation"
-)
+const RouteEquivocation = "equivocation"
 
 var _ exported.Evidence = &Equivocation{}
 
 // Route returns the Evidence Handler route for an Equivocation type.
 func (e *Equivocation) Route() string { return RouteEquivocation }
-
-// Type returns the Evidence Handler type for an Equivocation type.
-func (e *Equivocation) Type() string { return TypeEquivocation }
 
 // Hash returns the hash of an Equivocation object.
 func (e *Equivocation) Hash() tmbytes.HexBytes {

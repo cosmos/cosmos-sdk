@@ -10,12 +10,14 @@ use (
 	./errors
 	./math
 	./orm
-	./tx
 	./simapp
 	./tests
 	./tools/rosetta
 	./tools/cosmovisor
 	./tools/confix
+	./tools/hubl
+	./x/tx
 	./x/nft
 	./x/circuit
+	./x/evidence
 )

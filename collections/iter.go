@@ -161,26 +161,34 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	} else {
 		endBytes = nextBytesPrefixKey(m.prefix)
 	}
-
-	kv := m.sa(ctx)
-	switch order {
-	case OrderAscending:
-		return newIterator(kv.Iterator(startBytes, endBytes), m)
-	case OrderDescending:
-		return newIterator(kv.ReverseIterator(startBytes, endBytes), m)
-	default:
-		return iter, errOrder
-	}
+	return newIterator(ctx, startBytes, endBytes, order, m)
 }
 
-func newIterator[K, V any](iterator store.Iterator, m Map[K, V]) (Iterator[K, V], error) {
-	if iterator.Valid() == false {
+func newIterator[K, V any](ctx context.Context, start, end []byte, order Order, m Map[K, V]) (Iterator[K, V], error) {
+	kv := m.sa(ctx)
+	var (
+		iter store.Iterator
+		err  error
+	)
+	switch order {
+	case OrderAscending:
+		iter, err = kv.Iterator(start, end)
+	case OrderDescending:
+		iter, err = kv.ReverseIterator(start, end)
+	default:
+		return Iterator[K, V]{}, errOrder
+	}
+	if err != nil {
+		return Iterator[K, V]{}, err
+	}
+	if !iter.Valid() {
 		return Iterator[K, V]{}, ErrInvalidIterator
 	}
+
 	return Iterator[K, V]{
 		kc:           m.kc,
 		vc:           m.vc,
-		iter:         iterator,
+		iter:         iter,
 		prefixLength: len(m.prefix),
 	}, nil
 }

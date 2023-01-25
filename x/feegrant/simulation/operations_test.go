@@ -89,13 +89,13 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{
 			simulation.DefaultWeightGrantAllowance,
-			feegrant.MsgGrantAllowance{}.Route(),
-			simulation.TypeMsgGrantAllowance,
+			feegrant.ModuleName,
+			sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{}),
 		},
 		{
 			simulation.DefaultWeightRevokeAllowance,
-			feegrant.MsgRevokeAllowance{}.Route(),
-			simulation.TypeMsgRevokeAllowance,
+			feegrant.ModuleName,
+			sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{}),
 		},
 	}
 

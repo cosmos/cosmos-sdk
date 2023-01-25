@@ -12,6 +12,7 @@ use (
 	./orm
 	./simapp
 	./tests
+	./store
 	./tools/rosetta
 	./tools/cosmovisor
 	./tools/confix

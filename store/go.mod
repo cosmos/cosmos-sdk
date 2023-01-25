@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/spf13/cast v1.5.0
 	github.com/stretchr/testify v1.8.1
-	github.com/tendermint/tendermint v0.37.0-rc2
+	github.com/tendermint/tendermint v0.38.0-dev
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
 	google.golang.org/genproto v0.0.0-20230113154510-dbe35b8444a5 // indirect
@@ -26,14 +26,13 @@ require (
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd v0.22.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/errors v1.9.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.17.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect

@@ -267,8 +267,8 @@ Please refer to each module's documentation for the full set of events to query
 for. Each module documents its respective events under 'xx_events.md'.
 `,
 		Example: fmt.Sprintf(
-			"$ %s query txs --%s \"message.sender='cosmos1...' AND message.action='withdraw_delegator_reward' AND tx.height > 7\" --page 1 --limit 30",
-			version.AppName, flagQuery,
+			"$ %s query txs --query \"message.sender='cosmos1...' AND message.action='withdraw_delegator_reward' AND tx.height > 7\" --page 1 --limit 30",
+			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

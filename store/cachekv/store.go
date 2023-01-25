@@ -9,10 +9,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/internal/conv"
-	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
 	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/tendermint/tendermint/libs/math"
 )
 
 // cValue represents a cached value.
@@ -30,7 +30,7 @@ type Store struct {
 	cache         map[string]*cValue
 	deleted       map[string]struct{}
 	unsortedCache map[string]struct{}
-	sortedCache   *internal.BTree // always ascending sorted
+	sortedCache   *dbm.MemDB // always ascending sorted
 	parent        types.KVStore
 }
 
@@ -42,7 +42,7 @@ func NewStore(parent types.KVStore) *Store {
 		cache:         make(map[string]*cValue),
 		deleted:       make(map[string]struct{}),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   internal.NewBTree(),
+		sortedCache:   dbm.NewMemDB(),
 		parent:        parent,
 	}
 }
@@ -101,11 +101,6 @@ func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	if len(store.cache) == 0 && len(store.deleted) == 0 && len(store.unsortedCache) == 0 {
-		store.sortedCache = internal.NewBTree()
-		return
-	}
-
 	// We need a copy of all of the keys.
 	// Not the best, but probably not a bottleneck depending.
 	keys := make([]string, 0, len(store.cache))
@@ -149,7 +144,7 @@ func (store *Store) Write() {
 	for key := range store.unsortedCache {
 		delete(store.unsortedCache, key)
 	}
-	store.sortedCache = internal.NewBTree()
+	store.sortedCache = dbm.NewMemDB()
 }
 
 // CacheWrap implements CacheWrapper.
@@ -188,9 +183,9 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	}
 
 	store.dirtyItems(start, end)
-	cache = internal.NewMemIterator(start, end, store.sortedCache, store.deleted, ascending)
+	cache = newMemIterator(start, end, store.sortedCache, store.deleted, ascending)
 
-	return internal.NewCacheMergeIterator(parent, cache, ascending)
+	return newCacheMergeIterator(parent, cache, ascending)
 }
 
 func findStartIndex(strL []string, startQ string) int {
@@ -278,7 +273,7 @@ const minSortSize = 1024
 // Constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
-	if end != nil && startStr > endStr {
+	if startStr > endStr {
 		// Nothing to do here.
 		return
 	}
@@ -293,7 +288,6 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// than just not having the cache.
 	if n < minSortSize {
 		for key := range store.unsortedCache {
-			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
 				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
@@ -314,18 +308,24 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// Now find the values within the domain
 	//  [start, end)
 	startIndex := findStartIndex(strL, startStr)
+	endIndex := findEndIndex(strL, endStr)
+
+	if endIndex < 0 {
+		endIndex = len(strL) - 1
+	}
 	if startIndex < 0 {
 		startIndex = 0
 	}
 
-	var endIndex int
-	if end == nil {
-		endIndex = len(strL) - 1
-	} else {
-		endIndex = findEndIndex(strL, endStr)
-	}
-	if endIndex < 0 {
-		endIndex = len(strL) - 1
+	// Since we spent cycles to sort the values, we should process and remove a reasonable amount
+	// ensure start to end is at least minSortSize in size
+	// if below minSortSize, expand it to cover additional values
+	// this amortizes the cost of processing elements across multiple calls
+	if endIndex-startIndex < minSortSize {
+		endIndex = math.MinInt(startIndex+minSortSize, len(strL)-1)
+		if endIndex-startIndex < minSortSize {
+			startIndex = math.MaxInt(endIndex-minSortSize, 0)
+		}
 	}
 
 	kvL := make([]*kv.Pair, 0)
@@ -364,7 +364,10 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 			store.sortedCache.Set(item.Key, []byte{})
 			continue
 		}
-		store.sortedCache.Set(item.Key, item.Value)
+		err := store.sortedCache.Set(item.Key, item.Value)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

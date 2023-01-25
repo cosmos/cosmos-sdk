@@ -53,6 +53,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184) Pull in Cosmos-SDK authz validate basic fix.
+* [#444](https://github.com/provenance-io/cosmos-sdk/pull/444) Revert [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) "Optimize iteration on nested cached KV stores and other operations in general" due to a concurrent iterator issue: [#14786](https://github.com/cosmos/cosmos-sdk/issues/14786).
 
 ---
 

@@ -47,55 +47,15 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
-	if len(req.Query) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "query cannot be empty")
-	}
-
-	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
-	// so we default to 1 if not provided in the request.
-	page := int(req.Page)
-	if page == 0 {
-		page = 1
-	}
-
-	limit := int(req.Limit)
-	if limit == 0 {
-		limit = query.DefaultLimit
-	}
 
 	orderBy := parseOrderBy(req.OrderBy)
 
-	node, err := s.clientCtx.GetNode()
+	result, err := GetTxsByEvents(s.clientCtx, int(req.Page), int(req.Limit), req.Query, orderBy)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	resTxs, err := node.TxSearch(context.Background(), req.Query, false, &page, &limit, orderBy)
-	if err != nil {
-		return nil, err
-	}
-
-	resBlocks, err := getBlocksForTxResults(s.clientCtx, resTxs.Txs)
-	if err != nil {
-		return nil, err
-	}
-
-	txs, err := formatTxResults(s.clientCtx.TxConfig, resTxs.Txs, resBlocks)
-	if err != nil {
-		return nil, err
-	}
-
-	result := sdk.NewSearchTxsResult(
-		uint64(resTxs.TotalCount),
-		uint64(len(txs)),
-		uint64(page),
-		uint64(limit),
-		txs,
-	)
-
-	// create a proto codec, as we need it to unmarshal the tx bytes
 	txsList := make([]*txtypes.Tx, len(result.Txs))
-
 	for i, tx := range result.Txs {
 		protoTx, ok := tx.Tx.GetCachedValue().(*txtypes.Tx)
 		if !ok {

@@ -3,6 +3,7 @@ package tx
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,7 +12,50 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 )
+
+// GetTxsByEvents retrieves a list of paginated transactions from Tendermint's
+// TxSearch RPC method given a set of pagination criteria and an events query.
+// Note, the events query must be valid based on Tendermint's query semantics.
+// An error is returned if the query or parsing fails.
+func GetTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy string) (*sdk.SearchTxsResult, error) {
+	if len(query) == 0 {
+		return nil, errors.New("query cannot be empty")
+	}
+
+	// Tendermint node.TxSearch that is used for querying txs defines pages
+	// starting from 1, so we default to 1 if not provided in the request.
+	if page <= 0 {
+		page = 1
+	}
+
+	if limit <= 0 {
+		limit = querytypes.DefaultLimit
+	}
+
+	node, err := clientCtx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	resTxs, err := node.TxSearch(context.Background(), query, false, &page, &limit, orderBy)
+	if err != nil {
+		return nil, err
+	}
+
+	resBlocks, err := getBlocksForTxResults(clientCtx, resTxs.Txs)
+	if err != nil {
+		return nil, err
+	}
+
+	txs, err := formatTxResults(clientCtx.TxConfig, resTxs.Txs, resBlocks)
+	if err != nil {
+		return nil, err
+	}
+
+	return sdk.NewSearchTxsResult(uint64(resTxs.TotalCount), uint64(len(txs)), uint64(page), uint64(limit), txs), nil
+}
 
 // QueryTx queries for a single transaction by a hash string in hex format. An
 // error is returned if the transaction does not exist or cannot be queried.

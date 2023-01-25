@@ -6,14 +6,12 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/cockroachdb/errors"
 	"github.com/hashicorp/go-multierror"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/proto"
@@ -110,7 +108,7 @@ func (c *ChainInfo) Load(reload bool) error {
 
 	c.ProtoFiles, err = protodesc.FileOptions{AllowUnresolvable: true}.NewFiles(fdSet)
 	if err != nil {
-		return errors.Wrapf(err, "error building protoregistry.Files")
+		return fmt.Errorf("error building protoregistry.Files: %w", err)
 	}
 
 	appOptsFilename, err := c.appOptsCacheFilename()
@@ -179,14 +177,6 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 		c.client, err = grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			res = multierror.Append(res, err)
-			continue
-		}
-
-		ctx, cancel := context.WithTimeout(c.Context, 5*time.Second)
-		defer cancel()
-
-		if !c.client.WaitForStateChange(ctx, connectivity.Ready) {
-			res = multierror.Append(res, errors.New("error connecting to gRPC server: connection timeout"))
 			continue
 		}
 

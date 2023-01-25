@@ -13,12 +13,13 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"cosmossdk.io/client/v2/autocli"
-
 	"cosmossdk.io/client/v2/autocli/flag"
 )
 
 var (
 	flagInsecure string = "insecure"
+	flagUpdate   string = "update"
+	flagConfig   string = "config"
 )
 
 func RootCommand() (*cobra.Command, error) {
@@ -102,6 +103,7 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 		var (
 			update   bool
 			reconfig bool
+			insecure bool
 		)
 		chainCmd := &cobra.Command{
 			Use:   chain,
@@ -117,8 +119,9 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 				}
 			},
 		}
-		chainCmd.Flags().BoolVar(&update, "update", false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
-		chainCmd.Flags().BoolVar(&reconfig, "config", false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data)")
+		chainCmd.Flags().BoolVar(&update, flagUpdate, false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
+		chainCmd.Flags().BoolVar(&reconfig, flagConfig, false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data")
+		chainCmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow re-configuring the selected chain using an insecure gRPC connection")
 
 		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err
@@ -156,7 +159,7 @@ func reconfigure(cmd *cobra.Command, config *Config, configDir, chain string) er
 		return err
 	}
 
-	cmd.Printf("Selected: %s\n", endpoint)
+	cmd.Printf("%s endpoint selected\n", endpoint)
 	chainConfig := &ChainConfig{
 		GRPCEndpoints: []GRPCEndpoint{
 			{

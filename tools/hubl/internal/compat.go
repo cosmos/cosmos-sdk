@@ -204,7 +204,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 }
 
 func guessAutocli(files *protoregistry.Files) *autocliv1.AppOptionsResponse {
-	fmt.Printf("This chain does not support autoCLI directly yet. Using some default mappings in the meantime to support a subset of the available services.\n")
+	fmt.Printf("This chain does not support autocli directly yet. Using some default mappings in the meantime to support a subset of the available services.\n")
 	res := map[string]*autocliv1.ModuleOptions{}
 	files.RangeFiles(func(descriptor protoreflect.FileDescriptor) bool {
 		services := descriptor.Services()

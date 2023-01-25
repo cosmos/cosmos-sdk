@@ -43,7 +43,6 @@ func LoadConfig(configDir string) (*Config, error) {
 }
 
 func SaveConfig(configDir string, config *Config) error {
-	configPath := configFilename(configDir)
 	buf := &bytes.Buffer{}
 	enc := toml.NewEncoder(buf)
 	if err := enc.Encode(config); err != nil {
@@ -54,6 +53,7 @@ func SaveConfig(configDir string, config *Config) error {
 		return err
 	}
 
+	configPath := configFilename(configDir)
 	if err := os.WriteFile(configPath, buf.Bytes(), 0644); err != nil {
 		return err
 	}

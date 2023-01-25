@@ -172,24 +172,31 @@ func toSentenceCase(name string) string {
 var nilValue = protoreflect.Value{}
 
 func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
-	if len(screens) == 0 {
-		return nilValue, errors.New("expect at least one screen")
-	}
-
-	wantHeader := fmt.Sprintf("%s object", mr.msgDesc.Name())
-	if screens[0].Text != wantHeader {
-		return nilValue, fmt.Errorf(`bad header: want "%s", got "%s"`, wantHeader, screens[0].Text)
-	}
-	if screens[0].Indent != 0 {
-		return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)
-	}
-
 	msgType, err := protoregistry.GlobalTypes.FindMessageByName(mr.msgDesc.FullName())
 	if err != nil {
 		return nilValue, err
 	}
 	msg := msgType.New()
-	idx := 1
+
+	// Allow Any Objects that are empty
+	if len(screens) == 0 {
+		return protoreflect.ValueOfMessage(msg), nil
+	}
+
+	idx := 0
+	baseIndendation := 0
+
+	// Objects that fulfill Any do not have a header
+	//
+	header := fmt.Sprintf("%s object", mr.msgDesc.Name())
+	if screens[0].Text == header {
+		idx++
+		baseIndendation = 1
+
+		if screens[0].Indent != 0 {
+			return nilValue, fmt.Errorf("bad message indentation: want 0, got %d", screens[0].Indent)
+		}
+	}
 
 	for _, fd := range mr.fds {
 		if idx >= len(screens) {
@@ -202,7 +209,7 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 			return nilValue, err
 		}
 
-		if screens[idx].Indent != 1 {
+		if screens[idx].Indent != baseIndendation {
 			return nilValue, fmt.Errorf("bad message indentation: want 1, got %d", screens[idx].Indent)
 		}
 
@@ -216,13 +223,13 @@ func (mr *messageValueRenderer) Parse(ctx context.Context, screens []Screen) (pr
 		subscreens := make([]Screen, 1)
 		subscreens[0] = screens[idx]
 		subscreens[0].Text = strings.TrimPrefix(screens[idx].Text, prefix)
-		subscreens[0].Indent--
+		subscreens[0].Indent -= baseIndendation
 		idx++
 
 		// Gather nested screens
-		for idx < len(screens) && screens[idx].Indent > 1 {
+		for idx < len(screens) && screens[idx].Indent > baseIndendation {
 			scr := screens[idx]
-			scr.Indent--
+			scr.Indent -= baseIndendation
 			subscreens = append(subscreens, scr)
 			idx++
 		}

@@ -26,6 +26,8 @@ func NewAnyValueRenderer(t *Textual) ValueRenderer {
 // Format implements the ValueRenderer interface.
 func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
 	msg := v.Message().Interface()
+	omitHeader := 0
+
 	anymsg, ok := msg.(*anypb.Any)
 	if !ok {
 		return nil, fmt.Errorf("expected Any, got %T", msg)
@@ -45,10 +47,15 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 		return nil, err
 	}
 
-	screens := make([]Screen, 1+len(subscreens))
+	// The Any value renderer suprresses emission of the object header
+	if subscreens[0].Text == fmt.Sprintf("%s object", internalMsg.ProtoReflect().Descriptor().Name()) {
+		omitHeader = 1
+	}
+
+	screens := make([]Screen, (1-omitHeader)+len(subscreens))
 	screens[0].Text = anymsg.GetTypeUrl()
-	for i, subscreen := range subscreens {
-		subscreen.Indent++
+	for i, subscreen := range subscreens[omitHeader:] {
+		subscreen.Indent += 1 - omitHeader
 		screens[i+1] = subscreen
 	}
 

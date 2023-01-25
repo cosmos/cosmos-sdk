@@ -4,8 +4,7 @@
             "@type": "/Foo"
         },
         "screens": [
-            {"text": "/Foo"},
-            {"text": "Foo object", "indent": 1}
+            {"text": "/Foo"}
         ]
     },
     {
@@ -15,8 +14,7 @@
         },
         "screens": [
             {"text": "/Foo"},
-            {"text": "Foo object", "indent": 1},
-            {"text": "Full name: testing", "indent": 2}
+            {"text": "Full name: testing", "indent": 1}
         ]
     },
     {
@@ -38,8 +36,7 @@
         },
         "screens": [
             {"text": "/google.protobuf.Any"},
-            {"text": "/Foo", "indent": 1},
-            {"text": "Foo object", "indent": 2}
+            {"text": "/Foo", "indent": 1}
         ]
     },
     {
@@ -53,8 +50,7 @@
         "screens": [
             {"text": "/google.protobuf.Any"},
             {"text": "/Foo", "indent": 1},
-            {"text": "Foo object", "indent": 2},
-            {"text": "Full name: testing", "indent": 3}
+            {"text": "Full name: testing", "indent": 2}
         ]
     },
     {
@@ -67,10 +63,8 @@
         },
         "screens": [
             {"text": "/A"},
-            {"text": "A object", "indent": 1},
-            {"text": "ANY: /Foo", "indent": 2},
-            {"text": "Foo object", "indent": 3},
-            {"text": "Full name: testing", "indent": 4}
+            {"text": "ANY: /Foo", "indent": 1},
+            {"text": "Full name: testing", "indent": 2}
         ]
     }
 ]

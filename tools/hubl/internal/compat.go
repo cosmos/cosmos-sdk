@@ -30,9 +30,7 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 				InterfaceName: iface,
 			})
 			if err == nil {
-				for _, name := range implRes.ImplementationMessageNames {
-					interfaceImplNames = append(interfaceImplNames, name)
-				}
+				interfaceImplNames = append(interfaceImplNames, implRes.ImplementationMessageNames...)
 			}
 		}
 	}
@@ -95,11 +93,9 @@ func loadFileDescriptorsGRPCReflection(ctx context.Context, client *grpc.ClientC
 		if err != nil {
 			return nil, err
 		}
-
 	}
 
-	err = reflectClient.CloseSend()
-	if err != nil {
+	if err = reflectClient.CloseSend(); err != nil {
 		return nil, err
 	}
 
@@ -209,7 +205,7 @@ func addMissingFileDescriptors(ctx context.Context, client *grpc.ClientConn, fdM
 }
 
 func guessAutocli(files *protoregistry.Files) *autocliv1.AppOptionsResponse {
-	fmt.Printf("This chain does not support autocli directly yet. We will use some default mappings in the meantime to support a subset of the available services.\n")
+	fmt.Printf("This chain does not support autoCLI directly yet. Using some default mappings in the meantime to support a subset of the available services.\n")
 	res := map[string]*autocliv1.ModuleOptions{}
 	files.RangeFiles(func(descriptor protoreflect.FileDescriptor) bool {
 		services := descriptor.Services()

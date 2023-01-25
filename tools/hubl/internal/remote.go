@@ -75,6 +75,8 @@ func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
 	commands := []*cobra.Command{}
 
 	for chain, chainConfig := range config.Chains {
+		chain, chainConfig := chain, chainConfig
+
 		chainInfo := NewChainInfo(configDir, chain, chainConfig)
 		if err := chainInfo.Load(false); err != nil {
 			commands = append(commands, &cobra.Command{
@@ -162,7 +164,12 @@ func reconfigure(cmd *cobra.Command, configDir, chain string, config *Config) er
 		return err
 	}
 
-	return SaveConfig(configDir, config)
+	if err := SaveConfig(configDir, config); err != nil {
+		return err
+	}
+
+	cmd.Printf("Configuration saved to %s\n", configDir)
+	return nil
 }
 
 type dynamicTypeResolver struct {

@@ -23,13 +23,14 @@ import (
 const DefaultConfigDirName = ".hubl"
 
 type ChainInfo struct {
+	client *grpc.ClientConn
+
 	ConfigDir     string
 	Chain         string
 	ModuleOptions map[string]*autocliv1.ModuleOptions
 	ProtoFiles    *protoregistry.Files
 	Context       context.Context
 	Config        *ChainConfig
-	client        *grpc.ClientConn
 }
 
 func NewChainInfo(configDir string, chain string, config *ChainConfig) *ChainInfo {
@@ -91,8 +92,7 @@ func (c *ChainInfo) Load(reload bool) error {
 			return err
 		}
 
-		err = os.WriteFile(fdsFilename, bz, 0644)
-		if err != nil {
+		if err = os.WriteFile(fdsFilename, bz, 0644); err != nil {
 			return err
 		}
 	} else {
@@ -101,8 +101,7 @@ func (c *ChainInfo) Load(reload bool) error {
 			return err
 		}
 
-		err = proto.Unmarshal(bz, fdSet)
-		if err != nil {
+		if err = proto.Unmarshal(bz, fdSet); err != nil {
 			return err
 		}
 	}
@@ -165,7 +164,6 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 
 	var res error
 	for _, endpoint := range c.Config.GRPCEndpoints {
-		var err error
 		var creds credentials.TransportCredentials
 		if endpoint.Insecure {
 			creds = insecure.NewCredentials()
@@ -175,6 +173,7 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 			})
 		}
 
+		var err error
 		c.client, err = grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			res = multierror.Append(res, err)

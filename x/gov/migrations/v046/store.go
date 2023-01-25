@@ -93,17 +93,3 @@ func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Binar
 
 	return migrateProposals(store, cdc)
 }
-
-// Migrate_V046_4_To_V046_5 is a helper function to migrate chains from <=v0.46.6
-// to v0.46.7 ONLY.
-//
-// IMPORTANT: Please do not use this function if you are upgrading to v0.46
-// from <=v0.45.
-//
-// This function migrates the store in-place by fixing the gov votes weight to
-// be stored as decimals strings (instead of the sdk.Dec BigInt representation).
-//
-// The store is expected to be the gov store, and not any prefixed substore.
-func Migrate_V046_6_To_V046_7(store sdk.KVStore, cdc codec.BinaryCodec) error {
-	return migrateVotes(store, cdc)
-}

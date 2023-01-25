@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/regen-network/gocuke v0.6.2
-	google.golang.org/grpc v1.52.0
+	google.golang.org/grpc v1.52.1
 )
 
 require (

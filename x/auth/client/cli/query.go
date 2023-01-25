@@ -259,20 +259,15 @@ func QueryTxsByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "txs",
 		Short: "Query for paginated transactions that match a set of events",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`
-Search for transactions that match the exact given events where results are paginated.
+		Long: `Search for transactions that match the exact given events where results are paginated.
 The events query is directly passed to Tendermint's RPC TxSearch method and must
 conform to Tendermint's query syntax.
 
 Please refer to each module's documentation for the full set of events to query
 for. Each module documents its respective events under 'xx_events.md'.
 `,
-				version.AppName, flagQuery,
-			),
-		),
 		Example: fmt.Sprintf(
-			"$ %s query txs --%s 'message.sender='cosmos1...' AND message.action='withdraw_delegator_reward' AND tx.height > 7' --page 1 --limit 30",
+			"$ %s query txs --%s \"message.sender='cosmos1...' AND message.action='withdraw_delegator_reward' AND tx.height > 7\" --page 1 --limit 30",
 			version.AppName, flagQuery,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {

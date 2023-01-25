@@ -20,7 +20,7 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-const DefaultDirName = ".hubl"
+const DefaultConfigDirName = ".hubl"
 
 type ChainInfo struct {
 	ConfigDir     string
@@ -174,6 +174,7 @@ func (c *ChainInfo) OpenClient() (*grpc.ClientConn, error) {
 				MinVersion: tls.VersionTLS12,
 			})
 		}
+
 		c.client, err = grpc.Dial(endpoint.Endpoint, grpc.WithTransportCredentials(creds))
 		if err != nil {
 			res = multierror.Append(res, err)

@@ -18,7 +18,10 @@ import (
 // GetTxsByEvents retrieves a list of paginated transactions from Tendermint's
 // TxSearch RPC method given a set of pagination criteria and an events query.
 // Note, the events query must be valid based on Tendermint's query semantics.
-// An error is returned if the query or parsing fails.
+// An error is returned if the query or parsing fails or if the query is empty.
+//
+// Note, if an empty orderBy is provided, the default behavior is ascending. If
+// negative values are provided for page or limit, defaults will be used.
 func GetTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy string) (*sdk.SearchTxsResult, error) {
 	if len(query) == 0 {
 		return nil, errors.New("query cannot be empty")

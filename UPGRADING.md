@@ -431,4 +431,3 @@ message MsgSetWithdrawAddress {
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
 
-

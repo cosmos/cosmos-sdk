@@ -46712,11 +46712,15 @@ definitions:
       - AUTO_RESPONSE_ACCEPT
       - AUTO_RESPONSE_DECLINE
     default: AUTO_RESPONSE_UNSPECIFIED
-    description: |-
+    description: >-
       AutoResponse enumerates the quarantine auto-response options.
 
-       - AUTO_RESPONSE_UNSPECIFIED: AUTO_RESPONSE_UNSPECIFIED defines that no automatic action should be taken.
-       - AUTO_RESPONSE_ACCEPT: AUTO_RESPONSE_ACCEPT defines that sends should be automatically accepted.
+       - AUTO_RESPONSE_UNSPECIFIED: AUTO_RESPONSE_UNSPECIFIED defines that an automatic response has not been specified.
+      This means that no automatic action should be taken, i.e. this
+      auto-response is off,
+
+      and default quarantine behavior is used.
+       - AUTO_RESPONSE_ACCEPT: AUTO_RESPONSE_ACCEPT defines that sends should be automatically accepted, bypassing quarantine.
        - AUTO_RESPONSE_DECLINE: AUTO_RESPONSE_DECLINE defines that sends should be automatically declined.
   cosmos.quarantine.v1beta1.AutoResponseEntry:
     type: object

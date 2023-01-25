@@ -160,7 +160,7 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
 
-See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md)
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
 
 #### `{accepts,implements}_interface` proto annotations
 

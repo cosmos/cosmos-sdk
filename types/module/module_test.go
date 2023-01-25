@@ -54,8 +54,8 @@ func TestBasicManager(t *testing.T) {
 
 	// mock core API module
 	mockCoreAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
-	mockCoreAppModule2.EXPECT().DefaultGenesis(gomock.Any()).Times(1).Return(nil)
-	mockCoreAppModule2.EXPECT().ValidateGenesis(gomock.Any()).Times(1).Return(nil)
+	mockCoreAppModule2.EXPECT().DefaultGenesis(gomock.Any()).AnyTimes().Return(nil)
+	mockCoreAppModule2.EXPECT().ValidateGenesis(gomock.Any()).AnyTimes().Return(nil)
 	mockAppModule2 := module.CoreAppModuleBasicAdaptor("mockCoreAppModule2", mockCoreAppModule2)
 
 	// mock core API module (but all methods are implemented)
@@ -310,6 +310,93 @@ func TestCoreAPIManager(t *testing.T) {
 	require.Equal(t, 2, len(mm.Modules))
 	require.Equal(t, module1, mm.Modules["module1"])
 	require.Equal(t, module2, mm.Modules["module2"])
+}
+
+func TestCoreAPIManager_InitGenesis(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{"module1": mockAppModule1})
+	require.NotNil(t, mm)
+	require.Equal(t, 1, len(mm.Modules))
+
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
+
+	// this should panic since the validator set is empty even after init genesis
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
+	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+
+	// TODO: add happy path test. We are not returning any validator updates
+
+}
+
+func TestCoreAPIManager_ExportGenesis(t *testing.T) {
+	mockAppModule1 := MockCoreAppModule{}
+	mockAppModule2 := MockCoreAppModule{}
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	interfaceRegistry := types.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	want := map[string]json.RawMessage{
+		"module1": json.RawMessage(`{
+  "someField": "asd"
+}`),
+		"module2": json.RawMessage(`{
+  "someField": "asd"
+}`),
+	}
+
+	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
+	require.Equal(t, want, mm.ExportGenesisForModules(ctx, cdc, []string{}))
+	require.Equal(t, map[string]json.RawMessage{"module1": want["module1"]}, mm.ExportGenesisForModules(ctx, cdc, []string{"module1"}))
+	require.NotEqual(t, map[string]json.RawMessage{"module1": want["module1"]}, mm.ExportGenesisForModules(ctx, cdc, []string{"module2"}))
+
+	require.Panics(t, func() {
+		mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	})
+}
+
+func TestCoreAPIManagerOrderSetters(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
+
+	mm := module.NewManagerFromMap(
+		map[string]appmodule.AppModule{
+			"module1": mockAppModule1,
+			"module2": mockAppModule2,
+			"module3": mockAppModule3,
+		})
+	require.NotNil(t, mm)
+	require.Equal(t, 3, len(mm.Modules))
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderInitGenesis)
+	mm.SetOrderInitGenesis("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderInitGenesis)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
+	mm.SetOrderExportGenesis("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
+	mm.SetOrderBeginBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
+
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
+	mm.SetOrderEndBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
 }
 
 // MockCoreAppModule allows us to test functions like DefaultGenesis

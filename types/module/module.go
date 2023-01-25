@@ -454,13 +454,12 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 					panic(err)
 				}
 
-				channels[moduleName] <- rawJSON
+				ch <- rawJSON
 			}(module, channels[moduleName])
 		} else if module, ok := mod.(HasGenesis); ok {
 			channels[moduleName] = make(chan json.RawMessage)
 			go func(module HasGenesis, ch chan json.RawMessage) {
 				ctx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter()) // avoid race conditions
-
 				ch <- module.ExportGenesis(ctx, cdc)
 			}(module, channels[moduleName])
 		}

@@ -11,6 +11,7 @@ COPY core/go.mod core/go.sum /work/core/
 COPY depinject/go.mod depinject/go.sum /work/depinject/
 COPY tools/rosetta/go.mod tools/rosetta/go.sum /work/tools/rosetta/
 COPY collections/go.mod collections/go.sum /work/collections/
+COPY store/go.mod store/go.sum /work/store/
 
 RUN go mod download
 COPY ./ /work

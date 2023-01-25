@@ -41,6 +41,11 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate  store/types, hence the `types/store.go` file is no longer needed and has been removed.
 
+##### Extract Store to a standalone module
+
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
+
 ### SimApp
 
 #### Module Assertions
@@ -68,14 +73,20 @@ By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migrati
 ##### Extract evidence to a standalone module
 
 The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
-All the evidence imports are now renamed to use `cosmossdk.io/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
+All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
 
 #### `x/nft`
 
 ##### Extract nft to a standalone module
 
-The `x/nft` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 
+#### x/feegrant
+
+##### Extract feegrant to a standalone module
+
+The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
+All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
@@ -424,3 +435,4 @@ message MsgSetWithdrawAddress {
 <!-- todo: cosmos.scalar types -->
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+

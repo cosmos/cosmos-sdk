@@ -23,7 +23,7 @@ const (
 )
 
 // NewProposal creates a new Proposal instance
-func NewProposal(messages []sdk.Msg, id uint64, metadata string, submitTime, depositEndTime time.Time, title, summary string, proposer sdk.AccAddress) (Proposal, error) {
+func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.Time, metadata, title, summary string, proposer sdk.AccAddress) (Proposal, error) {
 	msgs, err := sdktx.SetMsgs(messages)
 	if err != nil {
 		return Proposal{}, err

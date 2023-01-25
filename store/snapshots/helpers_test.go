@@ -17,9 +17,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdkerrors "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/types"
 )
 
 func checksums(slice [][]byte) [][]byte {

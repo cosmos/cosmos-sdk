@@ -81,7 +81,7 @@ The `x/nft` module is extracted to have a separate go.mod file which allows it b
 ##### Extract feegrant to a standalone module
 
 The `x/feegrant` module is extracted to have a separate go.mod file which allows it be a standalone module.
-All the feegrant imports are now renamed to use `cosmossdk.io/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
+All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
 
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)

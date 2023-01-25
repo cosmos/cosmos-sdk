@@ -39,6 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.8-pio-1](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.8-pio-1) - 2023-01-25
+
 ### Features
 
 * [#270](https://github.com/provenance-io/cosmos-sdk/pull/270) Add functionality to update denom metadata via gov proposal.
@@ -54,6 +60,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#12184](https://github.com/cosmos/cosmos-sdk/pull/12184) Pull in Cosmos-SDK authz validate basic fix.
 * [#444](https://github.com/provenance-io/cosmos-sdk/pull/444) Revert [#13881](https://github.com/cosmos/cosmos-sdk/pull/13881) "Optimize iteration on nested cached KV stores and other operations in general" due to a concurrent iterator issue: [#14786](https://github.com/cosmos/cosmos-sdk/issues/14786).
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.7-pio-1...v0.46.8-pio-1
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8..v0.46.8-pio-1
 
 ---
 

@@ -8,3 +8,12 @@ The same seems to be true for `encoding/json.Marshaler.MarshalJSON` and `Marshal
 
 Note that go-amino [special cases byte arrays](https://github.com/tendermint/go-amino/blob/ccb15b138dfd74282be78f5e9059387768b12918/json-encode.go#L231) to support e.g. key serialization.  This odd feature must be
 included for total feature parity.
+
+look to `std.RegisterLegacyAminoCodec(amino)` for current usages and registration of the codec
+amino map serialization is non-deterministic
+
+- structurally follow legacy amino json encoding
+- refer to stablejson for protoreflect details on golang reflect -> protoreflect
+- add special casing custom encoders (including tests)
+- add rapid tests
+- refactor for readability. not really convinced stablejson is anymore readable than amino json yet

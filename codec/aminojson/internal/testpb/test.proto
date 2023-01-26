@@ -22,8 +22,9 @@ message ABitOfEverything {
   // map
   // All keys are converted to strings.
   map<string, string> str_map = 3;
-  map<int32, string>  int32_map = 4;
-  map<bool, string> bool_map = 5;
+// not supported by legacy amino
+//  map<int32, string>  int32_map = 4;
+//  map<bool, string> bool_map = 5;
 
   // repeated
   repeated int32 repeated = 6;
@@ -57,25 +58,23 @@ message ABitOfEverything {
 
   google.protobuf.Struct struct = 25;
 
-  google.protobuf.BoolValue bool_value = 26;
-  google.protobuf.BytesValue bytes_value = 27;
-  //google.protobuf.DoubleValue double_value = 28;
-  //google.protobuf.FloatValue float_value = 29;
-  google.protobuf.Int32Value int32_value = 30;
-  google.protobuf.Int64Value int64_value = 31;
-  google.protobuf.StringValue string_value = 32;
-  google.protobuf.UInt32Value uint32_value = 33;
-  google.protobuf.UInt64Value uint64_value = 34;
+// TODO
+//  google.protobuf.BoolValue bool_value = 26;
+//  google.protobuf.BytesValue bytes_value = 27;
+//  google.protobuf.DoubleValue double_value = 28;
+//  google.protobuf.FloatValue float_value = 29;
+//  google.protobuf.Int32Value int32_value = 30;
+//  google.protobuf.Int64Value int64_value = 31;
+//  google.protobuf.StringValue string_value = 32;
+//  google.protobuf.UInt32Value uint32_value = 33;
+//  google.protobuf.UInt64Value uint64_value = 34;
 
-  google.protobuf.FieldMask field_mask = 35;
 
-  google.protobuf.ListValue list_value = 36;
-
-  google.protobuf.Value value = 37;
-
-  google.protobuf.NullValue null_value = 38;
-
-  google.protobuf.Empty empty = 39;
+//  google.protobuf.FieldMask field_mask = 35;
+//  google.protobuf.ListValue list_value = 36;
+//  google.protobuf.Value value = 37;
+//  google.protobuf.NullValue null_value = 38;
+//  google.protobuf.Empty empty = 39;
 }
 
 message NestedMessage {

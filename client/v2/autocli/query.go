@@ -234,13 +234,3 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 func protoNameToCliName(name protoreflect.Name) string {
 	return strcase.ToKebab(string(name))
 }
-
-func topLevelCmd(use, short string) *cobra.Command {
-	return &cobra.Command{
-		Use:                        use,
-		Short:                      short,
-		DisableFlagParsing:         false,
-		SuggestionsMinimumDistance: 2,
-		RunE:                       validateCmd,
-	}
-}

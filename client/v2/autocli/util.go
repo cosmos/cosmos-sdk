@@ -17,3 +17,16 @@ func findSubCommand(cmd *cobra.Command, subCmdName string) *cobra.Command {
 	}
 	return nil
 }
+
+// topLevelCmd creates a new top-level command with the provided name and
+// description. The command will have DisableFlagParsing set to false and
+// SuggestionsMinimumDistance set to 2.
+func topLevelCmd(use, short string) *cobra.Command {
+	return &cobra.Command{
+		Use:                        use,
+		Short:                      short,
+		DisableFlagParsing:         false,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       validateCmd,
+	}
+}

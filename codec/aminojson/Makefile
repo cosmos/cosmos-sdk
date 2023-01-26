@@ -12,7 +12,7 @@ $(BUF):
 
 proto-gen: $(BUF) $(BIN)/protoc-gen-go
 	@echo "Generating proto files"
-	PATH=$(BIN) buf generate internal
+	cd internal && PATH=$(BIN) buf generate
 
 clean:
 	rm -rf $(BIN)

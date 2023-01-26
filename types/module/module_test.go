@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"cosmossdk.io/core/appmodule"
@@ -331,7 +331,6 @@ func TestCoreAPIManager_InitGenesis(t *testing.T) {
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 
 	// TODO: add happy path test. We are not returning any validator updates
-
 }
 
 func TestCoreAPIManager_ExportGenesis(t *testing.T) {
@@ -412,12 +411,13 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	someFieldWriter.Write([]byte(`"asd"`))
 	return someFieldWriter.Close()
 }
+
 func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {
 	rdr, err := src("someField")
 	if err != nil {
 		return err
 	}
-	data, err := ioutil.ReadAll(rdr)
+	data, err := io.ReadAll(rdr)
 	if err != nil {
 		return err
 	}

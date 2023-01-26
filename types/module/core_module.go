@@ -17,8 +17,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ AppModuleBasic = coreAppModuleBasicAdapator{}
-var _ HasGenesis = coreAppModuleBasicAdapator{}
+var (
+	_ AppModuleBasic = coreAppModuleBasicAdapator{}
+	_ HasGenesis     = coreAppModuleBasicAdapator{}
+)
 
 // CoreAppModuleBasicAdaptor wraps the core API module as an AppModule that this version
 // of the SDK can use.

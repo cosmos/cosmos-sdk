@@ -74,7 +74,6 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{100, types.ModuleName, sdk.MsgTypeURL(&types.MsgSend{})},
 		{10, types.ModuleName, sdk.MsgTypeURL(&types.MsgMultiSend{})},
-		{5, types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateParams{})},
 	}
 
 	for i, w := range weightesOps {

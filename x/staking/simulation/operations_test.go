@@ -137,7 +137,6 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgUndelegate{})},
 		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgBeginRedelegate{})},
 		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{})},
-		{simulation.DefaultWeightMsgUpdateParams, types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateParams{})},
 	}
 
 	for i, w := range weightesOps {

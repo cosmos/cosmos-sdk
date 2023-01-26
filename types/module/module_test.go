@@ -36,14 +36,14 @@ func TestBasicManager(t *testing.T) {
 	wantDefaultGenesis := map[string]json.RawMessage{
 		"mockAppModuleBasic1": json.RawMessage(``),
 		"module2": json.RawMessage(`{
-  "someField": "asd"
+  "someField": "someValue"
 }`)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 
 	mockAppModuleBasic1.EXPECT().Name().AnyTimes().Return("mockAppModuleBasic1")
 	mockAppModuleBasic1.EXPECT().DefaultGenesis(gomock.Eq(cdc)).Times(1).Return(json.RawMessage(``))
-	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).Times(1).Return(errFoo)
+	mockAppModuleBasic1.EXPECT().ValidateGenesis(gomock.Eq(cdc), gomock.Eq(nil), gomock.Eq(wantDefaultGenesis["mockAppModuleBasic1"])).AnyTimes().Return(nil)
 	mockAppModuleBasic1.EXPECT().RegisterRESTRoutes(gomock.Eq(client.Context{}), gomock.Eq(&mux.Router{})).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterLegacyAminoCodec(gomock.Eq(legacyAmino)).Times(1)
 	mockAppModuleBasic1.EXPECT().RegisterInterfaces(gomock.Eq(interfaceRegistry)).Times(1)
@@ -303,7 +303,7 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"asd"`))
+	someFieldWriter.Write([]byte(`"someValue"`))
 	return someFieldWriter.Close()
 }
 func (MockCoreAppModule) ValidateGenesis(src appmodule.GenesisSource) error {

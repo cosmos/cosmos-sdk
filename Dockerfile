@@ -10,10 +10,6 @@
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys add foo
 # > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.simappcli:/root/.simapp simapp simd keys list
 # TODO: demo connecting rest-server (or is this in server now?)
-<<<<<<< HEAD
-FROM golang:1.19-alpine AS build-env
-=======
->>>>>>> be9bd7a8c (perf: dockerfiles (#14793))
 
 # bullseye already comes with build dependencies, so we don't need anything extra to install
 FROM --platform=$BUILDPLATFORM golang:1.19-bullseye AS build-env

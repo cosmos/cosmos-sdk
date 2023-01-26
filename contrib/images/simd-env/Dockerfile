@@ -10,12 +10,6 @@ COPY api/go.mod api/go.sum /work/api/
 COPY core/go.mod core/go.sum /work/core/
 COPY depinject/go.mod depinject/go.sum /work/depinject/
 COPY tools/rosetta/go.mod tools/rosetta/go.sum /work/tools/rosetta/
-<<<<<<< HEAD
-
-=======
-COPY collections/go.mod collections/go.sum /work/collections/
-COPY store/go.mod store/go.sum /work/store/
->>>>>>> be9bd7a8c (perf: dockerfiles (#14793))
 RUN go mod download
 
 COPY ./ /work
@@ -33,4 +27,3 @@ WORKDIR /simd
 
 COPY contrib/images/simd-env/wrapper.sh /usr/bin/wrapper.sh
 COPY --from=build /work/build/simd /simd/
-

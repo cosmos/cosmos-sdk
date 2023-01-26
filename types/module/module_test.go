@@ -37,7 +37,7 @@ func TestBasicManager(t *testing.T) {
 		"mockAppModuleBasic1": json.RawMessage(``),
 		"mockCoreAppModule2":  json.RawMessage(`null`),
 		"mockCoreAppModule3": json.RawMessage(`{
-  "someField": "asd"
+  "someField": "someKey"
 }`),
 	}
 
@@ -238,7 +238,7 @@ func TestManager_ExportGenesis(t *testing.T) {
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`),
 		"mockCoreAppModule": json.RawMessage(`{
-  "someField": "asd"
+  "someField": "someKey"
 }`),
 	}
 
@@ -348,10 +348,10 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{
-  "someField": "asd"
+  "someField": "someKey"
 }`),
 		"module2": json.RawMessage(`{
-  "someField": "asd"
+  "someField": "someKey"
 }`),
 	}
 
@@ -408,7 +408,7 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"asd"`))
+	someFieldWriter.Write([]byte(`"someKey"`))
 	return someFieldWriter.Close()
 }
 
@@ -435,7 +435,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"asd"`))
+	wrt.Write([]byte(`"someKey"`))
 	return wrt.Close()
 }
 

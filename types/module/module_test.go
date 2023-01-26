@@ -51,8 +51,13 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
 	mockCoreAppModule2 := MockCoreAppModule{}
+	mockCoreAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 
-	mm := module.NewBasicManager(mockAppModuleBasic1, module.UseCoreAPIModule("module2", mockCoreAppModule2))
+	mm := module.NewBasicManager(
+		mockAppModuleBasic1,
+		module.UseCoreAPIModule("module2", mockCoreAppModule2),
+		module.UseCoreAPIModule("module3", mockCoreAppModule3),
+	)
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
 
 	mm.RegisterLegacyAminoCodec(legacyAmino)

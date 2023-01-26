@@ -207,28 +207,6 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	suite.Require().Len(futureOperations, 0)
 }
 
-func (suite *SimTestSuite) TestSimulateMsgUpdateParams() {
-	s := rand.NewSource(1)
-	r := rand.New(s)
-	accounts := suite.getTestingAccounts(r, 2)
-
-	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
-
-	// execute operation
-	op := simulation.SimulateMsgUpdateParams(suite.accountKeeper, suite.bankKeeper)
-
-	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
-	suite.Require().Error(err)
-
-	var msg types.MsgUpdateParams
-	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
-
-	suite.Require().False(operationMsg.OK)
-	suite.Require().Equal(sdk.MsgTypeURL(&types.MsgUpdateParams{}), sdk.MsgTypeURL(&msg))
-	suite.Require().Len(futureOperations, 0)
-}
-
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	accounts := simtypes.RandomAccounts(r, n)
 

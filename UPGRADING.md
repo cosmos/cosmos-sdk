@@ -83,6 +83,8 @@ The `x/nft` module is extracted to have a separate go.mod file which allows it b
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
 
+Moreover, to support the `MsgUpdateParams` governance proposals for each modules, `AppModuleSimulation` now defines a `ProposalMsgs` method instead of `ProposalContents`. That method defines the messages that can be used to submit a proposal and that should be tested in simulation.
+
 ### gRPC
 
 A new gRPC service, `proto/cosmos/base/node/v1beta1/query.proto`, has been introduced

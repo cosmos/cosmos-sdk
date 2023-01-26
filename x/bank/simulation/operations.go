@@ -20,19 +20,17 @@ import (
 //
 //nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgSend              = "op_weight_msg_send"
-	OpWeightMsgMultiSend         = "op_weight_msg_multisend"
-	OpWeightMsgUpdateParams      = "op_weight_msg_update_params"
-	DefaultWeightMsgSend         = 100 // from simappparams.DefaultWeightMsgSend
-	DefaultWeightMsgMultiSend    = 10  // from simappparams.DefaultWeightMsgMultiSend
-	DefaultWeightMsgUpdateParams = 5
+	OpWeightMsgSend           = "op_weight_msg_send"
+	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
+	DefaultWeightMsgSend      = 100 // from simappparams.DefaultWeightMsgSend
+	DefaultWeightMsgMultiSend = 10  // from simappparams.DefaultWeightMsgMultiSend
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk keeper.Keeper,
 ) simulation.WeightedOperations {
-	var weightMsgSend, weightMsgMultiSend, weightMsgUpdateParams int
+	var weightMsgSend, weightMsgMultiSend int
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgSend, &weightMsgSend, nil,
 		func(_ *rand.Rand) {
@@ -46,12 +44,6 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
-		},
-	)
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSend,
@@ -60,10 +52,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgMultiSend,
 			SimulateMsgMultiSend(ak, bk),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateParams,
-			SimulateMsgUpdateParams(ak, bk),
 		),
 	}
 }
@@ -333,43 +321,6 @@ func SimulateMsgMultiSendToModuleAccount(ak types.AccountKeeper, bk keeper.Keepe
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "invalid transfers"), nil, err
 		}
 		return simtypes.NewOperationMsg(msg, true, "", nil), nil, nil
-	}
-}
-
-func SimulateMsgUpdateParams(ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
-		account := ak.GetAccount(ctx, simAccount.Address)
-		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		authority := ak.GetModuleAccount(ctx, "gov")
-		msg := &types.MsgUpdateParams{
-			Authority: authority.String(),
-			Params:    randomParams(),
-		}
-
-		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
-		txCtx := simulation.OperationInput{
-			R:             r,
-			App:           app,
-			TxGen:         txConfig,
-			Cdc:           nil,
-			Msg:           msg,
-			Context:       ctx,
-			SimAccount:    simAccount,
-			AccountKeeper: ak,
-			ModuleName:    types.ModuleName,
-		}
-
-		return simulation.GenAndDeliverTx(txCtx, spendable)
-	}
-}
-
-func randomParams() types.Params {
-	return types.Params{
-		DefaultSendEnabled: false,
 	}
 }
 

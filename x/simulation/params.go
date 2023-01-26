@@ -121,33 +121,32 @@ func NewSimLegacyParamChange(subspace, key string, simVal simulation.SimValFn) s
 	}
 }
 
-// Proposal Contents
+// Proposal Msgs
 
-// WeightedProposalContent defines a common struct for proposal contents defined by
-// external modules (i.e outside gov)
-type WeightedProposalContent struct {
-	appParamsKey       string                        // key used to retrieve the value of the weight from the simulation application params
-	defaultWeight      int                           // default weight
-	contentSimulatorFn simulation.ContentSimulatorFn // content simulator function
+// WeightedProposalMsg defines a common struct for proposal msgs defined by external modules (i.e outside gov)
+type WeightedProposalMsg struct {
+	appParamsKey   string                    // key used to retrieve the value of the weight from the simulation application params
+	defaultWeight  int                       // default weight
+	msgSimulatorFn simulation.MsgSimulatorFn // msg simulator function
 }
 
-func NewWeightedProposalContent(appParamsKey string, defaultWeight int, contentSimulatorFn simulation.ContentSimulatorFn) simulation.WeightedProposalContent {
-	return &WeightedProposalContent{appParamsKey: appParamsKey, defaultWeight: defaultWeight, contentSimulatorFn: contentSimulatorFn}
+func NewWeightedProposalMsg(appParamsKey string, defaultWeight int, msgSimulatorFn simulation.MsgSimulatorFn) simulation.WeightedProposalMsg {
+	return &WeightedProposalMsg{appParamsKey: appParamsKey, defaultWeight: defaultWeight, msgSimulatorFn: msgSimulatorFn}
 }
 
-func (w WeightedProposalContent) AppParamsKey() string {
+func (w WeightedProposalMsg) AppParamsKey() string {
 	return w.appParamsKey
 }
 
-func (w WeightedProposalContent) DefaultWeight() int {
+func (w WeightedProposalMsg) DefaultWeight() int {
 	return w.defaultWeight
 }
 
-func (w WeightedProposalContent) ContentSimulatorFn() simulation.ContentSimulatorFn {
-	return w.contentSimulatorFn
+func (w WeightedProposalMsg) MsgSimulatorFn() simulation.MsgSimulatorFn {
+	return w.msgSimulatorFn
 }
 
-// Param change proposals
+// Consensus Params
 
 // randomConsensusParams returns random simulation consensus parameters, it extracts the Evidence from the Staking genesis state.
 func randomConsensusParams(r *rand.Rand, appState json.RawMessage, cdc codec.JSONCodec) *tmproto.ConsensusParams {

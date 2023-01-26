@@ -26,7 +26,6 @@ const (
 	DefaultWeightMsgUndelegate                int = 100
 	DefaultWeightMsgBeginRedelegate           int = 100
 	DefaultWeightMsgCancelUnbondingDelegation int = 100
-	DefaultWeightMsgUpdateParams              int = 100
 
 	OpWeightMsgCreateValidator           = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator             = "op_weight_msg_edit_validator"
@@ -34,7 +33,6 @@ const (
 	OpWeightMsgUndelegate                = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate           = "op_weight_msg_begin_redelegate"
 	OpWeightMsgCancelUnbondingDelegation = "op_weight_msg_cancel_unbonding_delegation"
-	OpWeightMsgUpdateParams              = "op_weight_msg_update_params"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -49,7 +47,6 @@ func WeightedOperations(
 		weightMsgUndelegate                int
 		weightMsgBeginRedelegate           int
 		weightMsgCancelUnbondingDelegation int
-		weightMsgUpdateParams              int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCreateValidator, &weightMsgCreateValidator, nil,
@@ -88,10 +85,6 @@ func WeightedOperations(
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil, func(r *rand.Rand) {
-		weightMsgUpdateParams = DefaultWeightMsgUpdateParams
-	})
-
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgCreateValidator,
@@ -116,10 +109,6 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgCancelUnbondingDelegation,
 			SimulateMsgCancelUnbondingDelegate(ak, bk, k),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateParams,
-			SimulateMsgUpdateParams(ak, k),
 		),
 	}
 }
@@ -588,13 +577,5 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k *
 		}
 
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
-	}
-}
-
-func SimulateMsgUpdateParams(ak types.AccountKeeper, sk *keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.OperationMsg{}, nil, nil
 	}
 }

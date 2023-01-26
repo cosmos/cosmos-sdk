@@ -37,24 +37,21 @@ const (
 	OpWeightMsgVote           = "op_weight_msg_vote"
 	OpWeightMsgVoteWeighted   = "op_weight_msg_weighted_vote"
 	OpWeightMsgCancelProposal = "op_weight_msg_cancel_proposal"
-	OpWeightMsgUpdateParams   = "op_weight_msg_update_params"
 
 	DefaultWeightMsgDeposit        = 100
 	DefaultWeightMsgVote           = 67
 	DefaultWeightMsgVoteWeighted   = 33
 	DefaultWeightTextProposal      = 5
 	DefaultWeightMsgCancelProposal = 5
-	DefaultWeightMsgUpdateParams   = 5
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations {
+func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wMsgs []simtypes.WeightedProposalMsg) simulation.WeightedOperations {
 	var (
 		weightMsgDeposit        int
 		weightMsgVote           int
 		weightMsgVoteWeighted   int
 		weightMsgCancelProposal int
-		weightMsgUpdateParams   int
 	)
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgDeposit, &weightMsgDeposit, nil,
@@ -81,26 +78,20 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		},
 	)
 
-	appParams.GetOrGenerate(cdc, OpWeightMsgUpdateParams, &weightMsgUpdateParams, nil,
-		func(_ *rand.Rand) {
-			weightMsgUpdateParams = DefaultWeightMsgUpdateParams
-		},
-	)
-
 	// generate the weighted operations for the proposal contents
 	var wProposalOps simulation.WeightedOperations
 
-	for _, wContent := range wContents {
-		wContent := wContent // pin variable
+	for _, wMsg := range wMsgs {
+		wMsg := wMsg // pin variable
 		var weight int
-		appParams.GetOrGenerate(cdc, wContent.AppParamsKey(), &weight, nil,
-			func(_ *rand.Rand) { weight = wContent.DefaultWeight() })
+		appParams.GetOrGenerate(cdc, wMsg.AppParamsKey(), &weight, nil,
+			func(_ *rand.Rand) { weight = wMsg.DefaultWeight() })
 
 		wProposalOps = append(
 			wProposalOps,
 			simulation.NewWeightedOperation(
 				weight,
-				SimulateMsgSubmitProposal(ak, bk, k, wContent.ContentSimulatorFn()),
+				SimulateMsgSubmitProposal(ak, bk, k, wMsg.MsgSimulatorFn()),
 			),
 		)
 	}
@@ -122,27 +113,15 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 			weightMsgCancelProposal,
 			SimulateMsgCancelProposal(ak, bk, k),
 		),
-		simulation.NewWeightedOperation(
-			weightMsgUpdateParams,
-			SimulateMsgUpdateParams(ak, k),
-		),
 	}
 
 	return append(wProposalOps, wGovOps...)
 }
 
-func SimulateMsgUpdateParams(ak types.AccountKeeper, k *keeper.Keeper) simtypes.Operation {
-	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.OperationMsg{}, nil, nil
-	}
-}
-
 // SimulateMsgSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, contentSim simtypes.ContentSimulatorFn) simtypes.Operation {
+func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, msgSim simtypes.MsgSimulatorFn) simtypes.Operation {
 	// The states are:
 	// column 1: All validators vote
 	// column 2: 90% vote
@@ -165,15 +144,12 @@ func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 	curNumVotesState := 1
 
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+		r *rand.Rand,
+		app *baseapp.BaseApp,
+		ctx sdk.Context,
+		accs []simtypes.Account,
+		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// 1) submit proposal now
-		content := contentSim(r, ctx, accs)
-		if content == nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "content is nil"), nil, nil
-		}
-
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true)
 		switch {
@@ -183,14 +159,21 @@ func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
 		}
 
-		macc := k.GetGovernanceAccount(ctx)
-		contentMsg, err := v1.NewLegacyContent(content, macc.GetAddress().String())
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
+		msgs := []sdk.Msg{}
+		proposalMsg := msgSim(r, ctx, accs)
+		if proposalMsg != nil {
+			msgs = append(msgs, proposalMsg)
 		}
 
-		msg, err := v1.NewMsgSubmitProposal([]sdk.Msg{contentMsg}, deposit, simAccount.Address.String(), "", "Title of proposal", "Short description of proposal")
-		if err != nil {
+		msg, err := v1.NewMsgSubmitProposal(
+			msgs,
+			deposit,
+			simAccount.Address.String(),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 100),
+		)
+		if err != nil || msg.ValidateBasic() != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
 		}
 

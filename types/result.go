@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
+	tm "github.com/tendermint/tendermint/proto/tendermint/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -83,24 +84,21 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 }
 
 // NewResponseResultBlock returns a BlockResponse given a ResultBlock from tendermint
-func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *BlockResponse {
+func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *tm.Block {
 	if res == nil {
 		return nil
 	}
 
-	return &BlockResponse{
-		Height:         res.Block.Height,
-		Time:           timestamp,
-		ChainId:        res.Block.ChainID,
-		LastCommit:     res.Block.LastCommitHash.String(),
-		Data:           res.Block.DataHash.String(),
-		Validators:     res.Block.ValidatorsHash.String(),
-		NextValidators: res.Block.NextValidatorsHash.String(),
-		Consensus:      res.Block.ConsensusHash.String(),
-		App:            res.Block.AppHash.String(),
-		Results:        res.Block.LastResultsHash.String(),
-		Evidence:       res.Block.EvidenceHash.String(),
-		Proposer:       res.Block.ProposerAddress.String(),
+	blk, err := res.Block.ToProto()
+	if err != nil {
+		return nil
+	}
+
+	return &tm.Block{
+		Header:     blk.Header,
+		Data:       blk.Data,
+		Evidence:   blk.Evidence,
+		LastCommit: blk.LastCommit,
 	}
 }
 
@@ -132,11 +130,6 @@ func (r TxResponse) Empty() bool {
 	return r.TxHash == "" && r.Logs == nil
 }
 
-// Empty returns true if the response is empty
-func (r BlockResponse) Empty() bool {
-	return r.Time == "" && r.Height == 0
-}
-
 func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
 	// calculate total pages in an overflow safe manner
 	totalPages := uint64(0)
@@ -158,7 +151,7 @@ func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse
 	}
 }
 
-func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*BlockResponse) *SearchBlocksResult {
+func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*tm.Block) *SearchBlocksResult {
 	// calculate total pages in an overflow safe manner
 	totalPages := int64(0)
 	if totalCount != 0 && limit != 0 {

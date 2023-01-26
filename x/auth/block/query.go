@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tm "github.com/tendermint/tendermint/proto/tendermint/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
@@ -57,7 +58,7 @@ func QueryBlocksByEvents(clientCtx client.Context, events []string, page, limit 
 }
 
 // get block by height
-func GetBlockByHeight(clientCtx client.Context, height *int64) (*sdk.BlockResponse, error) {
+func GetBlockByHeight(clientCtx client.Context, height *int64) (*tm.Block, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
@@ -80,7 +81,7 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*sdk.BlockRespon
 	return out, nil
 }
 
-func GetBlockByHash(clientCtx client.Context, hashHexString string) (*sdk.BlockResponse, error) {
+func GetBlockByHash(clientCtx client.Context, hashHexString string) (*tm.Block, error) {
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
 		return nil, err
@@ -105,14 +106,14 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*sdk.BlockR
 	return out, nil
 }
 
-func mkBlockResult(resBlock *coretypes.ResultBlock) (*sdk.BlockResponse, error) {
+func mkBlockResult(resBlock *coretypes.ResultBlock) (*tm.Block, error) {
 	return sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
-func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*sdk.BlockResponse, error) {
+func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*tm.Block, error) {
 	var err error
-	out := make([]*sdk.BlockResponse, len(resBlocks))
+	out := make([]*tm.Block, len(resBlocks))
 	for i := range resBlocks {
 		out[i], err = mkBlockResult(resBlocks[i])
 		if err != nil {

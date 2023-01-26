@@ -438,16 +438,18 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	}
 
 	// call the streaming service hook with the EndBlock messages
-	var changeSet []*storetypes.StoreKVPair
-	for _, abciListener := range app.streamingManager.AbciListeners {
+	abciListeners := app.streamingManager.AbciListeners
+	if len(abciListeners) > 0 {
 		ctx := app.deliverState.ctx
 		blockHeight := ctx.BlockHeight()
-		changeSet = append(changeSet, app.cms.PopStateCache()...)
-		if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
-			app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+		changeSet := app.cms.PopStateCache()
+		for _, abciListener := range abciListeners {
+			if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+			}
 		}
+		changeSet = nil
 	}
-	changeSet = nil
 
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
 

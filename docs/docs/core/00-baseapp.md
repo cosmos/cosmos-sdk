@@ -233,8 +233,30 @@ Developers building on top of the Cosmos SDK need not implement the ABCI themsel
 
 ### Prepare Proposal
 
+The `PrepareProposal` function is part of the new methods introduced in Application Blockchain Interface (ABCI++) in Tendermint and is an important part of the application's overall governance system. In the Cosmos SDK, it allows the application to have more fine-grained control over the transactions that are processed, and ensures that only valid transactions are committed to the blockchain.
+
+Here is how the `PrepareProposal` function can be implemented:
+
+1.  Extract the `sdk.Msg`s from the transaction.
+2.  Perform _stateful_ checks by calling `Validate()` on each of the `sdk.Msg`'s. This is done after _stateless_ checks as _stateful_ checks are more computationally expensive. If `Validate()` fails, `PrepareProposal` returns before running further checks, which saves resources.
+3.  Perform any additional checks that are specific to the application, such as checking account balances, or ensuring that certain conditions are met before a transaction is proposed.hey are processed by the consensus engine, if necessary.
+5.  Return the updated transactions to be processed by the consensus engine
+
+Note that, unlike `CheckTx()`, `PrepareProposal` process `sdk.Msg`s, so it can directly update the state. However, unlike `DeliverTx()`, it does not commit the state updates. It's important to exercise caution when using `PrepareProposal` as incorrect coding could affect the overall liveness of the network.
+
+It's important to note that `PrepareProposal` complements the `ProcessProposal` method which is executed after this method. The combination of these two methods means that it is possible to guarantee that no invalid transactions are ever committed. Furthermore, such a setup can give rise to other interesting use cases such as Oracles, threshold decryption and more.
+
+`PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+
+-   `Code (uint32)`: Response Code. `0` if successful.
+-   `Data ([]byte)`: Result bytes, if any.
+-   `Log (string):` The output of the application's logger. May be non-deterministic.
+-   `Info (string):` Additional information. May be non-deterministic.
+
+
 ### Process Proposal
-The `ProcessProposal` function is part of the new methods introduced in Application Blockchain Interface (ABCI++) in Tendermint. This function is called by the BaseApp as part of the ABCI message flow, and is executed during the `BeginBlock` phase of the consensus process. The purpose of this function is to give more control to the application for block validation, allowing it to check all transactions in a proposed block before the validator sends the prevote for the block. It allows a validator to perform application-dependent work in a proposed block, enabling features such as immediate block execution, and allows the Application to reject invalid blocks.
+
+The `ProcessProposal` function is called by the BaseApp as part of the ABCI message flow, and is executed during the `BeginBlock` phase of the consensus process. The purpose of this function is to give more control to the application for block validation, allowing it to check all transactions in a proposed block before the validator sends the prevote for the block. It allows a validator to perform application-dependent work in a proposed block, enabling features such as immediate block execution, and allows the Application to reject invalid blocks.
 
 The `ProcessProposal` function performs several key tasks, including:
 
@@ -253,10 +275,11 @@ However, developers must exercise greater caution when using these methods. Inco
 
 `ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
-* `Code (uint32)`: Response Code. `0` if successful.
-* `Data ([]byte)`: Result bytes, if any.
-* `Log (string):` The output of the application's logger. May be non-deterministic.
-* `Info (string):` Additional information. May be non-deterministic.
+-   `Code (uint32)`: Response Code. `0` if successful.
+-   `Data ([]byte)`: Result bytes, if any.
+-   `Log (string):` The output of the application's logger. May be non-deterministic.
+-   `Info (string):` Additional information. May be non-deterministic.
+
 
 ### CheckTx
 

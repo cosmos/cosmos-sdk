@@ -9,12 +9,16 @@ import (
 
 func TestReset(t *testing.T) {
 	t.Skip("TODO: uncomment this after implementing")
-	gocuke.NewRunner(t, &resetSuite{}).Path("../features/msg_authorize.feature").Run()
+	gocuke.NewRunner(t, &resetSuite{}).Path("../features/msg_reset.feature").Run()
 }
 
 type resetSuite struct {
-	t   gocuke.TestingT
-	err error
+	*baseSuite
+}
+
+func (s *resetSuite) Before(t *testing.T) {
+	s.baseSuite = setupBase(t)
+
 }
 
 func (s *resetSuite) HasPermission(a string, b string) {

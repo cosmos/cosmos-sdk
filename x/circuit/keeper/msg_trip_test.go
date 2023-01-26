@@ -9,12 +9,16 @@ import (
 
 func TestTrip(t *testing.T) {
 	t.Skip("TODO: uncomment this after implementing")
-	gocuke.NewRunner(t, &tripSuite{}).Path("../features/msg_authorize.feature").Run()
+	gocuke.NewRunner(t, &tripSuite{}).Path("../features/msg_trip.feature").Run()
 }
 
 type tripSuite struct {
-	t   gocuke.TestingT
-	err error
+	*baseSuite
+}
+
+func (s *tripSuite) Before(t *testing.T) {
+	s.baseSuite = setupBase(t)
+
 }
 
 func (s *tripSuite) HasPermission(a string, b string) {

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tm "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type resultTestSuite struct {
@@ -142,14 +143,14 @@ txhash: "74657374"
 }
 
 func (s *resultTestSuite) TestNewSearchBlocksResult() {
-	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*sdk.BlockResponse{})
+	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*tm.Block{})
 	s.Require().Equal(&sdk.SearchBlocksResult{
 		TotalCount: 150,
 		Count:      20,
 		PageNumber: 2,
 		PageTotal:  8,
 		Limit:      20,
-		Blocks:     []*sdk.BlockResponse{},
+		Blocks:     []*tm.Block{},
 	}, got)
 }
 
@@ -165,9 +166,11 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 		},
 	}}
 
-	want := &sdk.BlockResponse{
-		Height: 10,
-		Time:   timestampStr,
+	blk, err := resultBlock.Block.ToProto()
+	s.Require().NoError(err)
+
+	want := &tm.Block{
+		Header: blk.Header,
 	}
 
 	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))

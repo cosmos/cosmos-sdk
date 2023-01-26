@@ -568,6 +568,12 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 	return app.checkState
 }
 
+// NewProcessProposalContext returns a context with a branched version of the
+// DeliverTx state that is safe to query during ProcessProposal.
+func (app *BaseApp) NewProcessProposalQueryContext() (sdk.Context, error) {
+	return app.createQueryContext(app.cms.LatestVersion(), false)
+}
+
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
 	ctx := app.getState(mode).ctx.

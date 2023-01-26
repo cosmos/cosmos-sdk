@@ -33,9 +33,11 @@ func TestBasicManager(t *testing.T) {
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	clientCtx := client.Context{}
-	clientCtx = clientCtx.WithLegacyAmino(legacyAmino)
-	wantDefaultGenesis := map[string]json.RawMessage{"mockAppModuleBasic1": json.RawMessage(``)}
+	wantDefaultGenesis := map[string]json.RawMessage{
+		"mockAppModuleBasic1": json.RawMessage(``),
+		"module2": json.RawMessage(`{
+  "someField": "asd"
+}`)}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 
@@ -48,7 +50,9 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
-	mm := module.NewBasicManager(mockAppModuleBasic1)
+	mockCoreAppModule2 := MockCoreAppModule{}
+
+	mm := module.NewBasicManager(mockAppModuleBasic1, module.UseCoreAPIModule("module2", mockCoreAppModule2))
 	require.Equal(t, mm["mockAppModuleBasic1"], mockAppModuleBasic1)
 
 	mm.RegisterLegacyAminoCodec(legacyAmino)

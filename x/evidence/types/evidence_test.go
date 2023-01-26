@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/x/evidence/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestEquivocation_Valid(t *testing.T) {
@@ -27,7 +27,6 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.GetTime(), e.Time)
 	require.Equal(t, e.GetConsensusAddress().String(), e.ConsensusAddress)
 	require.Equal(t, e.GetHeight(), e.Height)
-	require.Equal(t, e.Type(), types.TypeEquivocation)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
 	require.Equal(t, e.Hash().String(), "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76")
 	require.Equal(t, "height:100 time:<seconds:1136214245 > power:1000000 consensus_address:\"cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\" ", e.String())
@@ -38,7 +37,6 @@ func TestEquivocation_Valid(t *testing.T) {
 	require.Equal(t, e.Time, e.GetTime())
 	require.Equal(t, e.ConsensusAddress, e.GetConsensusAddress().String())
 	require.Equal(t, e.Height, e.GetHeight())
-	require.Equal(t, types.TypeEquivocation, e.Type())
 	require.Equal(t, types.RouteEquivocation, e.Route())
 	require.Equal(t, "1E10F9267BEA3A9A4AB5302C2C510CC1AFD7C54E232DA5B2E3360DFAFACF7A76", e.Hash().String())
 	require.Equal(t, "height:100 time:<seconds:1136214245 > power:1000000 consensus_address:\"cosmosvalcons1vehk7h6lta047h6lta047h6lta047h6l8m4r53\" ", e.String())

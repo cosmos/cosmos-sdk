@@ -5,14 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
 	"github.com/stretchr/testify/require"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
@@ -160,16 +160,12 @@ type TestEvidence struct{}
 
 var _ exported.Evidence = &TestEvidence{}
 
-func (*TestEvidence) Route() string {
-	return "test-route"
-}
-
-func (*TestEvidence) Type() string {
-	return "test-type"
-}
-
 func (*TestEvidence) String() string {
 	return "test-string"
+}
+
+func (*TestEvidence) Route() string {
+	return "test-route"
 }
 
 func (*TestEvidence) ProtoMessage() {}

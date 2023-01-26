@@ -1,17 +1,11 @@
 package tx
 
 import (
-	"context"
 	"fmt"
 
-	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
-
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/x/tx/textual"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
 func init() {
@@ -43,7 +35,7 @@ type TxInputs struct {
 	BankKeeper authtypes.BankKeeper `optional:"true"`
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
 	TxBankKeeper   BankKeeper
-	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
+	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 }
 
 //nolint:revive
@@ -55,7 +47,7 @@ type TxOutputs struct {
 }
 
 func ProvideModule(in TxInputs) TxOutputs {
-	textual := newTextualWithBankKeeper(in.TxBankKeeper)
+	textual := NewTextualWithBankKeeper(in.TxBankKeeper)
 	txConfig := tx.NewTxConfigWithTextual(in.ProtoCodecMarshaler, tx.DefaultSignModes, textual)
 
 	baseAppOption := func(app *baseapp.BaseApp) {
@@ -119,50 +111,4 @@ func newAnteHandler(txConfig client.TxConfig, in TxInputs) (sdk.AnteHandler, err
 	}
 
 	return anteHandler, nil
-}
-
-// newTextualWithBankKeeper creates a new Textual struct using the given
-// BankKeeper to retrieve coin metadata.
-func newTextualWithBankKeeper(bk BankKeeper) textual.Textual {
-	textual := textual.NewTextual(func(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
-		res, err := bk.DenomMetadata(ctx, &types.QueryDenomMetadataRequest{Denom: denom})
-		if err != nil {
-			status, ok := grpcstatus.FromError(err)
-			if !ok {
-				return nil, err
-			}
-
-			// This means we didn't find any metadata for this denom. Returning
-			// empty metadata.
-			if status.Code() == codes.NotFound {
-				return nil, nil
-			}
-
-			return nil, err
-		}
-
-		m := &bankv1beta1.Metadata{
-			Base:    res.Metadata.Base,
-			Display: res.Metadata.Display,
-			// fields below are not strictly needed by Textual
-			// but added here for completeness.
-			Description: res.Metadata.Description,
-			Name:        res.Metadata.Name,
-			Symbol:      res.Metadata.Symbol,
-			Uri:         res.Metadata.URI,
-			UriHash:     res.Metadata.URIHash,
-		}
-		m.DenomUnits = make([]*bankv1beta1.DenomUnit, len(res.Metadata.DenomUnits))
-		for i, d := range res.Metadata.DenomUnits {
-			m.DenomUnits[i] = &bankv1beta1.DenomUnit{
-				Denom:    d.Denom,
-				Exponent: d.Exponent,
-				Aliases:  d.Aliases,
-			}
-		}
-
-		return m, nil
-	})
-
-	return textual
 }

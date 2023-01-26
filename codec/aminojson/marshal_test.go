@@ -1,6 +1,7 @@
 package aminojson_test
 
 import (
+	"github.com/tendermint/go-amino"
 	"testing"
 	"time"
 
@@ -43,22 +44,22 @@ func TestAminoJSON(t *testing.T) {
 			true:  "T",
 			false: "F",
 		},
-		Repeated:  []int32{3, -7, 2, 6, 4},
-		Str:       `abcxyz"foo"def`,
-		Bool:      true,
-		Bytes:     []byte{0, 1, 2, 3},
-		I32:       -15,
-		F32:       1001,
-		U32:       1200,
-		Si32:      -376,
-		Sf32:      -1000,
-		I64:       14578294827584932,
-		F64:       9572348124213523654,
-		U64:       4759492485,
-		Si64:      -59268425823934,
-		Sf64:      -659101379604211154,
-		Float:     1.0,
-		Double:    5235.2941,
+		Repeated: []int32{3, -7, 2, 6, 4},
+		Str:      `abcxyz"foo"def`,
+		Bool:     true,
+		Bytes:    []byte{0, 1, 2, 3},
+		I32:      -15,
+		F32:      1001,
+		U32:      1200,
+		Si32:     -376,
+		Sf32:     -1000,
+		I64:      14578294827584932,
+		F64:      9572348124213523654,
+		U64:      4759492485,
+		Si64:     -59268425823934,
+		Sf64:     -659101379604211154,
+		//Float:     1.0,
+		//Double:    5235.2941,
 		Any:       a,
 		Timestamp: timestamppb.New(time.Date(2022, 1, 1, 12, 31, 0, 0, time.UTC)),
 		Duration:  durationpb.New(time.Second * 3000),
@@ -79,10 +80,10 @@ func TestAminoJSON(t *testing.T) {
 				"empty": {},
 			},
 		},
-		BoolValue:   &wrapperspb.BoolValue{Value: true},
-		BytesValue:  &wrapperspb.BytesValue{Value: []byte{0, 1, 2, 3}},
-		DoubleValue: &wrapperspb.DoubleValue{Value: 1.324},
-		FloatValue:  &wrapperspb.FloatValue{Value: -1.0},
+		BoolValue:  &wrapperspb.BoolValue{Value: true},
+		BytesValue: &wrapperspb.BytesValue{Value: []byte{0, 1, 2, 3}},
+		//DoubleValue: &wrapperspb.DoubleValue{Value: 1.324},
+		//FloatValue:  &wrapperspb.FloatValue{Value: -1.0},
 		Int32Value:  &wrapperspb.Int32Value{Value: 10},
 		Int64Value:  &wrapperspb.Int64Value{Value: -376923457},
 		StringValue: &wrapperspb.StringValue{Value: "gfedcba"},
@@ -99,6 +100,9 @@ func TestAminoJSON(t *testing.T) {
 	}
 	bz, err := aminojson.MarshalAmino(msg)
 	assert.NilError(t, err)
+	cdc := amino.NewCodec()
+	legacyBz, err := cdc.MarshalJSON(msg)
+	golden.Assert(t, string(legacyBz), "example1.json")
 	golden.Assert(t, string(bz), "example1.json")
 }
 

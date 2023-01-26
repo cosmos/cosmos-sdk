@@ -24,6 +24,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 	leftAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 512))
 	oneAtom := sdk.NewCoins(sdk.NewInt64Coin("atom", 1))
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 1))
+	emptyCoins := sdk.Coins{}
 
 	now := ctx.BlockTime()
 	oneHour := now.Add(1 * time.Hour)
@@ -60,11 +61,12 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 				PeriodSpendLimit: smallAtom,
 				PeriodReset:      now.Add(30 * time.Minute),
 			},
-			blockTime:   now,
-			valid:       true,
-			accept:      true,
-			remove:      false,
-			periodReset: now.Add(30 * time.Minute),
+			blockTime:     now,
+			valid:         true,
+			accept:        true,
+			remove:        false,
+			remainsPeriod: emptyCoins,
+			periodReset:   now.Add(30 * time.Minute),
 		},
 		"mismatched currencies": {
 			allow: feegrant.PeriodicAllowance{
@@ -93,7 +95,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			blockTime:     now,
 			accept:        true,
 			remove:        false,
-			remainsPeriod: nil,
+			remainsPeriod: emptyCoins,
 			remains:       leftAtom,
 			periodReset:   now.Add(1 * time.Hour),
 		},
@@ -112,7 +114,7 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 			blockTime:     now.Add(1 * time.Hour),
 			accept:        true,
 			remove:        false,
-			remainsPeriod: nil,
+			remainsPeriod: emptyCoins,
 			remains:       smallAtom,
 			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
@@ -141,12 +143,13 @@ func TestPeriodicFeeValidAllow(t *testing.T) {
 				PeriodReset:      now,
 				PeriodSpendLimit: atom,
 			},
-			valid:       true,
-			fee:         atom,
-			blockTime:   oneHour,
-			accept:      true,
-			remove:      false,
-			periodReset: oneHour.Add(tenMinutes), // one step from last reset, not now
+			valid:         true,
+			fee:           atom,
+			blockTime:     oneHour,
+			accept:        true,
+			remove:        false,
+			remainsPeriod: emptyCoins,
+			periodReset:   oneHour.Add(tenMinutes), // one step from last reset, not now
 		},
 		"expired": {
 			allow: feegrant.PeriodicAllowance{

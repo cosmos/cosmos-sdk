@@ -140,17 +140,17 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function
 type SimulationState struct {
-	AppParams         simulation.AppParams
-	Cdc               codec.JSONCodec                      // application codec
-	Rand              *rand.Rand                           // random number
-	GenState          map[string]json.RawMessage           // genesis state
-	Accounts          []simulation.Account                 // simulation accounts
-	InitialStake      sdkmath.Int                          // initial coins per account
-	NumBonded         int64                                // number of initially bonded accounts
-	BondDenom         string                               // denom to be used as default
-	GenTimestamp      time.Time                            // genesis timestamp
-	UnbondTime        time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
-	LegacyParamChange []simulation.LegacyParamChange       // simulated parameter changes from modules
-	ProposalContents  []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key //nolint:staticcheck
-	ProposalMsg       []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
+	AppParams             simulation.AppParams
+	Cdc                   codec.JSONCodec                      // application codec
+	Rand                  *rand.Rand                           // random number
+	GenState              map[string]json.RawMessage           // genesis state
+	Accounts              []simulation.Account                 // simulation accounts
+	InitialStake          sdkmath.Int                          // initial coins per account
+	NumBonded             int64                                // number of initially bonded accounts
+	BondDenom             string                               // denom to be used as default
+	GenTimestamp          time.Time                            // genesis timestamp
+	UnbondTime            time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
+	LegacyParamChange     []simulation.LegacyParamChange       // simulated parameter changes from modules
+	LegacyProposalConents []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key //nolint:staticcheck
+	ProposalMsg           []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
 }

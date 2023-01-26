@@ -1,4 +1,4 @@
-package amino
+package aminojson
 
 import "github.com/cosmos/gogoproto/proto"
 

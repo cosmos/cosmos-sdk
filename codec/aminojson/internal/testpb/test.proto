@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package testpb;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
+
+message ABitOfEverything {
+  // message
+  // Generates JSON objects. Message field names are mapped to lowerCamelCase and become JSON object keys. If the json_name field option is specified, the specified value will be used as the key instead. Parsers accept both the lowerCamelCase name (or the one specified by the json_name option) and the original proto field name. null is an accepted value for all field types and treated as the default value of the corresponding field type.
+  NestedMessage message = 1;
+
+  // enum
+  // The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values.
+  AnEnum enum = 2;
+
+  // map
+  // All keys are converted to strings.
+  map<string, string> str_map = 3;
+  map<int32, string>  int32_map = 4;
+  map<bool, string> bool_map = 5;
+
+  // repeated
+  repeated int32 repeated = 6;
+
+  string str = 7;
+
+  bool bool = 8;
+
+  bytes bytes = 9;
+
+  int32 i32 = 10;
+  fixed32 f32 = 11;
+  uint32 u32 = 12;
+  sint32 si32 = 13;
+  sfixed32 sf32 = 14;
+
+  int64 i64 = 15;
+  fixed64 f64 = 16;
+  uint64 u64 = 17;
+  sint64 si64 = 18;
+  sfixed64 sf64 = 19;
+
+  float float = 20;
+  double double = 21;
+
+  google.protobuf.Any any = 22;
+
+  google.protobuf.Timestamp timestamp = 23;
+
+  google.protobuf.Duration duration = 24;
+
+  google.protobuf.Struct struct = 25;
+
+  google.protobuf.BoolValue bool_value = 26;
+  google.protobuf.BytesValue bytes_value = 27;
+  google.protobuf.DoubleValue double_value = 28;
+  google.protobuf.FloatValue float_value = 29;
+  google.protobuf.Int32Value int32_value = 30;
+  google.protobuf.Int64Value int64_value = 31;
+  google.protobuf.StringValue string_value = 32;
+  google.protobuf.UInt32Value uint32_value = 33;
+  google.protobuf.UInt64Value uint64_value = 34;
+
+  google.protobuf.FieldMask field_mask = 35;
+
+  google.protobuf.ListValue list_value = 36;
+
+  google.protobuf.Value value = 37;
+
+  google.protobuf.NullValue null_value = 38;
+
+  google.protobuf.Empty empty = 39;
+}
+
+message NestedMessage {
+  string foo = 1;
+  int32 bar = 2;
+}
+
+enum AnEnum {
+  UNDEFINED = 0;
+  ONE = 1;
+  TWO = 2;
+}

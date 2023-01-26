@@ -30,11 +30,11 @@ func (s *tripSuite) AttemptsToTripCircuit(a string, b string, c gocuke.DocString
 }
 
 func (s *tripSuite) ExpectSuccess() {
-	assert.NoError(s.t, s.err)
+	assert.NilError(s.t, s.err)
 }
 
 func (s *tripSuite) ExpectAnError(a string) {
-	assert.EqualError(s.t, s.err, a)
+	assert.Error(s.t, s.err, a)
 }
 
 func (s *tripSuite) ExpectThatHasNoPermissions(a string) {

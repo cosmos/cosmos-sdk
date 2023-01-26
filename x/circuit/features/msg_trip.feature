@@ -1,9 +1,9 @@
 Feature: MsgTripCircuitBreaker
 	Circuit breaker can disable message execution:
-	- when the caller trips the circuitbreaker for a message or messages
-	- when the permissions are valid
+	- when the caller trips the circuitbreaker for a message(s)
+	- when the caller has the correct permissions
 
-  Rule: a user must have permission to trip the circuit breaker for a message or messages
+  Rule: a user must have permission to trip the circuit breaker for a message(s)
 
     Example: user is a super admin
       Given "acct1" has permission "LEVEL_SUPER_ADMIN"

@@ -30,11 +30,11 @@ func (s *resetSuite) AttemptsToResetCircuit(a string, b string, c gocuke.DocStri
 }
 
 func (s *resetSuite) ExpectSuccess() {
-	assert.NoError(s.t, s.err)
+	assert.NilError(s.t, s.err)
 }
 
 func (s *resetSuite) ExpectAnError(a string) {
-	assert.EqualError(s.t, s.err, a)
+	assert.Error(s.t, s.err, a)
 }
 
 func (s *resetSuite) ExpectThatHasNoPermissions(a string) {

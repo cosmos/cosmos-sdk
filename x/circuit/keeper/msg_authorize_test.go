@@ -13,8 +13,12 @@ func TestAuthorize(t *testing.T) {
 }
 
 type authorizeSuite struct {
-	t   gocuke.TestingT
-	err error
+	*baseSuite
+}
+
+func (s *authorizeSuite) Before(t *testing.T) {
+	s.baseSuite = setupBase(t)
+
 }
 
 func (s *authorizeSuite) HasPermission(a string, b string) {
@@ -30,11 +34,11 @@ func (s *authorizeSuite) AttemptsToGrantThePermissions(a string, b string, c goc
 }
 
 func (s *authorizeSuite) ExpectSuccess() {
-	assert.NoError(s.t, s.err)
+	assert.NilError(s.t, s.err)
 }
 
 func (s *authorizeSuite) ExpectAnError(a string) {
-	assert.Error(s.t, s.err)
+	assert.Error(s.t, s.err, a)
 }
 
 func (s *authorizeSuite) ExpectThatHasNoPermissions(a string) {

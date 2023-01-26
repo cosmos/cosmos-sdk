@@ -95,6 +95,7 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		)
 	}
 
+	// generate the weighted operations for the proposal contents
 	var wLegacyProposalOps simulation.WeightedOperations
 	for _, wContent := range wContents {
 		wContent := wContent // pin variable

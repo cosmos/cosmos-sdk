@@ -8,17 +8,17 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/appmodule"
-
-	"github.com/cosmos/cosmos-sdk/codec/types"
-
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/tests/mocks"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -221,7 +221,7 @@ func TestManager_InitGenesis(t *testing.T) {
 	require.NotNil(t, mm)
 	require.Equal(t, 3, len(mm.Modules))
 
-	ctx := sdk.Context{}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	genesisData := map[string]json.RawMessage{"module1": json.RawMessage(`{"key": "value"}`)}
@@ -238,8 +238,16 @@ func TestManager_InitGenesis(t *testing.T) {
 }`),
 	}
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	require.Panics(t, func() {
+		mm.InitGenesis(ctx, cdc, genesisData)
+	})
+
+	// happy path, InitGenesis gets called for all modules
+	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return(nil)
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	mockAppModule3.EXPECT().InitGenesis(gomock.Any(), gomock.Any()).Times(1).Return(nil)
+	mm.InitGenesis(ctx, cdc, genesisData)
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
@@ -248,21 +256,33 @@ func TestManager_ExportGenesis(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
+	mockAppModule4 := MockCoreAppModule{}
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(
+		mockAppModule1,
+		mockAppModule2,
+		module.UseCoreAPIModule("module3", mockAppModule3),
+		module.UseCoreAPIModule("module4", mockAppModule4),
+	)
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 4, len(mm.Modules))
 
-	ctx := sdk.Context{}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 	mockAppModule1.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key1": "value1"}`))
 	mockAppModule2.EXPECT().ExportGenesis(gomock.Eq(ctx), gomock.Eq(cdc)).Times(1).Return(json.RawMessage(`{"key2": "value2"}`))
+	mockAppModule3.EXPECT().ExportGenesis(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 
 	want := map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key1": "value1"}`),
 		"module2": json.RawMessage(`{"key2": "value2"}`),
+		"module3": json.RawMessage(`null`),
+		"module4": json.RawMessage(`{
+  "someField": "someValue"
+}`),
 	}
 	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
 }
@@ -347,7 +367,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"asd"`))
+	wrt.Write([]byte(`"someValue"`))
 	return wrt.Close()
 }
 

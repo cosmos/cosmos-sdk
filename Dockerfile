@@ -19,9 +19,6 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 
 # optimization: if go.sum didn't change, docker will use cached image
 COPY go.mod go.sum ./
-COPY collections/go.mod collections/go.sum ./collections/
-COPY store/go.mod store/go.sum ./store/
-
 RUN go mod download
 
 # Add source files

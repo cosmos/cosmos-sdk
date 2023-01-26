@@ -44,7 +44,7 @@ func QueryTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy 
 
 	resTxs, err := node.TxSearch(context.Background(), query, false, &page, &limit, orderBy)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to search for txs: %w", err)
 	}
 
 	resBlocks, err := getBlocksForTxResults(clientCtx, resTxs.Txs)

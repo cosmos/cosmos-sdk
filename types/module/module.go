@@ -286,6 +286,9 @@ func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 		modulesStr = append(modulesStr, name)
 	}
 
+	// Sort the modules by name. Given that we are using a map above we can't guarantee the order.
+	sort.Strings(modulesStr)
+
 	return &Manager{
 		Modules:            simpleModuleMap,
 		OrderInitGenesis:   modulesStr,

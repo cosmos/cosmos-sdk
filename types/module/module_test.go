@@ -35,9 +35,11 @@ func TestBasicManager(t *testing.T) {
 
 	wantDefaultGenesis := map[string]json.RawMessage{
 		"mockAppModuleBasic1": json.RawMessage(``),
-		"module2": json.RawMessage(`{
+		"module2":             json.RawMessage(`null`),
+		"module3": json.RawMessage(`{
   "someField": "someValue"
-}`)}
+}`),
+	}
 
 	mockAppModuleBasic1 := mocks.NewMockAppModuleBasic(mockCtrl)
 
@@ -50,8 +52,11 @@ func TestBasicManager(t *testing.T) {
 	mockAppModuleBasic1.EXPECT().GetTxCmd().Times(1).Return(nil)
 	mockAppModuleBasic1.EXPECT().GetQueryCmd().Times(1).Return(nil)
 
-	mockCoreAppModule2 := MockCoreAppModule{}
-	mockCoreAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
+	mockCoreAppModule2 := mocks.NewMockCoreAppModule(mockCtrl)
+	mockCoreAppModule2.EXPECT().DefaultGenesis(gomock.Any()).Return(nil)
+	mockCoreAppModule2.EXPECT().ValidateGenesis(gomock.Any()).Return(nil)
+
+	mockCoreAppModule3 := MockCoreAppModule{}
 
 	mm := module.NewBasicManager(
 		mockAppModuleBasic1,
@@ -102,28 +107,29 @@ func TestManagerOrderSetters(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderInitGenesis)
-	mm.SetOrderInitGenesis("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderInitGenesis)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderInitGenesis)
+	mm.SetOrderInitGenesis("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderInitGenesis)
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderExportGenesis)
-	mm.SetOrderExportGenesis("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderExportGenesis)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderExportGenesis)
+	mm.SetOrderExportGenesis("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderExportGenesis)
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderBeginBlockers)
-	mm.SetOrderBeginBlockers("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderBeginBlockers)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderBeginBlockers)
+	mm.SetOrderBeginBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderBeginBlockers)
 
-	require.Equal(t, []string{"module1", "module2"}, mm.OrderEndBlockers)
-	mm.SetOrderEndBlockers("module2", "module1")
-	require.Equal(t, []string{"module2", "module1"}, mm.OrderEndBlockers)
+	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
+	mm.SetOrderEndBlockers("module2", "module1", "module3")
+	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
 }
 
 func TestManager_RegisterInvariants(t *testing.T) {
@@ -132,11 +138,12 @@ func TestManager_RegisterInvariants(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	// test RegisterInvariants
 	mockInvariantRegistry := mocks.NewMockInvariantRegistry(mockCtrl)
@@ -153,9 +160,10 @@ func TestManager_RegisterRoutes(t *testing.T) {
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	router := mocks.NewMockRouter(mockCtrl)
 	noopHandler := sdk.Handler(func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) { return nil, nil })
@@ -182,11 +190,12 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	msgRouter := mocks.NewMockServer(mockCtrl)
 	queryRouter := mocks.NewMockServer(mockCtrl)
@@ -205,11 +214,12 @@ func TestManager_InitGenesis(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(mockAppModule1, mockAppModule2, module.UseCoreAPIModule("module3", mockAppModule3))
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	ctx := sdk.Context{}
 	interfaceRegistry := types.NewInterfaceRegistry()
@@ -223,9 +233,12 @@ func TestManager_InitGenesis(t *testing.T) {
 	genesisData = map[string]json.RawMessage{
 		"module1": json.RawMessage(`{"key": "value"}`),
 		"module2": json.RawMessage(`{"key": "value"}`),
+		"module3": json.RawMessage(`{
+  "someField": "someValue"
+}`),
 	}
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
+	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return(nil)
 	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
 }
 

@@ -38,6 +38,5 @@ func TestHomeFlagRegistration(t *testing.T) {
 
 	result, err := rootCmd.Flags().GetString(flags.FlagHome)
 	require.NoError(t, err)
-	fmt.Println(result, homeDir)
 	require.Equal(t, result, homeDir)
 }

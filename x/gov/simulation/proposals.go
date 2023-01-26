@@ -30,7 +30,7 @@ func SimulateTextProposal(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk
 }
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents() []simtypes.WeightedProposalContent {
+func ProposalContents() []simtypes.WeightedProposalContent { //nolint:staticcheck
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
 			OpWeightMsgDeposit,
@@ -41,7 +41,7 @@ func ProposalContents() []simtypes.WeightedProposalContent {
 }
 
 // SimulateTextProposalContent returns a random text proposal content.
-func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
+func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content { //nolint:staticcheck
 	return v1beta1.NewTextProposal(
 		simtypes.RandStringOfLength(r, 140),
 		simtypes.RandStringOfLength(r, 5000),

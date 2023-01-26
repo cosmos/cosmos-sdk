@@ -42,5 +42,5 @@ func TestProposalMsgs(t *testing.T) {
 	assert.DeepEqual(t, sdk.NewDecWithPrec(7, 2), msgUpdateParams.Params.MinSignedPerWindow)
 	assert.DeepEqual(t, sdk.NewDecWithPrec(60, 2), msgUpdateParams.Params.SlashFractionDoubleSign)
 	assert.DeepEqual(t, sdk.NewDecWithPrec(89, 2), msgUpdateParams.Params.SlashFractionDowntime)
-	assert.Equal(t, time.Duration(3313479009*time.Second), msgUpdateParams.Params.DowntimeJailDuration)
+	assert.Equal(t, 3313479009*time.Second, msgUpdateParams.Params.DowntimeJailDuration)
 }

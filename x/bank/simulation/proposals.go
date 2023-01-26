@@ -36,11 +36,11 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) 
 	params := types.DefaultParams()
 	params.DefaultSendEnabled = r.Intn(2) == 0
 	if r.Intn(2) == 0 {
-		params.SendEnabled = nil
+		params.SendEnabled = nil //nolint:staticcheck
 	} else {
-		params.SendEnabled = make([]*types.SendEnabled, 10)
+		params.SendEnabled = make([]*types.SendEnabled, 10) //nolint:staticcheck
 		for i := 0; i < r.Intn(10); i++ {
-			params.SendEnabled[i] = types.NewSendEnabled(
+			params.SendEnabled[i] = types.NewSendEnabled( //nolint:staticcheck
 				simtypes.RandStringOfLength(r, 10),
 				r.Intn(2) == 0,
 			)

@@ -1,12 +1,10 @@
 package types
 
-import math "math"
-
 const (
-	// 32K
-	MaxKeyLength = math.MaxUint16
-	// 4G
-	MaxValueLength = math.MaxUint32
+	// 128K - 1
+	MaxKeyLength = 1<<17 - 1
+	// 2G - 1
+	MaxValueLength = 1<<31 - 1
 )
 
 // AssertValidKey checks if the key is valid(key is not nil, not empty and within length limit)

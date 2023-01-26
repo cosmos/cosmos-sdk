@@ -12,12 +12,10 @@ import (
 )
 
 // Simulation operation weights constants
-//
-//nolint:gosec // these are not hardcoded credentials.
 const (
 	DefaultWeightMsgUpdateParams int = 100
 
-	OpWeightMsgUpdateParams = "op_weight_msg_update_params"
+	OpWeightMsgUpdateParams = "op_weight_msg_update_params" //nolint:gosec
 )
 
 // ProposalMsgs defines the module weighted proposals' contents

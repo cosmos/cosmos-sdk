@@ -59,7 +59,7 @@ for a pre-commit, Tendermint will:
 
 * Reject the message if it doesn't contain a signed vote AND a signed vote extension
 * Reject the message if the vote's signature OR the vote extension's signature fails to verify
-* Reject the message if `VerifyVoteExtension` was rejected
+* Reject the message if `VerifyVoteExtension` was rejected by the app
 
 Otherwise, Tendermint will accept the pre-commit message.
 

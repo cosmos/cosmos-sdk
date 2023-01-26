@@ -424,7 +424,7 @@ func (coins Coins) SafeMulInt(x Int) (Coins, bool) {
 }
 
 // QuoInt performs the scalar division of coins with a `divisor`
-// All coins are divided by x and trucated.
+// All coins are divided by x and truncated.
 // e.g.
 // {2A, 30B} / 2 = {1A, 15B}
 // {2A} / 2 = {1A}

@@ -17,14 +17,23 @@ type AppModuleSimulation interface {
 	// randomized genesis states
 	GenerateGenesisState(input *SimulationState)
 
-	// msg functions used to simulate governance proposals
-	ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
-
 	// register a func to decode the each module's defined types from their corresponding store key
 	RegisterStoreDecoder(simulation.StoreDecoderRegistry)
 
 	// simulation operations (i.e msgs) with their respective weight
 	WeightedOperations(simState SimulationState) []simulation.WeightedOperation
+}
+
+// HasProposalMsgs defines the messages that can be used to simulate governance (v1) proposals
+type HasProposalMsgs interface {
+	// msg functions used to simulate governance proposals
+	ProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg
+}
+
+// HasProposalContents defines the contents that can be used to simulate legacy governance (v1beta1) proposals
+type HasProposalContents interface {
+	// content functions used to simulate governance proposals
+	ProposalContents(simState SimulationState) []simulation.WeightedProposalContent
 }
 
 // SimulationManager defines a simulation manager that provides the high level utility
@@ -76,12 +85,28 @@ func NewSimulationManagerFromAppModules(modules map[string]interface{}, override
 	return NewSimulationManager(simModules...)
 }
 
+// Deprecated: Use GetProposalMsgs instead.
+// GetProposalContents returns each module's proposal content generator function
+// with their default operation weight and key.
+func (sm *SimulationManager) GetProposalContents(simState SimulationState) []simulation.WeightedProposalContent {
+	wContents := make([]simulation.WeightedProposalContent, 0, len(sm.Modules))
+	for _, module := range sm.Modules {
+		if module, ok := module.(HasProposalContents); ok {
+			wContents = append(wContents, module.ProposalContents(simState)...)
+		}
+	}
+
+	return wContents
+}
+
 // GetProposalMsgs returns each module's proposal msg generator function
 // with their default operation weight and key.
 func (sm *SimulationManager) GetProposalMsgs(simState SimulationState) []simulation.WeightedProposalMsg {
 	wContents := make([]simulation.WeightedProposalMsg, 0, len(sm.Modules))
 	for _, module := range sm.Modules {
-		wContents = append(wContents, module.ProposalMsgs(simState)...)
+		if module, ok := module.(HasProposalMsgs); ok {
+			wContents = append(wContents, module.ProposalMsgs(simState)...)
+		}
 	}
 
 	return wContents
@@ -116,15 +141,16 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // GenesisState generator function
 type SimulationState struct {
 	AppParams         simulation.AppParams
-	Cdc               codec.JSONCodec                  // application codec
-	Rand              *rand.Rand                       // random number
-	GenState          map[string]json.RawMessage       // genesis state
-	Accounts          []simulation.Account             // simulation accounts
-	InitialStake      sdkmath.Int                      // initial coins per account
-	NumBonded         int64                            // number of initially bonded accounts
-	BondDenom         string                           // denom to be used as default
-	GenTimestamp      time.Time                        // genesis timestamp
-	UnbondTime        time.Duration                    // staking unbond time stored to use it as the slashing maximum evidence duration
-	LegacyParamChange []simulation.LegacyParamChange   // simulated parameter changes from modules
-	ProposalMsg       []simulation.WeightedProposalMsg // proposal msg generator functions with their default weight and app sim key
+	Cdc               codec.JSONCodec                      // application codec
+	Rand              *rand.Rand                           // random number
+	GenState          map[string]json.RawMessage           // genesis state
+	Accounts          []simulation.Account                 // simulation accounts
+	InitialStake      sdkmath.Int                          // initial coins per account
+	NumBonded         int64                                // number of initially bonded accounts
+	BondDenom         string                               // denom to be used as default
+	GenTimestamp      time.Time                            // genesis timestamp
+	UnbondTime        time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
+	LegacyParamChange []simulation.LegacyParamChange       // simulated parameter changes from modules
+	ProposalContents  []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key //nolint:staticcheck
+	ProposalMsg       []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
 }

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -26,4 +27,23 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 // A text proposal is a proposal that contains no msgs.
 func SimulateTextProposal(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 	return nil
+}
+
+// ProposalContents defines the module weighted proposals' contents
+func ProposalContents() []simtypes.WeightedProposalContent {
+	return []simtypes.WeightedProposalContent{
+		simulation.NewWeightedProposalContent(
+			OpWeightMsgDeposit,
+			DefaultWeightTextProposal,
+			SimulateLegacyTextProposalContent,
+		),
+	}
+}
+
+// SimulateTextProposalContent returns a random text proposal content.
+func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
+	return v1beta1.NewTextProposal(
+		simtypes.RandStringOfLength(r, 140),
+		simtypes.RandStringOfLength(r, 5000),
+	)
 }

@@ -114,11 +114,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	proposal.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// ProposalMsgs doesn't return any msg functions for governance proposals.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
-}
-
 // RegisterStoreDecoder doesn't register any type.
 func (AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
 

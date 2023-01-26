@@ -205,12 +205,7 @@ func SimulateMsgSubmitLegacyProposal(ak types.AccountKeeper, bk types.BankKeeper
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
 		}
 
-		msg, err := v1.NewMsgSubmitProposal([]sdk.Msg{contentMsg}, deposit, simAccount.Address.String(), "", "Title of proposal", "Short description of proposal")
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
-		}
-
-		return simulateMsgSubmitProposal(ak, bk, k, msg, simAccount, deposit)(r, app, ctx, accs, chainID)
+		return simulateMsgSubmitProposal(ak, bk, k, contentMsg, simAccount, deposit)(r, app, ctx, accs, chainID)
 	}
 }
 

@@ -110,7 +110,7 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 		}
 
 		spendLimit := spendableCoins.Sub(fees...)
-		if spendLimit == nil {
+		if len(spendLimit) == 0 {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
 

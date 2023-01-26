@@ -1,12 +1,16 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -16,12 +20,12 @@ const (
 )
 
 func TestDeposits(t *testing.T) {
-	govKeeper, _, bankKeeper, stakingKeeper, _, ctx := setupGovKeeper(t)
-	trackMockBalances(bankKeeper)
+	govKeeper, _, bankKeeper, stakingKeeper, distKeeper, _, ctx := setupGovKeeper(t)
+	trackMockBalances(bankKeeper, distKeeper)
 	TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10000000))
 
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", TestAddrs[0])
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0])
 	require.NoError(t, err)
 	proposalID := proposal.Id
 
@@ -31,7 +35,7 @@ func TestDeposits(t *testing.T) {
 	addr0Initial := bankKeeper.GetAllBalances(ctx, TestAddrs[0])
 	addr1Initial := bankKeeper.GetAllBalances(ctx, TestAddrs[1])
 
-	require.True(t, sdk.NewCoins(proposal.TotalDeposit...).IsEqual(sdk.NewCoins()))
+	require.True(t, sdk.NewCoins(proposal.TotalDeposit...).Equal(sdk.NewCoins()))
 
 	// Check no deposits at beginning
 	_, found := govKeeper.GetDeposit(ctx, proposalID, TestAddrs[1])
@@ -105,7 +109,7 @@ func TestDeposits(t *testing.T) {
 	require.Equal(t, addr1Initial, bankKeeper.GetAllBalances(ctx, TestAddrs[1]))
 
 	// Test delete and burn deposits
-	proposal, err = govKeeper.SubmitProposal(ctx, tp, "", "title", "description", TestAddrs[0])
+	proposal, err = govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0])
 	require.NoError(t, err)
 	proposalID = proposal.Id
 	_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fourStake)
@@ -193,7 +197,7 @@ func TestValidateInitialDeposit(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			govKeeper, _, _, _, _, ctx := setupGovKeeper(t)
+			govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
 
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
@@ -209,5 +213,108 @@ func TestValidateInitialDeposit(t *testing.T) {
 			}
 			require.NoError(t, err)
 		})
+	}
+}
+
+func TestChargeDeposit(t *testing.T) {
+	testCases := []struct {
+		name                      string
+		proposalCancelRatio       string
+		proposalCancelDestAddress string
+		expectError               bool
+	}{
+		{
+			name:                      "Success: CancelRatio=0",
+			proposalCancelRatio:       "0",
+			proposalCancelDestAddress: "",
+			expectError:               false,
+		},
+		{
+			name:                      "Success: CancelRatio=0.5",
+			proposalCancelRatio:       "0.5",
+			proposalCancelDestAddress: "",
+			expectError:               false,
+		},
+		{
+			name:                      "Success: CancelRatio=1",
+			proposalCancelRatio:       "1",
+			proposalCancelDestAddress: "",
+			expectError:               false,
+		},
+	}
+
+	for _, tc := range testCases {
+		for i := 0; i < 3; i++ {
+			testName := func(i int) string {
+				if i == 0 {
+					return fmt.Sprintf("%s and dest address is %s", tc.name, "nil")
+				} else if i == 1 {
+					return fmt.Sprintf("%s and dest address is normal address", tc.name)
+				}
+				return fmt.Sprintf("%s and dest address is community address", tc.name)
+			}
+
+			t.Run(testName(i), func(t *testing.T) {
+				govKeeper, _, bankKeeper, stakingKeeper, _, _, ctx := setupGovKeeper(t)
+				params := v1.DefaultParams()
+				params.ProposalCancelRatio = tc.proposalCancelRatio
+				TestAddrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(10000000000))
+
+				switch i {
+				case 0:
+					// no dest address for cancel proposal, total cancellation charges will be burned
+					params.ProposalCancelDest = ""
+				case 1:
+					// normal account address for proposal cancel dest address
+					params.ProposalCancelDest = TestAddrs[1].String()
+				default:
+					// community address for proposal cancel dest address
+					params.ProposalCancelDest = authtypes.NewModuleAddress(disttypes.ModuleName).String()
+				}
+
+				err := govKeeper.SetParams(ctx, params)
+				require.NoError(t, err)
+
+				tp := TestProposal
+				proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "summary", TestAddrs[0])
+				require.NoError(t, err)
+				proposalID := proposal.Id
+				// deposit to proposal
+				fiveStake := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, stakingKeeper.TokensFromConsensusPower(ctx, 300)))
+				_, err = govKeeper.AddDeposit(ctx, proposalID, TestAddrs[0], fiveStake)
+				require.NoError(t, err)
+
+				// get balances of dest address
+				var prevBalance sdk.Coin
+				if len(params.ProposalCancelDest) != 0 {
+					accAddr := sdk.MustAccAddressFromBech32(params.ProposalCancelDest)
+					prevBalance = bankKeeper.GetBalance(ctx, accAddr, sdk.DefaultBondDenom)
+				}
+
+				// get the deposits
+				allDeposits := govKeeper.GetDeposits(ctx, proposalID)
+
+				// charge cancellation charges for cancel proposal
+				err = govKeeper.ChargeDeposit(ctx, proposalID, TestAddrs[0].String(), params.ProposalCancelRatio)
+				if tc.expectError {
+					require.Error(t, err)
+					return
+				}
+				require.NoError(t, err)
+
+				if len(params.ProposalCancelDest) != 0 {
+					accAddr := sdk.MustAccAddressFromBech32(params.ProposalCancelDest)
+					newBalanceAfterCancelProposal := bankKeeper.GetBalance(ctx, accAddr, sdk.DefaultBondDenom)
+					cancellationCharges := math.NewInt(0)
+					for _, deposits := range allDeposits {
+						for _, deposit := range deposits.Amount {
+							burnAmount := sdk.NewDecFromInt(deposit.Amount).Mul(sdk.MustNewDecFromStr(params.MinInitialDepositRatio)).TruncateInt()
+							cancellationCharges = cancellationCharges.Add(burnAmount)
+						}
+					}
+					require.True(t, newBalanceAfterCancelProposal.Equal(prevBalance.Add(sdk.NewCoin(sdk.DefaultBondDenom, cancellationCharges))))
+				}
+			})
+		}
 	}
 }

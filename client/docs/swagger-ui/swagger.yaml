@@ -4090,8 +4090,10 @@ paths:
         - Query
   /cosmos/bank/v1beta1/spendable_balances/{address}:
     get:
-      summary: |-
-        SpendableBalances queries the spenable balance of all coins for a single
+      summary: >-
+        SpendableBalances queries the spendable balance of all coins for a
+        single
+
         account.
       description: >-
         When called from another module, this query might consume a high amount
@@ -4237,6 +4239,86 @@ paths:
           in: query
           required: false
           type: boolean
+      tags:
+        - Query
+  /cosmos/bank/v1beta1/spendable_balances/{address}/by_denom:
+    get:
+      summary: >-
+        SpendableBalanceByDenom queries the spendable balance of a single denom
+        for
+
+        a single account.
+      description: >-
+        When called from another module, this query might consume a high amount
+        of
+
+        gas if the pagination field is incorrectly set.
+
+
+        Since: cosmos-sdk 0.47
+      operationId: SpendableBalanceByDenom
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              balance:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            description: >-
+              QuerySpendableBalanceByDenomResponse defines the gRPC response
+              structure for
+
+              querying an account's spendable balance for a specific denom.
+
+
+              Since: cosmos-sdk 0.47
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          description: address is the address to query balances for.
+          in: path
+          required: true
+          type: string
+        - name: denom
+          description: denom is the coin denom to query balances for.
+          in: query
+          required: false
+          type: string
       tags:
         - Query
   /cosmos/bank/v1beta1/supply:
@@ -8870,7 +8952,7 @@ paths:
   /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards:
     get:
       summary: |-
-        DelegationTotalRewards queries the total rewards accrued by a each
+        DelegationTotalRewards queries the total rewards accrued by each
         validator.
       operationId: DelegationTotalRewards
       responses:
@@ -9142,13 +9224,17 @@ paths:
                   base_proposer_reward:
                     type: string
                     description: >-
-                      The base_proposer_reward and bonus_proposer_reward fields
-                      are deprecated
+                      Deprecated: The base_proposer_reward field is deprecated
+                      and is no longer used
 
-                      and are no longer used in the x/distribution module's
-                      reward mechanism.
+                      in the x/distribution module's reward mechanism.
                   bonus_proposer_reward:
                     type: string
+                    description: >-
+                      Deprecated: The bonus_proposer_reward field is deprecated
+                      and is no longer used
+
+                      in the x/distribution module's reward mechanism.
                   withdraw_addr_enabled:
                     type: boolean
             description: >-
@@ -10432,7 +10518,7 @@ paths:
                 properties:
                   voting_period:
                     type: string
-                    description: Length of the voting period.
+                    description: Duration of the voting period.
               deposit_params:
                 description: deposit_params defines the parameters related to deposit.
                 type: object
@@ -10460,7 +10546,8 @@ paths:
                     description: >-
                       Maximum period for Atom holders to deposit on a proposal.
                       Initial value: 2
-                       months.
+
+                      months.
               tally_params:
                 description: tally_params defines the parameters related to tally.
                 type: object
@@ -10471,7 +10558,8 @@ paths:
                     description: >-
                       Minimum percentage of total stake needed to vote for a
                       result to be
-                       considered valid.
+
+                      considered valid.
                   threshold:
                     type: string
                     format: byte
@@ -10484,7 +10572,8 @@ paths:
                     description: >-
                       Minimum value of Veto votes to Total votes ratio for
                       proposal to be
-                       vetoed. Default value: 1/3.
+
+                      vetoed. Default value: 1/3.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -10709,6 +10798,7 @@ paths:
                     proposal_id:
                       type: string
                       format: uint64
+                      description: proposal_id defines the unique id of the proposal.
                     content:
                       type: object
                       properties:
@@ -10889,6 +10979,7 @@ paths:
                               "value": "1.212s"
                             }
                     status:
+                      description: status defines the proposal status.
                       type: string
                       enum:
                         - PROPOSAL_STATUS_UNSPECIFIED
@@ -10898,21 +10989,6 @@ paths:
                         - PROPOSAL_STATUS_REJECTED
                         - PROPOSAL_STATUS_FAILED
                       default: PROPOSAL_STATUS_UNSPECIFIED
-                      description: >-
-                        ProposalStatus enumerates the valid statuses of a
-                        proposal.
-
-                         - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-                         - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-                        period.
-                         - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-                        period.
-                         - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-                        passed.
-                         - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-                        been rejected.
-                         - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-                        failed.
                     final_tally_result:
                       description: >-
                         final_tally_result is the final tally result of the
@@ -10926,18 +11002,28 @@ paths:
                       properties:
                         'yes':
                           type: string
+                          description: yes is the number of yes votes on a proposal.
                         abstain:
                           type: string
+                          description: >-
+                            abstain is the number of abstain votes on a
+                            proposal.
                         'no':
                           type: string
+                          description: no is the number of no votes on a proposal.
                         no_with_veto:
                           type: string
+                          description: >-
+                            no_with_veto is the number of no with veto votes on
+                            a proposal.
                     submit_time:
                       type: string
                       format: date-time
+                      description: submit_time is the time of proposal submission.
                     deposit_end_time:
                       type: string
                       format: date-time
+                      description: deposit_end_time is the end time for deposition.
                     total_deposit:
                       type: array
                       items:
@@ -10956,15 +11042,21 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
+                      description: total_deposit is the total deposit on the proposal.
                     voting_start_time:
                       type: string
                       format: date-time
+                      description: >-
+                        voting_start_time is the starting time to vote on a
+                        proposal.
                     voting_end_time:
                       type: string
                       format: date-time
+                      description: voting_end_time is the end time of voting on a proposal.
                   description: >-
                     Proposal defines the core field members of a governance
                     proposal.
+                description: proposals defines all the requested governance proposals.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -11291,6 +11383,7 @@ paths:
                   proposal_id:
                     type: string
                     format: uint64
+                    description: proposal_id defines the unique id of the proposal.
                   content:
                     type: object
                     properties:
@@ -11469,6 +11562,7 @@ paths:
                             "value": "1.212s"
                           }
                   status:
+                    description: status defines the proposal status.
                     type: string
                     enum:
                       - PROPOSAL_STATUS_UNSPECIFIED
@@ -11478,21 +11572,6 @@ paths:
                       - PROPOSAL_STATUS_REJECTED
                       - PROPOSAL_STATUS_FAILED
                     default: PROPOSAL_STATUS_UNSPECIFIED
-                    description: >-
-                      ProposalStatus enumerates the valid statuses of a
-                      proposal.
-
-                       - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-                       - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-                      period.
-                       - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-                      period.
-                       - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-                      passed.
-                       - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-                      been rejected.
-                       - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-                      failed.
                   final_tally_result:
                     description: >-
                       final_tally_result is the final tally result of the
@@ -11506,18 +11585,26 @@ paths:
                     properties:
                       'yes':
                         type: string
+                        description: yes is the number of yes votes on a proposal.
                       abstain:
                         type: string
+                        description: abstain is the number of abstain votes on a proposal.
                       'no':
                         type: string
+                        description: no is the number of no votes on a proposal.
                       no_with_veto:
                         type: string
+                        description: >-
+                          no_with_veto is the number of no with veto votes on a
+                          proposal.
                   submit_time:
                     type: string
                     format: date-time
+                    description: submit_time is the time of proposal submission.
                   deposit_end_time:
                     type: string
                     format: date-time
+                    description: deposit_end_time is the end time for deposition.
                   total_deposit:
                     type: array
                     items:
@@ -11535,12 +11622,17 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                    description: total_deposit is the total deposit on the proposal.
                   voting_start_time:
                     type: string
                     format: date-time
+                    description: >-
+                      voting_start_time is the starting time to vote on a
+                      proposal.
                   voting_end_time:
                     type: string
                     format: date-time
+                    description: voting_end_time is the end time of voting on a proposal.
                 description: >-
                   Proposal defines the core field members of a governance
                   proposal.
@@ -11765,8 +11857,12 @@ paths:
                     proposal_id:
                       type: string
                       format: uint64
+                      description: proposal_id defines the unique id of the proposal.
                     depositor:
                       type: string
+                      description: >-
+                        depositor defines the deposit addresses from the
+                        proposals.
                     amount:
                       type: array
                       items:
@@ -11785,11 +11881,13 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
+                      description: amount to be deposited by depositor.
                   description: >-
                     Deposit defines an amount deposited by an account address to
                     an active
 
                     proposal.
+                description: deposits defines the requested deposits.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -12086,8 +12184,12 @@ paths:
                   proposal_id:
                     type: string
                     format: uint64
+                    description: proposal_id defines the unique id of the proposal.
                   depositor:
                     type: string
+                    description: >-
+                      depositor defines the deposit addresses from the
+                      proposals.
                   amount:
                     type: array
                     items:
@@ -12105,6 +12207,7 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                    description: amount to be deposited by depositor.
                 description: >-
                   Deposit defines an amount deposited by an account address to
                   an active
@@ -12334,12 +12437,18 @@ paths:
                 properties:
                   'yes':
                     type: string
+                    description: yes is the number of yes votes on a proposal.
                   abstain:
                     type: string
+                    description: abstain is the number of abstain votes on a proposal.
                   'no':
                     type: string
+                    description: no is the number of no votes on a proposal.
                   no_with_veto:
                     type: string
+                    description: >-
+                      no_with_veto is the number of no with veto votes on a
+                      proposal.
             description: >-
               QueryTallyResultResponse is the response type for the Query/Tally
               RPC method.
@@ -12561,8 +12670,10 @@ paths:
                     proposal_id:
                       type: string
                       format: uint64
+                      description: proposal_id defines the unique id of the proposal.
                     voter:
                       type: string
+                      description: voter is the voter address of the proposal.
                     option:
                       description: >-
                         Deprecated: Prefer to use `options` instead. This field
@@ -12587,6 +12698,9 @@ paths:
                         type: object
                         properties:
                           option:
+                            description: >-
+                              option defines the valid vote options, it must not
+                              contain duplicate vote options.
                             type: string
                             enum:
                               - VOTE_OPTION_UNSPECIFIED
@@ -12595,30 +12709,27 @@ paths:
                               - VOTE_OPTION_NO
                               - VOTE_OPTION_NO_WITH_VETO
                             default: VOTE_OPTION_UNSPECIFIED
-                            description: >-
-                              VoteOption enumerates the valid vote options for a
-                              given governance proposal.
-
-                               - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                               - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                               - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                               - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                               - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                           weight:
                             type: string
+                            description: >-
+                              weight is the vote weight associated with the vote
+                              option.
                         description: >-
                           WeightedVoteOption defines a unit of vote for vote
                           split.
 
 
                           Since: cosmos-sdk 0.43
-                      title: 'Since: cosmos-sdk 0.43'
+                      description: |-
+                        options is the weighted vote options.
+
+                        Since: cosmos-sdk 0.43
                   description: >-
                     Vote defines a vote on a governance proposal.
 
                     A Vote consists of a proposal ID, the voter, and the vote
                     option.
-                description: votes defined the queried votes.
+                description: votes defines the queried votes.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -12913,8 +13024,10 @@ paths:
                   proposal_id:
                     type: string
                     format: uint64
+                    description: proposal_id defines the unique id of the proposal.
                   voter:
                     type: string
+                    description: voter is the voter address of the proposal.
                   option:
                     description: >-
                       Deprecated: Prefer to use `options` instead. This field is
@@ -12939,6 +13052,9 @@ paths:
                       type: object
                       properties:
                         option:
+                          description: >-
+                            option defines the valid vote options, it must not
+                            contain duplicate vote options.
                           type: string
                           enum:
                             - VOTE_OPTION_UNSPECIFIED
@@ -12947,24 +13063,21 @@ paths:
                             - VOTE_OPTION_NO
                             - VOTE_OPTION_NO_WITH_VETO
                           default: VOTE_OPTION_UNSPECIFIED
-                          description: >-
-                            VoteOption enumerates the valid vote options for a
-                            given governance proposal.
-
-                             - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                             - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                             - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                             - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                             - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                         weight:
                           type: string
+                          description: >-
+                            weight is the vote weight associated with the vote
+                            option.
                       description: >-
                         WeightedVoteOption defines a unit of vote for vote
                         split.
 
 
                         Since: cosmos-sdk 0.43
-                    title: 'Since: cosmos-sdk 0.43'
+                    description: |-
+                      options is the weighted vote options.
+
+                      Since: cosmos-sdk 0.43
                 description: >-
                   Vote defines a vote on a governance proposal.
 
@@ -13196,7 +13309,7 @@ paths:
                 properties:
                   voting_period:
                     type: string
-                    description: Length of the voting period.
+                    description: Duration of the voting period.
               deposit_params:
                 description: |-
                   Deprecated: Prefer to use `params` instead.
@@ -13226,7 +13339,8 @@ paths:
                     description: >-
                       Maximum period for Atom holders to deposit on a proposal.
                       Initial value: 2
-                       months.
+
+                      months.
               tally_params:
                 description: |-
                   Deprecated: Prefer to use `params` instead.
@@ -13238,7 +13352,8 @@ paths:
                     description: >-
                       Minimum percentage of total stake needed to vote for a
                       result to be
-                       considered valid.
+
+                      considered valid.
                   threshold:
                     type: string
                     description: >-
@@ -13249,7 +13364,8 @@ paths:
                     description: >-
                       Minimum value of Veto votes to Total votes ratio for
                       proposal to be
-                       vetoed. Default value: 1/3.
+
+                      vetoed. Default value: 1/3.
               params:
                 description: |-
                   params defines all the paramaters of x/gov module.
@@ -13280,10 +13396,11 @@ paths:
                     description: >-
                       Maximum period for Atom holders to deposit on a proposal.
                       Initial value: 2
-                       months.
+
+                      months.
                   voting_period:
                     type: string
-                    description: Length of the voting period.
+                    description: Duration of the voting period.
                   quorum:
                     type: string
                     description: >-
@@ -13530,6 +13647,7 @@ paths:
                     id:
                       type: string
                       format: uint64
+                      description: id defines the unique id of the proposal.
                     messages:
                       type: array
                       items:
@@ -13711,7 +13829,11 @@ paths:
                                 "@type": "type.googleapis.com/google.protobuf.Duration",
                                 "value": "1.212s"
                               }
+                      description: >-
+                        messages are the arbitrary messages to be executed if
+                        the proposal passes.
                     status:
+                      description: status defines the proposal status.
                       type: string
                       enum:
                         - PROPOSAL_STATUS_UNSPECIFIED
@@ -13721,21 +13843,6 @@ paths:
                         - PROPOSAL_STATUS_REJECTED
                         - PROPOSAL_STATUS_FAILED
                       default: PROPOSAL_STATUS_UNSPECIFIED
-                      description: >-
-                        ProposalStatus enumerates the valid statuses of a
-                        proposal.
-
-                         - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-                         - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-                        period.
-                         - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-                        period.
-                         - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-                        passed.
-                         - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-                        been rejected.
-                         - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-                        failed.
                     final_tally_result:
                       description: >-
                         final_tally_result is the final tally result of the
@@ -13749,18 +13856,28 @@ paths:
                       properties:
                         yes_count:
                           type: string
+                          description: yes_count is the number of yes votes on a proposal.
                         abstain_count:
                           type: string
+                          description: >-
+                            abstain_count is the number of abstain votes on a
+                            proposal.
                         no_count:
                           type: string
+                          description: no_count is the number of no votes on a proposal.
                         no_with_veto_count:
                           type: string
+                          description: >-
+                            no_with_veto_count is the number of no with veto
+                            votes on a proposal.
                     submit_time:
                       type: string
                       format: date-time
+                      description: submit_time is the time of proposal submission.
                     deposit_end_time:
                       type: string
                       format: date-time
+                      description: deposit_end_time is the end time for deposition.
                     total_deposit:
                       type: array
                       items:
@@ -13779,20 +13896,38 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
+                      description: total_deposit is the total deposit on the proposal.
                     voting_start_time:
                       type: string
                       format: date-time
+                      description: >-
+                        voting_start_time is the starting time to vote on a
+                        proposal.
                     voting_end_time:
                       type: string
                       format: date-time
+                      description: voting_end_time is the end time of voting on a proposal.
                     metadata:
                       type: string
                       description: >-
                         metadata is any arbitrary metadata attached to the
                         proposal.
+                    title:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.47'
+                      title: title is the title of the proposal
+                    summary:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.47'
+                      title: summary is a short summary of the proposal
+                    proposer:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.47'
+                      title: Proposer is the address of the proposal sumbitter
                   description: >-
                     Proposal defines the core field members of a governance
                     proposal.
+                description: proposals defines all the requested governance proposals.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -14119,6 +14254,7 @@ paths:
                   id:
                     type: string
                     format: uint64
+                    description: id defines the unique id of the proposal.
                   messages:
                     type: array
                     items:
@@ -14300,7 +14436,11 @@ paths:
                               "@type": "type.googleapis.com/google.protobuf.Duration",
                               "value": "1.212s"
                             }
+                    description: >-
+                      messages are the arbitrary messages to be executed if the
+                      proposal passes.
                   status:
+                    description: status defines the proposal status.
                     type: string
                     enum:
                       - PROPOSAL_STATUS_UNSPECIFIED
@@ -14310,21 +14450,6 @@ paths:
                       - PROPOSAL_STATUS_REJECTED
                       - PROPOSAL_STATUS_FAILED
                     default: PROPOSAL_STATUS_UNSPECIFIED
-                    description: >-
-                      ProposalStatus enumerates the valid statuses of a
-                      proposal.
-
-                       - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-                       - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-                      period.
-                       - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-                      period.
-                       - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-                      passed.
-                       - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-                      been rejected.
-                       - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-                      failed.
                   final_tally_result:
                     description: >-
                       final_tally_result is the final tally result of the
@@ -14338,18 +14463,28 @@ paths:
                     properties:
                       yes_count:
                         type: string
+                        description: yes_count is the number of yes votes on a proposal.
                       abstain_count:
                         type: string
+                        description: >-
+                          abstain_count is the number of abstain votes on a
+                          proposal.
                       no_count:
                         type: string
+                        description: no_count is the number of no votes on a proposal.
                       no_with_veto_count:
                         type: string
+                        description: >-
+                          no_with_veto_count is the number of no with veto votes
+                          on a proposal.
                   submit_time:
                     type: string
                     format: date-time
+                    description: submit_time is the time of proposal submission.
                   deposit_end_time:
                     type: string
                     format: date-time
+                    description: deposit_end_time is the end time for deposition.
                   total_deposit:
                     type: array
                     items:
@@ -14367,17 +14502,34 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                    description: total_deposit is the total deposit on the proposal.
                   voting_start_time:
                     type: string
                     format: date-time
+                    description: >-
+                      voting_start_time is the starting time to vote on a
+                      proposal.
                   voting_end_time:
                     type: string
                     format: date-time
+                    description: voting_end_time is the end time of voting on a proposal.
                   metadata:
                     type: string
                     description: >-
                       metadata is any arbitrary metadata attached to the
                       proposal.
+                  title:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.47'
+                    title: title is the title of the proposal
+                  summary:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.47'
+                    title: summary is a short summary of the proposal
+                  proposer:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.47'
+                    title: Proposer is the address of the proposal sumbitter
                 description: >-
                   Proposal defines the core field members of a governance
                   proposal.
@@ -14602,8 +14754,12 @@ paths:
                     proposal_id:
                       type: string
                       format: uint64
+                      description: proposal_id defines the unique id of the proposal.
                     depositor:
                       type: string
+                      description: >-
+                        depositor defines the deposit addresses from the
+                        proposals.
                     amount:
                       type: array
                       items:
@@ -14622,11 +14778,13 @@ paths:
                           custom method
 
                           signatures required by gogoproto.
+                      description: amount to be deposited by depositor.
                   description: >-
                     Deposit defines an amount deposited by an account address to
                     an active
 
                     proposal.
+                description: deposits defines the requested deposits.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -14923,8 +15081,12 @@ paths:
                   proposal_id:
                     type: string
                     format: uint64
+                    description: proposal_id defines the unique id of the proposal.
                   depositor:
                     type: string
+                    description: >-
+                      depositor defines the deposit addresses from the
+                      proposals.
                   amount:
                     type: array
                     items:
@@ -14942,6 +15104,7 @@ paths:
                         custom method
 
                         signatures required by gogoproto.
+                    description: amount to be deposited by depositor.
                 description: >-
                   Deposit defines an amount deposited by an account address to
                   an active
@@ -15171,12 +15334,20 @@ paths:
                 properties:
                   yes_count:
                     type: string
+                    description: yes_count is the number of yes votes on a proposal.
                   abstain_count:
                     type: string
+                    description: >-
+                      abstain_count is the number of abstain votes on a
+                      proposal.
                   no_count:
                     type: string
+                    description: no_count is the number of no votes on a proposal.
                   no_with_veto_count:
                     type: string
+                    description: >-
+                      no_with_veto_count is the number of no with veto votes on
+                      a proposal.
             description: >-
               QueryTallyResultResponse is the response type for the Query/Tally
               RPC method.
@@ -15398,14 +15569,19 @@ paths:
                     proposal_id:
                       type: string
                       format: uint64
+                      description: proposal_id defines the unique id of the proposal.
                     voter:
                       type: string
+                      description: voter is the voter address of the proposal.
                     options:
                       type: array
                       items:
                         type: object
                         properties:
                           option:
+                            description: >-
+                              option defines the valid vote options, it must not
+                              contain duplicate vote options.
                             type: string
                             enum:
                               - VOTE_OPTION_UNSPECIFIED
@@ -15414,20 +15590,15 @@ paths:
                               - VOTE_OPTION_NO
                               - VOTE_OPTION_NO_WITH_VETO
                             default: VOTE_OPTION_UNSPECIFIED
-                            description: >-
-                              VoteOption enumerates the valid vote options for a
-                              given governance proposal.
-
-                               - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                               - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                               - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                               - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                               - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                           weight:
                             type: string
+                            description: >-
+                              weight is the vote weight associated with the vote
+                              option.
                         description: >-
                           WeightedVoteOption defines a unit of vote for vote
                           split.
+                      description: options is the weighted vote options.
                     metadata:
                       type: string
                       description: >-
@@ -15438,7 +15609,7 @@ paths:
 
                     A Vote consists of a proposal ID, the voter, and the vote
                     option.
-                description: votes defined the queried votes.
+                description: votes defines the queried votes.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -15733,14 +15904,19 @@ paths:
                   proposal_id:
                     type: string
                     format: uint64
+                    description: proposal_id defines the unique id of the proposal.
                   voter:
                     type: string
+                    description: voter is the voter address of the proposal.
                   options:
                     type: array
                     items:
                       type: object
                       properties:
                         option:
+                          description: >-
+                            option defines the valid vote options, it must not
+                            contain duplicate vote options.
                           type: string
                           enum:
                             - VOTE_OPTION_UNSPECIFIED
@@ -15749,20 +15925,15 @@ paths:
                             - VOTE_OPTION_NO
                             - VOTE_OPTION_NO_WITH_VETO
                           default: VOTE_OPTION_UNSPECIFIED
-                          description: >-
-                            VoteOption enumerates the valid vote options for a
-                            given governance proposal.
-
-                             - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                             - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                             - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                             - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                             - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                         weight:
                           type: string
+                          description: >-
+                            weight is the vote weight associated with the vote
+                            option.
                       description: >-
                         WeightedVoteOption defines a unit of vote for vote
                         split.
+                    description: options is the weighted vote options.
                   metadata:
                     type: string
                     description: >-
@@ -22606,6 +22777,238 @@ paths:
               Since: cosmos-sdk 0.47
       tags:
         - Service
+  /cosmos/tx/v1beta1/decode/amino:
+    post:
+      summary: TxDecodeAmino decodes an Amino transaction from encoded bytes to JSON.
+      description: 'Since: cosmos-sdk 0.47'
+      operationId: TxDecodeAmino
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              amino_json:
+                type: string
+            description: >-
+              TxDecodeAminoResponse is the response type for the
+              Service.TxDecodeAmino
+
+              RPC method.
+
+
+              Since: cosmos-sdk 0.47
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                    Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                    Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              amino_binary:
+                type: string
+                format: byte
+            description: >-
+              TxDecodeAminoRequest is the request type for the
+              Service.TxDecodeAmino
+
+              RPC method.
+
+
+              Since: cosmos-sdk 0.47
+      tags:
+        - Service
   /cosmos/tx/v1beta1/encode:
     post:
       summary: TxEncode encodes the transaction.
@@ -22823,6 +23226,238 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/cosmos.tx.v1beta1.TxEncodeRequest'
+      tags:
+        - Service
+  /cosmos/tx/v1beta1/encode/amino:
+    post:
+      summary: TxEncodeAmino encodes an Amino transaction from JSON to encoded bytes.
+      description: 'Since: cosmos-sdk 0.47'
+      operationId: TxEncodeAmino
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              amino_binary:
+                type: string
+                format: byte
+            description: >-
+              TxEncodeAminoResponse is the response type for the
+              Service.TxEncodeAmino
+
+              RPC method.
+
+
+              Since: cosmos-sdk 0.47
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                    value:
+                      type: string
+                      format: byte
+                      description: >-
+                        Must be a valid serialized protocol buffer of the above
+                        specified type.
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+
+                    Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                    Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+
+                    JSON
+
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              amino_json:
+                type: string
+            description: >-
+              TxEncodeAminoRequest is the request type for the
+              Service.TxEncodeAmino
+
+              RPC method.
+
+
+              Since: cosmos-sdk 0.47
       tags:
         - Service
   /cosmos/tx/v1beta1/simulate:
@@ -25105,9 +25740,7 @@ paths:
                   height:
                     type: string
                     format: int64
-                    description: |-
-                      The height at which the upgrade must be performed.
-                      Only used if Time is not set.
+                    description: The height at which the upgrade must be performed.
                   info:
                     type: string
                     title: >-
@@ -28506,6 +29139,9 @@ paths:
               amount:
                 type: string
                 format: uint64
+                title: >-
+                  amount is the number of all NFTs of a given class owned by the
+                  owner
             title: >-
               QueryBalanceResponse is the response type for the Query/Balance
               RPC method
@@ -28702,10 +29338,12 @@ paths:
                         }
       parameters:
         - name: owner
+          description: owner is the owner address of the nft
           in: path
           required: true
           type: string
         - name: class_id
+          description: class_id associated with the nft
           in: path
           required: true
           type: string
@@ -28941,7 +29579,9 @@ paths:
                         data is the app specific metadata of the NFT class.
                         Optional
                   description: Class defines the class of the nft type.
+                description: class defines the class of the nft type.
               pagination:
+                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -28959,16 +29599,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
             title: >-
               QueryClassesResponse is the response type for the Query/Classes
               RPC method
@@ -29642,6 +30272,7 @@ paths:
                         }
       parameters:
         - name: class_id
+          description: class_id associated with the nft
           in: path
           required: true
           type: string
@@ -29861,7 +30492,9 @@ paths:
                             }
                       title: data is an app specific data of the NFT. Optional
                   description: NFT defines the NFT.
+                title: NFT defines the NFT
               pagination:
+                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -29879,16 +30512,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
             title: >-
               QueryNFTsResponse is the response type for the Query/NFTs RPC
               methods
@@ -30085,10 +30708,12 @@ paths:
                         }
       parameters:
         - name: class_id
+          description: class_id associated with the nft.
           in: query
           required: false
           type: string
         - name: owner
+          description: owner is the owner address of the nft.
           in: query
           required: false
           type: string
@@ -30356,6 +30981,7 @@ paths:
                           }
                     title: data is an app specific data of the NFT. Optional
                 description: NFT defines the NFT.
+                title: owner is the owner address of the nft
             title: QueryNFTResponse is the response type for the Query/NFT RPC method
         default:
           description: An unexpected error response.
@@ -30550,10 +31176,12 @@ paths:
                         }
       parameters:
         - name: class_id
+          description: class_id associated with the nft
           in: path
           required: true
           type: string
         - name: id
+          description: id is a unique identifier of the NFT
           in: path
           required: true
           type: string
@@ -30573,6 +31201,7 @@ paths:
             properties:
               owner:
                 type: string
+                title: owner is the owner address of the nft
             title: >-
               QueryOwnerResponse is the response type for the Query/Owner RPC
               method
@@ -30769,10 +31398,12 @@ paths:
                         }
       parameters:
         - name: class_id
+          description: class_id associated with the nft
           in: path
           required: true
           type: string
         - name: id
+          description: id is a unique identifier of the NFT
           in: path
           required: true
           type: string
@@ -30793,6 +31424,7 @@ paths:
               amount:
                 type: string
                 format: uint64
+                title: amount is the number of all NFTs from the given class
             title: >-
               QuerySupplyResponse is the response type for the Query/Supply RPC
               method
@@ -30989,6 +31621,7 @@ paths:
                         }
       parameters:
         - name: class_id
+          description: class_id associated with the nft
           in: path
           required: true
           type: string
@@ -31005,7 +31638,7 @@ paths:
             type: object
             properties:
               info:
-                description: info is the GroupInfo for the group.
+                description: info is the GroupInfo of the group.
                 type: object
                 properties:
                   id:
@@ -31247,7 +31880,7 @@ paths:
         - Query
   /cosmos/group/v1/group_members/{group_id}:
     get:
-      summary: GroupMembers queries members of a group
+      summary: GroupMembers queries members of a group by group id.
       operationId: GroupMembers
       responses:
         '200':
@@ -31571,7 +32204,7 @@ paths:
         - Query
   /cosmos/group/v1/group_policies_by_admin/{admin}:
     get:
-      summary: GroupsByAdmin queries group policies by admin address.
+      summary: GroupPoliciesByAdmin queries group policies by admin address.
       operationId: GroupPoliciesByAdmin
       responses:
         '200':
@@ -31597,8 +32230,8 @@ paths:
                     metadata:
                       type: string
                       description: >-
-                        metadata is any arbitrary metadata to attached to the
-                        group policy.
+                        metadata is any arbitrary metadata attached to the group
+                        policy.
                     version:
                       type: string
                       format: uint64
@@ -32103,8 +32736,8 @@ paths:
                     metadata:
                       type: string
                       description: >-
-                        metadata is any arbitrary metadata to attached to the
-                        group policy.
+                        metadata is any arbitrary metadata attached to the group
+                        policy.
                     version:
                       type: string
                       format: uint64
@@ -32610,8 +33243,8 @@ paths:
                   metadata:
                     type: string
                     description: >-
-                      metadata is any arbitrary metadata to attached to the
-                      group policy.
+                      metadata is any arbitrary metadata attached to the group
+                      policy.
                   version:
                     type: string
                     format: uint64
@@ -33698,7 +34331,7 @@ paths:
                   metadata:
                     type: string
                     description: >-
-                      metadata is any arbitrary metadata to attached to the
+                      metadata is any arbitrary metadata attached to the
                       proposal.
                   proposers:
                     type: array
@@ -33983,6 +34616,14 @@ paths:
                     description: >-
                       messages is a list of `sdk.Msg`s that will be executed if
                       the proposal passes.
+                  title:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.47'
+                    title: title is the title of the proposal
+                  summary:
+                    type: string
+                    description: 'Since: cosmos-sdk 0.47'
+                    title: summary is a short summary of the proposal
             description: QueryProposalResponse is the Query/Proposal response type.
         default:
           description: An unexpected error response.
@@ -34450,7 +35091,7 @@ paths:
                     metadata:
                       type: string
                       description: >-
-                        metadata is any arbitrary metadata to attached to the
+                        metadata is any arbitrary metadata attached to the
                         proposal.
                     proposers:
                       type: array
@@ -34735,6 +35376,14 @@ paths:
                       description: >-
                         messages is a list of `sdk.Msg`s that will be executed
                         if the proposal passes.
+                    title:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.47'
+                      title: title is the title of the proposal
+                    summary:
+                      type: string
+                      description: 'Since: cosmos-sdk 0.47'
+                      title: summary is a short summary of the proposal
                   description: >-
                     Proposal defines a group proposal. Any member of a group can
                     submit a proposal
@@ -35059,9 +35708,7 @@ paths:
                     default: VOTE_OPTION_UNSPECIFIED
                   metadata:
                     type: string
-                    description: >-
-                      metadata is any arbitrary metadata to attached to the
-                      vote.
+                    description: metadata is any arbitrary metadata attached to the vote.
                   submit_time:
                     type: string
                     format: date-time
@@ -35276,7 +35923,7 @@ paths:
         - Query
   /cosmos/group/v1/votes_by_proposal/{proposal_id}:
     get:
-      summary: VotesByProposal queries a vote by proposal.
+      summary: VotesByProposal queries a vote by proposal id.
       operationId: VotesByProposal
       responses:
         '200':
@@ -35308,9 +35955,7 @@ paths:
                       default: VOTE_OPTION_UNSPECIFIED
                     metadata:
                       type: string
-                      description: >-
-                        metadata is any arbitrary metadata to attached to the
-                        vote.
+                      description: metadata is any arbitrary metadata attached to the vote.
                     submit_time:
                       type: string
                       format: date-time
@@ -35631,9 +36276,7 @@ paths:
                       default: VOTE_OPTION_UNSPECIFIED
                     metadata:
                       type: string
-                      description: >-
-                        metadata is any arbitrary metadata to attached to the
-                        vote.
+                      description: metadata is any arbitrary metadata attached to the vote.
                     submit_time:
                       type: string
                       format: date-time
@@ -38057,6 +38700,29 @@ definitions:
               was set, its value is undefined otherwise
     description: |-
       QuerySendEnabledResponse defines the RPC response of a SendEnable query.
+
+      Since: cosmos-sdk 0.47
+  cosmos.bank.v1beta1.QuerySpendableBalanceByDenomResponse:
+    type: object
+    properties:
+      balance:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: >-
+      QuerySpendableBalanceByDenomResponse defines the gRPC response structure
+      for
+
+      querying an account's spendable balance for a specific denom.
+
 
       Since: cosmos-sdk 0.47
   cosmos.bank.v1beta1.QuerySpendableBalancesResponse:
@@ -44275,13 +44941,17 @@ definitions:
       base_proposer_reward:
         type: string
         description: >-
-          The base_proposer_reward and bonus_proposer_reward fields are
-          deprecated
+          Deprecated: The base_proposer_reward field is deprecated and is no
+          longer used
 
-          and are no longer used in the x/distribution module's reward
-          mechanism.
+          in the x/distribution module's reward mechanism.
       bonus_proposer_reward:
         type: string
+        description: >-
+          Deprecated: The bonus_proposer_reward field is deprecated and is no
+          longer used
+
+          in the x/distribution module's reward mechanism.
       withdraw_addr_enabled:
         type: boolean
     description: Params defines the set of params for the distribution module.
@@ -44411,13 +45081,17 @@ definitions:
           base_proposer_reward:
             type: string
             description: >-
-              The base_proposer_reward and bonus_proposer_reward fields are
-              deprecated
+              Deprecated: The base_proposer_reward field is deprecated and is no
+              longer used
 
-              and are no longer used in the x/distribution module's reward
-              mechanism.
+              in the x/distribution module's reward mechanism.
           bonus_proposer_reward:
             type: string
+            description: >-
+              Deprecated: The bonus_proposer_reward field is deprecated and is
+              no longer used
+
+              in the x/distribution module's reward mechanism.
           withdraw_addr_enabled:
             type: boolean
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
@@ -44981,8 +45655,10 @@ definitions:
       proposal_id:
         type: string
         format: uint64
+        description: proposal_id defines the unique id of the proposal.
       depositor:
         type: string
+        description: depositor defines the deposit addresses from the proposals.
       amount:
         type: array
         items:
@@ -44997,6 +45673,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+        description: amount to be deposited by depositor.
     description: |-
       Deposit defines an amount deposited by an account address to an active
       proposal.
@@ -45023,7 +45700,8 @@ definitions:
         description: >-
           Maximum period for Atom holders to deposit on a proposal. Initial
           value: 2
-           months.
+
+          months.
     description: DepositParams defines the params for deposits on governance proposals.
   cosmos.gov.v1beta1.Proposal:
     type: object
@@ -45031,6 +45709,7 @@ definitions:
       proposal_id:
         type: string
         format: uint64
+        description: proposal_id defines the unique id of the proposal.
       content:
         type: object
         properties:
@@ -45193,6 +45872,7 @@ definitions:
                 "value": "1.212s"
               }
       status:
+        description: status defines the proposal status.
         type: string
         enum:
           - PROPOSAL_STATUS_UNSPECIFIED
@@ -45202,20 +45882,6 @@ definitions:
           - PROPOSAL_STATUS_REJECTED
           - PROPOSAL_STATUS_FAILED
         default: PROPOSAL_STATUS_UNSPECIFIED
-        description: |-
-          ProposalStatus enumerates the valid statuses of a proposal.
-
-           - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-           - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-          period.
-           - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-          period.
-           - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-          passed.
-           - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-          been rejected.
-           - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-          failed.
       final_tally_result:
         description: |-
           final_tally_result is the final tally result of the proposal. When
@@ -45225,18 +45891,24 @@ definitions:
         properties:
           'yes':
             type: string
+            description: yes is the number of yes votes on a proposal.
           abstain:
             type: string
+            description: abstain is the number of abstain votes on a proposal.
           'no':
             type: string
+            description: no is the number of no votes on a proposal.
           no_with_veto:
             type: string
+            description: no_with_veto is the number of no with veto votes on a proposal.
       submit_time:
         type: string
         format: date-time
+        description: submit_time is the time of proposal submission.
       deposit_end_time:
         type: string
         format: date-time
+        description: deposit_end_time is the end time for deposition.
       total_deposit:
         type: array
         items:
@@ -45251,12 +45923,15 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+        description: total_deposit is the total deposit on the proposal.
       voting_start_time:
         type: string
         format: date-time
+        description: voting_start_time is the starting time to vote on a proposal.
       voting_end_time:
         type: string
         format: date-time
+        description: voting_end_time is the end time of voting on a proposal.
     description: Proposal defines the core field members of a governance proposal.
   cosmos.gov.v1beta1.ProposalStatus:
     type: string
@@ -45291,8 +45966,10 @@ definitions:
           proposal_id:
             type: string
             format: uint64
+            description: proposal_id defines the unique id of the proposal.
           depositor:
             type: string
+            description: depositor defines the deposit addresses from the proposals.
           amount:
             type: array
             items:
@@ -45310,6 +45987,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            description: amount to be deposited by depositor.
         description: |-
           Deposit defines an amount deposited by an account address to an active
           proposal.
@@ -45327,8 +46005,10 @@ definitions:
             proposal_id:
               type: string
               format: uint64
+              description: proposal_id defines the unique id of the proposal.
             depositor:
               type: string
+              description: depositor defines the deposit addresses from the proposals.
             amount:
               type: array
               items:
@@ -45346,11 +46026,13 @@ definitions:
                   method
 
                   signatures required by gogoproto.
+              description: amount to be deposited by depositor.
           description: >-
             Deposit defines an amount deposited by an account address to an
             active
 
             proposal.
+        description: deposits defines the requested deposits.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -45382,7 +46064,7 @@ definitions:
         properties:
           voting_period:
             type: string
-            description: Length of the voting period.
+            description: Duration of the voting period.
       deposit_params:
         description: deposit_params defines the parameters related to deposit.
         type: object
@@ -45410,7 +46092,8 @@ definitions:
             description: >-
               Maximum period for Atom holders to deposit on a proposal. Initial
               value: 2
-               months.
+
+              months.
       tally_params:
         description: tally_params defines the parameters related to tally.
         type: object
@@ -45421,7 +46104,8 @@ definitions:
             description: >-
               Minimum percentage of total stake needed to vote for a result to
               be
-               considered valid.
+
+              considered valid.
           threshold:
             type: string
             format: byte
@@ -45434,7 +46118,8 @@ definitions:
             description: >-
               Minimum value of Veto votes to Total votes ratio for proposal to
               be
-               vetoed. Default value: 1/3.
+
+              vetoed. Default value: 1/3.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.gov.v1beta1.QueryProposalResponse:
     type: object
@@ -45445,6 +46130,7 @@ definitions:
           proposal_id:
             type: string
             format: uint64
+            description: proposal_id defines the unique id of the proposal.
           content:
             type: object
             properties:
@@ -45613,6 +46299,7 @@ definitions:
                     "value": "1.212s"
                   }
           status:
+            description: status defines the proposal status.
             type: string
             enum:
               - PROPOSAL_STATUS_UNSPECIFIED
@@ -45622,20 +46309,6 @@ definitions:
               - PROPOSAL_STATUS_REJECTED
               - PROPOSAL_STATUS_FAILED
             default: PROPOSAL_STATUS_UNSPECIFIED
-            description: |-
-              ProposalStatus enumerates the valid statuses of a proposal.
-
-               - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-               - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-              period.
-               - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-              period.
-               - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-              passed.
-               - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-              been rejected.
-               - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-              failed.
           final_tally_result:
             description: >-
               final_tally_result is the final tally result of the proposal. When
@@ -45648,18 +46321,26 @@ definitions:
             properties:
               'yes':
                 type: string
+                description: yes is the number of yes votes on a proposal.
               abstain:
                 type: string
+                description: abstain is the number of abstain votes on a proposal.
               'no':
                 type: string
+                description: no is the number of no votes on a proposal.
               no_with_veto:
                 type: string
+                description: >-
+                  no_with_veto is the number of no with veto votes on a
+                  proposal.
           submit_time:
             type: string
             format: date-time
+            description: submit_time is the time of proposal submission.
           deposit_end_time:
             type: string
             format: date-time
+            description: deposit_end_time is the end time for deposition.
           total_deposit:
             type: array
             items:
@@ -45677,12 +46358,15 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            description: total_deposit is the total deposit on the proposal.
           voting_start_time:
             type: string
             format: date-time
+            description: voting_start_time is the starting time to vote on a proposal.
           voting_end_time:
             type: string
             format: date-time
+            description: voting_end_time is the end time of voting on a proposal.
         description: Proposal defines the core field members of a governance proposal.
     description: >-
       QueryProposalResponse is the response type for the Query/Proposal RPC
@@ -45698,6 +46382,7 @@ definitions:
             proposal_id:
               type: string
               format: uint64
+              description: proposal_id defines the unique id of the proposal.
             content:
               type: object
               properties:
@@ -45870,6 +46555,7 @@ definitions:
                       "value": "1.212s"
                     }
             status:
+              description: status defines the proposal status.
               type: string
               enum:
                 - PROPOSAL_STATUS_UNSPECIFIED
@@ -45879,20 +46565,6 @@ definitions:
                 - PROPOSAL_STATUS_REJECTED
                 - PROPOSAL_STATUS_FAILED
               default: PROPOSAL_STATUS_UNSPECIFIED
-              description: |-
-                ProposalStatus enumerates the valid statuses of a proposal.
-
-                 - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-                 - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-                period.
-                 - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-                period.
-                 - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-                passed.
-                 - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-                been rejected.
-                 - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-                failed.
             final_tally_result:
               description: >-
                 final_tally_result is the final tally result of the proposal.
@@ -45906,18 +46578,26 @@ definitions:
               properties:
                 'yes':
                   type: string
+                  description: yes is the number of yes votes on a proposal.
                 abstain:
                   type: string
+                  description: abstain is the number of abstain votes on a proposal.
                 'no':
                   type: string
+                  description: no is the number of no votes on a proposal.
                 no_with_veto:
                   type: string
+                  description: >-
+                    no_with_veto is the number of no with veto votes on a
+                    proposal.
             submit_time:
               type: string
               format: date-time
+              description: submit_time is the time of proposal submission.
             deposit_end_time:
               type: string
               format: date-time
+              description: deposit_end_time is the end time for deposition.
             total_deposit:
               type: array
               items:
@@ -45935,13 +46615,17 @@ definitions:
                   method
 
                   signatures required by gogoproto.
+              description: total_deposit is the total deposit on the proposal.
             voting_start_time:
               type: string
               format: date-time
+              description: voting_start_time is the starting time to vote on a proposal.
             voting_end_time:
               type: string
               format: date-time
+              description: voting_end_time is the end time of voting on a proposal.
           description: Proposal defines the core field members of a governance proposal.
+        description: proposals defines all the requested governance proposals.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -45973,12 +46657,16 @@ definitions:
         properties:
           'yes':
             type: string
+            description: yes is the number of yes votes on a proposal.
           abstain:
             type: string
+            description: abstain is the number of abstain votes on a proposal.
           'no':
             type: string
+            description: no is the number of no votes on a proposal.
           no_with_veto:
             type: string
+            description: no_with_veto is the number of no with veto votes on a proposal.
     description: >-
       QueryTallyResultResponse is the response type for the Query/Tally RPC
       method.
@@ -45991,8 +46679,10 @@ definitions:
           proposal_id:
             type: string
             format: uint64
+            description: proposal_id defines the unique id of the proposal.
           voter:
             type: string
+            description: voter is the voter address of the proposal.
           option:
             description: >-
               Deprecated: Prefer to use `options` instead. This field is set in
@@ -46016,6 +46706,9 @@ definitions:
               type: object
               properties:
                 option:
+                  description: >-
+                    option defines the valid vote options, it must not contain
+                    duplicate vote options.
                   type: string
                   enum:
                     - VOTE_OPTION_UNSPECIFIED
@@ -46024,22 +46717,17 @@ definitions:
                     - VOTE_OPTION_NO
                     - VOTE_OPTION_NO_WITH_VETO
                   default: VOTE_OPTION_UNSPECIFIED
-                  description: >-
-                    VoteOption enumerates the valid vote options for a given
-                    governance proposal.
-
-                     - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                     - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                     - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                     - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                     - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                 weight:
                   type: string
+                  description: weight is the vote weight associated with the vote option.
               description: |-
                 WeightedVoteOption defines a unit of vote for vote split.
 
                 Since: cosmos-sdk 0.43
-            title: 'Since: cosmos-sdk 0.43'
+            description: |-
+              options is the weighted vote options.
+
+              Since: cosmos-sdk 0.43
         description: |-
           Vote defines a vote on a governance proposal.
           A Vote consists of a proposal ID, the voter, and the vote option.
@@ -46055,8 +46743,10 @@ definitions:
             proposal_id:
               type: string
               format: uint64
+              description: proposal_id defines the unique id of the proposal.
             voter:
               type: string
+              description: voter is the voter address of the proposal.
             option:
               description: >-
                 Deprecated: Prefer to use `options` instead. This field is set
@@ -46080,6 +46770,9 @@ definitions:
                 type: object
                 properties:
                   option:
+                    description: >-
+                      option defines the valid vote options, it must not contain
+                      duplicate vote options.
                     type: string
                     enum:
                       - VOTE_OPTION_UNSPECIFIED
@@ -46088,26 +46781,21 @@ definitions:
                       - VOTE_OPTION_NO
                       - VOTE_OPTION_NO_WITH_VETO
                     default: VOTE_OPTION_UNSPECIFIED
-                    description: >-
-                      VoteOption enumerates the valid vote options for a given
-                      governance proposal.
-
-                       - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                       - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                       - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                       - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                       - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                   weight:
                     type: string
+                    description: weight is the vote weight associated with the vote option.
                 description: |-
                   WeightedVoteOption defines a unit of vote for vote split.
 
                   Since: cosmos-sdk 0.43
-              title: 'Since: cosmos-sdk 0.43'
+              description: |-
+                options is the weighted vote options.
+
+                Since: cosmos-sdk 0.43
           description: |-
             Vote defines a vote on a governance proposal.
             A Vote consists of a proposal ID, the voter, and the vote option.
-        description: votes defined the queried votes.
+        description: votes defines the queried votes.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -46136,7 +46824,7 @@ definitions:
         format: byte
         description: |-
           Minimum percentage of total stake needed to vote for a result to be
-           considered valid.
+          considered valid.
       threshold:
         type: string
         format: byte
@@ -46148,19 +46836,23 @@ definitions:
         format: byte
         description: |-
           Minimum value of Veto votes to Total votes ratio for proposal to be
-           vetoed. Default value: 1/3.
+          vetoed. Default value: 1/3.
     description: TallyParams defines the params for tallying votes on governance proposals.
   cosmos.gov.v1beta1.TallyResult:
     type: object
     properties:
       'yes':
         type: string
+        description: yes is the number of yes votes on a proposal.
       abstain:
         type: string
+        description: abstain is the number of abstain votes on a proposal.
       'no':
         type: string
+        description: no is the number of no votes on a proposal.
       no_with_veto:
         type: string
+        description: no_with_veto is the number of no with veto votes on a proposal.
     description: TallyResult defines a standard tally for a governance proposal.
   cosmos.gov.v1beta1.Vote:
     type: object
@@ -46168,8 +46860,10 @@ definitions:
       proposal_id:
         type: string
         format: uint64
+        description: proposal_id defines the unique id of the proposal.
       voter:
         type: string
+        description: voter is the voter address of the proposal.
       option:
         description: >-
           Deprecated: Prefer to use `options` instead. This field is set in
@@ -46193,6 +46887,9 @@ definitions:
           type: object
           properties:
             option:
+              description: >-
+                option defines the valid vote options, it must not contain
+                duplicate vote options.
               type: string
               enum:
                 - VOTE_OPTION_UNSPECIFIED
@@ -46201,22 +46898,17 @@ definitions:
                 - VOTE_OPTION_NO
                 - VOTE_OPTION_NO_WITH_VETO
               default: VOTE_OPTION_UNSPECIFIED
-              description: >-
-                VoteOption enumerates the valid vote options for a given
-                governance proposal.
-
-                 - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                 - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                 - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                 - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                 - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
             weight:
               type: string
+              description: weight is the vote weight associated with the vote option.
           description: |-
             WeightedVoteOption defines a unit of vote for vote split.
 
             Since: cosmos-sdk 0.43
-        title: 'Since: cosmos-sdk 0.43'
+        description: |-
+          options is the weighted vote options.
+
+          Since: cosmos-sdk 0.43
     description: |-
       Vote defines a vote on a governance proposal.
       A Vote consists of a proposal ID, the voter, and the vote option.
@@ -46243,12 +46935,15 @@ definitions:
     properties:
       voting_period:
         type: string
-        description: Length of the voting period.
+        description: Duration of the voting period.
     description: VotingParams defines the params for voting on governance proposals.
   cosmos.gov.v1beta1.WeightedVoteOption:
     type: object
     properties:
       option:
+        description: >-
+          option defines the valid vote options, it must not contain duplicate
+          vote options.
         type: string
         enum:
           - VOTE_OPTION_UNSPECIFIED
@@ -46257,17 +46952,9 @@ definitions:
           - VOTE_OPTION_NO
           - VOTE_OPTION_NO_WITH_VETO
         default: VOTE_OPTION_UNSPECIFIED
-        description: >-
-          VoteOption enumerates the valid vote options for a given governance
-          proposal.
-
-           - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-           - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-           - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-           - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-           - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
       weight:
         type: string
+        description: weight is the vote weight associated with the vote option.
     description: |-
       WeightedVoteOption defines a unit of vote for vote split.
 
@@ -46278,8 +46965,10 @@ definitions:
       proposal_id:
         type: string
         format: uint64
+        description: proposal_id defines the unique id of the proposal.
       depositor:
         type: string
+        description: depositor defines the deposit addresses from the proposals.
       amount:
         type: array
         items:
@@ -46294,6 +46983,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+        description: amount to be deposited by depositor.
     description: |-
       Deposit defines an amount deposited by an account address to an active
       proposal.
@@ -46320,7 +47010,8 @@ definitions:
         description: >-
           Maximum period for Atom holders to deposit on a proposal. Initial
           value: 2
-           months.
+
+          months.
     description: DepositParams defines the params for deposits on governance proposals.
   cosmos.gov.v1.Params:
     type: object
@@ -46345,10 +47036,11 @@ definitions:
         description: >-
           Maximum period for Atom holders to deposit on a proposal. Initial
           value: 2
-           months.
+
+          months.
       voting_period:
         type: string
-        description: Length of the voting period.
+        description: Duration of the voting period.
       quorum:
         type: string
         description: |-
@@ -46379,6 +47071,7 @@ definitions:
       id:
         type: string
         format: uint64
+        description: id defines the unique id of the proposal.
       messages:
         type: array
         items:
@@ -46545,7 +47238,11 @@ definitions:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
+        description: >-
+          messages are the arbitrary messages to be executed if the proposal
+          passes.
       status:
+        description: status defines the proposal status.
         type: string
         enum:
           - PROPOSAL_STATUS_UNSPECIFIED
@@ -46555,20 +47252,6 @@ definitions:
           - PROPOSAL_STATUS_REJECTED
           - PROPOSAL_STATUS_FAILED
         default: PROPOSAL_STATUS_UNSPECIFIED
-        description: |-
-          ProposalStatus enumerates the valid statuses of a proposal.
-
-           - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-           - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-          period.
-           - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-          period.
-           - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-          passed.
-           - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-          been rejected.
-           - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-          failed.
       final_tally_result:
         description: |-
           final_tally_result is the final tally result of the proposal. When
@@ -46578,18 +47261,26 @@ definitions:
         properties:
           yes_count:
             type: string
+            description: yes_count is the number of yes votes on a proposal.
           abstain_count:
             type: string
+            description: abstain_count is the number of abstain votes on a proposal.
           no_count:
             type: string
+            description: no_count is the number of no votes on a proposal.
           no_with_veto_count:
             type: string
+            description: >-
+              no_with_veto_count is the number of no with veto votes on a
+              proposal.
       submit_time:
         type: string
         format: date-time
+        description: submit_time is the time of proposal submission.
       deposit_end_time:
         type: string
         format: date-time
+        description: deposit_end_time is the end time for deposition.
       total_deposit:
         type: array
         items:
@@ -46604,15 +47295,30 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+        description: total_deposit is the total deposit on the proposal.
       voting_start_time:
         type: string
         format: date-time
+        description: voting_start_time is the starting time to vote on a proposal.
       voting_end_time:
         type: string
         format: date-time
+        description: voting_end_time is the end time of voting on a proposal.
       metadata:
         type: string
         description: metadata is any arbitrary metadata attached to the proposal.
+      title:
+        type: string
+        description: 'Since: cosmos-sdk 0.47'
+        title: title is the title of the proposal
+      summary:
+        type: string
+        description: 'Since: cosmos-sdk 0.47'
+        title: summary is a short summary of the proposal
+      proposer:
+        type: string
+        description: 'Since: cosmos-sdk 0.47'
+        title: Proposer is the address of the proposal sumbitter
     description: Proposal defines the core field members of a governance proposal.
   cosmos.gov.v1.ProposalStatus:
     type: string
@@ -46647,8 +47353,10 @@ definitions:
           proposal_id:
             type: string
             format: uint64
+            description: proposal_id defines the unique id of the proposal.
           depositor:
             type: string
+            description: depositor defines the deposit addresses from the proposals.
           amount:
             type: array
             items:
@@ -46666,6 +47374,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            description: amount to be deposited by depositor.
         description: |-
           Deposit defines an amount deposited by an account address to an active
           proposal.
@@ -46683,8 +47392,10 @@ definitions:
             proposal_id:
               type: string
               format: uint64
+              description: proposal_id defines the unique id of the proposal.
             depositor:
               type: string
+              description: depositor defines the deposit addresses from the proposals.
             amount:
               type: array
               items:
@@ -46702,11 +47413,13 @@ definitions:
                   method
 
                   signatures required by gogoproto.
+              description: amount to be deposited by depositor.
           description: >-
             Deposit defines an amount deposited by an account address to an
             active
 
             proposal.
+        description: deposits defines the requested deposits.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -46740,7 +47453,7 @@ definitions:
         properties:
           voting_period:
             type: string
-            description: Length of the voting period.
+            description: Duration of the voting period.
       deposit_params:
         description: |-
           Deprecated: Prefer to use `params` instead.
@@ -46770,7 +47483,8 @@ definitions:
             description: >-
               Maximum period for Atom holders to deposit on a proposal. Initial
               value: 2
-               months.
+
+              months.
       tally_params:
         description: |-
           Deprecated: Prefer to use `params` instead.
@@ -46782,7 +47496,8 @@ definitions:
             description: >-
               Minimum percentage of total stake needed to vote for a result to
               be
-               considered valid.
+
+              considered valid.
           threshold:
             type: string
             description: >-
@@ -46793,7 +47508,8 @@ definitions:
             description: >-
               Minimum value of Veto votes to Total votes ratio for proposal to
               be
-               vetoed. Default value: 1/3.
+
+              vetoed. Default value: 1/3.
       params:
         description: |-
           params defines all the paramaters of x/gov module.
@@ -46824,10 +47540,11 @@ definitions:
             description: >-
               Maximum period for Atom holders to deposit on a proposal. Initial
               value: 2
-               months.
+
+              months.
           voting_period:
             type: string
-            description: Length of the voting period.
+            description: Duration of the voting period.
           quorum:
             type: string
             description: >-
@@ -46860,6 +47577,7 @@ definitions:
           id:
             type: string
             format: uint64
+            description: id defines the unique id of the proposal.
           messages:
             type: array
             items:
@@ -47033,7 +47751,11 @@ definitions:
                       "@type": "type.googleapis.com/google.protobuf.Duration",
                       "value": "1.212s"
                     }
+            description: >-
+              messages are the arbitrary messages to be executed if the proposal
+              passes.
           status:
+            description: status defines the proposal status.
             type: string
             enum:
               - PROPOSAL_STATUS_UNSPECIFIED
@@ -47043,20 +47765,6 @@ definitions:
               - PROPOSAL_STATUS_REJECTED
               - PROPOSAL_STATUS_FAILED
             default: PROPOSAL_STATUS_UNSPECIFIED
-            description: |-
-              ProposalStatus enumerates the valid statuses of a proposal.
-
-               - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-               - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-              period.
-               - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-              period.
-               - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-              passed.
-               - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-              been rejected.
-               - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-              failed.
           final_tally_result:
             description: >-
               final_tally_result is the final tally result of the proposal. When
@@ -47069,18 +47777,26 @@ definitions:
             properties:
               yes_count:
                 type: string
+                description: yes_count is the number of yes votes on a proposal.
               abstain_count:
                 type: string
+                description: abstain_count is the number of abstain votes on a proposal.
               no_count:
                 type: string
+                description: no_count is the number of no votes on a proposal.
               no_with_veto_count:
                 type: string
+                description: >-
+                  no_with_veto_count is the number of no with veto votes on a
+                  proposal.
           submit_time:
             type: string
             format: date-time
+            description: submit_time is the time of proposal submission.
           deposit_end_time:
             type: string
             format: date-time
+            description: deposit_end_time is the end time for deposition.
           total_deposit:
             type: array
             items:
@@ -47098,15 +47814,30 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            description: total_deposit is the total deposit on the proposal.
           voting_start_time:
             type: string
             format: date-time
+            description: voting_start_time is the starting time to vote on a proposal.
           voting_end_time:
             type: string
             format: date-time
+            description: voting_end_time is the end time of voting on a proposal.
           metadata:
             type: string
             description: metadata is any arbitrary metadata attached to the proposal.
+          title:
+            type: string
+            description: 'Since: cosmos-sdk 0.47'
+            title: title is the title of the proposal
+          summary:
+            type: string
+            description: 'Since: cosmos-sdk 0.47'
+            title: summary is a short summary of the proposal
+          proposer:
+            type: string
+            description: 'Since: cosmos-sdk 0.47'
+            title: Proposer is the address of the proposal sumbitter
         description: Proposal defines the core field members of a governance proposal.
     description: >-
       QueryProposalResponse is the response type for the Query/Proposal RPC
@@ -47122,6 +47853,7 @@ definitions:
             id:
               type: string
               format: uint64
+              description: id defines the unique id of the proposal.
             messages:
               type: array
               items:
@@ -47297,7 +48029,11 @@ definitions:
                         "@type": "type.googleapis.com/google.protobuf.Duration",
                         "value": "1.212s"
                       }
+              description: >-
+                messages are the arbitrary messages to be executed if the
+                proposal passes.
             status:
+              description: status defines the proposal status.
               type: string
               enum:
                 - PROPOSAL_STATUS_UNSPECIFIED
@@ -47307,20 +48043,6 @@ definitions:
                 - PROPOSAL_STATUS_REJECTED
                 - PROPOSAL_STATUS_FAILED
               default: PROPOSAL_STATUS_UNSPECIFIED
-              description: |-
-                ProposalStatus enumerates the valid statuses of a proposal.
-
-                 - PROPOSAL_STATUS_UNSPECIFIED: PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status.
-                 - PROPOSAL_STATUS_DEPOSIT_PERIOD: PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-                period.
-                 - PROPOSAL_STATUS_VOTING_PERIOD: PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-                period.
-                 - PROPOSAL_STATUS_PASSED: PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-                passed.
-                 - PROPOSAL_STATUS_REJECTED: PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-                been rejected.
-                 - PROPOSAL_STATUS_FAILED: PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-                failed.
             final_tally_result:
               description: >-
                 final_tally_result is the final tally result of the proposal.
@@ -47334,18 +48056,26 @@ definitions:
               properties:
                 yes_count:
                   type: string
+                  description: yes_count is the number of yes votes on a proposal.
                 abstain_count:
                   type: string
+                  description: abstain_count is the number of abstain votes on a proposal.
                 no_count:
                   type: string
+                  description: no_count is the number of no votes on a proposal.
                 no_with_veto_count:
                   type: string
+                  description: >-
+                    no_with_veto_count is the number of no with veto votes on a
+                    proposal.
             submit_time:
               type: string
               format: date-time
+              description: submit_time is the time of proposal submission.
             deposit_end_time:
               type: string
               format: date-time
+              description: deposit_end_time is the end time for deposition.
             total_deposit:
               type: array
               items:
@@ -47363,16 +48093,32 @@ definitions:
                   method
 
                   signatures required by gogoproto.
+              description: total_deposit is the total deposit on the proposal.
             voting_start_time:
               type: string
               format: date-time
+              description: voting_start_time is the starting time to vote on a proposal.
             voting_end_time:
               type: string
               format: date-time
+              description: voting_end_time is the end time of voting on a proposal.
             metadata:
               type: string
               description: metadata is any arbitrary metadata attached to the proposal.
+            title:
+              type: string
+              description: 'Since: cosmos-sdk 0.47'
+              title: title is the title of the proposal
+            summary:
+              type: string
+              description: 'Since: cosmos-sdk 0.47'
+              title: summary is a short summary of the proposal
+            proposer:
+              type: string
+              description: 'Since: cosmos-sdk 0.47'
+              title: Proposer is the address of the proposal sumbitter
           description: Proposal defines the core field members of a governance proposal.
+        description: proposals defines all the requested governance proposals.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -47404,12 +48150,18 @@ definitions:
         properties:
           yes_count:
             type: string
+            description: yes_count is the number of yes votes on a proposal.
           abstain_count:
             type: string
+            description: abstain_count is the number of abstain votes on a proposal.
           no_count:
             type: string
+            description: no_count is the number of no votes on a proposal.
           no_with_veto_count:
             type: string
+            description: >-
+              no_with_veto_count is the number of no with veto votes on a
+              proposal.
     description: >-
       QueryTallyResultResponse is the response type for the Query/Tally RPC
       method.
@@ -47422,14 +48174,19 @@ definitions:
           proposal_id:
             type: string
             format: uint64
+            description: proposal_id defines the unique id of the proposal.
           voter:
             type: string
+            description: voter is the voter address of the proposal.
           options:
             type: array
             items:
               type: object
               properties:
                 option:
+                  description: >-
+                    option defines the valid vote options, it must not contain
+                    duplicate vote options.
                   type: string
                   enum:
                     - VOTE_OPTION_UNSPECIFIED
@@ -47438,18 +48195,11 @@ definitions:
                     - VOTE_OPTION_NO
                     - VOTE_OPTION_NO_WITH_VETO
                   default: VOTE_OPTION_UNSPECIFIED
-                  description: >-
-                    VoteOption enumerates the valid vote options for a given
-                    governance proposal.
-
-                     - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                     - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                     - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                     - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                     - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                 weight:
                   type: string
+                  description: weight is the vote weight associated with the vote option.
               description: WeightedVoteOption defines a unit of vote for vote split.
+            description: options is the weighted vote options.
           metadata:
             type: string
             description: metadata is any  arbitrary metadata to attached to the vote.
@@ -47468,14 +48218,19 @@ definitions:
             proposal_id:
               type: string
               format: uint64
+              description: proposal_id defines the unique id of the proposal.
             voter:
               type: string
+              description: voter is the voter address of the proposal.
             options:
               type: array
               items:
                 type: object
                 properties:
                   option:
+                    description: >-
+                      option defines the valid vote options, it must not contain
+                      duplicate vote options.
                     type: string
                     enum:
                       - VOTE_OPTION_UNSPECIFIED
@@ -47484,25 +48239,18 @@ definitions:
                       - VOTE_OPTION_NO
                       - VOTE_OPTION_NO_WITH_VETO
                     default: VOTE_OPTION_UNSPECIFIED
-                    description: >-
-                      VoteOption enumerates the valid vote options for a given
-                      governance proposal.
-
-                       - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                       - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                       - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                       - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                       - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
                   weight:
                     type: string
+                    description: weight is the vote weight associated with the vote option.
                 description: WeightedVoteOption defines a unit of vote for vote split.
+              description: options is the weighted vote options.
             metadata:
               type: string
               description: metadata is any  arbitrary metadata to attached to the vote.
           description: |-
             Vote defines a vote on a governance proposal.
             A Vote consists of a proposal ID, the voter, and the vote option.
-        description: votes defined the queried votes.
+        description: votes defines the queried votes.
       pagination:
         description: pagination defines the pagination in the response.
         type: object
@@ -47530,7 +48278,7 @@ definitions:
         type: string
         description: |-
           Minimum percentage of total stake needed to vote for a result to be
-           considered valid.
+          considered valid.
       threshold:
         type: string
         description: >-
@@ -47540,19 +48288,23 @@ definitions:
         type: string
         description: |-
           Minimum value of Veto votes to Total votes ratio for proposal to be
-           vetoed. Default value: 1/3.
+          vetoed. Default value: 1/3.
     description: TallyParams defines the params for tallying votes on governance proposals.
   cosmos.gov.v1.TallyResult:
     type: object
     properties:
       yes_count:
         type: string
+        description: yes_count is the number of yes votes on a proposal.
       abstain_count:
         type: string
+        description: abstain_count is the number of abstain votes on a proposal.
       no_count:
         type: string
+        description: no_count is the number of no votes on a proposal.
       no_with_veto_count:
         type: string
+        description: no_with_veto_count is the number of no with veto votes on a proposal.
     description: TallyResult defines a standard tally for a governance proposal.
   cosmos.gov.v1.Vote:
     type: object
@@ -47560,14 +48312,19 @@ definitions:
       proposal_id:
         type: string
         format: uint64
+        description: proposal_id defines the unique id of the proposal.
       voter:
         type: string
+        description: voter is the voter address of the proposal.
       options:
         type: array
         items:
           type: object
           properties:
             option:
+              description: >-
+                option defines the valid vote options, it must not contain
+                duplicate vote options.
               type: string
               enum:
                 - VOTE_OPTION_UNSPECIFIED
@@ -47576,18 +48333,11 @@ definitions:
                 - VOTE_OPTION_NO
                 - VOTE_OPTION_NO_WITH_VETO
               default: VOTE_OPTION_UNSPECIFIED
-              description: >-
-                VoteOption enumerates the valid vote options for a given
-                governance proposal.
-
-                 - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-                 - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-                 - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-                 - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-                 - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
             weight:
               type: string
+              description: weight is the vote weight associated with the vote option.
           description: WeightedVoteOption defines a unit of vote for vote split.
+        description: options is the weighted vote options.
       metadata:
         type: string
         description: metadata is any  arbitrary metadata to attached to the vote.
@@ -47617,12 +48367,15 @@ definitions:
     properties:
       voting_period:
         type: string
-        description: Length of the voting period.
+        description: Duration of the voting period.
     description: VotingParams defines the params for voting on governance proposals.
   cosmos.gov.v1.WeightedVoteOption:
     type: object
     properties:
       option:
+        description: >-
+          option defines the valid vote options, it must not contain duplicate
+          vote options.
         type: string
         enum:
           - VOTE_OPTION_UNSPECIFIED
@@ -47631,17 +48384,9 @@ definitions:
           - VOTE_OPTION_NO
           - VOTE_OPTION_NO_WITH_VETO
         default: VOTE_OPTION_UNSPECIFIED
-        description: >-
-          VoteOption enumerates the valid vote options for a given governance
-          proposal.
-
-           - VOTE_OPTION_UNSPECIFIED: VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
-           - VOTE_OPTION_YES: VOTE_OPTION_YES defines a yes vote option.
-           - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
-           - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
-           - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
       weight:
         type: string
+        description: weight is the vote weight associated with the vote option.
     description: WeightedVoteOption defines a unit of vote for vote split.
   cosmos.mint.v1beta1.Params:
     type: object
@@ -52198,7 +52943,9 @@ definitions:
       verified with raw bytes from Tx.
        - SIGN_MODE_TEXTUAL: SIGN_MODE_TEXTUAL is a future signing mode that will verify some
       human-readable textual representation on top of the binary representation
-      from SIGN_MODE_DIRECT. It is currently not supported.
+      from SIGN_MODE_DIRECT. It is currently experimental, and should be used
+      for testing purposes only, until Textual is fully released. Please follow
+      the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
        - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
       SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does not
       require signers signing over other signers' `signer_info`. It also allows
@@ -54038,7 +54785,14 @@ definitions:
               human-readable textual representation on top of the binary
               representation
 
-              from SIGN_MODE_DIRECT. It is currently not supported.
+              from SIGN_MODE_DIRECT. It is currently experimental, and should be
+              used
+
+              for testing purposes only, until Textual is fully released. Please
+              follow
+
+              the tracking issue
+              https://github.com/cosmos/cosmos-sdk/issues/11970.
                - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
               SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode
               does not
@@ -54142,7 +54896,13 @@ definitions:
           human-readable textual representation on top of the binary
           representation
 
-          from SIGN_MODE_DIRECT. It is currently not supported.
+          from SIGN_MODE_DIRECT. It is currently experimental, and should be
+          used
+
+          for testing purposes only, until Textual is fully released. Please
+          follow
+
+          the tracking issue https://github.com/cosmos/cosmos-sdk/issues/11970.
            - SIGN_MODE_DIRECT_AUX: SIGN_MODE_DIRECT_AUX specifies a signing mode which uses
           SignDocDirectAux. As opposed to SIGN_MODE_DIRECT, this sign mode does
           not
@@ -55816,6 +56576,27 @@ definitions:
 
           and can't be handled, they will be ignored
     description: TxBody is the body of a transaction that all signers sign over.
+  cosmos.tx.v1beta1.TxDecodeAminoRequest:
+    type: object
+    properties:
+      amino_binary:
+        type: string
+        format: byte
+    description: |-
+      TxDecodeAminoRequest is the request type for the Service.TxDecodeAmino
+      RPC method.
+
+      Since: cosmos-sdk 0.47
+  cosmos.tx.v1beta1.TxDecodeAminoResponse:
+    type: object
+    properties:
+      amino_json:
+        type: string
+    description: |-
+      TxDecodeAminoResponse is the response type for the Service.TxDecodeAmino
+      RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxDecodeRequest:
     type: object
     properties:
@@ -55839,6 +56620,27 @@ definitions:
       Service.TxDecode method.
 
       Since: cosmos-sdk 0.47
+  cosmos.tx.v1beta1.TxEncodeAminoRequest:
+    type: object
+    properties:
+      amino_json:
+        type: string
+    description: |-
+      TxEncodeAminoRequest is the request type for the Service.TxEncodeAmino
+      RPC method.
+
+      Since: cosmos-sdk 0.47
+  cosmos.tx.v1beta1.TxEncodeAminoResponse:
+    type: object
+    properties:
+      amino_binary:
+        type: string
+        format: byte
+    description: |-
+      TxEncodeAminoResponse is the response type for the Service.TxEncodeAmino
+      RPC method.
+
+      Since: cosmos-sdk 0.47
   cosmos.tx.v1beta1.TxEncodeRequest:
     type: object
     properties:
@@ -55846,7 +56648,7 @@ definitions:
         $ref: '#/definitions/cosmos.tx.v1beta1.Tx'
         description: tx is the transaction to encode.
     description: |-
-      TxEncodeResponse is the request type for the Service.TxEncode
+      TxEncodeRequest is the request type for the Service.TxEncode
       RPC method.
 
       Since: cosmos-sdk 0.47
@@ -55946,9 +56748,7 @@ definitions:
       height:
         type: string
         format: int64
-        description: |-
-          The height at which the upgrade must be performed.
-          Only used if Time is not set.
+        description: The height at which the upgrade must be performed.
       info:
         type: string
         title: |-
@@ -56179,9 +56979,7 @@ definitions:
           height:
             type: string
             format: int64
-            description: |-
-              The height at which the upgrade must be performed.
-              Only used if Time is not set.
+            description: The height at which the upgrade must be performed.
           info:
             type: string
             title: >-
@@ -58159,6 +58957,7 @@ definitions:
       amount:
         type: string
         format: uint64
+        title: amount is the number of all NFTs of a given class owned by the owner
     title: QueryBalanceResponse is the response type for the Query/Balance RPC method
   cosmos.nft.v1beta1.QueryClassResponse:
     type: object
@@ -58567,7 +59366,9 @@ definitions:
                     }
               title: data is the app specific metadata of the NFT class. Optional
           description: Class defines the class of the nft type.
+        description: class defines the class of the nft type.
       pagination:
+        description: pagination defines the pagination in the response.
         type: object
         properties:
           next_key:
@@ -58585,14 +59386,6 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
     title: QueryClassesResponse is the response type for the Query/Classes RPC method
   cosmos.nft.v1beta1.QueryNFTResponse:
     type: object
@@ -58783,6 +59576,7 @@ definitions:
                   }
             title: data is an app specific data of the NFT. Optional
         description: NFT defines the NFT.
+        title: owner is the owner address of the nft
     title: QueryNFTResponse is the response type for the Query/NFT RPC method
   cosmos.nft.v1beta1.QueryNFTsResponse:
     type: object
@@ -58979,7 +59773,9 @@ definitions:
                     }
               title: data is an app specific data of the NFT. Optional
           description: NFT defines the NFT.
+        title: NFT defines the NFT
       pagination:
+        description: pagination defines the pagination in the response.
         type: object
         properties:
           next_key:
@@ -58997,20 +59793,13 @@ definitions:
               PageRequest.count_total
 
               was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
     title: QueryNFTsResponse is the response type for the Query/NFTs RPC methods
   cosmos.nft.v1beta1.QueryOwnerResponse:
     type: object
     properties:
       owner:
         type: string
+        title: owner is the owner address of the nft
     title: QueryOwnerResponse is the response type for the Query/Owner RPC method
   cosmos.nft.v1beta1.QuerySupplyResponse:
     type: object
@@ -59018,6 +59807,7 @@ definitions:
       amount:
         type: string
         format: uint64
+        title: amount is the number of all NFTs from the given class
     title: QuerySupplyResponse is the response type for the Query/Supply RPC method
   cosmos.group.v1.GroupInfo:
     type: object
@@ -59095,7 +59885,7 @@ definitions:
         description: admin is the account address of the group admin.
       metadata:
         type: string
-        description: metadata is any arbitrary metadata to attached to the group policy.
+        description: metadata is any arbitrary metadata attached to the group policy.
       version:
         type: string
         format: uint64
@@ -59303,7 +60093,7 @@ definitions:
         description: group_policy_address is the account address of group policy.
       metadata:
         type: string
-        description: metadata is any arbitrary metadata to attached to the proposal.
+        description: metadata is any arbitrary metadata attached to the proposal.
       proposers:
         type: array
         items:
@@ -59564,6 +60354,14 @@ definitions:
         description: >-
           messages is a list of `sdk.Msg`s that will be executed if the proposal
           passes.
+      title:
+        type: string
+        description: 'Since: cosmos-sdk 0.47'
+        title: title is the title of the proposal
+      summary:
+        type: string
+        description: 'Since: cosmos-sdk 0.47'
+        title: summary is a short summary of the proposal
     description: >-
       Proposal defines a group proposal. Any member of a group can submit a
       proposal
@@ -59616,7 +60414,7 @@ definitions:
     type: object
     properties:
       info:
-        description: info is the GroupInfo for the group.
+        description: info is the GroupInfo of the group.
         type: object
         properties:
           id:
@@ -59726,9 +60524,7 @@ definitions:
               description: admin is the account address of the group admin.
             metadata:
               type: string
-              description: >-
-                metadata is any arbitrary metadata to attached to the group
-                policy.
+              description: metadata is any arbitrary metadata attached to the group policy.
             version:
               type: string
               format: uint64
@@ -59960,9 +60756,7 @@ definitions:
               description: admin is the account address of the group admin.
             metadata:
               type: string
-              description: >-
-                metadata is any arbitrary metadata to attached to the group
-                policy.
+              description: metadata is any arbitrary metadata attached to the group policy.
             version:
               type: string
               format: uint64
@@ -60194,9 +60988,7 @@ definitions:
             description: admin is the account address of the group admin.
           metadata:
             type: string
-            description: >-
-              metadata is any arbitrary metadata to attached to the group
-              policy.
+            description: metadata is any arbitrary metadata attached to the group policy.
           version:
             type: string
             format: uint64
@@ -60526,7 +61318,7 @@ definitions:
             description: group_policy_address is the account address of group policy.
           metadata:
             type: string
-            description: metadata is any arbitrary metadata to attached to the proposal.
+            description: metadata is any arbitrary metadata attached to the proposal.
           proposers:
             type: array
             items:
@@ -60801,6 +61593,14 @@ definitions:
             description: >-
               messages is a list of `sdk.Msg`s that will be executed if the
               proposal passes.
+          title:
+            type: string
+            description: 'Since: cosmos-sdk 0.47'
+            title: title is the title of the proposal
+          summary:
+            type: string
+            description: 'Since: cosmos-sdk 0.47'
+            title: summary is a short summary of the proposal
     description: QueryProposalResponse is the Query/Proposal response type.
   cosmos.group.v1.QueryProposalsByGroupPolicyResponse:
     type: object
@@ -60819,7 +61619,7 @@ definitions:
               description: group_policy_address is the account address of group policy.
             metadata:
               type: string
-              description: metadata is any arbitrary metadata to attached to the proposal.
+              description: metadata is any arbitrary metadata attached to the proposal.
             proposers:
               type: array
               items:
@@ -61097,6 +61897,14 @@ definitions:
               description: >-
                 messages is a list of `sdk.Msg`s that will be executed if the
                 proposal passes.
+            title:
+              type: string
+              description: 'Since: cosmos-sdk 0.47'
+              title: title is the title of the proposal
+            summary:
+              type: string
+              description: 'Since: cosmos-sdk 0.47'
+              title: summary is a short summary of the proposal
           description: >-
             Proposal defines a group proposal. Any member of a group can submit
             a proposal
@@ -61177,7 +61985,7 @@ definitions:
             default: VOTE_OPTION_UNSPECIFIED
           metadata:
             type: string
-            description: metadata is any arbitrary metadata to attached to the vote.
+            description: metadata is any arbitrary metadata attached to the vote.
           submit_time:
             type: string
             format: date-time
@@ -61212,7 +62020,7 @@ definitions:
               default: VOTE_OPTION_UNSPECIFIED
             metadata:
               type: string
-              description: metadata is any arbitrary metadata to attached to the vote.
+              description: metadata is any arbitrary metadata attached to the vote.
             submit_time:
               type: string
               format: date-time
@@ -61266,7 +62074,7 @@ definitions:
               default: VOTE_OPTION_UNSPECIFIED
             metadata:
               type: string
-              description: metadata is any arbitrary metadata to attached to the vote.
+              description: metadata is any arbitrary metadata attached to the vote.
             submit_time:
               type: string
               format: date-time
@@ -61331,7 +62139,7 @@ definitions:
         default: VOTE_OPTION_UNSPECIFIED
       metadata:
         type: string
-        description: metadata is any arbitrary metadata to attached to the vote.
+        description: metadata is any arbitrary metadata attached to the vote.
       submit_time:
         type: string
         format: date-time

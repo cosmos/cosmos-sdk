@@ -19,50 +19,30 @@ func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
 	return t
 }
 
-func (t testStore) Get(key []byte) []byte {
-	res, err := t.db.Get(key)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) Get(key []byte) ([]byte, error) {
+
+	return t.db.Get(key)
 }
 
-func (t testStore) Has(key []byte) bool {
-	res, err := t.db.Has(key)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) Has(key []byte) (bool, error) {
+	return t.db.Has(key)
 }
 
-func (t testStore) Set(key, value []byte) {
-	err := t.db.Set(key, value)
-	if err != nil {
-		panic(err)
-	}
+func (t testStore) Set(key, value []byte) error {
+	return t.db.Set(key, value)
+
 }
 
-func (t testStore) Delete(key []byte) {
-	err := t.db.Delete(key)
-	if err != nil {
-		panic(err)
-	}
+func (t testStore) Delete(key []byte) error {
+	return t.db.Delete(key)
 }
 
-func (t testStore) Iterator(start, end []byte) store.Iterator {
-	res, err := t.db.Iterator(start, end)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) Iterator(start, end []byte) (store.Iterator, error) {
+	return t.db.Iterator(start, end)
 }
 
-func (t testStore) ReverseIterator(start, end []byte) store.Iterator {
-	res, err := t.db.ReverseIterator(start, end)
-	if err != nil {
-		panic(err)
-	}
-	return res
+func (t testStore) ReverseIterator(start, end []byte) (store.Iterator, error) {
+	return t.db.ReverseIterator(start, end)
 }
 
 var _ store.KVStore = testStore{}
@@ -92,6 +72,13 @@ func checkKeyCodec[T any](t *testing.T, keyCodec KeyCodec[T], key T) {
 	require.NoError(t, err)
 	require.Equal(t, len(buffer), read, "encoded non terminal key and pair key read bytes must have same size")
 	require.Equal(t, pairKey, decodedPairKey, "encoding and decoding produces different keys with non terminal encoding")
+
+	// check JSON
+	keyJSON, err := keyCodec.EncodeJSON(key)
+	require.NoError(t, err)
+	decoded, err := keyCodec.DecodeJSON(keyJSON)
+	require.NoError(t, err)
+	require.Equal(t, key, decoded, "json encoding and decoding did not produce the same results")
 }
 
 // checkValueCodec asserts the correct behaviour of a ValueCodec over the type T.

@@ -1,8 +1,9 @@
 package simapp
 
 import (
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -26,6 +27,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 			// Migrate Tendermint consensus parameters from x/params module to a
 			// dedicated x/consensus module.
 			baseapp.MigrateParams(ctx, baseAppLegacySS, &app.ConsensusParamsKeeper)
+
+			// Note: this migration is optional,
+			// You can include x/gov proposal migration documented at [UPGRADING.md](https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md)
 
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},

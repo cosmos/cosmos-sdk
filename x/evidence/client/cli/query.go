@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/x/evidence/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // GetQueryCmd returns the CLI command with all evidence module query commands

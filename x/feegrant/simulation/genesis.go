@@ -4,10 +4,10 @@ import (
 	"math/rand"
 	"time"
 
+	"cosmossdk.io/x/feegrant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // genFeeGrants returns a slice of randomly generated allowances.

@@ -5,9 +5,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/google/gofuzz"
+	fuzz "github.com/google/gofuzz"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/query"

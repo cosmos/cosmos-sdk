@@ -1,8 +1,9 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type nftBalance struct {
@@ -57,6 +58,7 @@ func TestGenericUniqueIndex(t *testing.T) {
 		nftBalance{nftIDs: []uint64{1}},     // this is the update nft balance, which contains only id 1
 		&nftBalance{nftIDs: []uint64{0, 1}}, // this is the old nft balance, which contains both 0 and 1
 	)
+	require.NoError(t, err)
 
 	// the updated balance does not contain nft with id 0
 	_, err = ui.Get(ctx, 0)

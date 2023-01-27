@@ -76,7 +76,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.WeightSend, simulation.TypeMsgSend, simulation.TypeMsgSend},
+		{simulation.WeightSend, nft.ModuleName, simulation.TypeMsgSend},
 	}
 
 	for i, w := range weightedOps {

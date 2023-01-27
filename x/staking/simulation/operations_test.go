@@ -131,12 +131,12 @@ func (s *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.DefaultWeightMsgCreateValidator, types.ModuleName, types.TypeMsgCreateValidator},
-		{simulation.DefaultWeightMsgEditValidator, types.ModuleName, types.TypeMsgEditValidator},
-		{simulation.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
-		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
-		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
-		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, types.TypeMsgCancelUnbondingDelegation},
+		{simulation.DefaultWeightMsgCreateValidator, types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateValidator{})},
+		{simulation.DefaultWeightMsgEditValidator, types.ModuleName, sdk.MsgTypeURL(&types.MsgEditValidator{})},
+		{simulation.DefaultWeightMsgDelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgDelegate{})},
+		{simulation.DefaultWeightMsgUndelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgUndelegate{})},
+		{simulation.DefaultWeightMsgBeginRedelegate, types.ModuleName, sdk.MsgTypeURL(&types.MsgBeginRedelegate{})},
+		{simulation.DefaultWeightMsgCancelUnbondingDelegation, types.ModuleName, sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{})},
 	}
 
 	for i, w := range weightesOps {
@@ -168,7 +168,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal(types.TypeMsgCreateValidator, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgCreateValidator{}), sdk.MsgTypeURL(&msg))
 	valaddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	require.NoError(err)
 	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", sdk.AccAddress(valaddr).String())
@@ -214,7 +214,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal(types.TypeMsgCancelUnbondingDelegation, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgCancelUnbondingDelegation{}), sdk.MsgTypeURL(&msg))
 	require.Equal(delegator.Address.String(), msg.DelegatorAddress)
 	require.Equal(validator0.GetOperator().String(), msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
@@ -242,7 +242,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	types.ModuleCdc.UnmarshalJSON(operationMsg.Msg, &msg)
 
 	require.True(operationMsg.OK)
-	require.Equal(types.TypeMsgEditValidator, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgEditValidator{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -265,7 +265,7 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	require.True(operationMsg.OK)
 	require.Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.DelegatorAddress)
 	require.Equal("stake", msg.Amount.Denom)
-	require.Equal(types.TypeMsgDelegate, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgDelegate{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -305,7 +305,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	require.Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
 	require.Equal("1646627814093010272", msg.Amount.Amount.String())
 	require.Equal("stake", msg.Amount.Denom)
-	require.Equal(types.TypeMsgUndelegate, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgUndelegate{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorAddress)
 	require.Len(futureOperations, 0)
 }
@@ -348,7 +348,7 @@ func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	require.True(operationMsg.OK)
 	require.Equal("cosmos1ua0fwyws7vzjrry3pqkklvf8mny93l9s9zg0h4", msg.DelegatorAddress)
 	require.Equal("stake", msg.Amount.Denom)
-	require.Equal(types.TypeMsgBeginRedelegate, msg.Type())
+	require.Equal(sdk.MsgTypeURL(&types.MsgBeginRedelegate{}), sdk.MsgTypeURL(&msg))
 	require.Equal("cosmosvaloper1ghekyjucln7y67ntx7cf27m9dpuxxemnsvnaes", msg.ValidatorDstAddress)
 	require.Equal("cosmosvaloper1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7epjs3u", msg.ValidatorSrcAddress)
 	require.Len(futureOperations, 0)

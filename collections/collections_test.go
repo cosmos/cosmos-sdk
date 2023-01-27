@@ -2,10 +2,7 @@ package collections
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"math"
-	"reflect"
 	"testing"
 
 	"cosmossdk.io/core/store"
@@ -52,77 +49,6 @@ func deps() (store.KVStoreService, context.Context) {
 	kv := db.NewMemDB()
 	return &testStore{kv}, context.Background()
 }
-
-// checkKeyCodec asserts the correct behaviour of a KeyCodec over the type T.
-func checkKeyCodec[T any](t *testing.T, keyCodec KeyCodec[T], key T) {
-	buffer := make([]byte, keyCodec.Size(key))
-	written, err := keyCodec.Encode(buffer, key)
-	require.NoError(t, err)
-	require.Equal(t, len(buffer), written)
-	read, decodedKey, err := keyCodec.Decode(buffer)
-	require.NoError(t, err)
-	require.Equal(t, len(buffer), read, "encoded key and read bytes must have same size")
-	require.Equal(t, key, decodedKey, "encoding and decoding produces different keys")
-	// test if terminality is correctly applied
-	pairCodec := PairKeyCodec(keyCodec, StringKey)
-	pairKey := Join(key, "TEST")
-	buffer = make([]byte, pairCodec.Size(pairKey))
-	written, err = pairCodec.Encode(buffer, pairKey)
-	require.NoError(t, err)
-	read, decodedPairKey, err := pairCodec.Decode(buffer)
-	require.NoError(t, err)
-	require.Equal(t, len(buffer), read, "encoded non terminal key and pair key read bytes must have same size")
-	require.Equal(t, pairKey, decodedPairKey, "encoding and decoding produces different keys with non terminal encoding")
-
-	// check JSON
-	keyJSON, err := keyCodec.EncodeJSON(key)
-	require.NoError(t, err)
-	decoded, err := keyCodec.DecodeJSON(keyJSON)
-	require.NoError(t, err)
-	require.Equal(t, key, decoded, "json encoding and decoding did not produce the same results")
-}
-
-// checkValueCodec asserts the correct behaviour of a ValueCodec over the type T.
-func checkValueCodec[T any](t *testing.T, encoder ValueCodec[T], value T) {
-	encodedValue, err := encoder.Encode(value)
-	require.NoError(t, err)
-	decodedValue, err := encoder.Decode(encodedValue)
-	require.NoError(t, err)
-	require.Equal(t, value, decodedValue, "encoding and decoding produces different values")
-}
-
-type testValueCodec[T any] struct{}
-
-func (t testValueCodec[T]) EncodeJSON(value T) ([]byte, error) {
-	return t.Encode(value)
-}
-
-func (t testValueCodec[T]) DecodeJSON(b []byte) (T, error) {
-	return t.Decode(b)
-}
-
-func (testValueCodec[T]) Encode(value T) ([]byte, error) {
-	b, err := json.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-func (testValueCodec[T]) Decode(b []byte) (T, error) {
-	t := new(T)
-	err := json.Unmarshal(b, t)
-	if err != nil {
-		return *t, err
-	}
-	return *t, nil
-}
-func (testValueCodec[T]) Stringify(value T) string {
-	return fmt.Sprintf("%#v", value)
-}
-
-func (testValueCodec[T]) ValueType() string { return reflect.TypeOf(*new(T)).Name() }
-
-func newTestValueCodec[T any]() ValueCodec[T] { return testValueCodec[T]{} }
 
 func TestPrefix(t *testing.T) {
 	t.Run("panics on invalid int", func(t *testing.T) {

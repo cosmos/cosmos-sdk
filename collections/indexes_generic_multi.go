@@ -69,7 +69,7 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) It
 	return i.refs.Iterate(ctx, ranger)
 }
 
-// Has reports is there is a relationship in the index between the referencing and the referenced key.
+// Has reports if there is a relationship in the index between the referencing and the referenced key.
 func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Has(
 	ctx context.Context,
 	referencing ReferencingKey,
@@ -113,7 +113,6 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Un
 	pk PrimaryKey,
 	value Value,
 ) error {
-
 	refs, err := i.getRefs(pk, value)
 	if err != nil {
 		return err

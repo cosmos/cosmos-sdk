@@ -48,10 +48,9 @@ vagrant
 .dir-locals.el
 .vscode
 
-# Depinject & Graphviz
+# Graphviz
 dependency-graph.png
 debug_container.dot
-debug_container.log
 
 # Latex
 *.aux

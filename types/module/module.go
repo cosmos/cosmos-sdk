@@ -593,7 +593,6 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 				panic(err)
 			}
 		}
-
 	}
 
 	return abci.ResponseBeginBlock{

@@ -238,6 +238,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (store/streaming)[#14603](https://github.com/cosmos/cosmos-sdk/pull/14603) `StoreDecoderRegistry` moved from store to `types/simulations` this breaks the `AppModuleSimulation` interface. 
 * (x/staking) [#14590](https://github.com/cosmos/cosmos-sdk/pull/14590) `MsgUndelegateResponse` now includes undelegated amount. `x/staking` module's `keeper.Undelegate` now returns 3 values (completionTime,undelegateAmount,error)  instead of 2.
 * (x/feegrant) [14649](https://github.com/cosmos/cosmos-sdk/pull/14649) Extract Feegrant in its own go.mod and rename the package to `cosmossdk.io/x/feegrant`.
+* (x/capability) [14804](https://github.com/cosmos/cosmos-sdk/pull/14804) Extract Feegrant in its own go.mod and rename the package to `cosmossdk.io/x/capability`.
 
 ### Client Breaking Changes
 

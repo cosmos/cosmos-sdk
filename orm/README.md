@@ -38,7 +38,8 @@ except for `bytes` as well as the well-known types `google.protobuf.Timestamp` a
 are optimized for storage space when it makes sense (see the documentation in `cosmos/orm/v1/orm.proto` for more details)
 and table rows do not use extra storage space to store key fields in the value.
 
-We recommend that users of the ORM attempt to follow database design best practices such as [normalization](https://en.wikipedia.org/wiki/Database_normalization).
+We recommend that users of the ORM attempt to follow database design best practices such as
+[normalization](https://en.wikipedia.org/wiki/Database_normalization) (at least 1NF).
 For instance, defining `repeated` fields in a table is considered an anti-pattern because breaks first normal form (1NF).
 Although we support `repeated` fields in tables, they cannot be used as key fields for this reason. This may seem
 restrictive but years of best practice (and also experience in the SDK) have shown that following this pattern
@@ -46,7 +47,7 @@ leads to easier to maintain schemas.
 
 To illustrate the motivation for these principles with an example from the SDK, historically balances were stored
 as a mapping from account -> map of denom to amount. This did not scale well because an account with 100 token balances
-but need to be encoded/decoded every time a single coin balance changes. Now balances are stored as account,denom -> amount
+needed to be encoded/decoded every time a single coin balance changed. Now balances are stored as account,denom -> amount
 as in the example above. With the ORM's data model, if we wanted to add a new field to `Balance` such as
 `unlocked_balance` (if vesting accounts were redesigned in this way), it would be easy to add it to this table without
 requiring a data migration. Because of the ORM's optimizations, the account and denom are only stored in the key part

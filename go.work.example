@@ -22,4 +22,5 @@ use (
 	./x/circuit
 	./x/feegrant
 	./x/evidence
+	./x/crisis
 )

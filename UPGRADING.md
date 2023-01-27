@@ -72,7 +72,7 @@ By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migrati
 
 ##### Extract evidence to a standalone module
 
-The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/evidence` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
 
 #### `x/nft`
@@ -87,6 +87,13 @@ The `x/nft` module is extracted to have a separate go.mod file which allows it t
 
 The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
+
+#### x/crisis
+
+##### Extract crisis to a standalone module
+
+The `x/crisis` module is extracted to have a separate go.mod file which allows it to be a standalone module.
+All the crisis imports are now renamed to use `cosmossdk.io/x/crisis` instead of `github.com/cosmos/cosmos-sdk/x/crisis` across the SDK.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 

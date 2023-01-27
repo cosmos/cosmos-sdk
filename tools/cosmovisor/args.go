@@ -11,10 +11,9 @@ import (
 	"time"
 
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
-	"github.com/rs/zerolog"
-
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/rs/zerolog"
 )
 
 // environment variable names

@@ -23,4 +23,5 @@ use (
 	./x/feegrant
 	./x/evidence
 	./x/capability
+	./x/upgrade
 )

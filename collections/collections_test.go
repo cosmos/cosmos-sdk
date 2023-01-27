@@ -29,7 +29,6 @@ func (t testStore) Has(key []byte) (bool, error) {
 
 func (t testStore) Set(key, value []byte) error {
 	return t.db.Set(key, value)
-
 }
 
 func (t testStore) Delete(key []byte) error {

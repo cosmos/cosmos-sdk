@@ -81,19 +81,26 @@ All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instea
 
 The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 
-#### x/feegrant
+#### `x/feegrant`
 
 ##### Extract feegrant to a standalone module
 
 The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
 
-#### x/capability
+#### `x/capability`
 
 ##### Extract capability to a standalone module
 
 The `x/capability` module is extracted to have a separate go.mod file which allows it to be a standalone module.
 All the capability imports are now renamed to use `cosmossdk.io/x/capability` instead of `github.com/cosmos/cosmos-sdk/x/capability` across the SDK.
+
+#### `x/upgrade`
+
+##### Extract upgrade to a standalone module
+
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 

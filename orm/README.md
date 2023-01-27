@@ -117,7 +117,7 @@ message Balance {
 }
 ```
 
-## Auto-incrementing Primary Keys
+### Auto-incrementing Primary Keys
 
 A common pattern in SDK modules and in database design is to define tables with a single integer `id` field with an
 automatically generated primary key. In the ORM we can do this by setting the `auto_increment` option to `true` on the
@@ -134,7 +134,7 @@ message Account {
 }
 ```
 
-## Unique Indexes
+### Unique Indexes
 
 A unique index can be added by setting the `unique` option to `true` on an index, ex:
 ```protobuf

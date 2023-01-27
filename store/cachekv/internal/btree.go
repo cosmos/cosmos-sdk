@@ -51,22 +51,14 @@ func (bt BTree) Delete(key []byte) {
 	bt.tree.Delete(newItem(key, nil))
 }
 
-<<<<<<< HEAD
-func (bt *BTree) Iterator(start, end []byte) (*memIterator, error) {
-=======
 func (bt BTree) Iterator(start, end []byte) (types.Iterator, error) {
->>>>>>> f1ee974ec (refactor: make cachekv store thread-safe again (#14378))
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}
 	return newMemIterator(start, end, bt, true), nil
 }
 
-<<<<<<< HEAD
-func (bt *BTree) ReverseIterator(start, end []byte) (*memIterator, error) {
-=======
 func (bt BTree) ReverseIterator(start, end []byte) (types.Iterator, error) {
->>>>>>> f1ee974ec (refactor: make cachekv store thread-safe again (#14378))
 	if (start != nil && len(start) == 0) || (end != nil && len(end) == 0) {
 		return nil, errKeyEmpty
 	}

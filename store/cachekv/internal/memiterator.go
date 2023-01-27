@@ -22,11 +22,7 @@ type memIterator struct {
 	valid     bool
 }
 
-<<<<<<< HEAD
-func NewMemIterator(start, end []byte, items *BTree, deleted map[string]struct{}, ascending bool) *memIterator {
-=======
 func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator {
->>>>>>> f1ee974ec (refactor: make cachekv store thread-safe again (#14378))
 	iter := items.tree.Iter()
 	var valid bool
 	if ascending {

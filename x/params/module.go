@@ -113,12 +113,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	proposal.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// ProposalContents returns all the params content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
 // RegisterStoreDecoder doesn't register any type.
 func (AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {}
 

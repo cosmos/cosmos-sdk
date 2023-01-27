@@ -2,67 +2,91 @@ package docs
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
+	"cosmossdk.io/collections/indexes"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var BalancesPrefix = collections.NewPrefix(1)
+var AccountsNumberIndexPrefix = collections.NewPrefix(1)
 
-type Keeper struct {
-	Schema   collections.Schema
-	Balances collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
+type AccountsIndexes struct {
+	Number *indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
 }
 
-func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
-	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
-	return Keeper{
-		Balances: collections.NewMap(
-			sb, BalancesPrefix, "balances",
-			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
+	return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
+}
+
+func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
+	return AccountsIndexes{
+		Number: indexes.NewUnique(
+			sb, AccountsNumberIndexPrefix, "accounts_by_number",
+			collections.Uint64Key, sdk.AccAddressKey,
+			func(_ sdk.AccAddress, v authtypes.BaseAccount) (uint64, error) {
+				return v.AccountNumber, nil
+			},
 		),
 	}
 }
 
-func (k Keeper) SetBalance(ctx sdk.Context, address sdk.AccAddress, denom string, amount math.Int) error {
-	key := collections.Join(address, denom)
-	return k.Balances.Set(ctx, key, amount)
+var AccountsPrefix = collections.NewPrefix(0)
+
+type Keeper struct {
+	Schema   collections.Schema
+	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
 }
 
-func (k Keeper) GetBalance(ctx sdk.Context, address sdk.AccAddress, denom string) (math.Int, error) {
-	return k.Balances.Get(ctx, collections.Join(address, denom))
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+	return Keeper{
+		Accounts: collections.NewIndexedMap(
+			sb, AccountsPrefix, "accounts",
+			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc),
+			NewAccountIndexes(sb),
+		),
+	}
 }
 
-func (k Keeper) GetAllAddressBalances(ctx sdk.Context, address sdk.AccAddress) (sdk.Coins, error) {
-	balances := sdk.NewCoins()
+func (k Keeper) CreateAccount(ctx sdk.Context, addr sdk.AccAddress) error {
+	nextAccountNumber := k.getNextAccountNumber()
 
-	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](address)
+	newAcc := authtypes.BaseAccount{
+		AccountNumber: nextAccountNumber,
+		Sequence:      0,
+	}
 
-	iter, err := k.Balances.Iterate(ctx, rng)
+	return k.Accounts.Set(ctx, addr, newAcc)
+}
+
+func (k Keeper) RemoveAccount(ctx sdk.Context, addr sdk.AccAddress) error {
+	return k.Accounts.Remove(ctx, addr)
+}
+
+func (k Keeper) GetAccountByNumber(ctx sdk.Context, accNumber uint64) (sdk.AccAddress, authtypes.BaseAccount, error) {
+	accAddress, err := k.Accounts.Indexes.Number.MatchExact(ctx, accNumber)
+	if err != nil {
+		return nil, authtypes.BaseAccount{}, err
+	}
+
+	acc, err := k.Accounts.Get(ctx, accAddress)
+	return accAddress, acc, nil
+}
+
+func (k Keeper) GetAccountsByNumber(ctx sdk.Context, startAccNum, endAccNum uint64) ([]authtypes.BaseAccount, error) {
+	rng := new(collections.Range[uint64]).
+		StartInclusive(startAccNum).
+		EndInclusive(endAccNum)
+
+	iter, err := k.Accounts.Indexes.Number.Iterate(ctx, rng)
 	if err != nil {
 		return nil, err
 	}
 
-	kvs, err := iter.KeyValues()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, kv := range kvs {
-		balances = balances.Add(sdk.NewCoin(kv.Key.K2(), kv.Value))
-	}
-	return balances, nil
+	return indexes.CollectValues(ctx, k.Accounts, iter)
 }
 
-func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAddress, startDenom, endDenom string) (sdk.Coins, error) {
-	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](address).
-		StartInclusive(startDenom).
-		EndInclusive(endDenom)
-
-	iter, err := k.Balances.Iterate(ctx, rng)
-	if err != nil {
-		return nil, err
-	}
-	panic(iter)
+func (k Keeper) getNextAccountNumber() uint64 {
+	return 0
 }

@@ -9,7 +9,7 @@ over composite keys, etc.
 # Example
 
 In our example we will show-case how we can use collections when we are dealing with balances, similar to bank,
-a balance is a mapping between `(address, denom) => Int` the composite key in our case is `(address, denom)`.
+a balance is a mapping between `(address, denom) => math.Int` the composite key in our case is `(address, denom)`.
 
 ## Instantiation of a composite key collection
 

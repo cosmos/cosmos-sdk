@@ -9,16 +9,16 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/capability"
+	"cosmossdk.io/x/capability/keeper"
+	"cosmossdk.io/x/capability/testutil"
+	"cosmossdk.io/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	"github.com/cosmos/cosmos-sdk/x/capability/testutil"
-	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
 type CapabilityTestSuite struct {

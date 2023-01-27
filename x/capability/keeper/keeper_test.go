@@ -8,12 +8,12 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/capability"
+	"cosmossdk.io/x/capability/keeper"
+	"cosmossdk.io/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	"github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
 var (

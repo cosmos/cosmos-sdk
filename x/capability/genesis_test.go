@@ -5,11 +5,11 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/capability"
+	"cosmossdk.io/x/capability/keeper"
+	"cosmossdk.io/x/capability/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	"github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	"github.com/cosmos/cosmos-sdk/x/capability/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

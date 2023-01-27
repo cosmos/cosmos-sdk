@@ -20,7 +20,6 @@ func (t testStore) OpenKVStore(ctx context.Context) store.KVStore {
 }
 
 func (t testStore) Get(key []byte) ([]byte, error) {
-
 	return t.db.Get(key)
 }
 

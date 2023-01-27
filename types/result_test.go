@@ -164,13 +164,17 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 			Height: 10,
 			Time:   timestamp,
 		},
+		Evidence: tmtypes.EvidenceData{
+			Evidence: make(tmtypes.EvidenceList, 0),
+		},
 	}}
 
 	blk, err := resultBlock.Block.ToProto()
 	s.Require().NoError(err)
 
 	want := &tm.Block{
-		Header: blk.Header,
+		Header:   blk.Header,
+		Evidence: blk.Evidence,
 	}
 
 	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))

@@ -43,7 +43,7 @@ type Keeper struct {
 func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
 	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
-		Accounts: collections.NewMap(sb, AccountsPrefix, "params", collections.Uint64Key, codec.CollValue[authtypes.BaseAccount](cdc)),
+		Accounts: collections.NewMap(sb, AccountsPrefix, "accounts", collections.Uint64Key, codec.CollValue[authtypes.BaseAccount](cdc)),
 	}
 }
 
@@ -126,7 +126,9 @@ we specified in the range.
 
 Then we use again th `Values` method of the `Iterator` to collect all the results.
 
-`collections.Range` also offers a `Prefix` API which is not 
+`collections.Range` also offers a `Prefix` API which is not appliable to all keys types, 
+for example uint64 cannot be prefix because it is of constant size, but a `string` key 
+can be prefixed.
 
 ### IterateAccounts
 

@@ -353,6 +353,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return simulation.WeightedOperations(
 		simState.AppParams, simState.Cdc,
 		am.accountKeeper, am.bankKeeper, am.keeper,
-		simState.ProposalMsg, simState.LegacyProposalConents,
+		simState.ProposalMsgs, simState.LegacyProposalContents,
 	)
 }

@@ -17,8 +17,8 @@ require (
 	github.com/tendermint/tendermint v0.37.0-rc2
 	github.com/tidwall/btree v1.6.0
 	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
-	google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2 // indirect
-	google.golang.org/grpc v1.52.1 // indirect
+	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa // indirect
+	google.golang.org/grpc v1.52.3 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gotest.tools/v3 v3.4.0
 )

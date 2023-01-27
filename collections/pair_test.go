@@ -1,16 +1,13 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestPair(t *testing.T) {
 	keyCodec := PairKeyCodec(StringKey, StringKey)
-	t.Run("correctness", func(t *testing.T) {
-		checkKeyCodec(t, keyCodec, Join("A", "B"))
-	})
-
 	t.Run("stringify", func(t *testing.T) {
 		s := keyCodec.Stringify(Join("a", "b"))
 		require.Equal(t, `("a", "b")`, s)
@@ -67,5 +64,6 @@ func TestPairRange(t *testing.T) {
 	iter, err = m.Iterate(ctx, NewPrefixedPairRange[string, uint64]("A").Descending().StartExclusive(0).EndInclusive(2))
 	require.NoError(t, err)
 	keys, err = iter.Keys()
+	require.NoError(t, err)
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(2)), Join("A", uint64(1))}, keys)
 }

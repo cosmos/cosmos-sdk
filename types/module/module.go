@@ -584,10 +584,16 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
-		if ok {
+		if module, ok := m.Modules[moduleName].(BeginBlockAppModule); ok {
 			module.BeginBlock(ctx, req)
+		} else if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			err := module.BeginBlock(ctx)
+			if err != nil {
+				// TODO: Handle error
+				panic(err)
+			}
 		}
+
 	}
 
 	return abci.ResponseBeginBlock{
@@ -603,20 +609,26 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		module, ok := m.Modules[moduleName].(EndBlockAppModule)
-		if !ok {
-			continue
-		}
-		moduleValUpdates := module.EndBlock(ctx, req)
+		if module, ok := m.Modules[moduleName].(EndBlockAppModule); ok {
+			moduleValUpdates := module.EndBlock(ctx, req)
 
-		// use these validator updates if provided, the module manager assumes
-		// only one module will update the validator set
-		if len(moduleValUpdates) > 0 {
-			if len(validatorUpdates) > 0 {
-				panic("validator EndBlock updates already set by a previous module")
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					panic("validator EndBlock updates already set by a previous module")
+				}
+
+				validatorUpdates = moduleValUpdates
 			}
-
-			validatorUpdates = moduleValUpdates
+		} else if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
+			err := module.EndBlock(ctx)
+			// TODO: Handle error
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			continue
 		}
 	}
 

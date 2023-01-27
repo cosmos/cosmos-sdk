@@ -26,7 +26,8 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 }
 
 func (k Keeper) SetBalance(ctx sdk.Context, address sdk.AccAddress, denom string, amount math.Int) error {
-	return k.Balances.Set(ctx, collections.Join(address, denom), amount)
+	key := collections.Join(address, denom)
+	return k.Balances.Set(ctx, key, amount)
 }
 
 func (k Keeper) GetBalance(ctx sdk.Context, address sdk.AccAddress, denom string) (math.Int, error) {
@@ -52,4 +53,16 @@ func (k Keeper) GetAllAddressBalances(ctx sdk.Context, address sdk.AccAddress) (
 		balances = balances.Add(sdk.NewCoin(kv.Key.K2(), kv.Value))
 	}
 	return balances, nil
+}
+
+func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAddress, startDenom, endDenom string) (sdk.Coins, error) {
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, string](address).
+		StartInclusive(startDenom).
+		EndInclusive(endDenom)
+
+	iter, err := k.Balances.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+	panic(iter)
 }

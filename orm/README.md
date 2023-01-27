@@ -207,12 +207,12 @@ To use the ORM in a module, first create a `ModuleSchemaDescriptor`. This tells 
 an ORM schema and assigns them all a unique non-zero id. Ex:
 ```go
 var MyModuleSchema = &ormv1alpha1.ModuleSchemaDescriptor{
-	SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
-		{
-			Id:            1,
-			ProtoFileName: mymodule.File_my_module_state_proto.Path(),
-		},
-	},
+    SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+        {
+            Id:            1,
+            ProtoFileName: mymodule.File_my_module_state_proto.Path(),
+        },
+    },
 }
 ```
 
@@ -221,7 +221,7 @@ with a constructor `NewStateStore` that takes a parameter of type `ormdb.ModuleD
 to your module's keeper struct. Ex:
 ```go
 type Keeper struct {
-	db StateStore
+    db StateStore
 }
 ```
 
@@ -231,9 +231,9 @@ above and one or more store services from `cosmossdk.io/core/store`. Ex:
 func NewKeeper(storeService store.KVStoreService) (*Keeper, error) {
     modDb, err := ormdb.NewModuleDB(MyModuleSchema, ormdb.ModuleDBOptions{KVStoreService: storeService})
     if err != nil {
-		return nil, err
+        return nil, err
     }
-	db, err := NewStateStore(modDb)
+    db, err := NewStateStore(modDb)
     if err != nil {
         return nil, err
     }
@@ -248,19 +248,19 @@ For each table in a .proto file, there is a type-safe table interface implemente
 for a table named `Balance` there should be a `BalanceTable` interface that looks like this:
 ```go
 type BalanceTable interface {
-	Insert(ctx context.Context, balance *Balance) error
-	Update(ctx context.Context, balance *Balance) error
-	Save(ctx context.Context, balance *Balance) error
-	Delete(ctx context.Context, balance *Balance) error
-	Has(ctx context.Context, acocunt []byte, denom string) (found bool, err error)
-	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
-	Get(ctx context.Context, acocunt []byte, denom string) (*Balance, error)
-	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
-	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
-	DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error
-	DeleteRange(ctx context.Context, from, to BalanceIndexKey) error
+    Insert(ctx context.Context, balance *Balance) error
+    Update(ctx context.Context, balance *Balance) error
+    Save(ctx context.Context, balance *Balance) error
+    Delete(ctx context.Context, balance *Balance) error
+    Has(ctx context.Context, acocunt []byte, denom string) (found bool, err error)
+    // Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+    Get(ctx context.Context, acocunt []byte, denom string) (*Balance, error)
+    List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+    ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+    DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error
+    DeleteRange(ctx context.Context, from, to BalanceIndexKey) error
 
-	doNotImplement()
+    doNotImplement()
 }
 ```
 
@@ -269,33 +269,33 @@ via a `BalanceTable()` accessor method. If all the above example tables/singleto
 then `StateStore` would get generated like this:
 ```go
 type BankStore interface {
-	BalanceTable() BalanceTable
-	AccountTable() AccountTable
-	ParamsTable() ParamsTable
+    BalanceTable() BalanceTable
+    AccountTable() AccountTable
+    ParamsTable() ParamsTable
 
-	doNotImplement()
+    doNotImplement()
 }
 ```
 
 So to work with the `BalanceTable` in a keeper method we could use code like this:
 ```go
 func (k keeper) AddBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
-	balance, err := k.db.BalanceTable().Get(ctx, acct, denom)
-	if err != nil && !ormerrors.IsNotFound(err) {
-		return err
-	}
+    balance, err := k.db.BalanceTable().Get(ctx, acct, denom)
+    if err != nil && !ormerrors.IsNotFound(err) {
+        return err
+    }
 
-	if balance == nil {
-		balance = &Balance{
-			Account: acct,
-			Denom:   denom,
-			Amount:  amount,
-		}
-	} else {
-		balance.Amount = balance.Amount + amount
-	}
+    if balance == nil {
+        balance = &Balance{
+            Account: acct,
+            Denom:   denom,
+            Amount:  amount,
+        }
+    } else {
+        balance.Amount = balance.Amount + amount
+    }
 
-	return k.db.BalanceTable().Save(ctx, balance)
+    return k.db.BalanceTable().Save(ctx, balance)
 }
 ```
 

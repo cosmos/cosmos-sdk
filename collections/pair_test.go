@@ -1,8 +1,9 @@
 package collections
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestPair(t *testing.T) {
@@ -63,5 +64,6 @@ func TestPairRange(t *testing.T) {
 	iter, err = m.Iterate(ctx, NewPrefixedPairRange[string, uint64]("A").Descending().StartExclusive(0).EndInclusive(2))
 	require.NoError(t, err)
 	keys, err = iter.Keys()
+	require.NoError(t, err)
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(2)), Join("A", uint64(1))}, keys)
 }

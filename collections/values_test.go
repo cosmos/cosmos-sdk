@@ -7,7 +7,6 @@ import (
 )
 
 func TestUint64Value(t *testing.T) {
-
 	t.Run("invalid size", func(t *testing.T) {
 		_, err := Uint64Value.Decode([]byte{0x1, 0x2})
 		require.ErrorIs(t, err, ErrEncoding)

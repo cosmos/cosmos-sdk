@@ -8,6 +8,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v0.1.0
+	cosmossdk.io/x/crisis v0.0.0-20230127052719-0fceb8f40c7a
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
@@ -32,7 +33,7 @@ require (
 	cloud.google.com/go/storage v1.27.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58 // indirect
 	cosmossdk.io/collections v0.0.0-20230124101704-57bedb100648 // indirect
-	cosmossdk.io/core v0.5.0 // indirect
+	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect

@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 )
 
 // Import cosmos-sdk/types/store.go for convenience.
@@ -13,7 +13,6 @@ type (
 	CacheMultiStore  = types.CacheMultiStore
 	CommitMultiStore = types.CommitMultiStore
 	KVStore          = types.KVStore
-	KVPair           = types.KVPair
 	Iterator         = types.Iterator
 	CacheKVStore     = types.CacheKVStore
 	CommitKVStore    = types.CommitKVStore

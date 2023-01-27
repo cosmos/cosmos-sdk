@@ -7,10 +7,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
+	"cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
 )
 
 type Store interface {
@@ -433,11 +432,6 @@ func (key *MemoryStoreKey) String() string {
 
 //----------------------------------------
 
-// key-value result for iterator queries
-type KVPair kv.Pair
-
-//----------------------------------------
-
 // TraceContext contains TraceKVStore context data. It will be written with
 // every trace operation.
 type TraceContext map[string]interface{}
@@ -514,7 +508,3 @@ func NewMemoryStoreKeys(names ...string) map[string]*MemoryStoreKey {
 
 	return keys
 }
-
-// StoreDecoderRegistry defines each of the modules store decoders. Used for ImportExport
-// simulation.
-type StoreDecoderRegistry map[string]func(kvA, kvB kv.Pair) string

@@ -14,12 +14,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -181,20 +182,27 @@ func TestABCI_GRPCQuery(t *testing.T) {
 		ConsensusParams: &tmproto.ConsensusParams{},
 	})
 
-	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
-	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
-	suite.baseApp.Commit()
-
 	req := testdata.SayHelloRequest{Name: "foo"}
 	reqBz, err := req.Marshal()
 	require.NoError(t, err)
+
+	resQuery := suite.baseApp.Query(abci.RequestQuery{
+		Data: reqBz,
+		Path: "/testdata.Query/SayHello",
+	})
+	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
+	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
+
+	header := tmproto.Header{Height: suite.baseApp.LastBlockHeight() + 1}
+	suite.baseApp.BeginBlock(abci.RequestBeginBlock{Header: header})
+	suite.baseApp.Commit()
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
 		Path: "/testdata.Query/SayHello",
 	}
 
-	resQuery := suite.baseApp.Query(reqQuery)
+	resQuery = suite.baseApp.Query(reqQuery)
 	require.Equal(t, abci.CodeTypeOK, resQuery.Code, resQuery)
 
 	var res testdata.SayHelloResponse

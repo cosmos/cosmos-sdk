@@ -13,8 +13,8 @@ import (
 	sdkerrors "cosmossdk.io/errors"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // Manager manages snapshot and restore operations for an app, making sure only a single

@@ -30,22 +30,15 @@ func NewMap[K, V any](
 	keyCodec KeyCodec[K],
 	valueCodec ValueCodec[V],
 ) Map[K, V] {
-	m := newMap(schemaBuilder, prefix, name, keyCodec, valueCodec)
-	schemaBuilder.addCollection(m)
-	return m
-}
-
-func newMap[K, V any](
-	schemaBuilder *SchemaBuilder, prefix Prefix, name string,
-	keyCodec KeyCodec[K], valueCodec ValueCodec[V],
-) Map[K, V] {
-	return Map[K, V]{
+	m := Map[K, V]{
 		kc:     keyCodec,
 		vc:     valueCodec,
 		sa:     schemaBuilder.schema.storeAccessor,
 		prefix: prefix.Bytes(),
 		name:   name,
 	}
+	schemaBuilder.addCollection(m)
+	return m
 }
 
 func (m Map[K, V]) getName() string {
@@ -77,21 +70,22 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 // Get returns the value associated with the provided key,
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
-func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
+func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
-		var v V
 		return v, err
 	}
 
 	kvStore := m.sa(ctx)
-	valueBytes := kvStore.Get(bytesKey)
+	valueBytes, err := kvStore.Get(bytesKey)
+	if err != nil {
+		return v, err
+	}
 	if valueBytes == nil {
-		var v V
 		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
 	}
 
-	v, err := m.vc.Decode(valueBytes)
+	v, err = m.vc.Decode(valueBytes)
 	if err != nil {
 		return v, fmt.Errorf("%w: value decode: %s", ErrEncoding, err) // TODO: use multi err wrapping in go1.20: https://github.com/golang/go/issues/53435
 	}
@@ -106,7 +100,7 @@ func (m Map[K, V]) Has(ctx context.Context, key K) (bool, error) {
 		return false, err
 	}
 	kvStore := m.sa(ctx)
-	return kvStore.Has(bytesKey), nil
+	return kvStore.Has(bytesKey)
 }
 
 // Remove removes the key from the storage.
@@ -118,8 +112,7 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 		return err
 	}
 	kvStore := m.sa(ctx)
-	kvStore.Delete(bytesKey)
-	return nil
+	return kvStore.Delete(bytesKey)
 }
 
 // Iterate provides an Iterator over K and V. It accepts a Ranger interface.
@@ -138,20 +131,26 @@ func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Orde
 	prefixedStart := append(m.prefix, start...)
 	var prefixedEnd []byte
 	if end == nil {
-		prefixedEnd = prefixEndBytes(m.prefix)
+		prefixedEnd = nextBytesPrefixKey(m.prefix)
 	} else {
 		prefixedEnd = append(m.prefix, end...)
 	}
 
 	s := m.sa(ctx)
-	var storeIter store.Iterator
+	var (
+		storeIter store.Iterator
+		err       error
+	)
 	switch order {
 	case OrderAscending:
-		storeIter = s.Iterator(prefixedStart, prefixedEnd)
+		storeIter, err = s.Iterator(prefixedStart, prefixedEnd)
 	case OrderDescending:
-		storeIter = s.ReverseIterator(prefixedStart, prefixedEnd)
+		storeIter, err = s.ReverseIterator(prefixedStart, prefixedEnd)
 	default:
 		return Iterator[K, V]{}, errOrder
+	}
+	if err != nil {
+		return Iterator[K, V]{}, err
 	}
 
 	if !storeIter.Valid() {

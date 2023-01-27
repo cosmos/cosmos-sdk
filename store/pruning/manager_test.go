@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store/mock"
-	"github.com/cosmos/cosmos-sdk/store/pruning"
-	"github.com/cosmos/cosmos-sdk/store/pruning/types"
+	"cosmossdk.io/store/mock"
+	"cosmossdk.io/store/pruning"
+	"cosmossdk.io/store/pruning/types"
 )
 
 const dbErr = "db error"

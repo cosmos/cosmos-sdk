@@ -13,6 +13,7 @@ require (
 	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
+	cosmossdk.io/x/capability 6fc0c54d71943e4c9f2d3f854c37944374fc2cde
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
@@ -189,8 +190,8 @@ require (
 replace (
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
-	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/capability => ../x/capability
 )
 
 replace (

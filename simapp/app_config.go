@@ -29,6 +29,7 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"google.golang.org/protobuf/types/known/durationpb"
 
+	capabilitytypes "cosmossdk.io/x/capability/types"
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -36,7 +37,6 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

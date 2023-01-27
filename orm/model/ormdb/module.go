@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"math"
 
+	"cosmossdk.io/core/store"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
@@ -66,9 +68,14 @@ type ModuleDBOptions struct {
 	// will be used
 	JSONValidator func(proto.Message) error
 
-	// GetBackendResolver returns a backend resolver for the requested storage
-	// type or an error if this type of storage isn't supported.
-	GetBackendResolver func(ormv1alpha1.StorageType) (ormtable.BackendResolver, error)
+	// KVStoreService is the storage service to use for the DB if default KV-store storage is used.
+	KVStoreService store.KVStoreService
+
+	// KVStoreService is the storage service to use for the DB if memory storage is used.
+	MemoryStoreService store.MemoryStoreService
+
+	// KVStoreService is the storage service to use for the DB if transient storage is used.
+	TransientStoreService store.TransientStoreService
 }
 
 // NewModuleDB constructs a ModuleDB instance from the provided schema and options.
@@ -87,12 +94,49 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 
 	for _, entry := range schema.SchemaFile {
 		var backendResolver ormtable.BackendResolver
-		var err error
-		if options.GetBackendResolver != nil {
-			backendResolver, err = options.GetBackendResolver(entry.StorageType)
-			if err != nil {
-				return nil, err
+
+		switch entry.StorageType {
+		case ormv1alpha1.StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED:
+			service := options.KVStoreService
+			if service == nil {
+				return nil, fmt.Errorf("missing KVStoreService")
 			}
+
+			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+				kvStore := service.OpenKVStore(ctx)
+				return ormtable.NewBackend(ormtable.BackendOptions{
+					CommitmentStore: kvStore,
+					IndexStore:      kvStore,
+				}), nil
+			}
+		case ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY:
+			service := options.MemoryStoreService
+			if service == nil {
+				return nil, fmt.Errorf("missing MemoryStoreService")
+			}
+
+			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+				kvStore := service.OpenMemoryStore(ctx)
+				return ormtable.NewBackend(ormtable.BackendOptions{
+					CommitmentStore: kvStore,
+					IndexStore:      kvStore,
+				}), nil
+			}
+		case ormv1alpha1.StorageType_STORAGE_TYPE_TRANSIENT:
+			service := options.TransientStoreService
+			if service == nil {
+				return nil, fmt.Errorf("missing TransientStoreService")
+			}
+
+			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+				kvStore := service.OpenTransientStore(ctx)
+				return ormtable.NewBackend(ormtable.BackendOptions{
+					CommitmentStore: kvStore,
+					IndexStore:      kvStore,
+				}), nil
+			}
+		default:
+			return nil, fmt.Errorf("unsupported storage type %s", entry.StorageType)
 		}
 
 		id := entry.Id

@@ -1,10 +1,14 @@
 package tx
 
 import (
+	"fmt"
+	"crypto/sha256"
+
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -320,6 +324,10 @@ func (w *wrapper) AsAny() *codectypes.Any {
 
 // WrapTx creates a TxBuilder wrapper around a tx.Tx proto message.
 func WrapTx(protoTx *tx.Tx) client.TxBuilder {
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+	println(fmt.Sprintf("Wrapping tx struct: %#v", protoTx))
+	println(fmt.Sprintf("Wrapping tx hash: %x", sha256.Sum256(cdc.MustMarshal(protoTx))))
 	return &wrapper{
 		tx: protoTx,
 	}

@@ -140,12 +140,28 @@ A unique index can be added by setting the `unique` option to `true` on an index
 ```protobuf
 message Account {
   option (cosmos.orm.v1.table) = {
-    id: 1;
+    id: 2;
     primary_key: { fields: "id", auto_increment: true }
     index: {id: 1, fields: "address", unique: true}
   };
 
   uint64 id = 1;
   bytes address = 2;
+}
+```
+
+### Singletons
+
+The ORM also supports a special type of table with only one row called a `singleton`. This can be used for storing
+module parameters. Singletons only need to define a unique `id` and that cannot conflict with the id of other
+tables or singletons in the same .proto file. Ex:
+```protobuf
+message Params {
+  option (cosmos.orm.v1.singleton) = {
+    id: 3;
+  };
+  
+  google.protobuf.Duration voting_period = 1;
+  uint64 min_threshold = 2;
 }
 ```

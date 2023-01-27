@@ -25,7 +25,6 @@ var (
 	TypeMsgVote           = sdk.MsgTypeURL(&v1.MsgVote{})
 	TypeMsgVoteWeighted   = sdk.MsgTypeURL(&v1.MsgVoteWeighted{})
 	TypeMsgSubmitProposal = sdk.MsgTypeURL(&v1.MsgSubmitProposal{})
-	TypeMsgUpdateParams   = sdk.MsgTypeURL(&v1.MsgUpdateParams{})
 )
 
 // Simulation operation weights constants

@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -106,18 +106,14 @@ func TestWeightedOperations(t *testing.T) {
 		{simulation.DefaultWeightMsgDeposit, types.ModuleName, simulation.TypeMsgDeposit},
 		{simulation.DefaultWeightMsgVote, types.ModuleName, simulation.TypeMsgVote},
 		{simulation.DefaultWeightMsgVoteWeighted, types.ModuleName, simulation.TypeMsgVoteWeighted},
-<<<<<<< HEAD
-=======
-		{simulation.DefaultWeightMsgCancelProposal, types.ModuleName, simulation.TypeMsgCancelProposal},
 		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{1, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{2, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
->>>>>>> d3c319418 (fix: add simulation tests for new param change (#14728))
 	}
 
 	for i, w := range weightesOps {
-		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()), accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		require.NoError(t, err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -329,21 +325,12 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 }
 
 type suite struct {
-<<<<<<< HEAD
 	cdc           codec.Codec
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
 	GovKeeper     *keeper.Keeper
 	StakingKeeper *stakingkeeper.Keeper
 	App           *runtime.App
-=======
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	GovKeeper          *keeper.Keeper
-	StakingKeeper      *stakingkeeper.Keeper
-	DistributionKeeper dk.Keeper
-	App                *runtime.App
->>>>>>> d3c319418 (fix: add simulation tests for new param change (#14728))
 }
 
 // returns context and an app with updated mint keeper
@@ -358,11 +345,7 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 		configurator.StakingModule(),
 		configurator.ConsensusModule(),
 		configurator.GovModule(),
-<<<<<<< HEAD
 	), &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.cdc)
-=======
-	), &res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.StakingKeeper, &res.DistributionKeeper)
->>>>>>> d3c319418 (fix: add simulation tests for new param change (#14728))
 	require.NoError(t, err)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})

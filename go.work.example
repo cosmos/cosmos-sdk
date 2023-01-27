@@ -20,5 +20,6 @@ use (
 	./x/tx
 	./x/nft
 	./x/circuit
+	./x/feegrant
 	./x/evidence
 )

@@ -142,6 +142,15 @@ updates:
     labels:
       - "A:automerge"
       - dependencies
+
+  - package-ecosystem: gomod
+    directory: "x/feegrant"
+    schedule:
+      interval: weekly
+    labels:
+      - "A:automerge"
+      - dependencies
+
   - package-ecosystem: gomod
     directory: "/x/evidence"
     schedule:

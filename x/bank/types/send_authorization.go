@@ -62,7 +62,7 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (a SendAuthorization) ValidateBasic() error {
-	if a.SpendLimit == nil {
+	if len(a.SpendLimit) == 0 {
 		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be nil")
 	}
 	if !a.SpendLimit.IsAllPositive() {

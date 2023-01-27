@@ -54,8 +54,8 @@ require (
 	github.com/tendermint/tendermint v0.37.0-rc2
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
-	google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2
-	google.golang.org/grpc v1.52.1
+	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa
+	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
@@ -179,6 +179,7 @@ replace (
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/store => ./store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

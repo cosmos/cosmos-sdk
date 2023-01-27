@@ -6,10 +6,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/gaskv"
+	"cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type MockContext struct {

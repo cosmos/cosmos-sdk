@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path"
 
@@ -25,8 +24,8 @@ type GRPCEndpoint struct {
 
 func LoadConfig(configDir string) (*Config, error) {
 	configPath := configFilename(configDir)
+
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		// file doesn't exist
 		return &Config{Chains: map[string]*ChainConfig{}}, nil
 	}
 
@@ -36,8 +35,7 @@ func LoadConfig(configDir string) (*Config, error) {
 	}
 
 	config := &Config{}
-	err = toml.Unmarshal(bz, config)
-	if err != nil {
+	if err = toml.Unmarshal(bz, config); err != nil {
 		return nil, errors.Wrapf(err, "can't load config file: %s", configPath)
 	}
 
@@ -45,25 +43,20 @@ func LoadConfig(configDir string) (*Config, error) {
 }
 
 func SaveConfig(configDir string, config *Config) error {
-	configPath := configFilename(configDir)
 	buf := &bytes.Buffer{}
 	enc := toml.NewEncoder(buf)
-	err := enc.Encode(config)
-	if err != nil {
+	if err := enc.Encode(config); err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(configDir, 0755)
-	if err != nil {
+	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return err
 	}
 
-	err = os.WriteFile(configPath, buf.Bytes(), 0644)
-	if err != nil {
+	configPath := configFilename(configDir)
+	if err := os.WriteFile(configPath, buf.Bytes(), 0644); err != nil {
 		return err
 	}
-
-	fmt.Printf("Saved config in %s\n", configPath)
 
 	return nil
 }

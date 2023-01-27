@@ -25,11 +25,7 @@ var (
 	TypeMsgVote           = sdk.MsgTypeURL(&v1.MsgVote{})
 	TypeMsgVoteWeighted   = sdk.MsgTypeURL(&v1.MsgVoteWeighted{})
 	TypeMsgSubmitProposal = sdk.MsgTypeURL(&v1.MsgSubmitProposal{})
-<<<<<<< HEAD
-=======
-	TypeMsgCancelProposal = sdk.MsgTypeURL(&v1.MsgCancelProposal{})
 	TypeMsgUpdateParams   = sdk.MsgTypeURL(&v1.MsgUpdateParams{})
->>>>>>> d3c319418 (fix: add simulation tests for new param change (#14728))
 )
 
 // Simulation operation weights constants
@@ -72,17 +68,7 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		},
 	)
 
-<<<<<<< HEAD
 	// generate the weighted operations for the proposal contents
-=======
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelProposal, &weightMsgCancelProposal, nil,
-		func(_ *rand.Rand) {
-			weightMsgCancelProposal = DefaultWeightMsgCancelProposal
-		},
-	)
-
-	// generate the weighted operations for the proposal msgs
->>>>>>> d3c319418 (fix: add simulation tests for new param change (#14728))
 	var wProposalOps simulation.WeightedOperations
 	for _, wMsg := range wMsgs {
 		wMsg := wMsg // pin variable

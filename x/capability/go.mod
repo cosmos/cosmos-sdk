@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/store v0.1.0
+	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
 	github.com/cosmos/cosmos-sdk v0.46.8
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

@@ -183,10 +183,10 @@ require (
 
 // TODO tag all extracted modules after SDK refactor
 replace (
+	cosmossdk.io/x/capability => ../x/capability
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
-	cosmossdk.io/x/capability => ../x/capability
 	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 

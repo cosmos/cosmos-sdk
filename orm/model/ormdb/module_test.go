@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
+	"cosmossdk.io/core/genesis"
 	"cosmossdk.io/core/store"
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	"github.com/cosmos/cosmos-sdk/orm/testing/ormtest"
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
 // These tests use a simulated bank keeper. Addresses and balances use
@@ -240,40 +240,40 @@ func TestModuleDB(t *testing.T) {
 	}
 
 	// check JSON
-	target := ormjson.NewRawMessageTarget()
-	assert.NilError(t, db.DefaultJSON(target))
+	target := genesis.RawJSONTarget{}
+	assert.NilError(t, db.AppModuleGenesis().DefaultGenesis(target.Target()))
 	rawJson, err := target.JSON()
 	assert.NilError(t, err)
 	golden.Assert(t, string(rawJson), "default_json.golden")
 
-	target = ormjson.NewRawMessageTarget()
-	assert.NilError(t, db.ExportJSON(ctx, target))
+	target = genesis.RawJSONTarget{}
+	assert.NilError(t, db.AppModuleGenesis().ExportGenesis(ctx, target.Target()))
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
 	goodJSON := `{
   "testpb.Supply": []
 }`
-	source, err := ormjson.NewRawMessageSource(json.RawMessage(goodJSON))
+	source, err := genesis.SourceFromRawJSON(json.RawMessage(goodJSON))
 	assert.NilError(t, err)
-	assert.NilError(t, db.ValidateJSON(source))
-	assert.NilError(t, db.ImportJSON(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
+	assert.NilError(t, db.AppModuleGenesis().ValidateGenesis(source))
+	assert.NilError(t, db.AppModuleGenesis().InitGenesis(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
 
 	badJSON := `{
   "testpb.Balance": 5,
   "testpb.Supply": {}
 }
 `
-	source, err = ormjson.NewRawMessageSource(json.RawMessage(badJSON))
+	source, err = genesis.SourceFromRawJSON(json.RawMessage(badJSON))
 	assert.NilError(t, err)
-	assert.ErrorIs(t, db.ValidateJSON(source), ormerrors.JSONValidationError)
+	assert.ErrorIs(t, db.AppModuleGenesis().ValidateGenesis(source), ormerrors.JSONValidationError)
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
-	source, err = ormjson.NewRawMessageSource(rawJson)
+	source, err = genesis.SourceFromRawJSON(rawJson)
 	assert.NilError(t, err)
-	assert.NilError(t, db.ValidateJSON(source))
-	assert.NilError(t, db.ImportJSON(ctx2, source))
+	assert.NilError(t, db.AppModuleGenesis().ValidateGenesis(source))
+	assert.NilError(t, db.AppModuleGenesis().InitGenesis(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 
@@ -349,8 +349,16 @@ func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
 }
 
 func TestGetBackendResolver(t *testing.T) {
-	_, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
-	assert.ErrorContains(t, err, "missing KVStoreService")
+	_, err := ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
+		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+			{
+				Id:            1,
+				ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+				StorageType:   ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY,
+			},
+		},
+	}, ormdb.ModuleDBOptions{})
+	assert.ErrorContains(t, err, "missing MemoryStoreService")
 
 	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
 		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{

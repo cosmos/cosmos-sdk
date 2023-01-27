@@ -5,15 +5,24 @@ import (
 	"fmt"
 	"sort"
 
+	"cosmossdk.io/core/appmodule"
 	"golang.org/x/exp/maps"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
-	"github.com/cosmos/cosmos-sdk/orm/types/ormjson"
 )
 
-func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
+type appModuleGenesisWrapper struct {
+	moduleDB
+}
+
+func (m appModuleGenesisWrapper) IsOnePerModuleType() {}
+
+func (m appModuleGenesisWrapper) IsAppModule() {}
+
+func (m appModuleGenesisWrapper) DefaultGenesis(target appmodule.GenesisTarget) error {
 	tableNames := maps.Keys(m.tablesByName)
 	sort.Slice(tableNames, func(i, j int) bool {
 		ti, tj := tableNames[i], tableNames[j]
@@ -22,7 +31,7 @@ func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
 
 	for _, name := range tableNames {
 		table := m.tablesByName[name]
-		w, err := target.OpenWriter(name)
+		w, err := target(string(name))
 		if err != nil {
 			return err
 		}
@@ -40,7 +49,7 @@ func (m moduleDB) DefaultJSON(target ormjson.WriteTarget) error {
 	return nil
 }
 
-func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
+func (m appModuleGenesisWrapper) ValidateGenesis(source appmodule.GenesisSource) error {
 	errMap := map[protoreflect.FullName]error{}
 	names := maps.Keys(m.tablesByName)
 	sort.Slice(names, func(i, j int) bool {
@@ -48,7 +57,7 @@ func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
 		return ti.Name() < tj.Name()
 	})
 	for _, name := range names {
-		r, err := source.OpenReader(name)
+		r, err := source(string(name))
 		if err != nil {
 			return err
 		}
@@ -80,7 +89,7 @@ func (m moduleDB) ValidateJSON(source ormjson.ReadSource) error {
 	return nil
 }
 
-func (m moduleDB) ImportJSON(ctx context.Context, source ormjson.ReadSource) error {
+func (m appModuleGenesisWrapper) InitGenesis(ctx context.Context, source appmodule.GenesisSource) error {
 	var names []string
 	for name := range m.tablesByName {
 		names = append(names, string(name))
@@ -91,7 +100,7 @@ func (m moduleDB) ImportJSON(ctx context.Context, source ormjson.ReadSource) err
 		fullName := protoreflect.FullName(name)
 		table := m.tablesByName[fullName]
 
-		r, err := source.OpenReader(fullName)
+		r, err := source(string(fullName))
 		if err != nil {
 			return errors.Wrapf(err, "table %s", fullName)
 		}
@@ -114,7 +123,7 @@ func (m moduleDB) ImportJSON(ctx context.Context, source ormjson.ReadSource) err
 	return nil
 }
 
-func (m moduleDB) ExportJSON(ctx context.Context, sink ormjson.WriteTarget) error {
+func (m appModuleGenesisWrapper) ExportGenesis(ctx context.Context, sink appmodule.GenesisTarget) error {
 	// Ensure that we export the tables in a deterministic order.
 	tableNames := maps.Keys(m.tablesByName)
 	sort.Slice(tableNames, func(i, j int) bool {
@@ -123,7 +132,7 @@ func (m moduleDB) ExportJSON(ctx context.Context, sink ormjson.WriteTarget) erro
 	})
 
 	for _, name := range tableNames {
-		w, err := sink.OpenWriter(name)
+		w, err := sink(string(name))
 		if err != nil {
 			return err
 		}

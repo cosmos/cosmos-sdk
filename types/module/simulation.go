@@ -142,19 +142,6 @@ func (sm *SimulationManager) WeightedOperations(simState SimulationState) []simu
 // SimulationState is the input parameters used on each of the module's randomized
 // GenesisState generator function
 type SimulationState struct {
-<<<<<<< HEAD
-	AppParams    simulation.AppParams
-	Cdc          codec.JSONCodec                      // application codec
-	Rand         *rand.Rand                           // random number
-	GenState     map[string]json.RawMessage           // genesis state
-	Accounts     []simulation.Account                 // simulation accounts
-	InitialStake sdkmath.Int                          // initial coins per account
-	NumBonded    int64                                // number of initially bonded accounts
-	GenTimestamp time.Time                            // genesis timestamp
-	UnbondTime   time.Duration                        // staking unbond time stored to use it as the slashing maximum evidence duration
-	ParamChanges []simulation.ParamChange             // simulated parameter changes from modules
-	Contents     []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
-=======
 	AppParams         simulation.AppParams
 	Cdc               codec.JSONCodec                // application codec
 	Rand              *rand.Rand                     // random number
@@ -169,5 +156,4 @@ type SimulationState struct {
 	//nolint:staticcheck
 	LegacyProposalContents []simulation.WeightedProposalContent // proposal content generator functions with their default weight and app sim key
 	ProposalMsgs           []simulation.WeightedProposalMsg     // proposal msg generator functions with their default weight and app sim key
->>>>>>> d3c319418 (fix: add simulation tests for new param change (#14728))
 }

@@ -2,6 +2,7 @@ package cachekv_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -683,4 +684,47 @@ func BenchmarkCacheKVStoreGetKeyFound(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
 	}
+}
+
+func TestIteratorNested(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	store := cachekv.NewStore(mem)
+
+	// setup:
+	// - (owner, contract id) -> contract
+	// - (contract id, record id) -> record
+	owner1 := 1
+	contract1 := 1
+	contract2 := 2
+	record1 := 1
+	record2 := 2
+	store.Set([]byte(fmt.Sprintf("c%04d%04d", owner1, contract1)), []byte("contract1"))
+	store.Set([]byte(fmt.Sprintf("c%04d%04d", owner1, contract2)), []byte("contract2"))
+	store.Set([]byte(fmt.Sprintf("R%04d%04d", contract1, record1)), []byte("contract1-record1"))
+	store.Set([]byte(fmt.Sprintf("R%04d%04d", contract1, record2)), []byte("contract1-record2"))
+	store.Set([]byte(fmt.Sprintf("R%04d%04d", contract2, record1)), []byte("contract2-record1"))
+	store.Set([]byte(fmt.Sprintf("R%04d%04d", contract2, record2)), []byte("contract2-record2"))
+
+	it := types.KVStorePrefixIterator(store, []byte(fmt.Sprintf("c%04d", owner1)))
+	defer it.Close()
+
+	var records []string
+	for ; it.Valid(); it.Next() {
+		contractID, err := strconv.ParseInt(string(it.Key()[5:]), 10, 32)
+		require.NoError(t, err)
+
+		it2 := types.KVStorePrefixIterator(store, []byte(fmt.Sprintf("R%04d", contractID)))
+		for ; it2.Valid(); it2.Next() {
+			records = append(records, string(it2.Value()))
+		}
+
+		it2.Close()
+	}
+
+	require.Equal(t, []string{
+		"contract1-record1",
+		"contract1-record2",
+		"contract2-record1",
+		"contract2-record2",
+	}, records)
 }

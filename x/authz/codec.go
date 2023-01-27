@@ -45,4 +45,6 @@ func init() {
 	RegisterLegacyAminoCodec(authzcodec.Amino)
 	RegisterLegacyAminoCodec(govcodec.Amino)
 	RegisterLegacyAminoCodec(groupcodec.Amino)
+
+	sdk.RegisterLegacyAminoCodec(authzcodec.Amino)
 }

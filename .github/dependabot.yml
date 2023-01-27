@@ -166,7 +166,7 @@ updates:
       - "A:automerge"
       - dependencies
 
-- package-ecosystem: gomod
+  - package-ecosystem: gomod
     directory: "x/crisis"
     schedule:
       interval: weekly

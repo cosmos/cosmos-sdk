@@ -8,8 +8,8 @@ module's state. It provides support for:
 * unique indexes
 * easy prefix and range queries
 * automatic genesis import/export
-* automatic query services for clients, including support for light client proof
-* indexing state data in external databases
+* automatic query services for clients, including support for light client proofs (still in development)
+* indexing state data in external databases (still in development)
 
 ## Design and Philosophy
 
@@ -164,4 +164,134 @@ message Params {
   google.protobuf.Duration voting_period = 1;
   uint64 min_threshold = 2;
 }
+```
+
+## Running Codegen
+
+NOTE: the ORM will only work with protobuf code that implements the [google.golang.org/protobuf](https://pkg.go.dev/google.golang.org/protobuf)
+API. That means it will not work with code generated using gogo-proto.
+
+To install the ORM's code generator, run:
+```shell
+go install github.com/cosmos/cosmos-sdk/orm/cmd/protoc-gen-go-cosmos-orm@latest
+```
+
+The recommended way to run the code generator is to use [buf build](https://docs.buf.build/build/usage).
+This is an example `buf.gen.yaml` that runs `protoc-gen-go`, `protoc-gen-go-grpc` and `protoc-gen-go-cosmos-orm`
+using buf managed mode:
+```yaml
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: foo.bar/api # the go package prefix of your package
+    override:
+      buf.build/cosmos/cosmos-sdk: cosmossdk.io/api # required to import the Cosmos SDK api module
+plugins:
+  - name: go
+    out: .
+    opt: paths=source_relative
+  - name: go-grpc
+    out: .
+    opt: paths=source_relative
+  - name: go-cosmos-orm
+    out: .
+    opt: paths=source_relative
+```
+
+## Using the ORM in a module
+
+### Initialization
+
+To use the ORM in a module, first create a `ModuleSchemaDescriptor`. This tells the ORM which .proto files have defined
+an ORM schema and assigns them all a unique non-zero id. Ex:
+```go
+var MyModuleSchema = &ormv1alpha1.ModuleSchemaDescriptor{
+	SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+		{
+			Id:            1,
+			ProtoFileName: mymodule.File_my_module_state_proto.Path(),
+		},
+	},
+}
+```
+
+In the ORM generated code for a file named `state.proto`, there should be an interface `StateStore` that got generated
+with a constructor `NewStateStore` that takes a parameter of type `ormdb.ModuleDB`. Add a reference to `StateStore`
+to your module's keeper struct. Ex:
+```go
+type Keeper struct {
+	db StateStore
+}
+```
+
+Then instantiate the `StateStore` instance via an `ormdb.ModuleDB` that is instantiated from the `SchemaDescriptor`
+above and one or more store services from `cosmossdk.io/core/store`. Ex:
+```go
+func NewKeeper(storeService store.KVStoreService) (*Keeper, error) {
+    modDb, err := ormdb.NewModuleDB(MyModuleSchema, ormdb.ModuleDBOptions{KVStoreService: storeService})
+    if err != nil {
+		return nil, err
+    }
+	db, err := NewStateStore(modDb)
+    if err != nil {
+        return nil, err
+    }
+    return Keeper{db: db}, nil
+}
+```
+
+### Using the generated code
+
+The generated code for the ORM contains methods for inserting, updating, deleting and querying table entries.
+For each table in a .proto file, there is a type-safe table interface implemented in generated code. For instance,
+for a table named `Balance` there should be a `BalanceTable` interface that looks like this:
+```go
+type BalanceTable interface {
+	Insert(ctx context.Context, balance *Balance) error
+	Update(ctx context.Context, balance *Balance) error
+	Save(ctx context.Context, balance *Balance) error
+	Delete(ctx context.Context, balance *Balance) error
+	Has(ctx context.Context, acocunt []byte, denom string) (found bool, err error)
+	// Get returns nil and an error which responds true to ormerrors.IsNotFound() if the record was not found.
+	Get(ctx context.Context, acocunt []byte, denom string) (*Balance, error)
+	List(ctx context.Context, prefixKey BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+	ListRange(ctx context.Context, from, to BalanceIndexKey, opts ...ormlist.Option) (BalanceIterator, error)
+	DeleteBy(ctx context.Context, prefixKey BalanceIndexKey) error
+	DeleteRange(ctx context.Context, from, to BalanceIndexKey) error
+
+	doNotImplement()
+}
+```
+
+This `BalanceTable` should be accessible from the `StateStore` interface (assuming our file is named `state.proto`)
+via a `BalanceTable()` accessor method. So we would use this in a keeper method like this:
+```go
+func (k keeper) AddBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
+	balance, err := k.db.BalanceTable().Get(ctx, acct, denom)
+	if err != nil && !ormerrors.IsNotFound(err) {
+		return err
+	}
+
+	if balance == nil {
+		balance = &Balance{
+			Account: acct,
+			Denom:   denom,
+			Amount:  amount,
+		}
+	} else {
+		balance.Amount = balance.Amount + amount
+	}
+
+	return k.db.BalanceTable().Save(ctx, balance)
+}
+```
+
+`List` methods take `IndexKey` parameters. For instance, `BalanceTable.List` takes `BalanceIndexKey`. `BalanceIndexKey`
+let's represent index keys for the different indexes (primary and secondary) on the `Balance` table. The primary key
+in the `Balance` table gets a struct `BalanceAccountDenomIndexKey` and the first index gets an index key `BalanceDenomIndexKey`.
+If we wanted to list all the denoms and amounts that an account holds, we would use `BalanceAccountDenomIndexKey`
+with a `List` query just on the account prefix. Ex:
+```go
+it, err := keeper.db.BalanceTable().List(ctx, BalanceAccountDenomIndexKey{}.WithAccount(acct))
 ```

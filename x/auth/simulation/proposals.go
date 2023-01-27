@@ -34,11 +34,11 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) 
 	var authority sdk.AccAddress = address.Module("gov")
 
 	params := types.DefaultParams()
-	params.MaxMemoCharacters = uint64(simtypes.RandIntBetween(r, 0, 1000))
-	params.TxSigLimit = uint64(simtypes.RandIntBetween(r, 0, 1000))
-	params.TxSizeCostPerByte = uint64(simtypes.RandIntBetween(r, 0, 1000))
-	params.SigVerifyCostED25519 = uint64(simtypes.RandIntBetween(r, 0, 1000))
-	params.SigVerifyCostSecp256k1 = uint64(simtypes.RandIntBetween(r, 0, 1000))
+	params.MaxMemoCharacters = uint64(simtypes.RandIntBetween(r, 1, 1000))
+	params.TxSigLimit = uint64(simtypes.RandIntBetween(r, 1, 1000))
+	params.TxSizeCostPerByte = uint64(simtypes.RandIntBetween(r, 1, 1000))
+	params.SigVerifyCostED25519 = uint64(simtypes.RandIntBetween(r, 1, 1000))
+	params.SigVerifyCostSecp256k1 = uint64(simtypes.RandIntBetween(r, 1, 1000))
 
 	return &types.MsgUpdateParams{
 		Authority: authority.String(),

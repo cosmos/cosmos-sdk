@@ -115,7 +115,6 @@ func TestWeightedOperations(t *testing.T) {
 
 	for i, w := range weightesOps {
 		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()), accs, ctx.ChainID())
-		fmt.Println(i, operationMsg)
 		require.NoError(t, err)
 
 		// the following checks are very much dependent from the ordering of the output given

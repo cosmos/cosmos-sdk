@@ -37,10 +37,10 @@ func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) 
 	params := types.DefaultParams()
 	params.BondDenom = simtypes.RandStringOfLength(r, 10)
 	params.HistoricalEntries = uint32(simtypes.RandIntBetween(r, 0, 1000))
-	params.MaxEntries = uint32(simtypes.RandIntBetween(r, 0, 1000))
-	params.MaxValidators = uint32(simtypes.RandIntBetween(r, 0, 1000))
+	params.MaxEntries = uint32(simtypes.RandIntBetween(r, 1, 1000))
+	params.MaxValidators = uint32(simtypes.RandIntBetween(r, 1, 1000))
 	params.UnbondingTime = time.Duration(simtypes.RandTimestamp(r).UnixNano())
-	params.MinCommissionRate = sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 1000)), 2)
+	params.MinCommissionRate = simtypes.RandomDecAmount(r, sdk.NewDec(1))
 
 	return &types.MsgUpdateParams{
 		Authority: authority.String(),

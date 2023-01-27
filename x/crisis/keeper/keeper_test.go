@@ -8,13 +8,13 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/crisis"
+	"cosmossdk.io/x/crisis/keeper"
+	crisistestutil "cosmossdk.io/x/crisis/testutil"
+	"cosmossdk.io/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistestutil "github.com/cosmos/cosmos-sdk/x/crisis/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 func TestLogger(t *testing.T) {

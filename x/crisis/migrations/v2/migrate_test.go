@@ -7,12 +7,12 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/crisis"
+	v2 "cosmossdk.io/x/crisis/migrations/v2"
+	"cosmossdk.io/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	v2 "github.com/cosmos/cosmos-sdk/x/crisis/migrations/v2"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 type mockSubspace struct {

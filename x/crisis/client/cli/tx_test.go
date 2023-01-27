@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
+	"cosmossdk.io/x/crisis"
+	"cosmossdk.io/x/crisis/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -17,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
 )
 
 func TestNewMsgVerifyInvariantTxCmd(t *testing.T) {

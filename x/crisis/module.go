@@ -16,6 +16,10 @@ import (
 
 	store "cosmossdk.io/store/types"
 
+	"cosmossdk.io/x/crisis/client/cli"
+	"cosmossdk.io/x/crisis/exported"
+	"cosmossdk.io/x/crisis/keeper"
+	"cosmossdk.io/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,10 +29,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/crisis/exported"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 

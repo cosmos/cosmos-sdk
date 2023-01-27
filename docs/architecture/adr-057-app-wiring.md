@@ -215,6 +215,9 @@ can help us figure out issues with missing dependencies in an app config if the 
 In cases where required modules are not loaded at runtime, it may be possible to guide users to the correct module if
 through a global Cosmos SDK module registry.
 
+The `*appmodule.Handler` type referenced above is a replacement for the legacy `AppModule` framework, and
+described in [ADR 061: Core Module API](./adr-061-core-module-api.md).
+
 ### New `app.go`
 
 With this setup, `app.go` might now look something like this:
@@ -242,8 +245,10 @@ func main() {
 ### Application to existing SDK modules
 
 So far we have described a system which is largely agnostic to the specifics of the SDK such as store keys, `AppModule`,
-`BaseApp`, etc. A second app wiring ADR will be created which outlines the details of how this app wiring system will
-be applied to the existing SDK in a way that:
+`BaseApp`, etc. Improvements to these parts of the framework that integrate with the general app wiring framework
+defined here are described in [ADR 061: Core Module API](./adr-061-core-module-api.md).
+
+### Registration of Inter-Module Hooks
 
 ### Registration of Inter-Module Hooks
 
@@ -333,3 +338,4 @@ light of code generation. It may be better to do this type registration with a D
 * https://github.com/google/wire
 * https://pkg.go.dev/github.com/cosmos/cosmos-sdk/container
 * https://github.com/cosmos/cosmos-sdk/pull/11802
+* [ADR 061](./adr-061-core-module-api.md)

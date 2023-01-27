@@ -4,13 +4,14 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.2.6
-	cosmossdk.io/collections v0.0.0-20230124101704-57bedb100648
+	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846
 	cosmossdk.io/core v0.5.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/store v0.1.0
+	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
 	cosmossdk.io/x/tx v0.1.0
+	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
@@ -32,7 +33,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/go-getter v1.6.2
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3
 	github.com/huandu/skiplist v1.2.0
@@ -54,8 +54,8 @@ require (
 	github.com/tendermint/tendermint v0.37.0-rc2
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
-	google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2
-	google.golang.org/grpc v1.52.1
+	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa
+	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
@@ -120,6 +120,7 @@ require (
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-getter v1.6.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
@@ -177,7 +178,6 @@ require (
 
 replace (
 	cosmossdk.io/collections => ./collections
-	cosmossdk.io/store => ./store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

@@ -10,6 +10,8 @@ var (
 	ErrNotFound = errors.New("collections: not found")
 	// ErrEncoding is returned when something fails during key or value encoding/decoding.
 	ErrEncoding = errors.New("collections: encoding error")
+	// ErrConflict is returned when there are conflicts, for example in UniqueIndex.
+	ErrConflict = errors.New("collections: conflict")
 )
 
 // collection is the interface that all collections support. It will eventually

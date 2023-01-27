@@ -32,7 +32,6 @@ func NewGenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value any]
 	referencedKeyCodec KeyCodec[ReferencedKey],
 	getRefs func(pk PrimaryKey, value Value) ([]IndexReference[ReferencingKey, ReferencedKey], error),
 ) *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value] {
-
 	return &GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]{
 		refs:    NewMap[ReferencingKey, ReferencedKey](schema, prefix, name, referencingKeyCodec, keyToValueCodec[ReferencedKey]{kc: referencedKeyCodec}),
 		getRefs: getRefs,

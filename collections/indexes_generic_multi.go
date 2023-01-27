@@ -113,7 +113,6 @@ func (i *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) Un
 	pk PrimaryKey,
 	value Value,
 ) error {
-
 	refs, err := i.getRefs(pk, value)
 	if err != nil {
 		return err

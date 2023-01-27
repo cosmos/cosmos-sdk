@@ -121,7 +121,6 @@ func (r *Range[K]) Descending() *Range[K] {
 
 // test sentinel error
 var (
-	errRange = errors.New("collections: range error")
 	errOrder = errors.New("collections: invalid order")
 )
 

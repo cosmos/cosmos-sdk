@@ -125,7 +125,7 @@ primary key, ex:
 ```protobuf
 message Account {
   option (cosmos.orm.v1.table) = {
-    id: 1;
+    id: 2;
     primary_key: { fields: "id", auto_increment: true }
   };
 

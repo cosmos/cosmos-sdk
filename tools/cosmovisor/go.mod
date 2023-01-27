@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.19
 
 require (
-	cosmossdk.io/x/upgrade v0.1.0
+	cosmossdk.io/x/upgrade v0.0.0-20230125092026-51624ecc54d1
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/otiai10/copy v1.9.0
@@ -155,8 +155,5 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// TODO tag all extracted modules after SDK refactor
-replace cosmossdk.io/x/upgrade => ../../x/upgrade
 
 replace github.com/cosmos/cosmos-sdk => ../../.

@@ -38,7 +38,7 @@ type Keeper1 struct {
 }
 
 func NewKeeper1() Keeper1 {
-	sb := collections.NewSchemaBuilder(nil)
+	sb := collections.NewSchemaBuilderFromKVService(nil)
 	// we create the primary key codec, note it uses string key because we pretend
 	// AccAddress and ValAddress are strings and not bytes.
 	primaryKeyCodec := collections.PairKeyCodec(collections.StringKey, collections.StringKey)

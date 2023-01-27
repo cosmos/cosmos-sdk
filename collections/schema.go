@@ -25,14 +25,21 @@ type SchemaBuilder struct {
 // NewSchemaBuilder creates a new schema builder from the provided store key.
 // Callers should always call the SchemaBuilder.Build method when they are
 // done adding collections to the schema.
-func NewSchemaBuilder(service store.KVStoreService) *SchemaBuilder {
+func NewSchemaBuilder(kvStoreAccessor func(ctx context.Context) store.KVStore) *SchemaBuilder {
 	return &SchemaBuilder{
 		schema: &Schema{
-			storeAccessor:       service.OpenKVStore,
+			storeAccessor:       kvStoreAccessor,
 			collectionsByName:   map[string]collection{},
 			collectionsByPrefix: map[string]collection{},
 		},
 	}
+}
+
+// NewSchemaBuilderFromKVService creates a new schema builder from the provided store key.
+// Callers should always call the SchemaBuilder.Build method when they are
+// done adding collections to the schema.
+func NewSchemaBuilderFromKVService(service store.KVStoreService) *SchemaBuilder {
+	return NewSchemaBuilder(service.OpenKVStore)
 }
 
 // Build should be called after all collections that are part of the schema

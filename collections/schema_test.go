@@ -17,7 +17,7 @@ func TestNameRegex(t *testing.T) {
 
 func TestGoodSchema(t *testing.T) {
 	sk, _ := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
 	NewMap(schemaBuilder, NewPrefix(2), "def", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
@@ -26,7 +26,7 @@ func TestGoodSchema(t *testing.T) {
 
 func TestBadName(t *testing.T) {
 	sk, _ := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	NewMap(schemaBuilder, NewPrefix(1), "123", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.ErrorContains(t, err, "name must match regex")
@@ -34,7 +34,7 @@ func TestBadName(t *testing.T) {
 
 func TestDuplicatePrefix(t *testing.T) {
 	sk, _ := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
 	NewMap(schemaBuilder, NewPrefix(1), "def", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
@@ -43,7 +43,7 @@ func TestDuplicatePrefix(t *testing.T) {
 
 func TestDuplicateName(t *testing.T) {
 	sk, _ := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
 	NewMap(schemaBuilder, NewPrefix(2), "abc", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
@@ -52,7 +52,7 @@ func TestDuplicateName(t *testing.T) {
 
 func TestOverlappingPrefixes(t *testing.T) {
 	sk, _ := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	NewMap(schemaBuilder, NewPrefix("ab"), "ab", Uint64Key, Uint64Value)
 	NewMap(schemaBuilder, NewPrefix("abc"), "abc", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
@@ -61,7 +61,7 @@ func TestOverlappingPrefixes(t *testing.T) {
 
 func TestSchemaBuilderCantBeUsedAfterBuild(t *testing.T) {
 	sk, _ := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	NewMap(schemaBuilder, NewPrefix(1), "abc", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)

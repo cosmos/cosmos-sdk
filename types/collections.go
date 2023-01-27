@@ -1,6 +1,18 @@
 package types
 
-import "cosmossdk.io/collections"
+import (
+	"context"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
+)
+
+func OpenKVStore(key *storetypes.KVStoreKey) func(ctx context.Context) store.KVStore {
+	return func(ctx context.Context) store.KVStore {
+		return runtime.NewLegacyStoreWrapper(UnwrapSDKContext(ctx).KVStore(key))
+	}
+}
 
 var (
 	// AccAddressKey follows the same semantics of collections.BytesKey.

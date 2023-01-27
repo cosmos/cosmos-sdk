@@ -28,7 +28,7 @@ type Keeper3 struct {
 }
 
 func NewKeeper3() Keeper3 {
-	sb := collections.NewSchemaBuilder(nil)
+	sb := collections.NewSchemaBuilderFromKVService(nil)
 	return Keeper3{
 		Accounts: collections.NewIndexedMap(
 			sb, collections.NewPrefix(0), "accounts",

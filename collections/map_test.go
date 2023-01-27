@@ -8,7 +8,7 @@ import (
 
 func TestMap(t *testing.T) {
 	sk, ctx := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	m := NewMap(schemaBuilder, NewPrefix("hi"), "m", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)
@@ -42,7 +42,7 @@ func TestMap_IterateRaw(t *testing.T) {
 	sk.OpenKVStore(ctx).Set([]byte{0x0, 0x0}, []byte("before prefix"))
 	sk.OpenKVStore(ctx).Set([]byte{0x2, 0x0}, []byte("after prefix"))
 
-	sb := NewSchemaBuilder(sk)
+	sb := NewSchemaBuilderFromKVService(sk)
 
 	m := NewMap(sb, NewPrefix(1), "m", Uint64Key, Uint64Value)
 	require.NoError(t, m.Set(ctx, 0, 0))

@@ -10,6 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func NewLegacyStoreWrapper(kvStore storetypes.KVStore) store.KVStore {
+	return &coreKVStore{kvStore: kvStore}
+}
+
 type kvStoreService struct {
 	key *storetypes.KVStoreKey
 }

@@ -12,7 +12,7 @@ import (
 
 func TestCollectionPagination(t *testing.T) {
 	sk, ctx := deps()
-	sb := collections.NewSchemaBuilder(sk)
+	sb := collections.NewSchemaBuilderFromKVService(sk)
 	m := collections.NewMap(sb, collections.NewPrefix(0), "_", collections.Uint64Key, collections.Uint64Value)
 
 	for i := uint64(0); i < 300; i++ {

@@ -26,7 +26,7 @@ func TestPair(t *testing.T) {
 
 func TestPairRange(t *testing.T) {
 	sk, ctx := deps()
-	schema := NewSchemaBuilder(sk)
+	schema := NewSchemaBuilderFromKVService(sk)
 	pc := PairKeyCodec(StringKey, Uint64Key)
 	m := NewMap(schema, NewPrefix(0), "pair", pc, Uint64Value)
 

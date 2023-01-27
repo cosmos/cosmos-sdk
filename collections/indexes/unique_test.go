@@ -8,7 +8,7 @@ import (
 
 func TestUniqueIndex(t *testing.T) {
 	sk, ctx := deps()
-	schema := collections.NewSchemaBuilder(sk)
+	schema := collections.NewSchemaBuilderFromKVService(sk)
 	ui := NewUnique(schema, collections.NewPrefix("unique_index"), "unique_index", collections.Uint64Key, collections.Uint64Key, func(_ uint64, v company) (uint64, error) {
 		return v.Vat, nil
 	})

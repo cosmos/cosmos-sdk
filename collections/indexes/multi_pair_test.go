@@ -22,7 +22,7 @@ func (b balanceIndex) IndexesList() []collections.Index[collections.Pair[Address
 
 func TestMultiPair(t *testing.T) {
 	sk, ctx := deps()
-	sb := collections.NewSchemaBuilder(sk)
+	sb := collections.NewSchemaBuilderFromKVService(sk)
 	// we create an indexed map that maps balances, which are saved as
 	// key: Pair[Address, Denom]
 	// value: Amount

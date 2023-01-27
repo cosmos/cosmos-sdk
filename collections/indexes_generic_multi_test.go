@@ -27,7 +27,7 @@ func TestGenericMultiIndex(t *testing.T) {
 	// the referencing key which points to the address (string), which is the key
 	// being referenced.
 	sk, ctx := deps()
-	sb := NewSchemaBuilder(sk)
+	sb := NewSchemaBuilderFromKVService(sk)
 	mi := NewGenericMultiIndex(
 		sb, NewPrefix("denoms"), "denom_to_owner", StringKey, StringKey,
 		func(pk string, value balance) ([]IndexReference[string, string], error) {

@@ -91,7 +91,7 @@ type testFixture struct {
 
 func initFixture(t *testing.T) *testFixture {
 	sk, ctx := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	m := NewMap(schemaBuilder, NewPrefix(1), "map", StringKey, Uint64Value)
 	i := NewItem(schemaBuilder, NewPrefix(2), "item", StringValue)
 	s := NewSequence(schemaBuilder, NewPrefix(3), "sequence")

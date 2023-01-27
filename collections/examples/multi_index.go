@@ -28,7 +28,7 @@ type Keeper2 struct {
 }
 
 func NewKeeper2() Keeper2 {
-	sb := collections.NewSchemaBuilder(nil)
+	sb := collections.NewSchemaBuilderFromKVService(nil)
 	return Keeper2{
 		Validators: collections.NewIndexedMap(
 			sb,

@@ -8,7 +8,7 @@ import (
 
 func TestItem(t *testing.T) {
 	sk, ctx := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	item := NewItem(schemaBuilder, NewPrefix("item"), "item", Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)

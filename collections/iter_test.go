@@ -12,7 +12,7 @@ func TestIteratorBasic(t *testing.T) {
 	// safety check to ensure that iteration does not cross prefix boundaries
 	sk.OpenKVStore(ctx).Set([]byte{0, 0}, []byte("before prefix"))
 	sk.OpenKVStore(ctx).Set([]byte{2, 1}, []byte("after prefix"))
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	m := NewMap(schemaBuilder, NewPrefix(1), "m", StringKey, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)
@@ -61,7 +61,7 @@ func TestIteratorBasic(t *testing.T) {
 
 func TestIteratorKeyValues(t *testing.T) {
 	sk, ctx := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	m := NewMap(schemaBuilder, NewPrefix("some super amazing prefix"), "m", StringKey, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)
@@ -110,7 +110,7 @@ func TestIteratorKeyValues(t *testing.T) {
 
 func TestIteratorPrefixing(t *testing.T) {
 	sk, ctx := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	m := NewMap(schemaBuilder, NewPrefix("cool"), "cool", StringKey, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)
@@ -128,7 +128,7 @@ func TestIteratorPrefixing(t *testing.T) {
 
 func TestIteratorRanging(t *testing.T) {
 	sk, ctx := deps()
-	schemaBuilder := NewSchemaBuilder(sk)
+	schemaBuilder := NewSchemaBuilderFromKVService(sk)
 	m := NewMap(schemaBuilder, NewPrefix("cool"), "cool", Uint64Key, Uint64Value)
 	_, err := schemaBuilder.Build()
 	require.NoError(t, err)

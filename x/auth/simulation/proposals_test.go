@@ -38,8 +38,8 @@ func TestProposalMsgs(t *testing.T) {
 
 	assert.Equal(t, sdk.AccAddress(address.Module("gov")).String(), msgUpdateParams.Authority)
 	assert.Equal(t, uint64(999), msgUpdateParams.Params.MaxMemoCharacters)
-	assert.Equal(t, uint64(456), msgUpdateParams.Params.TxSigLimit)
-	assert.Equal(t, uint64(300), msgUpdateParams.Params.TxSizeCostPerByte)
-	assert.Equal(t, uint64(694), msgUpdateParams.Params.SigVerifyCostED25519)
-	assert.Equal(t, uint64(511), msgUpdateParams.Params.SigVerifyCostSecp256k1)
+	assert.Equal(t, uint64(905), msgUpdateParams.Params.TxSigLimit)
+	assert.Equal(t, uint64(151), msgUpdateParams.Params.TxSizeCostPerByte)
+	assert.Equal(t, uint64(213), msgUpdateParams.Params.SigVerifyCostED25519)
+	assert.Equal(t, uint64(539), msgUpdateParams.Params.SigVerifyCostSecp256k1)
 }

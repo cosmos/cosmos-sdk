@@ -371,8 +371,16 @@ func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
 }
 
 func TestGetBackendResolver(t *testing.T) {
-	_, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
-	assert.ErrorContains(t, err, "missing KVStoreService")
+	_, err := ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
+		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+			{
+				Id:            1,
+				ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+				StorageType:   ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY,
+			},
+		},
+	}, ormdb.ModuleDBOptions{})
+	assert.ErrorContains(t, err, "missing MemoryStoreService")
 
 	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
 		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{

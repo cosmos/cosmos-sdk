@@ -29,15 +29,18 @@ func StderrLogger() DebugOption {
 	})
 }
 
+// FileLogger is a debug option which routes logging output to a file.
 func FileLogger(filename string) DebugOption {
-	f, err := os.Create(filename)
-	if err != nil {
-		return debugOption(func(config *debugConfig) error {
-			return err
-		})
-	}
-
+	var f *os.File
 	return Logger(func(s string) {
+		var err error
+		if f == nil {
+			f, err = os.Create(filename)
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		_, err = f.Write([]byte(s))
 		if err != nil {
 			panic(err)

@@ -18,10 +18,9 @@ import (
 )
 
 // Simulation operation weights constants
-//
-//nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgUnjail      = "op_weight_msg_unjail"
+	OpWeightMsgUnjail = "op_weight_msg_unjail" //nolint:gosec
+
 	DefaultWeightMsgUnjail = 100
 )
 
@@ -31,6 +30,7 @@ func WeightedOperations(
 	bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
+
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
 		func(_ *rand.Rand) {

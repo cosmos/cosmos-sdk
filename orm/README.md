@@ -265,7 +265,19 @@ type BalanceTable interface {
 ```
 
 This `BalanceTable` should be accessible from the `StateStore` interface (assuming our file is named `state.proto`)
-via a `BalanceTable()` accessor method. So we would use this in a keeper method like this:
+via a `BalanceTable()` accessor method. If all the above example tables/singletons were in the same `state.proto`,
+then `StateStore` would get generated like this:
+```go
+type BankStore interface {
+	BalanceTable() BalanceTable
+	AccountTable() AccountTable
+	ParamsTable() ParamsTable
+
+	doNotImplement()
+}
+```
+
+So to work with the `BalanceTable` in a keeper method we could use code like this:
 ```go
 func (k keeper) AddBalance(ctx context.Context, acct []byte, denom string, amount uint64) error {
 	balance, err := k.db.BalanceTable().Get(ctx, acct, denom)

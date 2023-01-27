@@ -11,7 +11,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/grpc v1.52.1
+	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 	gotest.tools/v3 v3.4.0
 )
@@ -112,7 +112,7 @@ require (
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
-	google.golang.org/genproto v0.0.0-20230124163310-31e0e69b6fc2 // indirect
+	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

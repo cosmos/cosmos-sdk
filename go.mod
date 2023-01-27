@@ -4,7 +4,7 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.2.6
-	cosmossdk.io/collections v0.0.0-20230124101704-57bedb100648
+	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846
 	cosmossdk.io/core v0.5.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7

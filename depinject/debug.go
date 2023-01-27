@@ -29,6 +29,30 @@ func StderrLogger() DebugOption {
 	})
 }
 
+// FileLogger is a debug option which routes logging output to a file.
+func FileLogger(filename string) DebugOption {
+	var f *os.File
+	return Logger(func(s string) {
+		var err error
+		if f == nil {
+			f, err = os.Create(filename)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		_, err = f.Write([]byte(s))
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = f.Write([]byte("\n"))
+		if err != nil {
+			panic(err)
+		}
+	})
+}
+
 // Visualizer creates an option which provides a visualizer function which
 // will receive a rendering of the container in the Graphiz DOT format
 // whenever the container finishes building or fails due to an error. The
@@ -79,14 +103,17 @@ func Logger(logger func(string)) DebugOption {
 	})
 }
 
-const debugContainerDot = "debug_container.dot"
+const (
+	debugContainerDot = "debug_container.dot"
+	debugContainerLog = "debug_container.log"
+)
 
 // Debug is a default debug option which sends log output to stderr, dumps
 // the container in the graphviz DOT and SVG formats to debug_container.dot
 // and debug_container.svg respectively.
 func Debug() DebugOption {
 	return DebugOptions(
-		StderrLogger(),
+		FileLogger(debugContainerLog),
 		FileVisualizer(debugContainerDot),
 	)
 }
@@ -139,6 +166,7 @@ func AutoDebug() DebugOption {
 		OnError(Debug()),
 		OnSuccess(DebugCleanup(func() {
 			deleteIfExists(debugContainerDot)
+			deleteIfExists(debugContainerLog)
 		})),
 	)
 }

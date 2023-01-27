@@ -160,19 +160,7 @@ func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			msgs = append(msgs, proposalMsg)
 		}
 
-		msg, err := v1.NewMsgSubmitProposal(
-			msgs,
-			deposit,
-			simAccount.Address.String(),
-			simtypes.RandStringOfLength(r, 100),
-			simtypes.RandStringOfLength(r, 100),
-			simtypes.RandStringOfLength(r, 100),
-		)
-		if err != nil || msg.ValidateBasic() != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
-		}
-
-		return simulateMsgSubmitProposal(ak, bk, k, msg, simAccount, deposit)(r, app, ctx, accs, chainID)
+		return simulateMsgSubmitProposal(ak, bk, k, msgs, simAccount, deposit)(r, app, ctx, accs, chainID)
 	}
 }
 
@@ -205,7 +193,7 @@ func SimulateMsgSubmitLegacyProposal(ak types.AccountKeeper, bk types.BankKeeper
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
 		}
 
-		return simulateMsgSubmitProposal(ak, bk, k, contentMsg, simAccount, deposit)(r, app, ctx, accs, chainID)
+		return simulateMsgSubmitProposal(ak, bk, k, []sdk.Msg{contentMsg}, simAccount, deposit)(r, app, ctx, accs, chainID)
 	}
 }
 
@@ -213,7 +201,7 @@ func simulateMsgSubmitProposal(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k *keeper.Keeper,
-	msgSubmitProposal sdk.Msg,
+	proposalMsgs []sdk.Msg,
 	simAccount simtypes.Account,
 	deposit sdk.Coins,
 ) simtypes.Operation {
@@ -245,16 +233,27 @@ func simulateMsgSubmitProposal(
 		accs []simtypes.Account,
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg, err := v1.NewMsgSubmitProposal(
+			proposalMsgs,
+			deposit,
+			simAccount.Address.String(),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 100),
+		)
+		if err != nil || msg.ValidateBasic() != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
+		}
+
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		var fees sdk.Coins
-		var err error
 		coins, hasNeg := spendable.SafeSub(deposit...)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msgSubmitProposal), "unable to generate fees"), nil, err
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
 			}
 		}
 
@@ -262,7 +261,7 @@ func simulateMsgSubmitProposal(
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
-			[]sdk.Msg{msgSubmitProposal},
+			[]sdk.Msg{msg},
 			fees,
 			simtestutil.DefaultGenTxGas,
 			chainID,
@@ -271,20 +270,20 @@ func simulateMsgSubmitProposal(
 			simAccount.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msgSubmitProposal), "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate mock tx"), nil, err
 		}
 
 		_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msgSubmitProposal), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
-		opMsg := simtypes.NewOperationMsg(msgSubmitProposal, true, "", nil)
+		opMsg := simtypes.NewOperationMsg(msg, true, "", nil)
 
 		// get the submitted proposal ID
 		proposalID, err := k.GetProposalID(ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msgSubmitProposal), "unable to generate proposalID"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate proposalID"), nil, err
 		}
 
 		// 2) Schedule operations for votes

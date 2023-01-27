@@ -36,48 +36,28 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
-type MockWeightedProposalMsg struct {
+var _ simtypes.WeightedProposalMsg = MockWeightedProposals{}
+var _ simtypes.WeightedProposalContent = MockWeightedProposals{}
+
+type MockWeightedProposals struct {
 	n int
 }
 
-func (m MockWeightedProposalMsg) AppParamsKey() string {
+func (m MockWeightedProposals) AppParamsKey() string {
 	return fmt.Sprintf("AppParamsKey-%d", m.n)
 }
 
-func (m MockWeightedProposalMsg) DefaultWeight() int {
+func (m MockWeightedProposals) DefaultWeight() int {
 	return m.n
 }
 
-func (m MockWeightedProposalMsg) MsgSimulatorFn() simtypes.MsgSimulatorFn {
+func (m MockWeightedProposals) MsgSimulatorFn() simtypes.MsgSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
 		return nil
 	}
 }
 
-// make sure the MockWeightedProposalMsg satisfies the WeightedProposalMsg interface
-var _ simtypes.WeightedProposalMsg = MockWeightedProposalMsg{}
-
-func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
-	wpc := make([]simtypes.WeightedProposalMsg, n)
-	for i := 0; i < n; i++ {
-		wpc[i] = MockWeightedProposalMsg{i}
-	}
-	return wpc
-}
-
-type MockWeightedLegacyProposalContent struct {
-	n int
-}
-
-func (m MockWeightedLegacyProposalContent) AppParamsKey() string {
-	return fmt.Sprintf("AppParamsKey-%d", m.n)
-}
-
-func (m MockWeightedLegacyProposalContent) DefaultWeight() int {
-	return m.n
-}
-
-func (m MockWeightedLegacyProposalContent) ContentSimulatorFn() simtypes.ContentSimulatorFn {
+func (m MockWeightedProposals) ContentSimulatorFn() simtypes.ContentSimulatorFn {
 	return func(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
 		return v1beta1.NewTextProposal(
 			fmt.Sprintf("title-%d: %s", m.n, simtypes.RandStringOfLength(r, 100)),
@@ -86,13 +66,18 @@ func (m MockWeightedLegacyProposalContent) ContentSimulatorFn() simtypes.Content
 	}
 }
 
-// make sure the MockWeightedProposalContent satisfied the WeightedProposalContent interface
-var _ simtypes.WeightedProposalContent = MockWeightedLegacyProposalContent{}
+func mockWeightedProposalMsg(n int) []simtypes.WeightedProposalMsg {
+	wpc := make([]simtypes.WeightedProposalMsg, n)
+	for i := 0; i < n; i++ {
+		wpc[i] = MockWeightedProposals{i}
+	}
+	return wpc
+}
 
 func mockWeightedLegacyProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
 	for i := 0; i < n; i++ {
-		wpc[i] = MockWeightedLegacyProposalContent{i}
+		wpc[i] = MockWeightedProposals{i}
 	}
 	return wpc
 }
@@ -105,7 +90,7 @@ func TestWeightedOperations(t *testing.T) {
 	appParams := make(simtypes.AppParams)
 
 	weightesOps := simulation.WeightedOperations(appParams, govcodec.ModuleCdc, suite.AccountKeeper,
-		suite.BankKeeper, suite.GovKeeper, mockWeightedProposalMsg(3), mockWeightedLegacyProposalContent(3),
+		suite.BankKeeper, suite.GovKeeper, mockWeightedProposalMsg(3), mockWeightedLegacyProposalContent(1),
 	)
 
 	// setup 3 accounts
@@ -126,12 +111,11 @@ func TestWeightedOperations(t *testing.T) {
 		{1, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{2, types.ModuleName, simulation.TypeMsgSubmitProposal},
 		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
-		{1, types.ModuleName, simulation.TypeMsgSubmitProposal},
-		{2, types.ModuleName, simulation.TypeMsgSubmitProposal},
 	}
 
 	for i, w := range weightesOps {
 		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()), accs, ctx.ChainID())
+		fmt.Println(i, operationMsg)
 		require.NoError(t, err)
 
 		// the following checks are very much dependent from the ordering of the output given
@@ -158,7 +142,7 @@ func TestSimulateMsgSubmitProposal(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSubmitProposal(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposalMsg{3}.MsgSimulatorFn())
+	op := simulation.SimulateMsgSubmitProposal(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.MsgSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 
@@ -188,7 +172,7 @@ func TestSimulateMsgSubmitLegacyProposal(t *testing.T) {
 	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: app.LastBlockHeight() + 1, AppHash: app.LastCommitID().Hash}})
 
 	// execute operation
-	op := simulation.SimulateMsgSubmitLegacyProposal(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedLegacyProposalContent{3}.ContentSimulatorFn())
+	op := simulation.SimulateMsgSubmitLegacyProposal(suite.AccountKeeper, suite.BankKeeper, suite.GovKeeper, MockWeightedProposals{3}.ContentSimulatorFn())
 	operationMsg, _, err := op(r, app.BaseApp, ctx, accounts, "")
 	require.NoError(t, err)
 

@@ -3,11 +3,12 @@ package orm
 import (
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
+	"github.com/stretchr/testify/require"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/stretchr/testify/require"
 )
 
 func TestImportExportTableData(t *testing.T) {

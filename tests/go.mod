@@ -7,11 +7,13 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store v0.1.0
+	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
+	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
+	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/golang/mock v1.6.0
@@ -31,7 +33,7 @@ require (
 	cloud.google.com/go/iam v0.8.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58 // indirect
-	cosmossdk.io/collections v0.0.0-20230124101704-57bedb100648 // indirect
+	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846 // indirect
 	cosmossdk.io/core v0.5.0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
@@ -180,17 +182,15 @@ require (
 
 // TODO tag all extracted modules after SDK refactor
 replace (
-	cosmossdk.io/collections => ../collections
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
-	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	cosmossdk.io/store => ../store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

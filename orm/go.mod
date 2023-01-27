@@ -4,8 +4,9 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.2.6
+	cosmossdk.io/core v0.5.1
 	cosmossdk.io/errors v1.0.0-beta.7
-	github.com/cosmos/cosmos-db v0.0.0-20221224071843-97e1443c3226
+	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9

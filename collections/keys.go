@@ -3,26 +3,46 @@ package collections
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 )
 
 var (
-	// Uint64Key can be used to encode uint64 keys.
-	// Encoding is big endian to retain ordering.
+	// Uint64Key can be used to encode uint64 keys. Encoding is big endian to retain ordering.
 	Uint64Key KeyCodec[uint64] = uint64Key{}
-	// StringKey can be used to encode string keys.
-	// The encoding just converts the string to bytes.
+	// StringKey can be used to encode string keys. The encoding just converts the string
+	// to bytes.
+	// Non-terminality in multipart keys is handled by appending the StringDelimiter,
+	// this means that a string key when used as the non final part of a multipart key cannot
+	// contain the StringDelimiter.
+	// Lexicographical ordering is retained both in non and multipart keys.
 	StringKey KeyCodec[string] = stringKey{}
+	// BytesKey can be used to encode bytes keys. The encoding will just use
+	// the provided bytes.
+	// When used as the non-terminal part of a multipart key, we prefix the bytes key
+	// with a single byte representing the length of the key. This means two things:
+	// 1. When used in multipart keys the length can be at maximum 255 (max number that
+	// can be represented with a single byte).
+	// 2. When used in multipart keys the lexicographical ordering is lost due to the
+	// length prefixing.
+	// JSON encoding represents a bytes key as a hex encoded string.
+	BytesKey KeyCodec[[]byte] = bytesKey{}
+)
+
+const (
+	// StringDelimiter defines the delimiter of a string key when used in non-terminal encodings.
+	StringDelimiter uint8 = 0x0
+	// MaxBytesKeyNonTerminalSize defines the maximum length of a bytes key encoded
+	// using the BytesKey KeyCodec.
+	MaxBytesKeyNonTerminalSize = math.MaxUint8
 )
 
 // errDecodeKeySize is a sentinel error.
 var errDecodeKeySize = errors.New("decode error, wrong byte key size")
-
-// StringDelimiter defines the delimiter of a string key when used in non-terminal encodings.
-const StringDelimiter uint8 = 0x0
 
 type uint64Key struct{}
 
@@ -120,4 +140,72 @@ func (stringKey) Stringify(key string) string {
 
 func (stringKey) KeyType() string {
 	return "string"
+}
+
+type bytesKey struct{}
+
+func (b bytesKey) Encode(buffer []byte, key []byte) (int, error) {
+	return copy(buffer, key), nil
+}
+
+func (bytesKey) Decode(buffer []byte) (int, []byte, error) {
+	// todo: should we copy it? collections will just discard the buffer, so from coll POV is not needed.
+	return len(buffer), buffer, nil
+}
+
+func (bytesKey) Size(key []byte) int {
+	return len(key)
+}
+
+func (bytesKey) EncodeJSON(value []byte) ([]byte, error) {
+	return StringKey.EncodeJSON(hex.EncodeToString(value))
+}
+
+func (bytesKey) DecodeJSON(b []byte) ([]byte, error) {
+	hexBytes, err := StringKey.DecodeJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	return hex.DecodeString(hexBytes)
+}
+
+func (b bytesKey) Stringify(key []byte) string {
+	return fmt.Sprintf("hexBytes:%x", key)
+}
+
+func (b bytesKey) KeyType() string {
+	return "bytes"
+}
+
+func (b bytesKey) EncodeNonTerminal(buffer []byte, key []byte) (int, error) {
+	if len(key) > MaxBytesKeyNonTerminalSize {
+		return 0, fmt.Errorf(
+			"%w: bytes key non terminal size cannot exceed: %d, got: %d",
+			ErrEncoding, MaxBytesKeyNonTerminalSize, len(key),
+		)
+	}
+
+	buffer[0] = uint8(len(key))
+	written := copy(buffer[1:], key)
+	return written + 1, nil
+}
+
+func (bytesKey) DecodeNonTerminal(buffer []byte) (int, []byte, error) {
+	l := len(buffer)
+	if l == 0 {
+		return 0, nil, fmt.Errorf("%w: bytes key non terminal decoding cannot have an empty buffer", ErrEncoding)
+	}
+
+	keyLength := int(buffer[0])
+	if len(buffer[1:]) < keyLength {
+		return 0, nil, fmt.Errorf(
+			"%w: bytes key non terminal decoding isn't big enough, want at least: %d, got: %d",
+			ErrEncoding, keyLength, len(buffer[1:]),
+		)
+	}
+	return 1 + keyLength, buffer[1 : keyLength+1], nil
+}
+
+func (bytesKey) SizeNonTerminal(key []byte) int {
+	return len(key) + 1
 }

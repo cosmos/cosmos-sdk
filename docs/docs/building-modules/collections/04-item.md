@@ -49,4 +49,8 @@ func (k Keeper) GetParams(ctx sdk.Context) (stakingtypes.Params, error) {
 }
 ```
 
-The first key difference we notice is that we specify only one type parameter, which is the value we're storiing.
+The first key difference we notice is that we specify only one type parameter, which is the value we're storing.
+The second key difference is that we don't specify the `KeyCodec`, since we store only one item we already know the key
+and the fact that it is constant.
+
+

@@ -14,7 +14,7 @@ type Indexes[PrimaryKey, Value any] interface {
 	IndexesList() []Index[PrimaryKey, Value]
 }
 
-// Index represent an index of the Value
+// Index represents an index of the Value
 // indexed using the type PrimaryKey.
 type Index[PrimaryKey, Value any] interface {
 	// Reference creates a reference between the provided primary key and value.

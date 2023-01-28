@@ -25,10 +25,6 @@ var (
 	TypeMsgVote           = sdk.MsgTypeURL(&v1.MsgVote{})
 	TypeMsgVoteWeighted   = sdk.MsgTypeURL(&v1.MsgVoteWeighted{})
 	TypeMsgSubmitProposal = sdk.MsgTypeURL(&v1.MsgSubmitProposal{})
-<<<<<<< HEAD
-=======
-	TypeMsgCancelProposal = sdk.MsgTypeURL(&v1.MsgCancelProposal{})
->>>>>>> 5f08a5c9b (fix: fix sims (#14827))
 )
 
 // Simulation operation weights constants
@@ -214,20 +210,6 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-<<<<<<< HEAD
-		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		var fees sdk.Coins
-		coins, hasNeg := spendable.SafeSub(deposit...)
-		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
-			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to generate fees"), nil, err
-			}
-		}
-
-=======
->>>>>>> 5f08a5c9b (fix: fix sims (#14827))
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 		tx, err := simtestutil.GenSignedMockTx(
 			r,

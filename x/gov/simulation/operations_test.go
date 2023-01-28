@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -115,8 +114,9 @@ func TestWeightedOperations(t *testing.T) {
 		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
 	}
 
+	require.Equal(t, len(weightesOps), len(expected), "number of operations should be the same")
 	for i, w := range weightesOps {
-		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter()), accs, ctx.ChainID())
+		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		require.NoError(t, err)
 
 		// the following checks are very much dependent from the ordering of the output given

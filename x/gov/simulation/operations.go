@@ -224,23 +224,12 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		}
 
 		account := ak.GetAccount(ctx, simAccount.Address)
-		spendable := bk.SpendableCoins(ctx, account.GetAddress())
-
-		var fees sdk.Coins
-		coins, hasNeg := spendable.SafeSub(deposit...)
-		if !hasNeg {
-			fees, err = simtypes.RandomFees(r, ctx, coins)
-			if err != nil {
-				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate fees"), nil, err
-			}
-		}
-
 		txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 		tx, err := simtestutil.GenSignedMockTx(
 			r,
 			txGen,
 			[]sdk.Msg{msg},
-			fees,
+			sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)},
 			simtestutil.DefaultGenTxGas,
 			chainID,
 			[]uint64{account.GetAccountNumber()},

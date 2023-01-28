@@ -112,6 +112,7 @@ func TestWeightedOperations(t *testing.T) {
 		{0, types.ModuleName, simulation.TypeMsgSubmitProposal},
 	}
 
+	require.Equal(t, len(weightesOps), len(expected), "number of operations should be the same")
 	for i, w := range weightesOps {
 		operationMsg, _, err := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		require.NoError(t, err)

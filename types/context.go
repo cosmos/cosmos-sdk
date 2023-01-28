@@ -311,6 +311,7 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 }
 
 var _ context.Context = Context{}
+var _ storetypes.Context = Context{}
 
 // ContextKey defines a type alias for a stdlib Context key.
 type ContextKey string

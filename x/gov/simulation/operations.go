@@ -26,6 +26,7 @@ var (
 	TypeMsgVoteWeighted   = sdk.MsgTypeURL(&v1.MsgVoteWeighted{})
 	TypeMsgSubmitProposal = sdk.MsgTypeURL(&v1.MsgSubmitProposal{})
 	TypeMsgCancelProposal = sdk.MsgTypeURL(&v1.MsgCancelProposal{})
+	TypeMsgUpdateParams   = sdk.MsgTypeURL(&v1.MsgUpdateParams{})
 )
 
 // Simulation operation weights constants
@@ -45,7 +46,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
-func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations {
+func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, wMsgs []simtypes.WeightedProposalMsg, wContents []simtypes.WeightedProposalContent) simulation.WeightedOperations { //nolint:staticcheck
 	var (
 		weightMsgDeposit        int
 		weightMsgVote           int
@@ -77,20 +78,36 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		},
 	)
 
-	// generate the weighted operations for the proposal contents
+	// generate the weighted operations for the proposal msgs
 	var wProposalOps simulation.WeightedOperations
+	for _, wMsg := range wMsgs {
+		wMsg := wMsg // pin variable
+		var weight int
+		appParams.GetOrGenerate(cdc, wMsg.AppParamsKey(), &weight, nil,
+			func(_ *rand.Rand) { weight = wMsg.DefaultWeight() })
 
+		wProposalOps = append(
+			wProposalOps,
+			simulation.NewWeightedOperation(
+				weight,
+				SimulateMsgSubmitProposal(ak, bk, k, wMsg.MsgSimulatorFn()),
+			),
+		)
+	}
+
+	// generate the weighted operations for the proposal contents
+	var wLegacyProposalOps simulation.WeightedOperations
 	for _, wContent := range wContents {
 		wContent := wContent // pin variable
 		var weight int
 		appParams.GetOrGenerate(cdc, wContent.AppParamsKey(), &weight, nil,
 			func(_ *rand.Rand) { weight = wContent.DefaultWeight() })
 
-		wProposalOps = append(
-			wProposalOps,
+		wLegacyProposalOps = append(
+			wLegacyProposalOps,
 			simulation.NewWeightedOperation(
 				weight,
-				SimulateMsgSubmitProposal(ak, bk, k, wContent.ContentSimulatorFn()),
+				SimulateMsgSubmitLegacyProposal(ak, bk, k, wContent.ContentSimulatorFn()),
 			),
 		)
 	}
@@ -114,34 +131,43 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		),
 	}
 
-	return append(wProposalOps, wGovOps...)
+	return append(wGovOps, append(wProposalOps, wLegacyProposalOps...)...)
 }
 
 // SimulateMsgSubmitProposal simulates creating a msg Submit Proposal
 // voting on the proposal, and subsequently slashing the proposal. It is implemented using
 // future operations.
-func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, contentSim simtypes.ContentSimulatorFn) simtypes.Operation {
-	// The states are:
-	// column 1: All validators vote
-	// column 2: 90% vote
-	// column 3: 75% vote
-	// column 4: 40% vote
-	// column 5: 15% vote
-	// column 6: noone votes
-	// All columns sum to 100 for simplicity, values chosen by @valardragon semi-arbitrarily,
-	// feel free to change.
-	numVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
-		{20, 10, 0, 0, 0, 0},
-		{55, 50, 20, 10, 0, 0},
-		{25, 25, 30, 25, 30, 15},
-		{0, 15, 30, 25, 30, 30},
-		{0, 0, 20, 30, 30, 30},
-		{0, 0, 0, 10, 10, 25},
-	})
+func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, msgSim simtypes.MsgSimulatorFn) simtypes.Operation {
+	return func(
+		r *rand.Rand,
+		app *baseapp.BaseApp,
+		ctx sdk.Context,
+		accs []simtypes.Account,
+		chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true)
+		switch {
+		case skip:
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
+		case err != nil:
+			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
+		}
 
-	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
-	curNumVotesState := 1
+		msgs := []sdk.Msg{}
+		proposalMsg := msgSim(r, ctx, accs)
+		if proposalMsg != nil {
+			msgs = append(msgs, proposalMsg)
+		}
 
+		return simulateMsgSubmitProposal(ak, bk, k, msgs, simAccount, deposit)(r, app, ctx, accs, chainID)
+	}
+}
+
+// SimulateMsgSubmitLegacyProposal simulates creating a msg Submit Proposal
+// voting on the proposal, and subsequently slashing the proposal. It is implemented using
+// future operations.
+func SimulateMsgSubmitLegacyProposal(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, contentSim simtypes.ContentSimulatorFn) simtypes.Operation { //nolint:staticcheck
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -167,7 +193,54 @@ func SimulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "error converting legacy content into proposal message"), nil, err
 		}
 
-		msg, err := v1.NewMsgSubmitProposal([]sdk.Msg{contentMsg}, deposit, simAccount.Address.String(), "", "Title of proposal", "Short description of proposal")
+		return simulateMsgSubmitProposal(ak, bk, k, []sdk.Msg{contentMsg}, simAccount, deposit)(r, app, ctx, accs, chainID)
+	}
+}
+
+func simulateMsgSubmitProposal(
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	k *keeper.Keeper,
+	proposalMsgs []sdk.Msg,
+	simAccount simtypes.Account,
+	deposit sdk.Coins,
+) simtypes.Operation {
+	// The states are:
+	// column 1: All validators vote
+	// column 2: 90% vote
+	// column 3: 75% vote
+	// column 4: 40% vote
+	// column 5: 15% vote
+	// column 6: noone votes
+	// All columns sum to 100 for simplicity, values chosen by @valardragon semi-arbitrarily,
+	// feel free to change.
+	numVotesTransitionMatrix, _ := simulation.CreateTransitionMatrix([][]int{
+		{20, 10, 0, 0, 0, 0},
+		{55, 50, 20, 10, 0, 0},
+		{25, 25, 30, 25, 30, 15},
+		{0, 15, 30, 25, 30, 30},
+		{0, 0, 20, 30, 30, 30},
+		{0, 0, 0, 10, 10, 25},
+	})
+
+	statePercentageArray := []float64{1, .9, .75, .4, .15, 0}
+	curNumVotesState := 1
+
+	return func(
+		r *rand.Rand,
+		app *baseapp.BaseApp,
+		ctx sdk.Context,
+		accs []simtypes.Account,
+		chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		msg, err := v1.NewMsgSubmitProposal(
+			proposalMsgs,
+			deposit,
+			simAccount.Address.String(),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 100),
+			simtypes.RandStringOfLength(r, 100),
+		)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
 		}

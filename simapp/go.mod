@@ -5,15 +5,16 @@ go 1.19
 require (
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58
-	cosmossdk.io/core v0.5.0
+	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/store v0.1.0
+	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
+	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
@@ -33,7 +34,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.8.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
-	cosmossdk.io/collections v0.0.0-20230124101704-57bedb100648 // indirect
+	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -150,7 +151,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/rs/cors v1.8.2 // indirect
-	github.com/rs/zerolog v1.28.0 // indirect
+	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -189,12 +190,11 @@ require (
 replace (
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
-	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 
 replace (
-	cosmossdk.io/store => ../store
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

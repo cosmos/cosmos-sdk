@@ -9,14 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
+	"cosmossdk.io/x/upgrade"
+	upgradecli "cosmossdk.io/x/upgrade/client/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradecli "github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 )
 
 func TestModuleVersionsCLI(t *testing.T) {

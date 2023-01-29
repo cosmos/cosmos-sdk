@@ -11,36 +11,20 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/empty.proto";
 
 message ABitOfEverything {
-  // message
-  // Generates JSON objects. Message field names are mapped to lowerCamelCase and become JSON object keys. If the json_name field option is specified, the specified value will be used as the key instead. Parsers accept both the lowerCamelCase name (or the one specified by the json_name option) and the original proto field name. null is an accepted value for all field types and treated as the default value of the corresponding field type.
   NestedMessage message = 1;
-
-  // enum
-  // The name of the enum value as specified in proto is used. Parsers accept both enum names and integer values.
   AnEnum enum = 2;
-
-  // map
-  // All keys are converted to strings.
   map<string, string> str_map = 3;
-// not supported by legacy amino
-//  map<int32, string>  int32_map = 4;
-//  map<bool, string> bool_map = 5;
 
-  // repeated
   repeated int32 repeated = 6;
 
   string str = 7;
-
   bool bool = 8;
-
   bytes bytes = 9;
-
   int32 i32 = 10;
   fixed32 f32 = 11;
   uint32 u32 = 12;
   sint32 si32 = 13;
   sfixed32 sf32 = 14;
-
   int64 i64 = 15;
   fixed64 f64 = 16;
   uint64 u64 = 17;
@@ -51,11 +35,8 @@ message ABitOfEverything {
   //double double = 21;
 
   google.protobuf.Any any = 22;
-
   google.protobuf.Timestamp timestamp = 23;
-
   google.protobuf.Duration duration = 24;
-
   google.protobuf.Struct struct = 25;
 
 // TODO

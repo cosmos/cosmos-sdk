@@ -1,6 +1,7 @@
 package aminojson_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec/aminojson"
 	"github.com/tendermint/go-amino"
 	"testing"
 	"time"
@@ -11,15 +12,19 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
-	"github.com/cosmos/cosmos-sdk/codec/aminojson"
 	"github.com/cosmos/cosmos-sdk/codec/aminojson/internal/testpb"
 )
 
 func TestAminoJSON(t *testing.T) {
-	a, err := anypb.New(&testpb.ABitOfEverything{
-		I32: 10,
-		Str: "abc",
+	//a, err := anypb.New(&testpb.ABitOfEverything{
+	//	I32: 10,
+	//	Str: "string in an any type",
+	//})
+	a, err := anypb.New(&testpb.NestedMessage{
+		Foo: "any type nested",
+		Bar: 11,
 	})
+
 	assert.NilError(t, err)
 	msg := &testpb.ABitOfEverything{
 		Message: &testpb.NestedMessage{

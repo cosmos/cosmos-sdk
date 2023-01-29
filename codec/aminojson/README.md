@@ -13,7 +13,8 @@ look to `std.RegisterLegacyAminoCodec(amino)` for current usages and registratio
 amino map serialization is non-deterministic
 
 - structurally follow legacy amino json encoding
-- refer to stablejson for protoreflect details on golang reflect -> protoreflect
+- refer to stablejson for protoreflect details translating golang reflect -> protoreflect
 - add special casing custom encoders (including tests)
 - add rapid tests
 - refactor for readability. not really convinced stablejson is anymore readable than amino json yet
+- check timestamp special casing is equivalent

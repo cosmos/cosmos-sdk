@@ -23,14 +23,6 @@ func NewItem[V any](
 	return item
 }
 
-func (i Item[V]) getName() string {
-	return i.name
-}
-
-func (i Item[V]) getPrefix() []byte {
-	return i.prefix
-}
-
 // Get gets the item, if it is not set it returns an ErrNotFound error.
 // If value decoding fails then an ErrEncoding is returned.
 func (i Item[V]) Get(ctx context.Context) (V, error) {

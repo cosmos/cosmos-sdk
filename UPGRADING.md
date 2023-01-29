@@ -41,6 +41,11 @@ The `gogoproto.goproto_stringer = false` annotation has been removed from most p
 
 References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate  store/types, hence the `types/store.go` file is no longer needed and has been removed.
 
+##### Extract Store to a standalone module
+
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
+
 ### SimApp
 
 #### Module Assertions
@@ -68,20 +73,37 @@ By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migrati
 ##### Extract evidence to a standalone module
 
 The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
-All the evidence imports are now renamed to use `cosmossdk.io/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
+All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
 
 #### `x/nft`
 
 ##### Extract nft to a standalone module
 
-The `x/nft` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
 
+#### x/feegrant
+
+##### Extract feegrant to a standalone module
+
+The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
+All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
+
+#### `x/upgrade`
+
+##### Extract upgrade to a standalone module
+
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
 
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation
 
 Remove `RandomizedParams` from `AppModuleSimulation` interface. Previously, it used to generate random parameter changes during simulations, however, it does so through ParamChangeProposal which is now legacy. Since all modules were migrated, we can now safely remove this from `AppModuleSimulation` interface.
+
+Moreover, to support the `MsgUpdateParams` governance proposals for each modules, `AppModuleSimulation` now defines a `AppModule.ProposalMsgs` method in addition to `AppModule.ProposalContents`. That method defines the messages that can be used to submit a proposal and that should be tested in simulation.
+
+When a module has no proposal messages or proposal content to be tested by simulation, the `AppModule.ProposalMsgs` and `AppModule.ProposalContents` methods can be deleted.
 
 ### gRPC
 
@@ -149,7 +171,7 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
 
-See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md)
+See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
 
 #### `{accepts,implements}_interface` proto annotations
 
@@ -220,9 +242,7 @@ modified to set the new parameter to the desired value.
 
 ##### New Proposal.Proposer field
 
-The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and this migration is optional.
-
-> This migration is optional, if chain wants to cancel previous proposals which are active (deposit or voting period) they can do this proposals state migration.
+The `Proposal` proto has been updated with proposer field. For proposal state migraton developers can call `v4.AddProposerAddressToProposal` in their upgrade handler to update all existing proposal and make them compatible and **this migration is optional**.
 
 ```go
 import (
@@ -424,3 +444,4 @@ message MsgSetWithdrawAddress {
 <!-- todo: cosmos.scalar types -->
 
 When clients interract with a node they are required to set a codec in in the grpc.Dial. More information can be found in this [doc](https://docs.cosmos.network/v0.46/run-node/interact-node.html#programmatically-via-go).
+

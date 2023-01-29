@@ -1,4 +1,4 @@
-package util
+package log
 
 type Logger interface {
 	Debug(msg string, keyvals ...interface{})

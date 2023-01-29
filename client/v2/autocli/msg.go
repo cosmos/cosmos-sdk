@@ -4,6 +4,9 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/util"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -13,20 +16,61 @@ import (
 // module, this is used instead of any automatically generated CLI commands. This allows apps to a fully dynamic client
 // with a more customized experience if a binary with custom commands is downloaded.
 func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
-	queryCmd := topLevelCmd("query", "Querying subcommands")
-	queryCmd.Aliases = []string{"q"}
-	if err := b.EnhanceQueryCommand(queryCmd, moduleOptions, customCmds); err != nil {
+	msgCmd := topLevelCmd("tx", "Transaction subcommands")
+	if err := b.EnhanceQueryCommand(msgCmd, moduleOptions, customCmds); err != nil {
 		return nil, err
 	}
 
-	return queryCmd, nil
+	return msgCmd, nil
+}
+
+// EnhanceMsgCommand enhances the provided msg command with either generated commands based on the provided module
+// options or the provided custom commands for each module. If the provided msg command already contains a command
+// for a module, that command is not over-written by this method. This allows a graceful addition of autocli to
+// automatically fill in missing commands.
+func (b *Builder) EnhanceMsgCommand(msgCmd *cobra.Command, moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) error {
+	allModuleNames := map[string]bool{}
+	for moduleName := range moduleOptions {
+		allModuleNames[moduleName] = true
+	}
+	for moduleName := range customCmds {
+		allModuleNames[moduleName] = true
+	}
+
+	for moduleName := range allModuleNames {
+		if existing := findSubCommand(msgCmd, moduleName); existing != nil {
+			continue
+		}
+
+		if customCmd, ok := customCmds[moduleName]; ok {
+			msgCmd.AddCommand(customCmd)
+			continue
+		}
+
+		moduleOpt, ok := moduleOptions[moduleName]
+		if !ok {
+			continue
+		}
+		txCmdDesc := moduleOpt.Tx
+
+		// if descriptor is nil, then there are no commands to add
+		if txCmdDesc == nil {
+			continue
+		}
+		cmd, err := b.BuildModuleMsgCommand(moduleName, moduleOpt.Tx)
+		if err != nil {
+			return err
+		}
+		msgCmd.AddCommand(cmd)
+	}
+	return nil
 }
 
 // BuildModuleMsgCommand builds the msg command for a single module.
 func (b *Builder) BuildModuleMsgCommand(moduleName string, cmdDescriptor *autocliv1.ServiceCommandDescriptor) (*cobra.Command, error) {
-	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transactions for the %s module", moduleName))
+	cmd := topLevelCmd(moduleName, fmt.Sprintf("Transations commands for the %s module", moduleName))
 
-	err := b.AddQueryServiceCommands(cmd, cmdDescriptor)
+	err := b.AddMsgServiceCommands(cmd, cmdDescriptor)
 
 	return cmd, err
 }
@@ -35,11 +79,6 @@ func (b *Builder) BuildModuleMsgCommand(moduleName string, cmdDescriptor *autocl
 // method in the specified service and returns the command. This can be used in
 // order to add auto-generated commands to an existing command.
 func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
-	for cmdName, method := range cmdDescriptor.Methods {
-		if err := b.AddMsgServiceCommand(cmd, method); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
@@ -52,8 +91,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	if options.Skip {
 		return nil, nil
 	}
-
-	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 
 	long := options.Long
 	if long == "" {
@@ -95,7 +132,11 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		if err != nil {
 			return err
 		}
-
+		msg := input.Interface().(sdk.Msg)
+		clientCtx, err := client.GetClientTxContext(cmd)
+		if err != nil {
+			return err
+		}
 		output := outputType.New()
 		bz, err := jsonMarshalOptions.Marshal(output.Interface())
 		if err != nil {
@@ -103,7 +144,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		}
 
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
-		return err
+		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
 
 	return cmd, nil

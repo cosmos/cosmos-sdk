@@ -2,7 +2,7 @@ Feature: MsgResetCircuitBreaker
 	- Circuit breaker can be reset:
 	- when the permissions are valid
 
-  Rule: the caller has permission LEVEL_SUPER_ADMIN
+  Rule: caller with must have a permission to reset the circuit
 
     Example: caller attempts to reset a disabled message
       Given "acct1" has permission "LEVEL_SUPER_ADMIN"
@@ -34,8 +34,8 @@ Feature: MsgResetCircuitBreaker
         """
       Then expect success
 
-    Example: caller attempts to reset a disabled message
-      Given "acct1" has permission "LEVEL_SOME_MSGS"
+    Example: caller attempts to reset a message they have permission to trip
+      Given "acct1" has permission to trip circuit breaker for "cosmos.bank.v1beta1.MsgSend"
       When "acct1" attempts to reset a disabled message
         """
         {
@@ -44,12 +44,12 @@ Feature: MsgResetCircuitBreaker
         """
       Then expect success
 
-    Example: caller has does not have permission for MultiSend
-      Given "acct1" has permission "LEVEL_SOME_MSGS"
+    Example: caller attempts to reset a message they don't have permission to trip
+      Given "acct1" has permission to trip circuit breaker for "cosmos.bank.v1beta1.MsgSend"
       When "acct1" attempts to reset a disabled message
         """
         {
         	"msg": "cosmos.bank.v1beta1.MultiSend"
         }
         """
-      Then expect an "unauthorized" error
+      Then expect success

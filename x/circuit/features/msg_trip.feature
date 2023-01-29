@@ -46,7 +46,7 @@ Feature: MsgTripCircuitBreaker
       Then expect success
 
     Example: user does not have permission for 1 of the messages in the list
-      Given "acct1" has permission to diable "cosmos.bank.v1beta1.MsgSend"
+      Given "acct1" has permission to disable "cosmos.bank.v1beta1.MsgSend"
       When "acct1" attempts to disable msg execution
         """
         {

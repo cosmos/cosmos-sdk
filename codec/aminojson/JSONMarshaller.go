@@ -2,6 +2,7 @@ package aminojson
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
@@ -20,11 +21,11 @@ type AminoJson struct{}
 func MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
-	err := AminoJson{}.marshalMessage(vmsg, nil, buf)
+	err := AminoJson{}.marshal(vmsg, nil, buf)
 	return buf.Bytes(), err
 }
 
-func (aj AminoJson) marshalMessage(
+func (aj AminoJson) marshal(
 	value protoreflect.Value,
 	field protoreflect.FieldDescriptor,
 	writer io.Writer) error {
@@ -39,81 +40,86 @@ func (aj AminoJson) marshalMessage(
 
 	switch typedValue := value.Interface().(type) {
 	case protoreflect.Message:
-		msg := typedValue
-		//fmt.Printf("message: %s\n", msg.Descriptor().FullName())
-		switch msg.Descriptor().FullName() {
-		case anyFullName:
-			fmt.Println("any")
-			return aj.marshalAny(msg, writer)
-		}
+		return aj.marshalMessage(typedValue, writer)
 
-		fields := msg.Descriptor().Fields()
-		first := true
-		for i := 0; i < fields.Len(); i++ {
-			f := fields.Get(i)
-			if !msg.Has(f) {
-				continue
-			}
-
-			v := msg.Get(f)
-			//fmt.Printf("field: %s, value: %v\n", f.FullName(), v)
-
-			if first {
-				_, err := writer.Write([]byte("{"))
-				if err != nil {
-					return err
-				}
-			}
-
-			if !first {
-				_, err := writer.Write([]byte(","))
-				if err != nil {
-					return err
-				}
-			}
-
-			err := invokeStdlibJSONMarshal(writer, f.Name())
-			if err != nil {
-				return err
-			}
-
-			_, err = writer.Write([]byte(":"))
-			if err != nil {
-				return err
-			}
-
-			err = aj.marshalMessage(v, f, writer)
-			if err != nil {
-				return err
-			}
-
-			if i == fields.Len()-1 {
-
-			}
-
-			first = false
-		}
-
-		_, err := writer.Write([]byte("}"))
-		if err != nil {
-			return err
-		}
-		return nil
-
-	case protoreflect.EnumNumber:
-		return aj.marshalEnum(field, typedValue, writer)
-	case string, bool, int32, uint32:
+	case string, bool, int32, uint32, protoreflect.EnumNumber:
 		return invokeStdlibJSONMarshal(writer, typedValue)
+
+	case protoreflect.Map:
+		return aj.marshalMap(field, typedValue, writer)
+
+	case protoreflect.List:
+		return aj.marshalList(field, typedValue, writer)
+
+	case []byte:
+		_, err := fmt.Fprintf(writer, `"%s"`,
+			base64.StdEncoding.EncodeToString([]byte(typedValue)))
+		return err
 	}
 	//fmt.Printf("marshal field: %s, value: %v\n", field.FullName(), value)
 
 	return nil
 }
 
+func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
+	//fmt.Printf("message: %s\n", msg.Descriptor().FullName())
+	switch msg.Descriptor().FullName() {
+	case anyFullName:
+		fmt.Println("any")
+		return aj.marshalAny(msg, writer)
+	}
+
+	fields := msg.Descriptor().Fields()
+	first := true
+	for i := 0; i < fields.Len(); i++ {
+		f := fields.Get(i)
+		if !msg.Has(f) {
+			continue
+		}
+
+		v := msg.Get(f)
+		//fmt.Printf("field: %s, value: %v\n", f.FullName(), v)
+
+		if first {
+			_, err := writer.Write([]byte("{"))
+			if err != nil {
+				return err
+			}
+		}
+
+		if !first {
+			_, err := writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
+		}
+
+		err := invokeStdlibJSONMarshal(writer, f.Name())
+		if err != nil {
+			return err
+		}
+
+		_, err = writer.Write([]byte(":"))
+		if err != nil {
+			return err
+		}
+
+		err = aj.marshal(v, f, writer)
+		if err != nil {
+			return err
+		}
+
+		first = false
+	}
+
+	_, err := writer.Write([]byte("}"))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func invokeStdlibJSONMarshal(w io.Writer, v interface{}) error {
-	// Note: Please don't stream out the output because that adds a newline
-	// using json.NewEncoder(w).Encode(data)
-	// as per https://golang.org/pkg/encoding/json/#Encoder.Encode
 	blob, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -162,7 +168,7 @@ func (aj AminoJson) marshalAny(message protoreflect.Message, writer io.Writer) e
 		return err
 	}
 
-	return aj.marshalMessage(protoreflect.ValueOfMessage(valueMsg), nil, writer)
+	return aj.marshal(protoreflect.ValueOfMessage(valueMsg), nil, writer)
 
 	//err = aj.marshalMessageFields(valueMsg, writer, false)
 	//if err != nil {
@@ -173,22 +179,82 @@ func (aj AminoJson) marshalAny(message protoreflect.Message, writer io.Writer) e
 	//return err
 }
 
-func (aj AminoJson) marshalEnum(
+func (aj AminoJson) marshalMap(
 	fieldDescriptor protoreflect.FieldDescriptor,
-	value protoreflect.EnumNumber,
+	value protoreflect.Map,
 	writer io.Writer) error {
-	enumDescriptor := fieldDescriptor.Enum()
-	if enumDescriptor == nil {
-		return fmt.Errorf("expected enum descriptor for %s", fieldDescriptor.FullName())
+	_, err := writer.Write([]byte("{"))
+	if err != nil {
+		return err
 	}
 
-	enumValueDescriptor := enumDescriptor.Values().ByNumber(value)
-	var err error
-	if enumValueDescriptor != nil {
-		_, err = fmt.Fprintf(writer, "%q", enumValueDescriptor.Name())
-	} else {
-		_, err = fmt.Fprintf(writer, "%d", value)
+	allKeys := make([]protoreflect.MapKey, 0, value.Len())
+	value.Range(func(key protoreflect.MapKey, _ protoreflect.Value) bool {
+		allKeys = append(allKeys, key)
+		return true
+	})
+
+	// TODO sort
+	// TODO fail if key type is not string
+
+	valueField := fieldDescriptor.MapValue()
+	first := true
+	for _, key := range allKeys {
+		if !first {
+			_, err = writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
+		}
+		first = false
+
+		err = invokeStdlibJSONMarshal(writer, key.String())
+		if err != nil {
+			return err
+		}
+
+		_, err = writer.Write([]byte(":"))
+		if err != nil {
+			return err
+		}
+
+		err = aj.marshal(value.Get(key), valueField, writer)
+		if err != nil {
+			return err
+		}
 	}
+
+	_, err = writer.Write([]byte("}"))
+	return err
+}
+
+func (aj AminoJson) marshalList(
+	fieldDescriptor protoreflect.FieldDescriptor,
+	list protoreflect.List,
+	writer io.Writer) error {
+	n := list.Len()
+	_, err := writer.Write([]byte("["))
+	if err != nil {
+		return err
+	}
+
+	first := true
+	for i := 0; i < n; i++ {
+		if !first {
+			_, err := writer.Write([]byte(","))
+			if err != nil {
+				return err
+			}
+		}
+		first = false
+
+		err = aj.marshal(list.Get(i), fieldDescriptor, writer)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = writer.Write([]byte("]"))
 	return err
 }
 

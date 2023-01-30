@@ -133,7 +133,7 @@ prefix2 := collections.NewPrefix("aa") // prefix2 starts with the same as prefix
 ### Human-Readable Name
 
 The third parameter we pass to a collection is a string, which is a human-readable name.
-It needs to make the role of a collection understandable by clients who have no clue about
+It is needed to make the role of a collection understandable by clients who have no clue about
 what a module is storing in state.
 
 #### Rules

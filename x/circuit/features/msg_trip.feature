@@ -64,3 +64,13 @@ Feature: MsgTripCircuitBreaker
         }
         """
       Then expect an "unauthorized" error
+
+    Example: user tries to trip an already tripped circuit breaker
+      Given "acct1" has permission to diable "cosmos.bank.v1beta1.MsgSend" & is already tripped
+      When "acct1" attempts to disable msg execution
+        """
+        {
+        	"msg": "cosmos.bank.v1beta1.MultiSend"
+        }
+        """
+      Then expect an "msg disabled" error

@@ -13,11 +13,11 @@ func TestTrip(t *testing.T) {
 }
 
 type tripSuite struct {
-	*baseSuite
+	*baseFixture
 }
 
 func (s *tripSuite) Before(t *testing.T) {
-	s.baseSuite = setupBase(t)
+	s.baseFixture = setupBase(t)
 
 }
 

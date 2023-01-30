@@ -53,3 +53,13 @@ Feature: MsgResetCircuitBreaker
         }
         """
       Then expect success
+
+    Example: caller attempts to reset a message that has been tripped
+      Given "acct1" has permission "LEVEL_SUPER_ADMIN" & "cosmos.bank.v1beta1.MultiSend" has been enabled
+      When "acct1" attempts to reset a disabled message
+        """
+        {
+        	"msg": "cosmos.bank.v1beta1.MultiSend"
+        }
+        """
+      Then expect an "msg enabled" error

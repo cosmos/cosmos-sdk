@@ -2,15 +2,17 @@ package aminojson_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec/aminojson"
-	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
+	"testing"
+	"time"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
-	"testing"
-	"time"
+
+	"github.com/cosmos/cosmos-sdk/codec/aminojson"
+	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
 
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -33,25 +35,40 @@ func TestAminonJSON_Empty(t *testing.T) {
 	assert.Equal(t, "{}", string(bz))
 }
 
-func TestAminoJSON_Failures(t *testing.T) {
-	msg := &testpb.ABitOfEverything{
-		Duration: durationpb.New(time.Second * 0),
+func TestAminoJSON_EdgeCases(t *testing.T) {
+	cases := map[string]struct {
+		msg       proto.Message
+		shouldErr bool
+	}{
+		"empty":         {msg: &testpb.ABitOfEverything{}},
+		"any type":      {msg: &testpb.ABitOfEverything{Any: &anypb.Any{}}},
+		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
 	}
-	msg2 := &testpb.ABitOfEverything{}
 
-	bz, err := aminojson.MarshalAmino(msg)
-	assert.NilError(t, err)
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			bz, err := aminojson.MarshalAmino(tc.msg)
 
-	cdc := amino.NewCodec()
-	legacyBz, err := cdc.MarshalJSON(msg)
-	assert.NilError(t, err)
+			if tc.shouldErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
 
-	goProtoJson, err := protojson.Marshal(msg)
-	err = protojson.UnmarshalOptions{}.Unmarshal(bz, msg2)
-	assert.NilError(t, err, "protojson unmarshal failed; %s", goProtoJson)
+			msg2 := &testpb.ABitOfEverything{}
 
-	fmt.Printf("%s vs legacy: %s\n", string(bz), string(legacyBz))
-	assert.Equal(t, string(legacyBz), string(bz))
+			cdc := amino.NewCodec()
+			legacyBz, err := cdc.MarshalJSON(tc.msg)
+			assert.NilError(t, err)
+
+			goProtoJson, err := protojson.Marshal(tc.msg)
+			err = protojson.UnmarshalOptions{}.Unmarshal(bz, msg2)
+			assert.NilError(t, err, "unmarshal failed: %s vs %s", legacyBz, goProtoJson)
+
+			require.Equal(t, legacyBz, bz, "legacy: %s vs %s", legacyBz, bz)
+		})
+	}
+
 }
 
 func TestAminoJSON(t *testing.T) {

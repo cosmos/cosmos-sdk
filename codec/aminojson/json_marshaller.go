@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"io"
 )
 
 type JSONMarshaller interface {
@@ -29,18 +30,16 @@ func (aj AminoJson) marshal(
 	value protoreflect.Value,
 	field protoreflect.FieldDescriptor,
 	writer io.Writer) error {
-	//switch message.Descriptor().FullName() {
-	//case timestampFullName:
-	//	return marshalTimestamp(writer, message)
-	//case durationFullName:
-	//	return marshalDuration(writer, message)
-	//}
-
-	//fmt.Printf("value: %v\n", value)
 
 	switch typedValue := value.Interface().(type) {
 	case protoreflect.Message:
 		return aj.marshalMessage(typedValue, writer)
+
+	case protoreflect.Map:
+		return aj.marshalMap(field, typedValue, writer)
+
+	case protoreflect.List:
+		return aj.marshalList(field, typedValue, writer)
 
 	case string, bool, int32, uint32, protoreflect.EnumNumber:
 		return invokeStdlibJSONMarshal(writer, typedValue)
@@ -49,18 +48,11 @@ func (aj AminoJson) marshal(
 		_, err := fmt.Fprintf(writer, `"%d"`, typedValue) // quoted
 		return err
 
-	case protoreflect.Map:
-		return aj.marshalMap(field, typedValue, writer)
-
-	case protoreflect.List:
-		return aj.marshalList(field, typedValue, writer)
-
 	case []byte:
 		_, err := fmt.Fprintf(writer, `"%s"`,
 			base64.StdEncoding.EncodeToString([]byte(typedValue)))
 		return err
 	}
-	//fmt.Printf("marshal field: %s, value: %v\n", field.FullName(), value)
 
 	return nil
 }
@@ -90,16 +82,15 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		}
 
 		v := msg.Get(f)
-		//fmt.Printf("field: %s, value: %v\n", f.FullName(), v)
 
 		if !first {
-			_, err := writer.Write([]byte(","))
+			_, err = writer.Write([]byte(","))
 			if err != nil {
 				return err
 			}
 		}
 
-		err := invokeStdlibJSONMarshal(writer, f.Name())
+		err = invokeStdlibJSONMarshal(writer, f.Name())
 		if err != nil {
 			return err
 		}

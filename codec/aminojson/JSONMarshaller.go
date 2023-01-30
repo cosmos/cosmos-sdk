@@ -45,6 +45,10 @@ func (aj AminoJson) marshal(
 	case string, bool, int32, uint32, protoreflect.EnumNumber:
 		return invokeStdlibJSONMarshal(writer, typedValue)
 
+	case uint64, int64:
+		_, err := fmt.Fprintf(writer, `"%d"`, typedValue) // quoted
+		return err
+
 	case protoreflect.Map:
 		return aj.marshalMap(field, typedValue, writer)
 
@@ -62,12 +66,15 @@ func (aj AminoJson) marshal(
 }
 
 func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
-	//fmt.Printf("message: %s\n", msg.Descriptor().FullName())
-	switch msg.Descriptor().FullName() {
-	case anyFullName:
-		fmt.Println("any")
-		return aj.marshalAny(msg, writer)
-	}
+
+	// TODO
+	// Am I tracking this legacy amino coded behavior correctly?
+	//
+	//switch msg.Descriptor().FullName() {
+	//case anyFullName:
+	//	fmt.Println("any")
+	//	return aj.marshalAny(msg, writer)
+	//}
 
 	fields := msg.Descriptor().Fields()
 	first := true

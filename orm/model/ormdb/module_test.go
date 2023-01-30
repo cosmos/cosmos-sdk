@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
+	"cosmossdk.io/core/store"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/golang/mock/gomock"
 
@@ -43,8 +45,8 @@ type keeper struct {
 }
 
 func NewKeeper(db ormdb.ModuleDB) (Keeper, error) {
-	store, err := testpb.NewBankStore(db)
-	return keeper{store}, err
+	bankStore, err := testpb.NewBankStore(db)
+	return keeper{bankStore}, err
 }
 
 type Keeper interface {
@@ -338,22 +340,17 @@ func TestHooks(t *testing.T) {
 	assert.NilError(t, k.Burn(ctx, acct1, denom, 5))
 }
 
+type testStoreService struct {
+	db dbm.DB
+}
+
+func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
+	return t.db
+}
+
 func TestGetBackendResolver(t *testing.T) {
-	backend := ormtest.NewMemoryBackend()
-	getResolver := func(storageType ormv1alpha1.StorageType) (ormtable.BackendResolver, error) {
-		switch storageType {
-		case ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY:
-			return func(ctx context.Context) (ormtable.ReadBackend, error) {
-				return backend, nil
-			}, nil
-		default:
-			return nil, fmt.Errorf("storage type %s unsupported", storageType)
-		}
-	}
-	_, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{
-		GetBackendResolver: getResolver,
-	})
-	assert.ErrorContains(t, err, "unsupported")
+	_, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
+	assert.ErrorContains(t, err, "missing KVStoreService")
 
 	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
 		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
@@ -364,7 +361,7 @@ func TestGetBackendResolver(t *testing.T) {
 			},
 		},
 	}, ormdb.ModuleDBOptions{
-		GetBackendResolver: getResolver,
+		MemoryStoreService: testStoreService{db: dbm.NewMemDB()},
 	})
 	assert.NilError(t, err)
 }

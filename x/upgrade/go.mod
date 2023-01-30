@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.2.6
-	cosmossdk.io/core v0.5.0
+	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c

@@ -26,12 +26,10 @@ var (
 )
 
 // Simulation operation weights constants
-//
-//nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgGrant = "op_weight_msg_grant"
-	OpWeightRevoke   = "op_weight_msg_revoke"
-	OpWeightExec     = "op_weight_msg_execute"
+	OpWeightMsgGrant = "op_weight_msg_grant"   //nolint:gosec
+	OpWeightRevoke   = "op_weight_msg_revoke"  //nolint:gosec
+	OpWeightExec     = "op_weight_msg_execute" //nolint:gosec
 )
 
 // authz operations weights

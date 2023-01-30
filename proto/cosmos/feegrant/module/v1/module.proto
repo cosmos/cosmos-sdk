@@ -7,6 +7,6 @@ import "cosmos/app/v1alpha1/module.proto";
 // Module is the config object of the feegrant module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/x/feegrant"
+    go_import: "cosmossdk.io/x/feegrant"
   };
 }

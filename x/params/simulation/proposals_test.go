@@ -21,7 +21,7 @@ func TestProposalContents(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
-	paramChangePool := []simtypes.ParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
+	paramChangePool := []simtypes.LegacyParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(paramChangePool)

@@ -11,7 +11,7 @@ All Msg Service endpoints in the `x/sanction` module are for use with governance
 A user can request that accounts be sanctioned by submitting a governance proposal containing a `MsgSanction`.
 It contains the list of `addresses` of accounts to be sanctioned and the `authority` able to do it.
 
-+++ https://github.com/provenance-io/cosmos-sdk/blob/prov/dwedul/1046-sanction/proto/cosmos/sanction/v1beta1/tx.proto#L22-L32
++++ https://github.com/provenance-io/cosmos-sdk/blob/da2ea8a8139ae9e110de0776baffa1d0dd97db5e/proto/cosmos/sanction/v1beta1/tx.proto#L22-L32
 
 If the proposal ever has enough total deposit (defined in params), immediate temporary sanctions are issued for each address.
 Temporary sanctions expire at the completion of the governance proposal regardless of outcome.
@@ -30,7 +30,7 @@ It is expected to fail if:
 A user can request that accounts be unsanctioned by submitting a governance proposal containing a `MsgUnsanction`.
 It contains the list of `addresses` of accounts to be unsanctioned and the `authority` able to do it.
 
-+++ https://github.com/provenance-io/cosmos-sdk/blob/prov/dwedul/1046-sanction/proto/cosmos/sanction/v1beta1/tx.proto#L37-L47
++++ https://github.com/provenance-io/cosmos-sdk/blob/da2ea8a8139ae9e110de0776baffa1d0dd97db5e/proto/cosmos/sanction/v1beta1/tx.proto#L37-L47
 
 If the proposal ever has enough total deposit (defined in params), immediate temporary unsanctions are issued for each address.
 Temporary unsanctions expire at the completion of the governance proposal regardless of outcome.
@@ -48,7 +48,7 @@ It is expected to fail if:
 The sanction module params can be updated by submitting a governance proposal containing a `MsgUpdateParams`.
 It contains the desired new `params` and the `authority` able to update them.
 
-+++ https://github.com/provenance-io/cosmos-sdk/blob/prov/dwedul/1046-sanction/proto/cosmos/sanction/v1beta1/tx.proto#L52-L62
++++ https://github.com/provenance-io/cosmos-sdk/blob/da2ea8a8139ae9e110de0776baffa1d0dd97db5e/proto/cosmos/sanction/v1beta1/tx.proto#L52-L62
 
 If `params` is `null`, they will be deleted from state, reverting them to their code-defined defaults.
 If a field in `params` is `null` or empty, the record in state will reflect that.

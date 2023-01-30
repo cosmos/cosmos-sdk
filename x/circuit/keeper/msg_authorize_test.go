@@ -17,7 +17,7 @@ type authorizeSuite struct {
 }
 
 func (s *authorizeSuite) Before(t *testing.T) {
-	s.baseFixture = setupBase(t)
+	s.baseFixture = initFixture(t)
 
 }
 

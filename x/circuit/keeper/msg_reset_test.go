@@ -17,7 +17,7 @@ type resetSuite struct {
 }
 
 func (s *resetSuite) Before(t *testing.T) {
-	s.baseFixture = setupBase(t)
+	s.baseFixture = initFixture(t)
 
 }
 

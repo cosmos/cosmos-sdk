@@ -19,7 +19,7 @@ type baseFixture struct {
 	sdkCtx   sdk.Context
 }
 
-func setupBase(t *testing.T) *baseFixture {
+func initFixture(t *testing.T) *baseFixture {
 	s := &baseFixture{t: t}
 
 	return s

@@ -17,7 +17,7 @@ type tripSuite struct {
 }
 
 func (s *tripSuite) Before(t *testing.T) {
-	s.baseFixture = setupBase(t)
+	s.baseFixture = initFixture(t)
 
 }
 

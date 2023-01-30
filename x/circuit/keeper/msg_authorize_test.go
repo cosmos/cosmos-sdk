@@ -13,11 +13,11 @@ func TestAuthorize(t *testing.T) {
 }
 
 type authorizeSuite struct {
-	*baseSuite
+	*baseFixture
 }
 
 func (s *authorizeSuite) Before(t *testing.T) {
-	s.baseSuite = setupBase(t)
+	s.baseFixture = setupBase(t)
 
 }
 

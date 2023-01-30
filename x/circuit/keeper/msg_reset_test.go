@@ -13,11 +13,11 @@ func TestReset(t *testing.T) {
 }
 
 type resetSuite struct {
-	*baseSuite
+	*baseFixture
 }
 
 func (s *resetSuite) Before(t *testing.T) {
-	s.baseSuite = setupBase(t)
+	s.baseFixture = setupBase(t)
 
 }
 

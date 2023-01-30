@@ -13,7 +13,7 @@ import (
 	"gotest.tools/v3/assert"
 )
 
-type baseSuite struct {
+type baseFixture struct {
 	t   *testing.T
 	err error
 	ctx context.Context
@@ -24,8 +24,8 @@ type baseSuite struct {
 	sdkCtx   sdk.Context
 }
 
-func setupBase(t *testing.T) *baseSuite {
-	s := &baseSuite{t: t}
+func setupBase(t *testing.T) *baseFixture {
+	s := &baseFixture{t: t}
 	db := dbm.NewMemDB()
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), nil)
 	s.storeKey = storetypes.NewKVStoreKey("test")

@@ -144,7 +144,7 @@ Each collection in a module **MUST** have a unique humanised name.
 
 A collection is generic over the type you can use as keys or values.
 Which makes collections dumb, but also means that hypothetically we can store everything
-that can be a go type into a collection. I am not bounded to any type of encoding (be it proto, json or whatever)
+that can be a go type into a collection. We are not bounded to any type of encoding (be it proto, json or whatever)
 
 So a collection needs to be given a way to understand how to convert your keys and values to bytes. 
 This is achieved through ``KeyCodec`` and `ValueCodec`, which are arguments that you pass to your 

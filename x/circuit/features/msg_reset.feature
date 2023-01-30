@@ -2,7 +2,7 @@ Feature: MsgResetCircuitBreaker
 	- Circuit breaker can be reset:
 	- when the permissions are valid
 
-  Rule: caller with must have a permission to reset the circuit
+  Rule: caller must have a permission to reset the circuit
 
     Example: caller attempts to reset a disabled message
       Given "acct1" has permission "LEVEL_SUPER_ADMIN"

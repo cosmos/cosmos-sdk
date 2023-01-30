@@ -50,7 +50,7 @@ Feature: MsgTripCircuitBreaker
       When "acct1" attempts to disable msg execution
         """
         {
-        "msgs": ["cosmos.bank.v1beta1.MsgSend",cosmos.staking.v1beta1.MsgCreateValidator"]
+        "msgs": ["cosmos.bank.v1beta1.MsgSend","cosmos.staking.v1beta1.MsgCreateValidator"]
         }
         """
       Then expect an "unauthorized" error

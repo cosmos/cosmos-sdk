@@ -35,7 +35,5 @@ func setupBase(t *testing.T) *baseSuite {
 	s.sdkCtx = sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
 	s.ctx = sdk.WrapSDKContext(s.sdkCtx)
 
-	// s.k = NewKeeper()
-
 	return s
 }

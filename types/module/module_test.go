@@ -277,11 +277,13 @@ func TestManager_EndBlock(t *testing.T) {
 
 	mockAppModule1 := mock.NewMockEndBlockAppModule(mockCtrl)
 	mockAppModule2 := mock.NewMockEndBlockAppModule(mockCtrl)
+	mockAppModule3 := mock.NewMockAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mockAppModule3.EXPECT().Name().Times(2).Return("module3")
+	mm := module.NewManager(mockAppModule1, mockAppModule2, mockAppModule3)
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	req := abci.RequestEndBlock{Height: 10}
 
@@ -396,6 +398,55 @@ func TestCoreAPIManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module1", "module2", "module3"}, mm.OrderEndBlockers)
 	mm.SetOrderEndBlockers("module2", "module1", "module3")
 	require.Equal(t, []string{"module2", "module1", "module3"}, mm.OrderEndBlockers)
+}
+
+func TestCoreAPIManager_BeginBlock(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	req := abci.RequestBeginBlock{Hash: []byte("test")}
+
+	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
+	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
+	mm.BeginBlock(sdk.Context{}, req)
+
+	// test panic
+	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
+	require.PanicsWithError(t, "some error", func() { mm.BeginBlock(sdk.Context{}, req) })
+}
+
+func TestCoreAPIManager_EndBlock(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCoreAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCoreAppModule(mockCtrl)
+	mm := module.NewManagerFromMap(map[string]appmodule.AppModule{
+		"module1": mockAppModule1,
+		"module2": mockAppModule2,
+	})
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	req := abci.RequestEndBlock{Height: 10}
+
+	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(nil)
+	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return(nil)
+	res := mm.EndBlock(sdk.Context{}, req)
+	require.Len(t, res.ValidatorUpdates, 0)
+
+	// test panic
+	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
+	require.PanicsWithError(t, "some error", func() { mm.EndBlock(sdk.Context{}, req) })
 }
 
 // MockCoreAppModule allows us to test functions like DefaultGenesis

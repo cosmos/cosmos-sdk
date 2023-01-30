@@ -19,7 +19,7 @@ import (
 // with a more customized experience if a binary with custom commands is downloaded.
 func (b *Builder) BuildMsgCommand(moduleOptions map[string]*autocliv1.ModuleOptions, customCmds map[string]*cobra.Command) (*cobra.Command, error) {
 	msgCmd := topLevelCmd("tx", "Transaction subcommands")
-	if err := b.EnhanceQueryCommand(msgCmd, moduleOptions, customCmds); err != nil {
+	if err := b.EnhanceMsgCommand(msgCmd, moduleOptions, customCmds); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func (b *Builder) BuildModuleMsgCommand(moduleName string, cmdDescriptor *autocl
 // order to add auto-generated commands to an existing command.
 func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
 	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
-		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDescriptor.Service))
+		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Tx commands for the %s service", subCmdDescriptor.Service))
 		// Add recursive sub-commands if there are any. This is used for nested services.
 		err := b.AddMsgServiceCommands(subCmd, subCmdDescriptor)
 		if err != nil {

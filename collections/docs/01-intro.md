@@ -151,7 +151,7 @@ This is achieved through ``KeyCodec`` and `ValueCodec`, which are arguments that
 collections when you're instantiating them using the ```collections.NewMap/collections.NewItem/...``` 
 instantiation functions.
 
-(NOTE: generally speaking you will never be required to implement your own ``Key/ValueCodec`` as 
+NOTE: Generally speaking you will never be required to implement your own ``Key/ValueCodec`` as 
 the SDK and collections libraries already come with default, safe and fast implementation of those.
 You might need to implement them only if you're migrating to collections and there are state layout incompatibilities.)
 

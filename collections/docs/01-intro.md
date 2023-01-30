@@ -4,7 +4,7 @@ Collections is a library meant to simplify the experience with respect to module
 
 Cosmos-sdk modules handle their state using the `KVStore` interface. The problem with working with
 KVStore is that it forces you to think of state as a bytes KV pairings when in reality the majority of
-state comes from concrete golang object (strings, ints, structs, etc.).
+state comes from complex concrete golang objects (strings, ints, structs, etc.).
 
 Collections allows you to work with state as if they were normal golang objects and removes the need 
 from your code to think of state as bytes.

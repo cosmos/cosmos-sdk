@@ -206,7 +206,8 @@ func TestManager_InitGenesis(t *testing.T) {
 	// panic because more than one module returns validator set updates
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	_, err := mm.InitGenesis(ctx, cdc, genesisData)
+	require.Error(t, err)
 
 	// happy path
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
@@ -242,14 +243,24 @@ func TestManager_ExportGenesis(t *testing.T) {
 }`),
 	}
 
-	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
-	require.Equal(t, want, mm.ExportGenesisForModules(ctx, cdc, []string{}))
-	require.Equal(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, mm.ExportGenesisForModules(ctx, cdc, []string{"module1"}))
-	require.NotEqual(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, mm.ExportGenesisForModules(ctx, cdc, []string{"module2"}))
+	res, err := mm.ExportGenesis(ctx, cdc)
+	require.NoError(t, err)
+	require.Equal(t, want, res)
 
-	require.Panics(t, func() {
-		mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
-	})
+	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	require.NoError(t, err)
+	require.Equal(t, want, res)
+
+	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
+
+	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module2"})
+	require.NoError(t, err)
+	require.NotEqual(t, map[string]json.RawMessage{"module1": json.RawMessage(`{"key1": "value1"}`)}, res)
+
+	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	require.Error(t, err)
 }
 
 func TestManager_BeginBlock(t *testing.T) {
@@ -287,13 +298,15 @@ func TestManager_EndBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1)
-	ret := mm.EndBlock(sdk.Context{}, req)
+	ret, err := mm.EndBlock(sdk.Context{}, req)
+	require.NoError(t, err)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
-	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
+	_, err = mm.EndBlock(sdk.Context{}, req)
+	require.Error(t, err)
 }
 
 // Core API exclusive tests
@@ -355,14 +368,25 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 }`),
 	}
 
-	require.Equal(t, want, mm.ExportGenesis(ctx, cdc))
-	require.Equal(t, want, mm.ExportGenesisForModules(ctx, cdc, []string{}))
-	require.Equal(t, map[string]json.RawMessage{"module1": want["module1"]}, mm.ExportGenesisForModules(ctx, cdc, []string{"module1"}))
-	require.NotEqual(t, map[string]json.RawMessage{"module1": want["module1"]}, mm.ExportGenesisForModules(ctx, cdc, []string{"module2"}))
+	res, err := mm.ExportGenesis(ctx, cdc)
+	require.NoError(t, err)
+	require.Equal(t, want, res)
 
-	require.Panics(t, func() {
-		mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
-	})
+	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{})
+	require.NoError(t, err)
+	require.Equal(t, want, res)
+
+	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]json.RawMessage{"module1": want["module1"]}, res)
+
+	res, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module2"})
+	require.NoError(t, err)
+	require.NotEqual(t, map[string]json.RawMessage{"module1": want["module1"]}, res)
+
+	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
+	require.Error(t, err)
+
 }
 
 func TestCoreAPIManagerOrderSetters(t *testing.T) {

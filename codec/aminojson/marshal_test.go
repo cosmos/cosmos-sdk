@@ -1,8 +1,10 @@
 package aminojson_test
 
 import (
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec/aminojson"
 	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -19,11 +21,37 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/aminojson/internal/testpb"
 )
 
+func marshalLegacy(msg proto.Message) ([]byte, error) {
+	cdc := amino.NewCodec()
+	return cdc.MarshalJSON(msg)
+}
+
 func TestAminonJSON_Empty(t *testing.T) {
 	msg := &testpb.ABitOfEverything{}
 	bz, err := aminojson.MarshalAmino(msg)
 	assert.NilError(t, err)
 	assert.Equal(t, "{}", string(bz))
+}
+
+func TestAminoJSON_Failures(t *testing.T) {
+	msg := &testpb.ABitOfEverything{
+		Duration: durationpb.New(time.Second * 0),
+	}
+	msg2 := &testpb.ABitOfEverything{}
+
+	bz, err := aminojson.MarshalAmino(msg)
+	assert.NilError(t, err)
+
+	cdc := amino.NewCodec()
+	legacyBz, err := cdc.MarshalJSON(msg)
+	assert.NilError(t, err)
+
+	goProtoJson, err := protojson.Marshal(msg)
+	err = protojson.UnmarshalOptions{}.Unmarshal(bz, msg2)
+	assert.NilError(t, err, "protojson unmarshal failed; %s", goProtoJson)
+
+	fmt.Printf("%s vs legacy: %s\n", string(bz), string(legacyBz))
+	assert.Equal(t, string(legacyBz), string(bz))
 }
 
 func TestAminoJSON(t *testing.T) {
@@ -130,8 +158,18 @@ func TestRapid(t *testing.T) {
 }
 
 func checkInvariants(t *rapid.T, message proto.Message, marshaledBytes []byte) {
+	checkLegacyParity(t, message, marshaledBytes)
 	checkRoundTrip(t, message, marshaledBytes)
 	//	checkJsonNoWhitespace(t, marshaledBytes)
+}
+
+func checkLegacyParity(t *rapid.T, message proto.Message, marshaledBytes []byte) {
+	legacyBz, err := marshalLegacy(message)
+	assert.NilError(t, err)
+	fmt.Printf("%s vs legacy: %s\n", string(marshaledBytes), string(legacyBz))
+	require.Equal(t, marshaledBytes, legacyBz, "%s vs legacy: %s", string(marshaledBytes),
+		string(legacyBz))
+	//assert.DeepEqual(t, marshaledBytes, legacyBz, "%s vs legacy: %s", string(marshaledBytes), string(legacyBz))
 }
 
 func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {

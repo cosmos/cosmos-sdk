@@ -155,7 +155,7 @@ NOTE: Generally speaking you will never be required to implement your own ``Key/
 the SDK and collections libraries already come with default, safe and fast implementation of those.
 You might need to implement them only if you're migrating to collections and there are state layout incompatibilities.)
 
-Let's make an example:
+Let's explore an example:
 
 ````go
 package collections

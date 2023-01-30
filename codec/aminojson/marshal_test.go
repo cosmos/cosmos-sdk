@@ -36,12 +36,15 @@ func TestAminonJSON_Empty(t *testing.T) {
 }
 
 func TestAminoJSON_EdgeCases(t *testing.T) {
+	simpleAny, err := anypb.New(&testpb.NestedMessage{Foo: "any type nested", Bar: 11})
+	require.NoError(t, err)
+
 	cases := map[string]struct {
 		msg       proto.Message
 		shouldErr bool
 	}{
 		"empty":         {msg: &testpb.ABitOfEverything{}},
-		"any type":      {msg: &testpb.ABitOfEverything{Any: &anypb.Any{}}},
+		"any type":      {msg: &testpb.ABitOfEverything{Any: simpleAny}},
 		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
 	}
 
@@ -61,11 +64,11 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			legacyBz, err := cdc.MarshalJSON(tc.msg)
 			assert.NilError(t, err)
 
+			assert.Equal(t, string(legacyBz), string(bz), "legacy: %s vs %s", legacyBz, bz)
+
 			goProtoJson, err := protojson.Marshal(tc.msg)
 			err = protojson.UnmarshalOptions{}.Unmarshal(bz, msg2)
 			assert.NilError(t, err, "unmarshal failed: %s vs %s", legacyBz, goProtoJson)
-
-			require.Equal(t, legacyBz, bz, "legacy: %s vs %s", legacyBz, bz)
 		})
 	}
 

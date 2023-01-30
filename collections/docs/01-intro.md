@@ -1,25 +1,3 @@
-# Collections
-
-Collections is a library meant to simplify the experience with respect to module state handling.
-
-Cosmos-sdk modules handle their state using the `KVStore` interface. The problem with working with
-KVStore is that it forces you to think of state as a bytes KV pairings when in reality the majority of
-state comes from complex concrete golang objects (strings, ints, structs, etc.).
-
-Collections allows you to work with state as if they were normal golang objects and removes the need 
-for you to think of your state as raw bytes in your code.
-
-It also allows you to migrate your existing state without causing any state breakage that forces you into 
-tedious and complex chain state migrations.
-
-## Installation
-
-To install collections in your cosmos-sdk chain project, run the following command:
-
-```shell
-go get cosmossdk.io/collections
-```
-
 ## Core types
 
 Collections offers 5 different APIs to work with state, which will be explored in the next sections, these APIs are: 

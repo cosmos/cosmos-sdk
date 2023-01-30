@@ -2,7 +2,11 @@ package aminojson_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec/aminojson"
+	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
 	"github.com/tendermint/go-amino"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	"pgregory.net/rapid"
 	"testing"
 	"time"
 
@@ -14,6 +18,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/aminojson/internal/testpb"
 )
+
+func TestAminonJSON_Empty(t *testing.T) {
+	msg := &testpb.ABitOfEverything{}
+	bz, err := aminojson.MarshalAmino(msg)
+	assert.NilError(t, err)
+	assert.Equal(t, "{}", string(bz))
+}
 
 func TestAminoJSON(t *testing.T) {
 	//a, err := anypb.New(&testpb.ABitOfEverything{
@@ -108,12 +119,11 @@ func TestAminoJSON(t *testing.T) {
 	golden.Assert(t, string(bz), "legacyamino.json")
 }
 
-/*
 func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.Marshal(msg)
+		bz, err := aminojson.MarshalAmino(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
 	})
@@ -121,7 +131,7 @@ func TestRapid(t *testing.T) {
 
 func checkInvariants(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	checkRoundTrip(t, message, marshaledBytes)
-	checkJsonNoWhitespace(t, marshaledBytes)
+	//	checkJsonNoWhitespace(t, marshaledBytes)
 }
 
 func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
@@ -131,25 +141,3 @@ func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	assert.NilError(t, protojson.UnmarshalOptions{}.Unmarshal(marshaledBytes, message2), "%s vs %s", string(marshaledBytes), string(goProtoJson))
 	// TODO: assert.DeepEqual(t, message, message2, protocmp.Transform())
 }
-
-func checkJsonInvariants(t *testing.T, message proto.Message, unmarshaledJson map[string]interface{}) {
-}
-
-func checkJsonNoWhitespace(t *rapid.T, marshaledBytes []byte) {
-}
-
-func checkJsonFieldsOrdered(t *testing.T, message proto.Message, unmarshaledJson map[string]interface{}) {
-}
-
-func checkJsonMapsOrdered(t *testing.T, message proto.Message, unmarshaledJson map[string]interface{}) {
-}
-
-func checkJsonStringMapsOrdered(t *testing.T, message proto.Message, unmarshaledJson map[string]interface{}) {
-}
-
-func checkJsonNumericMapsOrdered(t *testing.T, message proto.Message, unmarshaledJson map[string]interface{}) {
-}
-
-func checkJsonBoolMapsOrdered(t *testing.T, message proto.Message, unmarshaledJson map[string]interface{}) {
-}
-*/

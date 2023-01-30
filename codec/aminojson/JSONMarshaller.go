@@ -76,6 +76,11 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	//	return aj.marshalAny(msg, writer)
 	//}
 
+	_, err := writer.Write([]byte("{"))
+	if err != nil {
+		return err
+	}
+
 	fields := msg.Descriptor().Fields()
 	first := true
 	for i := 0; i < fields.Len(); i++ {
@@ -86,13 +91,6 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 
 		v := msg.Get(f)
 		//fmt.Printf("field: %s, value: %v\n", f.FullName(), v)
-
-		if first {
-			_, err := writer.Write([]byte("{"))
-			if err != nil {
-				return err
-			}
-		}
 
 		if !first {
 			_, err := writer.Write([]byte(","))
@@ -119,7 +117,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		first = false
 	}
 
-	_, err := writer.Write([]byte("}"))
+	_, err = writer.Write([]byte("}"))
 	if err != nil {
 		return err
 	}

@@ -7,7 +7,7 @@ KVStore is that it forces you to think of state as a bytes KV pairings when in r
 state comes from complex concrete golang objects (strings, ints, structs, etc.).
 
 Collections allows you to work with state as if they were normal golang objects and removes the need 
-from your code to think of state as bytes.
+for you to think of your state as raw bytes in your code.
 
 It also allows you to migrate your existing state without causing any state breakage that forces you into 
 tedious and complex chain state migrations.

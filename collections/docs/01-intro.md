@@ -143,7 +143,7 @@ Each collection in a module **MUST** have a unique humanised name.
 ## Key and Value Codecs
 
 A collection is generic over the type you can use as keys or values.
-Which makes collections dumb, but also means that hypothetically I can store everything
+Which makes collections dumb, but also means that hypothetically we can store everything
 that can be a go type into a collection. I am not bounded to any type of encoding (be it proto, json or whatever)
 
 So a collection needs to be given a way to understand how to convert your keys and values to bytes. 

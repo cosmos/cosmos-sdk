@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 )
 
 // NewParams creates a BIP 44 parameter object from the params:

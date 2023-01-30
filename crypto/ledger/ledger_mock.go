@@ -6,7 +6,7 @@ package ledger
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/go-bip39"

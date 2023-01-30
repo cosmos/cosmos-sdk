@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

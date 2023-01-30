@@ -17,7 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-	authblock "github.com/cosmos/cosmos-sdk/x/auth/block"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -188,7 +187,7 @@ $ %s query blocks --%s 'message.sender=cosmos1...&message.action=withdraw_delega
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			blocks, err := authblock.QueryBlocksByEvents(clientCtx, tmEvents, page, limit, "")
+			blocks, err := QueryBlocksByEvents(clientCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}
@@ -248,7 +247,7 @@ $ %s query block --%s=%s <hash>
 						}
 					}
 
-					output, err := authblock.GetBlockByHeight(clientCtx, height)
+					output, err := GetBlockByHeight(clientCtx, height)
 					if err != nil {
 						return err
 					}
@@ -266,7 +265,7 @@ $ %s query block --%s=%s <hash>
 					}
 
 					// If hash is given, then query the tx by hash.
-					output, err := authblock.GetBlockByHash(clientCtx, args[0])
+					output, err := GetBlockByHash(clientCtx, args[0])
 					if err != nil {
 						return err
 					}

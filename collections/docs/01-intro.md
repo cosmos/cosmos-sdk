@@ -191,7 +191,7 @@ The fifth parameter is our `ValueCodec`, we know that the `Map` as a `uint64` as
 
 Collections already comes with all the required implementations for golang primitive types.
 
-Let's make another example, this falls closer to what we build using cosmos SDK, let's say I want
+Let's make another example, this falls closer to what we build using cosmos SDK, let's say we want
 to create a `collections.Map` that maps account addresses to their base account. So we want to map an `sdk.AccAddress` to an `auth.BaseAccount` (which is a proto):
 
 ```go

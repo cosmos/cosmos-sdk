@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/regen-network/gocuke"
+	"gotest.tools/v3/assert"
 )
 
 func TestAuthorize(t *testing.T) {
@@ -12,7 +13,12 @@ func TestAuthorize(t *testing.T) {
 }
 
 type authorizeSuite struct {
-	t gocuke.TestingT
+	*baseFixture
+}
+
+func (s *authorizeSuite) Before(t *testing.T) {
+	s.baseFixture = initFixture(t)
+
 }
 
 func (s *authorizeSuite) HasPermission(a string, b string) {
@@ -28,11 +34,11 @@ func (s *authorizeSuite) AttemptsToGrantThePermissions(a string, b string, c goc
 }
 
 func (s *authorizeSuite) ExpectSuccess() {
-	panic("PENDING")
+	assert.NilError(s.t, s.err)
 }
 
 func (s *authorizeSuite) ExpectAnError(a string) {
-	panic("PENDING")
+	assert.Error(s.t, s.err, a)
 }
 
 func (s *authorizeSuite) ExpectThatHasNoPermissions(a string) {

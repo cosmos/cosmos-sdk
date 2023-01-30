@@ -26,12 +26,10 @@ var (
 )
 
 // Simulation operation weights constants
-//
-//nolint:gosec // these are not hardcoded credentials.
 const (
-	OpWeightMsgGrant = "op_weight_msg_grant"
-	OpWeightRevoke   = "op_weight_msg_revoke"
-	OpWeightExec     = "op_weight_msg_execute"
+	OpWeightMsgGrant = "op_weight_msg_grant"   //nolint:gosec
+	OpWeightRevoke   = "op_weight_msg_revoke"  //nolint:gosec
+	OpWeightExec     = "op_weight_msg_execute" //nolint:gosec
 )
 
 // authz operations weights
@@ -110,7 +108,7 @@ func SimulateMsgGrant(cdc *codec.ProtoCodec, ak authz.AccountKeeper, bk authz.Ba
 		}
 
 		spendLimit := spendableCoins.Sub(fees...)
-		if spendLimit == nil {
+		if len(spendLimit) == 0 {
 			return simtypes.NoOpMsg(authz.ModuleName, TypeMsgGrant, "spend limit is nil"), nil, nil
 		}
 

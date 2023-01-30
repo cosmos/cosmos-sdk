@@ -468,7 +468,7 @@ func (s *decCoinTestSuite) TestDecCoinsIntersect() {
 		s.Require().NoError(err, "unexpected parse error in %v", i)
 		exr, err := sdk.ParseDecCoins(tc.expectedResult)
 		s.Require().NoError(err, "unexpected parse error in %v", i)
-		s.Require().True(in1.Intersect(in2).IsEqual(exr), "in1.cap(in2) != exr in %v", i)
+		s.Require().True(in1.Intersect(in2).Equal(exr), "in1.cap(in2) != exr in %v", i)
 	}
 }
 
@@ -1006,48 +1006,43 @@ func (s *decCoinTestSuite) TestDecCoin_IsEqual() {
 		coin           sdk.DecCoin
 		otherCoin      sdk.DecCoin
 		expectedResult bool
-		expectedPanic  bool
 	}{
 		{
 			"Different Denom Same Amount",
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(20)},
 			sdk.DecCoin{testDenom2, math.LegacyNewDec(20)},
-			false, true,
+			false,
 		},
 
 		{
 			"Different Denom Different Amount",
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(20)},
 			sdk.DecCoin{testDenom2, math.LegacyNewDec(10)},
-			false, true,
+			false,
 		},
 
 		{
 			"Same Denom Different Amount",
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(20)},
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(10)},
-			false, false,
+			false,
 		},
 
 		{
 			"Same Denom Same Amount",
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(20)},
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(20)},
-			true, false,
+			true,
 		},
 	}
 
 	for i, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			if tc.expectedPanic {
-				s.Require().Panics(func() { tc.coin.IsEqual(tc.otherCoin) }, "Test case #%d: %s", i, tc.name)
+			res := tc.coin.IsEqual(tc.otherCoin)
+			if tc.expectedResult {
+				s.Require().True(res, "Test case #%d: %s", i, tc.name)
 			} else {
-				res := tc.coin.IsEqual(tc.otherCoin)
-				if tc.expectedResult {
-					s.Require().True(res, "Test case #%d: %s", i, tc.name)
-				} else {
-					s.Require().False(res, "Test case #%d: %s", i, tc.name)
-				}
+				s.Require().False(res, "Test case #%d: %s", i, tc.name)
 			}
 		})
 	}
@@ -1059,14 +1054,13 @@ func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
 		coinsA         sdk.DecCoins
 		coinsB         sdk.DecCoins
 		expectedResult bool
-		expectedPanic  bool
 	}{
 		{"Different length sets", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(3)},
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(4)},
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(35)},
-		}, false, false},
+		}, false},
 
 		{"Same length - different denoms", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(3)},
@@ -1074,7 +1068,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom2, math.LegacyNewDec(3)},
 			sdk.DecCoin{testDenom2, math.LegacyNewDec(4)},
-		}, false, true},
+		}, false},
 
 		{"Same length - different amounts", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(3)},
@@ -1082,7 +1076,7 @@ func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(41)},
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(343)},
-		}, false, false},
+		}, false},
 
 		{"Same length - same amounts", sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(33)},
@@ -1090,20 +1084,16 @@ func (s *decCoinTestSuite) TestDecCoins_IsEqual() {
 		}, sdk.DecCoins{
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(33)},
 			sdk.DecCoin{testDenom1, math.LegacyNewDec(344)},
-		}, true, false},
+		}, true},
 	}
 
 	for i, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			if tc.expectedPanic {
-				s.Require().Panics(func() { tc.coinsA.IsEqual(tc.coinsB) }, "Test case #%d: %s", i, tc.name)
+			res := tc.coinsA.Equal(tc.coinsB)
+			if tc.expectedResult {
+				s.Require().True(res, "Test case #%d: %s", i, tc.name)
 			} else {
-				res := tc.coinsA.IsEqual(tc.coinsB)
-				if tc.expectedResult {
-					s.Require().True(res, "Test case #%d: %s", i, tc.name)
-				} else {
-					s.Require().False(res, "Test case #%d: %s", i, tc.name)
-				}
+				s.Require().False(res, "Test case #%d: %s", i, tc.name)
 			}
 		})
 	}

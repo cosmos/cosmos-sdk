@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -645,8 +646,8 @@ func trackingCorrected(ctx sdk.Context, t *testing.T, ak keeper.AccountKeeper, a
 	vDA, ok := baseAccount.(exported.VestingAccount)
 	require.True(t, ok)
 
-	vestedOk := expDelVesting.IsEqual(vDA.GetDelegatedVesting())
-	freeOk := expDelFree.IsEqual(vDA.GetDelegatedFree())
+	vestedOk := expDelVesting.Equal(vDA.GetDelegatedVesting())
+	freeOk := expDelFree.Equal(vDA.GetDelegatedFree())
 	require.True(t, vestedOk, vDA.GetDelegatedVesting().String())
 	require.True(t, freeOk, vDA.GetDelegatedFree().String())
 }

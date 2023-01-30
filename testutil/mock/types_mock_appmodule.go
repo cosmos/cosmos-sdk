@@ -5,9 +5,11 @@
 package mock
 
 import (
+	context "context"
 	json "encoding/json"
 	reflect "reflect"
 
+	appmodule "cosmossdk.io/core/appmodule"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
@@ -238,4 +240,107 @@ func (m *MockAppModuleWithAllExtensions) ValidateGenesis(arg0 codec.JSONCodec, a
 func (mr *MockAppModuleWithAllExtensionsMockRecorder) ValidateGenesis(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockAppModuleWithAllExtensions)(nil).ValidateGenesis), arg0, arg1, arg2)
+}
+
+// MockCoreAppModule is a mock of CoreAppModule interface.
+type MockCoreAppModule struct {
+	ctrl     *gomock.Controller
+	recorder *MockCoreAppModuleMockRecorder
+}
+
+// MockCoreAppModuleMockRecorder is the mock recorder for MockCoreAppModule.
+type MockCoreAppModuleMockRecorder struct {
+	mock *MockCoreAppModule
+}
+
+// NewMockCoreAppModule creates a new mock instance.
+func NewMockCoreAppModule(ctrl *gomock.Controller) *MockCoreAppModule {
+	mock := &MockCoreAppModule{ctrl: ctrl}
+	mock.recorder = &MockCoreAppModuleMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCoreAppModule) EXPECT() *MockCoreAppModuleMockRecorder {
+	return m.recorder
+}
+
+// DefaultGenesis mocks base method.
+func (m *MockCoreAppModule) DefaultGenesis(arg0 appmodule.GenesisTarget) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DefaultGenesis", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DefaultGenesis indicates an expected call of DefaultGenesis.
+func (mr *MockCoreAppModuleMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).DefaultGenesis), arg0)
+}
+
+// ExportGenesis mocks base method.
+func (m *MockCoreAppModule) ExportGenesis(arg0 context.Context, arg1 appmodule.GenesisTarget) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExportGenesis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ExportGenesis indicates an expected call of ExportGenesis.
+func (mr *MockCoreAppModuleMockRecorder) ExportGenesis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).ExportGenesis), arg0, arg1)
+}
+
+// InitGenesis mocks base method.
+func (m *MockCoreAppModule) InitGenesis(arg0 context.Context, arg1 appmodule.GenesisSource) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitGenesis", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitGenesis indicates an expected call of InitGenesis.
+func (mr *MockCoreAppModuleMockRecorder) InitGenesis(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).InitGenesis), arg0, arg1)
+}
+
+// IsAppModule mocks base method.
+func (m *MockCoreAppModule) IsAppModule() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsAppModule")
+}
+
+// IsAppModule indicates an expected call of IsAppModule.
+func (mr *MockCoreAppModuleMockRecorder) IsAppModule() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAppModule", reflect.TypeOf((*MockCoreAppModule)(nil).IsAppModule))
+}
+
+// IsOnePerModuleType mocks base method.
+func (m *MockCoreAppModule) IsOnePerModuleType() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsOnePerModuleType")
+}
+
+// IsOnePerModuleType indicates an expected call of IsOnePerModuleType.
+func (mr *MockCoreAppModuleMockRecorder) IsOnePerModuleType() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsOnePerModuleType", reflect.TypeOf((*MockCoreAppModule)(nil).IsOnePerModuleType))
+}
+
+// ValidateGenesis mocks base method.
+func (m *MockCoreAppModule) ValidateGenesis(arg0 appmodule.GenesisSource) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateGenesis", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateGenesis indicates an expected call of ValidateGenesis.
+func (mr *MockCoreAppModuleMockRecorder) ValidateGenesis(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).ValidateGenesis), arg0)
 }

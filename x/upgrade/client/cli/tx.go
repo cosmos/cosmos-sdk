@@ -6,13 +6,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/x/upgrade/plan"
+	"cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -93,7 +94,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // we are intentionally using a deprecated flag here.
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck // we are intentionally using a deprecated flag here.
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
@@ -129,7 +130,7 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle) //nolint:staticcheck // we are intentionally using a deprecated flag here.
+			title, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
 				return err
 			}
@@ -150,10 +151,10 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck // we are intentionally using a deprecated flag here.
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck // we are intentionally using a deprecated flag here.
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
-	cmd.MarkFlagRequired(cli.FlagTitle)       //nolint:staticcheck // we are intentionally using a deprecated flag here.
+	cmd.MarkFlagRequired(cli.FlagTitle)
 	cmd.MarkFlagRequired(cli.FlagDescription) //nolint:staticcheck // we are intentionally using a deprecated flag here.
 
 	return cmd

@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/x/upgrade/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var authority = sdk.AccAddress("authority")
@@ -63,7 +64,6 @@ func TestMsgSoftwareUpgrade(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&types.MsgSoftwareUpgrade{}))
 			}
 		})
 	}
@@ -102,7 +102,6 @@ func TestMsgCancelUpgrade(t *testing.T) {
 				require.Contains(t, err.Error(), tc.errMsg)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Type(), sdk.MsgTypeURL(&types.MsgCancelUpgrade{}))
 			}
 		})
 	}

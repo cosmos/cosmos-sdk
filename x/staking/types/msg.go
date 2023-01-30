@@ -6,29 +6,26 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// staking message types
-const (
-	TypeMsgUndelegate                = "begin_unbonding"
-	TypeMsgCancelUnbondingDelegation = "cancel_unbond"
-	TypeMsgEditValidator             = "edit_validator"
-	TypeMsgCreateValidator           = "create_validator"
-	TypeMsgDelegate                  = "delegate"
-	TypeMsgBeginRedelegate           = "begin_redelegate"
-	TypeMsgUpdateParams              = "update_params"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 var (
 	_ sdk.Msg                            = &MsgCreateValidator{}
 	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-	_ sdk.Msg                            = &MsgCreateValidator{}
 	_ sdk.Msg                            = &MsgEditValidator{}
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg                            = &MsgUpdateParams{}
+
+	_ legacytx.LegacyMsg = &MsgCreateValidator{}
+	_ legacytx.LegacyMsg = &MsgEditValidator{}
+	_ legacytx.LegacyMsg = &MsgDelegate{}
+	_ legacytx.LegacyMsg = &MsgUndelegate{}
+	_ legacytx.LegacyMsg = &MsgBeginRedelegate{}
+	_ legacytx.LegacyMsg = &MsgCancelUnbondingDelegation{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -53,12 +50,6 @@ func NewMsgCreateValidator(
 		MinSelfDelegation: minSelfDelegation,
 	}, nil
 }
-
-// Route implements the sdk.Msg interface.
-func (msg MsgCreateValidator) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgCreateValidator) Type() string { return TypeMsgCreateValidator }
 
 // GetSigners implements the sdk.Msg interface. It returns the address(es) that
 // must sign over msg.GetSignBytes().
@@ -138,12 +129,6 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 	}
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgEditValidator) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgEditValidator) Type() string { return TypeMsgEditValidator }
-
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
 	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddress)
@@ -193,12 +178,6 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.C
 	}
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgDelegate) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgDelegate) Type() string { return TypeMsgDelegate }
-
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -243,12 +222,6 @@ func NewMsgBeginRedelegate(
 		Amount:              amount,
 	}
 }
-
-// Route implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
 
 // GetSigners implements the sdk.Msg interface
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
@@ -295,12 +268,6 @@ func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk
 	}
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgUndelegate) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgUndelegate) Type() string { return TypeMsgUndelegate }
-
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -344,12 +311,6 @@ func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddr
 	}
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) Type() string { return TypeMsgCancelUnbondingDelegation }
-
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
 	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -389,13 +350,13 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 
 // GetSignBytes returns the raw bytes for a MsgUpdateParams message that
 // the expected signer needs to sign.
-func (m *MsgUpdateParams) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(m)
+func (m MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic executes sanity validation on the provided data
-func (m *MsgUpdateParams) ValidateBasic() error {
+func (m MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return sdkerrors.Wrap(err, "invalid authority address")
 	}
@@ -403,7 +364,7 @@ func (m *MsgUpdateParams) ValidateBasic() error {
 }
 
 // GetSigners returns the expected signers for a MsgUpdateParams message
-func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
 	addr, _ := sdk.AccAddressFromBech32(m.Authority)
 	return []sdk.AccAddress{addr}
 }

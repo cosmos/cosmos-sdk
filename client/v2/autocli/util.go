@@ -1,8 +1,10 @@
 package autocli
 
 import (
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
 
+	"cosmossdk.io/client/v2/internal/strcase"
 	"github.com/spf13/cobra"
 )
 
@@ -29,4 +31,8 @@ func topLevelCmd(use, short string) *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       validateCmd,
 	}
+}
+
+func protoNameToCliName(name protoreflect.Name) string {
+	return strcase.ToKebab(string(name))
 }

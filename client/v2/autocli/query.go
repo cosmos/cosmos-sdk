@@ -10,7 +10,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"cosmossdk.io/client/v2/internal/strcase"
 	"cosmossdk.io/client/v2/internal/util"
 )
 
@@ -229,8 +228,4 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 	}
 
 	return cmd, nil
-}
-
-func protoNameToCliName(name protoreflect.Name) string {
-	return strcase.ToKebab(string(name))
 }

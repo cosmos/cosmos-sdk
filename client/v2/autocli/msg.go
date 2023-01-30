@@ -4,12 +4,14 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/util"
 	"fmt"
+	"github.com/cockroachdb/errors"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a
@@ -79,6 +81,56 @@ func (b *Builder) BuildModuleMsgCommand(moduleName string, cmdDescriptor *autocl
 // method in the specified service and returns the command. This can be used in
 // order to add auto-generated commands to an existing command.
 func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autocliv1.ServiceCommandDescriptor) error {
+	for cmdName, subCmdDescriptor := range cmdDescriptor.SubCommands {
+		subCmd := topLevelCmd(cmdName, fmt.Sprintf("Querying commands for the %s service", subCmdDescriptor.Service))
+		// Add recursive sub-commands if there are any. This is used for nested services.
+		err := b.AddMsgServiceCommands(subCmd, subCmdDescriptor)
+		if err != nil {
+			return err
+		}
+		cmd.AddCommand(subCmd)
+	}
+	// skip empty command descriptor
+	if cmdDescriptor.Service == "" {
+		return nil
+	}
+
+	resolver := b.FileResolver
+	if b.FileResolver == nil {
+		resolver = protoregistry.GlobalFiles
+	}
+
+	descriptor, err := resolver.FindDescriptorByName(protoreflect.FullName(cmdDescriptor.Service))
+	if err != nil {
+		return errors.Errorf("can't find service %s: %v", cmdDescriptor.Service, err)
+	}
+	service := descriptor.(protoreflect.ServiceDescriptor)
+	methods := service.Methods()
+
+	rpcOptMap := map[protoreflect.Name]*autocliv1.RpcCommandOptions{}
+	for _, option := range cmdDescriptor.RpcCommandOptions {
+		methodName := protoreflect.Name(option.RpcMethod)
+		// validate that methods exist
+		if m := methods.ByName(methodName); m == nil {
+			return fmt.Errorf("rpc method %q not found for service %q", methodName, service.FullName())
+
+		}
+		rpcOptMap[methodName] = option
+
+	}
+
+	methodsLength := methods.Len()
+	for i := 0; i < methodsLength; i++ {
+		methodDescriptor := methods.Get(i)
+		methodOpts := rpcOptMap[methodDescriptor.Name()]
+		methodCmd, err := b.BuildMsgMethodCommand(methodDescriptor, methodOpts)
+		if err != nil {
+			return err
+		}
+		if methodCmd != nil {
+			cmd.AddCommand(methodCmd)
+		}
+	}
 
 	return nil
 }
@@ -101,6 +153,10 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 
 	use := options.Use
+
+	if use == "" {
+		use = protoNameToCliName(descriptor.Name())
+	}
 
 	cmd := &cobra.Command{
 		Use:        use,

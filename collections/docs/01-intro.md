@@ -140,7 +140,7 @@ what a module is storing in state.
 
 Each collection in a module **MUST** have a unique humanised name.
 
-## Key and Value codecs
+## Key and Value Codecs
 
 A collection is generic over the type you can use as keys or values.
 Which makes collections dumb, but also means that hypothetically I can store everything

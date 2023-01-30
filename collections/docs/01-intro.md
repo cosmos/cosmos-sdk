@@ -153,7 +153,7 @@ instantiation functions.
 
 NOTE: Generally speaking you will never be required to implement your own ``Key/ValueCodec`` as 
 the SDK and collections libraries already come with default, safe and fast implementation of those.
-You might need to implement them only if you're migrating to collections and there are state layout incompatibilities.)
+You might need to implement them only if you're migrating to collections and there are state layout incompatibilities.
 
 Let's explore an example:
 

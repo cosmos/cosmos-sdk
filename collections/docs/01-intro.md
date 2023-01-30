@@ -130,7 +130,7 @@ prefix2 := collections.NewPrefix("prefix") // THIS IS BAD!
 prefix1 := collections.NewPrefix("a")
 prefix2 := collections.NewPrefix("aa") // prefix2 starts with the same as prefix1: BAD!!!
 ```
-### Humanised name
+### Human-Readable Name
 
 The third parameter we pass to a collection is a string, which is a humanised name.
 It needs to make the role of a collection understandable by clients who have no clue about

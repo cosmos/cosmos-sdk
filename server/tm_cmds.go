@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	rpc "github.com/cosmos/cosmos-sdk/client/rpc"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -180,7 +181,7 @@ $ %s query blocks --%s 'message.sender=cosmos1...&message.action=withdraw_delega
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 
-			blocks, err := QueryBlocksByEvents(clientCtx, tmEvents, page, limit, "")
+			blocks, err := rpc.QueryBlocksByEvents(clientCtx, tmEvents, page, limit, "")
 			if err != nil {
 				return err
 			}
@@ -240,7 +241,7 @@ $ %s query block --%s=%s <hash>
 						}
 					}
 
-					output, err := GetBlockByHeight(clientCtx, height)
+					output, err := rpc.GetBlockByHeight(clientCtx, height)
 					if err != nil {
 						return err
 					}
@@ -258,7 +259,7 @@ $ %s query block --%s=%s <hash>
 					}
 
 					// If hash is given, then query the tx by hash.
-					output, err := GetBlockByHash(clientCtx, args[0])
+					output, err := rpc.GetBlockByHash(clientCtx, args[0])
 					if err != nil {
 						return err
 					}

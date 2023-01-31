@@ -37,7 +37,6 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 // containing blocks and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order blocks by asc
 func QueryBlocksByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchBlocksResult, error) {
-
 	// XXX: implement ANY
 	query := strings.Join(events, " AND ")
 

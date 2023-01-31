@@ -403,6 +403,16 @@ func (app *BaseApp) Router() sdk.Router {
 	return app.router
 }
 
+func (app *BaseApp) FakeCommit() {
+	fmt.Printf("nerla cosmos-sdk/baseapp/baseapp.go FakeCommit\n")
+	app.deliverState.ms.Write()
+	commitID := app.cms.Commit()
+	fmt.Printf("nerla cosmos-sdk/baseapp/baseapp.go FakeCommit commitID %x\n", commitID)
+	header := app.deliverState.ctx.BlockHeader()
+	app.setCheckState(header)
+	app.deliverState = nil
+}
+
 // QueryRouter returns the QueryRouter of a BaseApp.
 func (app *BaseApp) QueryRouter() sdk.QueryRouter { return app.queryRouter }
 
@@ -434,6 +444,15 @@ func (app *BaseApp) setDeliverState(header tmproto.Header) {
 		ms:  ms,
 		ctx: sdk.NewContext(ms, header, false, app.logger),
 	}
+}
+
+func (app *BaseApp) SetDeliverState(header tmproto.Header) {
+	ms := app.cms.CacheMultiStore()
+	app.deliverState = &state{
+		ms:  ms,
+		ctx: sdk.NewContext(ms, header, false, app.logger),
+	}
+	fmt.Printf("nerla cosmos-sdk/baseapp/baseapp.go SetDeliverState app.deliverState %v\n", app.deliverState )
 }
 
 // GetConsensusParams returns the current consensus parameters from the BaseApp's
@@ -569,8 +588,16 @@ func (app *BaseApp) getState(mode runTxMode) *state {
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context {
-	ctx := app.getState(mode).ctx.
-		WithTxBytes(txBytes).
+	var getstate *state
+	if mode == runTxModeSimulate {
+		getstate = app.getState(runTxModeDeliver)
+	} else {
+		getstate = app.getState(mode)
+	}
+
+	getstatctx := getstate.ctx
+	
+	ctx := getstatctx.WithTxBytes(txBytes).
 		WithVoteInfos(app.voteInfos)
 
 	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
@@ -579,9 +606,9 @@ func (app *BaseApp) getContextForTx(mode runTxMode, txBytes []byte) sdk.Context 
 		ctx = ctx.WithIsReCheckTx(true)
 	}
 
-	if mode == runTxModeSimulate {
-		ctx, _ = ctx.CacheContext()
-	}
+	// if mode == runTxModeSimulate {
+	// 	ctx, _ = ctx.CacheContext()
+	// }
 
 	return ctx
 }
@@ -617,14 +644,15 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter so we initialize upfront.
 	var gasWanted uint64
-
+	fmt.Printf("nerla cosmos-sdk/baseapp/baseapp.go runTx runTxModeDeliver %v runTxModeCheck %v runTxModeSimulate %v\n",  runTxModeDeliver, runTxModeCheck, runTxModeSimulate)
+	fmt.Printf("nerla cosmos-sdk/baseapp/baseapp.go runTx mode %v\n", mode)
 	ctx := app.getContextForTx(mode, txBytes)
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining
-	if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
-		return gInfo, nil, nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
-	}
+	// if mode == runTxModeDeliver && ctx.BlockGasMeter().IsOutOfGas() {
+	// 	return gInfo, nil, nil, sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
+	// }
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -635,26 +663,26 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
 	}()
 
-	blockGasConsumed := false
+	// blockGasConsumed := false
 	// consumeBlockGas makes sure block gas is consumed at most once. It must happen after
 	// tx processing, and must be execute even if tx processing fails. Hence we use trick with `defer`
-	consumeBlockGas := func() {
-		if !blockGasConsumed {
-			blockGasConsumed = true
-			ctx.BlockGasMeter().ConsumeGas(
-				ctx.GasMeter().GasConsumedToLimit(), "block gas meter",
-			)
-		}
-	}
+	// consumeBlockGas := func() {
+	// 	if !blockGasConsumed {
+	// 		blockGasConsumed = true
+	// 		ctx.BlockGasMeter().ConsumeGas(
+	// 			ctx.GasMeter().GasConsumedToLimit(), "block gas meter",
+	// 		)
+	// 	}
+	// }
 
 	// If BlockGasMeter() panics it will be caught by the above recover and will
 	// return an error - in any case BlockGasMeter will consume gas past the limit.
 	//
 	// NOTE: This must exist in a separate defer function for the above recovery
 	// to recover from this one.
-	if mode == runTxModeDeliver {
-		defer consumeBlockGas()
-	}
+	// if mode == runTxModeDeliver {
+	// 	defer consumeBlockGas()
+	// }
 
 	tx, err := app.txDecoder(txBytes)
 	if err != nil {
@@ -717,7 +745,7 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	result, err = app.runMsgs(runMsgCtx, msgs, mode)
 	if err == nil && mode == runTxModeDeliver {
 		// When block gas exceeds, it'll panic and won't commit the cached store.
-		consumeBlockGas()
+		// consumeBlockGas()
 
 		msCache.Write()
 

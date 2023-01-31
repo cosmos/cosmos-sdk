@@ -5,7 +5,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-
+	// "runtime/pprof"
+	// "runtime/debug"
+	// "os"
+	
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -260,8 +263,15 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
+
 		// Check account sequence number.
-		if sig.Sequence != acc.GetSequence() {
+		fmt.Printf("nerla cosmos-sdk/x/auth/ante/sigverify.go svd.AnteHandle simulate %v sig.Sequence %d acc.GetSequence() %d pubKey %x, addr %s acc_num %d\n ",simulate, sig.Sequence, acc.GetSequence(), pubKey,  signerAddrs[i].String(), acc.GetAccountNumber())
+		// pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+		// fmt.Printf("nerla cosmos-sdk/x/auth/ante/sigverify.go debug.PrintStack(): \n")
+		// debug.PrintStack()
+
+		if !simulate && sig.Sequence != acc.GetSequence() {
+			fmt.Printf("nerla cosmos-sdk/x/auth/ante/sigverify.go svd.AnteHandle checking sig.Sequence %d acc.GetSequence() %d\n ", sig.Sequence, acc.GetSequence())
 			return ctx, sdkerrors.Wrapf(
 				sdkerrors.ErrWrongSequence,
 				"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
@@ -328,13 +338,17 @@ func (isd IncrementSequenceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 	}
 
 	// increment sequence of all signers
-	for _, addr := range sigTx.GetSigners() {
-		acc := isd.ak.GetAccount(ctx, addr)
-		if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
-			panic(err)
-		}
+	fmt.Printf("nerla cosmos-sdk/x/auth/ante/sigverify.go isd.AnteHandle simulate %v\n ", simulate)
+	if !simulate {
+		for _, addr := range sigTx.GetSigners() {
+			acc := isd.ak.GetAccount(ctx, addr)
+			if err := acc.SetSequence(acc.GetSequence() + 1); err != nil {
+				panic(err)
+			}
 
-		isd.ak.SetAccount(ctx, acc)
+			isd.ak.SetAccount(ctx, acc)
+			fmt.Printf("nerla cosmos-sdk/x/auth/ante/sigverify.go isd.AnteHandle set acc.GetSequence() %d\n ",acc.GetSequence())
+		}
 	}
 
 	return next(ctx, tx, simulate)

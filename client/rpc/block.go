@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -38,17 +37,6 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 // containing blocks and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order blocks by asc
 func QueryBlocksByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchBlocksResult, error) {
-	if len(events) == 0 {
-		return nil, errors.New("must declare at least one event to search")
-	}
-
-	if page <= 0 {
-		return nil, errors.New("page must be greater than 0")
-	}
-
-	if limit <= 0 {
-		return nil, errors.New("limit must be greater than 0")
-	}
 
 	// XXX: implement ANY
 	query := strings.Join(events, " AND ")

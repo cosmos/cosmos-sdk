@@ -56,6 +56,11 @@ cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
 cosmossdk.io/math v1.0.0-beta.4 h1:JtKedVLGzA0vv84xjYmZ75RKG35Kf2WwcFu8IjRkIIw=
 cosmossdk.io/math v1.0.0-beta.4/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
+<<<<<<< HEAD
+=======
+cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f h1:LMXqH69KBG/R8w18sooHtoUZ0+5hcc99m6OjBiooDAo=
+cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f/go.mod h1:/apC5+JHM2A72kUY3z+55FWdIn/2ai2mTAYtSBDY4Lo=
+>>>>>>> b266522c8 (feat: add config `iavl-lazy-loading` to enable lazy loading of iavl store (#14189))
 cosmossdk.io/tools/rosetta v0.2.0 h1:Ae499UiZ9yPNCXvjOBO/R9I1pksCJfxoqWauEZgA/gs=
 cosmossdk.io/tools/rosetta v0.2.0/go.mod h1:3mn8QuE2wLUdTi77/gbDXdFqXZdBdiBJhgAWUTSXPv8=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
@@ -174,8 +179,13 @@ github.com/cosmos/gogoproto v1.4.4 h1:nVAsgLlAf5jeN0fV7hRlkZvf768zU+dy4pG+hxc2P3
 github.com/cosmos/gogoproto v1.4.4/go.mod h1:/yl6/nLwsZcZ2JY3OrqjRqvqCG9InUMcXRfRjQiF9DU=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
+<<<<<<< HEAD
 github.com/cosmos/iavl v0.19.5-rc.1 h1:4PjF2PdScyPbN1WbXpiQU21YtyonnrMU31xN74g8Rkg=
 github.com/cosmos/iavl v0.19.5-rc.1/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
+=======
+github.com/cosmos/iavl v0.20.0-alpha.2 h1:IIUIOqPG1LC2JGiQVeNxAi+Fon/M8TXMBAN0XsUSqq8=
+github.com/cosmos/iavl v0.20.0-alpha.2/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
+>>>>>>> b266522c8 (feat: add config `iavl-lazy-loading` to enable lazy loading of iavl store (#14189))
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
 github.com/cosmos/keyring v1.2.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/cosmos/ledger-cosmos-go v0.12.1 h1:sMBxza5p/rNK/06nBSNmsI/WDqI0pVJFVNihy1Y984w=

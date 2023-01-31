@@ -50,9 +50,14 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.19.5-rc.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.1 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.9.0 // indirect
+=======
+	github.com/cosmos/iavl v0.20.0-alpha1.0.20230129210330-66c167f401c7 // indirect
+	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
+>>>>>>> b266522c8 (feat: add config `iavl-lazy-loading` to enable lazy loading of iavl store (#14189))
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -162,12 +167,26 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+<<<<<<< HEAD
+=======
+// TODO tag all extracted modules after SDK refactor
+replace (
+	cosmossdk.io/store => ../store
+	cosmossdk.io/x/evidence => ../x/evidence
+	cosmossdk.io/x/feegrant => ../x/feegrant
+	cosmossdk.io/x/nft => ../x/nft
+	cosmossdk.io/x/upgrade => ../x/upgrade
+)
+
+>>>>>>> b266522c8 (feat: add config `iavl-lazy-loading` to enable lazy loading of iavl store (#14189))
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
+
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

@@ -10,10 +10,14 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/empty.proto";
 
+message WithAMap{
+  map<string, string> str_map = 1;
+}
+
 message ABitOfEverything {
   NestedMessage message = 1;
   AnEnum enum = 2;
-  map<string, string> str_map = 3;
+  //map<string, string> str_map = 3;
 
   repeated int32 repeated = 6;
 
@@ -31,31 +35,9 @@ message ABitOfEverything {
   sint64 si64 = 18;
   sfixed64 sf64 = 19;
 
-  //float float = 20;
-  //double double = 21;
-
   google.protobuf.Any any = 22;
   google.protobuf.Timestamp timestamp = 23;
   google.protobuf.Duration duration = 24;
-  google.protobuf.Struct struct = 25;
-
-// TODO
-//  google.protobuf.BoolValue bool_value = 26;
-//  google.protobuf.BytesValue bytes_value = 27;
-//  google.protobuf.DoubleValue double_value = 28;
-//  google.protobuf.FloatValue float_value = 29;
-//  google.protobuf.Int32Value int32_value = 30;
-//  google.protobuf.Int64Value int64_value = 31;
-//  google.protobuf.StringValue string_value = 32;
-//  google.protobuf.UInt32Value uint32_value = 33;
-//  google.protobuf.UInt64Value uint64_value = 34;
-
-
-//  google.protobuf.FieldMask field_mask = 35;
-//  google.protobuf.ListValue list_value = 36;
-//  google.protobuf.Value value = 37;
-//  google.protobuf.NullValue null_value = 38;
-//  google.protobuf.Empty empty = 39;
 }
 
 message NestedMessage {

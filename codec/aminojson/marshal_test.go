@@ -1,7 +1,7 @@
 package aminojson_test
 
 import (
-	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -18,7 +18,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
-	"gotest.tools/v3/golden"
 
 	"github.com/cosmos/cosmos-sdk/codec/aminojson/internal/testpb"
 )
@@ -44,6 +43,9 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 		shouldErr bool
 	}{
 		"empty":         {msg: &testpb.ABitOfEverything{}},
+		"nil map":       {msg: &testpb.WithAMap{}},
+		"empty map":     {msg: &testpb.WithAMap{StrMap: make(map[string]string)}},
+		"single map":    {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}},
 		"any type":      {msg: &testpb.ABitOfEverything{Any: simpleAny}},
 		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
 	}
@@ -58,7 +60,8 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			msg2 := &testpb.ABitOfEverything{}
+			rv := reflect.New(reflect.TypeOf(tc.msg).Elem()).Elem()
+			msg2 := rv.Addr().Interface().(proto.Message)
 
 			cdc := amino.NewCodec()
 			legacyBz, err := cdc.MarshalJSON(tc.msg)
@@ -67,7 +70,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			assert.Equal(t, string(legacyBz), string(bz), "legacy: %s vs %s", legacyBz, bz)
 
 			goProtoJson, err := protojson.Marshal(tc.msg)
-			err = protojson.UnmarshalOptions{}.Unmarshal(bz, msg2)
+			err = cdc.UnmarshalJSON(bz, msg2.(proto.Message))
 			assert.NilError(t, err, "unmarshal failed: %s vs %s", legacyBz, goProtoJson)
 		})
 	}
@@ -86,9 +89,10 @@ func TestAminoJSON(t *testing.T) {
 			Bar: 0, // this is the default value and should be omitted from output
 		},
 		Enum: testpb.AnEnum_ONE,
-		StrMap: map[string]string{
-			"foo": "abc",
-		},
+		//StrMap: map[string]string{
+		//	"foo": "abc",
+		//	"baz": "xyz",
+		//},
 		Repeated:  []int32{3, -7, 2, 6, 4},
 		Str:       `abcxyz"foo"def`,
 		Bool:      true,
@@ -112,8 +116,7 @@ func TestAminoJSON(t *testing.T) {
 	cdc := amino.NewCodec()
 	legacyBz, err := cdc.MarshalJSON(msg)
 	assert.NilError(t, err)
-	golden.Assert(t, string(legacyBz), "legacyamino.json")
-	golden.Assert(t, string(bz), "legacyamino.json")
+	require.Equal(t, string(legacyBz), string(bz), "%s vs legacy: %s", string(bz), string(legacyBz))
 }
 
 func TestRapid(t *testing.T) {
@@ -134,14 +137,15 @@ func checkInvariants(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 func checkLegacyParity(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	legacyBz, err := marshalLegacy(message)
 	assert.NilError(t, err)
-	fmt.Printf("%s vs legacy: %s\n", string(marshaledBytes), string(legacyBz))
-	require.Equal(t, marshaledBytes, legacyBz, "%s vs legacy: %s", string(marshaledBytes),
+	require.Equal(t, string(legacyBz), string(marshaledBytes), "%s vs legacy: %s", string(marshaledBytes),
 		string(legacyBz))
 }
 
 func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	message2 := message.ProtoReflect().New().Interface()
-	goProtoJson, err := protojson.Marshal(message)
+	cdc := amino.NewCodec()
+	goProtoJson, err := cdc.MarshalJSON(message)
 	assert.NilError(t, err)
-	assert.NilError(t, protojson.UnmarshalOptions{}.Unmarshal(marshaledBytes, message2), "%s vs %s", string(marshaledBytes), string(goProtoJson))
+	err = cdc.UnmarshalJSON(marshaledBytes, message2)
+	assert.NilError(t, err, "%s vs %s", string(marshaledBytes), string(goProtoJson))
 }

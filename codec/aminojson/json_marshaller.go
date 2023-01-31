@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
+	"strings"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -17,12 +19,33 @@ type JSONMarshaller interface {
 	MarshalAmino(proto.Message) ([]byte, error)
 }
 
-type AminoJson struct{}
+type User struct {
+	Name string `json:"name_field"`
+	Age  int    `json:"age_field"`
+}
+
+type AminoJson struct {
+	nilMapFields map[string]bool
+}
 
 func MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
+	aj := AminoJson{
+		nilMapFields: make(map[string]bool),
+	}
+	rt := reflect.TypeOf(message).Elem()
+	rv := reflect.ValueOf(message).Elem()
+
+	for i := 0; i < rt.NumField(); i++ {
+		f := rt.Field(i)
+		if f.Type.Kind() == reflect.Map {
+			protoFieldNo := strings.Split(f.Tag.Get("protobuf"), ",")[1]
+			aj.nilMapFields[protoFieldNo] = rv.Field(i).IsNil()
+		}
+	}
+
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
-	err := AminoJson{}.marshal(vmsg, nil, buf)
+	err := aj.marshal(vmsg, nil, buf)
 	return buf.Bytes(), err
 }
 
@@ -58,16 +81,6 @@ func (aj AminoJson) marshal(
 }
 
 func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
-
-	// TODO
-	// Am I tracking this legacy amino coded behavior correctly?
-	//
-	//switch msg.Descriptor().FullName() {
-	//case anyFullName:
-	//	fmt.Println("any")
-	//	return aj.marshalAny(msg, writer)
-	//}
-
 	_, err := writer.Write([]byte("{"))
 	if err != nil {
 		return err
@@ -77,11 +90,21 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	first := true
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
-		if !msg.Has(f) {
+		v := msg.Get(f)
+
+		if f.IsMap() {
+			// legacy behavior for maps:
+			// - if nil, omit
+			// - if empty, include
+			// - if non-empty, include
+			if isNil := aj.nilMapFields[fmt.Sprintf("%v", f.Number())]; isNil {
+				continue
+			}
+		} else if !msg.Has(f) {
 			continue
 		}
 
-		v := msg.Get(f)
+		// legacy behavior omits maps with no entries, but .Has only checks for absence
 
 		if !first {
 			_, err = writer.Write([]byte(","))
@@ -185,12 +208,12 @@ func (aj AminoJson) marshalMap(
 	}
 
 	allKeys := make([]protoreflect.MapKey, 0, value.Len())
+	//sortedKeys := make([]protoreflect.MapKey, 0, value.Len())
 	value.Range(func(key protoreflect.MapKey, _ protoreflect.Value) bool {
 		allKeys = append(allKeys, key)
 		return true
 	})
 
-	// TODO sort
 	// TODO fail if key type is not string
 
 	valueField := fieldDescriptor.MapValue()

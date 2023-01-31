@@ -130,8 +130,8 @@ Naturally, developers can add additional `options` based on their application's 
 
 ## State Updates
 
-The `BaseApp` maintains two primary volatile states and a root or main state. The main state
-is the canonical state of the application and the volatile states, `checkState`, `prepareProposalState`, `processPreposalState`,
+The `BaseApp` maintains four primary volatile states and a root or main state. The main state
+is the canonical state of the application and the volatile states, `checkState`, `deliverState`, `prepareProposalState`, `processPreposalState`,
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.

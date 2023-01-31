@@ -7,7 +7,7 @@ require (
 	github.com/armon/go-metrics v0.4.1
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
-	github.com/cosmos/gogoproto v1.4.3
+	github.com/cosmos/gogoproto v1.4.4
 	github.com/cosmos/iavl v0.20.0-alpha1
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2 // indirect

@@ -15,7 +15,7 @@ require (
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
-	github.com/cosmos/gogoproto v1.4.3
+	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.6.1

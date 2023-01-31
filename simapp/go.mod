@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
-	github.com/cosmos/cosmos-sdk v0.47.0-rc1
+	github.com/cosmos/cosmos-sdk v0.47.0-rc2
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1

@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	github.com/cosmos/cosmos-sdk v0.47.0-rc1
-	github.com/cosmos/gogoproto v1.4.3
+	github.com/cosmos/gogoproto v1.4.4
 	github.com/regen-network/gocuke v0.6.2
 	github.com/tendermint/tendermint v0.37.0-rc2
 	google.golang.org/grpc v1.52.3

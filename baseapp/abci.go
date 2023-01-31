@@ -74,7 +74,6 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	res, err := app.initChainer(app.deliverState.ctx, req)
-
 	if err != nil {
 		panic(err)
 	}

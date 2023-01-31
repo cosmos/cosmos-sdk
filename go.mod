@@ -21,9 +21,14 @@ require (
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
+<<<<<<< HEAD
 	github.com/cosmos/gogoproto v1.4.3
 	github.com/cosmos/iavl v0.19.5-rc.1
 	github.com/cosmos/ledger-cosmos-go v0.12.1
+=======
+	github.com/cosmos/gogoproto v1.4.4
+	github.com/cosmos/ledger-cosmos-go v0.13.0
+>>>>>>> d0a5bd1a0 (fix(reflection): Fix gogoproto import paths (#14838))
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/gofuzz v1.2.0

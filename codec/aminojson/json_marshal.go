@@ -16,11 +16,6 @@ type JSONMarshaller interface {
 	MarshalAmino(proto.Message) ([]byte, error)
 }
 
-type User struct {
-	Name string `json:"name_field"`
-	Age  int    `json:"age_field"`
-}
-
 type AminoJson struct{}
 
 func MarshalAmino(message proto.Message) ([]byte, error) {

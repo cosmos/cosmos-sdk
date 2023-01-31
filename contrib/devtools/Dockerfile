@@ -2,7 +2,7 @@
 # docker build --pull --rm -f "contrib/devtools/Dockerfile" -t cosmossdk-proto:latest "contrib/devtools"
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
-FROM bufbuild/buf:1.13.0 as BUILDER
+FROM bufbuild/buf:1.13.1 as BUILDER
 FROM golang:1.19-alpine
 
 RUN apk add --no-cache \

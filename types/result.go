@@ -131,36 +131,20 @@ func (r TxResponse) Empty() bool {
 }
 
 func NewSearchTxsResult(totalCount, count, page, limit uint64, txs []*TxResponse) *SearchTxsResult {
-	// calculate total pages in an overflow safe manner
-	totalPages := uint64(0)
-	if totalCount != 0 && limit != 0 {
-		if totalCount%limit > 0 {
-			totalPages = totalCount/limit + 1
-		} else {
-			totalPages = totalCount / limit
-		}
-	}
+	totalPages := calcTotalPages(int64(totalCount), int64(limit))
 
 	return &SearchTxsResult{
 		TotalCount: totalCount,
 		Count:      count,
 		PageNumber: page,
-		PageTotal:  totalPages,
+		PageTotal:  uint64(totalPages),
 		Limit:      limit,
 		Txs:        txs,
 	}
 }
 
 func NewSearchBlocksResult(totalCount, count, page, limit int64, blocks []*tm.Block) *SearchBlocksResult {
-	// calculate total pages in an overflow safe manner
-	totalPages := int64(0)
-	if totalCount != 0 && limit != 0 {
-		if totalCount%limit > 0 {
-			totalPages = totalCount/limit + 1
-		} else {
-			totalPages = totalCount / limit
-		}
-	}
+	totalPages := calcTotalPages(totalCount, limit)
 
 	return &SearchBlocksResult{
 		TotalCount: totalCount,
@@ -243,4 +227,17 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 		Events:       events,
 		MsgResponses: []*codectypes.Any{any},
 	}, nil
+}
+
+// calculate total pages in an overflow safe manner
+func calcTotalPages(totalCount int64, limit int64) int64 {
+	totalPages := int64(0)
+	if totalCount != 0 && limit != 0 {
+		if totalCount%limit > 0 {
+			totalPages = totalCount/limit + 1
+		} else {
+			totalPages = totalCount / limit
+		}
+	}
+	return totalPages
 }

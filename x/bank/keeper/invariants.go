@@ -62,7 +62,7 @@ func TotalSupply(k Keeper) sdk.Invariant {
 			return false
 		})
 
-		broken := !expectedTotal.IsEqual(supply)
+		broken := !expectedTotal.Equal(supply)
 
 		return sdk.FormatInvariant(types.ModuleName, "total supply",
 			fmt.Sprintf(

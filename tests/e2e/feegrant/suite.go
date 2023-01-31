@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/client/cli"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -17,8 +19,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/client/cli"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/client/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"

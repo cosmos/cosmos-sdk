@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := v1.NewProposal(TestProposal, proposalID, "", time.Now(), time.Now(), "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+			p, err := v1.NewProposal(TestProposal, proposalID, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 			suite.Require().NoError(err)
 
 			p.Status = s
@@ -155,6 +155,79 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 				if v1.ValidProposalStatus(tc.params.ProposalStatus) {
 					suite.Require().Equal(tc.params.ProposalStatus, p.Status)
 				}
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCancelProposal() {
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress().String()
+	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
+	prop, err := v1.NewLegacyContent(&tp, govAcct)
+	suite.Require().NoError(err)
+	proposalResp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0])
+	suite.Require().NoError(err)
+	proposalID := proposalResp.Id
+
+	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1])
+	proposal2ID := proposal2Resp.Id
+	makeProposalPass := func() {
+		proposal2, ok := suite.govKeeper.GetProposal(suite.ctx, proposal2ID)
+		suite.Require().True(ok)
+
+		proposal2.Status = v1.ProposalStatus_PROPOSAL_STATUS_PASSED
+		suite.govKeeper.SetProposal(suite.ctx, proposal2)
+	}
+
+	testCases := []struct {
+		name        string
+		proposalID  uint64
+		proposer    string
+		expectedErr bool
+	}{
+		{
+			name:        "without proposer",
+			proposalID:  1,
+			proposer:    "",
+			expectedErr: true,
+		},
+		{
+			name:        "invalid proposal id",
+			proposalID:  1,
+			proposer:    string(suite.addrs[0]),
+			expectedErr: true,
+		},
+		{
+			name:        "valid proposalID but invalid proposer",
+			proposalID:  proposalID,
+			proposer:    suite.addrs[1].String(),
+			expectedErr: true,
+		},
+		{
+			name:        "valid proposalID but invalid proposal which has already passed",
+			proposalID:  proposal2ID,
+			proposer:    suite.addrs[1].String(),
+			expectedErr: true,
+		},
+		{
+			name:        "valid proposer and proposal id",
+			proposalID:  proposalID,
+			proposer:    suite.addrs[0].String(),
+			expectedErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			if tc.proposalID == proposal2ID {
+				// making proposal status pass
+				makeProposalPass()
+			}
+			err = suite.govKeeper.CancelProposal(suite.ctx, tc.proposalID, tc.proposer)
+			if tc.expectedErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
 			}
 		})
 	}

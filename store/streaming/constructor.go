@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cosmos/cosmos-sdk/store/streaming/file"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/streaming/file"
+	"cosmossdk.io/store/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/spf13/cast"

@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/nft"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // SaveClass defines a method for creating a new nft class

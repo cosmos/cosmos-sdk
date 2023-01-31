@@ -6,9 +6,10 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -17,8 +18,9 @@ import (
 
 // Keeper defines the governance module Keeper
 type Keeper struct {
-	authKeeper types.AccountKeeper
-	bankKeeper types.BankKeeper
+	authKeeper  types.AccountKeeper
+	bankKeeper  types.BankKeeper
+	distrkeeper types.DistributionKeeper
 
 	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
 	sk types.StakingKeeper
@@ -59,7 +61,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper,
+	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrkeeper types.DistributionKeeper,
 	router *baseapp.MsgServiceRouter, config types.Config, authority string,
 ) *Keeper {
 	// ensure governance module account is set
@@ -77,14 +79,15 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		storeKey:   key,
-		authKeeper: authKeeper,
-		bankKeeper: bankKeeper,
-		sk:         sk,
-		cdc:        cdc,
-		router:     router,
-		config:     config,
-		authority:  authority,
+		storeKey:    key,
+		authKeeper:  authKeeper,
+		bankKeeper:  bankKeeper,
+		distrkeeper: distrkeeper,
+		sk:          sk,
+		cdc:         cdc,
+		router:      router,
+		config:      config,
+		authority:   authority,
 	}
 }
 
@@ -216,6 +219,11 @@ func (k Keeper) ActiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) 
 func (k Keeper) InactiveProposalQueueIterator(ctx sdk.Context, endTime time.Time) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.InactiveProposalQueuePrefix, storetypes.PrefixEndBytes(types.InactiveProposalByTimeKey(endTime)))
+}
+
+// ModuleAccountAddress returns gov module account address
+func (k Keeper) ModuleAccountAddress() sdk.AccAddress {
+	return k.authKeeper.GetModuleAddress(types.ModuleName)
 }
 
 // assertMetadataLength returns an error if given metadata length

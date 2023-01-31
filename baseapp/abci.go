@@ -16,9 +16,10 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -722,6 +723,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	lastBlockHeight := qms.LatestVersion()
+	if lastBlockHeight == 0 {
+		return sdk.Context{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
+	}
+
 	if height > lastBlockHeight {
 		return sdk.Context{},
 			sdkerrors.Wrap(
@@ -753,9 +758,9 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// branch the commit-multistore for safety
-	ctx := sdk.NewContext(
-		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
-	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
+	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
+		WithMinGasPrices(app.minGasPrices).
+		WithBlockHeight(height)
 
 	return ctx, nil
 }

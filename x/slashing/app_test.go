@@ -64,7 +64,7 @@ func TestSlashingMsgs(t *testing.T) {
 	baseApp := app.BaseApp
 
 	ctxCheck := baseApp.NewContext(true, tmproto.Header{})
-	require.True(t, sdk.Coins{genCoin}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr1)))
+	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
 	require.NoError(t, err)
 
@@ -80,7 +80,7 @@ func TestSlashingMsgs(t *testing.T) {
 	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
 	_, _, err = sims.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
-	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.IsEqual(bankKeeper.GetAllBalances(ctxCheck, addr1)))
+	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})

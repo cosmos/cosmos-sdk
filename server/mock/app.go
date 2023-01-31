@@ -13,10 +13,11 @@ import (
 	"github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
 
+	storetypes "cosmossdk.io/store/types"
+
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

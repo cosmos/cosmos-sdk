@@ -14,11 +14,12 @@ import (
 
 	"cosmossdk.io/depinject"
 
+	store "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -204,12 +205,6 @@ func ProvideModule(in AuthzInputs) AuthzOutputs {
 // GenerateGenesisState creates a randomized GenState of the authz module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
-}
-
-// ProposalContents returns all the authz content functions used to
-// simulate governance proposals.
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for authz module's types

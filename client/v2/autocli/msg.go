@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cockroachdb/errors"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
@@ -40,8 +41,12 @@ func (b *Builder) EnhanceMsgCommand(msgCmd *cobra.Command, moduleOptions map[str
 	}
 
 	for moduleName := range allModuleNames {
-		if existing := findSubCommand(msgCmd, moduleName); existing != nil {
-			continue
+
+		if msgCmd.HasSubCommands() {
+			if _, _, err := msgCmd.Find([]string{moduleName}); err == nil {
+				// command already exists, skip
+				continue
+			}
 		}
 
 		if customCmd, ok := customCmds[moduleName]; ok {
@@ -59,6 +64,7 @@ func (b *Builder) EnhanceMsgCommand(msgCmd *cobra.Command, moduleOptions map[str
 		if txCmdDesc == nil {
 			continue
 		}
+
 		cmd, err := b.BuildModuleMsgCommand(moduleName, moduleOpt.Tx)
 		if err != nil {
 			return err
@@ -90,8 +96,9 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 		}
 		cmd.AddCommand(subCmd)
 	}
-	// skip empty command descriptor
+
 	if cmdDescriptor.Service == "" {
+		// skip empty command descriptor
 		return nil
 	}
 
@@ -150,7 +157,6 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	}
 
 	inputType := util.ResolveMessageType(b.TypeResolver, descriptor.Input())
-	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 
 	use := options.Use
 
@@ -188,13 +194,19 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		if err != nil {
 			return err
 		}
-		msg := input.Interface().(sdk.Msg)
+
 		clientCtx, err := client.GetClientTxContext(cmd)
 		if err != nil {
 			return err
 		}
-		output := outputType.New()
-		bz, err := jsonMarshalOptions.Marshal(output.Interface())
+
+		msg := input.Interface().(sdk.Msg)
+
+		if err = msg.ValidateBasic(); err != nil {
+			return fmt.Errorf("message validation failed: %w", err)
+		}
+
+		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
 			return err
 		}
@@ -202,6 +214,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 		return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd, nil
 

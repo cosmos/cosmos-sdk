@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -94,8 +95,9 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*tm.Block, 
 	}
 
 	resBlock, err := node.BlockByHash(context.Background(), hash)
-	if err != nil {
-		return nil, err
+
+	if err != nil || resBlock.Block == nil {
+		return nil, fmt.Errorf("block not found with Hash: %s with Error: %s", hashHexString, err)
 	}
 
 	out, err := mkBlockResult(resBlock)

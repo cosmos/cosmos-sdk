@@ -20,15 +20,15 @@ import (
 )
 
 const (
-	flagEvents = "events"
+	FlagEvents = "events"
 	flagType   = "type"
 
-	typeHash   = "hash"
-	typeAccSeq = "acc_seq"
-	typeSig    = "signature"
-	typeHeight = "height"
+	TypeHash   = "hash"
+	TypeAccSeq = "acc_seq"
+	TypeSig    = "signature"
+	TypeHeight = "height"
 
-	eventFormat = "{eventType}.{eventAttribute}={value}"
+	EventFormat = "{eventType}.{eventAttribute}={value}"
 )
 
 // GetQueryCmd returns the transaction commands for this module
@@ -271,14 +271,14 @@ documents its respective events under 'xx_events.md'.
 
 Example:
 $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
-`, eventFormat, version.AppName, flagEvents),
+`, EventFormat, version.AppName, FlagEvents),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-			eventsRaw, _ := cmd.Flags().GetString(flagEvents)
+			eventsRaw, _ := cmd.Flags().GetString(FlagEvents)
 			eventsStr := strings.Trim(eventsRaw, "'")
 
 			var events []string
@@ -292,9 +292,9 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 
 			for _, event := range events {
 				if !strings.Contains(event, "=") {
-					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
+					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, EventFormat)
 				} else if strings.Count(event, "=") > 1 {
-					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, eventFormat)
+					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, EventFormat)
 				}
 
 				tokens := strings.Split(event, "=")
@@ -322,8 +322,8 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(flagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", eventFormat))
-	cmd.MarkFlagRequired(flagEvents)
+	cmd.Flags().String(FlagEvents, "", fmt.Sprintf("list of transaction events in the form of %s", EventFormat))
+	cmd.MarkFlagRequired(FlagEvents)
 
 	return cmd
 }
@@ -340,8 +340,8 @@ $ %s query tx --%s=%s <addr>/<sequence>
 $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 `,
 			version.AppName,
-			version.AppName, flagType, typeAccSeq,
-			version.AppName, flagType, typeSig)),
+			version.AppName, flagType, TypeAccSeq,
+			version.AppName, flagType, TypeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -352,7 +352,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 			typ, _ := cmd.Flags().GetString(flagType)
 
 			switch typ {
-			case typeHash:
+			case TypeHash:
 				{
 					if args[0] == "" {
 						return fmt.Errorf("argument should be a tx hash")
@@ -370,7 +370,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 					return clientCtx.PrintProto(output)
 				}
-			case typeSig:
+			case TypeSig:
 				{
 					sigParts, err := ParseSigArgs(args)
 					if err != nil {
@@ -395,7 +395,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 
 					return clientCtx.PrintProto(txs.Txs[0])
 				}
-			case typeAccSeq:
+			case TypeAccSeq:
 				{
 					if args[0] == "" {
 						return fmt.Errorf("`acc_seq` type takes an argument '<addr>/<seq>'")
@@ -425,7 +425,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagType, typeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", typeHash, typeAccSeq, typeSig))
+	cmd.Flags().String(flagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", TypeHash, TypeAccSeq, TypeSig))
 
 	return cmd
 }

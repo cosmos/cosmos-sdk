@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 func TestParseArgsToContent(t *testing.T) {
@@ -22,7 +23,7 @@ func TestParseArgsToContent(t *testing.T) {
 		},
 	}
 
-	fs.Set(cli.FlagTitle, proposal.Title)             //nolint:staticcheck // SA1019: cli.FlagTitle is deprecated: use cli.FlagProposalTitle instead
+	fs.Set(cli.FlagTitle, proposal.Title)
 	fs.Set(cli.FlagDescription, proposal.Description) //nolint:staticcheck // SA1019: cli.FlagDescription is deprecated: use cli.FlagProposalDescription instead
 	fs.Set(FlagUpgradeHeight, strconv.FormatInt(proposal.Plan.Height, 10))
 	fs.Set(FlagUpgradeInfo, proposal.Plan.Info)

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
 	"golang.org/x/exp/maps"
@@ -289,29 +288,6 @@ func (se StringEvents) String() string {
 	return strings.TrimRight(sb.String(), "\n")
 }
 
-// Flatten returns a flattened version of StringEvents by grouping all attributes
-// per unique event type.
-func (se StringEvents) Flatten() StringEvents {
-	flatEvents := make(map[string][]Attribute)
-
-	for _, e := range se {
-		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
-	}
-	keys := make([]string, 0, len(flatEvents))
-	res := make(StringEvents, 0, len(flatEvents)) // appeneded to keys, same length of what is allocated to keys
-
-	for ty := range flatEvents {
-		keys = append(keys, ty)
-	}
-
-	sort.Strings(keys)
-	for _, ty := range keys {
-		res = append(res, StringEvent{Type: ty, Attributes: flatEvents[ty]})
-	}
-
-	return res
-}
-
 // StringifyEvent converts an Event object to a StringEvent object.
 func StringifyEvent(e abci.Event) StringEvent {
 	res := StringEvent{Type: e.Type}
@@ -335,7 +311,7 @@ func StringifyEvents(events []abci.Event) StringEvents {
 		res = append(res, StringifyEvent(e))
 	}
 
-	return res.Flatten()
+	return res
 }
 
 // MarkEventsToIndex returns the set of ABCI events, where each event's attribute

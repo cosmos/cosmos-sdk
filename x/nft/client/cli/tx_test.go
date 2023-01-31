@@ -20,11 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
-	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	nftmodule "cosmossdk.io/x/nft/module"
+	nfttestutil "cosmossdk.io/x/nft/testutil"
 )
 
 const (

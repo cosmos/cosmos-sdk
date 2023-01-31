@@ -40,19 +40,22 @@ jobs:
         ###################
       - name: Build
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make build
+        run: GOARCH=${{ matrix.go-arch }} make build
       - name: Build Legacy
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false COSMOS_BUILD_OPTIONS=legacy make build
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS=legacy make build
         ###################
         ## Build Tooling ##
         ###################
       - name: Build Cosmovisor
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make cosmovisor
+        run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Rosetta
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make rosetta
+        run: GOARCH=${{ matrix.go-arch }} make rosetta
       - name: Build Confix
         if: env.GIT_DIFF
-        run: GOARCH=${{ matrix.go-arch }} LEDGER_ENABLED=false make confix
+        run: GOARCH=${{ matrix.go-arch }} make confix
+      - name: Build Hubl
+        if: env.GIT_DIFF
+        run: GOARCH=${{ matrix.go-arch }} make hubl

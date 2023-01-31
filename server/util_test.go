@@ -382,7 +382,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	if "tcp://127.0.0.1:26657" != serverCtx.Config.RPC.ListenAddress { //nolint:stylecheck
+	if serverCtx.Config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
 		t.Error("RPCListenAddress is not using default")
 	}
 }

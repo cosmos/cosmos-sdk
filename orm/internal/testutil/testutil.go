@@ -101,7 +101,7 @@ var TestFieldSpecs = []TestFieldSpec{
 	},
 	{
 		"e",
-		rapid.Transform(rapid.Int32(), func(x int32) protoreflect.EnumNumber {
+		rapid.Map(rapid.Int32(), func(x int32) protoreflect.EnumNumber {
 			return protoreflect.EnumNumber(x)
 		}).AsAny(),
 	},

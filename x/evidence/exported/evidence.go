@@ -13,7 +13,6 @@ type Evidence interface {
 	proto.Message
 
 	Route() string
-	Type() string
 	String() string
 	Hash() tmbytes.HexBytes
 	ValidateBasic() error

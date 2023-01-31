@@ -1,7 +1,9 @@
 package collections
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 )
 
 // Item is a type declaration based on Map
@@ -17,17 +19,8 @@ func NewItem[V any](
 	name string,
 	valueCodec ValueCodec[V],
 ) Item[V] {
-	item := (Item[V])(newMap[noKey](schema, prefix, name, noKey{}, valueCodec))
-	schema.addCollection(item)
+	item := (Item[V])(NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
 	return item
-}
-
-func (i Item[V]) getName() string {
-	return i.name
-}
-
-func (i Item[V]) getPrefix() []byte {
-	return i.prefix
 }
 
 // Get gets the item, if it is not set it returns an ErrNotFound error.
@@ -55,11 +48,18 @@ func (i Item[V]) Remove(ctx context.Context) error {
 // noKey defines a KeyCodec which decodes nothing.
 type noKey struct{}
 
-func (noKey) Stringify(_ noKey) string                           { return "no_key" }
-func (noKey) KeyType() string                                    { return "no_key" }
-func (noKey) Size(_ noKey) int                                   { return 0 }
-func (noKey) Encode(_ []byte, _ noKey) (int, error)              { return 0, nil }
-func (noKey) Decode(_ []byte) (int, noKey, error)                { return 0, noKey{}, nil }
+func (noKey) Stringify(_ noKey) string              { return "no_key" }
+func (noKey) KeyType() string                       { return "no_key" }
+func (noKey) Size(_ noKey) int                      { return 0 }
+func (noKey) Encode(_ []byte, _ noKey) (int, error) { return 0, nil }
+func (noKey) Decode(_ []byte) (int, noKey, error)   { return 0, noKey{}, nil }
+func (noKey) EncodeJSON(_ noKey) ([]byte, error)    { return []byte(`"item"`), nil }
+func (noKey) DecodeJSON(b []byte) (noKey, error) {
+	if !bytes.Equal(b, []byte(`"item"`)) {
+		return noKey{}, fmt.Errorf("%w: invalid item json key bytes", ErrEncoding)
+	}
+	return noKey{}, nil
+}
 func (k noKey) EncodeNonTerminal(_ []byte, _ noKey) (int, error) { panic("must not be called") }
 func (k noKey) DecodeNonTerminal(_ []byte) (int, noKey, error)   { panic("must not be called") }
 func (k noKey) SizeNonTerminal(_ noKey) int                      { panic("must not be called") }

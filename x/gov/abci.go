@@ -64,7 +64,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
-		if passes {
+		switch {
+		case passes:
 			var (
 				idx    int
 				events sdk.Events
@@ -108,7 +109,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
-		} else if proposal.Expedited {
+		case proposal.Expedited:
 			// When expedited proposal fails, it is converted
 			// to a regular proposal. As a result, the voting period is extended, and,
 			// once the regular voting period expires again, the tally is repeated
@@ -122,7 +123,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 			tagValue = types.AttributeValueExpeditedProposalRejected
 			logMsg = "expedited proposal converted to regular"
-		} else {
+		default:
 			proposal.Status = v1.StatusRejected
 			tagValue = types.AttributeValueProposalRejected
 			logMsg = "rejected"

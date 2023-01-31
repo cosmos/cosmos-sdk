@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"reflect"
-	"strings"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -24,25 +22,11 @@ type User struct {
 	Age  int    `json:"age_field"`
 }
 
-type AminoJson struct {
-	nilMapFields map[string]bool
-}
+type AminoJson struct{}
 
 func MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	aj := AminoJson{
-		nilMapFields: make(map[string]bool),
-	}
-	rt := reflect.TypeOf(message).Elem()
-	rv := reflect.ValueOf(message).Elem()
-
-	for i := 0; i < rt.NumField(); i++ {
-		f := rt.Field(i)
-		if f.Type.Kind() == reflect.Map {
-			protoFieldNo := strings.Split(f.Tag.Get("protobuf"), ",")[1]
-			aj.nilMapFields[protoFieldNo] = rv.Field(i).IsNil()
-		}
-	}
+	aj := AminoJson{}
 
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.marshal(vmsg, nil, buf)
@@ -59,7 +43,7 @@ func (aj AminoJson) marshal(
 		return aj.marshalMessage(typedValue, writer)
 
 	case protoreflect.Map:
-		return aj.marshalMap(field, typedValue, writer)
+		return errors.New("maps are not supported")
 
 	case protoreflect.List:
 		return aj.marshalList(field, typedValue, writer)
@@ -92,19 +76,9 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		f := fields.Get(i)
 		v := msg.Get(f)
 
-		if f.IsMap() {
-			// legacy behavior for maps:
-			// - if nil, omit
-			// - if empty, include
-			// - if non-empty, include
-			if isNil := aj.nilMapFields[fmt.Sprintf("%v", f.Number())]; isNil {
-				continue
-			}
-		} else if !msg.Has(f) {
+		if !msg.Has(f) {
 			continue
 		}
-
-		// legacy behavior omits maps with no entries, but .Has only checks for absence
 
 		if !first {
 			_, err = writer.Write([]byte(","))
@@ -196,55 +170,6 @@ func (aj AminoJson) marshalAny(message protoreflect.Message, writer io.Writer) e
 	//
 	//_, err = writer.Write([]byte("}"))
 	//return err
-}
-
-func (aj AminoJson) marshalMap(
-	fieldDescriptor protoreflect.FieldDescriptor,
-	value protoreflect.Map,
-	writer io.Writer) error {
-	_, err := writer.Write([]byte("{"))
-	if err != nil {
-		return err
-	}
-
-	allKeys := make([]protoreflect.MapKey, 0, value.Len())
-	//sortedKeys := make([]protoreflect.MapKey, 0, value.Len())
-	value.Range(func(key protoreflect.MapKey, _ protoreflect.Value) bool {
-		allKeys = append(allKeys, key)
-		return true
-	})
-
-	// TODO fail if key type is not string
-
-	valueField := fieldDescriptor.MapValue()
-	first := true
-	for _, key := range allKeys {
-		if !first {
-			_, err = writer.Write([]byte(","))
-			if err != nil {
-				return err
-			}
-		}
-		first = false
-
-		err = invokeStdlibJSONMarshal(writer, key.String())
-		if err != nil {
-			return err
-		}
-
-		_, err = writer.Write([]byte(":"))
-		if err != nil {
-			return err
-		}
-
-		err = aj.marshal(value.Get(key), valueField, writer)
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err = writer.Write([]byte("}"))
-	return err
 }
 
 func (aj AminoJson) marshalList(

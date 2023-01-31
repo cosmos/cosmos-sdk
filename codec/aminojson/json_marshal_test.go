@@ -43,9 +43,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 		shouldErr bool
 	}{
 		"empty":         {msg: &testpb.ABitOfEverything{}},
-		"nil map":       {msg: &testpb.WithAMap{}},
-		"empty map":     {msg: &testpb.WithAMap{StrMap: make(map[string]string)}},
-		"single map":    {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}},
+		"single map":    {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}, shouldErr: true},
 		"any type":      {msg: &testpb.ABitOfEverything{Any: simpleAny}},
 		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
 	}
@@ -56,6 +54,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 
 			if tc.shouldErr {
 				require.Error(t, err)
+				return
 			} else {
 				require.NoError(t, err)
 			}

@@ -61,6 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (types/coin) [#14715](https://github.com/cosmos/cosmos-sdk/pull/14715) `sdk.Coins.Add` now returns an empty set of coins `sdk.Coins{}` if both coins set are empty.
     * This is a behavior change, as previously `sdk.Coins.Add` would return `nil` in this case.
+* (reflection) [#14838](https://github.com/cosmos/cosmos-sdk/pull/14838) We now require that all proto files' import path (i.e. the OS path) matches their fully-qualified package name. For example, proto files with package name `cosmos.my.pkg.v1` should live in the folder `cosmos/my/pkg/v1/*.proto` relatively to the protoc import root folder (usually the root `proto/` folder.
 
 ## [v0.47.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc1) - 2022-01-09
 

@@ -37,7 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.47.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc2) - 2022-01-31
+## [v0.47.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc2) - 2023-01-31
 
 ### Improvements
 
@@ -65,7 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * This is a behavior change, as previously `sdk.Coins.Add` would return `nil` in this case.
 * (reflection) [#14838](https://github.com/cosmos/cosmos-sdk/pull/14838) We now require that all proto files' import path (i.e. the OS path) matches their fully-qualified package name. For example, proto files with package name `cosmos.my.pkg.v1` should live in the folder `cosmos/my/pkg/v1/*.proto` relatively to the protoc import root folder (usually the root `proto/` folder.
 
-## [v0.47.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc1) - 2022-01-09
+## [v0.47.0-rc1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc1) - 2023-01-09
 
 ### Features
 

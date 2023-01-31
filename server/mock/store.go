@@ -138,7 +138,7 @@ func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
 	panic("not implemented")
 }
 
-func (ms multiStore) SetLazyLoading() int64 {
+func (ms multiStore) SetLazyLoading(bool) int64 {
 	panic("not implemented")
 }
 

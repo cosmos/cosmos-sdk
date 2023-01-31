@@ -178,9 +178,10 @@ require (
 
 replace (
 	cosmossdk.io/collections => ./collections
+	cosmossdk.io/store => ./store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 
-	github.com/cosmos/iavl => github.com/yihuang/iavl v0.16.1-0.20230129205638-7f05087e4c78
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

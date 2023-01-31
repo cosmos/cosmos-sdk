@@ -7,20 +7,8 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.47.0-alpha2
-	github.com/cosmos/gogoproto v1.4.3
-=======
-	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
-	cosmossdk.io/x/evidence v0.1.0
-	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
-	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
-	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
-	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
-	// this version is not used as it is always replaced by the latest cosmos-sdk version
-	github.com/cosmos/cosmos-sdk v0.47.0-rc1
 	github.com/cosmos/gogoproto v1.4.4
->>>>>>> d0a5bd1a0 (fix(reflection): Fix gogoproto import paths (#14838))
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.6.1

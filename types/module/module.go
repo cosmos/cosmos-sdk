@@ -633,6 +633,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 			err := module.BeginBlock(ctx)
 			if err != nil {
 				// TODO: Handle error
+				// REF: https://github.com/cosmos/cosmos-sdk/issues/14836
 				panic(err)
 			}
 		}
@@ -666,6 +667,7 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 		} else if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
 			// TODO: Handle error
+			// REF: https://github.com/cosmos/cosmos-sdk/issues/14836
 			if err != nil {
 				panic(err)
 			}

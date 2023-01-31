@@ -212,6 +212,12 @@ type EndBlockAppModule interface {
 	EndBlock(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 }
 
+// CommitAppModule is an extension interface that contains information about the AppModule and Commit.
+type CommitAppModule interface {
+	AppModule
+	Commit(sdk.Context)
+}
+
 // GenesisOnlyAppModule is an AppModule that only has import/export functionality
 type GenesisOnlyAppModule struct {
 	AppModuleGenesis
@@ -258,6 +264,7 @@ type Manager struct {
 	OrderExportGenesis []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
+	OrderCommiters     []string
 	OrderMigrations    []string
 }
 
@@ -276,6 +283,7 @@ func NewManager(modules ...AppModule) *Manager {
 		OrderExportGenesis: modulesStr,
 		OrderBeginBlockers: modulesStr,
 		OrderEndBlockers:   modulesStr,
+		OrderCommiters:     modulesStr,
 	}
 }
 
@@ -349,6 +357,11 @@ func (m *Manager) SetOrderEndBlockers(moduleNames ...string) {
 			return !hasEndBlock
 		})
 	m.OrderEndBlockers = moduleNames
+}
+
+// SetOrderCommiters sets the order of set commiter calls
+func (m *Manager) SetOrderCommiters(moduleNames ...string) {
+	m.OrderCommiters = moduleNames
 }
 
 // SetOrderMigrations sets the order of migrations to be run. If not set
@@ -704,6 +717,17 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 		ValidatorUpdates: validatorUpdates,
 		Events:           ctx.EventManager().ABCIEvents(),
 	}, nil
+}
+
+// Commit performs commit functionality for all modules.
+func (m *Manager) Commit(ctx sdk.Context) {
+	for _, moduleName := range m.OrderCommiters {
+		module, ok := m.Modules[moduleName].(CommitAppModule)
+		if !ok {
+			continue
+		}
+		module.Commit(ctx)
+	}
 }
 
 // GetVersionMap gets consensus version from all modules

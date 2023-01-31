@@ -10,6 +10,7 @@ import (
 const (
 	MetricKeyBeginBlocker = "begin_blocker"
 	MetricKeyEndBlocker   = "end_blocker"
+	MetricKeyCommiter     = "commiter"
 	MetricLabelNameModule = "module"
 )
 

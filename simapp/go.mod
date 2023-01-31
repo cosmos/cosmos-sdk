@@ -65,7 +65,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
-	github.com/cosmos/iavl v0.20.0-alpha1 // indirect
+	github.com/cosmos/iavl v0.20.0-alpha1.0.20230129210330-66c167f401c7 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.9.0 // indirect
 	github.com/creachadair/atomicfile v0.2.8 // indirect
@@ -188,6 +188,7 @@ require (
 
 // TODO tag all extracted modules after SDK refactor
 replace (
+	cosmossdk.io/store => ../store
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
@@ -199,6 +200,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

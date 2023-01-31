@@ -50,7 +50,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"min_deposit", sdk.NewCoins(params.MinDeposit...).String(),
+			"expedited", proposal.Expedited,
+			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
@@ -63,11 +64,19 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 
 		passes, burnDeposits, tallyResults := keeper.Tally(ctx, proposal)
 
-		if burnDeposits {
-			keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
-		} else {
-			keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+		// If an expedited proposal fails, we do not want to update
+		// the deposit at this point since the proposal is converted to regular.
+		// As a result, the deposits are either deleted or refunded in all casses
+		// EXCEPT when an expedited proposal fails.
+		if !(proposal.Expedited && !passes) {
+			if burnDeposits {
+				keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
+			} else {
+				keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
+			}
 		}
+
+		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		if passes {
 			var (
@@ -112,6 +121,20 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
+		} else if proposal.Expedited {
+			// When expedited proposal fails, it is converted
+			// to a regular proposal. As a result, the voting period is extended, and,
+			// once the regular voting period expires again, the tally is repeated
+			// according to the regular proposal rules.
+			proposal.Expedited = false
+			params := keeper.GetParams(ctx)
+			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
+			proposal.VotingEndTime = &endTime
+
+			keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
+
+			tagValue = types.AttributeValueExpeditedProposalRejected
+			logMsg = "expedited proposal converted to regular"
 		} else {
 			proposal.Status = v1.StatusRejected
 			tagValue = types.AttributeValueProposalRejected
@@ -121,7 +144,6 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		proposal.FinalTallyResult = &tallyResults
 
 		keeper.SetProposal(ctx, proposal)
-		keeper.RemoveFromActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
 		// when proposal become active
 		cacheCtx, writeCache := ctx.CacheContext()

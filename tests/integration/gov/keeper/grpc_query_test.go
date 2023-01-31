@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"gotest.tools/assert"
 )
 
 func (suite *KeeperTestSuite) TestGRPCQueryTally() {
@@ -50,9 +51,9 @@ func (suite *KeeperTestSuite) TestGRPCQueryTally() {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
-				suite.Require().NoError(err)
-				suite.Require().NotNil(proposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
+				assert.NilError(t, err)
+				assert.Assert(t, proposal.String() != "")
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 
@@ -161,9 +162,9 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryTally() {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
-				suite.Require().NoError(err)
-				suite.Require().NotNil(proposal)
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
+				assert.NilError(t, err)
+				assert.Assert(t, proposal.String() != "")
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}
 

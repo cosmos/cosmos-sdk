@@ -7,6 +7,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
+	"gotest.tools/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -74,12 +75,12 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx = s1.app.BaseApp.NewContext(false, tmproto.Header{})
 	// Create two proposals, put the second into the voting period
-	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0])
-	require.NoError(t, err)
+	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
+	assert.NilError(t, err)
 	proposalID1 := proposal1.Id
 
-	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0])
-	require.NoError(t, err)
+	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], true)
+	assert.NilError(t, err)
 	proposalID2 := proposal2.Id
 
 	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], s1.GovKeeper.GetParams(ctx).MinDeposit)

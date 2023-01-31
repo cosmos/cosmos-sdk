@@ -32,7 +32,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 
 	params := k.Keeper.GetParams(ctx)
 
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit); err != nil {
+	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
 		return nil, err
 	}
 
@@ -50,7 +50,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.Expedited)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +219,7 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		"",
 		msg.GetContent().GetTitle(),
 		msg.GetContent().GetDescription(),
+		false, // legacy proposals cannot be expedited
 	)
 	if err != nil {
 		return nil, err

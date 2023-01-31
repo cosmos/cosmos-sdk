@@ -42,10 +42,11 @@ func TestRandomizedGenState(t *testing.T) {
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &govGenesis)
 
 	const (
-		tallyQuorum          = "0.400000000000000000"
-		tallyThreshold       = "0.539000000000000000"
-		tallyVetoThreshold   = "0.314000000000000000"
-		minInitialDepositDec = "0.590000000000000000"
+		tallyQuorum             = "0.400000000000000000"
+		tallyThreshold          = "0.539000000000000000"
+		tallyVetoThreshold      = "0.314000000000000000"
+		tallyExpeditedThreshold = "0.545000000000000000"
+		minInitialDepositDec    = "0.590000000000000000"
 	)
 
 	require.Equal(t, "905stake", govGenesis.Params.MinDeposit[0].String())
@@ -58,6 +59,9 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, []*v1.Deposit{}, govGenesis.Deposits)
 	require.Equal(t, []*v1.Vote{}, govGenesis.Votes)
 	require.Equal(t, []*v1.Proposal{}, govGenesis.Proposals)
+	require.Equal(t, "800stake", govGenesis.Params.ExpeditedMinDeposit[0].String())
+	require.Equal(t, float64(123081), govGenesis.Params.ExpeditedVotingPeriod.Seconds())
+	require.Equal(t, tallyExpeditedThreshold, govGenesis.Params.ExpeditedThreshold)
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

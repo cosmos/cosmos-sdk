@@ -22,4 +22,7 @@ const (
 	AttributeKeyProposalType       = "proposal_type"
 	AttributeSignalTitle           = "signal_title"
 	AttributeSignalDescription     = "signal_description"
+
+	AttributeValueExpeditedProposalRejected = "expedited_proposal_rejected" // didn't meet expedited vote quorum
+
 )

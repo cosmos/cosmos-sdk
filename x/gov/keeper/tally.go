@@ -117,7 +117,15 @@ func (keeper Keeper) Tally(ctx sdk.Context, proposal v1.Proposal) (passes bool, 
 	}
 
 	// If more than 1/2 of non-abstaining voters vote Yes, proposal passes
-	threshold, _ := sdk.NewDecFromStr(params.Threshold)
+	// For expedited 2/3
+	var thresholdStr string
+	if proposal.Expedited {
+		thresholdStr = params.GetExpeditedThreshold()
+	} else {
+		thresholdStr = params.GetThreshold()
+	}
+
+	threshold, _ := sdk.NewDecFromStr(thresholdStr)
 	if results[v1.OptionYes].Quo(totalVotingPower.Sub(results[v1.OptionAbstain])).GT(threshold) {
 		return true, false, tallyResults
 	}

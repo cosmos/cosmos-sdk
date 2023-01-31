@@ -211,7 +211,7 @@ func TestSimulateMsgCancelProposal(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "title", "summary", proposer)
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "title", "summary", proposer, false)
 	require.NoError(t, err)
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
@@ -255,7 +255,7 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 
 	suite.GovKeeper.SetProposal(ctx, proposal)
@@ -301,7 +301,7 @@ func TestSimulateMsgVote(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -344,7 +344,7 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := suite.GovKeeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, submitTime, submitTime.Add(*depositPeriod), "", "text proposal", "test", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 
 	suite.GovKeeper.ActivateVotingPeriod(ctx, proposal)

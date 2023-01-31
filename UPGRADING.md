@@ -57,6 +57,10 @@ This is no longer the case, the assertion has been loosened to only require modu
 
 #### `x/gov`
 
+##### Expedited Proposals
+
+The `gov` v1 module has been updated to support the ability to expedite governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
+
 ##### Cancelling Proposals
 
 The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.

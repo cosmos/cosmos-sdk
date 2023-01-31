@@ -218,6 +218,7 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
+			r.Intn(2) == 0,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err

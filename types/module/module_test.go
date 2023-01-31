@@ -386,7 +386,6 @@ func TestCoreAPIManager_ExportGenesis(t *testing.T) {
 
 	_, err = mm.ExportGenesisForModules(ctx, cdc, []string{"module1", "modulefoo"})
 	require.Error(t, err)
-
 }
 
 func TestCoreAPIManagerOrderSetters(t *testing.T) {

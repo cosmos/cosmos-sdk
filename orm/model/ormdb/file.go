@@ -3,6 +3,7 @@ package ormdb
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"math"
 
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -67,6 +68,9 @@ func newFileDescriptorDB(fileDescriptor protoreflect.FileDescriptor, options fil
 			JSONValidator:   options.JSONValidator,
 			BackendResolver: options.BackendResolver,
 		})
+		if errors.Is(err, ormerrors.NoTableDescriptor) {
+			continue
+		}
 		if err != nil {
 			return nil, err
 		}

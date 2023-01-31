@@ -2,6 +2,112 @@
 
 This guide provides instructions for upgrading to specific versions of Cosmos SDK.
 
+<<<<<<< HEAD
+=======
+## [Unreleased]
+
+### Configuration
+
+A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
+
+```bash
+simd config migrate v0.48
+```
+
+More information about [confix](https://docs.cosmos.network/main/tooling/confix).
+
+#### gRPC-Web
+
+gRPC-Web is now listening to the same address as the gRPC Gateway API server (default: `localhost:1317`).
+The possibility to listen to a different address has been removed, as well as its settings.
+Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can be set to keep the previous behavior.
+
+#### Database
+
+ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
+
+<!-- TODO: write database migration tool -->
+
+### Protobuf
+
+The SDK is in the process of removing all `gogoproto` annotations.
+
+#### Stringer
+
+The `gogoproto.goproto_stringer = false` annotation has been removed from most proto files. This means that the `String()` method is being generated for types that previously had this annotation. The generated `String()` method uses `proto.CompactTextString` for _stringifying_ structs.
+[Verify](https://github.com/cosmos/cosmos-sdk/pull/13850#issuecomment-1328889651) the usage of the modified `String()` methods and double-check that they are not used in state-machine code.
+
+#### Gogoproto Import Paths
+
+The SDK made a [patch fix](https://github.com/cosmos/gogoproto/pull/32) on its gogoproto repository to require that each proto file's package name matches its OS import path (relatively to a protobuf root import path, usually the root `proto/` folder, set by the `protoc -I` flag).
+
+For example, assuming you put all your proto files in subfolders inside your root `proto/` folder, then a proto file with package name `myapp.mymodule.v1` should be found in the `proto/myapp/mymodule/v1/` folder. If it is in another folder, the proto generation command will throw an error.
+
+If you are using a custom folder structure for your proto files, please reorganize them so that their OS path matches their proto package name.
+
+This is to allow the proto FileDescriptSets to be correctly registered, and this standardized OS import paths allows [Hubl](https://github.com/cosmos/cosmos-sdk/tree/main/tools/hubl) to reflectively talk to any chain.
+
+### Types
+
+#### Store
+
+References to `types/store.go` which contained aliases for store types have been remapped to point to appropriate  store/types, hence the `types/store.go` file is no longer needed and has been removed.
+
+##### Extract Store to a standalone module
+
+The `store` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the store imports are now renamed to use `cosmossdk.io/store` instead of `github.com/cosmos/cosmos-sdk/store` across the SDK.
+
+### SimApp
+
+#### Module Assertions
+
+Previously, all modules were required to be set in `OrderBeginBlockers`, `OrderEndBlockers` and `OrderInitGenesis / OrderExportGenesis` in `app.go` / `app_config.go`.
+This is no longer the case, the assertion has been loosened to only require modules implementing, respectively, the `module.BeginBlockAppModule`, `module.EndBlockAppModule` and `module.HasGenesis` interfaces.
+
+### Modules
+
+#### `x/gov`
+
+##### Cancelling Proposals
+
+The `gov` module has been updated to support the ability to cancel governance proposals. When a proposal is canceled, all the deposits of the proposal are either burnt or sent to `ProposalCancelDest` address. The deposits burn rate will be determined by a new parameter called `ProposalCancelRatio` parameter.
+
+```text
+	1. deposits * proposal_cancel_ratio will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned.
+	2. deposits * (1 - proposal_cancel_ratio) will be sent to depositors.
+```
+
+By default, the new `ProposalCancelRatio` parameter is set to 0.5 during migration and `ProposalCancelDest` is set to empty string (i.e. burnt).
+
+#### `x/evidence`
+
+##### Extract evidence to a standalone module
+
+The `x/evidence` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+All the evidence imports are now renamed to use `cosmossdk.io/x/evidence` instead of `github.com/cosmos/cosmos-sdk/x/evidence` across the SDK.
+
+#### `x/nft`
+
+##### Extract nft to a standalone module
+
+The `x/nft` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+
+#### x/feegrant
+
+##### Extract feegrant to a standalone module
+
+The `x/feegrant` module is extracted to have a separate go.mod file which allows it to be a standalone module.
+All the feegrant imports are now renamed to use `cosmossdk.io/x/feegrant` instead of `github.com/cosmos/cosmos-sdk/x/feegrant` across the SDK.
+
+#### `x/upgrade`
+
+##### Extract upgrade to a standalone module
+
+The `x/upgrade` module is extracted to have a separate go.mod file which allows it to be a standalone module. 
+All the upgrade imports are now renamed to use `cosmossdk.io/x/upgrade` instead of `github.com/cosmos/cosmos-sdk/x/upgrade` across the SDK.
+
+>>>>>>> 6a441f3df (docs: Require correct gogo import paths (#14852))
 ## [v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0)
 
 ### Simulation

@@ -37,26 +37,26 @@ func (aj AminoJson) marshal(
 	field protoreflect.FieldDescriptor,
 	writer io.Writer) error {
 
-	switch typedValue := value.Interface().(type) {
+	switch val := value.Interface().(type) {
 	case protoreflect.Message:
-		return aj.marshalMessage(typedValue, writer)
+		return aj.marshalMessage(val, writer)
 
 	case protoreflect.Map:
 		return errors.New("maps are not supported")
 
 	case protoreflect.List:
-		return aj.marshalList(field, typedValue, writer)
+		return aj.marshalList(field, val, writer)
 
 	case string, bool, int32, uint32, protoreflect.EnumNumber:
-		return invokeStdlibJSONMarshal(writer, typedValue)
+		return invokeStdlibJSONMarshal(writer, val)
 
 	case uint64, int64:
-		_, err := fmt.Fprintf(writer, `"%d"`, typedValue) // quoted
+		_, err := fmt.Fprintf(writer, `"%d"`, val) // quoted
 		return err
 
 	case []byte:
 		_, err := fmt.Fprintf(writer, `"%s"`,
-			base64.StdEncoding.EncodeToString([]byte(typedValue)))
+			base64.StdEncoding.EncodeToString(val))
 		return err
 	}
 

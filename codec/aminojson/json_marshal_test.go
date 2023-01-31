@@ -87,11 +87,7 @@ func TestAminoJSON(t *testing.T) {
 			Foo: "test",
 			Bar: 0, // this is the default value and should be omitted from output
 		},
-		Enum: testpb.AnEnum_ONE,
-		//StrMap: map[string]string{
-		//	"foo": "abc",
-		//	"baz": "xyz",
-		//},
+		Enum:      testpb.AnEnum_ONE,
 		Repeated:  []int32{3, -7, 2, 6, 4},
 		Str:       `abcxyz"foo"def`,
 		Bool:      true,

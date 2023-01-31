@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 )
 
 type JSONMarshaller interface {
@@ -121,57 +120,6 @@ func invokeStdlibJSONMarshal(w io.Writer, v interface{}) error {
 	return err
 }
 
-func (aj AminoJson) marshalAny(message protoreflect.Message, writer io.Writer) error {
-	fields := message.Descriptor().Fields()
-	typeUrlField := fields.ByName(typeUrlName)
-	if typeUrlField == nil {
-		return fmt.Errorf("expected type_url field")
-	}
-
-	//_, err := writer.Write([]byte("{"))
-	//if err != nil {
-	//	return err
-	//}
-
-	typeUrl := message.Get(typeUrlField).String()
-	// TODO
-	// do we need an resolver other than protoregistry.GlobalTypes?
-	resolver := protoregistry.GlobalTypes
-
-	typ, err := resolver.FindMessageByURL(typeUrl)
-	if err != nil {
-		return errors.Wrapf(err, "can't resolve type URL %s", typeUrl)
-	}
-
-	_, err = fmt.Fprintf(writer, `"@type_url":%q`, typeUrl)
-	if err != nil {
-		return err
-	}
-
-	valueField := fields.ByName(valueName)
-	if valueField == nil {
-		return fmt.Errorf("expected value field")
-	}
-
-	valueBz := message.Get(valueField).Bytes()
-
-	valueMsg := typ.New()
-	err = proto.Unmarshal(valueBz, valueMsg.Interface())
-	if err != nil {
-		return err
-	}
-
-	return aj.marshal(protoreflect.ValueOfMessage(valueMsg), nil, writer)
-
-	//err = aj.marshalMessageFields(valueMsg, writer, false)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//_, err = writer.Write([]byte("}"))
-	//return err
-}
-
 func (aj AminoJson) marshalList(
 	fieldDescriptor protoreflect.FieldDescriptor,
 	list protoreflect.List,
@@ -201,28 +149,3 @@ func (aj AminoJson) marshalList(
 	_, err = writer.Write([]byte("]"))
 	return err
 }
-
-const (
-	// type names
-	timestampFullName   protoreflect.FullName = "google.protobuf.Timestamp"
-	durationFullName                          = "google.protobuf.Duration"
-	structFullName                            = "google.protobuf.Struct"
-	valueFullName                             = "google.protobuf.Value"
-	listValueFullName                         = "google.protobuf.ListValue"
-	nullValueFullName                         = "google.protobuf.NullValue"
-	boolValueFullName                         = "google.protobuf.BoolValue"
-	stringValueFullName                       = "google.protobuf.StringValue"
-	bytesValueFullName                        = "google.protobuf.BytesValue"
-	int32ValueFullName                        = "google.protobuf.Int32Value"
-	int64ValueFullName                        = "google.protobuf.Int64Value"
-	uint32ValueFullName                       = "google.protobuf.UInt32Value"
-	uint64ValueFullName                       = "google.protobuf.UInt64Value"
-	floatValueFullName                        = "google.protobuf.FloatValue"
-	doubleValueFullName                       = "google.protobuf.DoubleValue"
-	fieldMaskFullName                         = "google.protobuf.FieldMask"
-	anyFullName                               = "google.protobuf.Any"
-
-	// field names
-	typeUrlName protoreflect.Name = "type_url"
-	valueName   protoreflect.Name = "value"
-)

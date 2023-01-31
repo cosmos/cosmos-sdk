@@ -104,8 +104,6 @@ func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChai
 		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
 			return abci.ResponseInitChain{}, err
-			// TODO https://github.com/cosmos/cosmos-sdk/issues/468
-			// return sdk.ErrGenesisParse("").TraceCause(err, "")
 		}
 
 		for _, val := range genesisState.Values {

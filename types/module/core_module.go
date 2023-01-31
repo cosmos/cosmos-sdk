@@ -25,6 +25,14 @@ func UseCoreAPIModule(name string, module appmodule.AppModule) AppModule {
 	}
 }
 
+var (
+	_ AppModuleBasic      = coreAppModuleAdapator{}
+	_ AppModule           = coreAppModuleAdapator{}
+	_ AppModuleGenesis    = coreAppModuleAdapator{}
+	_ BeginBlockAppModule = coreAppModuleAdapator{}
+	_ EndBlockAppModule   = coreAppModuleAdapator{}
+)
+
 type coreAppModuleAdapator struct {
 	name   string
 	module appmodule.AppModule
@@ -200,4 +208,17 @@ func (c coreAppModuleAdapator) ConsensusVersion() uint64 {
 	}
 
 	return 0
+}
+
+func (c coreAppModuleAdapator) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+	if mod, ok := c.module.(appmodule.HasBeginBlocker); ok {
+		mod.BeginBlock(sdk.WrapSDKContext(ctx))
+	}
+}
+
+func (c coreAppModuleAdapator) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	if mod, ok := c.module.(appmodule.HasEndBlocker); ok {
+		mod.EndBlock(sdk.WrapSDKContext(ctx))
+	}
+	return nil
 }

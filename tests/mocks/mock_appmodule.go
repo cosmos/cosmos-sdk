@@ -35,6 +35,20 @@ func (m *MockCoreAppModule) EXPECT() *MockCoreAppModuleMockRecorder {
 	return m.recorder
 }
 
+// BeginBlock mocks base method.
+func (m *MockCoreAppModule) BeginBlock(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BeginBlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BeginBlock indicates an expected call of BeginBlock.
+func (mr *MockCoreAppModuleMockRecorder) BeginBlock(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginBlock", reflect.TypeOf((*MockCoreAppModule)(nil).BeginBlock), arg0)
+}
+
 // DefaultGenesis mocks base method.
 func (m *MockCoreAppModule) DefaultGenesis(arg0 appmodule.GenesisTarget) error {
 	m.ctrl.T.Helper()
@@ -47,6 +61,20 @@ func (m *MockCoreAppModule) DefaultGenesis(arg0 appmodule.GenesisTarget) error {
 func (mr *MockCoreAppModuleMockRecorder) DefaultGenesis(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultGenesis", reflect.TypeOf((*MockCoreAppModule)(nil).DefaultGenesis), arg0)
+}
+
+// EndBlock mocks base method.
+func (m *MockCoreAppModule) EndBlock(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EndBlock", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EndBlock indicates an expected call of EndBlock.
+func (mr *MockCoreAppModuleMockRecorder) EndBlock(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EndBlock", reflect.TypeOf((*MockCoreAppModule)(nil).EndBlock), arg0)
 }
 
 // ExportGenesis mocks base method.

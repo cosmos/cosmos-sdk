@@ -293,17 +293,24 @@ func TestManager_BeginBlock(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockBeginBlockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockBeginBlockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(
+		mockAppModule1,
+		mockAppModule2,
+		module.UseCoreAPIModule("module3", mockAppModule3),
+	)
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	req := abci.RequestBeginBlock{Hash: []byte("test")}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any(), gomock.Eq(req)).Times(1)
 	mockAppModule2.EXPECT().BeginBlock(gomock.Any(), gomock.Eq(req)).Times(1)
-	mm.BeginBlock(sdk.Context{}, req)
+	mockAppModule3.EXPECT().BeginBlock(gomock.Any()).Times(1)
+	mm.BeginBlock(ctx, req)
 }
 
 func TestManager_EndBlock(t *testing.T) {
@@ -312,23 +319,30 @@ func TestManager_EndBlock(t *testing.T) {
 
 	mockAppModule1 := mocks.NewMockEndBlockAppModule(mockCtrl)
 	mockAppModule2 := mocks.NewMockEndBlockAppModule(mockCtrl)
+	mockAppModule3 := mocks.NewMockCoreAppModule(mockCtrl)
 	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
 	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	mm := module.NewManager(
+		mockAppModule1,
+		mockAppModule2,
+		module.UseCoreAPIModule("module3", mockAppModule3),
+	)
 	require.NotNil(t, mm)
-	require.Equal(t, 2, len(mm.Modules))
+	require.Equal(t, 3, len(mm.Modules))
 
 	req := abci.RequestEndBlock{Height: 10}
+	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1)
-	ret := mm.EndBlock(sdk.Context{}, req)
+	mockAppModule3.EXPECT().EndBlock(gomock.Any()).Times(1)
+	ret := mm.EndBlock(ctx, req)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
-	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
+	require.Panics(t, func() { mm.EndBlock(ctx, req) })
 }
 
 // MockCoreAppModule allows us to test functions like DefaultGenesis

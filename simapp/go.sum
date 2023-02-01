@@ -60,8 +60,6 @@ cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
 cosmossdk.io/math v1.0.0-beta.4 h1:JtKedVLGzA0vv84xjYmZ75RKG35Kf2WwcFu8IjRkIIw=
 cosmossdk.io/math v1.0.0-beta.4/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
-cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4 h1:m7oRquCtYL8OuLWogjMzTVDIxeu5toJz6sSUU01Canw=
-cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4/go.mod h1:NFKdO50vvtoZBnJXlWRstqq5dxhku7sRKc/5tLsFerI=
 cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f h1:LMXqH69KBG/R8w18sooHtoUZ0+5hcc99m6OjBiooDAo=
 cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f/go.mod h1:/apC5+JHM2A72kUY3z+55FWdIn/2ai2mTAYtSBDY4Lo=
 cosmossdk.io/tools/rosetta v0.2.0 h1:Ae499UiZ9yPNCXvjOBO/R9I1pksCJfxoqWauEZgA/gs=
@@ -218,8 +216,8 @@ github.com/cosmos/gogoproto v1.4.4 h1:nVAsgLlAf5jeN0fV7hRlkZvf768zU+dy4pG+hxc2P3
 github.com/cosmos/gogoproto v1.4.4/go.mod h1:/yl6/nLwsZcZ2JY3OrqjRqvqCG9InUMcXRfRjQiF9DU=
 github.com/cosmos/gorocksdb v1.2.0 h1:d0l3jJG8M4hBouIZq0mDUHZ+zjOx044J3nGRskwTb4Y=
 github.com/cosmos/gorocksdb v1.2.0/go.mod h1:aaKvKItm514hKfNJpUJXnnOWeBnk2GL4+Qw9NHizILw=
-github.com/cosmos/iavl v0.20.0-alpha1 h1:tP+Qv4MdnLVmrrhIAGpLRQOOhFGgci0hpJ4VI3xtHhM=
-github.com/cosmos/iavl v0.20.0-alpha1/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
+github.com/cosmos/iavl v0.20.0-alpha.2 h1:IIUIOqPG1LC2JGiQVeNxAi+Fon/M8TXMBAN0XsUSqq8=
+github.com/cosmos/iavl v0.20.0-alpha.2/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
 github.com/cosmos/keyring v1.2.0 h1:8C1lBP9xhImmIabyXW4c3vFjjLiBdGCmfLUfeZlV1Yo=
 github.com/cosmos/keyring v1.2.0/go.mod h1:fc+wB5KTk9wQ9sDx0kFXB3A0MaeGHM9AwRStKOQ5vOA=
 github.com/cosmos/ledger-cosmos-go v0.13.0 h1:ex0CvCxToSR7j5WjrghPu2Bu9sSXKikjnVvUryNnx4s=

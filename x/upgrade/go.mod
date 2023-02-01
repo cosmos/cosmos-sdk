@@ -173,7 +173,9 @@ require (
 )
 
 replace (
+	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../..
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230109172818-c9acb1bd72b3
-	github.com/cosmos/gogoproto v1.4.3
+	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -146,8 +146,12 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
-// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+replace (
+	cosmossdk.io/store => ../../store
 
-replace github.com/cosmos/cosmos-sdk => ../..
+	github.com/cosmos/cosmos-sdk => ../..
+	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
+	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+)

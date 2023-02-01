@@ -14,10 +14,13 @@ import (
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
+	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/aminojson"
 	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -60,12 +63,20 @@ func marshalLegacy(msg proto.Message) ([]byte, error) {
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc := amino.NewCodec()
 	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
+	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/x/distribution/MsgWithdrawDelegatorReward", nil)
 
 	cases := map[string]struct {
 		gogo   any
 		pulsar proto.Message
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
+		// TODO
+		// treat
+		// (gogoproto.nullable)     = false,
+		// (amino.dont_omitempty)   = true
+		"distribution/delegator_starting_info": {
+			gogo:   &disttypes.DelegatorStartingInfo{},
+			pulsar: &distapi.DelegatorStartingInfo{}},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {

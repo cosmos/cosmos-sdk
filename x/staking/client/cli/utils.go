@@ -17,10 +17,6 @@ type validator struct {
 	From                string `json:"from"`
 	PubKey              string `json:"pubkey"`
 	Moniker             string `json:"moniker"`
-	Identity            string `json:"identity"`
-	Website             string `json:"website"`
-	Securiy             string `json:"security"`
-	Details             string `json:"details"`
 	CommissionRate      string `json:"commission-rate"`
 	CommissionMaxRate   string `json:"commission-max-rate"`
 	CommissionMaxChange string `json:"commission-max-change-rate"`

@@ -11,7 +11,7 @@ import (
 // event.Service is a core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
-	// EmitEvent emits events represented as a protobuf message (as described in ADR 032).
+	// Emit emits events represented as a protobuf message (as described in ADR 032).
 	//
 	// Callers SHOULD assume that these events may be included in consensus. These events
 	// MUST be emitted deterministically and adding, removing or changing these events SHOULD

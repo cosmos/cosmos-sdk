@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -15,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -44,7 +42,6 @@ func NewTxCmd() *cobra.Command {
 	}
 
 	stakingTxCmd.AddCommand(
-		NewCreateValCmd(),
 		NewCreateValidatorCmd(),
 		NewEditValidatorCmd(),
 		NewDelegateCmd(),
@@ -56,10 +53,37 @@ func NewTxCmd() *cobra.Command {
 	return stakingTxCmd
 }
 
-func NewCreateValCmd() *cobra.Command {
+// NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
+func NewCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-val [path/to/validator.json]",
+		Use:   "create-validator [path/to/validator.json]",
 		Short: "create new validator initialized with a self-delegation to it",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Submit a JSON file contains the new validator details.
+Example:
+$ %s tx staking create-validator path/to/validator.json
+
+Where validator.json contains:
+
+{
+	"from": "key2",
+	"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+	"amount": "1000000stake",
+	"moniker": "myvalidator",
+	"identity": "optional identity signature (ex. UPort or Keybase)",
+	"security": "validator's (optional) security contact email"
+	"website": "validator's (optional) website (ex. https://myweb.site)",
+	"details": "validator's (optional) details",
+	"commission-rate": "0.1",
+	"commission-max-rate": "0.2",
+	"commission-max-change-rate": "0.01",
+	"min-self-delegation": "1"
+  }
+`,
+				version.AppName,
+			),
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -71,14 +95,9 @@ func NewCreateValCmd() *cobra.Command {
 				return err
 			}
 
-			var pk cryptotypes.PubKey
-			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pubkey), &pk); err != nil {
-				return err
-			}
-
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
 				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-			txf, msg, err := newBuildCreateValMsg(clientCtx, txf, cmd.Flags(), from, amount, pubkey, moniker, cm_rate, cm_max_rate, cm_max_change_rate, min_self_del)
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), from, amount, pubkey, moniker, cm_rate, cm_max_rate, cm_max_change_rate, min_self_del)
 			if err != nil {
 				return err
 			}
@@ -98,170 +117,6 @@ func NewCreateValCmd() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-
-	return cmd
-}
-
-// Validator struct to define the fields of the validator
-type validator struct {
-	Amount              string `json:"amount"`
-	From                string `json:"from"`
-	PubKey              string `json:"pubkey"`
-	Moniker             string `json:"moniker"`
-	Identity            string `json:"identity"`
-	Website             string `json:"website"`
-	Securiy             string `json:"security"`
-	Details             string `json:"details"`
-	CommissionRate      string `json:"commission-rate"`
-	CommissionMaxRate   string `json:"commission-max-rate"`
-	CommissionMaxChange string `json:"commission-max-change-rate"`
-	MinSelfDelegation   string `json:"min-self-delegation"`
-}
-
-func parseValidatorJSON(cdc codec.Codec, path string) (from, amount, pubkey, moniker, cm_rate, cm_max_rate, cm_max_change_rate, min_self_del string, err error) {
-	var validator validator
-
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return "", "", "", "", "", "", "", "", err
-	}
-
-	err = json.Unmarshal(contents, &validator)
-	if err != nil {
-		return "", "", "", "", "", "", "", "", err
-	}
-
-	if err := validator.validate(); err != nil {
-		return "", "", "", "", "", "", "", "", err
-	}
-
-	return validator.From, validator.Amount, validator.PubKey, validator.Moniker, validator.CommissionRate, validator.CommissionMaxRate, validator.CommissionMaxChange, validator.MinSelfDelegation, nil
-}
-
-func (v validator) validate() error {
-	if v.Amount == "" {
-		return fmt.Errorf("must specify amount of coins to bond")
-	}
-	if v.From == "" {
-		return fmt.Errorf("must specify name or address of from key")
-	}
-	if v.PubKey == "" {
-		return fmt.Errorf("must specify the JSON encoded pubkey")
-	}
-	if v.Moniker == "" {
-		return fmt.Errorf("must specify the moniker name")
-	}
-	if v.CommissionRate == "" {
-		return fmt.Errorf("must specify initial commission rate percentage")
-	}
-	if v.CommissionMaxRate == "" {
-		return fmt.Errorf("must specify maximum commission rate percentage")
-	}
-	if v.CommissionMaxChange == "" {
-		return fmt.Errorf("must specify maximum commission change rate percentage (per day)")
-	}
-	if v.MinSelfDelegation == "" {
-		return fmt.Errorf("minimum self delegation must be a positive integer")
-	}
-	return nil
-}
-
-func newBuildCreateValMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, from, amount, pubkey, moniker, cm_rate, cm_max_rate, cm_max_change_rate, min_self_del string) (tx.Factory, *types.MsgCreateValidator, error) {
-	valAmount, err := sdk.ParseCoinNormalized(amount)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	valAddr := clientCtx.GetFromAddress()
-	fmt.Println("valaddr : ", valAddr)
-
-	var pk cryptotypes.PubKey
-	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pubkey), &pk); err != nil {
-		return txf, nil, err
-	}
-
-	identity, _ := fs.GetString(FlagIdentity)
-	website, _ := fs.GetString(FlagWebsite)
-	security, _ := fs.GetString(FlagSecurityContact)
-	details, _ := fs.GetString(FlagDetails)
-	description := types.NewDescription(
-		moniker,
-		identity,
-		website,
-		security,
-		details,
-	)
-
-	commissionRates, err := buildCommissionRates(cm_rate, cm_max_rate, cm_max_change_rate)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	minSelfDelegation, ok := sdk.NewIntFromString(min_self_del)
-	if !ok {
-		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
-	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, valAmount, description, commissionRates, minSelfDelegation,
-	)
-	if err != nil {
-		return txf, nil, err
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		return txf, nil, err
-	}
-
-	genOnly, _ := fs.GetBool(flags.FlagGenerateOnly)
-	if genOnly {
-		ip, _ := fs.GetString(FlagIP)
-		p2pPort, _ := fs.GetUint(FlagP2PPort)
-		nodeID, _ := fs.GetString(FlagNodeID)
-
-		if nodeID != "" && ip != "" && p2pPort > 0 {
-			txf = txf.WithMemo(fmt.Sprintf("%s@%s:%d", nodeID, ip, p2pPort))
-		}
-	}
-
-	return txf, msg, nil
-}
-
-// NewCreateValidatorCmd returns a CLI command handler for creating a MsgCreateValidator transaction.
-func NewCreateValidatorCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "create-validator",
-		Short: "create new validator initialized with a self-delegation to it",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
-				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
-		},
-	}
-
-	cmd.Flags().AddFlagSet(FlagSetPublicKey())
-	cmd.Flags().AddFlagSet(FlagSetAmount())
-	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
-	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
-	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
-
-	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
-	cmd.Flags().String(FlagNodeID, "", "The node's ID")
-	flags.AddTxFlagsToCmd(cmd)
-
-	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-	_ = cmd.MarkFlagRequired(FlagAmount)
-	_ = cmd.MarkFlagRequired(FlagPubKey)
-	_ = cmd.MarkFlagRequired(FlagMoniker)
 
 	return cmd
 }
@@ -510,25 +365,19 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 	return cmd
 }
 
-func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, *types.MsgCreateValidator, error) {
-	fAmount, _ := fs.GetString(FlagAmount)
-	amount, err := sdk.ParseCoinNormalized(fAmount)
+func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, from, amount, pubkey, moniker, cm_rate, cm_max_rate, cm_max_change_rate, min_self_del string) (tx.Factory, *types.MsgCreateValidator, error) {
+	valAmount, err := sdk.ParseCoinNormalized(amount)
 	if err != nil {
 		return txf, nil, err
 	}
 
 	valAddr := clientCtx.GetFromAddress()
-	pkStr, err := fs.GetString(FlagPubKey)
-	if err != nil {
-		return txf, nil, err
-	}
 
 	var pk cryptotypes.PubKey
-	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &pk); err != nil {
+	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pubkey), &pk); err != nil {
 		return txf, nil, err
 	}
 
-	moniker, _ := fs.GetString(FlagMoniker)
 	identity, _ := fs.GetString(FlagIdentity)
 	website, _ := fs.GetString(FlagWebsite)
 	security, _ := fs.GetString(FlagSecurityContact)
@@ -541,26 +390,18 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		details,
 	)
 
-	// get the initial validator commission parameters
-	rateStr, _ := fs.GetString(FlagCommissionRate)
-	maxRateStr, _ := fs.GetString(FlagCommissionMaxRate)
-	maxChangeRateStr, _ := fs.GetString(FlagCommissionMaxChangeRate)
-
-	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
+	commissionRates, err := buildCommissionRates(cm_rate, cm_max_rate, cm_max_change_rate)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	// get the initial validator min self delegation
-	msbStr, _ := fs.GetString(FlagMinSelfDelegation)
-
-	minSelfDelegation, ok := sdk.NewIntFromString(msbStr)
+	minSelfDelegation, ok := sdk.NewIntFromString(min_self_del)
 	if !ok {
 		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), pk, valAmount, description, commissionRates, minSelfDelegation,
 	)
 	if err != nil {
 		return txf, nil, err

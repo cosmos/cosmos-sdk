@@ -452,7 +452,6 @@ func TestCoreAPIManager_BeginBlock(t *testing.T) {
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
 	_, err = mm.BeginBlock(sdk.Context{}, req)
 	require.EqualError(t, err, "some error")
-
 }
 
 func TestCoreAPIManager_EndBlock(t *testing.T) {

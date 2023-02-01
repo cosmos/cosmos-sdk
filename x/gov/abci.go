@@ -37,7 +37,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
 			"expedited", proposal.Expedited,
-			"min_deposit", sdk.NewCoins(keeper.GetParams(ctx).MinDeposit...).String(),
+			"title", proposal.Title,
+			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(keeper.GetParams(ctx))...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
@@ -139,6 +140,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) {
 		logger.Info(
 			"proposal tallied",
 			"proposal", proposal.Id,
+			"expedited", proposal.Expedited,
+			"title", proposal.Title,
 			"results", logMsg,
 		)
 

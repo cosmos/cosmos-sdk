@@ -746,13 +746,13 @@ The governance module contains the following parameters:
 | Key                     | Type             | Example                                 |
 | ----------------------- | ---------------- | --------------------------------------- |
 | min_deposit             | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period      | string (time ns) | "172800000000000"                       |
-| voting_period           | string (time ns) | "172800000000000"                       |
+| max_deposit_period      | string (time ns) | "172800000000000" (17280s)              |
+| voting_period           | string (time ns) | "172800000000000" (17280s)              |
 | quorum                  | string (dec)     | "0.334000000000000000"                  |
 | threshold               | string (dec)     | "0.500000000000000000"                  |
 | veto                    | string (dec)     | "0.334000000000000000"                  |
 | expedited_threshold     | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period | string (time ns) | "86400000000000"                        |
+| expedited_voting_period | string (time ns) | "86400000000000" (8600s)                |
 | expedited_min_deposit   | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
 
 **NOTE**: The governance module contains parameters that are objects unlike other

@@ -49,14 +49,11 @@ func MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	aj := NewAminoJson()
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
-	err := aj.marshal(vmsg, nil, buf)
+	err := aj.marshal(vmsg, buf)
 	return buf.Bytes(), err
 }
 
-func (aj AminoJson) marshal(
-	value protoreflect.Value,
-	field protoreflect.FieldDescriptor,
-	writer io.Writer) error {
+func (aj AminoJson) marshal(value protoreflect.Value, writer io.Writer) error {
 
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
@@ -66,7 +63,7 @@ func (aj AminoJson) marshal(
 		return errors.New("maps are not supported")
 
 	case protoreflect.List:
-		return aj.marshalList(field, val, writer)
+		return aj.marshalList(val, writer)
 
 	case string, bool, int32, uint32, protoreflect.EnumNumber:
 		return jsonMarshal(writer, val)
@@ -76,8 +73,7 @@ func (aj AminoJson) marshal(
 		return err
 
 	case []byte:
-		_, err := fmt.Fprintf(writer, `"%s"`,
-			base64.StdEncoding.EncodeToString(val))
+		_, err := fmt.Fprintf(writer, `"%s"`, base64.StdEncoding.EncodeToString(val))
 		return err
 	}
 
@@ -86,7 +82,7 @@ func (aj AminoJson) marshal(
 
 func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if encoded, encodingOption := aj.encodeMessage(msg); encodingOption {
-		return aj.marshal(encoded, nil, writer)
+		return aj.marshal(encoded, writer)
 	}
 
 	named := false
@@ -140,7 +136,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			return err
 		}
 
-		err = aj.marshal(v, f, writer)
+		err = aj.marshal(v, writer)
 		if err != nil {
 			return err
 		}
@@ -173,7 +169,6 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 }
 
 func (aj AminoJson) marshalList(
-	fieldDescriptor protoreflect.FieldDescriptor,
 	list protoreflect.List,
 	writer io.Writer) error {
 	n := list.Len()
@@ -199,7 +194,7 @@ func (aj AminoJson) marshalList(
 		}
 		first = false
 
-		err = aj.marshal(list.Get(i), fieldDescriptor, writer)
+		err = aj.marshal(list.Get(i), writer)
 		if err != nil {
 			return err
 		}

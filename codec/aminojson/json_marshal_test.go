@@ -1,7 +1,6 @@
 package aminojson_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -110,7 +109,6 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			legacyBz, err := cdc.MarshalJSON(tc.msg)
 			assert.NilError(t, err)
 
-			fmt.Printf("legacy: %s vs %s\n", legacyBz, bz)
 			assert.Equal(t, string(legacyBz), string(bz), "legacy: %s vs %s", legacyBz, bz)
 
 			goProtoJSON, err := protojson.Marshal(tc.msg)

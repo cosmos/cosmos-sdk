@@ -34,3 +34,31 @@ type KVStore interface {
 
 // Iterator is an alias db's Iterator for convenience.
 type Iterator = dbm.Iterator
+
+type CoreIterator interface {
+	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
+	// CONTRACT: start, end readonly []byte
+	Domain() ([]byte, []byte, error)
+
+	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
+	// invalid forever.
+	Valid() (bool, error)
+
+	// Next moves the iterator to the next key in the database, as defined by order of iteration.
+	// If Valid returns false, this method will panic.
+	Next() error
+
+	// Key returns the key at the current position. Panics if the iterator is invalid.
+	// CONTRACT: key readonly []byte
+	Key() ([]byte, error)
+
+	// Value returns the value at the current position. Panics if the iterator is invalid.
+	// CONTRACT: value readonly []byte
+	Value() ([]byte, error)
+
+	// Error returns the last error encountered by the iterator, if any.
+	// Error() error
+
+	// Close closes the iterator, relasing any allocated resources.
+	Close() error
+}

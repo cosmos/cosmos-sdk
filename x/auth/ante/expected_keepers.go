@@ -18,3 +18,12 @@ type AccountKeeper interface {
 type FeegrantKeeper interface {
 	UseGrantedFees(ctx sdk.Context, granter, grantee sdk.AccAddress, fee sdk.Coins, msgs []sdk.Msg) error
 }
+
+type CircuitBreakerKeeper interface {
+	// Check if the circuit breaker is open
+	IsCircuitOpen(ctx sdk.Context) bool
+	// Open the circuit breaker
+	OpenCircuit(ctx sdk.Context)
+	// Close the circuit breaker
+	CloseCircuit(ctx sdk.Context)
+}

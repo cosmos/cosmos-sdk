@@ -169,4 +169,7 @@ var (
 
 	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = errorsmod.ErrPanic
+
+	// ErrActivation defines transaction is blocked due to Circuit Breaker activation
+	ErrActivation = Register(RootCodespace, 42, "circuit breaker blocked")
 )

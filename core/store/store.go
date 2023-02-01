@@ -45,19 +45,16 @@ type CoreIterator interface {
 	Valid() (bool, error)
 
 	// Next moves the iterator to the next key in the database, as defined by order of iteration.
-	// If Valid returns false, this method will panic.
+	// If Valid returns false, this method will error.
 	Next() error
 
-	// Key returns the key at the current position. Panics if the iterator is invalid.
+	// Key returns the key at the current position. Errors if the iterator is invalid.
 	// CONTRACT: key readonly []byte
 	Key() ([]byte, error)
 
-	// Value returns the value at the current position. Panics if the iterator is invalid.
+	// Value returns the value at the current position. Errors if the iterator is invalid.
 	// CONTRACT: value readonly []byte
 	Value() ([]byte, error)
-
-	// Error returns the last error encountered by the iterator, if any.
-	// Error() error
 
 	// Close closes the iterator, relasing any allocated resources.
 	Close() error

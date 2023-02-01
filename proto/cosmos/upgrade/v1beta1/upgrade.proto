@@ -35,12 +35,25 @@ message Plan {
 
   // Any application specific upgrade info to be included on-chain
   // such as a git commit that validators could automatically upgrade to
-  string info = 4;
+  // Deprecated: Use the artifacts field instead.
+  string info = 4 [deprecated = true];
 
   // Deprecated: UpgradedClientState field has been deprecated. IBC upgrade logic has been
   // moved to the IBC module in the sub module 02-client.
   // If this field is not empty, an error will be thrown.
   google.protobuf.Any upgraded_client_state = 5 [deprecated = true];
+
+  // Artifacts specifies the list of artifacts that can be used to upgrade the chain.
+  repeated Artifact artifacts = 6;
+}
+
+// Artifact defines a software artifact that can be downloaded and installed.
+// It correspond to a single binary 
+message Artifact {
+  string platform      = 1;
+  string url           = 2;
+  string checksum      = 3;
+  string checksum_algo = 4;
 }
 
 // SoftwareUpgradeProposal is a gov Content type for initiating a software

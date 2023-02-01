@@ -23,7 +23,7 @@ type validator struct {
 	MinSelfDelegation   string `json:"min-self-delegation"`
 }
 
-func parseValidatorJSON(cdc codec.Codec, path string) (from, amount, pubkey, moniker, cm_rate, cm_max_rate, cm_max_change_rate, min_self_del string, err error) {
+func parseValidatorJSON(cdc codec.Codec, path string) (string, string, string, string, string, string, string, string, error) {
 	var validator validator
 
 	contents, err := os.ReadFile(path)

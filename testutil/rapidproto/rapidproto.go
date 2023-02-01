@@ -64,18 +64,18 @@ func (opts GeneratorOptions) setFields(t *rapid.T, msg protoreflect.Message, dep
 }
 
 const (
-	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
-	durationFullName                        = "google.protobuf.Duration"
-	anyFullName                             = "google.protobuf.Any"
-	fieldMaskFullName                       = "google.protobuf.FieldMask"
+	timestampFullName = "google.protobuf.Timestamp"
+	durationFullName  = "google.protobuf.Duration"
+	anyFullName       = "google.protobuf.Any"
+	fieldMaskFullName = "google.protobuf.FieldMask"
 )
 
 func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message, field protoreflect.FieldDescriptor, depth int) {
 	name := string(field.Name())
 	kind := field.Kind()
 
-	if field.IsList() {
-
+	switch {
+	case field.IsList():
 		list := msg.Mutable(field).List()
 		n := rapid.IntRange(0, 10).Draw(t, fmt.Sprintf("%sN", name))
 		for i := 0; i < n; i++ {
@@ -87,9 +87,7 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 				list.Append(opts.genScalarFieldValue(t, field, fmt.Sprintf("%s%d", name, i)))
 			}
 		}
-
-	} else if field.IsMap() {
-
+	case field.IsMap():
 		m := msg.Mutable(field).Map()
 		n := rapid.IntRange(0, 10).Draw(t, fmt.Sprintf("%sN", name))
 		for i := 0; i < n; i++ {
@@ -106,9 +104,7 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 				m.Set(key.MapKey(), value)
 			}
 		}
-
-	} else {
-
+	default:
 		if kind == protoreflect.MessageKind || kind == protoreflect.GroupKind {
 			if !opts.setFields(t, msg.Mutable(field).Message(), depth+1) {
 				msg.Clear(field)
@@ -116,7 +112,6 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 		} else {
 			msg.Set(field, opts.genScalarFieldValue(t, field, name))
 		}
-
 	}
 }
 
@@ -151,8 +146,8 @@ func (opts GeneratorOptions) genScalarFieldValue(t *rapid.T, field protoreflect.
 }
 
 const (
-	secondsName protoreflect.Name = "seconds"
-	nanosName                     = "nanos"
+	secondsName = "seconds"
+	nanosName   = "nanos"
 )
 
 func (opts GeneratorOptions) genTimestamp(t *rapid.T, msg protoreflect.Message) {
@@ -177,12 +172,10 @@ func setSecondsNanosFields(t *rapid.T, message protoreflect.Message, seconds int
 	nanosField := fields.ByName(nanosName)
 	assert.Assert(t, nanosField != nil)
 	message.Set(nanosField, protoreflect.ValueOfInt32(nanos))
-
-	return
 }
 
 const (
-	typeUrlName = "type_url"
+	typeURLName = "type_url"
 	valueName   = "value"
 )
 
@@ -193,13 +186,13 @@ func (opts GeneratorOptions) genAny(t *rapid.T, msg protoreflect.Message, depth 
 
 	fields := msg.Descriptor().Fields()
 
-	typeUrl := rapid.SampledFrom(opts.AnyTypeURLs).Draw(t, "type_url")
-	typ, err := opts.Resolver.FindMessageByURL(typeUrl)
+	typeURL := rapid.SampledFrom(opts.AnyTypeURLs).Draw(t, "type_url")
+	typ, err := opts.Resolver.FindMessageByURL(typeURL)
 	assert.NilError(t, err)
 
-	typeUrlField := fields.ByName(typeUrlName)
-	assert.Assert(t, typeUrlField != nil)
-	msg.Set(typeUrlField, protoreflect.ValueOfString(typeUrl))
+	typeURLField := fields.ByName(typeURLName)
+	assert.Assert(t, typeURLField != nil)
+	msg.Set(typeURLField, protoreflect.ValueOfString(typeURL))
 
 	valueMsg := typ.New()
 	opts.setFields(t, valueMsg, depth+1)

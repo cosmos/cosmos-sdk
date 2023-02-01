@@ -1497,7 +1497,6 @@ func (s *E2ETestSuite) TestBlockResults() {
 		)
 
 		return nil
-
 	}, 10)
 }
 

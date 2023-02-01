@@ -39,9 +39,20 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+* nothing
+
+---
+
+## [v0.46.8-pio-2](https://github.com/provenance-io/cosmos-sdk/releases/tag/v0.46.8-pio-2) - 2023-02-01
+
 ### Features
 
 * [#404](https://github.com/provenance-io/cosmos-sdk/pull/404) Add ADR-038 State Listening with Go Plugin System
+
+### Full Commit History
+
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8-pio-1...v0.46.8-pio-2
+* https://github.com/provenance-io/cosmos-sdk/compare/v0.46.8..v0.46.8-pio-2
 
 ---
 

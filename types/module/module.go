@@ -416,7 +416,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		panic(fmt.Sprintf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction))
+		return abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
 	return abci.ResponseInitChain{
@@ -645,9 +645,7 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.
 		} else if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			err := module.BeginBlock(ctx)
 			if err != nil {
-				// TODO: Handle error
-				// REF: https://github.com/cosmos/cosmos-sdk/issues/14836
-				panic(err)
+				return abci.ResponseBeginBlock{}, err
 			}
 		}
 	}
@@ -679,10 +677,8 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 			}
 		} else if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
-			// TODO: Handle error
-			// REF: https://github.com/cosmos/cosmos-sdk/issues/14836
 			if err != nil {
-				panic(err)
+				return abci.ResponseEndBlock{}, err
 			}
 		} else {
 			continue

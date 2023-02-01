@@ -194,7 +194,8 @@ func TestManager_InitGenesis(t *testing.T) {
 
 	// this should panic since the validator set is empty even after init genesis
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return(nil)
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	_, err := mm.InitGenesis(ctx, cdc, genesisData)
+	require.ErrorContains(t, err, "validator set is empty after InitGenesis")
 
 	// test panic
 	genesisData = map[string]json.RawMessage{
@@ -206,14 +207,15 @@ func TestManager_InitGenesis(t *testing.T) {
 	// panic because more than one module returns validator set updates
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{{}})
-	_, err := mm.InitGenesis(ctx, cdc, genesisData)
-	require.Error(t, err)
+	_, err = mm.InitGenesis(ctx, cdc, genesisData)
+	require.ErrorContains(t, err, "validator InitGenesis updates already set by a previous module")
 
 	// happy path
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module1"])).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(cdc), gomock.Eq(genesisData["module2"])).Times(1).Return([]abci.ValidatorUpdate{})
 	mockAppModule3.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	mm.InitGenesis(ctx, cdc, genesisData)
+	_, err = mm.InitGenesis(ctx, cdc, genesisData)
+	require.NoError(t, err)
 }
 
 func TestManager_ExportGenesis(t *testing.T) {
@@ -279,7 +281,8 @@ func TestManager_BeginBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any(), gomock.Eq(req)).Times(1)
 	mockAppModule2.EXPECT().BeginBlock(gomock.Any(), gomock.Eq(req)).Times(1)
-	mm.BeginBlock(sdk.Context{}, req)
+	_, err := mm.BeginBlock(sdk.Context{}, req)
+	require.NoError(t, err)
 }
 
 func TestManager_EndBlock(t *testing.T) {
@@ -343,9 +346,11 @@ func TestCoreAPIManager_InitGenesis(t *testing.T) {
 
 	// this should panic since the validator set is empty even after init genesis
 	mockAppModule1.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Any()).Times(1).Return(nil)
-	require.Panics(t, func() { mm.InitGenesis(ctx, cdc, genesisData) })
+	_, err := mm.InitGenesis(ctx, cdc, genesisData)
+	require.ErrorContains(t, err, "validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction")
 
-	// TODO: add happy path test. We are not returning any validator updates
+	// TODO: add happy path test. We are not returning any validator updates, this will come with the services.
+	// REF: https://github.com/cosmos/cosmos-sdk/issues/14688
 }
 
 func TestCoreAPIManager_ExportGenesis(t *testing.T) {
@@ -440,11 +445,14 @@ func TestCoreAPIManager_BeginBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
 	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
-	mm.BeginBlock(sdk.Context{}, req)
+	_, err := mm.BeginBlock(sdk.Context{}, req)
+	require.NoError(t, err)
 
 	// test panic
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
-	require.PanicsWithError(t, "some error", func() { mm.BeginBlock(sdk.Context{}, req) })
+	_, err = mm.BeginBlock(sdk.Context{}, req)
+	require.EqualError(t, err, "some error")
+
 }
 
 func TestCoreAPIManager_EndBlock(t *testing.T) {
@@ -464,12 +472,14 @@ func TestCoreAPIManager_EndBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return(nil)
-	res := mm.EndBlock(sdk.Context{}, req)
+	res, err := mm.EndBlock(sdk.Context{}, req)
+	require.NoError(t, err)
 	require.Len(t, res.ValidatorUpdates, 0)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
-	require.PanicsWithError(t, "some error", func() { mm.EndBlock(sdk.Context{}, req) })
+	_, err = mm.EndBlock(sdk.Context{}, req)
+	require.EqualError(t, err, "some error")
 }
 
 // MockCoreAppModule allows us to test functions like DefaultGenesis

@@ -36,6 +36,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* (x/upgrade) [#14878](https://github.com/cosmos/cosmos-sdk/pull/14878) Support `Artifacts` field from the upgrading plan.
+
 ## v1.4.0 2022-10-23
 
 ### API Breaking Changes

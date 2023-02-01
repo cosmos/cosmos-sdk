@@ -12,10 +12,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
+	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/aminojson"
 	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -35,11 +37,11 @@ func (pubKey pubKeyEd25519) MarshalAmino() ([]byte, error) {
 	return pubKey.Key, nil
 }
 
-func (pubKey pubKeyEd25519) UnmarshalAmino(bytes []byte) error {
+func (pubKey pubKeyEd25519) UnmarshalAmino([]byte) error {
 	panic("not implemented")
 }
 
-func (pubKey pubKeyEd25519) UnmarshalAminoJSON(bytes []byte) error {
+func (pubKey pubKeyEd25519) UnmarshalAminoJSON([]byte) error {
 	panic("not implemented")
 }
 
@@ -55,12 +57,35 @@ func marshalLegacy(msg proto.Message) ([]byte, error) {
 	return cdc.MarshalJSON(msg)
 }
 
+func TestAminoJSON_LegacyParity(t *testing.T) {
+	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
+
+	cases := map[string]struct {
+		gogo   any
+		pulsar proto.Message
+	}{
+		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			gogoBytes, err := cdc.MarshalJSON(tc.gogo)
+			require.NoError(t, err)
+
+			pulsarBytes, err := aminojson.MarshalAmino(tc.pulsar)
+			require.NoError(t, err)
+
+			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)
+		})
+	}
+}
+
 func TestAminoJSON_EdgeCases(t *testing.T) {
 	simpleAny, err := anypb.New(&testpb.NestedMessage{Foo: "any type nested", Bar: 11})
 	require.NoError(t, err)
 
 	cdc := amino.NewCodec()
-	cdc.RegisterConcrete((*pubKeyEd25519)(nil), "PubKeyEd25519", nil)
+	cdc.RegisterConcrete((*pubKeyEd25519)(nil), "tendermint/PubKeyEd25519", nil)
 	pubkey := &pubKeyEd25519{}
 	pubkey.Key = []byte("key")
 

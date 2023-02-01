@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/api/amino"
 )
 
 type JSONMarshaller interface {
@@ -34,7 +36,23 @@ func (aj AminoJson) marshal(
 
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
-		return aj.marshalMessage(val, writer)
+		var res error
+		opts := val.Descriptor().Options()
+		if proto.HasExtension(opts, amino.E_Name) {
+			name := proto.GetExtension(opts, amino.E_Name)
+			_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
+			if err != nil {
+				return err
+			}
+			res = aj.marshalMessage(val, writer)
+			_, err = writer.Write([]byte(`}`))
+			if err != nil {
+				return err
+			}
+		} else {
+			res = aj.marshalMessage(val, writer)
+		}
+		return res
 
 	case protoreflect.Map:
 		return errors.New("maps are not supported")
@@ -43,7 +61,7 @@ func (aj AminoJson) marshal(
 		return aj.marshalList(field, val, writer)
 
 	case string, bool, int32, uint32, protoreflect.EnumNumber:
-		return invokeStdlibJSONMarshal(writer, val)
+		return jsonMarshal(writer, val)
 
 	case uint64, int64:
 		_, err := fmt.Fprintf(writer, `"%d"`, val) // quoted
@@ -81,7 +99,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			}
 		}
 
-		err = invokeStdlibJSONMarshal(writer, f.Name())
+		err = jsonMarshal(writer, f.Name())
 		if err != nil {
 			return err
 		}
@@ -106,7 +124,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	return nil
 }
 
-func invokeStdlibJSONMarshal(w io.Writer, v interface{}) error {
+func jsonMarshal(w io.Writer, v interface{}) error {
 	blob, err := json.Marshal(v)
 	if err != nil {
 		return err

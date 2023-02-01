@@ -86,14 +86,14 @@ Where validator.json contains:
 				return err
 			}
 
-			from, amount, pubkey, moniker, rate, maxRate, maxChangeRate, minSelfDel, err := parseValidatorJSON(clientCtx.Codec, args[0])
+			validator, err := parseValidatorJSON(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
 			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
 				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
-			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), from, amount, pubkey, moniker, rate, maxRate, maxChangeRate, minSelfDel)
+			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags(), validator)
 			if err != nil {
 				return err
 			}
@@ -361,8 +361,8 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 	return cmd
 }
 
-func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, from, amount, pubkey, moniker, rate, maxRate, maxChangeRate, minSelfDel string) (tx.Factory, *types.MsgCreateValidator, error) {
-	valAmount, err := sdk.ParseCoinNormalized(amount)
+func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, val validator) (tx.Factory, *types.MsgCreateValidator, error) {
+	amount, err := sdk.ParseCoinNormalized(val.Amount)
 	if err != nil {
 		return txf, nil, err
 	}
@@ -370,7 +370,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	valAddr := clientCtx.GetFromAddress()
 
 	var pk cryptotypes.PubKey
-	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pubkey), &pk); err != nil {
+	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(val.PubKey), &pk); err != nil {
 		return txf, nil, err
 	}
 
@@ -379,25 +379,25 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	security, _ := fs.GetString(FlagSecurityContact)
 	details, _ := fs.GetString(FlagDetails)
 	description := types.NewDescription(
-		moniker,
+		val.Moniker,
 		identity,
 		website,
 		security,
 		details,
 	)
 
-	commissionRates, err := buildCommissionRates(rate, maxRate, maxChangeRate)
+	commissionRates, err := buildCommissionRates(val.CommissionRate, val.CommissionMaxRate, val.CommissionMaxChange)
 	if err != nil {
 		return txf, nil, err
 	}
 
-	minSelfDelegation, ok := sdk.NewIntFromString(minSelfDel)
+	minSelfDelegation, ok := sdk.NewIntFromString(val.MinSelfDelegation)
 	if !ok {
 		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, valAmount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
 	)
 	if err != nil {
 		return txf, nil, err

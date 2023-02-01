@@ -23,24 +23,24 @@ type validator struct {
 	MinSelfDelegation   string `json:"min-self-delegation"`
 }
 
-func parseValidatorJSON(cdc codec.Codec, path string) (string, string, string, string, string, string, string, string, error) {
-	var validator validator
+func parseValidatorJSON(cdc codec.Codec, path string) (validator, error) {
+	var val validator
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return "", "", "", "", "", "", "", "", err
+		return validator{}, err
 	}
 
-	err = json.Unmarshal(contents, &validator)
+	err = json.Unmarshal(contents, &val)
 	if err != nil {
-		return "", "", "", "", "", "", "", "", err
+		return validator{}, err
 	}
 
-	if err := validator.validate(); err != nil {
-		return "", "", "", "", "", "", "", "", err
+	if err := val.validate(); err != nil {
+		return validator{}, err
 	}
 
-	return validator.From, validator.Amount, validator.PubKey, validator.Moniker, validator.CommissionRate, validator.CommissionMaxRate, validator.CommissionMaxChange, validator.MinSelfDelegation, nil
+	return val, nil
 }
 
 // validate checks that the required fields are present in the validator json.

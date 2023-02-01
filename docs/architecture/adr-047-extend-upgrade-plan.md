@@ -3,10 +3,11 @@
 ## Changelog
 
 * Nov, 23, 2021: Initial Draft
+* Feb, 1, 2023: Implemented
 
 ## Status
 
-PROPOSED Not Implemented
+ACCEPTED Implemented
 
 ## Abstract
 
@@ -18,7 +19,8 @@ It also defines a structure for providing downloadable artifacts involved in an 
 The `upgrade` module in conjunction with Cosmovisor are designed to facilitate and automate a blockchain's transition from one version to another.
 
 Users submit a software upgrade governance proposal containing an upgrade `Plan`.
-The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
+The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc2/proto/cosmos/upgrade/v1beta1/upgrade.proto#L13-L45) currently contains the following fields:
+
 * `name`: A short string identifying the new version.
 * `height`: The chain height at which the upgrade is to be performed.
 * `info`: A string containing information about the upgrade.
@@ -79,6 +81,7 @@ message UpgradeInstructions {
 ```
 
 All fields in the `UpgradeInstructions` are optional.
+
 * `pre_run` is a command to run prior to the upgraded chain restarting.
   If defined, it will be executed after halting and downloading the new artifact but before restarting the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.

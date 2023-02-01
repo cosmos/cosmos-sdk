@@ -668,12 +668,12 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 		if module, ok := m.Modules[moduleName].(EndBlockAppModule); ok {
 			moduleValUpdates := module.EndBlock(ctx, req)
 
-		// use these validator updates if provided, the module manager assumes
-		// only one module will update the validator set
-		if len(moduleValUpdates) > 0 {
-			if len(validatorUpdates) > 0 {
-				return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
-			}
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+				}
 
 				validatorUpdates = moduleValUpdates
 			}

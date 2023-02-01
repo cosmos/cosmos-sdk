@@ -167,7 +167,9 @@ The `prepareProposalState` is used for any reads and writes that occur during th
 The function uses the `Select()` method of the mempool to iterate over the transactions. `runTx` is then called,
 which encodes and validates each transaction and from there the `AnteHandler` is executed. 
 If successful, valid transactions are returned inclusive of the events, tags, and data generated 
-during the execution of the proposal.
+during the execution of the proposal. 
+The described behavior is that of the default handler, applications have the flexibility to define their own 
+[custom-mempool-handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
 
 ![ProcessProposal](./baseapp_state-prepareproposal.png)
 
@@ -176,7 +178,9 @@ during the execution of the proposal.
 During `ProcessProposal`, the `processProposalState` is set based off of the last committed state 
 from the root store and is used to process a signed proposal received from a validator.
 In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
-from the header and the main state, including the minimum gas prices, which are also set.
+from the header and the main state, including the minimum gas prices, which are also set. 
+Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
+[custom-mempool-handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
 
 ![ProcessProposal](./baseapp_state-processproposal.png)
 
@@ -269,10 +273,10 @@ It's important to note that `PrepareProposal` complements the `ProcessProposal` 
 
 `PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
--   `Code (uint32)`: Response Code. `0` if successful.
--   `Data ([]byte)`: Result bytes, if any.
--   `Log (string):` The output of the application's logger. May be non-deterministic.
--   `Info (string):` Additional information. May be non-deterministic.
+*   `Code (uint32)`: Response Code. `0` if successful.
+*   `Data ([]byte)`: Result bytes, if any.
+*   `Log (string):` The output of the application's logger. May be non-deterministic.
+*   `Info (string):` Additional information. May be non-deterministic.
 
 
 ### Process Proposal
@@ -296,10 +300,10 @@ However, developers must exercise greater caution when using these methods. Inco
 
 `ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
--   `Code (uint32)`: Response Code. `0` if successful.
--   `Data ([]byte)`: Result bytes, if any.
--   `Log (string):` The output of the application's logger. May be non-deterministic.
--   `Info (string):` Additional information. May be non-deterministic.
+*   `Code (uint32)`: Response Code. `0` if successful.
+*   `Data ([]byte)`: Result bytes, if any.
+*   `Log (string):` The output of the application's logger. May be non-deterministic.
+*   `Info (string):` Additional information. May be non-deterministic.
 
 
 ### CheckTx

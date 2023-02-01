@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
+
 ## [v0.47.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc2) - 2023-01-31
 
 ### Improvements

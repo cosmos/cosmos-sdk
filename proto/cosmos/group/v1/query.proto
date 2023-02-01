@@ -85,6 +85,8 @@ service Query {
   };
 
   // Groups queries all groups in state.
+  // 
+  // Since: cosmos-sdk 0.48
   rpc Groups(QueryGroupsRequest) returns (QueryGroupsResponse) {
     option (google.api.http).get = "/cosmos/group/v1/groups";
   };
@@ -298,6 +300,8 @@ message QueryTallyResultResponse {
 }
 
 // QueryGroupsRequest is the Query/Groups request type.
+// 
+// Since: cosmos-sdk 0.48
 message QueryGroupsRequest {
 
   // pagination defines an optional pagination for the request.
@@ -305,8 +309,10 @@ message QueryGroupsRequest {
 }
 
 // QueryGroupsResponse is the Query/Groups response type.
+// 
+// Since: cosmos-sdk 0.48
 message QueryGroupsResponse {
-  // groups are the groups info with the provided admin.
+  // `groups` is all groups present in state.
   repeated GroupInfo groups = 1;
 
   // pagination defines the pagination in the response.

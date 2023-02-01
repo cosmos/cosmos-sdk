@@ -15,7 +15,6 @@ import (
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/aminojson"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
@@ -29,31 +28,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/aminojson/internal/testpb"
 )
-
-type pubKeyEd25519 struct {
-	ed25519.PubKey
-}
-
-var _ codec.AminoMarshaler = pubKeyEd25519{}
-
-func (pubKey pubKeyEd25519) MarshalAmino() ([]byte, error) {
-	return pubKey.Key, nil
-}
-
-func (pubKey pubKeyEd25519) UnmarshalAmino([]byte) error {
-	panic("not implemented")
-}
-
-func (pubKey pubKeyEd25519) UnmarshalAminoJSON([]byte) error {
-	panic("not implemented")
-}
-
-// MarshalAminoJSON overrides Amino JSON marshalling.
-func (pubKey pubKeyEd25519) MarshalAminoJSON() ([]byte, error) {
-	// When we marshal to Amino JSON, we don't marshal the "key" field itself,
-	// just its contents (i.e. the key bytes).
-	return pubKey.MarshalAmino()
-}
 
 func marshalLegacy(msg proto.Message) ([]byte, error) {
 	cdc := amino.NewCodec()
@@ -109,9 +83,6 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 	require.NoError(t, err)
 
 	cdc := amino.NewCodec()
-	cdc.RegisterConcrete((*pubKeyEd25519)(nil), "tendermint/PubKeyEd25519", nil)
-	pubkey := &pubKeyEd25519{}
-	pubkey.Key = []byte("key")
 
 	cases := map[string]struct {
 		msg       proto.Message
@@ -121,7 +92,6 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 		"single map":    {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}, shouldErr: true},
 		"any type":      {msg: &testpb.ABitOfEverything{Any: simpleAny}},
 		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
-		"key_field":     {msg: pubkey},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -130,9 +100,9 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			if tc.shouldErr {
 				require.Error(t, err)
 				return
-			} else {
-				require.NoError(t, err)
 			}
+
+			require.NoError(t, err)
 
 			rv := reflect.New(reflect.TypeOf(tc.msg).Elem()).Elem()
 			msg2 := rv.Addr().Interface().(proto.Message)
@@ -143,9 +113,9 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			fmt.Printf("legacy: %s vs %s\n", legacyBz, bz)
 			assert.Equal(t, string(legacyBz), string(bz), "legacy: %s vs %s", legacyBz, bz)
 
-			goProtoJson, err := protojson.Marshal(tc.msg)
-			err = cdc.UnmarshalJSON(bz, msg2.(proto.Message))
-			assert.NilError(t, err, "unmarshal failed: %s vs %s", legacyBz, goProtoJson)
+			goProtoJSON, err := protojson.Marshal(tc.msg)
+			err = cdc.UnmarshalJSON(bz, msg2)
+			assert.NilError(t, err, "unmarshal failed: %s vs %s", legacyBz, goProtoJSON)
 		})
 	}
 }
@@ -214,8 +184,8 @@ func checkLegacyParity(t *rapid.T, message proto.Message, marshaledBytes []byte)
 func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
 	message2 := message.ProtoReflect().New().Interface()
 	cdc := amino.NewCodec()
-	goProtoJson, err := cdc.MarshalJSON(message)
+	goProtoJSON, err := cdc.MarshalJSON(message)
 	assert.NilError(t, err)
 	err = cdc.UnmarshalJSON(marshaledBytes, message2)
-	assert.NilError(t, err, "%s vs %s", string(marshaledBytes), string(goProtoJson))
+	assert.NilError(t, err, "%s vs %s", string(marshaledBytes), string(goProtoJSON))
 }

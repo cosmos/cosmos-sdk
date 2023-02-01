@@ -19,14 +19,14 @@ type JSONMarshaller interface {
 	MarshalAmino(proto.Message) ([]byte, error)
 }
 
-type AminoJson struct {
+type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
 	zeroValues      map[string]func() protoreflect.Value
 	messageEncoders map[string]func(message protoreflect.Message) protoreflect.Value
 }
 
-func NewAminoJson() AminoJson {
-	aj := AminoJson{
+func NewAminoJSON() AminoJSON {
+	aj := AminoJSON{
 		zeroValues: map[string]func() protoreflect.Value{
 			"cosmos.Dec": func() protoreflect.Value {
 				return protoreflect.ValueOfString("0")
@@ -47,14 +47,13 @@ func NewAminoJson() AminoJson {
 
 func MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	aj := NewAminoJson()
+	aj := NewAminoJSON()
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.marshal(vmsg, buf)
 	return buf.Bytes(), err
 }
 
-func (aj AminoJson) marshal(value protoreflect.Value, writer io.Writer) error {
-
+func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
 		return aj.marshalMessage(val, writer)
@@ -80,7 +79,7 @@ func (aj AminoJson) marshal(value protoreflect.Value, writer io.Writer) error {
 	return nil
 }
 
-func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
+func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if encoded, encodingOption := aj.encodeMessage(msg); encodingOption {
 		return aj.marshal(encoded, writer)
 	}
@@ -168,9 +167,7 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 	return err
 }
 
-func (aj AminoJson) marshalList(
-	list protoreflect.List,
-	writer io.Writer) error {
+func (aj AminoJSON) marshalList(list protoreflect.List, writer io.Writer) error {
 	n := list.Len()
 
 	// replicate https://github.com/tendermint/go-amino/blob/rc0/v0.16.0/json-encode.go#L222
@@ -213,9 +210,9 @@ func omitEmpty(field protoreflect.FieldDescriptor) bool {
 	}
 	// legacy support for gogoproto would need to look something like below.
 	//
-	//if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
+	// if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
 	//
-	//}
+	// }
 	return true
 }
 
@@ -227,7 +224,7 @@ func fieldName(field protoreflect.FieldDescriptor) string {
 	return string(field.Name())
 }
 
-func (aj AminoJson) fieldZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
+func (aj AminoJSON) fieldZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
 	opts := field.Options()
 	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
@@ -238,7 +235,7 @@ func (aj AminoJson) fieldZeroValue(field protoreflect.FieldDescriptor) (protoref
 	return field.Default(), false
 }
 
-func (aj AminoJson) encodeMessage(message protoreflect.Message) (protoreflect.Value, bool) {
+func (aj AminoJSON) encodeMessage(message protoreflect.Message) (protoreflect.Value, bool) {
 	opts := message.Descriptor().Options()
 	if proto.HasExtension(opts, amino.E_MessageEncoding) {
 		encoding := proto.GetExtension(opts, amino.E_MessageEncoding).(string)

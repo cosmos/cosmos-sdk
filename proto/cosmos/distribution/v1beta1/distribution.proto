@@ -155,8 +155,8 @@ message DelegatorStartingInfo {
   string stake           = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (amino.dont_omitempty) = true,
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
   uint64 height = 3
       [(gogoproto.jsontag) = "creation_height", (amino.field_name) = "creation_height", (amino.dont_omitempty) = true];

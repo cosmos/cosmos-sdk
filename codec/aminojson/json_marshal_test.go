@@ -63,20 +63,29 @@ func marshalLegacy(msg proto.Message) ([]byte, error) {
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc := amino.NewCodec()
 	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
-	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/x/distribution/MsgWithdrawDelegatorReward", nil)
+	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
 
 	cases := map[string]struct {
 		gogo   any
 		pulsar proto.Message
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
-		// TODO
-		// treat
-		// (gogoproto.nullable)     = false,
-		// (amino.dont_omitempty)   = true
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
-			pulsar: &distapi.DelegatorStartingInfo{}},
+			pulsar: &distapi.DelegatorStartingInfo{},
+		},
+		"distribution/delegation_delegator_reward": {
+			gogo:   &disttypes.DelegationDelegatorReward{},
+			pulsar: &distapi.DelegationDelegatorReward{},
+		},
+		"distribution/community_pool_spend_proposal_with_deposit": {
+			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
+			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
+		},
+		"distribution/msg_withdraw_delegator_reward": {
+			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
+			pulsar: &distapi.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
+		},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {

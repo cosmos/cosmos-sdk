@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -18,11 +19,20 @@ type JSONMarshaller interface {
 	MarshalAmino(proto.Message) ([]byte, error)
 }
 
-type AminoJson struct{}
+type AminoJson struct {
+	// maps cosmos_proto.scalar -> zero value factory
+	zeroValues map[string]func() protoreflect.Value
+}
 
 func MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	aj := AminoJson{}
+	aj := AminoJson{
+		zeroValues: map[string]func() protoreflect.Value{
+			"cosmos.Dec": func() protoreflect.Value {
+				return protoreflect.ValueOfString("0")
+			},
+		},
+	}
 
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.marshal(vmsg, nil, buf)
@@ -80,8 +90,14 @@ func (aj AminoJson) marshal(
 func omitEmpty(field protoreflect.FieldDescriptor) bool {
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_DontOmitempty) {
-		return !proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
+		dontOmitEmpty := proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
+		return !dontOmitEmpty
 	}
+	// legacy support for gogoproto would need to look something like below.
+	//
+	//if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
+	//
+	//}
 	return true
 }
 
@@ -91,6 +107,17 @@ func fieldName(field protoreflect.FieldDescriptor) string {
 		return proto.GetExtension(opts, amino.E_FieldName).(string)
 	}
 	return string(field.Name())
+}
+
+func (aj AminoJson) fieldZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
+	opts := field.Options()
+	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
+		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
+		if fn, ok := aj.zeroValues[scalar]; ok {
+			return fn(), true
+		}
+	}
+	return field.Default(), false
 }
 
 func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
@@ -104,9 +131,17 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
 		v := msg.Get(f)
+		name := fieldName(f)
 
-		if !msg.Has(f) && omitEmpty(f) {
-			continue
+		if !msg.Has(f) {
+			if omitEmpty(f) {
+				continue
+			} else {
+				zv, found := aj.fieldZeroValue(f)
+				if found {
+					v = zv
+				}
+			}
 		}
 
 		if !first {
@@ -116,7 +151,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			}
 		}
 
-		err = jsonMarshal(writer, fieldName(f))
+		err = jsonMarshal(writer, name)
 		if err != nil {
 			return err
 		}
@@ -155,6 +190,13 @@ func (aj AminoJson) marshalList(
 	list protoreflect.List,
 	writer io.Writer) error {
 	n := list.Len()
+
+	// replicate https://github.com/tendermint/go-amino/blob/rc0/v0.16.0/json-encode.go#L222
+	if n == 0 {
+		_, err := writer.Write([]byte("null"))
+		return err
+	}
+
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err

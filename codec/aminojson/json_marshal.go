@@ -76,6 +76,23 @@ func (aj AminoJson) marshal(
 	return nil
 }
 
+// omitEmpty returns true if the field should be omitted if empty. Empty field omission is the default behavior.
+func omitEmpty(field protoreflect.FieldDescriptor) bool {
+	opts := field.Options()
+	if proto.HasExtension(opts, amino.E_DontOmitempty) {
+		return !proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
+	}
+	return true
+}
+
+func fieldName(field protoreflect.FieldDescriptor) string {
+	opts := field.Options()
+	if proto.HasExtension(opts, amino.E_FieldName) {
+		return proto.GetExtension(opts, amino.E_FieldName).(string)
+	}
+	return string(field.Name())
+}
+
 func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	_, err := writer.Write([]byte("{"))
 	if err != nil {
@@ -88,7 +105,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		f := fields.Get(i)
 		v := msg.Get(f)
 
-		if !msg.Has(f) {
+		if !msg.Has(f) && omitEmpty(f) {
 			continue
 		}
 
@@ -99,7 +116,7 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			}
 		}
 
-		err = jsonMarshal(writer, f.Name())
+		err = jsonMarshal(writer, fieldName(f))
 		if err != nil {
 			return err
 		}

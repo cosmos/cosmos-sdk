@@ -18,3 +18,5 @@ amino map serialization is non-deterministic
 - add rapid tests
 - refactor for readability. not really convinced stablejson is anymore readable than amino json yet
 - check timestamp special casing is equivalent
+
+- ensure all usages of gogoproto.nullable are augmented with amino.dont_omitempty

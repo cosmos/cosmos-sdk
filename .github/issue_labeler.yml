@@ -1,2 +1,2 @@
-"": # if no label is set then set triage
-  - triage
+triage: # if no label is set then set triage
+  - ''

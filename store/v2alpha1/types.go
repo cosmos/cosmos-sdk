@@ -16,8 +16,8 @@ type (
 	StoreRename   = v1.StoreRename
 	Iterator      = v1.Iterator
 
-	TraceContext  = v1.TraceContext
-	WriteListener = v1.WriteListener
+	TraceContext   = v1.TraceContext
+	MemoryListener = v1.MemoryListener
 
 	BasicKVStore  = v1.BasicKVStore
 	KVStore       = v1.KVStore
@@ -50,8 +50,6 @@ var (
 	KVStorePrefixIterator        = v1.KVStorePrefixIterator
 	KVStoreReversePrefixIterator = v1.KVStoreReversePrefixIterator
 
-	NewStoreKVPairWriteListener = v1.NewStoreKVPairWriteListener
-
 	ProofOpSMTCommitment          = v1.ProofOpSMTCommitment
 	ProofOpSimpleMerkleCommitment = v1.ProofOpSimpleMerkleCommitment
 
@@ -73,7 +71,7 @@ type rootStoreTraceListen interface {
 	SetTracer(w io.Writer)
 	SetTraceContext(TraceContext)
 	ListeningEnabled(key StoreKey) bool
-	AddListeners(key StoreKey, listeners []WriteListener)
+	AddListeners(keys []StoreKey)
 }
 
 // CommitMultiStore defines a complete interface for persistent root state, including

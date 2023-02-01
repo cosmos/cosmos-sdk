@@ -2265,3 +2265,82 @@ func TestDefaultStoreLoader(t *testing.T) {
 		require.Equal(t, storetypes.StoreTypeIAVL, store.GetStoreType())
 	}
 }
+
+var (
+	distKey1 = storetypes.NewKVStoreKey("distKey1")
+)
+
+func TestABCI_MultiListener_StateChanges(t *testing.T) {
+	// increment the tx counter
+	anteKey := []byte("ante-key")
+	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+
+	// increment the msg counter
+	deliverKey := []byte("deliver-key")
+	deliverKey2 := []byte("deliver-key2")
+	routerOpt := func(bapp *BaseApp) {
+		r1 := sdk.NewRoute(routeMsgCounter, handlerMsgCounter(t, capKey1, deliverKey))
+		r2 := sdk.NewRoute(routeMsgCounter2, handlerMsgCounter(t, capKey1, deliverKey2))
+		bapp.Router().AddRoute(r1)
+		bapp.Router().AddRoute(r2)
+	}
+
+	distOpt := func(bapp *BaseApp) { bapp.MountStores(distKey1) }
+	mockListener1 := NewMockABCIListener("lis_1")
+	mockListener2 := NewMockABCIListener("lis_2")
+	streamingManager := storetypes.StreamingManager{AbciListeners: []storetypes.ABCIListener{&mockListener1, &mockListener2}}
+	streamingManagerOpt := func(bapp *BaseApp) { bapp.SetStreamingManager(streamingManager) }
+	addListenerOpt := func(bapp *BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+
+	app := setupBaseApp(t, anteOpt, routerOpt, distOpt, streamingManagerOpt, addListenerOpt)
+	app.InitChain(abci.RequestInitChain{})
+
+	// Create same codec used in txDecoder
+	codec := codec.NewLegacyAmino()
+	registerTestCodec(codec)
+
+	nBlocks := 3
+	txPerHeight := 5
+
+	for blockN := 0; blockN < nBlocks; blockN++ {
+		header := tmproto.Header{Height: int64(blockN) + 1}
+		app.BeginBlock(abci.RequestBeginBlock{Header: header})
+		var expectedChangeSet []*storetypes.StoreKVPair
+
+		for i := 0; i < txPerHeight; i++ {
+			counter := int64(blockN*txPerHeight + i)
+			tx := newTxCounter(counter, counter)
+
+			txBytes, err := codec.Marshal(tx)
+			require.NoError(t, err)
+
+			sKey := []byte(fmt.Sprintf("distKey%d", i))
+			sVal := []byte(fmt.Sprintf("distVal%d", i))
+
+			ctx := app.getState(runTxModeDeliver).ctx
+			store := ctx.KVStore(distKey1)
+			store.Set(sKey, sVal)
+
+			expectedChangeSet = append(expectedChangeSet, &storetypes.StoreKVPair{
+				StoreKey: distKey1.Name(),
+				Delete:   false,
+				Key:      sKey,
+				Value:    sVal,
+			})
+
+			res := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
+			require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+			events := res.GetEvents()
+			require.Len(t, events, 3, "should contain ante handler, message type and counter events respectively")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent("ante_handler", counter).ToABCIEvents(), map[string]struct{}{})[0], events[0], "ante handler event")
+			require.Equal(t, sdk.MarkEventsToIndex(counterEvent(sdk.EventTypeMessage, counter).ToABCIEvents(), map[string]struct{}{})[0], events[2], "msg handler update counter event")
+		}
+
+		app.EndBlock(abci.RequestEndBlock{})
+		app.Commit()
+
+		require.Equal(t, expectedChangeSet, mockListener1.ChangeSet, "should contain the same changeSet")
+		require.Equal(t, expectedChangeSet, mockListener2.ChangeSet, "should contain the same changeSet")
+	}
+}

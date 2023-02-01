@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Features
+
+* [#404](https://github.com/provenance-io/cosmos-sdk/pull/404) Add ADR-038 State Listening with Go Plugin System
 
 ---
 

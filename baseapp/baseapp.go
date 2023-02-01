@@ -107,9 +107,8 @@ type BaseApp struct { // nolint: maligned
 	// which informs Tendermint what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
-	// abciListeners for hooking into the ABCI message processing of the BaseApp
-	// and exposing the requests and responses to external consumers
-	abciListeners []ABCIListener
+	// streamingManager for managing instances and configuration of ABCIListener services
+	streamingManager storetypes.StreamingManager
 
 	feeHandler sdk.FeeHandler
 

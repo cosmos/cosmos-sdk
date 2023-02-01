@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sort"
 	"strings"
 	"sync"
 
@@ -140,13 +141,14 @@ type prefixRegistry struct {
 
 // Mixin type that to compose trace & listen state into each root store variant type
 type traceListenMixin struct {
-	listeners    map[string][]types.WriteListener
+	listeners    map[string]*types.MemoryListener
 	TraceWriter  io.Writer
 	TraceContext types.TraceContext
+	listenersMx  sync.Mutex
 }
 
 func newTraceListenMixin() *traceListenMixin {
-	return &traceListenMixin{listeners: map[string][]types.WriteListener{}}
+	return &traceListenMixin{listeners: map[string]*types.MemoryListener{}}
 }
 
 // DefaultStoreConfig returns a MultiStore config with an empty schema, a single backing DB,
@@ -876,17 +878,40 @@ func (pr *prefixRegistry) RegisterSubstore(key string, typ types.StoreType) erro
 	return nil
 }
 
-func (tlm *traceListenMixin) AddListeners(skey types.StoreKey, listeners []types.WriteListener) {
-	key := skey.Name()
-	tlm.listeners[key] = append(tlm.listeners[key], listeners...)
+// AddListeners adds a listener for the KVStore belonging to the provided StoreKey
+func (tlm *traceListenMixin) AddListeners(keys []types.StoreKey) {
+	tlm.listenersMx.Lock()
+	defer tlm.listenersMx.Unlock()
+	for i := range keys {
+		listener := tlm.listeners[keys[i].Name()]
+		if listener == nil {
+			tlm.listeners[keys[i].Name()] = &types.MemoryListener{}
+		}
+	}
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
 func (tlm *traceListenMixin) ListeningEnabled(key types.StoreKey) bool {
 	if ls, has := tlm.listeners[key.Name()]; has {
-		return len(ls) != 0
+		return ls != nil
 	}
 	return false
+}
+
+func (tlm *traceListenMixin) PopStateCache() []*types.StoreKVPair {
+	tlm.listenersMx.Lock()
+	defer tlm.listenersMx.Unlock()
+	var cache []*types.StoreKVPair
+	for key := range tlm.listeners {
+		ls := tlm.listeners[key]
+		if ls != nil {
+			cache = append(cache, ls.PopStateCache()...)
+		}
+	}
+	sort.SliceStable(cache, func(i, j int) bool {
+		return cache[i].StoreKey < cache[j].StoreKey
+	})
+	return cache
 }
 
 func (tlm *traceListenMixin) TracingEnabled() bool {
@@ -902,6 +927,8 @@ func (tlm *traceListenMixin) SetTraceContext(tc types.TraceContext) {
 }
 
 func (tlm *traceListenMixin) wrapTraceListen(store types.KVStore, skey types.StoreKey) types.KVStore {
+	tlm.listenersMx.Lock()
+	defer tlm.listenersMx.Unlock()
 	if tlm.TracingEnabled() {
 		store = tracekv.NewStore(store, tlm.TraceWriter, tlm.TraceContext)
 	}

@@ -194,9 +194,11 @@ type CommitMultiStore interface {
 	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
 	ListeningEnabled(key StoreKey) bool
 
-	// AddListeners adds WriteListeners for the KVStore belonging to the provided StoreKey
-	// It appends the listeners to a current set, if one already exists
-	AddListeners(key StoreKey, listeners []WriteListener)
+	// AddListeners adds a listener for the KVStore belonging to the provided StoreKey
+	AddListeners(keys []StoreKey)
+
+	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
+	PopStateCache() []*StoreKVPair
 }
 
 //---------subsp-------------------------------
@@ -344,7 +346,7 @@ type StoreKey interface {
 }
 
 // CapabilityKey represent the Cosmos SDK keys for object-capability
-// generation in the IBC protocol as defined in https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#data-structures
+// generation in the IBC protocol as defined in https://github.com/cosmos/ics/tree/master/spec/ics-005-port-allocation#data-structures
 type CapabilityKey StoreKey
 
 // KVStoreKey is used for accessing substores.

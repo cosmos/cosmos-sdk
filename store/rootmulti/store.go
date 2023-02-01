@@ -60,7 +60,9 @@ type Store struct {
 
 	interBlockCache types.MultiStorePersistentCache
 
-	listeners map[types.StoreKey][]types.WriteListener
+	listeners map[types.StoreKey]*types.MemoryListener
+
+	listenersMx sync.Mutex
 }
 
 var (
@@ -81,7 +83,7 @@ func NewStore(db dbm.DB, logger log.Logger) *Store {
 		storesParams:        make(map[types.StoreKey]storeParams),
 		stores:              make(map[types.StoreKey]types.CommitKVStore),
 		keysByName:          make(map[string]types.StoreKey),
-		listeners:           make(map[types.StoreKey][]types.WriteListener),
+		listeners:           make(map[types.StoreKey]*types.MemoryListener),
 		removalMap:          make(map[types.StoreKey]bool),
 		pruningManager:      pruning.NewManager(db, logger),
 	}
@@ -378,21 +380,44 @@ func (rs *Store) TracingEnabled() bool {
 	return rs.traceWriter != nil
 }
 
-// AddListeners adds listeners for a specific KVStore
-func (rs *Store) AddListeners(key types.StoreKey, listeners []types.WriteListener) {
-	if ls, ok := rs.listeners[key]; ok {
-		rs.listeners[key] = append(ls, listeners...)
-	} else {
-		rs.listeners[key] = listeners
+// AddListeners adds a listener for the KVStore belonging to the provided StoreKey
+func (rs *Store) AddListeners(keys []types.StoreKey) {
+	rs.listenersMx.Lock()
+	defer rs.listenersMx.Unlock()
+	for i := range keys {
+		listener := rs.listeners[keys[i]]
+		if listener == nil {
+			rs.listeners[keys[i]] = types.NewMemoryListener()
+		}
 	}
 }
 
 // ListeningEnabled returns if listening is enabled for a specific KVStore
 func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
 	if ls, ok := rs.listeners[key]; ok {
-		return len(ls) != 0
+		return ls != nil
 	}
 	return false
+}
+
+// PopStateCache returns the accumulated state change messages from the CommitMultiStore
+// Calling PopStateCache destroys only the currently accumulated state in each listener
+// not the state in the store itself. This is a mutating and destructive operation.
+// This method has been synchronized.
+func (rs *Store) PopStateCache() []*types.StoreKVPair {
+	rs.listenersMx.Lock()
+	defer rs.listenersMx.Unlock()
+	var cache []*types.StoreKVPair
+	for key := range rs.listeners {
+		ls := rs.listeners[key]
+		if ls != nil {
+			cache = append(cache, ls.PopStateCache()...)
+		}
+	}
+	sort.SliceStable(cache, func(i, j int) bool {
+		return cache[i].StoreKey < cache[j].StoreKey
+	})
+	return cache
 }
 
 // LatestVersion returns the latest version in the store
@@ -465,6 +490,8 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
 func (rs *Store) CacheMultiStore() types.CacheMultiStore {
+	rs.listenersMx.Lock()
+	defer rs.listenersMx.Unlock()
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.KVStore(v)
@@ -483,6 +510,8 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
 func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
+	rs.listenersMx.Lock()
+	defer rs.listenersMx.Unlock()
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	for key, store := range rs.stores {
 		var cacheStore types.KVStore
@@ -537,6 +566,8 @@ func (rs *Store) GetStore(key types.StoreKey) types.Store {
 // NOTE: The returned KVStore may be wrapped in an inter-block cache if it is
 // set on the root store.
 func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
+	rs.listenersMx.Lock()
+	defer rs.listenersMx.Unlock()
 	s := rs.stores[key]
 	if s == nil {
 		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))

@@ -80,8 +80,8 @@ func (st *viewSubstore) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) t
 	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
 }
 
-func (st *viewSubstore) CacheWrapWithListeners(storeKey types.StoreKey, listeners []types.WriteListener) types.CacheWrap {
-	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listeners))
+func (st *viewSubstore) CacheWrapWithListeners(storeKey types.StoreKey, listener *types.MemoryListener) types.CacheWrap {
+	return cachekv.NewStore(listenkv.NewStore(st, storeKey, listener))
 }
 
 func (s *viewStore) getMerkleRoots() (ret map[string][]byte, err error) {

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -234,17 +235,6 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
 }
 
-// SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
-func (app *BaseApp) SetStreamingService(s StreamingService) {
-	// add the listeners for each StoreKey
-	for key, lis := range s.Listeners() {
-		app.cms.AddListeners(key, lis)
-	}
-	// register the StreamingService within the BaseApp
-	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-	app.abciListeners = append(app.abciListeners, s)
-}
-
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
@@ -271,4 +261,9 @@ func (app *BaseApp) SetAggregateEventsFunc(aggregateEventsFunc func(resultEvents
 	}
 
 	app.aggregateEventsFunc = aggregateEventsFunc
+}
+
+// SetStreamingManager sets the streaming manager for the BaseApp.test
+func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
+	app.streamingManager = manager
 }

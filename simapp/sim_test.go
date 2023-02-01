@@ -2,12 +2,15 @@ package simapp
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 	"runtime/debug"
 	"strings"
 	"testing"
+
+	"github.com/spf13/viper"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/stretchr/testify/require"
@@ -35,9 +38,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+var (
+	FlagEnableStreamingValue bool
+)
+
 // Get flags every time the simulator is run
 func init() {
 	GetSimulatorFlags()
+	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
 }
 
 type StoreKeysPrefixes struct {
@@ -290,6 +298,17 @@ func TestAppStateDeterminism(t *testing.T) {
 		t.Skip("skipping application simulation")
 	}
 
+	vpr := viper.New()
+	if FlagEnableStreamingValue {
+		m := make(map[string]interface{})
+		m["streaming.abci.keys"] = []string{"*"}
+		m["streaming.abci.plugin"] = "abci_v1"
+		m["streaming.abci.stop-node-on-err"] = true
+		for key, value := range m {
+			vpr.SetDefault(key, value)
+		}
+	}
+
 	config := NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
@@ -313,7 +332,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, interBlockCacheOpt())
+			app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), vpr, interBlockCacheOpt())
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

@@ -9,8 +9,6 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	dbm "github.com/cosmos/cosmos-sdk/db"
 	"github.com/cosmos/cosmos-sdk/db/memdb"
 	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
@@ -937,9 +935,6 @@ func TestListeners(t *testing.T) {
 		},
 	}
 
-	interfaceRegistry := codecTypes.NewInterfaceRegistry()
-	marshaller := codec.NewProtoCodec(interfaceRegistry)
-
 	db := memdb.NewDB()
 	opts := simpleStoreConfig(t)
 	require.NoError(t, opts.RegisterSubstore(skey_2.Name(), types.StoreTypeMemory))
@@ -949,37 +944,34 @@ func TestListeners(t *testing.T) {
 	require.NoError(t, err)
 
 	for i, tc := range testCases {
-		var buf bytes.Buffer
-		listener := types.NewStoreKVPairWriteListener(&buf, marshaller)
-		store.AddListeners(tc.skey, []types.WriteListener{listener})
+		store.AddListeners([]types.StoreKey{tc.skey})
 		require.True(t, store.ListeningEnabled(tc.skey))
 
 		// Set case
-		expected := types.StoreKVPair{
+		expected := &types.StoreKVPair{
 			Key:      tc.key,
 			Value:    tc.value,
 			StoreKey: tc.skey.Name(),
 			Delete:   false,
 		}
-		var kvpair types.StoreKVPair
-
-		buf.Reset()
 		store.GetKVStore(tc.skey).Set(tc.key, tc.value)
-		require.NoError(t, marshaller.UnmarshalLengthPrefixed(buf.Bytes(), &kvpair))
+		cache := store.PopStateCache()
+		require.Equal(t, 1, len(cache))
+		kvpair := cache[0]
 		require.Equal(t, expected, kvpair, i)
 
 		// Delete case
-		expected = types.StoreKVPair{
+		expected = &types.StoreKVPair{
 			Key:      tc.key,
 			Value:    nil,
 			StoreKey: tc.skey.Name(),
 			Delete:   true,
 		}
-		kvpair = types.StoreKVPair{}
 
-		buf.Reset()
 		store.GetKVStore(tc.skey).Delete(tc.key)
-		require.NoError(t, marshaller.UnmarshalLengthPrefixed(buf.Bytes(), &kvpair))
+		cache = store.PopStateCache()
+		require.Equal(t, 1, len(cache))
+		kvpair = cache[0]
 		require.Equal(t, expected, kvpair, i)
 	}
 	require.NoError(t, store.Close())

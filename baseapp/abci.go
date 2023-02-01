@@ -12,10 +12,12 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
+
+	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
@@ -186,10 +188,12 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	// set the signed validators for addition to context in deliverTx
 	app.voteInfos = req.LastCommitInfo.GetVotes()
 
-	// call the hooks with the BeginBlock messages
-	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenBeginBlock(app.deliverState.ctx, req, res); err != nil {
-			panic(fmt.Errorf("BeginBlock listening hook failed, height: %d, err: %w", req.Header.Height, err))
+	// call the streaming service hook with the BeginBlock messages
+	for _, abciListener := range app.streamingManager.AbciListeners {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		if err := abciListener.ListenBeginBlock(ctx, req, res); err != nil {
+			app.logger.Error("BeginBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
 
@@ -213,10 +217,12 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 		res.ConsensusParamUpdates = cp
 	}
 
-	// call the streaming service hooks with the EndBlock messages
-	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenEndBlock(app.deliverState.ctx, req, res); err != nil {
-			panic(fmt.Errorf("EndBlock listening hook failed, height: %d, err: %w", req.Height, err))
+	// call the streaming service hook with the EndBlock messages
+	for _, abciListener := range app.streamingManager.AbciListeners {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		if err := abciListener.ListenEndBlock(ctx, req, res); err != nil {
+			app.logger.Error("EndBlock listening hook failed", "height", blockHeight, "err", err)
 		}
 	}
 
@@ -263,14 +269,18 @@ func (app *BaseApp) CheckTx(req abci.RequestCheckTx) abci.ResponseCheckTx {
 // Otherwise, the ResponseDeliverTx will contain releveant error information.
 // Regardless of tx execution outcome, the ResponseDeliverTx will contain relevant
 // gas execution context.
-func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
+func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
+	var res abci.ResponseDeliverTx
 	defer func() {
-		for _, streamingListener := range app.abciListeners {
-			if err := streamingListener.ListenDeliverTx(app.deliverState.ctx, req, res); err != nil {
-				panic(fmt.Errorf("DeliverTx listening hook failed: %w", err))
+		// call the streaming service hook with the EndBlock messages
+		for _, abciListener := range app.streamingManager.AbciListeners {
+			ctx := app.deliverState.ctx
+			blockHeight := ctx.BlockHeight()
+			if err := abciListener.ListenDeliverTx(ctx, req, res); err != nil {
+				app.logger.Error("DeliverTx listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
 	}()
@@ -288,13 +298,15 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 		return sdkerrors.ResponseDeliverTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, sdk.MarkEventsToIndex(anteEvents, app.indexEvents), app.trace)
 	}
 
-	return abci.ResponseDeliverTx{
+	res = abci.ResponseDeliverTx{
 		GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
 		GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 		Log:       result.Log,
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),
 	}
+
+	return res
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in
@@ -305,6 +317,7 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
+
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -319,11 +332,18 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 		RetainHeight: retainHeight,
 	}
 
-	// call the hooks with the Commit message
-	for _, streamingListener := range app.abciListeners {
-		if err := streamingListener.ListenCommit(app.deliverState.ctx, res); err != nil {
-			panic(fmt.Errorf("Commit listening hook failed, height: %d, err: %w", header.Height, err))
+	// call the streaming service hook with the EndBlock messages
+	abciListeners := app.streamingManager.AbciListeners
+	if len(abciListeners) > 0 {
+		ctx := app.deliverState.ctx
+		blockHeight := ctx.BlockHeight()
+		changeSet := app.cms.PopStateCache()
+		for _, abciListener := range abciListeners {
+			if err := abciListener.ListenCommit(ctx, res, changeSet); err != nil {
+				app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
+			}
 		}
+		changeSet = nil
 	}
 
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))
@@ -375,6 +395,9 @@ func (app *BaseApp) halt() {
 			return
 		}
 	}
+
+	// Stop any running streaming plugins
+	plugin.CleanupClients()
 
 	// Resort to exiting immediately if the process could not be found or killed
 	// via SIGINT/SIGTERM signals.

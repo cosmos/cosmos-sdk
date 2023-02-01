@@ -13,14 +13,14 @@ var _ types.KVStore = &Store{}
 // underlying listeners with the proper key and operation permissions
 type Store struct {
 	parent         types.KVStore
-	listeners      []types.WriteListener
+	listener       *types.MemoryListener
 	parentStoreKey types.StoreKey
 }
 
 // NewStore returns a reference to a new traceKVStore given a parent
 // KVStore implementation and a buffered writer.
-func NewStore(parent types.KVStore, parentStoreKey types.StoreKey, listeners []types.WriteListener) *Store {
-	return &Store{parent: parent, listeners: listeners, parentStoreKey: parentStoreKey}
+func NewStore(parent types.KVStore, parentStoreKey types.StoreKey, listener *types.MemoryListener) *Store {
+	return &Store{parent: parent, listener: listener, parentStoreKey: parentStoreKey}
 }
 
 // Get implements the KVStore interface. It traces a read operation and
@@ -35,14 +35,14 @@ func (s *Store) Get(key []byte) []byte {
 func (s *Store) Set(key []byte, value []byte) {
 	types.AssertValidKey(key)
 	s.parent.Set(key, value)
-	s.onWrite(false, key, value)
+	s.listener.OnWrite(s.parentStoreKey, key, value, false)
 }
 
 // Delete implements the KVStore interface. It traces a write operation and
 // delegates the Delete call to the parent KVStore.
 func (s *Store) Delete(key []byte) {
 	s.parent.Delete(key)
-	s.onWrite(true, key, nil)
+	s.listener.OnWrite(s.parentStoreKey, key, nil, true)
 }
 
 // Has implements the KVStore interface. It delegates the Has call to the
@@ -74,16 +74,16 @@ func (s *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 		parent = s.parent.ReverseIterator(start, end)
 	}
 
-	return newTraceIterator(parent, s.listeners)
+	return newTraceIterator(parent, s.listener)
 }
 
 type listenIterator struct {
-	parent    types.Iterator
-	listeners []types.WriteListener
+	parent   types.Iterator
+	listener *types.MemoryListener
 }
 
-func newTraceIterator(parent types.Iterator, listeners []types.WriteListener) types.Iterator {
-	return &listenIterator{parent: parent, listeners: listeners}
+func newTraceIterator(parent types.Iterator, listener *types.MemoryListener) types.Iterator {
+	return &listenIterator{parent: parent, listener: listener}
 }
 
 // Domain implements the Iterator interface.
@@ -139,11 +139,4 @@ func (s *Store) CacheWrap() types.CacheWrap {
 // Store cannot be cache wrapped.
 func (s *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	panic("cannot CacheWrapWithTrace a ListenKVStore")
-}
-
-// onWrite writes a KVStore operation to all of the WriteListeners
-func (s *Store) onWrite(delete bool, key, value []byte) {
-	for _, l := range s.listeners {
-		l.OnWrite(s.parentStoreKey, key, value, delete)
-	}
 }

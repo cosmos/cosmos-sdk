@@ -8,6 +8,7 @@ use (
 	./core
 	./depinject
 	./errors
+	./log
 	./math
 	./orm
 	./simapp

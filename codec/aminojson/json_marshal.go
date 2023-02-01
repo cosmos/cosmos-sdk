@@ -21,19 +21,33 @@ type JSONMarshaller interface {
 
 type AminoJson struct {
 	// maps cosmos_proto.scalar -> zero value factory
-	zeroValues map[string]func() protoreflect.Value
+	zeroValues      map[string]func() protoreflect.Value
+	messageEncoders map[string]func(message protoreflect.Message) protoreflect.Value
 }
 
-func MarshalAmino(message proto.Message) ([]byte, error) {
-	buf := &bytes.Buffer{}
+func NewAminoJson() AminoJson {
 	aj := AminoJson{
 		zeroValues: map[string]func() protoreflect.Value{
 			"cosmos.Dec": func() protoreflect.Value {
 				return protoreflect.ValueOfString("0")
 			},
 		},
+		messageEncoders: map[string]func(message protoreflect.Message) protoreflect.Value{
+			"key_field": func(message protoreflect.Message) protoreflect.Value {
+				// todo
+				// err handling
+				keyField := message.Get(message.Descriptor().Fields().ByName("key"))
+				bz := keyField.Bytes()
+				return protoreflect.ValueOfBytes(bz)
+			},
+		},
 	}
+	return aj
+}
 
+func MarshalAmino(message proto.Message) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	aj := NewAminoJson()
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.marshal(vmsg, nil, buf)
 	return buf.Bytes(), err
@@ -46,23 +60,7 @@ func (aj AminoJson) marshal(
 
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
-		var res error
-		opts := val.Descriptor().Options()
-		if proto.HasExtension(opts, amino.E_Name) {
-			name := proto.GetExtension(opts, amino.E_Name)
-			_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
-			if err != nil {
-				return err
-			}
-			res = aj.marshalMessage(val, writer)
-			_, err = writer.Write([]byte(`}`))
-			if err != nil {
-				return err
-			}
-		} else {
-			res = aj.marshalMessage(val, writer)
-		}
-		return res
+		return aj.marshalMessage(val, writer)
 
 	case protoreflect.Map:
 		return errors.New("maps are not supported")
@@ -86,41 +84,22 @@ func (aj AminoJson) marshal(
 	return nil
 }
 
-// omitEmpty returns true if the field should be omitted if empty. Empty field omission is the default behavior.
-func omitEmpty(field protoreflect.FieldDescriptor) bool {
-	opts := field.Options()
-	if proto.HasExtension(opts, amino.E_DontOmitempty) {
-		dontOmitEmpty := proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
-		return !dontOmitEmpty
-	}
-	// legacy support for gogoproto would need to look something like below.
-	//
-	//if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
-	//
-	//}
-	return true
-}
-
-func fieldName(field protoreflect.FieldDescriptor) string {
-	opts := field.Options()
-	if proto.HasExtension(opts, amino.E_FieldName) {
-		return proto.GetExtension(opts, amino.E_FieldName).(string)
-	}
-	return string(field.Name())
-}
-
-func (aj AminoJson) fieldZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
-	opts := field.Options()
-	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
-		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
-		if fn, ok := aj.zeroValues[scalar]; ok {
-			return fn(), true
-		}
-	}
-	return field.Default(), false
-}
-
 func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
+	if encoded, encodingOption := aj.encodeMessage(msg); encodingOption {
+		return aj.marshal(encoded, nil, writer)
+	}
+
+	named := false
+	opts := msg.Descriptor().Options()
+	if proto.HasExtension(opts, amino.E_Name) {
+		name := proto.GetExtension(opts, amino.E_Name)
+		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
+		if err != nil {
+			return err
+		}
+		named = true
+	}
+
 	_, err := writer.Write([]byte("{"))
 	if err != nil {
 		return err
@@ -173,6 +152,14 @@ func (aj AminoJson) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	if err != nil {
 		return err
 	}
+
+	if named {
+		_, err = writer.Write([]byte("}"))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -220,4 +207,49 @@ func (aj AminoJson) marshalList(
 
 	_, err = writer.Write([]byte("]"))
 	return err
+}
+
+// omitEmpty returns true if the field should be omitted if empty. Empty field omission is the default behavior.
+func omitEmpty(field protoreflect.FieldDescriptor) bool {
+	opts := field.Options()
+	if proto.HasExtension(opts, amino.E_DontOmitempty) {
+		dontOmitEmpty := proto.GetExtension(opts, amino.E_DontOmitempty).(bool)
+		return !dontOmitEmpty
+	}
+	// legacy support for gogoproto would need to look something like below.
+	//
+	//if gproto.GetBoolExtension(opts, gogoproto.E_Nullable, true) {
+	//
+	//}
+	return true
+}
+
+func fieldName(field protoreflect.FieldDescriptor) string {
+	opts := field.Options()
+	if proto.HasExtension(opts, amino.E_FieldName) {
+		return proto.GetExtension(opts, amino.E_FieldName).(string)
+	}
+	return string(field.Name())
+}
+
+func (aj AminoJson) fieldZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
+	opts := field.Options()
+	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
+		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
+		if fn, ok := aj.zeroValues[scalar]; ok {
+			return fn(), true
+		}
+	}
+	return field.Default(), false
+}
+
+func (aj AminoJson) encodeMessage(message protoreflect.Message) (protoreflect.Value, bool) {
+	opts := message.Descriptor().Options()
+	if proto.HasExtension(opts, amino.E_MessageEncoding) {
+		encoding := proto.GetExtension(opts, amino.E_MessageEncoding).(string)
+		if fn, ok := aj.messageEncoders[encoding]; ok {
+			return fn(message), true
+		}
+	}
+	return protoreflect.Value{}, false
 }

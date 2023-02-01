@@ -15,9 +15,9 @@ import (
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/aminojson"
+	crypto "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -64,6 +64,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc := amino.NewCodec()
 	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
 	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
+	cdc.RegisterConcrete(&ed25519.PubKey{}, crypto.PubKeyName, nil)
 
 	cases := map[string]struct {
 		gogo   any
@@ -85,6 +86,9 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"distribution/msg_withdraw_delegator_reward": {
 			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
 			pulsar: &distapi.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
+		},
+		"crypto/pubkey": {
+			gogo: &crypto.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
 		},
 	}
 	for name, tc := range cases {

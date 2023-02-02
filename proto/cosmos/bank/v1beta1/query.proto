@@ -125,9 +125,6 @@ message QueryBalanceRequest {
 
   // denom is the coin denom to query balances for.
   string denom = 2;
-
-  // IBC_resolve is the flag to resolve the ibc hash denom into a human-readable form.
-  bool IBC_resolve = 3;
 }
 
 // QueryBalanceResponse is the response type for the Query/Balance RPC method.
@@ -146,6 +143,9 @@ message QueryAllBalancesRequest {
 
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
+
+  // ibc_resolve is the flag to resolve the ibc hash denom into a human-readable form.
+  bool ibc_resolve = 3;
 }
 
 // QueryAllBalancesResponse is the response type for the Query/AllBalances RPC

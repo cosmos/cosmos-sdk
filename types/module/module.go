@@ -416,7 +416,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		panic(fmt.Sprintf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction))
+		return abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
 	return abci.ResponseInitChain{
@@ -640,9 +640,13 @@ func (m *Manager) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) (abci.
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 	for _, moduleName := range m.OrderBeginBlockers {
-		module, ok := m.Modules[moduleName].(BeginBlockAppModule)
-		if ok {
+		if module, ok := m.Modules[moduleName].(BeginBlockAppModule); ok {
 			module.BeginBlock(ctx, req)
+		} else if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
+			err := module.BeginBlock(ctx)
+			if err != nil {
+				return abci.ResponseBeginBlock{}, err
+			}
 		}
 	}
 
@@ -659,20 +663,25 @@ func (m *Manager) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) (abci.Resp
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		module, ok := m.Modules[moduleName].(EndBlockAppModule)
-		if !ok {
-			continue
-		}
-		moduleValUpdates := module.EndBlock(ctx, req)
+		if module, ok := m.Modules[moduleName].(EndBlockAppModule); ok {
+			moduleValUpdates := module.EndBlock(ctx, req)
 
-		// use these validator updates if provided, the module manager assumes
-		// only one module will update the validator set
-		if len(moduleValUpdates) > 0 {
-			if len(validatorUpdates) > 0 {
-				return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+			// use these validator updates if provided, the module manager assumes
+			// only one module will update the validator set
+			if len(moduleValUpdates) > 0 {
+				if len(validatorUpdates) > 0 {
+					return abci.ResponseEndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+				}
+
+				validatorUpdates = moduleValUpdates
 			}
-
-			validatorUpdates = moduleValUpdates
+		} else if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
+			err := module.EndBlock(ctx)
+			if err != nil {
+				return abci.ResponseEndBlock{}, err
+			}
+		} else {
+			continue
 		}
 	}
 

@@ -15,6 +15,8 @@ import (
 	"cosmossdk.io/api/amino"
 )
 
+type MessageEncoder func(message protoreflect.Message) (protoreflect.Value, error)
+
 type JSONMarshaller interface {
 	MarshalAmino(proto.Message) ([]byte, error)
 }
@@ -22,7 +24,7 @@ type JSONMarshaller interface {
 type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
 	zeroValues      map[string]func() protoreflect.Value
-	messageEncoders map[string]func(message protoreflect.Message) protoreflect.Value
+	messageEncoders map[string]MessageEncoder
 }
 
 func NewAminoJSON() AminoJSON {
@@ -32,13 +34,15 @@ func NewAminoJSON() AminoJSON {
 				return protoreflect.ValueOfString("0")
 			},
 		},
-		messageEncoders: map[string]func(message protoreflect.Message) protoreflect.Value{
-			"key_field": func(message protoreflect.Message) protoreflect.Value {
-				// todo
-				// err handling
-				keyField := message.Get(message.Descriptor().Fields().ByName("key"))
-				bz := keyField.Bytes()
-				return protoreflect.ValueOfBytes(bz)
+		messageEncoders: map[string]MessageEncoder{
+			"key_field": func(message protoreflect.Message) (protoreflect.Value, error) {
+				keyField := message.Descriptor().Fields().ByName("key")
+				if keyField == nil {
+					return protoreflect.Value{}, errors.New(
+						`message encoder for key_field: no field named "key" found`)
+				}
+				bz := message.Get(keyField).Bytes()
+				return protoreflect.ValueOfBytes(bz), nil
 			},
 		},
 	}
@@ -81,7 +85,11 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 }
 
 func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
-	if encoded, encodingOption := aj.encodeMessage(msg); encodingOption {
+	if encoder := aj.getMessageEncoder(msg); encoder != nil {
+		encoded, err := encoder(msg)
+		if err != nil {
+			return err
+		}
 		return aj.marshal(encoded, writer)
 	}
 
@@ -106,13 +114,13 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	for i := 0; i < fields.Len(); i++ {
 		f := fields.Get(i)
 		v := msg.Get(f)
-		name := fieldName(f)
+		name := getFieldName(f)
 
 		if !msg.Has(f) {
 			if omitEmpty(f) {
 				continue
 			} else {
-				zv, found := aj.fieldZeroValue(f)
+				zv, found := aj.getZeroValue(f)
 				if found {
 					v = zv
 				}
@@ -217,7 +225,7 @@ func omitEmpty(field protoreflect.FieldDescriptor) bool {
 	return true
 }
 
-func fieldName(field protoreflect.FieldDescriptor) string {
+func getFieldName(field protoreflect.FieldDescriptor) string {
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_FieldName) {
 		return proto.GetExtension(opts, amino.E_FieldName).(string)
@@ -225,7 +233,7 @@ func fieldName(field protoreflect.FieldDescriptor) string {
 	return string(field.Name())
 }
 
-func (aj AminoJSON) fieldZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
+func (aj AminoJSON) getZeroValue(field protoreflect.FieldDescriptor) (protoreflect.Value, bool) {
 	opts := field.Options()
 	if proto.HasExtension(opts, cosmos_proto.E_Scalar) {
 		scalar := proto.GetExtension(opts, cosmos_proto.E_Scalar).(string)
@@ -236,13 +244,13 @@ func (aj AminoJSON) fieldZeroValue(field protoreflect.FieldDescriptor) (protoref
 	return field.Default(), false
 }
 
-func (aj AminoJSON) encodeMessage(message protoreflect.Message) (protoreflect.Value, bool) {
+func (aj AminoJSON) getMessageEncoder(message protoreflect.Message) MessageEncoder {
 	opts := message.Descriptor().Options()
 	if proto.HasExtension(opts, amino.E_MessageEncoding) {
 		encoding := proto.GetExtension(opts, amino.E_MessageEncoding).(string)
 		if fn, ok := aj.messageEncoders[encoding]; ok {
-			return fn(message), true
+			return fn
 		}
 	}
-	return protoreflect.Value{}, false
+	return nil
 }

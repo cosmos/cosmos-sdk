@@ -3,7 +3,7 @@ module cosmossdk.io/math
 go 1.19
 
 require (
-	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846
+	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/exp v0.0.0-20221205204356-47842c84f3db
 	sigs.k8s.io/yaml v1.3.0
@@ -11,12 +11,12 @@ require (
 
 require (
 	cosmossdk.io/api v0.2.6 // indirect
-	cosmossdk.io/core v0.5.0 // indirect
+	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/cockroachdb/errors v1.9.0 // indirect
+	github.com/cockroachdb/errors v1.9.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
@@ -42,8 +42,8 @@ require (
 	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
-	google.golang.org/genproto v0.0.0-20230112194545-e10362b5ecf9 // indirect
-	google.golang.org/grpc v1.52.0 // indirect
+	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa // indirect
+	google.golang.org/grpc v1.52.3 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

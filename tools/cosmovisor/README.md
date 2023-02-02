@@ -210,12 +210,12 @@ If `DAEMON_ALLOW_DOWNLOAD_BINARIES` is set to `true`, and no local binary can be
     When submitting this as a proposal ensure there are no spaces. An example command using `gaiad` could look like:
 
     ```shell
-    > gaiad tx gov submit-proposal software-upgrade Vega \
+    > gaiad tx upgrade software-upgrade Vega \
     --title Vega \
     --deposit 100uatom \
     --upgrade-height 7368420 \
     --upgrade-info '{"binaries":{"linux/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-amd64","linux/arm64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-linux-arm64","darwin/amd64":"https://github.com/cosmos/gaia/releases/download/v6.0.0-rc1/gaiad-v6.0.0-rc1-darwin-amd64"}}' \
-    --description "upgrade to Vega" \
+    --summary "upgrade to Vega" \
     --gas 400000 \
     --from user \
     --chain-id test \
@@ -293,9 +293,6 @@ cat <<< $(jq '.app_state.gov.voting_params.voting_period = "20s"' $HOME/.simapp/
 
 Create a validator, and setup genesis transaction:
 
-<!-- TODO: add-genesis-account does not read keyring-backend from config -->
-<!-- TODO: gentx does not read chain-id from config -->
-
 ```shell
 ./build/simd keys add validator
 ./build/simd genesis add-genesis-account validator 1000000000stake --keyring-backend test
@@ -351,10 +348,27 @@ cp ./build/simd $DAEMON_HOME/cosmovisor/upgrades/test1/bin
 ```
 
 Open a new terminal window and submit an upgrade proposal along with a deposit and a vote (these commands must be run within 20 seconds of each other):
-Note, when using a `v0.46+` chain, replace `submit-proposal` by `submit-legacy-proposal`.
+
+**<= v0.45**:
 
 ```shell
 ./build/simd tx gov submit-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
+./build/simd tx gov deposit 1 10000000stake --from validator --yes
+./build/simd tx gov vote 1 yes --from validator --yes
+```
+
+**v0.46, v0.47**:
+
+```shell
+./build/simd tx gov submit-legacy-proposal software-upgrade test1 --title upgrade --description upgrade --upgrade-height 200 --from validator --yes
+./build/simd tx gov deposit 1 10000000stake --from validator --yes
+./build/simd tx gov vote 1 yes --from validator --yes
+```
+
+**>= v0.48+**:
+
+```shell
+./build/simd tx upgrade software-upgrade test1 --title upgrade --summary upgrade --upgrade-height 200 --from validator --yes
 ./build/simd tx gov deposit 1 10000000stake --from validator --yes
 ./build/simd tx gov vote 1 yes --from validator --yes
 ```

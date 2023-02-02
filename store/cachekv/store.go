@@ -69,12 +69,11 @@ func (store *Store) Get(key []byte) (value []byte) {
 
 // Set implements types.KVStore.
 func (store *Store) Set(key []byte, value []byte) {
-	store.mtx.Lock()
-	defer store.mtx.Unlock()
-
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
 	store.setCacheValue(key, value, true)
 }
 
@@ -86,10 +85,11 @@ func (store *Store) Has(key []byte) bool {
 
 // Delete implements types.KVStore.
 func (store *Store) Delete(key []byte) {
+	types.AssertValidKey(key)
+
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	types.AssertValidKey(key)
 	store.setCacheValue(key, nil, true)
 }
 

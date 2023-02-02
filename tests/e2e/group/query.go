@@ -162,9 +162,15 @@ func (s *E2ETestSuite) TestQueryGroups() {
 	}{
 		{
 			name:      "valid req",
-			args:      []string{"abcd", fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			args:      []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
 			expectErr: false,
 			numItems:  5,
+		},
+		{
+			name:      "valid req with pagination",
+			args:      []string{fmt.Sprintf("--%s=json, --limit=2", flags.FlagOutput)},
+			expectErr: false,
+			numItems:  2,
 		},
 	}
 

@@ -33,34 +33,34 @@ can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the nat
 staking token of the chain.
 
 * [Concepts](#concepts)
-  * [Proposal submission](#proposal-submission)
-  * [Deposit](#deposit)
-  * [Vote](#vote)
-  * [Software Upgrade](#software-upgrade)
+    * [Proposal submission](#proposal-submission)
+    * [Deposit](#deposit)
+    * [Vote](#vote)
+    * [Software Upgrade](#software-upgrade)
 * [State](#state)
-  * [Proposals](#proposals)
-  * [Parameters and base types](#parameters-and-base-types)
-  * [Deposit](#deposit-1)
-  * [ValidatorGovInfo](#validatorgovinfo)
-  * [Stores](#stores)
-  * [Proposal Processing Queue](#proposal-processing-queue)
-  * [Legacy Proposal](#legacy-proposal)
+    * [Proposals](#proposals)
+    * [Parameters and base types](#parameters-and-base-types)
+    * [Deposit](#deposit-1)
+    * [ValidatorGovInfo](#validatorgovinfo)
+    * [Stores](#stores)
+    * [Proposal Processing Queue](#proposal-processing-queue)
+    * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-  * [Proposal Submission](#proposal-submission-1)
-  * [Deposit](#deposit-2)
-  * [Vote](#vote-1)
+    * [Proposal Submission](#proposal-submission-1)
+    * [Deposit](#deposit-2)
+    * [Vote](#vote-1)
 * [Events](#events)
-  * [EndBlocker](#endblocker)
-  * [Handlers](#handlers)
+    * [EndBlocker](#endblocker)
+    * [Handlers](#handlers)
 * [Parameters](#parameters)
-  * [SubKeys](#subkeys)
+    * [SubKeys](#subkeys)
 * [Client](#client)
-  * [CLI](#cli)
-  * [gRPC](#grpc)
-  * [REST](#rest)
+    * [CLI](#cli)
+    * [gRPC](#grpc)
+    * [REST](#rest)
 * [Metadata](#metadata)
-  * [Proposal](#proposal-3)
-  * [Vote](#vote-5)
+    * [Proposal](#proposal-3)
+    * [Vote](#vote-5)
 * [Future Improvements](#future-improvements)
 
 ## Concepts
@@ -211,7 +211,7 @@ This means that proposals are accepted iff:
 * The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
   the voting period is superior to 1/2.
 
-For expedited proposals, it has a higher minimum threshold as its initial parameter, set at 66.7%.
+For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
 
 #### Inheritance
 
@@ -512,7 +512,7 @@ must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 * Initialise `Proposal`'s attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in `ProposalProcessingQueue`
+    * Push `proposalID` in `ProposalProcessingQueue`
 * Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
@@ -577,7 +577,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 * Add `deposit` of sender in `proposal.Deposits`
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
-  * Push `proposalID` in `ProposalProcessingQueueEnd`
+    * Push `proposalID` in `ProposalProcessingQueueEnd`
 * Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.

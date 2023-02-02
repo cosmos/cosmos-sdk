@@ -1,5 +1,3 @@
-// TODO update this file
-
 package gov_test
 
 import (
@@ -450,9 +448,9 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 	testcases := []struct {
 		name string
-		// flag indicating whether the expedited proposal passes.
+		// indicates whether the expedited proposal passes.
 		expeditedPasses bool
-		// flag indicating whether the converted regular proposal is expected to eventually pass
+		// indicates whether the converted regular proposal is expected to eventually pass
 		regularEventuallyPassing bool
 	}{
 		{
@@ -477,7 +475,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			app := suite.App
 			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 			depositMultiplier := getDepositMultiplier(true)
-			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 4, valTokens.Mul(math.NewInt(depositMultiplier)))
+			addrs := simtestutil.AddTestAddrs(suite.BankKeeper, suite.StakingKeeper, ctx, 3, valTokens.Mul(math.NewInt(depositMultiplier)))
 			params := suite.GovKeeper.GetParams(ctx)
 
 			SortAddresses(addrs)
@@ -644,10 +642,10 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 				return
 			}
 
-			// Not enough votes - module account has burned the deposit
+			// Not enough votes - module account has returned the deposit
 			require.Equal(t, initialModuleAccCoins, eventualModuleAccCoins)
-			require.Equal(t, submitterInitialBalance.Sub(proposalCoins...), submitterEventualBalance)
-			require.Equal(t, depositorInitialBalance.Sub(proposalCoins...), depositorEventualBalance)
+			require.Equal(t, submitterInitialBalance, submitterEventualBalance)
+			require.Equal(t, depositorInitialBalance, depositorEventualBalance)
 
 			require.Equal(t, v1.StatusRejected, proposal.Status)
 		})

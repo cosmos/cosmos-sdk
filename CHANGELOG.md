@@ -54,7 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [\#10922](https://github.com/cosmos/cosmos-sdk/pull/10922), [/#10956](https://github.com/cosmos/cosmos-sdk/pull/10956) Deprecate key `server.Generate*` functions and move them to `testutil` and support custom mnemonics in in-process testing network. Moved `TestMnemonic` from `testutil` package to `testdata`.
 
 ### Features
-
+* [\#408](https://github.com/osmosis-labs/cosmos-sdk/pull/408) Add `AddGenesisAccount` helper func in x/auth module which helps adding accounts to genesis state. 
 * [\#10614](https://github.com/cosmos/cosmos-sdk/pull/10614) Support in-place migration ordering
 
 ### Improvements

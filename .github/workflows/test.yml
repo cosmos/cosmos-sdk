@@ -442,6 +442,7 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
+            contrib/rosetta/*
             tools/rosetta/**/*.go
             tools/rosetta/go.mod
             tools/rosetta/go.sum

@@ -34,6 +34,7 @@ func QueryCmd(name string) *cobra.Command {
 		QueryVotesByVoterCmd(),
 		QueryGroupsByMemberCmd(),
 		QueryTallyResultCmd(),
+		QueryGroupsCmd(),
 	)
 
 	return queryCmd

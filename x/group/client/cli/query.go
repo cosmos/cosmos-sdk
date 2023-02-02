@@ -527,7 +527,6 @@ func QueryGroupsCmd() *cobra.Command {
 			res, err := queryClient.Groups(cmd.Context(), &group.QueryGroupsRequest{
 				Pagination: pageReq,
 			})
-
 			if err != nil {
 				return err
 			}

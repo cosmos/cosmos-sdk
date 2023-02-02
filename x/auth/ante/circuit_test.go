@@ -1,13 +1,14 @@
 package ante
 
 import (
+	"testing"
+
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"testing"
 )
 
 type fixture struct {
@@ -47,13 +48,14 @@ func TestCircuitBreakerDecorator(t *testing.T) {
 	f := initFixture(t)
 	mockKeeper := &mockCircuitBreakerKeeper{circuitOpen: true}
 	decorator := NewCircuitBreakerDecorator(mockKeeper)
+	expectedError := sdkerrors.Wrap(sdkerrors.ErrActivation, "transaction is blocked due to Circuit Breaker activation")
 
 	// Test case 1: the circuit breaker is open
 	_, err := decorator.AnteHandle(f.ctx, nil, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 		return ctx, nil
 	})
 
-	require.Equal(t, sdkerrors.Wrap(sdkerrors.ErrActivation, "transaction is blocked due to Circuit Breaker activation"), err)
+	require.Equal(t, expectedError.Error(), err.Error())
 
 	// Test case 2: the circuit breaker is closed
 	mockKeeper.circuitOpen = false

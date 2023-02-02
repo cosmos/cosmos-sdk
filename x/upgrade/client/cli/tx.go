@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -12,17 +13,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
-	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagUpgradeHeight = "upgrade-height"
-	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagUpgradeInfo = "upgrade-info"
-	FlagNoValidate  = "no-validate"
-	FlagDaemonName  = "daemon-name"
+	FlagUpgradeInfo   = "upgrade-info"
+	FlagNoValidate    = "no-validate"
+	FlagDaemonName    = "daemon-name"
+	FlagAuthority     = "authority"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -81,9 +81,19 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				}
 			}
 
+			authority, _ := cmd.Flags().GetString(FlagAuthority)
+			if authority != "" {
+				if _, err = sdk.AccAddressFromBech32(authority); err != nil {
+					return fmt.Errorf("invalid authority address: %w", err)
+				}
+			} else {
+				authority = sdk.AccAddress(address.Module("gov")).String()
+			}
+
 			proposal.SetMsgs([]sdk.Msg{
 				&types.MsgSoftwareUpgrade{
-					Plan: p,
+					Authority: authority,
+					Plan:      p,
 				},
 			})
 
@@ -95,6 +105,10 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info")
 	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
+	cmd.Flags().String(FlagAuthority, "", "The address of the upgrade module authority (defaults to gov)")
+
+	// add common proposal flags
+	cli.AddGovPropFlagsToCmd(cmd)
 
 	// add common proposal flags
 	cli.AddGovPropFlagsToCmd(cmd)
@@ -102,9 +116,8 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	return cmd
 }
 
-// NewCmdSubmitLegacyCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
-// Deprecated: please use NewCmdSubmitCancelUpgradeProposal instead.
-func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
+// NewCmdSubmitCancelUpgradeProposal implements a command handler for submitting a software upgrade cancel proposal transaction.
+func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-software-upgrade [flags]",
 		Args:  cobra.ExactArgs(0),
@@ -115,38 +128,35 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			from := clientCtx.GetFromAddress()
 
-			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
 
-			deposit, err := sdk.ParseCoinsNormalized(depositStr)
-			if err != nil {
-				return err
+			authority, _ := cmd.Flags().GetString(FlagAuthority)
+			if authority != "" {
+				if _, err = sdk.AccAddressFromBech32(authority); err != nil {
+					return fmt.Errorf("invalid authority address: %w", err)
+				}
+			} else {
+				authority = sdk.AccAddress(address.Module("gov")).String()
 			}
 
-			title, err := cmd.Flags().GetString(cli.FlagTitle)
-			if err != nil {
-				return err
-			}
+			proposal.SetMsgs([]sdk.Msg{
+				&types.MsgCancelUpgrade{
+					Authority: authority,
+				},
+			})
 
-			description, err := cmd.Flags().GetString(cli.FlagDescription) //nolint:staticcheck // we are intentionally using a deprecated flag here.
-			if err != nil {
-				return err
-			}
-
-			content := types.NewCancelSoftwareUpgradeProposal(title, description)
-
-			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
-			if err != nil {
-				return err
-			}
-
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 		},
 	}
+
+	// add common proposal flags
+	cli.AddGovPropFlagsToCmd(cmd)
+
+	cmd.Flags().String(FlagAuthority, "", "The address of the upgrade module authority (defaults to gov)")
 
 	return cmd
 }

@@ -17,10 +17,6 @@ import (
 
 type MessageEncoder func(message protoreflect.Message) (protoreflect.Value, error)
 
-type JSONMarshaller interface {
-	MarshalAmino(proto.Message) ([]byte, error)
-}
-
 type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
 	zeroValues      map[string]func() protoreflect.Value
@@ -49,9 +45,12 @@ func NewAminoJSON() AminoJSON {
 	return aj
 }
 
-func MarshalAmino(message proto.Message) ([]byte, error) {
+func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
+	aj.messageEncoders[name] = encoder
+}
+
+func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	aj := NewAminoJSON()
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.marshal(vmsg, buf)
 	return buf.Bytes(), err

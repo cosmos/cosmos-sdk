@@ -23,6 +23,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
 	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
 	cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
+	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
 		gogo   gogoproto.Message
@@ -58,7 +59,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogoBytes, err := cdc.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
 
-			pulsarBytes, err := aminojson.MarshalAmino(tc.pulsar)
+			pulsarBytes, err := aj.MarshalAmino(tc.pulsar)
 			require.NoError(t, err)
 
 			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)

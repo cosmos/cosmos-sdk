@@ -16,6 +16,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 
+	"github.com/cosmos/cosmos-proto/any"
+
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
 
@@ -32,6 +34,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 	require.NoError(t, err)
 
 	cdc := amino.NewCodec()
+	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
 		msg       proto.Message
@@ -44,7 +47,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			bz, err := aminojson.MarshalAmino(tc.msg)
+			bz, err := aj.MarshalAmino(tc.msg)
 
 			if tc.shouldErr {
 				require.Error(t, err)
@@ -69,7 +72,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 }
 
 func TestAminoJSON(t *testing.T) {
-	a, err := anypb.New(&testpb.NestedMessage{
+	a, err := any.New(&testpb.NestedMessage{
 		Foo: "any type nested",
 		Bar: 11,
 	})
@@ -99,7 +102,7 @@ func TestAminoJSON(t *testing.T) {
 		Timestamp: timestamppb.New(time.Date(2022, 1, 1, 12, 31, 0, 0, time.UTC)),
 		Duration:  durationpb.New(time.Second * 3000),
 	}
-	bz, err := aminojson.MarshalAmino(msg)
+	bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
 	assert.NilError(t, err)
 	cdc := amino.NewCodec()
 	legacyBz, err := cdc.MarshalJSON(msg)
@@ -111,7 +114,7 @@ func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.MarshalAmino(msg)
+		bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
 	})

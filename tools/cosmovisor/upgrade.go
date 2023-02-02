@@ -44,7 +44,7 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, p upgradetypes.Plan) err
 		return fmt.Errorf("cannot parse upgrade info: %w", err)
 	}
 
-	if err := upgradeInfo.ValidateFull(p.Name); err != nil {
+	if err := upgradeInfo.ValidateFull(cfg.Name); err != nil {
 		return fmt.Errorf("invalid binaries: %w", err)
 	}
 
@@ -55,7 +55,7 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, p upgradetypes.Plan) err
 
 	// If not there, then we try to download it... maybe
 	logger.Info().Msg("no upgrade binary found, beginning to download it")
-	if err := plan.DownloadUpgrade(cfg.UpgradeDir(p.Name), url, p.Name); err != nil {
+	if err := plan.DownloadUpgrade(cfg.UpgradeDir(p.Name), url, cfg.Name); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
 	logger.Info().Msg("downloading binary complete")

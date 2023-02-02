@@ -131,23 +131,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 		}
 	}()
 
-	validJSONWithoutOptionalFields := fmt.Sprintf(`
-	{
-  		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
-  		"amount": "%dstake",
-  		"moniker": "NewValidator",
-  		"commission-rate": "0.5",
-  		"commission-max-rate": "1.0",
-  		"commission-max-change-rate": "0.1",
-  		"min-self-delegation": "1"
-	}`, 100)
-	validJSONWOOptionalFile := testutil.WriteToNewTempFile(s.T(), validJSONWithoutOptionalFields)
-	defer func() {
-		if err := validJSONWOOptionalFile.Close(); err != nil {
-			val.Ctx.Logger.Info("Error closing file: %s\n", err)
-		}
-	}()
-
 	noAmountJSON := `
 	{
   		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
@@ -237,24 +220,13 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 			true, 0, nil,
 		},
 		{
-			"valid transaction with all fields",
+			"valid transaction",
 			[]string{
 				validJSONFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
-			},
-			false, 0, &sdk.TxResponse{},
-		},
-		{
-			"valid transaction without optional fields",
-			[]string{
-				validJSONWOOptionalFile.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
-				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
-				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},

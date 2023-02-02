@@ -32,6 +32,11 @@ func GetTxCmd() *cobra.Command {
 		Short: "Upgrade transaction subcommands",
 	}
 
+	cmd.AddCommand(
+		NewCmdSubmitUpgradeProposal(),
+		NewCmdSubmitCancelUpgradeProposal(),
+	)
+
 	return cmd
 }
 

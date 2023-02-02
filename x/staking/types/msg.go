@@ -36,7 +36,7 @@ func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
 	selfDelegation sdk.Coin, description Description,
 	commission CommissionRates, minSelfDelegation math.Int,
-	orch sdk.AccAddress, eth common.Address,
+	eth common.Address,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -53,7 +53,6 @@ func NewMsgCreateValidator(
 		Value:             selfDelegation,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
-		Orchestrator:      orch.String(),
 		EvmAddress:        eth.Hex(),
 	}, nil
 }
@@ -149,16 +148,9 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 func NewMsgEditValidator(
 	valAddr sdk.ValAddress, description Description,
 	newRate *sdk.Dec, newMinSelfDelegation *math.Int,
-	newOrch *sdk.AccAddress, newEVMAddress *common.Address,
+	newEVMAddress *common.Address,
 ) *MsgEditValidator {
-	// TODO add test for Orchestrator and EVM addresses edit
-	var orch string
-	if newOrch != nil {
-		orch = newOrch.String()
-	} else {
-		orch = ""
-	}
-
+	// TODO add test for EVM addresses edit
 	var evmStringAddress string
 	if newEVMAddress != nil {
 		evmStringAddress = newEVMAddress.Hex()
@@ -171,7 +163,6 @@ func NewMsgEditValidator(
 		CommissionRate:    newRate,
 		ValidatorAddress:  valAddr.String(),
 		MinSelfDelegation: newMinSelfDelegation,
-		Orchestrator:      orch,
 		EvmAddress:        evmStringAddress,
 	}
 }

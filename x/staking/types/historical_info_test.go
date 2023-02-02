@@ -30,9 +30,9 @@ func createValidators(t *testing.T) []types.Validator {
 	randomEVMAddress3, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	return []types.Validator{
-		newValidator(t, valAddr1, pk1, sdk.AccAddress(pk1.Address()), *randomEVMAddress1),
-		newValidator(t, valAddr2, pk2, sdk.AccAddress(pk2.Address()), *randomEVMAddress2),
-		newValidator(t, valAddr3, pk3, sdk.AccAddress(pk3.Address()), *randomEVMAddress3),
+		newValidator(t, valAddr1, pk1, *randomEVMAddress1),
+		newValidator(t, valAddr2, pk2, *randomEVMAddress2),
+		newValidator(t, valAddr3, pk3, *randomEVMAddress3),
 	}
 }
 

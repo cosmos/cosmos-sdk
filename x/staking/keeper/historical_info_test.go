@@ -35,7 +35,7 @@ func TestHistoricalInfo(t *testing.T) {
 	for i, valAddr := range addrVals {
 		randomEVMAddress, err := teststaking.RandomEVMAddress()
 		require.NoError(t, err)
-		validators[i] = teststaking.NewValidator(t, valAddr, PKs[i], sdk.AccAddress(PKs[i].Address()), *randomEVMAddress)
+		validators[i] = teststaking.NewValidator(t, valAddr, PKs[i], *randomEVMAddress)
 	}
 
 	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators, app.StakingKeeper.PowerReduction(ctx))
@@ -80,8 +80,8 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	require.NoError(t, err)
 
 	valSet := []types.Validator{
-		teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress1),
-		teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2),
+		teststaking.NewValidator(t, addrVals[0], PKs[0], *randomEVMAddress1),
+		teststaking.NewValidator(t, addrVals[1], PKs[1], *randomEVMAddress2),
 	}
 
 	hi4 := types.NewHistoricalInfo(h4, valSet, app.StakingKeeper.PowerReduction(ctx))
@@ -102,14 +102,14 @@ func TestTrackHistoricalInfo(t *testing.T) {
 	// Set bonded validators in keeper
 	randomEVMAddress3, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2], sdk.AccAddress(PKs[2].Address()), *randomEVMAddress3)
+	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2], *randomEVMAddress3)
 	val1.Status = types.Bonded // when not bonded, consensus power is Zero
 	val1.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	randomEVMAddress4, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3], sdk.AccAddress(PKs[3].Address()), *randomEVMAddress4)
+	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3], *randomEVMAddress4)
 	val1.Status = types.Bonded
 	val2.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 80)
 	app.StakingKeeper.SetValidator(ctx, val2)
@@ -161,8 +161,8 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	require.NoError(t, err)
 
 	valSet := []types.Validator{
-		teststaking.NewValidator(t, addrVals[0], PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress1),
-		teststaking.NewValidator(t, addrVals[1], PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2),
+		teststaking.NewValidator(t, addrVals[0], PKs[0], *randomEVMAddress1),
+		teststaking.NewValidator(t, addrVals[1], PKs[1], *randomEVMAddress2),
 	}
 
 	header1 := tmproto.Header{ChainID: "HelloChain", Height: 10}

@@ -346,7 +346,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	suite.NoError(err)
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

@@ -87,8 +87,7 @@ const (
 	FlagLogFormat = "log_format"
 
 	// QGB related flags
-	FlagOrchestratorAddress = "orchestrator-address"
-	FlagEVMAddress          = "evm-address"
+	FlagEVMAddress = "evm-address"
 )
 
 // LineBreak can be included in a command list to provide a blank line

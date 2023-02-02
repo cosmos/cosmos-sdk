@@ -20,7 +20,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign() {
 	suite.NoError(err)
 	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
-	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, sdk.AccAddress(val.Address()), *randomEVMAddress, true)
+	selfDelegation := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, *randomEVMAddress, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)
@@ -88,7 +88,7 @@ func (suite *KeeperTestSuite) TestHandleDoubleSign_TooOld() {
 	suite.NoError(err)
 	tstaking := teststaking.NewHelper(suite.T(), ctx, suite.app.StakingKeeper)
 
-	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, sdk.AccAddress(val.Address()), *randomEVMAddress, true)
+	amt := tstaking.CreateValidatorWithValPower(operatorAddr, val, power, *randomEVMAddress, true)
 
 	// execute end-blocker and verify validator attributes
 	staking.EndBlocker(ctx, suite.app.StakingKeeper)

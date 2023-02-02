@@ -29,7 +29,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 
 	// end block to bond validator and start new block
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -86,7 +86,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	valPower := int64(100)
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, *randomEVMAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -151,7 +151,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	require.NoError(t, err)
 	valPower := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, *randomEVMAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -227,7 +227,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -302,7 +302,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	require.NoError(t, err)
 	power := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	valTokens := tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, power, *randomEVMAddress, true)
 
 	// assert correct initial balance
 	expTokens := balanceTokens.Sub(valTokens)
@@ -368,7 +368,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	require.NoError(t, err)
 	valPower := int64(100)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, *randomEVMAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -438,7 +438,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	valPower := int64(100)
-	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidatorWithValPower(valAddrs[0], valConsPk1, valPower, *randomEVMAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -523,7 +523,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 
 	// end block to bond validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -672,7 +672,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valAddrs[0]), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 	app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// end block to bond validator

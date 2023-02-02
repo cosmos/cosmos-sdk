@@ -31,7 +31,7 @@ func TestGetValidatorPowerRank(t *testing.T) {
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 
-	val1 := newValidator(t, valAddr1, keysPK1, sdk.AccAddress(keysPK1.Address()), *randomEVMAddress)
+	val1 := newValidator(t, valAddr1, keysPK1, *randomEVMAddress)
 	val1.Tokens = sdk.ZeroInt()
 	val2, val3, val4 := val1, val1, val1
 	val2.Tokens = sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction)

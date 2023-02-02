@@ -260,7 +260,7 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(err)
-	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{}, sdk.AccAddress(valPubKey.Address()), *randomEVMAddress)
+	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{}, *randomEVMAddress)
 	require.NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
 	require.NoError(err)

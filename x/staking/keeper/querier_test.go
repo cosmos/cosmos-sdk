@@ -29,7 +29,7 @@ func TestNewQuerier(t *testing.T) {
 	for i, amt := range amts {
 		randomEVMAddress, err := teststaking.RandomEVMAddress()
 		require.NoError(t, err)
-		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i], sdk.AccAddress(PKs[i].Address()), *randomEVMAddress)
+		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i], *randomEVMAddress)
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
 		app.StakingKeeper.SetValidator(ctx, validators[i])
 		app.StakingKeeper.SetValidatorByPowerIndex(ctx, validators[i])
@@ -151,7 +151,7 @@ func TestQueryValidators(t *testing.T) {
 	for i, amt := range amts {
 		randomEVMAddress, err := teststaking.RandomEVMAddress()
 		require.NoError(t, err)
-		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i], sdk.AccAddress(PKs[i].Address()), *randomEVMAddress)
+		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i], *randomEVMAddress)
 		validators[i], _ = validators[i].AddTokensFromDel(amt)
 		validators[i] = validators[i].UpdateStatus(status[i])
 	}
@@ -221,13 +221,13 @@ func TestQueryDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	randomEVMAddress1, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, addrVal1, pk1, sdk.AccAddress(pk1.Address()), *randomEVMAddress1)
+	val1 := teststaking.NewValidator(t, addrVal1, pk1, *randomEVMAddress1)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val2 := teststaking.NewValidator(t, addrVal2, pk2, sdk.AccAddress(pk2.Address()), *randomEVMAddress2)
+	val2 := teststaking.NewValidator(t, addrVal2, pk2, *randomEVMAddress2)
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
 
@@ -472,7 +472,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, valAddress, pubKeys[0], sdk.AccAddress(pubKeys[0].Address()), *randomEVMAddress)
+	val1 := teststaking.NewValidator(t, valAddress, pubKeys[0], *randomEVMAddress)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 
@@ -559,10 +559,10 @@ func TestQueryRedelegations(t *testing.T) {
 	// Create Validators and Delegation
 	randomEVMAddress1, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, addrVal1, PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress1)
+	val1 := teststaking.NewValidator(t, addrVal1, PKs[0], *randomEVMAddress1)
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val2 := teststaking.NewValidator(t, addrVal2, PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2)
+	val2 := teststaking.NewValidator(t, addrVal2, PKs[1], *randomEVMAddress2)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidator(ctx, val2)
 
@@ -635,7 +635,7 @@ func TestQueryUnbondingDelegation(t *testing.T) {
 	// Create Validators and Delegation
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, addrVal1, PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress)
+	val1 := teststaking.NewValidator(t, addrVal1, PKs[0], *randomEVMAddress)
 	app.StakingKeeper.SetValidator(ctx, val1)
 
 	// delegate
@@ -733,10 +733,10 @@ func TestQueryHistoricalInfo(t *testing.T) {
 	// Create Validators and Delegation
 	randomEVMAddress1, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, addrVal1, PKs[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress1)
+	val1 := teststaking.NewValidator(t, addrVal1, PKs[0], *randomEVMAddress1)
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val2 := teststaking.NewValidator(t, addrVal2, PKs[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2)
+	val2 := teststaking.NewValidator(t, addrVal2, PKs[1], *randomEVMAddress2)
 	vals := []types.Validator{val1, val2}
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidator(ctx, val2)

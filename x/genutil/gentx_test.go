@@ -62,13 +62,11 @@ func (suite *GenTxTestSuite) SetupTest() {
 	one := sdk.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(pk1.Address()), pk1, amount, desc, comm, one,
-		sdk.AccAddress(pk1.Address()),
 		*evmAddr1,
 	)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
 		sdk.ValAddress(pk2.Address()), pk1, amount, desc, comm, one,
-		sdk.AccAddress(pk2.Address()),
 		*evmAddr2,
 	)
 	suite.NoError(err)

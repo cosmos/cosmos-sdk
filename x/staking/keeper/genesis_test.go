@@ -179,7 +179,6 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			sdk.ValAddress(addrs[i]),
 			PKs[i],
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
-			sdk.AccAddress(PKs[i].Address()),
 			*randomEVMAddress,
 		)
 		require.NoError(t, err)

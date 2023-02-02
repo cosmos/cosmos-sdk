@@ -52,7 +52,6 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
     --details="..." \
     --security-contact="..." \
     --website="..." \
-    --orchestrator-address="..." \
     --evm-address="..."
 `, defaultsDesc, version.AppName,
 		),
@@ -111,11 +110,6 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 				moniker = m
 			}
 
-			orchestratorAddress, err := cmd.Flags().GetString(flags.FlagOrchestratorAddress)
-			if err != nil {
-				return errors.Wrapf(err, "failed to get the orchestrator address")
-			}
-
 			evmAddress, err := cmd.Flags().GetString(flags.FlagEVMAddress)
 			if err != nil {
 				return errors.Wrapf(err, "failed to get the EVM address")
@@ -125,7 +119,7 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			createValCfg, err := cli.PrepareConfigForTxCreateValidator(
 				cmd.Flags(), moniker,
 				nodeID, genDoc.ChainID,
-				valPubKey, orchestratorAddress,
+				valPubKey,
 				evmAddress,
 			)
 			if err != nil {

@@ -800,11 +800,11 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 
 	randomEVMAddress1, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0], sdk.AccAddress(PKs[0].Address()), *randomEVMAddress1)
+	val1 := teststaking.NewValidator(t, valAddrs[0], pks[0], *randomEVMAddress1)
 
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1], sdk.AccAddress(PKs[1].Address()), *randomEVMAddress2)
+	val2 := teststaking.NewValidator(t, valAddrs[1], pks[1], *randomEVMAddress2)
 	vals := []types.Validator{val1, val2}
 
 	app.StakingKeeper.SetValidator(ctx, val1)

@@ -73,7 +73,7 @@ func TestStakingMsgs(t *testing.T) {
 	// create validator
 	description := types.NewDescription("foo_moniker", "", "", "", "")
 	createValidatorMsg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(), sdk.AccAddress(valKey.PubKey().Address()), evmAddr,
+		sdk.ValAddress(addr1), valKey.PubKey(), bondCoin, description, commissionRates, sdk.OneInt(), evmAddr,
 	)
 	require.NoError(t, err)
 
@@ -96,7 +96,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	// edit the validator
 	description = types.NewDescription("bar_moniker", "", "", "", "")
-	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil, nil, nil)
+	editValidatorMsg := types.NewMsgEditValidator(sdk.ValAddress(addr1), description, nil, nil, nil)
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)

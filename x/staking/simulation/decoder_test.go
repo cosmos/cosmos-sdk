@@ -40,7 +40,7 @@ func TestDecodeStore(t *testing.T) {
 
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val, err := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test", "test"), sdk.AccAddress(delPk1.Address()), *randomEVMAddress)
+	val, err := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test", "test"), *randomEVMAddress)
 	require.NoError(t, err)
 	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())

@@ -29,7 +29,7 @@ func TestBeginBlocker(t *testing.T) {
 	power := int64(100)
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, sdk.AccAddress(pk.Address()), *randomEVMAddress, true)
+	amt := tstaking.CreateValidatorWithValPower(addr, pk, power, *randomEVMAddress, true)
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(
 		t, app.BankKeeper.GetAllBalances(ctx, sdk.AccAddress(addr)),

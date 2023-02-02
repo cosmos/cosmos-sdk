@@ -124,12 +124,9 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
-  // The orchestrator field is a celes1... string  (i.e. sdk.AccAddress) that
-  // references the key that is being delegated to
-  string orchestrator = 12;
   // This is a hex encoded 0x EVM public key that will be used by this
   // validator on the target EVM chain.
-  string evm_address = 13;
+  string evm_address = 12;
 }
 
 // BondStatus is the status of a validator.

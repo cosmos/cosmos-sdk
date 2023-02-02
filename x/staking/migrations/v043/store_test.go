@@ -26,7 +26,7 @@ func TestStoreMigration(t *testing.T) {
 	valAddr1 := sdk.ValAddress(addr1)
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val := teststaking.NewValidator(t, valAddr1, pk1, sdk.AccAddress(pk1.Address()), *randomEVMAddress)
+	val := teststaking.NewValidator(t, valAddr1, pk1, *randomEVMAddress)
 	_, pk1, addr2 := testdata.KeyTestPubAddr()
 	valAddr2 := sdk.ValAddress(addr2)
 	_, _, addr3 := testdata.KeyTestPubAddr()

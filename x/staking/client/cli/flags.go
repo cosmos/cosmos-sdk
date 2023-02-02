@@ -81,13 +81,6 @@ func FlagSetPublicKey() *flag.FlagSet {
 	return fs
 }
 
-// FlagSetOrchestratorAddress Returns the flagset for Orchestrator address related operations.
-func FlagSetOrchestratorAddress() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(flags.FlagOrchestratorAddress, "", "The Bech32 cosmos1 address of the orchestrator")
-	return fs
-}
-
 // FlagSetEVMAddress Returns the flagset for EVM address related operations.
 func FlagSetEVMAddress() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)

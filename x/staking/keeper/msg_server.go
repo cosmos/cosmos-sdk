@@ -86,17 +86,12 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		}
 	}
 
-	orchAddr, err := k.validateOrchestratorAddress(ctx, msg.Orchestrator)
-	if err != nil {
-		return nil, err
-	}
-
 	evmAddr, err := k.validateEVMAddress(ctx, msg.EvmAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	validator, err := types.NewValidator(valAddr, pk, msg.Description, orchAddr, evmAddr)
+	validator, err := types.NewValidator(valAddr, pk, msg.Description, evmAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -196,14 +191,6 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		validator.MinSelfDelegation = *msg.MinSelfDelegation
-	}
-
-	if msg.Orchestrator != "" {
-		_, err := k.validateOrchestratorAddress(ctx, msg.Orchestrator)
-		if err != nil {
-			return nil, err
-		}
-		validator.Orchestrator = msg.Orchestrator
 	}
 
 	if msg.EvmAddress != "" {
@@ -429,18 +416,6 @@ func (k msgServer) validateEVMAddress(ctx sdk.Context, evmAddrHex string) (commo
 		return common.Address{}, types.ErrValidatorEVMAddressExists
 	}
 	return evmAddr, nil
-}
-
-func (k msgServer) validateOrchestratorAddress(ctx sdk.Context, orchAddr string) (sdk.AccAddress, error) {
-	addr, err := sdk.AccAddressFromBech32(orchAddr)
-	if err != nil {
-		return sdk.AccAddress{}, err
-	}
-	// FIXME should we add the zero accAddr check?
-	if _, found := k.GetValidatorByOrchestratorAddress(ctx, addr); found {
-		return sdk.AccAddress{}, types.ErrValidatorOrchestratorAddressExists
-	}
-	return addr, nil
 }
 
 // CancelUnbondingDelegation defines a method for canceling the unbonding delegation

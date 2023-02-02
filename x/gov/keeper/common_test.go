@@ -54,17 +54,17 @@ func createValidators(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers 
 
 	randomEVMAddress1, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{}, sdk.AccAddress(pks[0].Address()), *randomEVMAddress1)
+	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{}, *randomEVMAddress1)
 	require.NoError(t, err)
 
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{}, sdk.AccAddress(pks[1].Address()), *randomEVMAddress2)
+	val2, err := stakingtypes.NewValidator(valAddrs[1], pks[1], stakingtypes.Description{}, *randomEVMAddress2)
 	require.NoError(t, err)
 
 	randomEVMAddress3, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
-	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{}, sdk.AccAddress(pks[2].Address()), *randomEVMAddress3)
+	val3, err := stakingtypes.NewValidator(valAddrs[2], pks[2], stakingtypes.Description{}, *randomEVMAddress3)
 	require.NoError(t, err)
 
 	app.StakingKeeper.SetValidator(ctx, val1)

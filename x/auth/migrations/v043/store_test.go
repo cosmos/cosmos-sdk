@@ -665,7 +665,7 @@ func createValidator(t *testing.T, ctx sdk.Context, app *simapp.SimApp, powers i
 		app.GetSubspace(stakingtypes.ModuleName),
 	)
 
-	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{}, sdk.AccAddress(pks[0].Address()), *evmAddr)
+	val1, err := stakingtypes.NewValidator(valAddrs[0], pks[0], stakingtypes.Description{}, *evmAddr)
 	require.NoError(t, err)
 
 	app.StakingKeeper.SetValidator(ctx, val1)

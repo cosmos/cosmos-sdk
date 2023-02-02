@@ -175,8 +175,6 @@ type (
 
 		EVMPrivateKey *ecdsa.PrivateKey
 		EVMAddr       common.Address
-
-		OrchestratorAddr sdk.AccAddress
 	}
 )
 
@@ -423,7 +421,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(commission, sdk.OneDec(), sdk.OneDec()),
 			sdk.OneInt(),
-			addr,
 			evmAddr,
 		)
 		if err != nil {
@@ -481,21 +478,20 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			WithAccountRetriever(cfg.AccountRetriever)
 
 		network.Validators[i] = &Validator{
-			AppConfig:        appCfg,
-			ClientCtx:        clientCtx,
-			Ctx:              ctx,
-			Dir:              filepath.Join(network.BaseDir, nodeDirName),
-			NodeID:           nodeID,
-			PubKey:           pubKey,
-			Moniker:          nodeDirName,
-			RPCAddress:       tmCfg.RPC.ListenAddress,
-			P2PAddress:       tmCfg.P2P.ListenAddress,
-			APIAddress:       apiAddr,
-			Address:          addr,
-			ValAddress:       sdk.ValAddress(addr),
-			EVMPrivateKey:    evmPrivateKey,
-			EVMAddr:          evmAddr,
-			OrchestratorAddr: addr,
+			AppConfig:     appCfg,
+			ClientCtx:     clientCtx,
+			Ctx:           ctx,
+			Dir:           filepath.Join(network.BaseDir, nodeDirName),
+			NodeID:        nodeID,
+			PubKey:        pubKey,
+			Moniker:       nodeDirName,
+			RPCAddress:    tmCfg.RPC.ListenAddress,
+			P2PAddress:    tmCfg.P2P.ListenAddress,
+			APIAddress:    apiAddr,
+			Address:       addr,
+			ValAddress:    sdk.ValAddress(addr),
+			EVMPrivateKey: evmPrivateKey,
+			EVMAddr:       evmAddr,
 		}
 	}
 

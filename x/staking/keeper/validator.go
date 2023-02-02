@@ -25,19 +25,6 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator ty
 	return validator, true
 }
 
-// get a single validator by orchestrator address
-func (k Keeper) GetValidatorByOrchestrator(ctx sdk.Context, addr sdk.AccAddress) (validator types.Validator, found bool) {
-	// TODO find a better way to iterate
-	// https://github.com/celestiaorg/cosmos-sdk/issues/129
-	validators := k.GetAllValidators(ctx)
-	for _, validator := range validators {
-		if validator.Orchestrator == addr.String() {
-			return validator, true
-		}
-	}
-	return types.Validator{}, false
-}
-
 func (k Keeper) mustGetValidator(ctx sdk.Context, addr sdk.ValAddress) types.Validator {
 	validator, found := k.GetValidator(ctx, addr)
 	if !found {
@@ -66,19 +53,6 @@ func (k Keeper) mustGetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAdd
 	}
 
 	return validator
-}
-
-func (k Keeper) GetValidatorByOrchestratorAddress(ctx sdk.Context, orch sdk.AccAddress) (types.Validator, bool) {
-	// TODO optimise these queries and even add grpc queries for them.
-	// Issue: https://github.com/celestiaorg/cosmos-sdk/issues/129
-	validators := k.GetAllValidators(ctx)
-	for _, val := range validators {
-		if val.Orchestrator == orch.String() {
-			return val, true
-		}
-	}
-
-	return types.Validator{}, false
 }
 
 func (k Keeper) GetValidatorByEVMAddress(ctx sdk.Context, evm common.Address) (types.Validator, bool) {

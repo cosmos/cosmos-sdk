@@ -289,8 +289,6 @@ func initTestnetFiles(
 		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
 		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
 
-		orchAddress := sdk.AccAddress(valPubKeys[i].Address())
-
 		evmAddress, err := teststaking.RandomEVMAddress()
 		if err != nil {
 			return err
@@ -303,7 +301,7 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(), orchAddress, *evmAddress,
+			sdk.OneInt(), *evmAddress,
 		)
 		if err != nil {
 			return err

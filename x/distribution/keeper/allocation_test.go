@@ -28,7 +28,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(sdk.ValAddress(addrs[0]), valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
 
 	// allocate tokens
@@ -62,13 +62,13 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 
 	// create validator with 50% commission
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), *randomEVMAddress, true)
 
 	// create second validator with 0% commission
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDec(0), sdk.NewDec(0), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), sdk.AccAddress(valConsPk2.Address()), *randomEVMAddress2, true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), *randomEVMAddress2, true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),
@@ -140,19 +140,19 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	randomEVMAddress, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(110), sdk.AccAddress(valConsPk1.Address()), *randomEVMAddress, true)
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(110), *randomEVMAddress, true)
 
 	// create second validator with 10% commission
 	randomEVMAddress2, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), sdk.AccAddress(valConsPk2.Address()), *randomEVMAddress2, true)
+	tstaking.CreateValidator(valAddrs[1], valConsPk2, sdk.NewInt(100), *randomEVMAddress2, true)
 
 	// create third validator with 10% commission
 	randomEVMAddress3, err := teststaking.RandomEVMAddress()
 	require.NoError(t, err)
 	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(1, 1), sdk.NewDecWithPrec(1, 1), sdk.NewDec(0))
-	tstaking.CreateValidator(valAddrs[2], valConsPk3, sdk.NewInt(100), sdk.AccAddress(valConsPk3.Address()), *randomEVMAddress3, true)
+	tstaking.CreateValidator(valAddrs[2], valConsPk3, sdk.NewInt(100), *randomEVMAddress3, true)
 
 	abciValA := abci.Validator{
 		Address: valConsPk1.Address(),

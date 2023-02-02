@@ -110,9 +110,6 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	// add common proposal flags
 	cli.AddGovPropFlagsToCmd(cmd)
 
-	// add common proposal flags
-	cli.AddGovPropFlagsToCmd(cmd)
-
 	return cmd
 }
 

@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -95,12 +96,14 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 				authority = sdk.AccAddress(address.Module("gov")).String()
 			}
 
-			proposal.SetMsgs([]sdk.Msg{
+			if err := proposal.SetMsgs([]sdk.Msg{
 				&types.MsgSoftwareUpgrade{
 					Authority: authority,
 					Plan:      p,
 				},
-			})
+			}); err != nil {
+				return fmt.Errorf("failed to create cancel upgrade message: %w", err)
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 		},
@@ -113,7 +116,9 @@ func NewCmdSubmitUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(FlagAuthority, "", "The address of the upgrade module authority (defaults to gov)")
 
 	// add common proposal flags
+	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
+	cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }
@@ -145,20 +150,24 @@ func NewCmdSubmitCancelUpgradeProposal() *cobra.Command {
 				authority = sdk.AccAddress(address.Module("gov")).String()
 			}
 
-			proposal.SetMsgs([]sdk.Msg{
+			if err := proposal.SetMsgs([]sdk.Msg{
 				&types.MsgCancelUpgrade{
 					Authority: authority,
 				},
-			})
+			}); err != nil {
+				return fmt.Errorf("failed to create cancel upgrade message: %w", err)
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
 		},
 	}
 
-	// add common proposal flags
-	cli.AddGovPropFlagsToCmd(cmd)
-
 	cmd.Flags().String(FlagAuthority, "", "The address of the upgrade module authority (defaults to gov)")
+
+	// add common proposal flags
+	flags.AddTxFlagsToCmd(cmd)
+	cli.AddGovPropFlagsToCmd(cmd)
+	cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }

@@ -441,6 +441,17 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		}
 	}
 
+	// If gRPC is enabled but API is not, we need to start the gRPC server
+	// without the API server. If the API server is enabled, we've already
+	// started the grpc server.
+	if config.GRPC.Enable && !config.API.Enable {
+		grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+		if err != nil {
+			return err
+		}
+		defer grpcSrv.Stop()
+	}
+
 	// At this point it is safe to block the process if we're in gRPC only mode as
 	// we do not need to handle any Tendermint related processes.
 	if gRPCOnly {

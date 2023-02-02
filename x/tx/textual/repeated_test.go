@@ -18,10 +18,6 @@ import (
 type repeatedJsonTest struct {
 	Proto   *testpb.Qux
 	Screens []textual.Screen
-	// TODO Remove once we finished all primitive value renderers parsing
-	// https://github.com/cosmos/cosmos-sdk/pull/13696
-	// https://github.com/cosmos/cosmos-sdk/pull/13853
-	Parses bool
 }
 
 func TestRepeatedJsonTestcases(t *testing.T) {
@@ -45,14 +41,12 @@ func TestRepeatedJsonTestcases(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)
 
-			if tc.Parses {
-				val, err := rend.Parse(context.Background(), screens)
-				require.NoError(t, err)
-				msg := val.Message().Interface()
-				require.IsType(t, &testpb.Qux{}, msg)
-				baz := msg.(*testpb.Qux)
-				require.True(t, proto.Equal(baz, tc.Proto))
-			}
+			val, err := rend.Parse(context.Background(), screens)
+			require.NoError(t, err)
+			msg := val.Message().Interface()
+			require.IsType(t, &testpb.Qux{}, msg)
+			baz := msg.(*testpb.Qux)
+			require.True(t, proto.Equal(baz, tc.Proto))
 		})
 	}
 }

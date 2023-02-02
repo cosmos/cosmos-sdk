@@ -256,6 +256,11 @@ func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
 }
 
+// LazyLoadVersionForOverwriting is the lazy version of LoadVersionForOverwriting.
+func (st *Store) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	return st.tree.LazyLoadVersionForOverwriting(targetVersion)
+}
+
 // Implements types.KVStore.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
 	iterator, err := st.tree.Iterator(start, end, true)

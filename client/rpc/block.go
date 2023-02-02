@@ -14,7 +14,7 @@ import (
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
-// get the current blockchain height
+// GetChainHeight returns the current blockchain height.
 func GetChainHeight(clientCtx client.Context) (int64, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {

@@ -78,9 +78,6 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 		logger.Info().Msgf("the %q file already exists", genBinExe)
 	}
 	logger.Info().Msgf("making sure %q is executable", genBinExe)
-	if err = cosmovisor.MarkExecutable(genBinExe); err != nil {
-		return err
-	}
 	if err = plan.EnsureBinary(genBinExe); err != nil {
 		return err
 	}

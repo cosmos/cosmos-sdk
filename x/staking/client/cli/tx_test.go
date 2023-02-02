@@ -169,6 +169,10 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
   		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
   		"amount": "%dstake",
   		"moniker": "NewValidator",
+		"identity": "AFAF00C4",
+		"website": "https://newvalidator.io",
+		"security": "contact@newvalidator.io",
+		"details": "'Hey, I am a new validator. Please delegate!'",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
   		"commission-max-change-rate": "0.1",
@@ -176,6 +180,19 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 	}`, 100)
 	validJSONFile := testutil.WriteToNewTempFile(s.T(), validJSON)
 	defer validJSONFile.Close()
+
+	validJSONWithoutOptionalFields := fmt.Sprintf(`
+	{
+  		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+  		"amount": "%dstake",
+  		"moniker": "NewValidator",
+  		"commission-rate": "0.5",
+  		"commission-max-rate": "1.0",
+  		"commission-max-change-rate": "0.1",
+  		"min-self-delegation": "1"
+	}`, 100)
+	validJSONWOOptionalFile := testutil.WriteToNewTempFile(s.T(), validJSONWithoutOptionalFields)
+	defer validJSONWOOptionalFile.Close()
 
 	noAmountJSON := `
 	{
@@ -224,10 +241,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing amount)",
 			[]string{
 				noAmountJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -241,10 +254,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing pubkey)",
 			[]string{
 				noPubKeyJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -258,10 +267,6 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing moniker)",
 			[]string{
 				noMonikerJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -272,13 +277,20 @@ func (s *CLITestSuite) TestNewCreateValidatorCmd() {
 			nil,
 		},
 		{
-			"valid transaction",
+			"valid transaction with all fields",
 			[]string{
 				validJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
+			},
+			false, "", &sdk.TxResponse{},
+		},
+		{
+			"valid transaction without optional fields",
+			[]string{
+				validJSONWOOptionalFile.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, s.addrs[0]),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

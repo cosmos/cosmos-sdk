@@ -125,7 +125,28 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
   		"min-self-delegation": "1"
 	}`, 100)
 	validJSONFile := testutil.WriteToNewTempFile(s.T(), validJSON)
-	defer validJSONFile.Close()
+	defer func() {
+		if err := validJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
+
+	validJSONWithoutOptionalFields := fmt.Sprintf(`
+	{
+  		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+  		"amount": "%dstake",
+  		"moniker": "NewValidator",
+  		"commission-rate": "0.5",
+  		"commission-max-rate": "1.0",
+  		"commission-max-change-rate": "0.1",
+  		"min-self-delegation": "1"
+	}`, 100)
+	validJSONWOOptionalFile := testutil.WriteToNewTempFile(s.T(), validJSONWithoutOptionalFields)
+	defer func() {
+		if err := validJSONWOOptionalFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
 
 	noAmountJSON := `
 	{
@@ -137,7 +158,11 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
   		"min-self-delegation": "1"
 	}`
 	noAmountJSONFile := testutil.WriteToNewTempFile(s.T(), noAmountJSON)
-	defer noAmountJSONFile.Close()
+	defer func() {
+		if err := noAmountJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
 
 	noPubKeyJSON := fmt.Sprintf(`
 	{
@@ -149,7 +174,11 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
   		"min-self-delegation": "1"
 	}`, 100)
 	noPubKeyJSONFile := testutil.WriteToNewTempFile(s.T(), noPubKeyJSON)
-	defer noPubKeyJSONFile.Close()
+	defer func() {
+		if err := noPubKeyJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
 
 	noMonikerJSON := fmt.Sprintf(`
 	{
@@ -161,7 +190,11 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
   		"min-self-delegation": "1"
 	}`, 100)
 	noMonikerJSONFile := testutil.WriteToNewTempFile(s.T(), noMonikerJSON)
-	defer noMonikerJSONFile.Close()
+	defer func() {
+		if err := noMonikerJSONFile.Close(); err != nil {
+			val.Ctx.Logger.Info("Error closing file: %s\n", err)
+		}
+	}()
 
 	testCases := []struct {
 		name         string
@@ -174,10 +207,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing amount)",
 			[]string{
 				noAmountJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -189,10 +218,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing pubkey)",
 			[]string{
 				noPubKeyJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -204,10 +229,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 			"invalid transaction (missing moniker)",
 			[]string{
 				noMonikerJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -216,17 +237,24 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 			true, 0, nil,
 		},
 		{
-			"valid transaction",
+			"valid transaction with all fields",
 			[]string{
 				validJSONFile.Name(),
-				fmt.Sprintf("--%s=AFAF00C4", cli.FlagIdentity),
-				fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
-				fmt.Sprintf("--%s=contact@newvalidator.io", cli.FlagSecurityContact),
-				fmt.Sprintf("--%s='Hey, I am a new validator. Please delegate!'", cli.FlagDetails),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+			},
+			false, 0, &sdk.TxResponse{},
+		},
+		{
+			"valid transaction without optional fields",
+			[]string{
+				validJSONWOOptionalFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, newAddr),
+				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10))).String()),
 			},
 			false, 0, &sdk.TxResponse{},
 		},

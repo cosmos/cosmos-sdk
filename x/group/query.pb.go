@@ -1382,6 +1382,8 @@ func (m *QueryTallyResultResponse) GetTally() TallyResult {
 }
 
 // QueryGroupsRequest is the Query/Groups request type.
+//
+// Since: cosmos-sdk 0.47.1
 type QueryGroupsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -1428,8 +1430,10 @@ func (m *QueryGroupsRequest) GetPagination() *query.PageRequest {
 }
 
 // QueryGroupsResponse is the Query/Groups response type.
+//
+// Since: cosmos-sdk 0.47.1
 type QueryGroupsResponse struct {
-	// groups are the groups info with the provided admin.
+	// `groups` is all groups present in state.
 	Groups []*GroupInfo `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -1644,6 +1648,8 @@ type QueryClient interface {
 	// proposal itself.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
 	// Groups queries all groups in state.
+	//
+	// Since: cosmos-sdk 0.47.1
 	Groups(ctx context.Context, in *QueryGroupsRequest, opts ...grpc.CallOption) (*QueryGroupsResponse, error)
 }
 
@@ -1814,6 +1820,8 @@ type QueryServer interface {
 	// proposal itself.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
 	// Groups queries all groups in state.
+	//
+	// Since: cosmos-sdk 0.47.1
 	Groups(context.Context, *QueryGroupsRequest) (*QueryGroupsResponse, error)
 }
 

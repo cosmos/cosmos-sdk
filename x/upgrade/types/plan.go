@@ -24,6 +24,15 @@ func (p Plan) ValidateBasic() error {
 	if p.Height <= 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "height must be greater than 0")
 	}
+	if p.Info != "" && len(p.Artifacts) > 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "info and artifacts cannot both be set")
+	}
+
+	for _, artifact := range p.Artifacts {
+		if err := artifact.ValidateBasic(); err != nil {
+			return fmt.Errorf("artifact invalid: %w", err)
+		}
+	}
 
 	return nil
 }
@@ -39,4 +48,33 @@ func (p Plan) ShouldExecute(ctx sdk.Context) bool {
 // DueAt is a string representation of when this plan is due to be executed
 func (p Plan) DueAt() string {
 	return fmt.Sprintf("height: %d", p.Height)
+}
+
+var SupportedChecksumAlgo = []string{"md5", "sha256", "sha512"}
+
+// ValidateBasic does basic validation of an Artifact
+func (a Artifact) ValidateBasic() error {
+	if a.Platform == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "platform cannot be empty")
+	}
+
+	if a.Url == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "url cannot be empty")
+	}
+
+	if a.Checksum == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "checksum cannot be empty")
+	}
+
+	if a.ChecksumAlgo == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "checksum algo cannot be empty")
+	}
+
+	for _, algo := range SupportedChecksumAlgo {
+		if a.ChecksumAlgo == algo {
+			return nil
+		}
+	}
+
+	return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "checksum algo %s is not supported", a.ChecksumAlgo)
 }

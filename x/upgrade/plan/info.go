@@ -99,6 +99,7 @@ func (m BinaryDownloadURLMap) CheckURLs(daemonName string) error {
 		return fmt.Errorf("could not create temp directory: %w", err)
 	}
 	defer os.RemoveAll(tempDir)
+
 	for osArch, url := range m {
 		dstRoot := filepath.Join(tempDir, strings.ReplaceAll(osArch, "/", "-"))
 		if err = DownloadUpgrade(dstRoot, url, daemonName); err != nil {

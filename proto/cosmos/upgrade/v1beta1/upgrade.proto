@@ -50,9 +50,16 @@ message Plan {
 // Artifact defines a software artifact that can be downloaded and installed.
 // It correspond to a single binary 
 message Artifact {
+  option (amino.name)      = "cosmos-sdk/Artifact";
+  option (gogoproto.equal)                   = true;
+
+  // Platform identifier. It's composed from OS and CPU architecture. Example: "linux/amd64"
   string platform      = 1;
+  // URL to a chain script or chain binary to download.
   string url           = 2;
+  // Checksum is a sha256 hex encoded checksum of an artifact referenced by the URL.
   string checksum      = 3;
+  // Checksum_algo defines the checksum algorithm used to calculate the checksum.
   string checksum_algo = 4;
 }
 

@@ -65,6 +65,35 @@ func TestPlanValid(t *testing.T) {
 			},
 			valid: true,
 		},
+		"proper with artifacts": {
+			p: types.Plan{
+				Name:   "all-good",
+				Height: 123450000,
+				Artifacts: []*types.Artifact{
+					{
+						Platform:     "linux/amd64",
+						Url:          "https://example.com",
+						Checksum:     "checksum",
+						ChecksumAlgo: "md5",
+					},
+				},
+			},
+			valid: true,
+		},
+		"unsupported checksum algo": {
+			p: types.Plan{
+				Name:   "all-good",
+				Height: 123450000,
+				Artifacts: []*types.Artifact{
+					{
+						Platform:     "linux/amd64",
+						Url:          "https://example.com",
+						Checksum:     "checksum",
+						ChecksumAlgo: "foo",
+					},
+				},
+			},
+		},
 		"no name": {
 			p: types.Plan{
 				Height: 123450000,
@@ -91,6 +120,29 @@ func TestPlanValid(t *testing.T) {
 			p: types.Plan{
 				Name:   "minus",
 				Height: -12345,
+			},
+		},
+		"info and artifacts": {
+			p: types.Plan{
+				Name:   "info-artifacts",
+				Height: 10,
+				Info:   "important",
+				Artifacts: []*types.Artifact{
+					{
+						Checksum: "checksum",
+					},
+				},
+			},
+		},
+		"invalid artifacts": {
+			p: types.Plan{
+				Name:   "info-artifacts",
+				Height: 10,
+				Artifacts: []*types.Artifact{
+					{
+						Checksum: "checksum",
+					},
+				},
 			},
 		},
 	}

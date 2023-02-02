@@ -6,16 +6,12 @@ import (
 
 	"cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
-func TestParseArgsToContent(t *testing.T) {
-	fs := NewCmdSubmitLegacyUpgradeProposal().Flags()
+func TestParsePlan(t *testing.T) {
+	fs := NewCmdSubmitUpgradeProposal().Flags()
 
-	proposal := types.SoftwareUpgradeProposal{ //nolint:staticcheck // SA1019: types.SoftwareUpgradeProposal is deprecated: use types.Content instead
-		Title:       "proposal title",
-		Description: "proposal description",
+	proposal := types.MsgSoftwareUpgrade{
 		Plan: types.Plan{
 			Name:   "plan name",
 			Height: 123456,
@@ -23,19 +19,12 @@ func TestParseArgsToContent(t *testing.T) {
 		},
 	}
 
-	fs.Set(cli.FlagTitle, proposal.Title)
-	fs.Set(cli.FlagDescription, proposal.Description) //nolint:staticcheck // SA1019: cli.FlagDescription is deprecated: use cli.FlagProposalDescription instead
 	fs.Set(FlagUpgradeHeight, strconv.FormatInt(proposal.Plan.Height, 10))
 	fs.Set(FlagUpgradeInfo, proposal.Plan.Info)
 
-	content, err := parseArgsToContent(fs, proposal.Plan.Name)
+	p, err := parsePlan(fs, proposal.Plan.Name)
 	require.NoError(t, err)
-
-	p, ok := content.(*types.SoftwareUpgradeProposal) //nolint:staticcheck // SA1019: types.SoftwareUpgradeProposal is deprecated: use types.Content instead
-	require.Equal(t, ok, true)
-	require.Equal(t, p.Title, proposal.Title)
-	require.Equal(t, p.Description, proposal.Description)
-	require.Equal(t, p.Plan.Name, proposal.Plan.Name)
-	require.Equal(t, p.Plan.Height, proposal.Plan.Height)
-	require.Equal(t, p.Plan.Info, proposal.Plan.Info)
+	require.Equal(t, p.Name, proposal.Plan.Name)
+	require.Equal(t, p.Height, proposal.Plan.Height)
+	require.Equal(t, p.Info, proposal.Plan.Info)
 }

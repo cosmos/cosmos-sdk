@@ -78,7 +78,7 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 # Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
 
-# IAVLLazyLoading enable/disable the lazy loading of iavl store.
+# EXPERIMENTAL: IAVLLazyLoading enable/disable the lazy loading of iavl store.
 # Default is false.
 iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
 

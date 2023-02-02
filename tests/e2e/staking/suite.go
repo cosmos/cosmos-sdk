@@ -116,7 +116,6 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 
 	validJSON := fmt.Sprintf(`
 	{
-		"from": "%s",
   		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
   		"amount": "%dstake",
   		"moniker": "NewValidator",
@@ -124,46 +123,43 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
   		"commission-max-rate": "1.0",
   		"commission-max-change-rate": "0.1",
   		"min-self-delegation": "1"
-	}`, newAddr, 100)
+	}`, 100)
 	validJSONFile := testutil.WriteToNewTempFile(s.T(), validJSON)
 	defer validJSONFile.Close()
 
-	noAmountJSON := fmt.Sprintf(`
+	noAmountJSON := `
 	{
-		"from": "%s",
   		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
   		"commission-max-change-rate": "0.1",
   		"min-self-delegation": "1"
-	}`, newAddr)
+	}`
 	noAmountJSONFile := testutil.WriteToNewTempFile(s.T(), noAmountJSON)
 	defer noAmountJSONFile.Close()
 
 	noPubKeyJSON := fmt.Sprintf(`
 	{
-		"from": "%s",
   		"amount": "%dstake",
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
   		"commission-max-change-rate": "0.1",
   		"min-self-delegation": "1"
-	}`, newAddr, 100)
+	}`, 100)
 	noPubKeyJSONFile := testutil.WriteToNewTempFile(s.T(), noPubKeyJSON)
 	defer noPubKeyJSONFile.Close()
 
 	noMonikerJSON := fmt.Sprintf(`
 	{
-		"from": "%s",
   		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
   		"amount": "%dstake",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
   		"commission-max-change-rate": "0.1",
   		"min-self-delegation": "1"
-	}`, newAddr, 100)
+	}`, 100)
 	noMonikerJSONFile := testutil.WriteToNewTempFile(s.T(), noMonikerJSON)
 	defer noMonikerJSONFile.Close()
 

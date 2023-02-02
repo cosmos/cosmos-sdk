@@ -47,7 +47,7 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 	}
 
 	if v.Amount == "" {
-		return validator{}, fmt.Errorf("must specify the delegation amount")
+		return validator{}, fmt.Errorf("must specify amount of coins to bond")
 	}
 	amount, err := sdk.ParseCoinNormalized(v.Amount)
 	if err != nil {

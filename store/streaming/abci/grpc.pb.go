@@ -6,7 +6,7 @@ package abci
 import (
 	context "context"
 	fmt "fmt"
-	types1 "github.com/cosmos/cosmos-sdk/store/types"
+	types1 "cosmossdk.io/store/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	types "github.com/tendermint/tendermint/abci/types"

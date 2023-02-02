@@ -6,10 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/go-plugin"
-
-	streamingabci "github.com/cosmos/cosmos-sdk/store/streaming/abci"
+	streamingabci "cosmossdk.io/store/streaming/abci"
 )
 
 const pluginEnvKeyPrefix = "COSMOS_SDK"

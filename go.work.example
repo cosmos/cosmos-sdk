@@ -12,6 +12,7 @@ use (
 	./orm
 	./simapp
 	./tests
+	./store
 	./tools/rosetta
 	./tools/cosmovisor
 	./tools/confix
@@ -19,5 +20,7 @@ use (
 	./x/tx
 	./x/nft
 	./x/circuit
+	./x/feegrant
 	./x/evidence
+	./x/upgrade
 )

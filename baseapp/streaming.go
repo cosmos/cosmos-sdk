@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cast"
 
+	storetypes "cosmossdk.io/store/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 const (

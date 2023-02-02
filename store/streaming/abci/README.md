@@ -23,7 +23,7 @@ package cosmos.store.streaming.abci;
 import "tendermint/abci/types.proto";
 import "cosmos/base/store/v1beta1/listening.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/store/streaming/abci";
+option go_package = "cosmossdk.io/store/streaming/abci";
 
 // Empty is the response message for incoming requests
 message Empty {}

@@ -4,10 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/hashicorp/go-plugin"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 var _ storetypes.ABCIListener = (*GRPCClient)(nil)

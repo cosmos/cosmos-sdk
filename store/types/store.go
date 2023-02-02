@@ -7,9 +7,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
+	"cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
 )
 
 type Store interface {
@@ -187,6 +187,9 @@ type CommitMultiStore interface {
 
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
+
+	// SetIAVLLazyLoading enable/disable lazy loading on iavl.
+	SetLazyLoading(lazyLoading bool)
 
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error

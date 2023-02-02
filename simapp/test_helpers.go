@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/streaming"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/store/streaming"
 	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -18,13 +18,14 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
+	"cosmossdk.io/store/types"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

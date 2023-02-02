@@ -4,13 +4,18 @@ import (
 	"fmt"
 	"io"
 
+	"cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/streaming"
+	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
@@ -68,6 +73,11 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 // SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
 func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+}
+
+// SetIAVLLazyLoading enables/disables lazy loading of the IAVL store.
+func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
 }
 
 // SetInterBlockCache provides a BaseApp option function that sets the

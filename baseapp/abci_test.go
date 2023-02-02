@@ -14,12 +14,13 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,10 +54,10 @@ func TestABCI_InitChain(t *testing.T) {
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{}, nil
 	}
 
 	query := abci.RequestQuery{
@@ -578,12 +579,12 @@ func TestABCI_EndBlock(t *testing.T) {
 		ConsensusParams: cp,
 	})
 
-	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: []abci.ValidatorUpdate{
 				{Power: 100},
 			},
-		}
+		}, nil
 	})
 	app.Seal()
 
@@ -1383,9 +1384,9 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	someKey := []byte("some-key")
 
 	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		bapp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
-			return abci.ResponseInitChain{}
+			return abci.ResponseInitChain{}, nil
 		})
 	}
 

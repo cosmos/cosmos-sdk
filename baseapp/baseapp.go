@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
@@ -13,12 +14,12 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"golang.org/x/exp/maps"
 
-	dbm "github.com/cosmos/cosmos-db"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/snapshots"
+	storetypes "cosmossdk.io/store/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store"
-	storemetrics "github.com/cosmos/cosmos-sdk/store/metrics"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

@@ -16,9 +16,10 @@ import (
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -73,7 +74,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
-	res = app.initChainer(app.deliverState.ctx, req)
+	res, err := app.initChainer(app.deliverState.ctx, req)
+	if err != nil {
+		panic(err)
+	}
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -195,7 +199,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		var err error
+		res, err = app.beginBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
@@ -220,7 +228,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		var err error
+		res, err = app.endBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 

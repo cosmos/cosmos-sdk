@@ -4,9 +4,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 func TestParseArgsToContent(t *testing.T) {

@@ -9,11 +9,12 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/depinject"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +78,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 		// Make sure not to forget to persist `myParams` into the actual store,
 		// this is done in InitChain.
-		app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 			subspace.SetParamSet(ctx, &paramSet)
 
 			return app.InitChainer(ctx, req)

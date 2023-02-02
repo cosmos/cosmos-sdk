@@ -70,6 +70,10 @@ Where validator.json contains:
 	"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
 	"amount": "1000000stake",
 	"moniker": "myvalidator",
+	"identity": "optional identity signature (ex. UPort or Keybase)",
+	"website": "validator's (optional) website",
+	"security": "validator's (optional) security contact email",
+	"details": "validator's (optional) details",
 	"commission-rate": "0.1",
 	"commission-max-rate": "0.2",
 	"commission-max-change-rate": "0.01",
@@ -100,8 +104,6 @@ Where validator.json contains:
 			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
 		},
 	}
-
-	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -359,16 +361,12 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, val validator) (tx.Factory, *types.MsgCreateValidator, error) {
 	valAddr := clientCtx.GetFromAddress()
 
-	identity, _ := fs.GetString(FlagIdentity)
-	website, _ := fs.GetString(FlagWebsite)
-	security, _ := fs.GetString(FlagSecurityContact)
-	details, _ := fs.GetString(FlagDetails)
 	description := types.NewDescription(
 		val.Moniker,
-		identity,
-		website,
-		security,
-		details,
+		val.Identity,
+		val.Website,
+		val.Security,
+		val.Details,
 	)
 
 	msg, err := types.NewMsgCreateValidator(

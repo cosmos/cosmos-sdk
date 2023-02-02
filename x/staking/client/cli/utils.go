@@ -20,6 +20,10 @@ type validator struct {
 	Amount            sdk.Coin
 	PubKey            cryptotypes.PubKey
 	Moniker           string
+	Identity          string
+	Website           string
+	Security          string
+	Details           string
 	CommissionRates   types.CommissionRates
 	MinSelfDelegation math.Int
 }
@@ -29,6 +33,10 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		Amount              string `json:"amount"`
 		PubKey              string `json:"pubkey"`
 		Moniker             string `json:"moniker"`
+		Identity            string `json:"identity"`
+		Website             string `json:"website"`
+		Security            string `json:"security"`
+		Details             string `json:"details"`
 		CommissionRate      string `json:"commission-rate"`
 		CommissionMaxRate   string `json:"commission-max-rate"`
 		CommissionMaxChange string `json:"commission-max-change-rate"`
@@ -83,6 +91,10 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		Amount:            amount,
 		PubKey:            pk,
 		Moniker:           v.Moniker,
+		Identity:          v.Identity,
+		Website:           v.Website,
+		Security:          v.Security,
+		Details:           v.Details,
 		CommissionRates:   commissionRates,
 		MinSelfDelegation: minSelfDelegation,
 	}, nil

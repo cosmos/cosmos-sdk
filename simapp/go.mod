@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
+	cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
 	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0
@@ -34,7 +34,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v0.8.0 // indirect
 	cloud.google.com/go/storage v1.27.0 // indirect
-	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846 // indirect
+	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -186,6 +186,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// Using this replace directive as v0.20.0-alpha1 > v0.20.0-alpha.2
+// This can be deleted when a v0.20.0-alpha3 is tagged or anything lexicographically above than v0.20.0-alpha1
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
+
 // TODO tag all extracted modules after SDK refactor
 replace (
 	cosmossdk.io/store => ../store
@@ -200,7 +204,6 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
-	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1

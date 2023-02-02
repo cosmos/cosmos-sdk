@@ -11,70 +11,20 @@ import (
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
-	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
-	"cosmossdk.io/api/cosmos/crypto/ed25519"
-	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	"github.com/cosmos/cosmos-sdk/codec/aminojson"
-	crypto "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/codec/aminojson/internal/testpb"
+	"cosmossdk.io/x/tx/aminojson"
+	"cosmossdk.io/x/tx/rapidproto"
+
+	"cosmossdk.io/x/tx/aminojson/internal/testpb"
 )
 
 func marshalLegacy(msg proto.Message) ([]byte, error) {
 	cdc := amino.NewCodec()
 	return cdc.MarshalJSON(msg)
-}
-
-func TestAminoJSON_LegacyParity(t *testing.T) {
-	cdc := amino.NewCodec()
-	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
-	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
-	cdc.RegisterConcrete(&ed25519.PubKey{}, crypto.PubKeyName, nil)
-
-	cases := map[string]struct {
-		gogo   any
-		pulsar proto.Message
-	}{
-		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
-		"distribution/delegator_starting_info": {
-			gogo:   &disttypes.DelegatorStartingInfo{},
-			pulsar: &distapi.DelegatorStartingInfo{},
-		},
-		"distribution/delegation_delegator_reward": {
-			gogo:   &disttypes.DelegationDelegatorReward{},
-			pulsar: &distapi.DelegationDelegatorReward{},
-		},
-		"distribution/community_pool_spend_proposal_with_deposit": {
-			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
-			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
-		},
-		"distribution/msg_withdraw_delegator_reward": {
-			gogo:   &disttypes.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
-			pulsar: &distapi.MsgWithdrawDelegatorReward{DelegatorAddress: "foo"},
-		},
-		"crypto/pubkey": {
-			gogo: &crypto.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
-		},
-	}
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			gogoBytes, err := cdc.MarshalJSON(tc.gogo)
-			require.NoError(t, err)
-
-			pulsarBytes, err := aminojson.MarshalAmino(tc.pulsar)
-			require.NoError(t, err)
-
-			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)
-		})
-	}
 }
 
 func TestAminoJSON_EdgeCases(t *testing.T) {

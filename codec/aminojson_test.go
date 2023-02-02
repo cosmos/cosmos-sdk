@@ -3,6 +3,7 @@ package codec_test
 import (
 	"testing"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/proto"
@@ -12,6 +13,7 @@ import (
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	"cosmossdk.io/x/tx/aminojson"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -23,13 +25,17 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
 
 	cases := map[string]struct {
-		gogo   any
+		gogo   gogoproto.Message
 		pulsar proto.Message
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
 			pulsar: &distapi.DelegatorStartingInfo{},
+		},
+		"distribution/delegator_starting_info/non_zero_dec": {
+			gogo:   &disttypes.DelegatorStartingInfo{Stake: types.NewDec(10)},
+			pulsar: &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
 		},
 		"distribution/delegation_delegator_reward": {
 			gogo:   &disttypes.DelegationDelegatorReward{},

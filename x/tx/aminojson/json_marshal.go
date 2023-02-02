@@ -74,9 +74,10 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	case []byte:
 		_, err := fmt.Fprintf(writer, `"%s"`, base64.StdEncoding.EncodeToString(val))
 		return err
-	}
 
-	return nil
+	default:
+		return errors.Errorf("unknown type %T", val)
+	}
 }
 
 func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {

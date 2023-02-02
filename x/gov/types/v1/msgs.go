@@ -48,6 +48,18 @@ func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
 }
 
+// SetMsgs packs sdk.Msg's into m.Messages Any's
+// NOTE: this will overwrite any existing messages
+func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
+	anys, err := sdktx.SetMsgs(msgs)
+	if err != nil {
+		return err
+	}
+
+	m.Messages = anys
+	return nil
+}
+
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgSubmitProposal) ValidateBasic() error {
 	if m.Title == "" {

@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func (s *KeeperTestSuite) TestSoftwareUpgrade() {
-	govAccAddr := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn" // TODO
-	// govAccAddr := s.govKeeper.GetGovernanceAccount(s.ctx).GetAddress().String()
+	govAccAddr := sdk.AccAddress(address.Module("gov")).String()
 
 	testCases := []struct {
 		name      string

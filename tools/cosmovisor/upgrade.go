@@ -14,12 +14,12 @@ import (
 // UpgradeBinary will be called after the log message has been parsed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in a state, so we can make a proper restart
-func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) error {
+func UpgradeBinary(logger *zerolog.Logger, cfg *Config, p upgradetypes.Plan) error {
 	// simplest case is to switch the link
-	err := plan.EnsureBinary(cfg.UpgradeBin(info.Name))
+	err := plan.EnsureBinary(cfg.UpgradeBin(p.Name))
 	if err == nil {
 		// we have the binary - do it
-		return cfg.SetCurrentUpgrade(info)
+		return cfg.SetCurrentUpgrade(p)
 	}
 
 	// if auto-download is disabled, we fail
@@ -28,7 +28,7 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 	}
 
 	// if the dir is there already, don't download either
-	switch fi, err := os.Stat(cfg.UpgradeDir(info.Name)); {
+	switch fi, err := os.Stat(cfg.UpgradeDir(p.Name)); {
 	case fi != nil: // The directory exists, do not overwrite.
 		return errors.New("upgrade dir already exists, won't overwrite")
 
@@ -39,12 +39,12 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 		return fmt.Errorf("unhandled error: %w", err)
 	}
 
-	upgradeInfo, err := plan.ParseInfo(info.Info)
+	upgradeInfo, err := plan.ParseInfo(p.Info)
 	if err != nil {
 		return fmt.Errorf("cannot parse upgrade info: %w", err)
 	}
 
-	if err := upgradeInfo.Binaries.ValidateBasic(); err != nil {
+	if err := upgradeInfo.ValidateFull(p.Name); err != nil {
 		return fmt.Errorf("invalid binaries: %w", err)
 	}
 
@@ -55,17 +55,17 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 
 	// If not there, then we try to download it... maybe
 	logger.Info().Msg("no upgrade binary found, beginning to download it")
-	if err := plan.DownloadUpgrade(cfg.UpgradeDir(info.Name), url, info.Name); err != nil {
+	if err := plan.DownloadUpgrade(cfg.UpgradeDir(p.Name), url, p.Name); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
 	logger.Info().Msg("downloading binary complete")
 
 	// and then set the binary again
-	if err := plan.EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
+	if err := plan.EnsureBinary(cfg.UpgradeBin(p.Name)); err != nil {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
 	}
 
-	return cfg.SetCurrentUpgrade(info)
+	return cfg.SetCurrentUpgrade(p)
 }
 
 func GetBinaryURL(binaries plan.BinaryDownloadURLMap) (string, error) {

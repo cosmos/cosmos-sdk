@@ -342,11 +342,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.APIAddress != "" {
 				apiListenAddr = cfg.APIAddress
 			} else {
-				var err error
-				apiListenAddr, _, err = FreeTCPAddr()
-				if err != nil {
-					return nil, err
-				}
+				// use a random free tcp port
+				apiListenAddr = "tcp://0.0.0.0:0"
 			}
 
 			appCfg.API.Address = apiListenAddr
@@ -364,16 +361,14 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 					return nil, err
 				}
 				tmCfg.RPC.ListenAddress = rpcAddr
+				// tmCfg.RPC.ListenAddress = "tcp://0.0.0.0:0"
 			}
 
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				_, grpcPort, err := FreeTCPAddr()
-				if err != nil {
-					return nil, err
-				}
-				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
+				// use a random free tcp port
+				appCfg.GRPC.Address = "0.0.0.0:0"
 			}
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true

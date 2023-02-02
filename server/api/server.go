@@ -40,6 +40,8 @@ type Server struct {
 	// this mutex to avoid data races.
 	mtx      sync.Mutex
 	listener net.Listener
+
+	ListenerAddr string
 }
 
 // CustomGRPCHeaderMatcher for mapping request headers to
@@ -105,6 +107,7 @@ func (s *Server) Start(cfg config.Config) error {
 		return err
 	}
 
+	s.ListenerAddr = strings.Replace(listener.Addr().Network()+"://"+listener.Addr().String(), "[::]", "0.0.0.0", 1)
 	s.listener = listener
 	s.mtx.Unlock()
 

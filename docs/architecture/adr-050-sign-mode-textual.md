@@ -12,6 +12,7 @@
 * Dec 01, 2022: Link to examples in separate JSON file.
 * Dec 06, 2022: Re-ordering of envelope screens.
 * Dec 14, 2022: Mention exceptions for invertability.
+* Jan 23, 2022: Switch Screen.Text to Title+Content.
 
 ## Status
 
@@ -126,10 +127,11 @@ in the rendering.
 
 The SignDoc for `SIGN_MODE_TEXTUAL` is formed from a data structure like:
 
-```
+```go
 type Screen struct {
-  Text string text  // possibly size limited to, e.g. 255 characters
-  Indent uint8  // size limited to something small like 16 or 32
+  Title string   // possibly size limited to, e.g. 64 characters
+  Content string // possibly size limited to, e.g. 255 characters
+  Indent uint8   // size limited to something small like 16 or 32
   Expert bool
 }
 
@@ -154,15 +156,17 @@ screens = [* screen]
 ;; Text defaults to the empty string, indent defaults to zero,
 ;; and expert defaults to false.
 screen = {
-  ? text_key: tstr,
+  ? title_key: tstr,
+  ? content_key: tstr,
   ? indent_key: uint,
   ? expert_key: bool,
 }
 
 ;; Keys are small integers to keep the encoding small.
-text_key = 1
-indent_key = 2
-expert_key = 3
+title_key = 1
+content_key = 2
+indent_key = 3
+expert_key = 4
 ```
 
 ## Details

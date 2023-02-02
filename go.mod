@@ -4,12 +4,12 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v0.2.6
-	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846
+	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
+	cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0
 	cosmossdk.io/x/tx v0.1.0
 	github.com/99designs/keyring v1.2.1
 	github.com/armon/go-metrics v0.4.1
@@ -151,12 +151,13 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-replace (
-	cosmossdk.io/collections => ./collections
-	cosmossdk.io/store => ./store
-	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
+// Using this replace directive as v0.20.0-alpha1 > v0.20.0-alpha.2
+// This can be deleted when a v0.20.0-alpha3 is tagged or anything lexicographically above than v0.20.0-alpha1
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 
+replace (
+	// use cosmos fork of keyring
+	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

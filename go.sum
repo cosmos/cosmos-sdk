@@ -37,6 +37,8 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3fOKtUw0Xmo=
 cosmossdk.io/api v0.2.6 h1:AoNwaLLapcLsphhMK6+o0kZl+D6MMUaHVqSdwinASGU=
 cosmossdk.io/api v0.2.6/go.mod h1:u/d+GAxil0nWpl1XnQL8nkziQDIWuBDhv8VnDm/s6dI=
+cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0 h1:x3T+atIz3Bd3+bcip5ZwRL5ng3VLr74j9aXzGUPadvw=
+cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0/go.mod h1:bFbVPivvFEFlxk7U99CkebYbN9qVZPMOvclR3tyw8ag=
 cosmossdk.io/core v0.5.1 h1:vQVtFrIYOQJDV3f7rw4pjjVqc1id4+mE0L9hHP66pyI=
 cosmossdk.io/core v0.5.1/go.mod h1:KZtwHCLjcFuo0nmDc24Xy6CRNEL9Vl/MeimQ2aC7NLE=
 cosmossdk.io/depinject v1.0.0-alpha.3 h1:6evFIgj//Y3w09bqOUOzEpFj5tsxBqdc5CfkO7z+zfw=
@@ -45,6 +47,8 @@ cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
 cosmossdk.io/math v1.0.0-beta.4 h1:JtKedVLGzA0vv84xjYmZ75RKG35Kf2WwcFu8IjRkIIw=
 cosmossdk.io/math v1.0.0-beta.4/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp9NnaM=
+cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0 h1:qwSpfFP7A7JsX5v7H1L0ybsn9Bmfxe81cnRvb5zT+Q0=
+cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0/go.mod h1:h8TjnlilY/jcJZIB2V0WeMd7IFtnv67oP7GMtPpQxkA=
 cosmossdk.io/x/tx v0.1.0 h1:uyyYVjG22B+jf54N803Z99Y1uPvfuNP3K1YShoCHYL8=
 cosmossdk.io/x/tx v0.1.0/go.mod h1:qsDv7e1fSftkF16kpSAk+7ROOojyj+SC0Mz3ukI52EQ=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

@@ -146,6 +146,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+// Using this replace directive as v0.20.0-alpha1 > v0.20.0-alpha.2
+// This can be deleted when a v0.20.0-alpha3 is tagged or anything lexicographically above than v0.20.0-alpha1
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
+
 replace (
 	github.com/cosmos/cosmos-sdk => ../..
 

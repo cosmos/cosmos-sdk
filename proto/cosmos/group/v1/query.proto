@@ -312,7 +312,7 @@ message QueryGroupsRequest {
 // 
 // Since: cosmos-sdk 0.47.1
 message QueryGroupsResponse {
-  // `groups` is all groups present in state.
+  // `groups` is all the groups present in state.
   repeated GroupInfo groups = 1;
 
   // pagination defines the pagination in the response.

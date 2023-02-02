@@ -68,17 +68,16 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 	errCh := make(chan error)
 	go func() {
 		err = grpcSrv.Serve(listener)
-		if err != nil {
-			errCh <- fmt.Errorf("failed to serve: %w", err)
-		}
+		errCh <- err
 	}()
 
 	select {
 	case err := <-errCh:
-		return nil, err
-
-	case <-time.After(types.ServerStartTime):
+		if err != nil {
+			return nil, fmt.Errorf("failed to serve: %w", err)
+		}
+	case <-time.After(types.ServerStartTime): // TODO: ideally this would respect a ctx.Err
 		// assume server started successfully
-		return grpcSrv, nil
 	}
+	return grpcSrv, nil
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -43,13 +44,18 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 		return fmt.Errorf("cannot parse upgrade info: %w", err)
 	}
 
-	if err := upgradeInfo.ValidateFull(info.Name); err != nil {
+	if err := upgradeInfo.Binaries.ValidateBasic(); err != nil {
 		return fmt.Errorf("invalid binaries: %w", err)
+	}
+
+	url, err := GetBinaryURL(upgradeInfo.Binaries)
+	if err != nil {
+		return err
 	}
 
 	// If not there, then we try to download it... maybe
 	logger.Info().Msg("no upgrade binary found, beginning to download it")
-	if err := plan.DownloadUpgrade(cfg.UpgradeDir(info.Name), "", info.Name); err != nil {
+	if err := plan.DownloadUpgrade(cfg.UpgradeDir(info.Name), url, info.Name); err != nil {
 		return fmt.Errorf("cannot download binary. %w", err)
 	}
 	logger.Info().Msg("downloading binary complete")
@@ -60,4 +66,20 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 	}
 
 	return cfg.SetCurrentUpgrade(info)
+}
+
+func GetBinaryURL(binaries plan.BinaryDownloadURLMap) (string, error) {
+	url, ok := binaries[OSArch()]
+	if !ok {
+		url, ok = binaries["any"]
+	}
+	if !ok {
+		return "", fmt.Errorf("cannot find binary for os/arch: neither %s, nor any", OSArch())
+	}
+
+	return url, nil
+}
+
+func OSArch() string {
+	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 }

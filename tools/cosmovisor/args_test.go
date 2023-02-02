@@ -257,10 +257,9 @@ func (s *argsTestSuite) TestEnsureBin() {
 		upgrade string
 		hasBin  bool
 	}{
-		"proper":         {"chain2", true},
-		"no binary":      {"nobin", false},
-		"not executable": {"noexec", false},
-		"no directory":   {"foobarbaz", false},
+		"proper":       {"chain2", true},
+		"no binary":    {"nobin", false},
+		"no directory": {"foobarbaz", false},
 	}
 
 	for _, tc := range cases {

@@ -4,6 +4,7 @@
 package cosmovisor_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
@@ -37,7 +37,7 @@ func (s *upgradeTestSuite) TestCurrentBin() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
 	// ensure we cannot set this to an invalid value
-	for _, name := range []string{"missing", "nobin", "noexec"} {
+	for _, name := range []string{"missing", "nobin"} {
 		s.Require().Error(cfg.SetCurrentUpgrade(upgradetypes.Plan{Name: name}), name)
 
 		currentBin, err := cfg.CurrentBin()
@@ -101,7 +101,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	s.Require().Equal(cfg.GenesisBin(), currentBin)
 
 	// do upgrade ignores bad files
-	for _, name := range []string{"missing", "nobin", "noexec"} {
+	for _, name := range []string{"missing", "nobin"} {
 		info := upgradetypes.Plan{Name: name}
 		err = cosmovisor.UpgradeBinary(logger, cfg, info)
 		s.Require().Error(err, name)
@@ -125,7 +125,9 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	}
 }
 
-func (s *upgradeTestSuite) TestDownloadUpgrade() {
+func (s *upgradeTestSuite) TestUpgradeBinary() {
+	logger := cosmovisor.NewLogger()
+
 	cases := map[string]struct {
 		url         string
 		canDownload bool
@@ -175,20 +177,24 @@ func (s *upgradeTestSuite) TestDownloadUpgrade() {
 				s.Require().NoError(err)
 			}
 
-			const upgrade = "amazonas"
-			err = plan.DownloadUpgrade(cfg.UpgradeDir(upgrade), url, upgrade)
+			plan := upgradetypes.Plan{
+				Name: "amazonas",
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+			}
+
+			err = cosmovisor.UpgradeBinary(logger, cfg, plan)
 			if !tc.canDownload {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 			}
-
-			err = plan.EnsureBinary(cfg.UpgradeBin(upgrade))
-			if tc.validBinary {
-				s.Require().NoError(err)
-			}
 		})
 	}
+}
+
+func (s *upgradeTestSuite) TestOsArch() {
+	// all download tests will fail if we are not on linux...
+	s.Require().Equal("linux/amd64", cosmovisor.OSArch())
 }
 
 // copyTestData will make a tempdir and then

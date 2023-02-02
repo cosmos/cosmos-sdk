@@ -173,6 +173,16 @@ Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for ge
 
 See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
 
+#### Gogoproto Import Paths
+
+The SDK made a [patch fix](https://github.com/cosmos/gogoproto/pull/32) on its gogoproto repository to require that each proto file's package name matches its OS import path (relatively to a protobuf root import path, usually the root `proto/` folder, set by the `protoc -I` flag).
+
+For example, assuming you put all your proto files in subfolders inside your root `proto/` folder, then a proto file with package name `myapp.mymodule.v1` should be found in the `proto/myapp/mymodule/v1/` folder. If it is in another folder, the proto generation command will throw an error.
+
+If you are using a custom folder structure for your proto files, please reorganize them so that their OS path matches their proto package name.
+
+This is to allow the proto FileDescriptSets to be correctly registered, and this standardized OS import paths allows [Hubl](https://github.com/cosmos/cosmos-sdk/tree/main/tools/hubl) to reflectively talk to any chain.
+
 #### `{accepts,implements}_interface` proto annotations
 
 The SDK is normalizing the strings inside the Protobuf `accepts_interface` and `implements_interface` annotations. We require them to be fully-scoped names. They will soon be used by code generators like Pulsar and Telescope to match which messages can or cannot be packed inside `Any`s.

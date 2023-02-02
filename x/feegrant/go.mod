@@ -7,10 +7,10 @@ require (
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/math v1.0.0-beta.4
-	cosmossdk.io/store v0.0.0-20230126202154-be9bd7a8c1b4
+	cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
-	github.com/cosmos/cosmos-sdk v0.47.0-rc1
-	github.com/cosmos/gogoproto v1.4.3
+	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -23,7 +23,7 @@ require (
 )
 
 require (
-	cosmossdk.io/collections v0.0.0-20230124184726-872ec34a5846 // indirect
+	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/x/tx v0.1.0 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
@@ -147,6 +147,10 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+// Using this replace directive as v0.20.0-alpha1 > v0.20.0-alpha.2
+// This can be deleted when a v0.20.0-alpha3 is tagged or anything lexicographically above than v0.20.0-alpha1
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 
 replace (
 	github.com/cosmos/cosmos-sdk => ../..

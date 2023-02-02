@@ -104,7 +104,6 @@ func flagSetCommissionUpdate() *flag.FlagSet {
 func flagSetDescriptionCreate() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 
-	fs.String(FlagMoniker, "", "The validator's name")
 	fs.String(FlagIdentity, "", "The optional identity signature (ex. UPort or Keybase)")
 	fs.String(FlagWebsite, "", "The validator's (optional) website")
 	fs.String(FlagSecurityContact, "", "The validator's (optional) security contact email")

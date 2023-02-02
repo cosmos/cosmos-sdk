@@ -102,11 +102,7 @@ Where validator.json contains:
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetPublicKey())
-	cmd.Flags().AddFlagSet(FlagSetAmount())
 	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
-	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
-	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")

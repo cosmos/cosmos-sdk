@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.19
 
 require (
-	cosmossdk.io/x/upgrade v0.0.0-20230201234215-6b256ce7c087
+	cosmossdk.io/x/upgrade v0.0.0-20230202115111-f719cd32adf3
 	github.com/hashicorp/go-getter v1.6.2
 	github.com/otiai10/copy v1.9.0
 	github.com/rs/zerolog v1.29.0

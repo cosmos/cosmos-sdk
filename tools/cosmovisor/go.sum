@@ -59,8 +59,8 @@ cosmossdk.io/math v1.0.0-beta.4/go.mod h1:An0MllWJY6PxibUpnwGk8jOm+a/qIxlKmL5Zyp
 cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0 h1:qwSpfFP7A7JsX5v7H1L0ybsn9Bmfxe81cnRvb5zT+Q0=
 cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0/go.mod h1:h8TjnlilY/jcJZIB2V0WeMd7IFtnv67oP7GMtPpQxkA=
 cosmossdk.io/tools/rosetta v0.2.0 h1:Ae499UiZ9yPNCXvjOBO/R9I1pksCJfxoqWauEZgA/gs=
-cosmossdk.io/x/upgrade v0.0.0-20230201234215-6b256ce7c087 h1:Bz0ZYJuhtEdvjOc2tsheildLYR48WNAydUXuUn02Xus=
-cosmossdk.io/x/upgrade v0.0.0-20230201234215-6b256ce7c087/go.mod h1:YDvH2EYpTzTKx8lJvjng/W4v2G0uG0q8rmbuhDXflfY=
+cosmossdk.io/x/upgrade v0.0.0-20230202115111-f719cd32adf3 h1:blRe4xHitznu6TNBraL7ROgFbVVZlxWIC2zm+eM/QJk=
+cosmossdk.io/x/upgrade v0.0.0-20230202115111-f719cd32adf3/go.mod h1:J/t9BO3h03R9PMPPNooCdcCjtxIF5qD8VUR08uJr2Zw=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmGfU=
 filippo.io/edwards25519 v1.0.0-rc.1/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
@@ -115,6 +115,7 @@ github.com/btcsuite/btcd/btcec/v2 v2.3.2 h1:5n0X6hX0Zk+6omWcihdYvdAlGf2DfasC0GMf
 github.com/btcsuite/btcd/btcec/v2 v2.3.2/go.mod h1:zYzJ8etWJQIv1Ogk7OzpWjowwOdXY1W/17j2MW85J04=
 github.com/btcsuite/btcd/btcutil v1.1.2 h1:XLMbX8JQEiwMcYft2EGi8zPUkoa0abKIU6/BJSRsjzQ=
 github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 h1:q0rUy8C/TYNBQS1+CGKw68tLOFYSNEs0TFnxxnS9+4U=
+github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
 github.com/cenkalti/backoff/v4 v4.1.3 h1:cFAlzYUlVYDysBEH2T5hyJZMh3+5+WCBvSnK6Q8UtC4=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=

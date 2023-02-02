@@ -27,4 +27,5 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (x/upgrade) [14764](https://github.com/cosmos/cosmos-sdk/pull/14764) The `x/upgrade` module is extracted to have a separate go.mod file which allows it be a standalone module. 
+* [#](https://github.com/cosmos/cosmos-sdk/pull/) Remove deprecated `NewCmdSubmitLegacyUpgradeProposal` command replace it by its gov v1 equivalent.
+* [#14764](https://github.com/cosmos/cosmos-sdk/pull/14764) The `x/upgrade` module is extracted to have a separate go.mod file which allows it be a standalone module.

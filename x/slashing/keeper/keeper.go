@@ -74,6 +74,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.De
 			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
 			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
+			sdk.NewAttribute(types.AttributeKeyInfractionHeight, fmt.Sprintf("%d", distributionHeight)),
 		),
 	)
 }

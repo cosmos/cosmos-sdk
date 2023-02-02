@@ -18,10 +18,17 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1
 	github.com/cosmos/go-bip39 v1.0.0
+<<<<<<< HEAD
 	github.com/cosmos/iavl v0.19.5-rc.2
 	github.com/cosmos/ledger-cosmos-go v0.12.2
 	github.com/gogo/gateway v1.1.0
 	github.com/gogo/protobuf v1.3.2
+=======
+	github.com/cosmos/gogogateway v1.2.0
+	github.com/cosmos/gogoproto v1.4.4
+	github.com/cosmos/iavl v0.19.5
+	github.com/cosmos/ledger-cosmos-go v0.12.1
+>>>>>>> 21926ee78 (chore: bump IAVL to v0.19.5 (#14889))
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
@@ -157,7 +164,15 @@ require (
 )
 
 replace (
+<<<<<<< HEAD
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+=======
+	// use cosmos fork of keyring
+	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
+	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
+	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
+>>>>>>> 21926ee78 (chore: bump IAVL to v0.19.5 (#14889))
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0

@@ -32,36 +32,35 @@ The following specification uses *ATOM* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
 staking token of the chain.
 
-
 * [Concepts](#concepts)
-    * [Proposal submission](#proposal-submission)
-    * [Deposit](#deposit)
-    * [Vote](#vote)
-    * [Software Upgrade](#software-upgrade)
+  * [Proposal submission](#proposal-submission)
+  * [Deposit](#deposit)
+  * [Vote](#vote)
+  * [Software Upgrade](#software-upgrade)
 * [State](#state)
-    * [Proposals](#proposals)
-    * [Parameters and base types](#parameters-and-base-types)
-    * [Deposit](#deposit-1)
-    * [ValidatorGovInfo](#validatorgovinfo)
-    * [Stores](#stores)
-    * [Proposal Processing Queue](#proposal-processing-queue)
-    * [Legacy Proposal](#legacy-proposal)
+  * [Proposals](#proposals)
+  * [Parameters and base types](#parameters-and-base-types)
+  * [Deposit](#deposit-1)
+  * [ValidatorGovInfo](#validatorgovinfo)
+  * [Stores](#stores)
+  * [Proposal Processing Queue](#proposal-processing-queue)
+  * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-    * [Proposal Submission](#proposal-submission-1)
-    * [Deposit](#deposit-2)
-    * [Vote](#vote-1)
+  * [Proposal Submission](#proposal-submission-1)
+  * [Deposit](#deposit-2)
+  * [Vote](#vote-1)
 * [Events](#events)
-    * [EndBlocker](#endblocker)
-    * [Handlers](#handlers)
+  * [EndBlocker](#endblocker)
+  * [Handlers](#handlers)
 * [Parameters](#parameters)
-    * [SubKeys](#subkeys)
+  * [SubKeys](#subkeys)
 * [Client](#client)
-    * [CLI](#cli)
-    * [gRPC](#grpc)
-    * [REST](#rest)
+  * [CLI](#cli)
+  * [gRPC](#grpc)
+  * [REST](#rest)
 * [Metadata](#metadata)
-    * [Proposal](#proposal-3)
-    * [Vote](#vote-5)
+  * [Proposal](#proposal-3)
+  * [Vote](#vote-5)
 * [Future Improvements](#future-improvements)
 
 ## Concepts
@@ -398,7 +397,7 @@ We will use one KVStore `Governance` to store four mappings:
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
   x/gov params.
 * A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
   us to know if a proposal is in the voting period or not with very low gas cost.
@@ -513,7 +512,7 @@ must not be larger than the `maxMetadataLen` config passed into the gov keeper.
 * Initialise `Proposal`'s attributes
 * Decrease balance of sender by `InitialDeposit`
 * If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueue`
+  * Push `proposalID` in `ProposalProcessingQueue`
 * Transfer `InitialDeposit` from the `Proposer` to the governance `ModuleAccount`
 
 A `MsgSubmitProposal` transaction can be handled according to the following
@@ -578,7 +577,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.pro
 * Add `deposit` of sender in `proposal.Deposits`
 * Increase `proposal.TotalDeposit` by sender's `deposit`
 * If `MinDeposit` is reached:
-    * Push `proposalID` in `ProposalProcessingQueueEnd`
+  * Push `proposalID` in `ProposalProcessingQueueEnd`
 * Transfer `Deposit` from the `proposer` to the governance `ModuleAccount`
 
 A `MsgDeposit` transaction has to go through a number of checks to be valid.
@@ -1181,28 +1180,6 @@ Example:
 simd tx gov submit-legacy-proposal --title="Test Proposal" --description="testing" --type="Text" --deposit="100000000stake" --from cosmos1..
 ```
 
-Example (`cancel-software-upgrade`):
-
-```bash
-simd tx gov submit-legacy-proposal cancel-software-upgrade --title="Test Proposal" --description="testing" --deposit="100000000stake" --from cosmos1..
-```
-
-Example (`community-pool-spend`):
-
-```bash
-simd tx gov submit-legacy-proposal community-pool-spend proposal.json --from cosmos1..
-```
-
-```json
-{
-  "title": "Test Proposal",
-  "description": "testing, 1, 2, 3",
-  "recipient": "cosmos1..",
-  "amount": "10000000stake",
-  "deposit": "10000000stake"
-}
-```
-
 Example (`param-change`):
 
 ```bash
@@ -1222,12 +1199,6 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
   ],
   "deposit": "10000000stake"
 }
-```
-
-Example (`software-upgrade`):
-
-```bash
-simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" --description="testing, testing, 1, 2, 3" --upgrade-height 1000000 --from cosmos1..
 ```
 
 #### cancel-proposal
@@ -1372,7 +1343,6 @@ Example Output:
   }
 }
 ```
-
 
 #### Proposals
 
@@ -2609,7 +2579,6 @@ Example Output:
   }
 }
 ```
-
 
 ## Metadata
 

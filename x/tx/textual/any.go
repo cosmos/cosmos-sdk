@@ -46,7 +46,7 @@ func (ar anyValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]
 	}
 
 	screens := make([]Screen, 1+len(subscreens))
-	screens[0].Text = anymsg.GetTypeUrl()
+	screens[0].Content = anymsg.GetTypeUrl()
 	for i, subscreen := range subscreens {
 		subscreen.Indent++
 		screens[i+1] = subscreen
@@ -64,7 +64,7 @@ func (ar anyValueRenderer) Parse(ctx context.Context, screens []Screen) (protore
 		return nilValue, fmt.Errorf("bad indentation: want 0, got %d", screens[0].Indent)
 	}
 
-	msgType, err := protoregistry.GlobalTypes.FindMessageByURL(screens[0].Text)
+	msgType, err := protoregistry.GlobalTypes.FindMessageByURL(screens[0].Content)
 	if err != nil {
 		return nilValue, err
 	}

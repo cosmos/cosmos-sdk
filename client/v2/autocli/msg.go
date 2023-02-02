@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/client/v2/internal/util"
 	"fmt"
 	"github.com/cockroachdb/errors"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -191,19 +192,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
-		//clientCtx, err := client.GetClientTxContext(cmd)
-		//fmt.Println(clientCtx)
 		if err != nil {
 			return err
 		}
-
-		//msg := input.Interface()
-		//fmt.Println(msg)
-		//md := input.Descriptor()
-		//fmt.Println(md)
-		//if err = msg.ValidateBasic(); err != nil {
-		//	return fmt.Errorf("message validation failed: %w", err)
-		//}
 
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
@@ -211,11 +202,10 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		}
 
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
-		//return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		return err
 	}
 
-	//flags.AddTxFlagsToCmd(cmd)
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd, nil
 

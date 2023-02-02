@@ -62,12 +62,11 @@ func NewCreateValidatorCmd() *cobra.Command {
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a JSON file with the new validator details.
 Example:
-$ %s tx staking create-validator path/to/validator.json
+$ %s tx staking create-validator path/to/validator.json --from keyname
 
 Where validator.json contains:
 
 {
-	"from": "key2",
 	"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
 	"amount": "1000000stake",
 	"moniker": "myvalidator",
@@ -86,7 +85,7 @@ Where validator.json contains:
 				return err
 			}
 
-			validator, err := parseValidatorJSON(clientCtx.Codec, args[0])
+			validator, err := parseAndValidateValidatorJSON(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
@@ -358,17 +357,7 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 }
 
 func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet, val validator) (tx.Factory, *types.MsgCreateValidator, error) {
-	amount, err := sdk.ParseCoinNormalized(val.Amount)
-	if err != nil {
-		return txf, nil, err
-	}
-
 	valAddr := clientCtx.GetFromAddress()
-
-	var pk cryptotypes.PubKey
-	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(val.PubKey), &pk); err != nil {
-		return txf, nil, err
-	}
 
 	identity, _ := fs.GetString(FlagIdentity)
 	website, _ := fs.GetString(FlagWebsite)
@@ -382,18 +371,8 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		details,
 	)
 
-	commissionRates, err := buildCommissionRates(val.CommissionRate, val.CommissionMaxRate, val.CommissionMaxChange)
-	if err != nil {
-		return txf, nil, err
-	}
-
-	minSelfDelegation, ok := sdk.NewIntFromString(val.MinSelfDelegation)
-	if !ok {
-		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
-	}
-
 	msg, err := types.NewMsgCreateValidator(
-		sdk.ValAddress(valAddr), pk, amount, description, commissionRates, minSelfDelegation,
+		sdk.ValAddress(valAddr), val.PubKey, val.Amount, description, val.CommissionRates, val.MinSelfDelegation,
 	)
 	if err != nil {
 		return txf, nil, err

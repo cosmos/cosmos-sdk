@@ -23,4 +23,6 @@ type AppModuleWithAllExtensions interface {
 type CoreAppModule interface {
 	appmodule.AppModule
 	appmodule.HasGenesis
+	appmodule.HasBeginBlocker
+	appmodule.HasEndBlocker
 }

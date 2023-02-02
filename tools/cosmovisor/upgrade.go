@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/hashicorp/go-getter"
 	"github.com/otiai10/copy"
@@ -21,7 +22,7 @@ import (
 // in a state, so we can make a proper restart
 func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) error {
 	// simplest case is to switch the link
-	err := EnsureBinary(cfg.UpgradeBin(info.Name))
+	err := plan.EnsureBinary(cfg.UpgradeBin(info.Name))
 	if err == nil {
 		// we have the binary - do it
 		return cfg.SetCurrentUpgrade(info)
@@ -52,7 +53,7 @@ func UpgradeBinary(logger *zerolog.Logger, cfg *Config, info upgradetypes.Plan) 
 	logger.Info().Msg("downloading binary complete")
 
 	// and then set the binary again
-	if err := EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
+	if err := plan.EnsureBinary(cfg.UpgradeBin(info.Name)); err != nil {
 		return fmt.Errorf("downloaded binary doesn't check out: %w", err)
 	}
 
@@ -77,7 +78,8 @@ func DownloadBinary(cfg *Config, info upgradetypes.Plan) error {
 		if err != nil {
 			return err
 		}
-		err = EnsureBinary(binPath)
+
+		err = plan.EnsureBinary(binPath)
 		// copy binary to binPath from dirPath if zipped directory don't contain bin directory to wrap the binary
 		if err != nil {
 			err = copy.Copy(filepath.Join(dirPath, cfg.Name), binPath)
@@ -156,24 +158,4 @@ func GetDownloadURL(info upgradetypes.Plan) (string, error) {
 
 func OSArch() string {
 	return fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-}
-
-// EnsureBinary ensures the file exists and is executable, or returns an error
-func EnsureBinary(path string) error {
-	info, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("cannot stat dir %s: %w", path, err)
-	}
-
-	if !info.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", info.Name())
-	}
-
-	// this checks if the world-executable bit is set (we cannot check owner easily)
-	exec := info.Mode().Perm() & 0o001
-	if exec == 0 {
-		return fmt.Errorf("%s is not world executable", info.Name())
-	}
-
-	return nil
 }

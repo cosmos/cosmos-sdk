@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/tools/cosmovisor/errors"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 type argsTestSuite struct {
@@ -250,7 +251,7 @@ func (s *argsTestSuite) TestEnsureBin() {
 	cfg := Config{Home: absPath, Name: "dummyd", DataBackupPath: absPath}
 	s.Require().Len(cfg.validate(), 0, "validation errors")
 
-	s.Require().NoError(EnsureBinary(cfg.GenesisBin()))
+	s.Require().NoError(plan.EnsureBinary(cfg.GenesisBin()))
 
 	cases := map[string]struct {
 		upgrade string
@@ -263,7 +264,7 @@ func (s *argsTestSuite) TestEnsureBin() {
 	}
 
 	for _, tc := range cases {
-		err := EnsureBinary(cfg.UpgradeBin(tc.upgrade))
+		err := plan.EnsureBinary(cfg.UpgradeBin(tc.upgrade))
 		if tc.hasBin {
 			s.Require().NoError(err)
 		} else {

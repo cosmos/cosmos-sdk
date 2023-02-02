@@ -12,6 +12,7 @@ import (
 
 	"cosmossdk.io/tools/cosmovisor"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 func init() {
@@ -80,7 +81,7 @@ func InitializeCosmovisor(logger *zerolog.Logger, args []string) error {
 	if err = cosmovisor.MarkExecutable(genBinExe); err != nil {
 		return err
 	}
-	if err = cosmovisor.EnsureBinary(genBinExe); err != nil {
+	if err = plan.EnsureBinary(genBinExe); err != nil {
 		return err
 	}
 

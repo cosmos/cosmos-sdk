@@ -171,11 +171,11 @@ func TestParseSubmitProposal(t *testing.T) {
 	badJSON := testutil.WriteToNewTempFile(t, "bad json")
 
 	// nonexistent json
-	_, _, _, err := parseSubmitProposal(cdc, "fileDoesNotExist") 
+	_, _, _, err := parseSubmitProposal(cdc, "fileDoesNotExist")
 	require.Error(t, err)
 
 	// invalid json
-	_, _, _, err = parseSubmitProposal(cdc, badJSON.Name()) 
+	_, _, _, err = parseSubmitProposal(cdc, badJSON.Name())
 	require.Error(t, err)
 
 	// ok json

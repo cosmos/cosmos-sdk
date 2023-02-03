@@ -173,6 +173,7 @@ require (
 )
 
 replace (
+	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../..
 
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

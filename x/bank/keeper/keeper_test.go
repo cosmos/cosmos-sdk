@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"strings"
 	"testing"
@@ -28,15 +29,19 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 )
 
 const (
-	fooDenom     = "foo"
-	barDenom     = "bar"
-	initialPower = int64(100)
-	holder       = "holder"
-	multiPerm    = "multiple permissions account"
-	randomPerm   = "random permission"
+	fooDenom            = "foo"
+	barDenom            = "bar"
+	ibcPath             = "transfer/channel-0"
+	ibcBaseDenom        = "farboo"
+	metaDataDescription = "IBC Token from %s"
+	initialPower        = int64(100)
+	holder              = "holder"
+	multiPerm           = "multiple permissions account"
+	randomPerm          = "random permission"
 )
 
 var (
@@ -67,6 +72,36 @@ func newFooCoin(amt int64) sdk.Coin {
 
 func newBarCoin(amt int64) sdk.Coin {
 	return sdk.NewInt64Coin(barDenom, amt)
+}
+
+func newIbcCoin(amt int64) sdk.Coin {
+	return sdk.NewInt64Coin(getIBCDenom(ibcPath, ibcBaseDenom), amt)
+}
+
+func getIBCDenom(path string, baseDenom string) string {
+	return fmt.Sprintf("%s/%s", "ibc", getIBCHash(path, baseDenom))
+}
+
+func getIBCHash(path string, baseDenom string) tmbytes.HexBytes {
+	hash := sha256.Sum256([]byte(path + "/" + baseDenom))
+	return hash[:]
+}
+
+func addIBCMetadata(ctx sdk.Context, k keeper.BaseKeeper) {
+	metadata := banktypes.Metadata{
+		Description: fmt.Sprintf(metaDataDescription, ibcPath),
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    ibcBaseDenom,
+				Exponent: 0,
+			},
+		},
+		// Setting base as IBChash Denom as SetDenomMetaData uses Base as storeKey
+		// and the bank keeper will only have the IBCHash to get the denom metadata
+		Base:    getIBCDenom(ibcPath, ibcBaseDenom),
+		Display: ibcPath + "/" + ibcBaseDenom,
+	}
+	k.SetDenomMetaData(ctx, metadata)
 }
 
 type KeeperTestSuite struct {

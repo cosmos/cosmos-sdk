@@ -65,7 +65,7 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
-	github.com/cosmos/iavl v0.20.0-alpha1.0.20230129210330-66c167f401c7 // indirect
+	github.com/cosmos/iavl v0.20.0-alpha3 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.0 // indirect
 	github.com/cosmos/rosetta-sdk-go v0.9.0 // indirect
 	github.com/creachadair/atomicfile v0.2.8 // indirect
@@ -185,10 +185,6 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// Using this replace directive as v0.20.0-alpha1 > v0.20.0-alpha.2
-// This can be deleted when a v0.20.0-alpha3 is tagged or anything lexicographically above than v0.20.0-alpha1
-replace github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0-alpha.2
 
 // TODO tag all extracted modules after SDK refactor
 replace (

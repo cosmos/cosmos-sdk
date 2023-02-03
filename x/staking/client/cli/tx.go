@@ -59,9 +59,9 @@ func NewCreateValidatorCmd() *cobra.Command {
 		Use:   "create-validator [path/to/validator.json]",
 		Short: "create new validator initialized with a self-delegation to it",
 		Args:  cobra.ExactArgs(1),
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`Submit a JSON file with the new validator details.
-Example:
+		Long:  `Create a new validator initialized with a self-delegation by submitting a JSON file with the new validator details.`,
+		Example: strings.TrimSpace(
+			fmt.Sprintf(`
 $ %s tx staking create-validator path/to/validator.json --from keyname
 
 Where validator.json contains:
@@ -79,10 +79,7 @@ Where validator.json contains:
 	"commission-max-change-rate": "0.01",
 	"min-self-delegation": "1"
   }
-`,
-				version.AppName,
-			),
-		),
+`, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

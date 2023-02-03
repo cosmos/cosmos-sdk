@@ -27,7 +27,7 @@ func (vr intValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Sc
 	if err != nil {
 		return nil, err
 	}
-	return []Screen{{Text: formatted}}, nil
+	return []Screen{{Content: formatted}}, nil
 }
 
 func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
@@ -35,7 +35,7 @@ func (vr intValueRenderer) Parse(_ context.Context, screens []Screen) (protorefl
 		return nilValue, fmt.Errorf("expected 1 screen, got: %d", n)
 	}
 
-	parsedInt, err := parseInt(screens[0].Text)
+	parsedInt, err := parseInt(screens[0].Content)
 	if err != nil {
 		return nilValue, err
 	}

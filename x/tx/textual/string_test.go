@@ -31,7 +31,7 @@ func TestStringJsonTestcases(t *testing.T) {
 			screens, err := rend.Format(context.Background(), protoreflect.ValueOfString(tc.Text))
 			require.NoError(t, err)
 			require.Equal(t, 1, len(screens))
-			require.Equal(t, tc.Text, screens[0].Text)
+			require.Equal(t, tc.Text, screens[0].Content)
 
 			val, err := rend.Parse(context.Background(), screens)
 			require.NoError(t, err)
@@ -48,7 +48,7 @@ func TestStringHighUnicode(t *testing.T) {
 	screens, err := rend.Format(context.Background(), protoreflect.ValueOfString(s))
 	require.NoError(t, err)
 	require.Equal(t, 1, len(screens))
-	require.Equal(t, s, screens[0].Text)
+	require.Equal(t, s, screens[0].Content)
 	val, err := rend.Parse(context.Background(), screens)
 	require.NoError(t, err)
 	require.Equal(t, s, val.String())

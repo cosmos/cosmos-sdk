@@ -133,8 +133,9 @@ func (keeper Keeper) AddDeposit(ctx sdk.Context, proposalID uint64, depositorAdd
 
 	// Check if deposit has provided sufficient total funds to transition the proposal into the voting period
 	activatedVotingPeriod := false
+	minDepositAmount := proposal.GetMinDepositFromParams(keeper.GetParams(ctx))
 
-	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(keeper.GetParams(ctx).MinDeposit) {
+	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDepositAmount) {
 		keeper.ActivateVotingPeriod(ctx, proposal)
 
 		activatedVotingPeriod = true
@@ -256,7 +257,7 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx sdk.Context, proposalID uint64)
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins) error {
+func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins, expedited bool) error {
 	params := keeper.GetParams(ctx)
 	minInitialDepositRatio, err := sdk.NewDecFromStr(params.MinInitialDepositRatio)
 	if err != nil {
@@ -265,7 +266,14 @@ func (keeper Keeper) validateInitialDeposit(ctx sdk.Context, initialDeposit sdk.
 	if minInitialDepositRatio.IsZero() {
 		return nil
 	}
-	minDepositCoins := params.MinDeposit
+
+	var minDepositCoins sdk.Coins
+	if expedited {
+		minDepositCoins = params.ExpeditedMinDeposit
+	} else {
+		minDepositCoins = params.MinDeposit
+	}
+
 	for i := range minDepositCoins {
 		minDepositCoins[i].Amount = sdk.NewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
 	}

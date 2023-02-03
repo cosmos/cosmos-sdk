@@ -60,7 +60,7 @@ func TestGRPCQueryTally(t *testing.T) {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
 				assert.NilError(t, err)
 				assert.Assert(t, proposal.String() != "")
 
@@ -181,7 +181,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
+				proposal, err = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
 				assert.NilError(t, err)
 				assert.Assert(t, proposal.String() != "")
 

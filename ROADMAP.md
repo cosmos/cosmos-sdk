@@ -1,4 +1,4 @@
-# Roadmap
+# Roadmap 2023
 
 Welcome to the Cosmos SDK's team roadmap. 
 
@@ -9,7 +9,7 @@ Welcome to the Cosmos SDK's team roadmap.
 
 ### Storage
  
-- [Prodcue a spec for the new store design](https://github.com/cosmos/cosmos-sdk/issues/12986)
+- [Produce a spec for the new store design](https://github.com/cosmos/cosmos-sdk/issues/12986)
     - Research a new design for store. This could entail writing some POC's in order to identify design patterns
 - Store as its own go module
     - Store module should be its own go.mod without a dependency on the Cosmos SDK
@@ -29,20 +29,19 @@ Welcome to the Cosmos SDK's team roadmap.
     - Dynamic support allows the Cosmos SDK to release a cmd line tool that could work with any chain. 
     - Add metadata support to latest version of Cosmos SDK and, if possible, backport to older versions
 - Multi-chain command 
-    - release a cmd line tool that can be pointed a grpc endpoint which then can produce cmd lines to interact with the chain
+    - Release a cmd line tool that can be pointed a grpc endpoint which then can produce cmd lines to interact with the chain
 - Auto-cli tx support 
-    - tx support for auto-cli/hubl
-        - this would fully remove the need for application developers to write cli commands for their modules
+    - Tx support for auto-cli/hubl
+        - This would fully remove the need for application developers to write cli commands for their modules
 
 
 ### Dev UX
 
-**Deliverable**
 - [Release collections v1](https://github.com/cosmos/cosmos-sdk/issues/14300) 
     - Collections is a new abstraction layer similar to the ORM. In the ADR phase it received support from many in the ecosystem. 
     - V1 release should allow modules to be migrated to collections.  
 - Migrate 3 modules to use collections api
-    - migrating 3 modules to use collections would help in show users how to migrate users
+    - Migrating 3 modules to use collections would help in show users how to migrate users
 - [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) (75%)
     - Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
 - Core API
@@ -52,15 +51,15 @@ Welcome to the Cosmos SDK's team roadmap.
     - Give three modules their own go.mods
     - Cleanup dependency graph (dependent on integration testing framework)
 - [Metamask signing directly into the sdk](https://github.com/cosmos/cosmos-sdk/discussions/13892) 
-- [Adr-033 (internal message routing)](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)
+- [ADR-033 (internal message routing)](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)
     - Merge internal message router
     - Add docs on how to use the router
-- [Adr-54 (dependency management)](https://github.com/cosmos/cosmos-sdk/pull/11802)
+- [ADR-54 (dependency management)](https://github.com/cosmos/cosmos-sdk/pull/11802)
     - Come to consensus on module dependency graph for the future
     - Begin socializing conventions 
 - [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
 - [Auth module](https://github.com/cosmos/cosmos-sdk/issues/14900)
-  - produce a spec/ADR on a proposed new auth module. 
+  - Produce a spec/ADR on a proposed new auth module. 
 - [Implement Amino Json encoder](https://github.com/cosmos/cosmos-sdk/issues/10993)
 
 ### Testing
@@ -79,11 +78,9 @@ Issue: https://github.com/cosmos/cosmos-sdk/issues/12272
 
 **Blocked**:
 
-> once tendermint has a release candidate of ABCI 2.0 (tm 0.38)
+> once cometBFT has a release candidate of ABCI 2.0 (cmt 0.38)
 
-- complete implementation (0%)
-    - implement ABCI 2.0 ADR. 
-    - conduct all pre-release testing for ABCI 2.0
+- Integrate ABCI 2.0
 
 ### Security
 
@@ -93,8 +90,8 @@ Issue: https://github.com/cosmos/cosmos-sdk/issues/12272
 
 ### IAVL
 
-- [Adr 001](https://github.com/cosmos/iavl/pull/608) 
-    - implementation has been completed, waiting on reviewers
+- [ADR 001](https://github.com/cosmos/iavl/pull/608) 
+    - Implementation has been completed, waiting on reviewers
 - [Prepare the migration path](https://github.com/cosmos/iavl/issues/675) 
     - Migration path has not been finalized
 - Test on mainnets 

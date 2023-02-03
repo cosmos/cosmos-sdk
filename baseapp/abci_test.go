@@ -132,6 +132,27 @@ func TestGetBlockRentionHeight(t *testing.T) {
 	}
 }
 
+// Verifies that the Commiter is called with the checkState.
+func TestCommiterCalledWithCheckState(t *testing.T) {
+	t.Parallel()
+
+	logger := defaultLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := NewBaseApp(name, logger, db, nil)
+
+	wasCommiterCalled := false
+	app.commiter = func(ctx sdk.Context) {
+		require.Equal(t, app.checkState.ctx, ctx)
+		wasCommiterCalled = true
+	}
+
+	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: 1}})
+	app.Commit()
+
+	require.Equal(t, true, wasCommiterCalled)
+}
+
 // Test and ensure that invalid block heights always cause errors.
 // See issues:
 // - https://github.com/cosmos/cosmos-sdk/issues/11220

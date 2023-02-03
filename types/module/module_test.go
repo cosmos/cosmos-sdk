@@ -101,6 +101,10 @@ func TestManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module1", "module2"}, mm.OrderEndBlockers)
 	mm.SetOrderEndBlockers("module2", "module1")
 	require.Equal(t, []string{"module2", "module1"}, mm.OrderEndBlockers)
+
+	require.Equal(t, []string{"module1", "module2"}, mm.OrderCommiters)
+	mm.SetOrderCommiters("module2", "module1")
+	require.Equal(t, []string{"module2", "module1"}, mm.OrderCommiters)
 }
 
 func TestManager_RegisterInvariants(t *testing.T) {
@@ -248,4 +252,21 @@ func TestManager_EndBlock(t *testing.T) {
 	mockAppModule1.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	mockAppModule2.EXPECT().EndBlock(gomock.Any(), gomock.Eq(req)).Times(1).Return([]abci.ValidatorUpdate{{}})
 	require.Panics(t, func() { mm.EndBlock(sdk.Context{}, req) })
+}
+
+func TestManager_Commit(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+
+	mockAppModule1 := mock.NewMockCommitAppModule(mockCtrl)
+	mockAppModule2 := mock.NewMockCommitAppModule(mockCtrl)
+	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
+	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
+	mm := module.NewManager(mockAppModule1, mockAppModule2)
+	require.NotNil(t, mm)
+	require.Equal(t, 2, len(mm.Modules))
+
+	mockAppModule1.EXPECT().Commit(gomock.Any()).Times(1)
+	mockAppModule2.EXPECT().Commit(gomock.Any()).Times(1)
+	mm.Commit(sdk.Context{})
 }

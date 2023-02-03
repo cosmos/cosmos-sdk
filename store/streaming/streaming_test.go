@@ -1,17 +1,18 @@
 package streaming
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +22,7 @@ import (
 type PluginTestSuite struct {
 	suite.Suite
 
-	loggerCtx sdk.Context
+	loggerCtx mockContext
 
 	workDir string
 
@@ -37,22 +38,36 @@ type PluginTestSuite struct {
 }
 
 func (s *PluginTestSuite) SetupTest() {
-	s.loggerCtx = sdk.NewContext(
-		nil,
-		tmproto.Header{Height: 1, Time: time.Now()},
-		false,
-		log.TestingLogger(),
-	)
-
 	path, err := os.Getwd()
 	if err != nil {
 		s.T().Fail()
 	}
 	s.workDir = path
 
+	pluginVersion := "abci_v1"
+	// to write data to files, replace stdout/stdout => file/file
+	pluginPath := fmt.Sprintf("%s/abci/examples/file/file", s.workDir)
+	if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
+		s.T().Fail()
+	}
+
+	raw, err := NewStreamingPlugin(pluginVersion, "trace")
+	require.NoError(s.T(), err, "load", "streaming", "unexpected error")
+
+	abciListener, ok := raw.(storetypes.ABCIListener)
+	require.True(s.T(), ok, "should pass type check")
+
+	header := tmproto.Header{Height: 1, Time: time.Now()}
+	logger := log.TestingLogger()
+	streamingService := storetypes.StreamingManager{
+		AbciListeners: []storetypes.ABCIListener{abciListener},
+		StopNodeOnErr: true,
+	}
+	s.loggerCtx = NewMockContext(header, logger, streamingService)
+
 	// test abci message types
 	s.beginBlockReq = abci.RequestBeginBlock{
-		Header:              tmproto.Header{Height: 1, Time: time.Now()},
+		Header:              s.loggerCtx.BlockHeader(),
 		ByzantineValidators: []abci.Misbehavior{},
 		Hash:                []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		LastCommitInfo:      abci.CommitInfo{Round: 1, Votes: []abci.VoteInfo{}},
@@ -60,7 +75,7 @@ func (s *PluginTestSuite) SetupTest() {
 	s.beginBlockRes = abci.ResponseBeginBlock{
 		Events: []abci.Event{{Type: "testEventType1"}},
 	}
-	s.endBlockReq = abci.RequestEndBlock{Height: 1}
+	s.endBlockReq = abci.RequestEndBlock{Height: s.loggerCtx.BlockHeight()}
 	s.endBlockRes = abci.ResponseEndBlock{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &tmproto.ConsensusParams{},
@@ -98,46 +113,77 @@ func TestPluginTestSuite(t *testing.T) {
 
 func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 	s.T().Run("Should successfully load streaming", func(t *testing.T) {
-		pluginVersion := "abci_v1"
-		// to write data to files, replace stdout => file
-		pluginPath := fmt.Sprintf("%s/abci/examples/stdout", s.workDir)
-		if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
-			t.Fail()
-		}
 
-		raw, err := NewStreamingPlugin(pluginVersion, "trace")
-		require.NoError(t, err, "load", "streaming", "unexpected error")
+		abciListeners := s.loggerCtx.StreamingManager().AbciListeners
+		for _, abciListener := range abciListeners {
+			for i := range [50]int{} {
+				err := abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
+				assert.NoError(t, err, "ListenBeginBlock")
 
-		abciListener, ok := raw.(storetypes.ABCIListener)
-		require.True(t, ok, "should pass type check")
+				err = abciListener.ListenEndBlock(s.loggerCtx, s.endBlockReq, s.endBlockRes)
+				assert.NoError(t, err, "ListenEndBlock")
 
-		s.loggerCtx = s.loggerCtx.WithStreamingManager(storetypes.StreamingManager{
-			AbciListeners: []storetypes.ABCIListener{abciListener},
-			StopNodeOnErr: true,
-		})
+				for range [50]int{} {
+					err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
+					assert.NoError(t, err, "ListenDeliverTx")
+				}
 
-		for i := range [50]int{} {
-			s.updateHeight(int64(i + 1))
+				err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
+				assert.NoError(t, err, "ListenCommit")
 
-			err = abciListener.ListenBeginBlock(s.loggerCtx, s.beginBlockReq, s.beginBlockRes)
-			assert.NoError(t, err, "ListenBeginBlock")
-
-			err = abciListener.ListenEndBlock(s.loggerCtx, s.endBlockReq, s.endBlockRes)
-			assert.NoError(t, err, "ListenEndBlock")
-
-			for range [50]int{} {
-				err = abciListener.ListenDeliverTx(s.loggerCtx, s.deliverTxReq, s.deliverTxRes)
-				assert.NoError(t, err, "ListenDeliverTx")
+				s.updateHeight(int64(i + 1))
 			}
-
-			err = abciListener.ListenCommit(s.loggerCtx, s.commitRes, s.changeSet)
-			assert.NoError(t, err, "ListenCommit")
 		}
 	})
 }
 
 func (s *PluginTestSuite) updateHeight(n int64) {
-	s.beginBlockReq.Header.Height = n
-	s.endBlockReq.Height = n
-	s.loggerCtx = s.loggerCtx.WithBlockHeight(n)
+	header := s.loggerCtx.BlockHeader()
+	header.Height = n
+	s.loggerCtx = NewMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
+}
+
+var _ context.Context = mockContext{}
+var _ storetypes.Context = mockContext{}
+
+type mockContext struct {
+	baseCtx          context.Context
+	header           tmproto.Header
+	logger           log.Logger
+	streamingManager storetypes.StreamingManager
+}
+
+func (m mockContext) BlockHeight() int64                            { return m.header.Height }
+func (m mockContext) Logger() log.Logger                            { return m.logger }
+func (m mockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
+
+func (m mockContext) BlockHeader() tmproto.Header {
+	msg := proto.Clone(&m.header).(*tmproto.Header)
+	return *msg
+}
+
+func NewMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) mockContext {
+	header.Time = header.Time.UTC()
+	return mockContext{
+		baseCtx:          context.Background(),
+		header:           header,
+		logger:           logger,
+		streamingManager: sm,
+	}
+}
+
+func (m mockContext) Deadline() (deadline time.Time, ok bool) {
+	return m.baseCtx.Deadline()
+}
+
+func (m mockContext) Done() <-chan struct{} {
+	return m.baseCtx.Done()
+}
+
+func (m mockContext) Err() error {
+	return m.baseCtx.Err()
+}
+
+func (m mockContext) Value(key any) any {
+	return m.baseCtx.Value(key)
 }

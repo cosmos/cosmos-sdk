@@ -755,3 +755,24 @@ func makeEncodingConfig() simappparams.EncodingConfig {
 	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
 }
+
+func RegisterStreamingServices(bApp *bam.BaseApp, appOpts servertypes.AppOptions, keys map[string]*types.KVStoreKey) {
+	// register streaming services
+	streamingCfg := cast.ToStringMap(appOpts.Get(bam.StreamingTomlKey))
+	for service := range streamingCfg {
+		pluginKey := fmt.Sprintf("%s.%s.%s", bam.StreamingTomlKey, service, bam.StreamingABCIPluginTomlKey)
+		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
+		if len(pluginName) > 0 {
+			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
+			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
+			if err != nil {
+				fmt.Printf("failed to load streaming plugin: %s", err)
+				os.Exit(1)
+			}
+			if err := bam.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
+				fmt.Printf("failed to register streaming plugin: %s", err)
+				os.Exit(1)
+			}
+		}
+	}
+}

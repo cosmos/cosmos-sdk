@@ -1,13 +1,14 @@
 package types
 
 import (
-	"context"
-
 	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
+// Context is an interface used by an App to pass context information
+// needed to process store streaming requests.
 type Context interface {
-	Context() context.Context
+	BlockHeader() tmproto.Header
 	BlockHeight() int64
 	Logger() log.Logger
 	StreamingManager() StreamingManager

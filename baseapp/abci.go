@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hashicorp/go-plugin"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
@@ -514,9 +513,6 @@ func (app *BaseApp) halt() {
 			return
 		}
 	}
-
-	// Stop any running streaming plugins
-	plugin.CleanupClients()
 
 	// Resort to exiting immediately if the process could not be found or killed
 	// via SIGINT/SIGTERM signals.

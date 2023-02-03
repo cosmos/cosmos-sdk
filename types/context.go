@@ -257,8 +257,8 @@ func (c Context) WithPriority(p int64) Context {
 }
 
 // WithStreamingManager returns a Context with an updated streaming manager
-func (c Context) WithStreamingManager(s storetypes.StreamingManager) Context {
-	c.streamingManager = s
+func (c Context) WithStreamingManager(sm storetypes.StreamingManager) Context {
+	c.streamingManager = sm
 	return c
 }
 

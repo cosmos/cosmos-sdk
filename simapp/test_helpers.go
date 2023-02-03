@@ -4,13 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/store/streaming"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -20,7 +17,6 @@ import (
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
-	"cosmossdk.io/store/types"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -247,26 +243,5 @@ func NewTestNetworkFixture() network.TestFixture {
 			TxConfig:          app.TxConfig(),
 			Amino:             app.LegacyAmino(),
 		},
-	}
-}
-
-func RegisterStreamingServices(bApp *bam.BaseApp, appOpts servertypes.AppOptions, keys map[string]*types.KVStoreKey) {
-	// register streaming services
-	streamingCfg := cast.ToStringMap(appOpts.Get(bam.StreamingTomlKey))
-	for service := range streamingCfg {
-		pluginKey := fmt.Sprintf("%s.%s.%s", bam.StreamingTomlKey, service, bam.StreamingABCIPluginTomlKey)
-		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-		if len(pluginName) > 0 {
-			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-			if err != nil {
-				fmt.Printf("failed to load streaming plugin: %s", err)
-				os.Exit(1)
-			}
-			if err := bam.RegisterStreamingPlugin(bApp, appOpts, keys, plugin); err != nil {
-				fmt.Printf("failed to register streaming plugin: %s", err)
-				os.Exit(1)
-			}
-		}
 	}
 }

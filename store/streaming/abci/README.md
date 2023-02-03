@@ -348,12 +348,12 @@ make proto-gen
 
 - stdout plugin
 ```shell
-go build -o store/streaming/abci/examples/stdout store/streaming/abci/examples/stdout.go
+go build -o streaming/abci/examples/stdout/stdout streaming/abci/examples/stdout/stdout.go
 ```
 
 - file plugin (writes to ~/)
 ```shell
-go build -o store/streaming/abci/examples/file store/streaming/abci/examples/file.go
+go build -o streaming/abci/examples/file/file streaming/abci/examples/file/file.go
 ```
 
 ### Testing
@@ -362,11 +362,11 @@ Export a plugin from one of the Go or Python examples.
 
 - stdout plugin
 ```shell
-export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/store/streaming/abci/examples/stdout"
+export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/store/streaming/abci/examples/stdout/stdout"
 ```
 - file plugin (writes to ~/)
 ```shell
-export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/store/streaming/abci/examples/file"
+export COSMOS_SDK_ABCI_V1="{path to}/cosmos-sdk/store/streaming/abci/examples/file/file"
 ```
 where `{path to}` is the parent path to the `cosmos-sdk` repo on you system.
 

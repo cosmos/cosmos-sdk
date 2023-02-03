@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/hashicorp/go-plugin"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -16,6 +17,11 @@ type GRPCClient struct {
 	client ABCIListenerServiceClient
 }
 
+// ListenBeginBlock listens to begin block request and responses.
+// In addition, it retrieves a types.Context from a context.Context instance.
+// It panics if a types.Context was not properly attached.
+// When the node is configured to stop on listening errors,
+// it will terminate immediately and exit with a non-zero code.
 func (m *GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()
@@ -28,6 +34,11 @@ func (m *GRPCClient) ListenBeginBlock(goCtx context.Context, req abci.RequestBeg
 	return err
 }
 
+// ListenEndBlock listens to end block request and responses.
+// In addition, it retrieves a types.Context from a context.Context instance.
+// It panics if a types.Context was not properly attached.
+// When the node is configured to stop on listening errors,
+// it will terminate immediately and exit with a non-zero code.
 func (m *GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()
@@ -40,6 +51,11 @@ func (m *GRPCClient) ListenEndBlock(goCtx context.Context, req abci.RequestEndBl
 	return err
 }
 
+// ListenDeliverTx listens to deliver tx request and responses.
+// In addition, it retrieves a types.Context from a context.Context instance.
+// It panics if a types.Context was not properly attached.
+// When the node is configured to stop on listening errors,
+// it will terminate immediately and exit with a non-zero code.
 func (m *GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()
@@ -52,6 +68,11 @@ func (m *GRPCClient) ListenDeliverTx(goCtx context.Context, req abci.RequestDeli
 	return err
 }
 
+// ListenCommit listens to commit responses and state changes for the current block.
+// In addition, it retrieves a types.Context from a context.Context instance.
+// It panics if a types.Context was not properly attached.
+// When the node is configured to stop on listening errors,
+// it will terminate immediately and exit with a non-zero code.
 func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()

@@ -197,7 +197,7 @@ type CommitMultiStore interface {
 	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
 	ListeningEnabled(key StoreKey) bool
 
-	// AddListeners adds q listener for the KVStore belonging to the provided StoreKey
+	// AddListeners adds a listener for the KVStore belonging to the provided StoreKey
 	AddListeners(keys []StoreKey)
 
 	// PopStateCache returns the accumulated state change messages from the CommitMultiStore

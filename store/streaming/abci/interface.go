@@ -4,6 +4,7 @@ package abci
 import (
 	"context"
 
+	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
 
 	storetypes "cosmossdk.io/store/types"
@@ -19,10 +20,10 @@ var Handshake = plugin.HandshakeConfig{
 	MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-var _ plugin.GRPCPlugin = (*ABCIListenerGRPCPlugin)(nil)
+var _ plugin.GRPCPlugin = (*ListenerGRPCPlugin)(nil)
 
-// ABCIListenerGRPCPlugin is the implementation of plugin.GRPCPlugin, so we can serve/consume this.
-type ABCIListenerGRPCPlugin struct {
+// ListenerGRPCPlugin is the implementation of plugin.GRPCPlugin, so we can serve/consume this.
+type ListenerGRPCPlugin struct {
 	// GRPCPlugin must still implement the Plugin interface
 	plugin.Plugin
 	// Concrete implementation, written in Go. This is only used for plugins
@@ -30,12 +31,12 @@ type ABCIListenerGRPCPlugin struct {
 	Impl storetypes.ABCIListener
 }
 
-func (p *ABCIListenerGRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
+func (p *ListenerGRPCPlugin) GRPCServer(_ *plugin.GRPCBroker, s *grpc.Server) error {
 	RegisterABCIListenerServiceServer(s, &GRPCServer{Impl: p.Impl})
 	return nil
 }
 
-func (p *ABCIListenerGRPCPlugin) GRPCClient(
+func (p *ListenerGRPCPlugin) GRPCClient(
 	_ context.Context,
 	_ *plugin.GRPCBroker,
 	c *grpc.ClientConn,

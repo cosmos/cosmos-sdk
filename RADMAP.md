@@ -19,7 +19,7 @@ Welcome to the Cosmos SDK's team roadmap.
 - Parallel execution of state
     - RFC/ADR is merged into the main on the sdk
 - Optimistic execution
-    - RFC?ADR is merged into main on the sdk
+    - RFC/ADR is merged into main on the sdk
 
 
 ### Client UX

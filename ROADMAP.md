@@ -14,7 +14,6 @@ Welcome to the Cosmos SDK's team roadmap.
 - Store as its own go module
     - Store module should be its own go.mod without a dependency on the Cosmos SDK
 - Begin implementation of store v2
-    - Achieve 20%-50% implementation
     - Identify the migration path from store v1 -> store v2
 - Parallel execution of state
     - RFC/ADR is merged into the main on the sdk
@@ -46,9 +45,9 @@ Welcome to the Cosmos SDK's team roadmap.
     - migrating 3 modules to use collections would help in show users how to migrate users
 - [Sign mode textual](https://github.com/cosmos/cosmos-sdk/issues/11970) (75%)
     - Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
-- Core API (60%)
-    - merge ADR for core api
-    - migrate 3+ modules to use core api
+- Core API
+    - [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md)
+    - Migrate 3 modules to use core api
 - Module Dependency 
     - Give three modules their own go.mods
     - cleanup dependency graph (dependent on integration testing framework)

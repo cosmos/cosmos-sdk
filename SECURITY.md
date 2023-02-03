@@ -12,8 +12,8 @@ See the policy linked above for more details on submissions and rewards and read
 this [blog post](https://blog.cosmos.network/bug-bounty-program-for-tendermint-cosmos-833c67693586) for the program scope.
 
 The following is a list of examples of the kinds of bugs we're most interested
-in for the Cosmos SDK. See [here](https://github.com/tendermint/tendermint/blob/master/SECURITY.md) for vulnerabilities we are interested
-in for Tendermint and other lower-level libraries (eg. [IAVL](https://github.com/cosmos/iavl)).
+in for the Cosmos SDK. See [here](https://github.com/cometbft/cometbft/blob/master/SECURITY.md) for vulnerabilities we are interested
+in for CometBFT and other lower-level libraries (eg. [IAVL](https://github.com/cosmos/iavl)).
 
 ### Core packages
 

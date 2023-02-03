@@ -1433,7 +1433,7 @@ func (m *QueryGroupsRequest) GetPagination() *query.PageRequest {
 //
 // Since: cosmos-sdk 0.47.1
 type QueryGroupsResponse struct {
-	// `groups` is all groups present in state.
+	// `groups` is all the groups present in state.
 	Groups []*GroupInfo `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

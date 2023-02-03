@@ -537,6 +537,7 @@ func QueryGroupsCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "groups")
 
 	return cmd
 }

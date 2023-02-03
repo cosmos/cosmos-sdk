@@ -162,6 +162,55 @@ func (s *E2ETestSuite) TestQueryGroupsByMembers() {
 	}
 }
 
+func (s *E2ETestSuite) TestQueryGroups() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	require := s.Require()
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		numItems     int
+		expectGroups []*group.GroupInfo
+	}{
+		{
+			name:      "valid req",
+			args:      []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expectErr: false,
+			numItems:  5,
+		},
+		{
+			name: "valid req with pagination",
+			args: []string{
+				"--limit=2",
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			expectErr: false,
+			numItems:  2,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := client.QueryGroupsCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				require.Contains(out.String(), tc.expectErrMsg)
+			} else {
+				require.NoError(err, out.String())
+
+				var resp group.QueryGroupsResponse
+				val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &resp)
+
+				require.Len(resp.Groups, tc.numItems)
+			}
+		})
+	}
+}
+
 func (s *E2ETestSuite) TestQueryGroupMembers() {
 	val := s.network.Validators[0]
 	clientCtx := val.ClientCtx

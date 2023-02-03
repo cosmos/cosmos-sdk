@@ -8,10 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+<<<<<<< HEAD
 	sdk "github.com/cosmos/cosmos-sdk/types"
+=======
+	"github.com/cosmos/cosmos-sdk/types"
+>>>>>>> a2797c8cd (feat: add query `groups` in `x/group` (#14879))
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/x/group/module"
@@ -24,7 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
-func TestQueryGroupsByMember(t *testing.T) {
+func initKeeper(t *testing.T) (types.Context, groupkeeper.Keeper, []types.AccAddress, group.QueryClient) {
 	var (
 		groupKeeper       groupkeeper.Keeper
 		interfaceRegistry codectypes.InterfaceRegistry
@@ -45,8 +49,6 @@ func TestQueryGroupsByMember(t *testing.T) {
 		encCfg.TxConfig.TxDecoder(),
 	)
 
-	banktypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-
 	addrs := simtestutil.CreateIncrementalAccounts(6)
 	ctrl := gomock.NewController(t)
 	accountKeeper := grouptestutil.NewMockAccountKeeper(ctrl)
@@ -58,6 +60,16 @@ func TestQueryGroupsByMember(t *testing.T) {
 	accountKeeper.EXPECT().GetAccount(gomock.Any(), addrs[5]).Return(authtypes.NewBaseAccountWithAddress(addrs[5])).AnyTimes()
 
 	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
+
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	group.RegisterQueryServer(queryHelper, groupKeeper)
+	queryClient := group.NewQueryClient(queryHelper)
+
+	return ctx, groupKeeper, addrs, queryClient
+}
+
+func TestQueryGroupsByMember(t *testing.T) {
+	ctx, groupKeeper, addrs, queryClient := initKeeper(t)
 
 	// Initial group, group policy and balance setup
 	members := []group.MemberRequest{
@@ -79,10 +91,6 @@ func TestQueryGroupsByMember(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
-	group.RegisterQueryServer(queryHelper, groupKeeper)
-	queryClient := group.NewQueryClient(queryHelper)
-
 	// not part of any group
 	resp, err := queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
 		Address: addrs[5].String(),
@@ -103,4 +111,71 @@ func TestQueryGroupsByMember(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Groups, 2)
+}
+
+func TestQueryGroups(t *testing.T) {
+	ctx, groupKeeper, addrs, queryClient := initKeeper(t)
+
+	// Initial group, group policy and balance setup
+	members := []group.MemberRequest{
+		{Address: addrs[1].String(), Weight: "1"},
+		{Address: addrs[3].String(), Weight: "2"},
+	}
+
+	_, err := groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
+		Admin:   addrs[0].String(),
+		Members: members,
+	})
+	require.NoError(t, err)
+
+	members = []group.MemberRequest{
+		{Address: addrs[3].String(), Weight: "1"},
+	}
+	_, err = groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
+		Admin:   addrs[2].String(),
+		Members: members,
+	})
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name         string
+		expErr       bool
+		expLen       int
+		itemsPerPage uint64
+	}{
+		{
+			name:         "success case, without pagination",
+			expErr:       false,
+			expLen:       2,
+			itemsPerPage: 10,
+		},
+		{
+			name:         "success case, with pagination",
+			expErr:       false,
+			expLen:       1,
+			itemsPerPage: 1,
+		},
+		{
+			name:   "success without pagination",
+			expErr: false,
+			expLen: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := queryClient.Groups(context.Background(), &group.QueryGroupsRequest{
+				Pagination: &query.PageRequest{
+					Limit: tc.itemsPerPage,
+				},
+			})
+
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, len(resp.Groups), tc.expLen)
+			}
+		})
+	}
 }

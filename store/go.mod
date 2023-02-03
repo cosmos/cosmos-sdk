@@ -8,7 +8,7 @@ require (
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	github.com/cosmos/gogoproto v1.4.4
-	github.com/cosmos/iavl v0.20.0-alpha.2
+	github.com/cosmos/iavl v0.20.0-alpha3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d

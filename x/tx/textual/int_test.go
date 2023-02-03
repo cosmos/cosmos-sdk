@@ -65,7 +65,7 @@ func checkNumberTest(t *testing.T, r textual.ValueRenderer, pv protoreflect.Valu
 	require.Equal(t, 0, screens[0].Indent)
 	require.Equal(t, false, screens[0].Expert)
 
-	require.Equal(t, expected, screens[0].Text)
+	require.Equal(t, expected, screens[0].Content)
 
 	// Round trip.
 	value, err := r.Parse(context.Background(), screens)

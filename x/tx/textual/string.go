@@ -16,12 +16,12 @@ func NewStringValueRenderer() ValueRenderer {
 }
 
 func (sr stringValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]Screen, error) {
-	return []Screen{{Text: v.String()}}, nil
+	return []Screen{{Content: v.String()}}, nil
 }
 
 func (sr stringValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
-	return protoreflect.ValueOfString(screens[0].Text), nil
+	return protoreflect.ValueOfString(screens[0].Content), nil
 }

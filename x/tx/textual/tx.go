@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"regexp"
-	"strings"
 
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -22,7 +21,7 @@ import (
 
 var (
 	// msgRe is a regex matching the beginning of the TxBody msgs in the envelope.
-	msgRe = regexp.MustCompile("Message: ([0-9]+) Any")
+	msgRe = regexp.MustCompile("([0-9]+) Any")
 	// inverseMsgRe is a regex matching the textual output of the TxBody msgs
 	// header.
 	inverseMsgRe = regexp.MustCompile("This transaction has ([0-9]+) Messages?")
@@ -138,23 +137,26 @@ func (vr txValueRenderer) Format(ctx context.Context, v protoreflect.Value) ([]S
 	for i := range screens {
 		if screens[i].Indent == 0 {
 			// Do expert fields.
-			screenKV := strings.Split(screens[i].Text, ": ")
-			_, ok := expert[screenKV[0]]
+			_, ok := expert[screens[i].Title]
 			if ok {
-				expertify(screens, i, screenKV[0])
+				expertify(screens, i, screens[i].Title)
 			}
 
 			// Replace:
 			// "Message: <N> Any"
 			// with:
 			// "This transaction has <N> Message"
-			matches := msgRe.FindStringSubmatch(screens[i].Text)
-			if len(matches) > 0 {
-				screens[i].Text = fmt.Sprintf("This transaction has %s Message", matches[1])
-				if matches[1] != "1" {
-					screens[i].Text += "s"
+			if screens[i].Title == "Message" {
+				matches := msgRe.FindStringSubmatch(screens[i].Content)
+				if len(matches) > 0 {
+					screens[i].Title = ""
+					screens[i].Content = fmt.Sprintf("This transaction has %s Message", matches[1])
+					if matches[1] != "1" {
+						screens[i].Content += "s"
+					}
 				}
 			}
+
 		}
 	}
 
@@ -168,7 +170,7 @@ func expertify(screens []Screen, fromIdx int, fieldName string) {
 	for i := fromIdx; i < len(screens); i++ {
 		if i > fromIdx &&
 			screens[i].Indent == 0 &&
-			screens[i].Text != fmt.Sprintf("End of %s", fieldName) {
+			screens[i].Content != fmt.Sprintf("End of %s", fieldName) {
 			break
 		}
 
@@ -198,7 +200,7 @@ func getHash(bodyBz, authInfoBz []byte) string {
 func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
 	// Process the screens to be parsable by a envelope message value renderer
 	parsable := make([]Screen, len(screens)+1)
-	parsable[0] = Screen{Text: "Envelope object"}
+	parsable[0] = Screen{Content: "Envelope object"}
 	for i := range screens {
 		parsable[i+1].Indent = screens[i].Indent + 1
 
@@ -206,11 +208,13 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 		// "This transaction has <N> Message"
 		// with:
 		// "Message: <N> Any"
-		matches := inverseMsgRe.FindStringSubmatch(screens[i].Text)
+		matches := inverseMsgRe.FindStringSubmatch(screens[i].Content)
 		if len(matches) > 0 {
-			parsable[i+1].Text = fmt.Sprintf("Message: %s Any", matches[1])
+			parsable[i+1].Title = "Message"
+			parsable[i+1].Content = fmt.Sprintf("%s Any", matches[1])
 		} else {
-			parsable[i+1].Text = screens[i].Text
+			parsable[i+1].Title = screens[i].Title
+			parsable[i+1].Content = screens[i].Content
 		}
 	}
 

@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
+	cosmossdk.io/math v1.0.0-beta.5
 	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.0.0-20230202201700-d159562d0d96
 	github.com/confio/ics23/go v0.9.0
@@ -21,7 +22,6 @@ require (
 	google.golang.org/grpc v1.52.3 // indirect
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
 	gotest.tools/v3 v3.4.0
-	cosmossdk.io/math v1.0.0-beta.5
 )
 
 require (
@@ -49,6 +49,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/klauspost/compress v1.15.14 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect

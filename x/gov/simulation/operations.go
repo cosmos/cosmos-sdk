@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -204,17 +203,13 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, true)
+		expedited := r.Intn(2) == 0
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
 		case err != nil:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
-		}
-
-		expedited := r.Intn(2) == 0
-		if expedited {
-			deposit = deposit.MulInt(sdkmath.NewInt(v1.DefaultMinExpeditedDepositTokensRatio))
 		}
 
 		msg, err := v1.NewMsgSubmitProposal(

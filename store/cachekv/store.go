@@ -6,7 +6,7 @@ import (
 	"sort"
 	"sync"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/cachekv/internal"
@@ -332,9 +332,9 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// if below minSortSize, expand it to cover additional values
 	// this amortizes the cost of processing elements across multiple calls
 	if endIndex-startIndex < minSortSize {
-		endIndex = sdkmath.Min(startIndex+minSortSize, len(strL)-1)
+		endIndex = math.Min(startIndex+minSortSize, len(strL)-1)
 		if endIndex-startIndex < minSortSize {
-			startIndex = sdkmath.Max(endIndex-minSortSize, 0)
+			startIndex = math.Max(endIndex-minSortSize, 0)
 		}
 	}
 

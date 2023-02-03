@@ -8,8 +8,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/libs/cli"
 	"sigs.k8s.io/yaml"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

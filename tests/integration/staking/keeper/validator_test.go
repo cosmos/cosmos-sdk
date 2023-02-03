@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"gotest.tools/v3/assert"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

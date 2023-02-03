@@ -11,7 +11,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	"github.com/coinbase/rosetta-sdk-go/types"
-	tmtypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	tmtypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 )
 
 // ListErrors lists all the registered errors

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/math"
 

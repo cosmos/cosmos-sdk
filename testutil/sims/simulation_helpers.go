@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	storetypes "cosmossdk.io/store/types"
 

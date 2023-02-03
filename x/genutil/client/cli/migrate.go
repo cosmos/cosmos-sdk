@@ -6,9 +6,9 @@ import (
 	"sort"
 	"time"
 
+	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	tmjson "github.com/tendermint/tendermint/libs/json"
 	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"

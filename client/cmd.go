@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cometbft/cometbft/libs/cli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/tendermint/tendermint/libs/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"

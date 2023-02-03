@@ -69,8 +69,8 @@ github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c h1:18vrPZBG4Zuh8A
 github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c/go.mod h1:NoM5UQkpKJY86c0Acb8Hy7HyNrltal8+BxQyerU8fzM=
 github.com/cosmos/gogoproto v1.4.4 h1:nVAsgLlAf5jeN0fV7hRlkZvf768zU+dy4pG+hxc2P34=
 github.com/cosmos/gogoproto v1.4.4/go.mod h1:/yl6/nLwsZcZ2JY3OrqjRqvqCG9InUMcXRfRjQiF9DU=
-github.com/cosmos/iavl v0.20.0-alpha.2 h1:IIUIOqPG1LC2JGiQVeNxAi+Fon/M8TXMBAN0XsUSqq8=
-github.com/cosmos/iavl v0.20.0-alpha.2/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
+github.com/cosmos/iavl v0.20.0-alpha3 h1:hbUyr0dkiGDlmmbrArvte0lXv6VkMrGQNr3b29xvmVk=
+github.com/cosmos/iavl v0.20.0-alpha3/go.mod h1:25YJYzilTErJ2mKfNB3xyWL9IsCwEQdNzdIutg2mh3U=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

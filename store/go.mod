@@ -61,7 +61,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// TODO remove after tag of CometBFT
+// TODO update/remove after v0.37.x tag of CometBFT
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.

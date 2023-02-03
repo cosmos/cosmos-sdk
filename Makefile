@@ -422,7 +422,8 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.37.x/proto/tendermint
+# TODO update/remove after v0.37.x tag of CometBFT
+TM_URL              = https://raw.githubusercontent.com/cometbft/cometbft/387422ac220d/proto/tendermint
 
 TM_CRYPTO_TYPES     = proto/tendermint/crypto
 TM_ABCI_TYPES       = proto/tendermint/abci

@@ -84,7 +84,7 @@ jobs:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
-    if: ${{ success() }}
+    if: ${{ false }} # Disabled due to requiring Slack integration
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -112,7 +112,7 @@ jobs:
     needs:
       [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
     runs-on: ubuntu-latest
-    if: ${{ failure() }}
+    if: ${{ false }} # Disabled due to requiring Slack integration
     steps:
       - name: Notify Slack on failure
         uses: rtCamp/action-slack-notify@v2.2.0

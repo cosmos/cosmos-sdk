@@ -161,6 +161,7 @@ jobs:
           path: ./tests/e2e-profile.out
 
   repo-analysis:
+    if: ${{ false }} # Disabled due to requiring SonarCloud integration
     runs-on: ubuntu-latest
     needs: [tests, test-integration, test-e2e]
     steps:

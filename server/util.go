@@ -146,11 +146,12 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	}
 
 	var logger tmlog.Logger
-	if config.LogFormat == tmcfg.LogFormatJSON {
+	switch config.LogFormat {
+	case tmcfg.LogFormatJSON:
 		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
-	} else if config.LogFormat == tmcfg.LogFormatPlain {
+	case tmcfg.LogFormatPlain:
 		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
-	} else {
+	default:
 		return errors.New("unsupported log format")
 	}
 

@@ -14959,6 +14959,8 @@ func (x *QueryTallyResultResponse) GetTally() *TallyResult {
 }
 
 // QueryGroupsRequest is the Query/Groups request type.
+//
+// Since: cosmos-sdk 0.47.1
 type QueryGroupsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -14996,12 +14998,14 @@ func (x *QueryGroupsRequest) GetPagination() *v1beta1.PageRequest {
 }
 
 // QueryGroupsResponse is the Query/Groups response type.
+//
+// Since: cosmos-sdk 0.47.1
 type QueryGroupsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// groups are the groups info with the provided admin.
+	// `groups` is all groups present in state.
 	Groups []*GroupInfo `protobuf:"bytes,1,rep,name=groups,proto3" json:"groups,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`

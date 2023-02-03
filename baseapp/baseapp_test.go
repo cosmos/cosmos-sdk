@@ -389,6 +389,9 @@ func TestBaseAppOptionSeal(t *testing.T) {
 		suite.baseApp.SetEndBlocker(nil)
 	})
 	require.Panics(t, func() {
+		suite.baseApp.SetCommiter(nil)
+	})
+	require.Panics(t, func() {
 		suite.baseApp.SetAnteHandler(nil)
 	})
 	require.Panics(t, func() {

@@ -63,7 +63,7 @@ func (s *PluginTestSuite) SetupTest() {
 		AbciListeners: []storetypes.ABCIListener{abciListener},
 		StopNodeOnErr: true,
 	}
-	s.loggerCtx = NewMockContext(header, logger, streamingService)
+	s.loggerCtx = newMockContext(header, logger, streamingService)
 
 	// test abci message types
 	s.beginBlockReq = abci.RequestBeginBlock{
@@ -140,7 +140,7 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 func (s *PluginTestSuite) updateHeight(n int64) {
 	header := s.loggerCtx.BlockHeader()
 	header.Height = n
-	s.loggerCtx = NewMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
+	s.loggerCtx = newMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
 }
 
 var _ context.Context = mockContext{}
@@ -162,7 +162,7 @@ func (m mockContext) BlockHeader() tmproto.Header {
 	return *msg
 }
 
-func NewMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) mockContext {
+func newMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) mockContext {
 	header.Time = header.Time.UTC()
 	return mockContext{
 		baseCtx:          context.Background(),

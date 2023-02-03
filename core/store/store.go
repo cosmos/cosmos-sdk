@@ -1,7 +1,5 @@
 package store
 
-import dbm "github.com/cosmos/cosmos-db"
-
 // KVStore describes the basic interface for interacting with key-value stores.
 type KVStore interface {
 	// Get returns nil iff key doesn't exist. Errors on nil key.
@@ -32,10 +30,7 @@ type KVStore interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Iterator is an alias db's Iterator for convenience.
-type Iterator = dbm.Iterator
-
-type CoreIterator interface {
+type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	// CONTRACT: start, end readonly []byte
 	Domain() ([]byte, []byte, error)

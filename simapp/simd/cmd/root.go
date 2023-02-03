@@ -8,8 +8,10 @@ import (
 	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	tmcfg "github.com/tendermint/tendermint/config"
 
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"

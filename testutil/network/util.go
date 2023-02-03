@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -78,13 +77,12 @@ func startInProcess(cfg Config, val *Validator) error {
 	}
 
 	if val.AppConfig.GRPC.Enable {
-		grpcSrv, addr, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
 		if err != nil {
 			return err
 		}
 
 		val.grpc = grpcSrv
-		val.AppConfig.GRPC.Address = addr
 	}
 
 	if val.APIAddress != "" {
@@ -106,14 +104,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		}
 
 		val.api = apiSrv
-
-		// Update the APIAddress in case the port was set to 0 (random port).
-		apiURL, err := url.Parse(apiSrv.ListenerAddr)
-		if err != nil {
-			return err
-		}
-		val.APIAddress = fmt.Sprintf("http://%s:%s", apiURL.Hostname(), apiURL.Port())
-		val.AppConfig.API.Address = apiSrv.ListenerAddr
 	}
 
 	return nil

@@ -412,7 +412,7 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			ctx.Logger.Debug("grpc client assigned to client context", "target", grpcAddress)
 
 			// start grpc server
-			grpcSrv, _, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
+			grpcSrv, err = servergrpc.StartGRPCServer(clientCtx, app, config.GRPC)
 			if err != nil {
 				return err
 			}

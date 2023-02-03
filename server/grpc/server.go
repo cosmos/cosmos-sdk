@@ -3,7 +3,6 @@ package grpc
 import (
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -19,7 +18,7 @@ import (
 )
 
 // StartGRPCServer starts a gRPC server on the given address.
-func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, string, error) {
+func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = config.DefaultGRPCMaxSendMsgSize
@@ -54,7 +53,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 		InterfaceRegistry: clientCtx.InterfaceRegistry,
 	})
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// Reflection allows external clients to see what services and methods
@@ -63,7 +62,7 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 
 	listener, err := net.Listen("tcp", cfg.Address)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	errCh := make(chan error)
@@ -76,11 +75,10 @@ func StartGRPCServer(clientCtx client.Context, app types.Application, cfg config
 
 	select {
 	case err := <-errCh:
-		return nil, "", err
+		return nil, err
 
 	case <-time.After(types.ServerStartTime):
 		// assume server started successfully
-		addr := strings.Replace(listener.Addr().String(), "[::]", "0.0.0.0", 1)
-		return grpcSrv, addr, nil
+		return grpcSrv, nil
 	}
 }

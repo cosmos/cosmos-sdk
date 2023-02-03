@@ -11,8 +11,9 @@ import (
 	"time"
 
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/rs/zerolog"
 )
 
@@ -275,7 +276,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
-	if err := EnsureBinary(bin); err != nil {
+	if err := plan.EnsureBinary(bin); err != nil {
 		return err
 	}
 

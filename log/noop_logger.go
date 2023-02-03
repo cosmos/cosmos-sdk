@@ -1,5 +1,7 @@
 package log
 
+import tmlog "github.com/tendermint/tendermint/libs/log"
+
 var _ Logger = &NoOp{}
 
 type NoOp struct{}
@@ -12,6 +14,6 @@ func (l NoOp) Debug(msg string, keyvals ...interface{}) {}
 func (l NoOp) Info(msg string, keyvals ...interface{})  {}
 func (l NoOp) Error(msg string, keyvals ...interface{}) {}
 
-func (l NoOp) With(i ...interface{}) Logger {
+func (l NoOp) With(i ...interface{}) tmlog.Logger {
 	return l
 }

@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -55,6 +56,10 @@ type pairKeyCodec[K1, K2 any] struct {
 	keyCodec1 KeyCodec[K1]
 	keyCodec2 KeyCodec[K2]
 }
+
+func (p pairKeyCodec[K1, K2]) KeyCodec1() KeyCodec[K1] { return p.keyCodec1 }
+
+func (p pairKeyCodec[K1, K2]) KeyCodec2() KeyCodec[K2] { return p.keyCodec2 }
 
 func (p pairKeyCodec[K1, K2]) Encode(buffer []byte, pair Pair[K1, K2]) (int, error) {
 	writtenTotal := 0
@@ -172,6 +177,41 @@ func (p pairKeyCodec[K1, K2]) SizeNonTerminal(key Pair[K1, K2]) int {
 		size += p.keyCodec2.SizeNonTerminal(*key.key2)
 	}
 	return size
+}
+
+// GENESIS
+
+type jsonPairKey [2]json.RawMessage
+
+func (p pairKeyCodec[K1, K2]) EncodeJSON(v Pair[K1, K2]) ([]byte, error) {
+	k1Json, err := p.keyCodec1.EncodeJSON(v.K1())
+	if err != nil {
+		return nil, err
+	}
+	k2Json, err := p.keyCodec2.EncodeJSON(v.K2())
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(jsonPairKey{k1Json, k2Json})
+}
+
+func (p pairKeyCodec[K1, K2]) DecodeJSON(b []byte) (Pair[K1, K2], error) {
+	pairJSON := jsonPairKey{}
+	err := json.Unmarshal(b, &pairJSON)
+	if err != nil {
+		return Pair[K1, K2]{}, err
+	}
+
+	k1, err := p.keyCodec1.DecodeJSON(pairJSON[0])
+	if err != nil {
+		return Pair[K1, K2]{}, err
+	}
+	k2, err := p.keyCodec2.DecodeJSON(pairJSON[1])
+	if err != nil {
+		return Pair[K1, K2]{}, err
+	}
+
+	return Join(k1, k2), nil
 }
 
 // NewPrefixedPairRange creates a new PairRange which will prefix over all the keys

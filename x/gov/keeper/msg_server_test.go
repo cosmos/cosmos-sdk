@@ -41,6 +41,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					strings.Repeat("1", 300),
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -55,6 +56,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -69,6 +71,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -83,6 +86,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr:    true,
@@ -97,6 +101,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr: false,
@@ -110,6 +115,7 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 			},
 			expErr: false,
@@ -127,6 +133,75 @@ func (suite *KeeperTestSuite) TestSubmitProposalReq() {
 			} else {
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res.ProposalId)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCancelProposalReq() {
+	govAcct := suite.govKeeper.GetGovernanceAccount(suite.ctx).GetAddress()
+	addrs := suite.addrs
+	proposer := addrs[0]
+
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100)))
+	bankMsg := &banktypes.MsgSend{
+		FromAddress: govAcct.String(),
+		ToAddress:   proposer.String(),
+		Amount:      coins,
+	}
+
+	msg, err := v1.NewMsgSubmitProposal(
+		[]sdk.Msg{bankMsg},
+		coins,
+		proposer.String(),
+		"", "title", "summary",
+		false,
+	)
+	suite.Require().NoError(err)
+
+	res, err := suite.msgSrvr.SubmitProposal(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res.ProposalId)
+	proposalID := res.ProposalId
+
+	cases := map[string]struct {
+		preRun     func() uint64
+		expErr     bool
+		proposalID uint64
+		depositor  sdk.AccAddress
+	}{
+		"wrong proposal id": {
+			preRun: func() uint64 {
+				return 0
+			},
+			depositor: proposer,
+			expErr:    true,
+		},
+		"valid proposal but invalid proposer": {
+			preRun: func() uint64 {
+				return proposalID
+			},
+			depositor: addrs[1],
+			expErr:    true,
+		},
+		"all good": {
+			preRun: func() uint64 {
+				return proposalID
+			},
+			depositor: proposer,
+			expErr:    false,
+		},
+	}
+
+	for name, tc := range cases {
+		suite.Run(name, func() {
+			proposalID := tc.preRun()
+			cancelProposalReq := v1.NewMsgCancelProposal(proposalID, tc.depositor.String())
+			_, err := suite.msgSrvr.CancelProposal(suite.ctx, cancelProposalReq)
+			if tc.expErr {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
 			}
 		})
 	}
@@ -153,6 +228,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -178,6 +254,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -221,6 +298,7 @@ func (suite *KeeperTestSuite) TestVoteReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -272,6 +350,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -298,6 +377,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -341,6 +421,7 @@ func (suite *KeeperTestSuite) TestVoteWeightedReq() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -391,6 +472,7 @@ func (suite *KeeperTestSuite) TestDepositReq() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -511,6 +593,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -536,6 +619,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -569,6 +653,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgVote() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -620,6 +705,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -646,6 +732,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -679,6 +766,7 @@ func (suite *KeeperTestSuite) TestLegacyVoteWeighted() {
 					"",
 					"Proposal",
 					"description of proposal",
+					false,
 				)
 				suite.Require().NoError(err)
 
@@ -729,6 +817,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 		"",
 		"Proposal",
 		"description of proposal",
+		false,
 	)
 	suite.Require().NoError(err)
 
@@ -1107,7 +1196,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
 			govKeeper.SetParams(ctx, params)
 
-			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal")
+			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)
 
 			// System under test

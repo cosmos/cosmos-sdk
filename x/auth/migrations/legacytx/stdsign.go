@@ -17,22 +17,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-// LegacyMsg defines the old interface a message must fulfill, containing
-// Amino signing method and legacy router info.
+// LegacyMsg defines the old interface a message must fulfill,
+// containing Amino signing method.
 // Deprecated: Please use `Msg` instead.
 type LegacyMsg interface {
 	sdk.Msg
 
 	// Get the canonical byte representation of the Msg.
 	GetSignBytes() []byte
-
-	// Return the message type.
-	// Must be alphanumeric or empty.
-	Route() string
-
-	// Returns a human-readable string for the message, intended for utilization
-	// within tags
-	Type() string
 }
 
 // StdSignDoc is replay-prevention structure.

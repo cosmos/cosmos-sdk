@@ -33,19 +33,14 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 		return authz.AcceptResponse{}, sdkerrors.ErrInvalidType.Wrap("type mismatch")
 	}
 
-	toAddr := mSend.ToAddress
-
 	limitLeft, isNegative := a.SpendLimit.SafeSub(mSend.Amount...)
 	if isNegative {
 		return authz.AcceptResponse{}, sdkerrors.ErrInsufficientFunds.Wrapf("requested amount is more than spend limit")
 	}
-	if limitLeft.IsZero() {
-		return authz.AcceptResponse{Accept: true, Delete: true}, nil
-	}
 
 	isAddrExists := false
+	toAddr := mSend.ToAddress
 	allowedList := a.GetAllowList()
-
 	for _, addr := range allowedList {
 		ctx.GasMeter().ConsumeGas(gasCostPerIteration, "send authorization")
 		if addr == toAddr {
@@ -58,12 +53,16 @@ func (a SendAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRes
 		return authz.AcceptResponse{}, sdkerrors.ErrUnauthorized.Wrapf("cannot send to %s address", toAddr)
 	}
 
+	if limitLeft.IsZero() {
+		return authz.AcceptResponse{Accept: true, Delete: true}, nil
+	}
+
 	return authz.AcceptResponse{Accept: true, Delete: false, Updated: &SendAuthorization{SpendLimit: limitLeft, AllowList: allowedList}}, nil
 }
 
 // ValidateBasic implements Authorization.ValidateBasic.
 func (a SendAuthorization) ValidateBasic() error {
-	if a.SpendLimit == nil {
+	if len(a.SpendLimit) == 0 {
 		return sdkerrors.ErrInvalidCoins.Wrap("spend limit cannot be nil")
 	}
 	if !a.SpendLimit.IsAllPositive() {

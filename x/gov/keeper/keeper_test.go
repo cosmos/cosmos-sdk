@@ -27,6 +27,7 @@ type KeeperTestSuite struct {
 	acctKeeper        *govtestutil.MockAccountKeeper
 	bankKeeper        *govtestutil.MockBankKeeper
 	stakingKeeper     *govtestutil.MockStakingKeeper
+	distKeeper        *govtestutil.MockDistributionKeeper
 	queryClient       v1.QueryClient
 	legacyQueryClient v1beta1.QueryClient
 	addrs             []sdk.AccAddress
@@ -39,7 +40,7 @@ func (suite *KeeperTestSuite) SetupSuite() {
 }
 
 func (suite *KeeperTestSuite) reset() {
-	govKeeper, acctKeeper, bankKeeper, stakingKeeper, encCfg, ctx := setupGovKeeper(suite.T())
+	govKeeper, acctKeeper, bankKeeper, stakingKeeper, distKeeper, encCfg, ctx := setupGovKeeper(suite.T())
 
 	// Populate the gov account with some coins, as the TestProposal we have
 	// is a MsgSend from the gov account.
@@ -61,6 +62,7 @@ func (suite *KeeperTestSuite) reset() {
 	suite.acctKeeper = acctKeeper
 	suite.bankKeeper = bankKeeper
 	suite.stakingKeeper = stakingKeeper
+	suite.distKeeper = distKeeper
 	suite.cdc = encCfg.Codec
 	suite.queryClient = queryClient
 	suite.legacyQueryClient = legacyQueryClient
@@ -71,31 +73,31 @@ func (suite *KeeperTestSuite) reset() {
 }
 
 func TestIncrementProposalNumber(t *testing.T) {
-	govKeeper, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
 
 	tp := TestProposal
-	_, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	_, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), true)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), true)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
-	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.Id)
 }
 
 func TestProposalQueues(t *testing.T) {
-	govKeeper, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t) //nolint:dogsled
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 
 	inactiveIterator := govKeeper.InactiveProposalQueueIterator(ctx, *proposal.DepositEndTime)

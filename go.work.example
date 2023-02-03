@@ -8,13 +8,20 @@ use (
 	./core
 	./depinject
 	./errors
+	./log
 	./math
 	./orm
-	./tx
 	./simapp
 	./tests
+	./store
 	./tools/rosetta
 	./tools/cosmovisor
 	./tools/confix
+	./tools/hubl
+	./x/tx
 	./x/nft
+	./x/circuit
+	./x/feegrant
+	./x/evidence
+	./x/upgrade
 )

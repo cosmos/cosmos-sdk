@@ -7,7 +7,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -21,9 +22,6 @@ const (
 
 	// DefaultGRPCAddress defines the default address to bind the gRPC server to.
 	DefaultGRPCAddress = "localhost:9090"
-
-	// DefaultGRPCWebAddress defines the default address to bind the gRPC-web server to.
-	DefaultGRPCWebAddress = "localhost:9091"
 
 	// DefaultGRPCMaxRecvMsgSize defines the default gRPC max message size in
 	// bytes the server can receive.
@@ -90,6 +88,9 @@ type BaseConfig struct {
 	// IAVLDisableFastNode enables or disables the fast sync node.
 	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
 
+	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
+	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
+
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
 	// An empty string indicates that the Tendermint config's DBBackend value should be used.
 	AppDBBackend string `mapstructure:"app-db-backend"`
@@ -147,12 +148,6 @@ type GRPCConfig struct {
 type GRPCWebConfig struct {
 	// Enable defines if the gRPC-web should be enabled.
 	Enable bool `mapstructure:"enable"`
-
-	// Address defines the gRPC-web server to listen on
-	Address string `mapstructure:"address"`
-
-	// EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk)
-	EnableUnsafeCORS bool `mapstructure:"enable-unsafe-cors"`
 }
 
 // StateSyncConfig defines the state sync snapshot configuration.
@@ -262,6 +257,7 @@ func DefaultConfig() *Config {
 			IndexEvents:         make([]string, 0),
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
+			IAVLLazyLoading:     false,
 			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{
@@ -283,8 +279,7 @@ func DefaultConfig() *Config {
 			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
 		},
 		GRPCWeb: GRPCWebConfig{
-			Enable:  true,
-			Address: DefaultGRPCWebAddress,
+			Enable: true,
 		},
 		StateSync: StateSyncConfig{
 			SnapshotInterval:   0,

@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/evidence/client/cli"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
@@ -19,8 +21,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
 )
 
 func TestGetQueryCmd(t *testing.T) {

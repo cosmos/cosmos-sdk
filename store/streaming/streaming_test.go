@@ -46,7 +46,7 @@ func (s *PluginTestSuite) SetupTest() {
 
 	pluginVersion := "abci_v1"
 	// to write data to files, replace stdout/stdout => file/file
-	pluginPath := fmt.Sprintf("%s/abci/examples/file/file", s.workDir)
+	pluginPath := fmt.Sprintf("%s/abci/examples/stdout/stdout", s.workDir)
 	if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 		s.T().Fail()
 	}

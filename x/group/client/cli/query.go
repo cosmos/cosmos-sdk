@@ -33,6 +33,7 @@ func QueryCmd(name string) *cobra.Command {
 		QueryVotesByVoterCmd(),
 		QueryGroupsByMemberCmd(),
 		QueryTallyResultCmd(),
+		QueryGroupsCmd(),
 	)
 
 	return queryCmd
@@ -501,6 +502,40 @@ func QueryVotesByVoterCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func QueryGroupsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "groups",
+		Short: "Query for groups present in the state",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := group.NewQueryClient(clientCtx)
+
+			res, err := queryClient.Groups(cmd.Context(), &group.QueryGroupsRequest{
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "groups")
 
 	return cmd
 }

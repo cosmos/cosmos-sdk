@@ -11,16 +11,21 @@ import (
 // Addition of the new min initial deposit ratio parameter that is set to 0 by default.
 // Proposals in voting period are tracked in a separate index.
 func MigrateJSON(oldState *v1.GenesisState) (*v1.GenesisState, error) {
+	defaultParams := v1.DefaultParams()
+
 	params := v1.NewParams(
 		oldState.DepositParams.MinDeposit,
+		defaultParams.ExpeditedMinDeposit,
 		*oldState.DepositParams.MaxDepositPeriod,
 		*oldState.VotingParams.VotingPeriod,
+		*defaultParams.ExpeditedVotingPeriod,
 		oldState.TallyParams.Quorum,
 		oldState.TallyParams.Threshold,
+		defaultParams.ExpeditedThreshold,
 		oldState.TallyParams.VetoThreshold,
-		v1.DefaultParams().MinInitialDepositRatio,
-		v1.DefaultParams().ProposalCancelRatio,
-		v1.DefaultParams().ProposalCancelDest,
+		defaultParams.MinInitialDepositRatio,
+		defaultParams.ProposalCancelRatio,
+		defaultParams.ProposalCancelDest,
 	)
 
 	return &v1.GenesisState{

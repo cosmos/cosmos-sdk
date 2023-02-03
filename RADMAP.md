@@ -64,6 +64,7 @@ Welcome to the Cosmos SDK's team roadmap.
 - [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
 - Auth module 
   - produce a spec/ADR on a proposed new auth module. 
+- [Implement Amino Json encoder](https://github.com/cosmos/cosmos-sdk/issues/10993)
 
 ### Testing
 

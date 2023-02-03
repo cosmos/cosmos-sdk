@@ -47,21 +47,19 @@ Welcome to the Cosmos SDK's team roadmap.
     - Sign mode textual has been under construction for 2 quarters now, this quarter the goal is to move towards v1 and potentially line up a audit before final release.
 - Core API
     - [Merge ADR for Core API](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-063-core-module-api.md)
-    - Migrate 3 modules to use core api
+    - Migrate three modules to use core api
 - Module Dependency 
     - Give three modules their own go.mods
-    - cleanup dependency graph (dependent on integration testing framework)
-- Metamask signing directly into the sdk 
-    - metamask signing can be done directly from the sdk. In doing research in Q4 2022, it was identified that sign mode textual was a blocker
-- Adr-033 (internal message routing) 
-    - Merge internal router pr
-    - add docs on how to use the router
-- Adr-54 (dependency management) 
+    - Cleanup dependency graph (dependent on integration testing framework)
+- [Metamask signing directly into the sdk](https://github.com/cosmos/cosmos-sdk/discussions/13892) 
+- [Adr-033 (internal message routing)](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-033-protobuf-inter-module-comm.md)
+    - Merge internal message router
+    - Add docs on how to use the router
+- [Adr-54 (dependency management)](https://github.com/cosmos/cosmos-sdk/pull/11802)
     - Come to consensus on module dependency graph for the future
-    - Merge adr
     - Begin socializing conventions 
 - [Remove global bech32](https://github.com/cosmos/cosmos-sdk/issues/13140) 
-- Auth module 
+- [Auth module](https://github.com/cosmos/cosmos-sdk/issues/14900)
   - produce a spec/ADR on a proposed new auth module. 
 - [Implement Amino Json encoder](https://github.com/cosmos/cosmos-sdk/issues/10993)
 
@@ -76,7 +74,7 @@ Welcome to the Cosmos SDK's team roadmap.
 
 Issue: https://github.com/cosmos/cosmos-sdk/issues/12272
 
-- ADR ABCI 2.0 (50%)
+- [ADR ABCI 2.0](https://github.com/cosmos/cosmos-sdk/issues/14674)
     - Write ADR for integration of vote extensions & finalize block
 
 **Blocked**:
@@ -95,10 +93,9 @@ Issue: https://github.com/cosmos/cosmos-sdk/issues/12272
 
 ### IAVL
 
-- Adr 001 
-- implementation of Adr 001 
+- [Adr 001](https://github.com/cosmos/iavl/pull/608) 
     - implementation has been completed, waiting on reviewers
-- Prepare the migration path 
+- [Prepare the migration path](https://github.com/cosmos/iavl/issues/675) 
     - Migration path has not been finalized
 - Test on mainnets 
     - If possible we would like to test the new IAVL design on mainnets to observer behavior changes. 

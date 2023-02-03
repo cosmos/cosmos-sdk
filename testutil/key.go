@@ -78,5 +78,5 @@ func GenerateSaveCoinKey(
 		return sdk.AccAddress{}, "", err
 	}
 
-	return sdk.AccAddress(info.GetAddress()), secret, nil
+	return info.GetAddress(), secret, nil
 }

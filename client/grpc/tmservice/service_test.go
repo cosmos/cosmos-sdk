@@ -109,7 +109,7 @@ func (s IntegrationTestSuite) TestQueryLatestValidatorSet() {
 	s.Require().Equal(true, ok)
 	s.Require().Equal(content, val.PubKey)
 
-	//with pagination
+	// with pagination
 	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
 		Offset: 0,
 		Limit:  10,

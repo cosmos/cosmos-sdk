@@ -15,7 +15,7 @@ func TestStoreIntSuite(t *testing.T) {
 }
 
 func (s *storeIntSuite) TestAssertNoPrefix() {
-	var testCases = []struct {
+	testCases := []struct {
 		keys        []string
 		expectPanic bool
 	}{

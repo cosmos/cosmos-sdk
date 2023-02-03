@@ -14,8 +14,10 @@ const (
 	gasCostPerIteration = uint64(10)
 )
 
-var _ FeeAllowanceI = (*AllowedMsgAllowance)(nil)
-var _ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+var (
+	_ FeeAllowanceI                 = (*AllowedMsgAllowance)(nil)
+	_ types.UnpackInterfacesMessage = (*AllowedMsgAllowance)(nil)
+)
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error {

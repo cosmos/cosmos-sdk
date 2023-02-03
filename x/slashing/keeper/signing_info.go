@@ -39,8 +39,8 @@ func (k Keeper) SetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 
 // IterateValidatorSigningInfos iterates over the stored ValidatorSigningInfo
 func (k Keeper) IterateValidatorSigningInfos(ctx sdk.Context,
-	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool)) {
-
+	handler func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
+) {
 	store := ctx.KVStore(k.storeKey)
 	iter := sdk.KVStorePrefixIterator(store, types.ValidatorSigningInfoKeyPrefix)
 	defer iter.Close()
@@ -71,8 +71,8 @@ func (k Keeper) GetValidatorMissedBlockBitArray(ctx sdk.Context, address sdk.Con
 // IterateValidatorMissedBlockBitArray iterates over the signed blocks window
 // and performs a callback function
 func (k Keeper) IterateValidatorMissedBlockBitArray(ctx sdk.Context,
-	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool)) {
-
+	address sdk.ConsAddress, handler func(index int64, missed bool) (stop bool),
+) {
 	store := ctx.KVStore(k.storeKey)
 	index := int64(0)
 	// Array may be sparse

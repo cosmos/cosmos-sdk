@@ -31,7 +31,7 @@ func Test_runListCmd(t *testing.T) {
 	clientCtx := client.Context{}.WithKeyring(kb)
 	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
 
-	path := "" //sdk.GetConfig().GetFullBIP44Path()
+	path := "" // sdk.GetConfig().GetFullBIP44Path()
 	_, err = kb.NewAccount("something", testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 

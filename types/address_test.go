@@ -298,7 +298,6 @@ func (s *addressTestSuite) TestAddressInterface() {
 			s.T().Fail()
 		}
 	}
-
 }
 
 func (s *addressTestSuite) TestVerifyAddressFormat() {

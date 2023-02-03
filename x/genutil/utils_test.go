@@ -24,7 +24,7 @@ func TestInitializeNodeValidatorFilesFromMnemonic(t *testing.T) {
 
 	cfg := config.TestConfig()
 	cfg.RootDir = t.TempDir()
-	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0755))
+	require.NoError(t, os.MkdirAll(filepath.Join(cfg.RootDir, "config"), 0o755))
 
 	tests := []struct {
 		name     string

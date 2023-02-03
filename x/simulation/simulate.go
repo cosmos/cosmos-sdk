@@ -31,7 +31,6 @@ func initChain(
 	config simulation.Config,
 	cdc codec.JSONCodec,
 ) (mockValidators, time.Time, []simulation.Account, string) {
-
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc)
 	req := abci.RequestInitChain{
@@ -253,8 +252,8 @@ type blockSimFn func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 func createBlockSimulator(testingMode bool, tb testing.TB, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
 	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
-	logWriter LogWriter, config simulation.Config) blockSimFn {
-
+	logWriter LogWriter, config simulation.Config,
+) blockSimFn {
 	lastBlockSizeState := 0 // state for [4 * uniform distribution]
 	blocksize := 0
 	selectOp := ops.getSelectOpFn()
@@ -321,8 +320,8 @@ Comment: %s`,
 func runQueuedOperations(queueOps map[int][]simulation.Operation,
 	height int, tb testing.TB, r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []simulation.Account, logWriter LogWriter,
-	event func(route, op, evResult string), lean bool, chainID string) (numOpsRan int) {
-
+	event func(route, op, evResult string), lean bool, chainID string,
+) (numOpsRan int) {
 	queuedOp, ok := queueOps[height]
 	if !ok {
 		return 0
@@ -355,8 +354,8 @@ func runQueuedTimeOperations(queueOps []simulation.FutureOperation,
 	height int, currentTime time.Time, tb testing.TB, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
-	lean bool, chainID string) (numOpsRan int) {
-
+	lean bool, chainID string,
+) (numOpsRan int) {
 	numOpsRan = 0
 	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
 

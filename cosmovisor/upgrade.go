@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -88,11 +87,11 @@ func MarkExecutable(path string) error {
 		return fmt.Errorf("stating binary: %w", err)
 	}
 	// end early if world exec already set
-	if info.Mode()&0001 == 1 {
+	if info.Mode()&0o001 == 1 {
 		return nil
 	}
 	// now try to set all exec bits
-	newMode := info.Mode().Perm() | 0111
+	newMode := info.Mode().Perm() | 0o111
 	return os.Chmod(path, newMode)
 }
 
@@ -106,7 +105,7 @@ func GetDownloadURL(info *UpgradeInfo) (string, error) {
 	doc := strings.TrimSpace(info.Info)
 	// if this is a url, then we download that and try to get a new doc with the real info
 	if _, err := url.Parse(doc); err == nil {
-		tmpDir, err := ioutil.TempDir("", "upgrade-manager-reference")
+		tmpDir, err := os.MkdirTemp("", "upgrade-manager-reference")
 		if err != nil {
 			return "", fmt.Errorf("create tempdir for reference file: %w", err)
 		}
@@ -117,7 +116,7 @@ func GetDownloadURL(info *UpgradeInfo) (string, error) {
 			return "", fmt.Errorf("downloading reference link %s: %w", doc, err)
 		}
 
-		refBytes, err := ioutil.ReadFile(refPath)
+		refBytes, err := os.ReadFile(refPath)
 		if err != nil {
 			return "", fmt.Errorf("reading downloaded reference: %w", err)
 		}
@@ -186,7 +185,7 @@ func EnsureBinary(path string) error {
 	}
 
 	// this checks if the world-executable bit is set (we cannot check owner easily)
-	exec := info.Mode().Perm() & 0001
+	exec := info.Mode().Perm() & 0o001
 	if exec == 0 {
 		return fmt.Errorf("%s is not world executable", info.Name())
 	}

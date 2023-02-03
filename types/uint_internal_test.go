@@ -51,5 +51,4 @@ func (s *uintInternalTestSuite) TestUintSize() {
 	s.Require().Equal(2, x.Size())
 	x = NewUint(100)
 	s.Require().Equal(3, x.Size())
-
 }

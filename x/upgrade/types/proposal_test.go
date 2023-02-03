@@ -71,7 +71,6 @@ func TestContentAccessors(t *testing.T) {
 			assert.Equal(t, tc.typ, unwrap.Prop.ProposalType())
 			assert.Equal(t, "upgrade", unwrap.Prop.ProposalRoute())
 			assert.Equal(t, tc.str, unwrap.Prop.String())
-
 		})
 
 	}

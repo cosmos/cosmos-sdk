@@ -157,9 +157,9 @@ message GetBlockWithTxsRequest {
 // Since: cosmos-sdk 0.45.2
 message GetBlockWithTxsResponse {
   // txs are the transactions in the block.
-  repeated cosmos.tx.v1beta1.Tx txs = 1;
-  .tendermint.types.BlockID block_id = 2;
-  .tendermint.types.Block   block    = 3;
+  repeated cosmos.tx.v1beta1.Tx txs      = 1;
+  .tendermint.types.BlockID     block_id = 2;
+  .tendermint.types.Block       block    = 3;
   // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 4;
 }

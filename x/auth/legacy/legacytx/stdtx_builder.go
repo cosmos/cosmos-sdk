@@ -177,7 +177,7 @@ func mkDecoder(unmarshaler Unmarshaler) sdk.TxDecoder {
 		if len(txBytes) == 0 {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "tx bytes are empty")
 		}
-		var tx = StdTx{}
+		tx := StdTx{}
 		// StdTx.Msg is an interface. The concrete types
 		// are registered by MakeTxCodec
 		err := unmarshaler(txBytes, &tx)

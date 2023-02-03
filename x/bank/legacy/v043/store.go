@@ -32,7 +32,7 @@ func migrateSupply(store sdk.KVStore, cdc codec.BinaryCodec) error {
 
 	// We're sure that SupplyI is a Supply struct, there's no other
 	// implementation.
-	oldSupply := oldSupplyI.(*types.Supply)
+	oldSupply := oldSupplyI.(*types.Supply) //nolint:staticcheck
 	for i := range oldSupply.Total {
 		coin := oldSupply.Total[i]
 		coinBz, err := coin.Amount.Marshal()
@@ -61,7 +61,7 @@ func migrateBalanceKeys(store sdk.KVStore) {
 	for ; oldStoreIter.Valid(); oldStoreIter.Next() {
 		addr := v040bank.AddressFromBalancesStore(oldStoreIter.Key())
 		denom := oldStoreIter.Key()[v040auth.AddrLen:]
-		newStoreKey := append(types.CreateAccountBalancesPrefix(addr), denom...)
+		newStoreKey := types.CreatePrefixedAccountStoreKey(addr, denom)
 
 		// Set new key on store. Values don't change.
 		store.Set(newStoreKey, oldStoreIter.Value())

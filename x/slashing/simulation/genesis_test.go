@@ -52,7 +52,6 @@ func TestRandomizedGenState(t *testing.T) {
 	require.Equal(t, time.Duration(34800000000000), slashingGenesis.Params.DowntimeJailDuration)
 	require.Len(t, slashingGenesis.MissedBlocks, 0)
 	require.Len(t, slashingGenesis.SigningInfos, 0)
-
 }
 
 // TestRandomizedGenState tests abnormal scenarios of applying RandomizedGenState.

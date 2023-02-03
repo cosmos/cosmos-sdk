@@ -53,7 +53,6 @@ func (k Querier) Validators(c context.Context, req *types.QueryValidatorsRequest
 
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -129,7 +128,8 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	}
 
 	return &types.QueryValidatorDelegationsResponse{
-		DelegationResponses: delResponses, Pagination: pageRes}, nil
+		DelegationResponses: delResponses, Pagination: pageRes,
+	}, nil
 }
 
 // ValidatorUnbondingDelegations queries unbonding delegations of a validator
@@ -287,7 +287,6 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
-
 }
 
 // DelegatorValidator queries validator info for given delegator validator pair
@@ -354,7 +353,8 @@ func (k Querier) DelegatorUnbondingDelegations(c context.Context, req *types.Que
 	}
 
 	return &types.QueryDelegatorUnbondingDelegationsResponse{
-		UnbondingResponses: unbondingDelegations, Pagination: pageRes}, nil
+		UnbondingResponses: unbondingDelegations, Pagination: pageRes,
+	}, nil
 }
 
 // HistoricalInfo queries the historical info for given height
@@ -439,7 +439,6 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		validators = append(validators, validator)
 		return nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -471,7 +470,6 @@ func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.
 }
 
 func queryRedelegation(ctx sdk.Context, k Querier, req *types.QueryRedelegationsRequest) (redels types.Redelegations, err error) {
-
 	delAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddr)
 	if err != nil {
 		return nil, err

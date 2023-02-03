@@ -136,7 +136,7 @@ message Vote {
   // Deprecated: Prefer to use `options` instead. This field is set in queries
   // if and only if `len(options) == 1` and that option has weight 1. In all
   // other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
-  VoteOption                  option  = 3 [deprecated = true];
+  VoteOption option = 3 [deprecated = true];
   // Since: cosmos-sdk 0.43
   repeated WeightedVoteOption options = 4 [(gogoproto.nullable) = false];
 }

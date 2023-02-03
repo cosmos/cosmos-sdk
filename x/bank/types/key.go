@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
 const (
@@ -43,6 +44,7 @@ func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
 	if len(key) == 0 {
 		return nil, ErrInvalidKey
 	}
+	kv.AssertKeyAtLeastLength(key, 1)
 	addrLen := key[0]
 	bound := int(addrLen)
 	if len(key)-1 < bound {
@@ -54,4 +56,10 @@ func AddressFromBalancesStore(key []byte) (sdk.AccAddress, error) {
 // CreateAccountBalancesPrefix creates the prefix for an account's balances.
 func CreateAccountBalancesPrefix(addr []byte) []byte {
 	return append(BalancesPrefix, address.MustLengthPrefix(addr)...)
+}
+
+// CreatePrefixedAccountStoreKey returns the key for the given account and denomination.
+// This method can be used when performing an ABCI query for the balance of an account.
+func CreatePrefixedAccountStoreKey(addr []byte, denom []byte) []byte {
+	return append(CreateAccountBalancesPrefix(addr), denom...)
 }

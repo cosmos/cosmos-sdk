@@ -47,10 +47,8 @@ func mockWeightedProposalContent(n int) []simtypes.WeightedProposalContent {
 	wpc := make([]simtypes.WeightedProposalContent, n)
 	for i := 0; i < n; i++ {
 		wpc[i] = MockWeightedProposalContent{i}
-
 	}
 	return wpc
-
 }
 
 // TestWeightedOperations tests the weights of the operations.

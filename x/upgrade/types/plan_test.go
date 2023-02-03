@@ -105,7 +105,6 @@ func TestPlanValid(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestShouldExecute(t *testing.T) {
@@ -115,7 +114,6 @@ func TestShouldExecute(t *testing.T) {
 		ctxHeight int64
 		expected  bool
 	}{
-
 		"past height": {
 			p: types.Plan{
 				Name:   "do-good",

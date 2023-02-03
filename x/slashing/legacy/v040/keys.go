@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/legacy/v040"
 )
 
@@ -44,10 +45,9 @@ func ValidatorSigningInfoKey(v sdk.ConsAddress) []byte {
 
 // ValidatorSigningInfoAddress - extract the address from a validator signing info key
 func ValidatorSigningInfoAddress(key []byte) (v sdk.ConsAddress) {
+	kv.AssertKeyAtLeastLength(key, 2)
 	addr := key[1:]
-	if len(addr) != v040auth.AddrLen {
-		panic("unexpected key length")
-	}
+	kv.AssertKeyLength(addr, v040auth.AddrLen)
 	return sdk.ConsAddress(addr)
 }
 

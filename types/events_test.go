@@ -71,6 +71,21 @@ func (s *eventsTestSuite) TestEventManager() {
 	s.Require().Equal(em.Events(), events.AppendEvent(event))
 }
 
+func (s *eventsTestSuite) TestEmitTypedEvent() {
+	s.Run("deterministic key-value order", func() {
+		for i := 0; i < 10; i++ {
+			em := sdk.NewEventManager()
+			coin := sdk.NewCoin("fakedenom", sdk.NewInt(1999999))
+			s.Require().NoError(em.EmitTypedEvent(&coin))
+			s.Require().Len(em.Events(), 1)
+			attrs := em.Events()[0].Attributes
+			s.Require().Len(attrs, 2)
+			s.Require().Equal(string(attrs[0].Key), "amount")
+			s.Require().Equal(string(attrs[1].Key), "denom")
+		}
+	})
+}
+
 func (s *eventsTestSuite) TestEventManagerTypedEvents() {
 	em := sdk.NewEventManager()
 

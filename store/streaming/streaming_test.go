@@ -22,7 +22,7 @@ import (
 type PluginTestSuite struct {
 	suite.Suite
 
-	loggerCtx mockContext
+	loggerCtx MockContext
 
 	workDir string
 
@@ -63,7 +63,7 @@ func (s *PluginTestSuite) SetupTest() {
 		AbciListeners: []storetypes.ABCIListener{abciListener},
 		StopNodeOnErr: true,
 	}
-	s.loggerCtx = newMockContext(header, logger, streamingService)
+	s.loggerCtx = NewMockContext(header, logger, streamingService)
 
 	// test abci message types
 	s.beginBlockReq = abci.RequestBeginBlock{
@@ -140,31 +140,31 @@ func (s *PluginTestSuite) TestABCIGRPCPlugin() {
 func (s *PluginTestSuite) updateHeight(n int64) {
 	header := s.loggerCtx.BlockHeader()
 	header.Height = n
-	s.loggerCtx = newMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
+	s.loggerCtx = NewMockContext(header, s.loggerCtx.Logger(), s.loggerCtx.StreamingManager())
 }
 
-var _ context.Context = mockContext{}
-var _ storetypes.Context = mockContext{}
+var _ context.Context = MockContext{}
+var _ storetypes.Context = MockContext{}
 
-type mockContext struct {
+type MockContext struct {
 	baseCtx          context.Context
 	header           tmproto.Header
 	logger           log.Logger
 	streamingManager storetypes.StreamingManager
 }
 
-func (m mockContext) BlockHeight() int64                            { return m.header.Height }
-func (m mockContext) Logger() log.Logger                            { return m.logger }
-func (m mockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
+func (m MockContext) BlockHeight() int64                            { return m.header.Height }
+func (m MockContext) Logger() log.Logger                            { return m.logger }
+func (m MockContext) StreamingManager() storetypes.StreamingManager { return m.streamingManager }
 
-func (m mockContext) BlockHeader() tmproto.Header {
+func (m MockContext) BlockHeader() tmproto.Header {
 	msg := proto.Clone(&m.header).(*tmproto.Header)
 	return *msg
 }
 
-func newMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) mockContext {
+func NewMockContext(header tmproto.Header, logger log.Logger, sm storetypes.StreamingManager) MockContext {
 	header.Time = header.Time.UTC()
-	return mockContext{
+	return MockContext{
 		baseCtx:          context.Background(),
 		header:           header,
 		logger:           logger,
@@ -172,18 +172,18 @@ func newMockContext(header tmproto.Header, logger log.Logger, sm storetypes.Stre
 	}
 }
 
-func (m mockContext) Deadline() (deadline time.Time, ok bool) {
+func (m MockContext) Deadline() (deadline time.Time, ok bool) {
 	return m.baseCtx.Deadline()
 }
 
-func (m mockContext) Done() <-chan struct{} {
+func (m MockContext) Done() <-chan struct{} {
 	return m.baseCtx.Done()
 }
 
-func (m mockContext) Err() error {
+func (m MockContext) Err() error {
 	return m.baseCtx.Err()
 }
 
-func (m mockContext) Value(key any) any {
+func (m MockContext) Value(key any) any {
 	return m.baseCtx.Value(key)
 }

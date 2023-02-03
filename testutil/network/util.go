@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	pvm "github.com/tendermint/tendermint/privval"
@@ -201,14 +200,14 @@ func writeFile(name string, dir string, contents []byte) error {
 
 // Get a free address for a test tendermint server
 // protocol is either tcp, http, etc
-func FreeTCPAddr() (addr, port string, err error) {
+func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
-		return "", "", err
+		return "", "", nil, err
 	}
 
-	if err := l.Close(); err != nil {
-		return "", "", sdkerrors.Wrap(err, "couldn't close the listener")
+	closeFn = func() error {
+		return l.Close()
 	}
 
 	portI := l.Addr().(*net.TCPAddr).Port

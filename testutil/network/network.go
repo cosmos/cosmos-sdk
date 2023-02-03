@@ -317,6 +317,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	)
 
 	buf := bufio.NewReader(os.Stdin)
+	closeFns := []func() error{}
 
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < cfg.NumValidators; i++ {
@@ -343,10 +344,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 				apiListenAddr = cfg.APIAddress
 			} else {
 				var err error
-				apiListenAddr, _, err = FreeTCPAddr()
+				var closeFn func() error
+				apiListenAddr, _, closeFn, err = FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
+				closeFns = append(closeFns, closeFn)
 			}
 
 			appCfg.API.Address = apiListenAddr
@@ -359,21 +362,23 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.RPCAddress != "" {
 				tmCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				rpcAddr, _, err := FreeTCPAddr()
+				rpcAddr, _, closeFn, err := FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
 				tmCfg.RPC.ListenAddress = rpcAddr
+				closeFns = append(closeFns, closeFn)
 			}
 
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				_, grpcPort, err := FreeTCPAddr()
+				_, grpcPort, closeFn, err := FreeTCPAddr()
 				if err != nil {
 					return nil, err
 				}
 				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
+				closeFns = append(closeFns, closeFn)
 			}
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true
@@ -405,16 +410,18 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		proxyAddr, _, err := FreeTCPAddr()
+		proxyAddr, _, closeFn, err := FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
 		tmCfg.ProxyApp = proxyAddr
+		closeFns = append(closeFns, closeFn)
 
-		p2pAddr, _, err := FreeTCPAddr()
+		p2pAddr, _, closeFn, err := FreeTCPAddr()
 		if err != nil {
 			return nil, err
 		}
+		closeFns = append(closeFns, closeFn)
 
 		tmCfg.P2P.ListenAddress = p2pAddr
 		tmCfg.P2P.AddrBookStrict = false
@@ -566,6 +573,14 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	err = collectGenFiles(cfg, network.Validators, network.BaseDir)
 	if err != nil {
 		return nil, err
+	}
+
+	// close all reserved ports
+	for i := range closeFns {
+		err := closeFns[i]()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	l.Log("starting test network...")

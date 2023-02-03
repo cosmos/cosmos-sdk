@@ -92,7 +92,7 @@ func (s *HelpTestSuite) TestGetHelpText() {
 	expectedPieces := []string{
 		"Cosmovisor",
 		cosmovisor.EnvName, cosmovisor.EnvHome,
-		"https://github.com/cosmos/cosmos-sdk/tree/main/tools/cosmovisor/README.md",
+		"https://docs.cosmos.network/main/tooling/cosmovisor",
 	}
 
 	actual := GetHelpText()

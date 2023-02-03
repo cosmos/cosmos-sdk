@@ -24,13 +24,19 @@ var (
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
 //
 //nolint:interfacer
-func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer, metadata, title, summary string) (*MsgSubmitProposal, error) {
+func NewMsgSubmitProposal(
+	messages []sdk.Msg,
+	initialDeposit sdk.Coins,
+	proposer, metadata, title, summary string,
+	expedited bool,
+) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer,
 		Metadata:       metadata,
 		Title:          title,
 		Summary:        summary,
+		Expedited:      expedited,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)
@@ -46,6 +52,18 @@ func NewMsgSubmitProposal(messages []sdk.Msg, initialDeposit sdk.Coins, proposer
 // GetMsgs unpacks m.Messages Any's into sdk.Msg's
 func (m *MsgSubmitProposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(m.Messages, "sdk.MsgProposal")
+}
+
+// SetMsgs packs sdk.Msg's into m.Messages Any's
+// NOTE: this will overwrite any existing messages
+func (m *MsgSubmitProposal) SetMsgs(msgs []sdk.Msg) error {
+	anys, err := sdktx.SetMsgs(msgs)
+	if err != nil {
+		return err
+	}
+
+	m.Messages = anys
+	return nil
 }
 
 // ValidateBasic implements the sdk.Msg interface.

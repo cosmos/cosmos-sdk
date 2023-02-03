@@ -20,8 +20,10 @@ import (
 )
 
 const (
-	FlagEvents = "events"
-	flagType   = "type"
+	FlagEvents  = "events" // TODO: Remove when #14758 is merged
+	FlagQuery   = "query"
+	FlagType    = "type"
+	FlagOrderBy = "order_by"
 
 	TypeHash   = "hash"
 	TypeAccSeq = "acc_seq"
@@ -340,8 +342,8 @@ $ %s query tx --%s=%s <addr>/<sequence>
 $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 `,
 			version.AppName,
-			version.AppName, flagType, TypeAccSeq,
-			version.AppName, flagType, TypeSig)),
+			version.AppName, FlagType, TypeAccSeq,
+			version.AppName, FlagType, TypeSig)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -349,7 +351,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				return err
 			}
 
-			typ, _ := cmd.Flags().GetString(flagType)
+			typ, _ := cmd.Flags().GetString(FlagType)
 
 			switch typ {
 			case TypeHash:
@@ -419,13 +421,13 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 					return clientCtx.PrintProto(txs.Txs[0])
 				}
 			default:
-				return fmt.Errorf("unknown --%s value %s", flagType, typ)
+				return fmt.Errorf("unknown --%s value %s", FlagType, typ)
 			}
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", TypeHash, TypeAccSeq, TypeSig))
+	cmd.Flags().String(FlagType, TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\", \"%s\"", TypeHash, TypeAccSeq, TypeSig))
 
 	return cmd
 }

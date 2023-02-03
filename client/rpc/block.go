@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -36,17 +35,12 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing blocks and metadata. An error is returned if the query fails.
 // If an empty string is provided it will order blocks by asc
-func QueryBlocksByEvents(clientCtx client.Context, events []string, page, limit int, orderBy string) (*sdk.SearchBlocksResult, error) {
-	// XXX: implement ANY
-	query := strings.Join(events, " AND ")
-
+func QueryBlocksByEvents(clientCtx client.Context, page, limit int, query string, orderBy string) (*sdk.SearchBlocksResult, error) {
 	node, err := clientCtx.GetNode()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: this may not always need to be proven
-	// https://github.com/cosmos/cosmos-sdk/issues/6807
 	resBlocks, err := node.BlockSearch(context.Background(), query, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err

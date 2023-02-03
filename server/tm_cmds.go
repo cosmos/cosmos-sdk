@@ -19,11 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
-	tmtypes "github.com/tendermint/tendermint/types"
-)
-
-const (
-	flagType = "type"
 )
 
 // ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
@@ -133,55 +128,27 @@ func QueryBlocksByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
-		Long: strings.TrimSpace(
-			fmt.Sprintf(`
-Search for blocks that match the exact given events where results are paginated.
-Each event takes the form of '%s'. Please refer
-to each module's documentation for the full set of events to query for. Each module
-documents its respective events under 'xx_events.md'.
-
-Example:
-$ %s query blocks --%s 'message.sender=cosmos1...&message.action=withdraw_delegator_reward' --page 1 --limit 30
-`, auth.EventFormat, version.AppName, auth.FlagEvents),
+		Long: `Search for blocks that match the exact given events where results are paginated.
+The events query is directly passed to Tendermint's RPC BlockSearch method and must
+conform to Tendermint's query syntax.
+Please refer to each module's documentation for the full set of events to query
+for. Each module documents its respective events under 'xx_events.md'.
+`,
+		Example: fmt.Sprintf(
+			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order-by ASC",
+			version.AppName,
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
-			eventsRaw, _ := cmd.Flags().GetString(auth.FlagEvents)
-			eventsStr := strings.Trim(eventsRaw, "'")
-
-			var events []string
-			if strings.Contains(eventsStr, "&") {
-				events = strings.Split(eventsStr, "&")
-			} else {
-				events = append(events, eventsStr)
-			}
-
-			var tmEvents []string
-
-			for _, event := range events {
-				if !strings.Contains(event, "=") {
-					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, auth.EventFormat)
-				} else if strings.Count(event, "=") > 1 {
-					return fmt.Errorf("invalid event; event %s should be of the format: %s", event, auth.EventFormat)
-				}
-
-				tokens := strings.Split(event, "=")
-				if tokens[0] == tmtypes.TxHeightKey {
-					event = fmt.Sprintf("%s=%s", tokens[0], tokens[1])
-				} else {
-					event = fmt.Sprintf("%s='%s'", tokens[0], tokens[1])
-				}
-
-				tmEvents = append(tmEvents, event)
-			}
-
+			query, _ := cmd.Flags().GetString(auth.FlagQuery)
 			page, _ := cmd.Flags().GetInt(flags.FlagPage)
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
+			orderBy, _ := cmd.Flags().GetString(auth.FlagOrderBy)
 
-			blocks, err := rpc.QueryBlocksByEvents(clientCtx, tmEvents, page, limit, "")
+			blocks, err := rpc.QueryBlocksByEvents(clientCtx, page, limit, query, orderBy)
 			if err != nil {
 				return err
 			}
@@ -192,9 +159,10 @@ $ %s query blocks --%s 'message.sender=cosmos1...&message.action=withdraw_delega
 
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
-	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of block results per page returned")
-	cmd.Flags().String(auth.FlagEvents, "", fmt.Sprintf("list of block events in the form of %s", auth.EventFormat))
-	cmd.MarkFlagRequired(auth.FlagEvents)
+	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
+	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per Tendermint's query semantics")
+	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
+	_ = cmd.MarkFlagRequired(auth.FlagQuery)
 
 	return cmd
 }
@@ -209,8 +177,8 @@ Example:
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
-			version.AppName, flagType, auth.TypeHeight,
-			version.AppName, flagType, auth.TypeHash)),
+			version.AppName, auth.FlagType, auth.TypeHeight,
+			version.AppName, auth.FlagType, auth.TypeHash)),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -218,7 +186,7 @@ $ %s query block --%s=%s <hash>
 				return err
 			}
 
-			typ, _ := cmd.Flags().GetString(flagType)
+			typ, _ := cmd.Flags().GetString(auth.FlagType)
 
 			switch typ {
 			case auth.TypeHeight:
@@ -271,13 +239,13 @@ $ %s query block --%s=%s <hash>
 					return clientCtx.PrintProto(output)
 				}
 			default:
-				return fmt.Errorf("unknown --%s value %s", flagType, typ)
+				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
 			}
 		},
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	cmd.Flags().String(flagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
+	cmd.Flags().String(auth.FlagType, auth.TypeHash, fmt.Sprintf("The type to be used when querying tx, can be one of \"%s\", \"%s\"", auth.TypeHeight, auth.TypeHash))
 
 	return cmd
 }

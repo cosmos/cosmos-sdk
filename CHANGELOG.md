@@ -39,7 +39,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Features
 
-* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by either height/hash `simd q block --type=height|hash <height|hash>`. Also added ability to query blocks by events similar to the existing tx query `simd q blocks --events 'message.sender=cosmos...' --page 1 --limit 30`
+* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by events with queries directly passed to Tendermint, which will allow for full query operator support, e.g. `>`.
 * (x/gov) [#14720](https://github.com/cosmos/cosmos-sdk/pull/14720) Upstream expedited proposals from Osmosis.
 * (x/auth) [#14650](https://github.com/cosmos/cosmos-sdk/pull/14650) Add Textual SignModeHandler. It is however **NOT** enabled by default, and should only be used for **TESTING** purposes until `SIGN_MODE_TEXTUAL` is fully released.
 * (cli) [#14655](https://github.com/cosmos/cosmos-sdk/pull/14655) Add a new command to list supported algos.
@@ -78,6 +78,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (cli) [#14659](https://github.com/cosmos/cosmos-sdk/pull/14659)  Added ability to query blocks by either height/hash `simd q block --type=height|hash <height|hash>`.
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 * (x/evidence) [#14757](https://github.com/cosmos/cosmos-sdk/pull/14757) Evidence messages do not need to implement a `.Type()` anymore.
 * (x/auth/tx) [#14751](https://github.com/cosmos/cosmos-sdk/pull/14751) Remove `.Type()` and `Route()` methods from all msgs and `legacytx.LegacyMsg` interface.

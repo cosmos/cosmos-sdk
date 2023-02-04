@@ -17,16 +17,9 @@ import (
 // For Go plugins this is all that is required to process data sent over gRPC.
 type FilePlugin struct {
 	BlockHeight int64
-	fileDict    map[string]*os.File
 }
 
 func (a *FilePlugin) writeToFile(file string, data []byte) error {
-	if f, ok := a.fileDict[file]; ok {
-		_, err := f.Write(data)
-		return err
-	}
-	a.fileDict = make(map[string]*os.File, 0)
-
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -37,9 +30,13 @@ func (a *FilePlugin) writeToFile(file string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	a.fileDict[file] = f
 
 	if _, err := f.Write(data); err != nil {
+		f.Close() // ignore error; Write error takes precedence
+		return err
+	}
+
+	if err := f.Close(); err != nil {
 		return err
 	}
 

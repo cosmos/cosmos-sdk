@@ -28,7 +28,7 @@ for modfile in $(find . -name go.mod); do
     fi
     # we want to skip indirect dependencies
     if [[ ! -z "$(cd $DIR; go mod edit -json | jq -r '.Require[] | select(.Indirect == null and .Path == "$dependency_mod")')" ]]; then
-        echo "Skipping $DIR ($modfile is an indirect dependency)"
+        echo "Skipping $DIR ($dependency_mod is an indirect dependency)"
         continue
     fi
 

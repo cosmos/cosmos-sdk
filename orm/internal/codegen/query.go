@@ -258,8 +258,12 @@ func (g queryProtoGen) startRequestResponseType(typ string, format string, args 
 	g.msgs.F("message %s {", msgTypeName)
 }
 
-func (g queryProtoGen) queryServiceName() string {
-	return fmt.Sprintf("%sQuery", strcase.ToCamel(fileShortName(g.File)))
+func (g queryProtoGen) queryServiceName() protoreflect.Name {
+	return QueryServiceName(g.File.Proto.GetName())
+}
+
+func QueryServiceName(stateFileName string) protoreflect.Name {
+	return protoreflect.Name(fmt.Sprintf("%sQuery", strcase.ToCamel(fileShortName(stateFileName))))
 }
 
 func (g queryProtoGen) fieldType(descriptor protoreflect.FieldDescriptor) string {

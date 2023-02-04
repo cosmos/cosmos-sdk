@@ -87,11 +87,10 @@ func (f fileGen) storeStructName() string {
 }
 
 func (f fileGen) fileShortName() string {
-	return fileShortName(f.file)
+	return fileShortName(f.file.Proto.GetName())
 }
 
-func fileShortName(file *protogen.File) string {
-	filename := file.Proto.GetName()
+func fileShortName(filename string) string {
 	shortName := filepath.Base(filename)
 	i := strings.Index(shortName, ".")
 	if i > 0 {

@@ -8,6 +8,7 @@ import (
 	"math"
 
 	"cosmossdk.io/core/store"
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
@@ -43,12 +44,16 @@ type ModuleDB interface {
 
 	// ExportJSON exports JSON for each table in the module.
 	ExportJSON(context.Context, ormjson.WriteTarget) error
+
+	RegisterQueryServices(grpc.ServiceRegistrar) error
 }
 
 type moduleDB struct {
 	prefix       []byte
 	filesById    map[uint32]*fileDescriptorDB
 	tablesByName map[protoreflect.FullName]ormtable.Table
+	schema       *ormv1alpha1.ModuleSchemaDescriptor
+	options      ModuleDBOptions
 }
 
 // ModuleDBOptions are options for constructing a ModuleDB.
@@ -82,6 +87,8 @@ type ModuleDBOptions struct {
 func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOptions) (ModuleDB, error) {
 	prefix := schema.Prefix
 	db := &moduleDB{
+		schema:       schema,
+		options:      options,
 		prefix:       prefix,
 		filesById:    map[uint32]*fileDescriptorDB{},
 		tablesByName: map[protoreflect.FullName]ormtable.Table{},

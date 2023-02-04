@@ -4,6 +4,12 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Migration to CometBFT
+
+The SDK has migrated to [CometBFT](https://github.com/cometbft/cometbft), a fork of Tendermint Core.
+For migrating an app to CometBFT, all imports of Tendermint Core (`tendermint/tendermint`) must be replaced with CometBFT (`cometbft/cometbft`).
+Additionally, the app protobuf files must be re-generated.
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:

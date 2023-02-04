@@ -164,7 +164,7 @@ type GenesisState struct {
   validators based on agreed upon slashing parameters.
 * Allows evidence types to be defined and handled by any module. This further allows
   slashing and jailing to be defined by more complex mechanisms.
-* Does not solely rely on Tendermint to submit evidence.
+* Does not solely rely on CometBFT to submit evidence.
 
 ### Negative
 

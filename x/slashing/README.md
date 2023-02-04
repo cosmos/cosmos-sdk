@@ -101,10 +101,10 @@ is also tombstoned, they can not rejoin the validator set.
 ### Signing Info (Liveness)
 
 Every block includes a set of precommits by the validators for the previous block,
-known as the `LastCommitInfo` provided by Tendermint. A `LastCommitInfo` is valid so
+known as the `LastCommitInfo` provided by CometBFT. A `LastCommitInfo` is valid so
 long as it contains precommits from +2/3 of total voting power.
 
-Proposers are incentivized to include precommits from all validators in the Tendermint `LastCommitInfo`
+Proposers are incentivized to include precommits from all validators in the CometBFT `LastCommitInfo`
 by receiving additional fees proportional to the difference between the voting
 power included in the `LastCommitInfo` and +2/3 (see [fee distribution](../distribution/README.md#begin-block)).
 
@@ -494,7 +494,7 @@ for Tendermint consensus are slashed at the same level, we don't have to keep
 track of "max slash". Once an ABCI fault happens, we don't have to worry about
 comparing potential future ones to find the max.
 
-Currently the only Tendermint ABCI fault is:
+Currently the only CometBFT ABCI fault is:
 
 * Unjustified precommits (double signs)
 
@@ -506,7 +506,7 @@ Given that these faults are both attributable byzantine faults, we will likely
 want to slash them equally, and thus we can enact the above change.
 
 > Note: This change may make sense for current Tendermint consensus, but maybe
-> not for a different consensus algorithm or future versions of Tendermint that
+> not for a different consensus algorithm or future versions of CometBFT that
 > may want to punish at different levels (for example, partial slashing).
 
 ## Parameters

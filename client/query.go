@@ -20,7 +20,7 @@ import (
 
 // GetNode returns an RPC client. If the context's client is not defined, an
 // error is returned.
-func (ctx Context) GetNode() (TendermintRPC, error) {
+func (ctx Context) GetNode() (CometRPC, error) {
 	if ctx.Client == nil {
 		return nil, errors.New("no RPC client is defined in offline mode")
 	}

@@ -280,12 +280,12 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 
 // add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
-	tendermintCmd := &cobra.Command{
-		Use:   "tendermint",
-		Short: "Tendermint subcommands",
+	cometCmd := &cobra.Command{
+		Use:   "comet",
+		Short: "CometBFT subcommands",
 	}
 
-	tendermintCmd.AddCommand(
+	cometCmd.AddCommand(
 		ShowNodeIDCmd(),
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
@@ -299,7 +299,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 
 	rootCmd.AddCommand(
 		startCmd,
-		tendermintCmd,
+		cometCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator, defaultNodeHome),

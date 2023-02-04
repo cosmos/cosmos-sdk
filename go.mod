@@ -150,7 +150,7 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 )
 
-// This can be deleted after the CometBFT PR is merged
+// TODO update/remove after v0.37.x tag of CometBFT
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 replace (

@@ -38,7 +38,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## v0.45.13 - 2023-02-04
+## v0.45.13 - 2023-02-06
+
+### Improvements
+
+* (deps) Bump Tendermint version to [v0.34.25](https://github.com/informalsystems/tendermint/releases/tag/v0.34.25).
 
 ### Bug Fixes
 

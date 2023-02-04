@@ -95,7 +95,7 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*tm.Block, 
 	resBlock, err := node.BlockByHash(context.Background(), hash)
 
 	if err != nil || resBlock.Block == nil {
-		return nil, fmt.Errorf("block not found with Hash: %s with Error: %s", hashHexString, err)
+		return nil, fmt.Errorf("block not found with hash: %s with error: %s", hashHexString, err)
 	}
 
 	out, err := mkBlockResult(resBlock)

@@ -5,9 +5,9 @@ go 1.19
 require (
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/math v1.0.0-beta.4
+	cosmossdk.io/math v1.0.0-beta.5
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0
+	cosmossdk.io/store v0.0.0-20230203122834-2c67b11220f1
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
@@ -182,7 +182,6 @@ require (
 
 // TODO tag all extracted modules after SDK refactor
 replace (
-	cosmossdk.io/store => ../store
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft

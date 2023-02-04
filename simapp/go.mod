@@ -19,6 +19,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
@@ -27,8 +28,6 @@ require (
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a
 )
-
-require github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
 
 require (
 	cloud.google.com/go v0.105.0 // indirect

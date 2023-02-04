@@ -83,6 +83,13 @@ github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c h1:18vrPZBG4Zuh8A
 github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c/go.mod h1:NoM5UQkpKJY86c0Acb8Hy7HyNrltal8+BxQyerU8fzM=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1 h1:iDL5qh++NoXxG8hSy93FdYJut4XfgbShIocllGaXx/0=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1/go.mod h1:8k2GNZghi5sDRFw/scPL8gMSowT1vDA+5ouxL8GjaUE=
+<<<<<<< HEAD
+||||||| parent of d92fd24ba6 (fix go.mods)
+>>>>>>> main
+=======
+github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1 h1:w/pmi2E+KaWm0n/XMFK42w+bxKVh90MQforxrEsVRhE=
+github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1/go.mod h1:KeFt2fAXe+xLWpJ/8KeGI6JtHzpA7jVMQN1dIfi5SgY=
+>>>>>>> d92fd24ba6 (fix go.mods)
 github.com/cosmos/gogoproto v1.4.4 h1:nVAsgLlAf5jeN0fV7hRlkZvf768zU+dy4pG+hxc2P34=
 github.com/cosmos/gogoproto v1.4.4/go.mod h1:/yl6/nLwsZcZ2JY3OrqjRqvqCG9InUMcXRfRjQiF9DU=
 github.com/cosmos/iavl v0.20.0-alpha3 h1:hbUyr0dkiGDlmmbrArvte0lXv6VkMrGQNr3b29xvmVk=

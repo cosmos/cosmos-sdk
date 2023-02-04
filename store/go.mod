@@ -9,6 +9,7 @@ require (
 	github.com/cometbft/cometbft v0.0.0-20230202201700-d159562d0d96
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/cosmos/iavl v0.20.0-alpha3
 	github.com/golang/mock v1.6.0
@@ -23,8 +24,6 @@ require (
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
 	gotest.tools/v3 v3.4.0
 )
-
-require github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
 
 require (
 	cosmossdk.io/api v0.2.6 // indirect

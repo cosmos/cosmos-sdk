@@ -95,50 +95,14 @@ type coreIterator struct {
 }
 
 // Domain implements Iterator.
-func (itr *coreIterator) Domain() ([]byte, []byte, error) {
-	start, end := itr.iterator.Domain()
-	return start, end, nil
+func (itr *coreIterator) Domain() ([]byte, []byte) {
+	return itr.iterator.Domain()
 }
 
-// // Valid implements Iterator.
-// func (itr *coreIterator) Valid() (bool, error) {
-// 	// Once invalid, forever invalid.
-// 	if itr.isInvalid {
-// 		return false
-// 	}
-
-// 	// If source errors, invalid.
-// 	if err := itr.Error(); err != nil {
-// 		itr.isInvalid = true
-// 		return false
-// 	}
-
-// 	// If source is invalid, invalid.
-// 	if !itr.source.Valid() {
-// 		itr.isInvalid = true
-// 		return false
-// 	}
-
-// 	// If key is end or past it, invalid.
-// 	start := itr.start
-// 	end := itr.end
-// 	key := itr.source.Key()
-
-// 	if itr.isReverse {
-// 		if start != nil && bytes.Compare(key, start) < 0 {
-// 			itr.isInvalid = true
-// 			return false
-// 		}
-// 	} else {
-// 		if end != nil && bytes.Compare(end, key) <= 0 {
-// 			itr.isInvalid = true
-// 			return false
-// 		}
-// 	}
-
-// 	// Valid
-// 	return true
-// }
+// Valid implements Iterator.
+func (itr *coreIterator) Valid() bool {
+	return itr.iterator.Valid()
+}
 
 // // Key implements Iterator.
 // func (itr *coreIterator) Key() ([]byte, error) {

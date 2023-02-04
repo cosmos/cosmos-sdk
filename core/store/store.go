@@ -33,11 +33,11 @@ type KVStore interface {
 type Iterator interface {
 	// Domain returns the start (inclusive) and end (exclusive) limits of the iterator.
 	// CONTRACT: start, end readonly []byte
-	Domain() ([]byte, []byte, error)
+	Domain() ([]byte, []byte)
 
 	// Valid returns whether the current iterator is valid. Once invalid, the Iterator remains
 	// invalid forever.
-	Valid() (bool, error)
+	Valid() bool
 
 	// Next moves the iterator to the next key in the database, as defined by order of iteration.
 	// If Valid returns false, this method will error.

@@ -59,7 +59,7 @@ import (
 
 // package-wide network lock to only allow one test network at a time
 // var lock = new(sync.Mutex)
-var portPool = make(chan string, 200) //new(sync.Pool)
+var portPool = make(chan string, 200) // new(sync.Pool)
 
 func init() {
 	closeFns := []func() error{}
@@ -79,7 +79,6 @@ func init() {
 			panic(err)
 		}
 	}
-
 }
 
 // AppConstructor defines a function which accepts a network configuration and

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	sdkerrors "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"

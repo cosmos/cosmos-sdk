@@ -807,6 +807,8 @@ type TestSchemaStore interface {
 	SimpleExampleTable() SimpleExampleTable
 	ExampleAutoIncFieldNameTable() ExampleAutoIncFieldNameTable
 
+	TestSchemaQueryServiceServer
+
 	doNotImplement()
 }
 

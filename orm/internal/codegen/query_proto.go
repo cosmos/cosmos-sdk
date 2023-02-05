@@ -27,8 +27,9 @@ type queryProtoGen struct {
 func (g queryProtoGen) gen() error {
 	g.imports[g.Desc.Path()] = true
 
-	g.svc.F("// %sService queries the state of the tables specified by %s.", g.queryServiceName(), g.Desc.Path())
-	g.svc.F("service %sService {", g.queryServiceName())
+	svcName := queryServiceName(g.File)
+	g.svc.F("// %sService queries the state of the tables specified by %s.", svcName, g.Desc.Path())
+	g.svc.F("service %sService {", svcName)
 	g.svc.Indent()
 	for _, msg := range g.Messages {
 		tableDesc := proto.GetExtension(msg.Desc.Options(), ormv1.E_Table).(*ormv1.TableDescriptor)
@@ -254,16 +255,12 @@ func (g queryProtoGen) startResponseType(format string, args ...any) {
 
 func (g queryProtoGen) startRequestResponseType(typ string, format string, args ...any) {
 	msgTypeName := fmt.Sprintf(format, args...)
-	g.msgs.F("// %s is the %s/%s %s type.", msgTypeName, g.queryServiceName(), msgTypeName, typ)
+	g.msgs.F("// %s is the %s/%s %s type.", msgTypeName, queryServiceName(g.File), msgTypeName, typ)
 	g.msgs.F("message %s {", msgTypeName)
 }
 
-func (g queryProtoGen) queryServiceName() protoreflect.Name {
-	return QueryServiceName(g.File.Proto.GetName())
-}
-
-func QueryServiceName(stateFileName string) protoreflect.Name {
-	return protoreflect.Name(fmt.Sprintf("%sQuery", strcase.ToCamel(fileShortName(stateFileName))))
+func queryServiceName(file *protogen.File) string {
+	return fmt.Sprintf("%sQuery", strcase.ToCamel(fileShortName(file.Proto.GetName())))
 }
 
 func (g queryProtoGen) fieldType(descriptor protoreflect.FieldDescriptor) string {

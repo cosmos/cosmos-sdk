@@ -14,4 +14,4 @@ plugins:
     opt: paths=source_relative
   - name: go-cosmos-orm
     out: .
-    opt: paths=source_relative
+    opt: paths=source_relative,query-gen=true

@@ -50,6 +50,7 @@ func (f fileGen) gen() error {
 	f.genStoreMethods(stores)
 	f.genStoreInterfaceGuard()
 	f.genStoreConstructor(stores)
+
 	return nil
 }
 
@@ -58,6 +59,10 @@ func (f fileGen) genStoreInterface(stores []*protogen.Message) {
 	for _, store := range stores {
 		name := f.messageTableInterfaceName(store)
 		f.P(name, "()", name)
+	}
+	f.P()
+	if GenQueries {
+		f.P(queryServiceName(f.file), "ServiceServer")
 	}
 	f.P()
 	f.P("doNotImplement()")

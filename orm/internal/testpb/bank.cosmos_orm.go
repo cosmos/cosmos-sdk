@@ -259,6 +259,8 @@ type BankStore interface {
 	BalanceTable() BalanceTable
 	SupplyTable() SupplyTable
 
+	BankQueryServiceServer
+
 	doNotImplement()
 }
 

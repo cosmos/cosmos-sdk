@@ -19,6 +19,8 @@ const (
 	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
 )
 
+var GenQueries bool
+
 func ORMPluginRunner(p *protogen.Plugin) error {
 	p.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
 	for _, f := range p.Files {

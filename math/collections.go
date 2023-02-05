@@ -1,17 +1,12 @@
 package math
 
-import "cosmossdk.io/collections"
+type IntValueCodec struct{}
 
-// IntValue represents a collections.ValueCodec to work with Int.
-var IntValue collections.ValueCodec[Int] = intValueCodec{}
-
-type intValueCodec struct{}
-
-func (i intValueCodec) Encode(value Int) ([]byte, error) {
+func (i IntValueCodec) Encode(value Int) ([]byte, error) {
 	return value.Marshal()
 }
 
-func (i intValueCodec) Decode(b []byte) (Int, error) {
+func (i IntValueCodec) Decode(b []byte) (Int, error) {
 	v := new(Int)
 	err := v.Unmarshal(b)
 	if err != nil {
@@ -20,11 +15,11 @@ func (i intValueCodec) Decode(b []byte) (Int, error) {
 	return *v, nil
 }
 
-func (i intValueCodec) EncodeJSON(value Int) ([]byte, error) {
+func (i IntValueCodec) EncodeJSON(value Int) ([]byte, error) {
 	return value.MarshalJSON()
 }
 
-func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
+func (i IntValueCodec) DecodeJSON(b []byte) (Int, error) {
 	v := new(Int)
 	err := v.UnmarshalJSON(b)
 	if err != nil {
@@ -33,10 +28,10 @@ func (i intValueCodec) DecodeJSON(b []byte) (Int, error) {
 	return *v, nil
 }
 
-func (i intValueCodec) Stringify(value Int) string {
+func (i IntValueCodec) Stringify(value Int) string {
 	return value.String()
 }
 
-func (i intValueCodec) ValueType() string {
+func (i IntValueCodec) ValueType() string {
 	return "math.Int"
 }

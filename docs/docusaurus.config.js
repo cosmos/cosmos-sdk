@@ -120,8 +120,8 @@ const config = {
                 href: "https://hub.cosmos.network",
               },
               {
-                label: "Tendermint Core",
-                href: "https://docs.tendermint.com",
+                label: "CometBFT",
+                href: "https://docs.cometbft.com",
               },
               {
                 label: "IBC Go",

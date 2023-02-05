@@ -8,10 +8,10 @@ import (
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/cometbft/cometbft/libs/json"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -44,13 +44,13 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 	},
 	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
 }
 
 // CreateRandomValidatorSet creates a validator set with one random validator
-func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -58,9 +58,9 @@ func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	}
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
+	validator := cmttypes.NewValidator(pubKey, 1)
 
-	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 }
 
 type GenesisAccount struct {
@@ -74,7 +74,7 @@ type GenesisAccount struct {
 // BaseAppOption defines the additional operations that must be run on baseapp before app start.
 // AtGenesis defines if the app started should already have produced block or not.
 type StartupConfig struct {
-	ValidatorSet    func() (*tmtypes.ValidatorSet, error)
+	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
@@ -153,7 +153,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}
@@ -185,7 +185,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 func GenesisStateWithValSet(
 	codec codec.Codec,
 	genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet,
+	valSet *cmttypes.ValidatorSet,
 	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {

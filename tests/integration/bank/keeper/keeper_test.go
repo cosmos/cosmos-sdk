@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"gotest.tools/v3/assert"
 
 	storetypes "cosmossdk.io/store/types"
@@ -542,7 +542,7 @@ func TestValidateBalance(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
@@ -575,7 +575,7 @@ func TestSendCoins_Invalid_SendLockedCoins(t *testing.T) {
 	addr := sdk.AccAddress([]byte("addr1_______________"))
 	addr2 := sdk.AccAddress([]byte("addr2_______________"))
 
-	now := tmtime.Now()
+	now := cmttime.Now()
 	endTime := now.Add(24 * time.Hour)
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -801,7 +801,7 @@ func TestSpendableCoins(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
@@ -837,7 +837,7 @@ func TestVestingAccountSend(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
@@ -869,7 +869,7 @@ func TestPeriodicVestingAccountSend(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
 	sendCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 50))
@@ -905,7 +905,7 @@ func TestVestingAccountReceive(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
@@ -942,7 +942,7 @@ func TestPeriodicVestingAccountReceive(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 
 	origCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
@@ -984,7 +984,7 @@ func TestDelegateCoins(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 
@@ -1053,7 +1053,7 @@ func TestUndelegateCoins(t *testing.T) {
 	t.Parallel()
 
 	ctx := f.ctx
-	now := tmtime.Now()
+	now := cmttime.Now()
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: now})
 	endTime := now.Add(24 * time.Hour)
 

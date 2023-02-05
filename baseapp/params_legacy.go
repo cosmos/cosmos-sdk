@@ -1,7 +1,7 @@
 /*
 Deprecated.
 
-Legacy types are defined below to aid in the migration of Tendermint consensus
+Legacy types are defined below to aid in the migration of CometBFT consensus
 parameters from use of the now deprecated x/params modules to a new dedicated
 x/consensus module.
 
@@ -29,7 +29,7 @@ Example:
 Developers can also bypass the use of the legacy Params subspace and set the
 values to app.ConsensusParamsKeeper.Set() explicitly.
 
-Note, for new chains this is not necessary as Tendermint's consensus parameters
+Note, for new chains this is not necessary as CometBFT's consensus parameters
 will automatically be set for you in InitChain.
 */
 package baseapp

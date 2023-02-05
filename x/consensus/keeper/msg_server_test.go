@@ -2,12 +2,12 @@ package keeper_test
 
 import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateParams() {
-	defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 	testCases := []struct {
 		name      string
 		input     *types.MsgUpdateParams

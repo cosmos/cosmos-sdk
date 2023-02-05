@@ -2,7 +2,7 @@ package types
 
 import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -28,7 +28,7 @@ func (msg MsgUpdateParams) GetSignBytes() []byte {
 
 // ValidateBasic performs basic MsgUpdateParams message validation.
 func (msg MsgUpdateParams) ValidateBasic() error {
-	params := tmtypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
+	params := cmttypes.ConsensusParamsFromProto(msg.ToProtoConsensusParams())
 	return params.ValidateBasic()
 }
 
@@ -46,6 +46,6 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() cmtproto.ConsensusParams {
 		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
-		Version: tmtypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
+		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
 }

@@ -12,7 +12,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -70,12 +70,12 @@ func (s *SimTestSuite) SetupTest() {
 	account := accounts[0]
 	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
 	require.NoError(s.T(), err)
-	validator := tmtypes.NewValidator(tmPk, 1)
+	validator := cmttypes.NewValidator(tmPk, 1)
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs
-	startupCfg.ValidatorSet = func() (*tmtypes.ValidatorSet, error) {
-		return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	startupCfg.ValidatorSet = func() (*cmttypes.ValidatorSet, error) {
+		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 	}
 
 	var (

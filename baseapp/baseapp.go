@@ -114,11 +114,11 @@ type BaseApp struct { //nolint: maligned
 
 	// minRetainBlocks defines the minimum block height offset from the current
 	// block being committed, such that all blocks past this offset are pruned
-	// from Tendermint. It is used as part of the process of determining the
+	// from CometBFT. It is used as part of the process of determining the
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: Tendermint block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependant on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -138,7 +138,7 @@ type BaseApp struct { //nolint: maligned
 	trace bool
 
 	// indexEvents defines the set of events in the form {eventType}.{attributeKey},
-	// which informs Tendermint what to index. If empty, all events will be indexed.
+	// which informs CometBFT what to index. If empty, all events will be indexed.
 	indexEvents map[string]struct{}
 
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
@@ -459,7 +459,7 @@ func (app *BaseApp) StoreConsensusParams(ctx sdk.Context, cp *cmtproto.Consensus
 	}
 
 	app.paramStore.Set(ctx, cp)
-	// We're explicitly not storing the Tendermint app_version in the param store. It's
+	// We're explicitly not storing the CometBFT app_version in the param store. It's
 	// stored instead in the x/upgrade store, with its own bump logic.
 }
 
@@ -862,12 +862,12 @@ func createEvents(events sdk.Events, msg sdk.Msg) sdk.Events {
 // non-default handlers.
 //
 // - If no mempool is set or if the mempool is a no-op mempool, the transactions
-// requested from Tendermint will simply be returned, which, by default, are in
+// requested from CometBFT will simply be returned, which, by default, are in
 // FIFO order.
 func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
 		// If the mempool is nil or a no-op mempool, we simply return the transactions
-		// requested from Tendermint, which, by default, should be in FIFO order.
+		// requested from CometBFT, which, by default, should be in FIFO order.
 		_, isNoOp := app.mempool.(mempool.NoOpMempool)
 		if app.mempool == nil || isNoOp {
 			return abci.ResponsePrepareProposal{Txs: req.Txs}

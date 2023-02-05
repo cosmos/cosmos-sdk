@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/cometbft/cometbft/libs/json"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -112,7 +112,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			})
 
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
-			stateBytes, err := tmjson.MarshalIndent(genState, "", " ")
+			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			bapp.InitChain(abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},

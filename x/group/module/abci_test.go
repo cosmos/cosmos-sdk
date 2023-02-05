@@ -6,7 +6,7 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtime "github.com/cometbft/cometbft/types/time"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: tmtime.Now()})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
 	s.ctx = ctx
 	s.addrs = simtestutil.AddTestAddrsIncremental(s.bankKeeper, s.stakingKeeper, ctx, 4, sdk.NewInt(30000000))

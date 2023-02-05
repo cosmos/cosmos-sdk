@@ -64,6 +64,8 @@ cosmossdk.io/store v0.0.0-20230204135315-697871069999 h1:NrV990BIbdDngOoTrD3Hg5k
 cosmossdk.io/store v0.0.0-20230204135315-697871069999/go.mod h1:Sf3G8SV8e8H31CD6w+o2syqCwyaoL0fe244JcPSsaD4=
 cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f h1:LMXqH69KBG/R8w18sooHtoUZ0+5hcc99m6OjBiooDAo=
 cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f/go.mod h1:/apC5+JHM2A72kUY3z+55FWdIn/2ai2mTAYtSBDY4Lo=
+cosmossdk.io/tools/rosetta v0.2.1-0.20230205135133-41a3dfeced29 h1:AwJJkPk/jr6DpSzd016AEZX7dT0mUvafpamQ3s6VF1I=
+cosmossdk.io/tools/rosetta v0.2.1-0.20230205135133-41a3dfeced29/go.mod h1:jzFZh60Di2rszgQPZhxdbQB6KMEst1kacFDvQDf+O6A=
 cosmossdk.io/x/tx v0.1.0 h1:uyyYVjG22B+jf54N803Z99Y1uPvfuNP3K1YShoCHYL8=
 cosmossdk.io/x/tx v0.1.0/go.mod h1:qsDv7e1fSftkF16kpSAk+7ROOojyj+SC0Mz3ukI52EQ=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=

@@ -188,10 +188,7 @@ require (
 )
 
 // This can be deleted after the CometBFT PR is merged
-replace (
-	cosmossdk.io/tools/rosetta => ../tools/rosetta
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-)
+replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 // TODO tag all extracted modules after SDK refactor
 replace (

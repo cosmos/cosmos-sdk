@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.5
 	github.com/armon/go-metrics v0.4.1
-	github.com/cometbft/cometbft v0.0.0-20230202201700-d159562d0d96
+	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
@@ -71,6 +71,8 @@ require (
 
 // TODO update/remove after v0.37.x tag of CometBFT
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
+
+replace github.com/cosmos/cosmos-sdk/log => ../log
 
 // Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409

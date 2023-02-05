@@ -1,8 +1,6 @@
 package types
 
 import (
-	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-
 	sdkmaps "cosmossdk.io/store/internal/maps"
 )
 
@@ -37,7 +35,7 @@ func (ci CommitInfo) Hash() []byte {
 	return rootHash
 }
 
-func (ci CommitInfo) ProofOp(storeName string) tmcrypto.ProofOp {
+func (ci CommitInfo) ProofOp(storeName string) cmtcrypto.ProofOp {
 	ret, err := ProofOpFromMap(ci.toMap(), storeName)
 	if err != nil {
 		panic(err)

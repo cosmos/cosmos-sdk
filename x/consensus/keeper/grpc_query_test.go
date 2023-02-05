@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) TestGRPCQueryConsensusParams() {
 				s.msgServer.UpdateParams(s.ctx, input)
 			},
 			types.QueryParamsResponse{
-				Params: &tmproto.ConsensusParams{
+				Params: &cmtproto.ConsensusParams{
 					Block:     defaultConsensusParams.Block,
 					Validator: defaultConsensusParams.Validator,
 					Evidence:  defaultConsensusParams.Evidence,

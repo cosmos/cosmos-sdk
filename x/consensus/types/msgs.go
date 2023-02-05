@@ -1,7 +1,7 @@
 package types
 
 import (
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,18 +32,18 @@ func (msg MsgUpdateParams) ValidateBasic() error {
 	return params.ValidateBasic()
 }
 
-func (msg MsgUpdateParams) ToProtoConsensusParams() tmproto.ConsensusParams {
-	return tmproto.ConsensusParams{
-		Block: &tmproto.BlockParams{
+func (msg MsgUpdateParams) ToProtoConsensusParams() cmtproto.ConsensusParams {
+	return cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
 			MaxBytes: msg.Block.MaxBytes,
 			MaxGas:   msg.Block.MaxGas,
 		},
-		Evidence: &tmproto.EvidenceParams{
+		Evidence: &cmtproto.EvidenceParams{
 			MaxAgeNumBlocks: msg.Evidence.MaxAgeNumBlocks,
 			MaxAgeDuration:  msg.Evidence.MaxAgeDuration,
 			MaxBytes:        msg.Evidence.MaxBytes,
 		},
-		Validator: &tmproto.ValidatorParams{
+		Validator: &cmtproto.ValidatorParams{
 			PubKeyTypes: msg.Validator.PubKeyTypes,
 		},
 		Version: tmtypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade

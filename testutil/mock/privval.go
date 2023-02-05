@@ -2,7 +2,7 @@ package mock
 
 import (
 	"github.com/cometbft/cometbft/crypto"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -28,7 +28,7 @@ func (pv PV) GetPubKey() (crypto.PubKey, error) {
 }
 
 // SignVote implements PrivValidator interface
-func (pv PV) SignVote(chainID string, vote *tmproto.Vote) error {
+func (pv PV) SignVote(chainID string, vote *cmtproto.Vote) error {
 	signBytes := tmtypes.VoteSignBytes(chainID, vote)
 	sig, err := pv.PrivKey.Sign(signBytes)
 	if err != nil {
@@ -39,7 +39,7 @@ func (pv PV) SignVote(chainID string, vote *tmproto.Vote) error {
 }
 
 // SignProposal implements PrivValidator interface
-func (pv PV) SignProposal(chainID string, proposal *tmproto.Proposal) error {
+func (pv PV) SignProposal(chainID string, proposal *cmtproto.Proposal) error {
 	signBytes := tmtypes.ProposalSignBytes(chainID, proposal)
 	sig, err := pv.PrivKey.Sign(signBytes)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -32,17 +32,17 @@ const DefaultGenTxGas = 10000000
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &tmproto.ConsensusParams{
-	Block: &tmproto.BlockParams{
+var DefaultConsensusParams = &cmtproto.ConsensusParams{
+	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &tmproto.EvidenceParams{
+	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &tmproto.ValidatorParams{
+	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 		},
@@ -170,7 +170,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
 		app.Commit()
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 			Height:             app.LastBlockHeight() + 1,
 			AppHash:            app.LastCommitID().Hash,
 			ValidatorsHash:     valSet.Hash(),

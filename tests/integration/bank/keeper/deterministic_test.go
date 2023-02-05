@@ -75,7 +75,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	f.ctx = ctx
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)

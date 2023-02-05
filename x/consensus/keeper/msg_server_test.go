@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			name: "invalid  params",
 			input: &types.MsgUpdateParams{
 				Authority: s.consensusParamsKeeper.GetAuthority(),
-				Block:     &tmproto.BlockParams{MaxGas: -10, MaxBytes: -10},
+				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
 			},

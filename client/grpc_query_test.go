@@ -9,7 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	)
 
 	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 		Height:             app.LastBlockHeight() + 1,
 		AppHash:            app.LastCommitID().Hash,
 		ValidatorsHash:     valSet.Hash(),
@@ -95,7 +95,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	// end of app init
 
-	s.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	s.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, bankKeeper)
 	testdata.RegisterQueryServer(queryHelper, testdata.QueryImpl{})

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -126,7 +126,7 @@ func fetchTxs(iterator mempool.Iterator, maxBytes int64) []sdk.Tx {
 
 func (s *MempoolTestSuite) TestDefaultMempool() {
 	t := s.T()
-	ctx := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 10)
 	txCount := 1000
 	var txs []testTx
@@ -218,7 +218,7 @@ func TestMempoolTestSuite(t *testing.T) {
 }
 
 func (s *MempoolTestSuite) TestSampleTxs() {
-	ctxt := sdk.NewContext(nil, tmproto.Header{}, false, log.NewNopLogger())
+	ctxt := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	t := s.T()
 	s.resetMempool()
 	mp := s.mempool

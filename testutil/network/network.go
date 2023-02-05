@@ -340,7 +340,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	)
 
 	buf := bufio.NewReader(os.Stdin)
-	closeFns := []func() error{}
 
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < cfg.NumValidators; i++ {
@@ -591,14 +590,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	err = collectGenFiles(cfg, network.Validators, network.BaseDir)
 	if err != nil {
 		return nil, err
-	}
-
-	// close all reserved ports
-	for i := range closeFns {
-		err := closeFns[i]()
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	l.Log("starting test network...")

@@ -12,6 +12,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/require"
 
 	store "cosmossdk.io/store/types"

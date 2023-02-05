@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

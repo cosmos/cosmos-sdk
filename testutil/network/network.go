@@ -22,6 +22,7 @@ import (
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -379,7 +380,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			appCfg.GRPCWeb.Enable = true
 		}
 
-		logger := tmlog.NewNopLogger()
+		logger := log.NewNopLogger()
 		if cfg.EnableTMLogging {
 			logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
 		}

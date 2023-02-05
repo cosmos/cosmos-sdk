@@ -24,6 +24,8 @@ require (
 	gotest.tools/v3 v3.4.0
 )
 
+require github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
+
 require (
 	cosmossdk.io/api v0.2.6 // indirect
 	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0 // indirect

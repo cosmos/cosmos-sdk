@@ -28,6 +28,8 @@ require (
 	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a
 )
 
+require github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
+
 require (
 	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.14.0 // indirect

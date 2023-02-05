@@ -22,6 +22,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1.0.20220726092710-f848e4300a8a
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.4.4

@@ -11,6 +11,7 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/depinject"
 	pruningtypes "cosmossdk.io/store/pruning/types"

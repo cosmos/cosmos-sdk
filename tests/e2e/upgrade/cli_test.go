@@ -6,8 +6,8 @@ package upgrade
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/network"

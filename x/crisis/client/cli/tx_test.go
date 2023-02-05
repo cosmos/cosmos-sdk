@@ -6,9 +6,9 @@ import (
 	"io"
 	"testing"
 
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

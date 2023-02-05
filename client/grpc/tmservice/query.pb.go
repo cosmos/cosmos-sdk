@@ -6,6 +6,8 @@ package tmservice
 import (
 	context "context"
 	fmt "fmt"
+	p2p "github.com/cometbft/cometbft/proto/tendermint/p2p"
+	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
@@ -13,8 +15,6 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	p2p "github.com/tendermint/tendermint/proto/tendermint/p2p"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

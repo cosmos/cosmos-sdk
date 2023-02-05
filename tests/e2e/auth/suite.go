@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"

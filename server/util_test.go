@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	tmcfg "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -10,9 +10,9 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetestutil "cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 

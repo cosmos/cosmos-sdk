@@ -3,9 +3,9 @@ package secp256r1
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"

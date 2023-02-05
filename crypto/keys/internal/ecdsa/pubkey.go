@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math/big"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"

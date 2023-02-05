@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/types"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

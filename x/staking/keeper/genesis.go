@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/math"
 

@@ -17,12 +17,12 @@ import (
 
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
+	tmlog "github.com/cometbft/cometbft/libs/log"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/node"
+	tmclient "github.com/cometbft/cometbft/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	tmlog "github.com/tendermint/tendermint/libs/log"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/node"
-	tmclient "github.com/tendermint/tendermint/rpc/client"
 	"google.golang.org/grpc"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"

@@ -16,7 +16,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	cobra "github.com/spf13/cobra"
-	types1 "github.com/tendermint/tendermint/abci/types"
+	types1 "github.com/cometbft/cometbft/abci/types"
 )
 
 // MockAppModuleBasic is a mock of AppModuleBasic interface.

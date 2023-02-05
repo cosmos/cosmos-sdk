@@ -136,3 +136,5 @@ require (
 
 // This can be deleted after the CometBFT PR is merged
 replace github.com/cosmos/cosmos-sdk => ../..
+
+replace github.com/cosmos/cosmos-sdk/log => ../../log

@@ -161,4 +161,5 @@ require (
 replace (
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 	github.com/cosmos/cosmos-sdk => ../..
+	github.com/cosmos/cosmos-sdk/log => ../../log
 )

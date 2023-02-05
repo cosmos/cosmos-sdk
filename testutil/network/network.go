@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -58,8 +59,8 @@ import (
 )
 
 // package-wide network lock to only allow one test network at a time
-// var lock = new(sync.Mutex)
-var portPool = make(chan string, 200) // new(sync.Pool)
+var lock = new(sync.Mutex)
+var portPool = make(chan string, 200)
 
 func init() {
 	closeFns := []func() error{}
@@ -315,7 +316,7 @@ func NewCLILogger(cmd *cobra.Command) CLILogger {
 func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")
-	// lock.Lock()
+	lock.Lock()
 
 	network := &Network{
 		Logger:     l,
@@ -732,7 +733,7 @@ func (n *Network) WaitForNextBlock() error {
 // in a defer.
 func (n *Network) Cleanup() {
 	defer func() {
-		// lock.Unlock()
+		lock.Unlock()
 		n.Logger.Log("released test network lock")
 	}()
 

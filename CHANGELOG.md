@@ -42,7 +42,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (deps) Bump Tendermint version to [v0.34.25](https://github.com/informalsystems/tendermint/releases/tag/v0.34.25).
+* (deps) Bump Tendermint version to [v0.34.26](https://github.com/informalsystems/tendermint/releases/tag/v0.34.26).
 
 ### Bug Fixes
 

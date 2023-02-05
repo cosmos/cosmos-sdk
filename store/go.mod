@@ -9,7 +9,7 @@ require (
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
-	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/cosmos/iavl v0.20.0-alpha3
 	github.com/golang/mock v1.6.0

@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -59,7 +58,29 @@ import (
 )
 
 // package-wide network lock to only allow one test network at a time
-var lock = new(sync.Mutex)
+// var lock = new(sync.Mutex)
+var portPool = make(chan string, 200) //new(sync.Pool)
+
+func init() {
+	closeFns := []func() error{}
+	for i := 0; i < 200; i++ {
+		_, port, closeFn, err := FreeTCPAddr()
+		if err != nil {
+			panic(err)
+		}
+
+		portPool <- port
+		closeFns = append(closeFns, closeFn)
+	}
+
+	for _, closeFn := range closeFns {
+		err := closeFn()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+}
 
 // AppConstructor defines a function which accepts a network configuration and
 // creates an ABCI Application to provide to Tendermint.
@@ -295,7 +316,7 @@ func NewCLILogger(cmd *cobra.Command) CLILogger {
 func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 	// only one caller/test can create and use a network at a time
 	l.Log("acquiring test network lock")
-	lock.Lock()
+	// lock.Lock()
 
 	network := &Network{
 		Logger:     l,
@@ -343,13 +364,11 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.APIAddress != "" {
 				apiListenAddr = cfg.APIAddress
 			} else {
-				var err error
-				var closeFn func() error
-				apiListenAddr, _, closeFn, err = FreeTCPAddr()
-				if err != nil {
-					return nil, err
+				if len(portPool) == 0 {
+					return nil, fmt.Errorf("failed to get port for API server")
 				}
-				closeFns = append(closeFns, closeFn)
+				port := <-portPool
+				apiListenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
 			}
 
 			appCfg.API.Address = apiListenAddr
@@ -362,23 +381,21 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.RPCAddress != "" {
 				tmCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-				rpcAddr, _, closeFn, err := FreeTCPAddr()
-				if err != nil {
-					return nil, err
+				if len(portPool) == 0 {
+					return nil, fmt.Errorf("failed to get port for RPC server")
 				}
-				tmCfg.RPC.ListenAddress = rpcAddr
-				closeFns = append(closeFns, closeFn)
+				port := <-portPool
+				tmCfg.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%s", port)
 			}
 
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-				_, grpcPort, closeFn, err := FreeTCPAddr()
-				if err != nil {
-					return nil, err
+				if len(portPool) == 0 {
+					return nil, fmt.Errorf("failed to get port for GRPC server")
 				}
-				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", grpcPort)
-				closeFns = append(closeFns, closeFn)
+				port := <-portPool
+				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", port)
 			}
 			appCfg.GRPC.Enable = true
 			appCfg.GRPCWeb.Enable = true
@@ -410,19 +427,18 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-		proxyAddr, _, closeFn, err := FreeTCPAddr()
-		if err != nil {
-			return nil, err
+		if len(portPool) == 0 {
+			return nil, fmt.Errorf("failed to get port for Proxy server")
 		}
+		port := <-portPool
+		proxyAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
 		tmCfg.ProxyApp = proxyAddr
-		closeFns = append(closeFns, closeFn)
 
-		p2pAddr, _, closeFn, err := FreeTCPAddr()
-		if err != nil {
-			return nil, err
+		if len(portPool) == 0 {
+			return nil, fmt.Errorf("failed to get port for Proxy server")
 		}
-		closeFns = append(closeFns, closeFn)
-
+		port = <-portPool
+		p2pAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
 		tmCfg.P2P.ListenAddress = p2pAddr
 		tmCfg.P2P.AddrBookStrict = false
 		tmCfg.P2P.AllowDuplicateIP = true
@@ -717,7 +733,7 @@ func (n *Network) WaitForNextBlock() error {
 // in a defer.
 func (n *Network) Cleanup() {
 	defer func() {
-		lock.Unlock()
+		// lock.Unlock()
 		n.Logger.Log("released test network lock")
 	}()
 

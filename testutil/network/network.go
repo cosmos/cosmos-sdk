@@ -59,8 +59,10 @@ import (
 )
 
 // package-wide network lock to only allow one test network at a time
-var lock = new(sync.Mutex)
-var portPool = make(chan string, 200)
+var (
+	lock     = new(sync.Mutex)
+	portPool = make(chan string, 200)
+)
 
 func init() {
 	closeFns := []func() error{}

@@ -11,8 +11,8 @@ import (
 	"sync"
 
 	"cosmossdk.io/errors"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/log"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/store/types"
 )

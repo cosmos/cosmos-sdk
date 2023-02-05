@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/log"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
 

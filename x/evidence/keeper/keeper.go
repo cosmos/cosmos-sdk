@@ -5,8 +5,8 @@ import (
 
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
+	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/log"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"

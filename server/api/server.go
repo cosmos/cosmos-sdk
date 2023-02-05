@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
+	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	"github.com/cosmos/cosmos-sdk/log"
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"

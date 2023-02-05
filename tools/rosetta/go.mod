@@ -7,7 +7,8 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
@@ -132,6 +133,3 @@ require (
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// This can be deleted after the CometBFT PR is merged
-replace github.com/cosmos/cosmos-sdk => ../..

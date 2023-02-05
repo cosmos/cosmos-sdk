@@ -10,7 +10,8 @@ require (
 	cosmossdk.io/math v1.0.0-beta.5
 	cosmossdk.io/store v0.0.0-20230204135315-697871069999
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
-	cosmossdk.io/tools/rosetta v0.2.0
+	// TODO to replace by a tagged version of rosetta
+	cosmossdk.io/tools/rosetta v0.2.1-0.20230205135133-41a3dfeced29
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc

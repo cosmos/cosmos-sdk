@@ -40,13 +40,8 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0
-<<<<<<< HEAD
-	github.com/tendermint/tendermint v0.34.25
-	github.com/tendermint/tm-db v0.6.6
-=======
 	github.com/tendermint/tendermint v0.34.26
-	github.com/tendermint/tm-db v0.6.7
->>>>>>> 04de09326 (build(deps): bump tendermint to v0.34.26 (#14911))
+	github.com/tendermint/tm-db v0.6.6
 	github.com/tidwall/btree v1.5.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
@@ -76,9 +71,6 @@ require (
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
-	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
-	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
-	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
@@ -122,22 +114,10 @@ require (
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-<<<<<<< HEAD
-	golang.org/x/net v0.4.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/term v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
-=======
-	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
-	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
-	google.golang.org/api v0.93.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
->>>>>>> 04de09326 (build(deps): bump tendermint to v0.34.26 (#14911))
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
@@ -160,12 +140,7 @@ replace (
 
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
 	// use informal system fork of tendermint
-<<<<<<< HEAD
-	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.25
-=======
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
-)
->>>>>>> 04de09326 (build(deps): bump tendermint to v0.34.26 (#14911))
 
 	// latest grpc doesn't work with with our modified proto compiler, so we need to enforce
 	// the following version across all dependencies.

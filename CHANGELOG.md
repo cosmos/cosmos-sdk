@@ -41,19 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-<<<<<<< HEAD
-* (deps) Bump Tendermint version to [v0.34.25](https://github.com/informalsystems/tendermint/releases/tag/v0.34.25).
-=======
 * (deps) Bump Tendermint version to [v0.34.26](https://github.com/informalsystems/tendermint/releases/tag/v0.34.26).
-* (store) [#14189](https://github.com/cosmos/cosmos-sdk/pull/14189) Add config `iavl-lazy-loading` to enable lazy loading of iavl store, to improve start up time of archive nodes, add method `SetLazyLoading` to `CommitMultiStore` interface.
-    * A new field has been added to the app.toml. This alllows nodes with larger databases to startup quicker 
-
-    ```toml
-    # IAVLLazyLoading enable/disable the lazy loading of iavl store.
-    # Default is false.
-    iavl-lazy-loading = ""  
-  ```
->>>>>>> 04de09326 (build(deps): bump tendermint to v0.34.26 (#14911))
 
 ### Bug Fixes
 

@@ -69,8 +69,7 @@ Liveness faults do not have caps, as they can't stack upon each other. Liveness 
 
 ### Infraction Timelines
 
-To illustrate how the `x/slashing` module handles submitted evidence through
-Tendermint consensus, consider the following examples:
+To illustrate how the `x/slashing` module handles submitted evidence through CometBFT, consider the following examples:
 
 **Definitions**:
 

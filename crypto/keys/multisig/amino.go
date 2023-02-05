@@ -10,7 +10,7 @@ import (
 // Amino JSON marshaling of LegacyAminoPubKey (see below for details).
 //
 // This struct is copy-pasted from:
-// https://github.com/cometbft/cometbft/blob/v0.33.9/crypto/multisig/threshold_pubkey.go
+// https://github.com/tendermint/tendermint/blob/v0.33.9/crypto/multisig/threshold_pubkey.go
 //
 // This struct was used in the SDK <=0.39. In 0.40 and the switch to protobuf,
 // it has been converted to LegacyAminoPubKey. However, there's one difference:

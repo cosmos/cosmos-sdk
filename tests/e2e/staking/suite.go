@@ -116,7 +116,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 
 	validJSON := fmt.Sprintf(`
 	{
-  		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+  		"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
   		"amount": "%dstake",
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
@@ -133,7 +133,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 
 	noAmountJSON := `
 	{
-  		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+  		"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
   		"moniker": "NewValidator",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",
@@ -165,7 +165,7 @@ func (s *E2ETestSuite) TestNewCreateValidatorCmd() {
 
 	noMonikerJSON := fmt.Sprintf(`
 	{
-  		"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+  		"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
   		"amount": "%dstake",
   		"commission-rate": "0.5",
   		"commission-max-rate": "1.0",

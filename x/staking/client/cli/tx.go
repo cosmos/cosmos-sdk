@@ -67,7 +67,7 @@ $ %s tx staking create-validator path/to/validator.json --from keyname
 Where validator.json contains:
 
 {
-	"pubkey": "{\"@type\":\"/cosmos.crypto.ed25519.PubKey\",\"key\":\"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw=\"}",
+	"pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"oWg2ISpLF405Jcm2vXV+2v4fnjodh6aafuIdeoW+rUw="},
 	"amount": "1000000stake",
 	"moniker": "myvalidator",
 	"identity": "optional identity signature (ex. UPort or Keybase)",

@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
+	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -92,10 +92,11 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 	if req.ValidatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
 
+	ctx := sdk.UnwrapSDKContext(c)
 	store := ctx.KVStore(k.storeKey)
 	valStore := prefix.NewStore(store, types.DelegationKey)
+
 	delegations, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
 		valAddr, err := sdk.ValAddressFromBech32(req.ValidatorAddr)
 		if err != nil {
@@ -107,9 +108,9 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		}
 
 		return delegation, nil
-	}, func() *types.Delegation {
-		return &types.Delegation{}
-	})
+	},
+		func() *types.Delegation { return &types.Delegation{} },
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -119,13 +120,31 @@ func (k Querier) ValidatorDelegations(c context.Context, req *types.QueryValidat
 		dels = append(dels, *d)
 	}
 
-	delResponses, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)
+	resp, err := DelegationsToDelegationResponses(ctx, k.Keeper, dels)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// filter out delegations with shares less than one
+	if req.ExcludeDust {
+		i := 0
+		for _, r := range resp {
+			if r.Delegation.Shares.GTE(sdkmath.LegacyOneDec()) {
+				resp[i] = r
+				i++
+			}
+		}
+
+		// prevent memory leak by erasing truncated values
+		for j := i; j < len(resp); j++ {
+			resp[j] = types.DelegationResponse{}
+		}
+		resp = resp[:i]
+	}
+
 	return &types.QueryValidatorDelegationsResponse{
-		DelegationResponses: delResponses, Pagination: pageRes,
+		DelegationResponses: resp,
+		Pagination:          pageRes,
 	}, nil
 }
 
@@ -256,6 +275,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	if req.DelegatorAddr == "" {
 		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
+
 	var delegations types.Delegations
 	ctx := sdk.UnwrapSDKContext(c)
 
@@ -266,11 +286,13 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 
 	store := ctx.KVStore(k.storeKey)
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
+
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return err
 		}
+
 		delegations = append(delegations, delegation)
 		return nil
 	})
@@ -278,12 +300,32 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	delegationResps, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
+	resp, err := DelegationsToDelegationResponses(ctx, k.Keeper, delegations)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryDelegatorDelegationsResponse{DelegationResponses: delegationResps, Pagination: pageRes}, nil
+	// filter out delegations with shares less than one
+	if req.ExcludeDust {
+		i := 0
+		for _, r := range resp {
+			if r.Delegation.Shares.GTE(sdkmath.LegacyOneDec()) {
+				resp[i] = r
+				i++
+			}
+		}
+
+		// prevent memory leak by erasing truncated values
+		for j := i; j < len(resp); j++ {
+			resp[j] = types.DelegationResponse{}
+		}
+		resp = resp[:i]
+	}
+
+	return &types.QueryDelegatorDelegationsResponse{
+		DelegationResponses: resp,
+		Pagination:          pageRes,
+	}, nil
 }
 
 // DelegatorValidator queries validator info for given delegator validator pair

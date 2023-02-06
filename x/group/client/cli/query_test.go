@@ -105,11 +105,6 @@ func (s *CLITestSuite) TestQueryGroupMembers() {
 			expCmdOutput: "1 --output=json",
 		},
 		{
-			name:         "json output with pagination",
-			args:         []string{"1", fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			expCmdOutput: "1 --output=json",
-		},
-		{
 			name:         "text output",
 			args:         []string{"1", fmt.Sprintf("--%s=text", flags.FlagOutput)},
 			expCmdOutput: "1 --output=text",

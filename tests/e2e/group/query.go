@@ -896,7 +896,11 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 		},
 		{
 			"found votes (request with pagination)",
-			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
 			false,
 			"",
 			0,

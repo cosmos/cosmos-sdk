@@ -4,7 +4,7 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
-### CometBFT
+### Consensus Engine
 
 The Cosmos SDK has migrated to CometBFT as its default consensus engine.
 This is a breaking changes that needs chains to re-generate their protos.

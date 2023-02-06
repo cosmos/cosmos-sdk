@@ -701,17 +701,19 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 		msCache.Write()
 	}
 
-	if mode == runTxModeCheck {
+	// insert or remove the transaction from the mempool
+	switch mode {
+	case runTxModeCheck:
 		err = app.mempool.Insert(ctx, tx)
-		if err != nil {
-			return gInfo, nil, anteEvents, priority, err
-		}
-	} else if mode == runTxModeDeliver {
+	case runTxModeDeliver:
 		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents, priority,
-				fmt.Errorf("failed to remove tx from mempool: %w", err)
+			err = fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
+	}
+
+	if err != nil {
+		return gInfo, nil, events, priority, err
 	}
 
 	// Create a new Context based off of the existing Context with a MultiStore branch
@@ -733,19 +735,6 @@ func (app *BaseApp) runTx(mode runTxMode, txBytes []byte) (gInfo sdk.GasInfo, re
 	if err != nil && app.postHandler != nil {
 		// Run optional postHandlers with a context branched off the ante handler ctx
 		postCtx, postCache := app.cacheTxContext(ctx, txBytes)
-
-		// Run optional postHandlers.
-		// Note: If the postHandler fails, we also revert the runMsgs state.
-		if app.postHandler != nil {
-			// The runMsgCtx context currently contains events emitted by the ante handler.
-			// We clear this to correctly order events without duplicates.
-			// Note that the state is still preserved.
-			postCtx := runMsgCtx.WithEventManager(sdk.NewEventManager())
-
-			newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
-			if err != nil {
-				return gInfo, nil, anteEvents, priority, err
-			}
 
 		newCtx, err := app.postHandler(postCtx, tx, mode == runTxModeSimulate, err == nil)
 		if err != nil {

@@ -30,17 +30,17 @@ type validator struct {
 
 func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, error) {
 	type internalVal struct {
-		Amount              string      `json:"amount"`
-		PubKey              interface{} `json:"pubkey"`
-		Moniker             string      `json:"moniker"`
-		Identity            string      `json:"identity"`
-		Website             string      `json:"website"`
-		Security            string      `json:"security"`
-		Details             string      `json:"details"`
-		CommissionRate      string      `json:"commission-rate"`
-		CommissionMaxRate   string      `json:"commission-max-rate"`
-		CommissionMaxChange string      `json:"commission-max-change-rate"`
-		MinSelfDelegation   string      `json:"min-self-delegation"`
+		Amount              string          `json:"amount"`
+		PubKey              json.RawMessage `json:"pubkey"`
+		Moniker             string          `json:"moniker"`
+		Identity            string          `json:"identity,omitempty"`
+		Website             string          `json:"website,omitempty"`
+		Security            string          `json:"security,omitempty"`
+		Details             string          `json:"details,omitempty"`
+		CommissionRate      string          `json:"commission-rate"`
+		CommissionMaxRate   string          `json:"commission-max-rate"`
+		CommissionMaxChange string          `json:"commission-max-change-rate"`
+		MinSelfDelegation   string          `json:"min-self-delegation"`
 	}
 
 	contents, err := os.ReadFile(path)
@@ -66,11 +66,8 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		return validator{}, fmt.Errorf("must specify the JSON encoded pubkey")
 	}
 	var pk cryptotypes.PubKey
-	if pubKey, ok := v.PubKey.(string); ok {
-		if err := cdc.UnmarshalInterfaceJSON([]byte(pubKey), &pk); err != nil {
-			return validator{}, err
-		}
-		v.PubKey = pk
+	if err := cdc.UnmarshalInterfaceJSON(v.PubKey, &pk); err != nil {
+		return validator{}, err
 	}
 
 	if v.Moniker == "" {

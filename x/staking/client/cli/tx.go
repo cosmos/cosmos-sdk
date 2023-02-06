@@ -78,8 +78,10 @@ Where validator.json contains:
 	"commission-max-rate": "0.2",
 	"commission-max-change-rate": "0.01",
 	"min-self-delegation": "1"
-  }
-`, version.AppName)),
+}
+
+where we can get the pubkey using "%s tendermint show-validator"
+`, version.AppName, version.AppName)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

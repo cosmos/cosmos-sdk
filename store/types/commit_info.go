@@ -1,7 +1,7 @@
 package types
 
 import (
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdkmaps "cosmossdk.io/store/internal/maps"
 )

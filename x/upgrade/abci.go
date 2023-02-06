@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/upgrade/keeper"

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"

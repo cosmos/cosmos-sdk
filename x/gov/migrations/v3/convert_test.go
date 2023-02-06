@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,7 +74,7 @@ func TestConvertToLegacyProposal(t *testing.T) {
 }
 
 func TestConvertToLegacyProposalContent(t *testing.T) {
-	msg := upgradetypes.MsgSoftwareUpgrade{Authority: "gov module", Plan: upgradetypes.Plan{Name: "test upgrade"}}
+	msg := v1.MsgCancelProposal{ProposalId: 1, Proposer: "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh"}
 	msgsAny, err := tx.SetMsgs([]sdk.Msg{&msg})
 	require.NoError(t, err)
 	tallyResult := v1.EmptyTallyResult()
@@ -89,8 +88,8 @@ func TestConvertToLegacyProposalContent(t *testing.T) {
 
 	legacyP, err := v3.ConvertToLegacyProposal(proposal)
 	require.NoError(t, err)
-	tp, ok := legacyP.Content.GetCachedValue().(*upgradetypes.MsgSoftwareUpgrade)
-	require.Truef(t, ok, "expected *MsgSoftwareUpgrade, got %T", legacyP.Content.GetCachedValue())
+	tp, ok := legacyP.Content.GetCachedValue().(*v1.MsgCancelProposal)
+	require.Truef(t, ok, "expected *MsgCancelProposal, got %T", legacyP.Content.GetCachedValue())
 	require.Equal(t, &msg, tp)
 
 	// more than one message is not supported

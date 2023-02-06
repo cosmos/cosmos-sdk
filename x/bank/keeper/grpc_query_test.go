@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: false,
 	}
-	req := types.NewQueryAllBalancesRequest(addr, pageReq)
+	req := types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err := queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -65,11 +65,14 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 
 	fooCoins := newFooCoin(50)
 	barCoins := newBarCoin(30)
+	ibcCoins := newIbcCoin(20)
 
-	origCoins := sdk.NewCoins(fooCoins, barCoins)
+	origCoins := sdk.NewCoins(fooCoins, barCoins, ibcCoins)
 
 	suite.mockFundAccount(addr)
 	suite.Require().NoError(testutil.FundAccount(suite.bankKeeper, ctx, addr, origCoins))
+
+	addIBCMetadata(ctx, suite.bankKeeper)
 
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
@@ -83,10 +86,37 @@ func (suite *KeeperTestSuite) TestQueryAllBalances() {
 		Limit:      1,
 		CountTotal: true,
 	}
-	req = types.NewQueryAllBalancesRequest(addr, pageReq)
+	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), req)
 	suite.Require().NoError(err)
 	suite.Equal(res.Balances.Len(), 1)
+	suite.NotNil(res.Pagination.NextKey)
+
+	pageThree := res.Pagination.NextKey
+
+	suite.T().Log("query third page with nextkey")
+	pageReq = &query.PageRequest{
+		Key:        pageThree,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addr, pageReq, false)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(res.Balances[0].Denom, ibcCoins.Denom)
+
+	suite.T().Log("query third page with nextkey and resolve ibc denom")
+	pageReq = &query.PageRequest{
+		Key:        pageThree,
+		Limit:      1,
+		CountTotal: true,
+	}
+	req = types.NewQueryAllBalancesRequest(addr, pageReq, true)
+	res, err = queryClient.AllBalances(gocontext.Background(), req)
+	suite.Require().NoError(err)
+	suite.Equal(res.Balances.Len(), 1)
+	suite.Equal(res.Balances[0].Denom, ibcPath+"/"+ibcBaseDenom)
 	suite.Nil(res.Pagination.NextKey)
 }
 

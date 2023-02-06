@@ -60,7 +60,7 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 		// IBC denom metadata will be registered in ibc-go after first mint
 		//
 		// Since: ibc-go v7
-		if req.IbcResolve {
+		if req.ResolveDenom {
 			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
 				denom = metadata.Display
 			}

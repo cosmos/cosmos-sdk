@@ -51,6 +51,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0
+	github.com/tendermint/tendermint v0.35.9
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20230203172020-98cc5a0785f9
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57

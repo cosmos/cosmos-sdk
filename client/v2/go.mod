@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.52.3
-	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a
+	google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af
 	gotest.tools/v3 v3.4.0
 )
 
@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/collections v0.0.0-20230204135315-697871069999 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	cosmossdk.io/math v1.0.0-beta.6 // indirect
-	cosmossdk.io/store v0.0.0-20230204135315-697871069999 // indirect
+	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect

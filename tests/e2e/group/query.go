@@ -336,7 +336,7 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 			},
 		},
 		{
-			"found groups with pagination",
+			"found groups (request with pagination)",
 			[]string{
 				val.Address.String(),
 				fmt.Sprintf("--%s=json", flags.FlagOutput),

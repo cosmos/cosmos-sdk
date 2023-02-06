@@ -4,12 +4,15 @@ import (
 	"bytes"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/testpb"
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/testing/protocmp"
 	"gotest.tools/v3/assert"
 	"net"
+	"strings"
 	"testing"
 )
 
@@ -51,7 +54,7 @@ var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
 					Deprecated: "don't use this",
 				},
 				"shorthand_deprecated_field": {
-					Shorthand:  "s",
+					Shorthand:  "d",
 					Deprecated: "bad idea",
 				},
 				"hidden_bool": {
@@ -117,14 +120,81 @@ func TestMsgOptions(t *testing.T) {
 	conn := testMsgExec(t,
 		"send", "5", "6",
 		"--uint32", "7",
-		"--u64", // no opt default value 5
-
+		"--u64",
 	)
-	fmt.Println(conn.out.String())
-	//lastReq := conn.lastRequest.(*testpb.MsgRequest)
-	//assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set
-	//assert.Equal(t, int32(3), lastReq.I32)   // default value got set
-	//assert.Equal(t, uint64(5), lastReq.U64)  // no opt default value got set
+	response := conn.out.String()
+	var output testpb.MsgRequest
+	json.Unmarshal([]byte(response), &output)
+	assert.Equal(t, output.GetU32(), uint32(7))
+	assert.Equal(t, output.GetU64(), uint64(0))
+	assert.Equal(t, output.GetPositional1(), int32(5))
+	assert.Equal(t, output.GetPositional2(), "6")
+}
+
+func TestDeprecatedMsg(t *testing.T) {
+	conn := testMsgExec(t, "send",
+		"1", "abc",
+		"--deprecated-field", "foo")
+	assert.Assert(t, strings.Contains(conn.out.String(), "--deprecated-field has been deprecated"))
+
+	conn = testMsgExec(t, "send",
+		"1", "abc",
+		"-d", "foo")
+	assert.Assert(t, strings.Contains(conn.out.String(), "--shorthand-deprecated-field has been deprecated"))
+}
+
+func TestEverythingMsg(t *testing.T) {
+	conn := testMsgExec(t,
+		"send",
+		"1",
+		//"abc",
+		//`{"denom":"foo","amount":"1234"}`,
+		//`{"denom":"bar","amount":"4321"}`,
+		"--a-bool",
+		"--an-enum", "one",
+		"--a-message", `{"bar":"abc", "baz":-3}`,
+		"--duration", "4h3s",
+		"--uint32", "27",
+		"--u64", "3267246890",
+		"--i32", "-253",
+		"--i64", "-234602347",
+		"--str", "def",
+		"--timestamp", "2019-01-02T00:01:02Z",
+		"--a-coin", `{"denom":"foo","amount":"100000"}`,
+		"--an-address", "cosmossdghdsfoi2134sdgh",
+		"--bz", "c2RncXdlZndkZ3NkZw==",
+		"--page-count-total",
+		"--page-key", "MTIzNTQ4N3NnaGRhcw==",
+		"--page-limit", "1000",
+		"--page-offset", "10",
+		"--page-reverse",
+		"--bools", "true",
+		"--bools", "false,false,true",
+		"--enums", "one",
+		"--enums", "five",
+		"--enums", "two",
+		"--strings", "abc",
+		"--strings", "xyz",
+		"--strings", "xyz,qrs",
+		"--durations", "3s",
+		"--durations", "5s",
+		"--durations", "10h",
+		"--some-messages", "{}",
+		"--some-messages", `{"bar":"baz"}`,
+		"--some-messages", `{"baz":-1}`,
+		"--uints", "1,2,3",
+		"--uints", "4",
+	)
+	response := conn.out.String()
+	fmt.Println(response)
+	var output testpb.MsgRequest
+	fmt.Println(output.U64)
+	json.Unmarshal([]byte(response), &output)
+	assert.Equal(t, output.GetU32(), uint32(27))
+	assert.Equal(t, output.GetU64(), uint64(5))
+	assert.Equal(t, output.GetPositional1(), int32(5))
+	assert.Equal(t, output.GetPositional2(), "6")
+	assert.DeepEqual(t, conn.lastRequest, conn.lastResponse.(*testpb.EchoResponse).Request, protocmp.Transform())
 }
 
 func TestBuildCustomMsgCommand(t *testing.T) {

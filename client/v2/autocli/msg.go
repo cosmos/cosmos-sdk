@@ -196,6 +196,8 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 			return err
 		}
 
+		fmt.Println(inputType.Descriptor().FullName())
+		fmt.Println("-------")
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
 			return err

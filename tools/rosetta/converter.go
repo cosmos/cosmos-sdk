@@ -11,10 +11,10 @@ import (
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto"
-	tmcoretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto"
+	tmcoretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,25 +29,25 @@ import (
 )
 
 // Converter is a utility that can be used to convert
-// back and forth from rosetta to sdk and tendermint types
+// back and forth from rosetta to sdk and CometBFT types
 // IMPORTANT NOTES:
 //   - IT SHOULD BE USED ONLY TO DEAL WITH THINGS
 //     IN A STATELESS WAY! IT SHOULD NEVER INTERACT DIRECTLY
-//     WITH TENDERMINT RPC AND COSMOS GRPC
+//     WITH COMETBFT RPC AND COSMOS GRPC
 //
 // - IT SHOULD RETURN cosmos rosetta gateway error types!
 type Converter interface {
 	// ToSDK exposes the methods that convert
-	// rosetta types to cosmos sdk and tendermint types
+	// rosetta types to cosmos sdk and CometBFT types
 	ToSDK() ToSDKConverter
 	// ToRosetta exposes the methods that convert
-	// sdk and tendermint types to rosetta types
+	// sdk and CometBFT types to rosetta types
 	ToRosetta() ToRosettaConverter
 }
 
 // ToRosettaConverter is an interface that exposes
 // all the functions used to convert sdk and
-// tendermint types to rosetta known types
+// CometBFT types to rosetta known types
 type ToRosettaConverter interface {
 	// BlockResponse returns a block response given a result block
 	BlockResponse(block *tmcoretypes.ResultBlock) crgtypes.BlockResponse
@@ -67,21 +67,21 @@ type ToRosettaConverter interface {
 	SignerData(anyAccount *codectypes.Any) (*SignerData, error)
 	// SigningComponents returns rosetta's components required to build a signable transaction
 	SigningComponents(tx authsigning.Tx, metadata *ConstructionMetadata, rosPubKeys []*rosettatypes.PublicKey) (txBytes []byte, payloadsToSign []*rosettatypes.SigningPayload, err error)
-	// Tx converts a tendermint transaction and tx result if provided to a rosetta tx
-	Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error)
-	// TxIdentifiers converts a tendermint tx to transaction identifiers
-	TxIdentifiers(txs []tmtypes.Tx) []*rosettatypes.TransactionIdentifier
+	// Tx converts a CometBFT transaction and tx result if provided to a rosetta tx
+	Tx(rawTx cmttypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error)
+	// TxIdentifiers converts a CometBFT tx to transaction identifiers
+	TxIdentifiers(txs []cmttypes.Tx) []*rosettatypes.TransactionIdentifier
 	// BalanceOps converts events to balance operations
 	BalanceOps(status string, events []abci.Event) []*rosettatypes.Operation
-	// SyncStatus converts a tendermint status to sync status
+	// SyncStatus converts a CometBFT status to sync status
 	SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus
-	// Peers converts tendermint peers to rosetta
+	// Peers converts CometBFT peers to rosetta
 	Peers(peers []tmcoretypes.Peer) []*rosettatypes.Peer
 }
 
 // ToSDKConverter is an interface that exposes
 // all the functions used to convert rosetta types
-// to tendermint and sdk types
+// to CometBFT and sdk types
 type ToSDKConverter interface {
 	// UnsignedTx converts rosetta operations to an unsigned cosmos sdk transactions
 	UnsignedTx(ops []*rosettatypes.Operation) (tx authsigning.Tx, err error)
@@ -258,8 +258,8 @@ func (c converter) Ops(status string, msg sdk.Msg) ([]*rosettatypes.Operation, e
 	return ops, nil
 }
 
-// Tx converts a tendermint raw transaction and its result (if provided) to a rosetta transaction
-func (c converter) Tx(rawTx tmtypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error) {
+// Tx converts a CometBFT raw transaction and its result (if provided) to a rosetta transaction
+func (c converter) Tx(rawTx cmttypes.Tx, txResult *abci.ResponseDeliverTx) (*rosettatypes.Transaction, error) {
 	// decode tx
 	tx, err := c.txDecode(rawTx)
 	if err != nil {
@@ -500,7 +500,7 @@ func (c converter) HashToTxType(hashBytes []byte) (txType TransactionType, realH
 	}
 }
 
-// StatusToSyncStatus converts a tendermint status to rosetta sync status
+// StatusToSyncStatus converts a CometBFT status to rosetta sync status
 func (c converter) SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.SyncStatus {
 	// determine sync status
 	stage := StatusPeerSynced
@@ -515,8 +515,8 @@ func (c converter) SyncStatus(status *tmcoretypes.ResultStatus) *rosettatypes.Sy
 	}
 }
 
-// TxIdentifiers converts a tendermint raw transactions into an array of rosetta tx identifiers
-func (c converter) TxIdentifiers(txs []tmtypes.Tx) []*rosettatypes.TransactionIdentifier {
+// TxIdentifiers converts a CometBFT raw transactions into an array of rosetta tx identifiers
+func (c converter) TxIdentifiers(txs []cmttypes.Tx) []*rosettatypes.TransactionIdentifier {
 	converted := make([]*rosettatypes.TransactionIdentifier, len(txs))
 	for i, tx := range txs {
 		converted[i] = &rosettatypes.TransactionIdentifier{Hash: fmt.Sprintf("%X", tx.Hash())}
@@ -525,7 +525,7 @@ func (c converter) TxIdentifiers(txs []tmtypes.Tx) []*rosettatypes.TransactionId
 	return converted
 }
 
-// tmResultBlockToRosettaBlockResponse converts a tendermint result block to block response
+// tmResultBlockToRosettaBlockResponse converts a CometBFT result block to block response
 func (c converter) BlockResponse(block *tmcoretypes.ResultBlock) crgtypes.BlockResponse {
 	var parentBlock *rosettatypes.BlockIdentifier
 

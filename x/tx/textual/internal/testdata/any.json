@@ -4,8 +4,8 @@
             "@type": "/Foo"
         },
         "screens": [
-            {"text": "/Foo"},
-            {"text": "Foo object", "indent": 1}
+            {"content": "/Foo"},
+            {"content": "Foo object", "indent": 1}
         ]
     },
     {
@@ -14,9 +14,9 @@
             "full_name": "testing"
         },
         "screens": [
-            {"text": "/Foo"},
-            {"text": "Foo object", "indent": 1},
-            {"text": "Full name: testing", "indent": 2}
+            {"content": "/Foo"},
+            {"content": "Foo object", "indent": 1},
+            {"title": "Full name", "content": "testing", "indent": 2}
         ]
     },
     {
@@ -25,8 +25,8 @@
             "value": "2006-01-02T15:04:05Z"
         },
         "screens": [
-            {"text": "/google.protobuf.Timestamp"},
-            {"text": "2006-01-02T15:04:05Z", "indent": 1}
+            {"content": "/google.protobuf.Timestamp"},
+            {"content": "2006-01-02T15:04:05Z", "indent": 1}
         ]
     },
     {
@@ -37,9 +37,9 @@
             }
         },
         "screens": [
-            {"text": "/google.protobuf.Any"},
-            {"text": "/Foo", "indent": 1},
-            {"text": "Foo object", "indent": 2}
+            {"content": "/google.protobuf.Any"},
+            {"content": "/Foo", "indent": 1},
+            {"content": "Foo object", "indent": 2}
         ]
     },
     {
@@ -51,10 +51,10 @@
             }
         },
         "screens": [
-            {"text": "/google.protobuf.Any"},
-            {"text": "/Foo", "indent": 1},
-            {"text": "Foo object", "indent": 2},
-            {"text": "Full name: testing", "indent": 3}
+            {"content": "/google.protobuf.Any"},
+            {"content": "/Foo", "indent": 1},
+            {"content": "Foo object", "indent": 2},
+            {"title": "Full name", "content": "testing", "indent": 3}
         ]
     },
     {
@@ -66,11 +66,11 @@
             }
         },
         "screens": [
-            {"text": "/A"},
-            {"text": "A object", "indent": 1},
-            {"text": "ANY: /Foo", "indent": 2},
-            {"text": "Foo object", "indent": 3},
-            {"text": "Full name: testing", "indent": 4}
+            {"content": "/A"},
+            {"content": "A object", "indent": 1},
+            {"title": "ANY", "content": "/Foo", "indent": 2},
+            {"content": "Foo object", "indent": 3},
+            {"title": "Full name", "content": "testing", "indent": 4}
         ]
     }
 ]

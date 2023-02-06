@@ -3,9 +3,9 @@ package bank_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -128,7 +128,7 @@ func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) s
 
 // CheckBalance checks the balance of an account.
 func checkBalance(t *testing.T, baseApp *baseapp.BaseApp, addr sdk.AccAddress, balances sdk.Coins, keeper bankkeeper.Keeper) {
-	ctxCheck := baseApp.NewContext(true, tmproto.Header{})
+	ctxCheck := baseApp.NewContext(true, cmtproto.Header{})
 	require.True(t, balances.Equal(keeper.GetAllBalances(ctxCheck, addr)))
 }
 
@@ -140,7 +140,7 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	genAccs := []authtypes.GenesisAccount{acc}
 	s := createTestSuite(t, genAccs)
 	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false, tmproto.Header{})
+	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
@@ -154,14 +154,14 @@ func TestSendNotEnoughBalance(t *testing.T) {
 	origSeq := res1.GetSequence()
 
 	sendMsg := types.NewMsgSend(addr1, addr2, sdk.Coins{sdk.NewInt64Coin("foocoin", 100)})
-	header := tmproto.Header{Height: baseApp.LastBlockHeight() + 1}
+	header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 	txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
 	_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, []sdk.Msg{sendMsg}, "", []uint64{origAccNum}, []uint64{origSeq}, false, false, priv1)
 	require.Error(t, err)
 
 	checkBalance(t, baseApp, addr1, sdk.Coins{sdk.NewInt64Coin("foocoin", 67)}, s.BankKeeper)
 
-	ctx2 := baseApp.NewContext(true, tmproto.Header{})
+	ctx2 := baseApp.NewContext(true, cmtproto.Header{})
 	res2 := s.AccountKeeper.GetAccount(ctx2, addr1)
 	require.NotNil(t, res2)
 
@@ -177,7 +177,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	genAccs := []authtypes.GenesisAccount{acc}
 	s := createTestSuite(t, genAccs)
 	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false, tmproto.Header{})
+	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 67))))
 
@@ -231,7 +231,7 @@ func TestMsgMultiSendWithAccounts(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := tmproto.Header{Height: baseApp.LastBlockHeight() + 1}
+		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		if tc.expPass {
@@ -257,7 +257,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
 	s := createTestSuite(t, genAccs)
 	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false, tmproto.Header{})
+	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
@@ -282,7 +282,7 @@ func TestMsgMultiSendMultipleOut(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := tmproto.Header{Height: baseApp.LastBlockHeight() + 1}
+		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
@@ -302,7 +302,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	genAccs := []authtypes.GenesisAccount{acc1, acc2}
 	s := createTestSuite(t, genAccs)
 	baseApp := s.App.BaseApp
-	ctx := baseApp.NewContext(false, tmproto.Header{})
+	ctx := baseApp.NewContext(false, cmtproto.Header{})
 
 	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 42))))
 
@@ -335,7 +335,7 @@ func TestMsgMultiSendDependent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		header := tmproto.Header{Height: baseApp.LastBlockHeight() + 1}
+		header := cmtproto.Header{Height: baseApp.LastBlockHeight() + 1}
 		txConfig := moduletestutil.MakeTestEncodingConfig().TxConfig
 		_, _, err := simtestutil.SignCheckDeliver(t, txConfig, baseApp, header, tc.msgs, "", tc.accNums, tc.accSeqs, tc.expSimPass, tc.expPass, tc.privKeys...)
 		require.NoError(t, err)
@@ -352,7 +352,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	genAccs := []authtypes.GenesisAccount{acc1}
 	s := createTestSuite(t, genAccs)
 
-	ctx := s.App.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := s.App.BaseApp.NewContext(false, cmtproto.Header{})
 	require.NoError(t, testutil.FundAccount(s.BankKeeper, ctx, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
 	addr1Str := addr1.String()
 	govAddr := s.BankKeeper.GetAuthority()
@@ -365,6 +365,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
+		false,
 	)
 	require.NoError(t, err, "making goodGovProp")
 	badGovProp, err := govv1.NewMsgSubmitProposal(
@@ -376,6 +377,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
+		false,
 	)
 	require.NoError(t, err, "making badGovProp")
 
@@ -437,7 +439,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(tt *testing.T) {
-			header := tmproto.Header{Height: s.App.LastBlockHeight() + 1}
+			header := cmtproto.Header{Height: s.App.LastBlockHeight() + 1}
 			txGen := moduletestutil.MakeTestEncodingConfig().TxConfig
 			_, _, err = simtestutil.SignCheckDeliver(tt, txGen, s.App.BaseApp, header, tc.msgs, "", []uint64{0}, tc.accSeqs, tc.expSimPass, tc.expPass, priv1)
 			if len(tc.expInError) > 0 {

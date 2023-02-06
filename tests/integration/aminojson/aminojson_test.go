@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
+	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/api/amino"
@@ -44,10 +45,14 @@ var msgTypes = []typeUnderTest{
 	// auth
 	{gogo: &authtypes.Params{}, pulsar: &authapi.Params{}},
 	{gogo: &authtypes.BaseAccount{}, pulsar: &authapi.BaseAccount{}},
-	{gogo: &authtypes.ModuleAccount{}, pulsar: &authapi.ModuleAccount{}},
+	// punting since the structs have a different shape
+	//{gogo: &authtypes.ModuleAccount{}, pulsar: &authapi.ModuleAccount{}},
+
 	// missing name extension, do we need it?
 	// {gogo: &authtypes.ModuleCredential{}, pulsar: &authapi.ModuleCredential{}},
+
 	{gogo: &authtypes.MsgUpdateParams{}, pulsar: &authapi.MsgUpdateParams{}},
+
 	// authz
 	{gogo: &authztypes.MsgGrant{}, pulsar: &authzapi.MsgGrant{}},
 	{gogo: &authztypes.MsgRevoke{}, pulsar: &authzapi.MsgRevoke{}},
@@ -196,6 +201,25 @@ func (ti typeIndex) setField(pulsar reflect.Value, gogo reflect.Value) {
 	}
 }
 
+func newGogoMessage(t reflect.Type) gogoproto.Message {
+	msg := reflect.New(t).Interface()
+	switch msg.(type) {
+	case *authtypes.ModuleAccount:
+		return &authtypes.ModuleAccount{BaseAccount: &authtypes.BaseAccount{}}
+	default:
+		return msg.(gogoproto.Message)
+	}
+}
+
+func Test_newGogoMessage(t *testing.T) {
+	ma := &authtypes.ModuleAccount{}
+	rma := newGogoMessage(reflect.TypeOf(ma).Elem())
+	require.NotPanics(t, func() {
+		x := rma.(*authtypes.ModuleAccount)
+		require.NotNil(t, x.Address)
+	})
+}
+
 func (ti typeIndex) assertEquals(t *testing.T, pulsar proto.Message, gogo gogoproto.Message) {
 	for n, pStructField := range ti.pulsarFields[fqTypeName(pulsar)] {
 		gStructField := ti.gogoFields[fqTypeName(gogo)][n]
@@ -270,7 +294,9 @@ func TestDeepClone(t *testing.T) {
 }
 
 func TestAminoJSON_AllTypes(t *testing.T) {
+	ti := newTypeIndex(msgTypes)
 	cdc := goamino.NewCodec()
+	aj := aminojson.NewAminoJSON()
 	for _, tt := range msgTypes {
 		desc := tt.pulsar.ProtoReflect().Descriptor()
 		opts := desc.Options()
@@ -284,19 +310,24 @@ func TestAminoJSON_AllTypes(t *testing.T) {
 	// TODO
 	// roundtrip the message into gogoproto, check equivalanece with pulsar
 
-	//ti := newTypeIndex(msgTypes)
 	for _, tt := range msgTypes {
 		gen := rapidproto.MessageGenerator(tt.pulsar, rapidproto.GeneratorOptions{})
-		fmt.Printf("testing %T\n", tt.pulsar)
+		fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
 		rapid.Check(t, func(t *rapid.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Printf("Panic: %+v\n", r)
+					t.FailNow()
+				}
+			}()
 			msg := gen.Draw(t, "msg")
-			fmt.Printf("testing %T\n", msg)
-			//
-			//for k, gogoField := range gogoFieldsByTag {
-			//	fmt.Printf("testing field %v\n", gogoField.Type())
-			//	pulsarField := pulsarFieldsByTag[k]
-			//	pulsarField.Set(gogoField)
-			//}
+			//goMsg := reflect.New(reflect.TypeOf(tt.gogo).Elem()).Interface().(gogoproto.Message)
+			goMsg := newGogoMessage(reflect.TypeOf(tt.gogo).Elem())
+			ti.deepClone(msg, goMsg)
+			gogobz, err := cdc.MarshalJSON(goMsg)
+			require.NoError(t, err, "failed to marshal gogo message")
+			pulsarbz, err := aj.MarshalAmino(msg)
+			require.Equal(t, pulsarbz, gogobz)
 		})
 	}
 }
@@ -306,13 +337,19 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
 	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
 	cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
+	cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	aj := aminojson.NewAminoJSON()
+	addr1 := types.AccAddress([]byte("addr1"))
 
 	cases := map[string]struct {
 		gogo   gogoproto.Message
 		pulsar proto.Message
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
+		"auth/module_account": {
+			gogo:   &authtypes.ModuleAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(addr1)},
+			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}},
+		},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
 			pulsar: &distapi.DelegatorStartingInfo{},
@@ -348,4 +385,14 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)
 		})
 	}
+}
+
+func TestModuleAccount(t *testing.T) {
+	gen := rapidproto.MessageGenerator(&authapi.ModuleAccount{}, rapidproto.GeneratorOptions{})
+	rapid.Check(t, func(t *rapid.T) {
+		msg := gen.Draw(t, "msg")
+		fmt.Printf("msg: %v\n", msg)
+		_, err := aminojson.NewAminoJSON().MarshalAmino(msg)
+		assert.NilError(t, err)
+	})
 }

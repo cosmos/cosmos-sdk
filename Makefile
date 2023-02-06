@@ -3,7 +3,7 @@
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 export VERSION := $(shell echo $(shell git describe --always --match "v*") | sed 's/^v//')
-export TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
+export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -62,7 +62,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-			-X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
 ifeq ($(ENABLE_ROCKSDB),true)
   BUILD_TAGS += rocksdb_build
@@ -369,32 +369,6 @@ format:
 .PHONY: format
 
 ###############################################################################
-###                                 Devdoc                                  ###
-###############################################################################
-
-DEVDOC_SAVE = docker commit `docker ps -a -n 1 -q` devdoc:local
-
-devdoc-init:
-	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" tendermint/devdoc echo
-	# TODO make this safer
-	$(call DEVDOC_SAVE)
-
-devdoc:
-	$(DOCKER) run -it -v "$(CURDIR):/go/src/github.com/cosmos/cosmos-sdk" -w "/go/src/github.com/cosmos/cosmos-sdk" devdoc:local bash
-
-devdoc-save:
-	# TODO make this safer
-	$(call DEVDOC_SAVE)
-
-devdoc-clean:
-	docker rmi -f $$(docker images -f "dangling=true" -q)
-
-devdoc-update:
-	docker pull tendermint/devdoc
-
-.PHONY: devdoc devdoc-clean devdoc-init devdoc-save devdoc-update
-
-###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
 
@@ -422,40 +396,41 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.37.0-rc2/proto/tendermint
+# TODO update/remove after v0.37.x tag of CometBFT
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/387422ac220d/proto/tendermint
 
-TM_CRYPTO_TYPES     = proto/tendermint/crypto
-TM_ABCI_TYPES       = proto/tendermint/abci
-TM_TYPES            = proto/tendermint/types
-TM_VERSION          = proto/tendermint/version
-TM_LIBS             = proto/tendermint/libs/bits
-TM_P2P              = proto/tendermint/p2p
+CMT_CRYPTO_TYPES     = proto/tendermint/crypto
+CMT_ABCI_TYPES       = proto/tendermint/abci
+CMT_TYPES            = proto/tendermint/types
+CMT_VERSION          = proto/tendermint/version
+CMT_LIBS             = proto/tendermint/libs/bits
+CMT_P2P              = proto/tendermint/p2p
 
 proto-update-deps:
 	@echo "Updating Protobuf dependencies"
 
-	@mkdir -p $(TM_ABCI_TYPES)
-	@curl -sSL $(TM_URL)/abci/types.proto > $(TM_ABCI_TYPES)/types.proto
+	@mkdir -p $(CMT_ABCI_TYPES)
+	@curl -sSL $(CMT_URL)/abci/types.proto > $(CMT_ABCI_TYPES)/types.proto
 
-	@mkdir -p $(TM_VERSION)
-	@curl -sSL $(TM_URL)/version/types.proto > $(TM_VERSION)/types.proto
+	@mkdir -p $(CMT_VERSION)
+	@curl -sSL $(CMT_URL)/version/types.proto > $(CMT_VERSION)/types.proto
 
-	@mkdir -p $(TM_TYPES)
-	@curl -sSL $(TM_URL)/types/types.proto > $(TM_TYPES)/types.proto
-	@curl -sSL $(TM_URL)/types/evidence.proto > $(TM_TYPES)/evidence.proto
-	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto
-	@curl -sSL $(TM_URL)/types/validator.proto > $(TM_TYPES)/validator.proto
-	@curl -sSL $(TM_URL)/types/block.proto > $(TM_TYPES)/block.proto
+	@mkdir -p $(CMT_TYPES)
+	@curl -sSL $(CMT_URL)/types/types.proto > $(CMT_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/types/evidence.proto > $(CMT_TYPES)/evidence.proto
+	@curl -sSL $(CMT_URL)/types/params.proto > $(CMT_TYPES)/params.proto
+	@curl -sSL $(CMT_URL)/types/validator.proto > $(CMT_TYPES)/validator.proto
+	@curl -sSL $(CMT_URL)/types/block.proto > $(CMT_TYPES)/block.proto
 
-	@mkdir -p $(TM_CRYPTO_TYPES)
-	@curl -sSL $(TM_URL)/crypto/proof.proto > $(TM_CRYPTO_TYPES)/proof.proto
-	@curl -sSL $(TM_URL)/crypto/keys.proto > $(TM_CRYPTO_TYPES)/keys.proto
+	@mkdir -p $(CMT_CRYPTO_TYPES)
+	@curl -sSL $(CMT_URL)/crypto/proof.proto > $(CMT_CRYPTO_TYPES)/proof.proto
+	@curl -sSL $(CMT_URL)/crypto/keys.proto > $(CMT_CRYPTO_TYPES)/keys.proto
 
-	@mkdir -p $(TM_LIBS)
-	@curl -sSL $(TM_URL)/libs/bits/types.proto > $(TM_LIBS)/types.proto
+	@mkdir -p $(CMT_LIBS)
+	@curl -sSL $(CMT_URL)/libs/bits/types.proto > $(CMT_LIBS)/types.proto
 
-	@mkdir -p $(TM_P2P)
-	@curl -sSL $(TM_URL)/p2p/types.proto > $(TM_P2P)/types.proto
+	@mkdir -p $(CMT_P2P)
+	@curl -sSL $(CMT_URL)/p2p/types.proto > $(CMT_P2P)/types.proto
 
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
 

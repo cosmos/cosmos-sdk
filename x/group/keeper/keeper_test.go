@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -52,7 +52,7 @@ type TestSuite struct {
 }
 
 func (s *TestSuite) SetupTest() {
-	s.blockTime = tmtime.Now()
+	s.blockTime = cmttime.Now()
 	key := storetypes.NewKVStoreKey(group.StoreKey)
 
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))

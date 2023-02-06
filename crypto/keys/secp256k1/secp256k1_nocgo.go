@@ -9,7 +9,7 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
 )
 
 // Sign creates an ECDSA signature on curve Secp256k1, using SHA256 on the msg.

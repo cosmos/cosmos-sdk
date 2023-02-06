@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"

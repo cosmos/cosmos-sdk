@@ -72,6 +72,11 @@ message MsgSubmitProposal {
   //
   // Since: cosmos-sdk 0.47
   string summary = 6;
+
+  // expedided defines if the proposal is expedited or not
+  //
+  // Since: cosmos-sdk 0.48
+  bool expedited = 7;
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.

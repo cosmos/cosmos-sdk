@@ -442,6 +442,7 @@ jobs:
         id: git_diff
         with:
           PATTERNS: |
+            contrib/rosetta/*
             tools/rosetta/**/*.go
             tools/rosetta/go.mod
             tools/rosetta/go.sum
@@ -619,6 +620,8 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.19.4
+          cache: true
+          cache-dependency-path: log/go.sum
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:

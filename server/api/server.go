@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
-	"github.com/tendermint/tendermint/libs/log"
-	tmrpcserver "github.com/tendermint/tendermint/rpc/jsonrpc/server"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -93,13 +93,13 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()
 
-	tmCfg := tmrpcserver.DefaultConfig()
-	tmCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
-	tmCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
-	tmCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
-	tmCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
+	cmtCfg := tmrpcserver.DefaultConfig()
+	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
+	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
+	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
+	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, tmCfg)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, cmtCfg)
 	if err != nil {
 		s.mtx.Unlock()
 		return err
@@ -137,10 +137,10 @@ func (s *Server) Start(cfg config.Config) error {
 	s.logger.Info("starting API server...")
 	if cfg.API.EnableUnsafeCORS {
 		allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-		return tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, tmCfg)
+		return tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), s.logger, cmtCfg)
 	}
 
-	return tmrpcserver.Serve(s.listener, s.Router, s.logger, tmCfg)
+	return tmrpcserver.Serve(s.listener, s.Router, s.logger, cmtCfg)
 }
 
 // Close closes the API server.

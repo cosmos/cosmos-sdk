@@ -1,6 +1,7 @@
 package aminojson_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -114,6 +115,7 @@ func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
+		fmt.Printf("msg: %v\n", msg)
 		bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)

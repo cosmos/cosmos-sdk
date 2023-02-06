@@ -76,4 +76,6 @@ extend google.protobuf.FieldOptions {
   // out := AminoJSONEncoder(&f);
   // out == {"baz":""}
   bool dont_omitempty = 11110005;
+
+  bool embedded = 11110006;
 }

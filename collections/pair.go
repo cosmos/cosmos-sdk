@@ -57,6 +57,10 @@ type pairKeyCodec[K1, K2 any] struct {
 	keyCodec2 KeyCodec[K2]
 }
 
+func (p pairKeyCodec[K1, K2]) KeyCodec1() KeyCodec[K1] { return p.keyCodec1 }
+
+func (p pairKeyCodec[K1, K2]) KeyCodec2() KeyCodec[K2] { return p.keyCodec2 }
+
 func (p pairKeyCodec[K1, K2]) Encode(buffer []byte, pair Pair[K1, K2]) (int, error) {
 	writtenTotal := 0
 	if pair.key1 != nil {

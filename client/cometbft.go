@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 )
 
-// TendermintRPC defines the interface of a Tendermint RPC client needed for
+// CometRPC defines the interface of a CometBFT RPC client needed for
 // queries and transaction handling.
-type TendermintRPC interface {
+type CometRPC interface {
 	rpcclient.ABCIClient
 
 	Validators(ctx context.Context, height *int64, page, perPage *int) (*coretypes.ResultValidators, error)

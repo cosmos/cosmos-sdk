@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/simapp"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +29,7 @@ func init() {
 // to avoid messing with the hooks.
 func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	app.StakingKeeper = keeper.NewKeeper(
 		app.AppCodec(),

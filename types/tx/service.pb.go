@@ -6,11 +6,11 @@ package tx
 import (
 	context "context"
 	fmt "fmt"
+	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	types1 "github.com/tendermint/tendermint/proto/tendermint/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

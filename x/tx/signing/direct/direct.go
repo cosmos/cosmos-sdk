@@ -21,8 +21,8 @@ func (h SignModeHandler) Mode() signingv1beta1.SignMode {
 // GetSignBytes implements signing.SignModeHandler.GetSignBytes.
 func (SignModeHandler) GetSignBytes(_ context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	return proto.Marshal(&txv1beta1.SignDoc{
-		BodyBytes:     txData.TxRaw.BodyBytes,
-		AuthInfoBytes: txData.TxRaw.AuthInfoBytes,
+		BodyBytes:     txData.BodyBytes,
+		AuthInfoBytes: txData.AuthInfoBytes,
 		ChainId:       signerData.ChainId,
 		AccountNumber: signerData.AccountNumber,
 	})

@@ -39,7 +39,7 @@ func TestMessageJsonTestcases(t *testing.T) {
 	tr := textual.NewSignModeHandler(EmptyCoinMetadataQuerier)
 	for i, tc := range testcases {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			rend := textual.NewMessageValueRenderer(&tr, (&testpb.Foo{}).ProtoReflect().Descriptor())
+			rend := textual.NewMessageValueRenderer(tr, (&testpb.Foo{}).ProtoReflect().Descriptor())
 
 			screens, err := rend.Format(context.Background(), protoreflect.ValueOf(tc.Proto.ProtoReflect()))
 			require.NoError(t, err)

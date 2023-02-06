@@ -75,14 +75,10 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	txData := signing.TxData{
-		Tx: &txv1beta1.Tx{
-			Body:     txBody,
-			AuthInfo: authInfo,
-		},
-		TxRaw: &txv1beta1.TxRaw{
-			BodyBytes:     bodyBz,
-			AuthInfoBytes: authInfoBz,
-		},
+		Body:                       txBody,
+		AuthInfo:                   authInfo,
+		BodyBytes:                  bodyBz,
+		AuthInfoBytes:              authInfoBz,
 		BodyHasUnknownNonCriticals: false,
 	}
 
@@ -91,8 +87,8 @@ func TestDirectModeHandler(t *testing.T) {
 	require.NotNil(t, signBytes)
 
 	signBytes2, err := proto.Marshal(&txv1beta1.SignDoc{
-		BodyBytes:     txData.TxRaw.BodyBytes,
-		AuthInfoBytes: txData.TxRaw.AuthInfoBytes,
+		BodyBytes:     txData.BodyBytes,
+		AuthInfoBytes: txData.AuthInfoBytes,
 		ChainId:       chainId,
 		AccountNumber: accNum,
 	})

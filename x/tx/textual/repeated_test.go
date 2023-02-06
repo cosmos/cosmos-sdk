@@ -35,7 +35,7 @@ func TestRepeatedJsonTestcases(t *testing.T) {
 			// Create a context.Context containing all coins metadata, to simulate
 			// that they are in state.
 			ctx := context.Background()
-			rend := textual.NewMessageValueRenderer(&tr, (&testpb.Qux{}).ProtoReflect().Descriptor())
+			rend := textual.NewMessageValueRenderer(tr, (&testpb.Qux{}).ProtoReflect().Descriptor())
 			require.NoError(t, err)
 
 			screens, err := rend.Format(ctx, protoreflect.ValueOf(tc.Proto.ProtoReflect()))

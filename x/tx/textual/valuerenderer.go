@@ -151,8 +151,8 @@ func (r *SignModeHandler) DefineMessageRenderer(name protoreflect.FullName, vr V
 // GetSignBytes returns the transaction sign bytes.
 func (r *SignModeHandler) GetSignBytes(ctx context.Context, signerData signing.SignerData, txData signing.TxData) ([]byte, error) {
 	data := &textualpb.TextualData{
-		BodyBytes:     txData.TxRaw.BodyBytes,
-		AuthInfoBytes: txData.TxRaw.AuthInfoBytes,
+		BodyBytes:     txData.BodyBytes,
+		AuthInfoBytes: txData.AuthInfoBytes,
 		SignerData: &textualpb.SignerData{
 			Address:       signerData.Address,
 			ChainId:       signerData.ChainId,

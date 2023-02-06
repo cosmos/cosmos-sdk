@@ -17,6 +17,7 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
 
+	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/textual"
 	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
@@ -39,7 +40,7 @@ func TestE2EJsonTestcases(t *testing.T) {
 			_, bodyBz, _, authInfoBz, signerData := createTextualData(t, tc.Proto, tc.SignerData)
 
 			tr := textual.NewSignModeHandler(mockCoinMetadataQuerier)
-			rend := textual.NewTxValueRenderer(&tr)
+			rend := textual.NewTxValueRenderer(tr)
 			ctx := addMetadataToContext(context.Background(), tc.Metadata)
 
 			data := &textualpb.TextualData{
@@ -65,7 +66,10 @@ func TestE2EJsonTestcases(t *testing.T) {
 			require.Equal(t, tc.Screens, screens)
 
 			// Make sure CBOR match.
-			signDoc, err := tr.GetSignBytes(ctx, bodyBz, authInfoBz, signerData)
+			signDoc, err := tr.GetSignBytes(ctx, signerData, signing.TxData{
+				BodyBytes:     bodyBz,
+				AuthInfoBytes: authInfoBz,
+			})
 			require.NoError(t, err)
 			require.Equal(t, tc.Cbor, hex.EncodeToString(signDoc))
 

@@ -39,7 +39,7 @@ func TestAny(t *testing.T) {
 			require.NoError(t, err)
 
 			// Format into screens and check vs expected
-			rend := textual.NewAnyValueRenderer((&tr))
+			rend := textual.NewAnyValueRenderer((tr))
 			screens, err := rend.Format(context.Background(), protoreflect.ValueOfMessage(anyMsg.ProtoReflect()))
 			require.NoError(t, err)
 			require.Equal(t, tc.Screens, screens)

@@ -3,10 +3,10 @@ package server
 import (
 	"fmt"
 
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	tversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	tversion "github.com/tendermint/tendermint/version"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/client"

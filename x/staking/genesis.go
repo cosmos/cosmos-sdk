@@ -191,17 +191,18 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 }
 
 // WriteValidators returns a slice of bonded genesis validators.
-func WriteValidators(ctx context.Context, keeper *keeper.Keeper) (vals []GenesisValidator, returnErr error) {
-	err := keeper.LastValidatorPower.Walk(ctx, nil, func(key []byte, _ gogotypes.Int64Value) (bool, error) {
-		validator, err := keeper.GetValidator(ctx, key)
+func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, returnErr error) {
+	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
+		pk, err := validator.ConsPubKey()
 		if err != nil {
-			return true, err
+			returnErr = err
+			return true
 		}
 
 		pk, err := validator.ConsPubKey()
 		if err != nil {
 			returnErr = err
-			return true, err
+			return true
 		}
 
 		vals = append(vals, GenesisValidator{

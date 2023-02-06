@@ -114,7 +114,7 @@ func (dr durationValueRenderer) Format(_ context.Context, v protoreflect.Value) 
 		s = "-" + s
 	}
 
-	return []Screen{{Text: s}}, nil
+	return []Screen{{Content: s}}, nil
 }
 
 var durRegexp = regexp.MustCompile(`^(-)?(?:([0-9]+) days?)?(?:, )?(?:([0-9]+) hours?)?(?:, )?(?:([0-9]+) minutes?)?(?:, )?(?:([0-9]+)(?:\.([0-9]+))? seconds?)?$`)
@@ -125,9 +125,9 @@ func (dr durationValueRenderer) Parse(_ context.Context, screens []Screen) (prot
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	parts := durRegexp.FindStringSubmatch(screens[0].Text)
+	parts := durRegexp.FindStringSubmatch(screens[0].Content)
 	if parts == nil {
-		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", screens[0].Text)
+		return protoreflect.Value{}, fmt.Errorf("bad duration format: %s", screens[0].Content)
 	}
 
 	negative := parts[1] != ""

@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/cometbft/cometbft/rpc/client/mock"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/rpc/client/mock"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -46,7 +45,7 @@ func (mock TxSearchMock) TxSearch(ctx context.Context, query string, prove bool,
 			return nil, err
 		}
 		for _, msg := range sdkTx.GetMsgs() {
-			if msg.(legacytx.LegacyMsg).Type() == msgType {
+			if sdk.MsgTypeURL(msg) == msgType {
 				matchingTxs = append(matchingTxs, tx)
 				break
 			}

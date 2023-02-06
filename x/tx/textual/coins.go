@@ -49,7 +49,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 		return nil, err
 	}
 
-	return []Screen{{Text: formatted}}, nil
+	return []Screen{{Content: formatted}}, nil
 }
 
 func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.Value) ([]Screen, error) {
@@ -74,7 +74,7 @@ func (vr coinsValueRenderer) FormatRepeated(ctx context.Context, v protoreflect.
 		return nil, err
 	}
 
-	return []Screen{{Text: formatted}}, nil
+	return []Screen{{Content: formatted}}, nil
 }
 
 func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (protoreflect.Value, error) {
@@ -82,11 +82,11 @@ func (vr coinsValueRenderer) Parse(ctx context.Context, screens []Screen) (proto
 		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	if screens[0].Text == emptyCoins {
+	if screens[0].Content == emptyCoins {
 		return protoreflect.ValueOfMessage((&basev1beta1.Coin{}).ProtoReflect()), nil
 	}
 
-	parsed, err := vr.parseCoins(ctx, screens[0].Text)
+	parsed, err := vr.parseCoins(ctx, screens[0].Content)
 	if err != nil {
 		return nilValue, err
 	}
@@ -99,11 +99,11 @@ func (vr coinsValueRenderer) ParseRepeated(ctx context.Context, screens []Screen
 		return fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	if screens[0].Text == emptyCoins {
+	if screens[0].Content == emptyCoins {
 		return nil
 	}
 
-	parsed, err := vr.parseCoins(ctx, screens[0].Text)
+	parsed, err := vr.parseCoins(ctx, screens[0].Content)
 	if err != nil {
 		return err
 	}

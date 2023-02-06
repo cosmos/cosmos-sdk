@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
@@ -35,6 +35,10 @@ const (
 	SignModeLegacyAminoJSON = "amino-json"
 	// SignModeDirectAux is the value of the --sign-mode flag for SIGN_MODE_DIRECT_AUX
 	SignModeDirectAux = "direct-aux"
+	// SignModeTextual is the value of the --sign-mode flag for SIGN_MODE_TEXTUAL.
+	// Choosing this flag will result in an error for now, as Textual should be
+	// used only for TESTING purposes for now.
+	SignModeTextual = "textual"
 	// SignModeEIP191 is the value of the --sign-mode flag for SIGN_MODE_EIP_191
 	SignModeEIP191 = "eip-191"
 )

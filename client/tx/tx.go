@@ -309,7 +309,7 @@ func Sign(ctx context.Context, txf Factory, name string, txBuilder client.TxBuil
 	}
 
 	// Sign those bytes
-	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign)
+	sigBytes, _, err := txf.keybase.Sign(name, bytesToSign, signMode)
 	if err != nil {
 		return err
 	}
@@ -409,7 +409,7 @@ func makeAuxSignerData(clientCtx client.Context, f Factory, msgs ...sdk.Msg) (tx
 		return tx.AuxSignerData{}, err
 	}
 
-	sig, _, err := clientCtx.Keyring.Sign(name, signBz)
+	sig, _, err := clientCtx.Keyring.Sign(name, signBz, f.signMode)
 	if err != nil {
 		return tx.AuxSignerData{}, err
 	}

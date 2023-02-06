@@ -7,14 +7,18 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"google.golang.org/protobuf/proto"
+	"cosmossdk.io/x/tx/textual"
+	"cosmossdk.io/x/tx/textual/internal/testpb"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/x/tx/textual"
 	"cosmossdk.io/x/tx/textual/internal/testpb"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func EmptyCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {
@@ -48,7 +52,8 @@ func TestMessageJsonTestcases(t *testing.T) {
 			msg := val.Message().Interface()
 			require.IsType(t, &testpb.Foo{}, msg)
 			foo := msg.(*testpb.Foo)
-			require.True(t, proto.Equal(foo, tc.Proto))
+			diff := cmp.Diff(foo, tc.Proto, protocmp.Transform())
+			require.Empty(t, diff)
 		})
 	}
 }

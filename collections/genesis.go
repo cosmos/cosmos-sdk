@@ -20,13 +20,13 @@ type jsonMapEntry struct {
 }
 
 func (m Map[K, V]) validateGenesis(reader io.Reader) error {
-	return m.doDecodeJson(reader, func(key K, value V) error {
+	return m.doDecodeJSON(reader, func(key K, value V) error {
 		return nil
 	})
 }
 
 func (m Map[K, V]) importGenesis(ctx context.Context, reader io.Reader) error {
-	return m.doDecodeJson(reader, func(key K, value V) error {
+	return m.doDecodeJSON(reader, func(key K, value V) error {
 		return m.Set(ctx, key, value)
 	})
 }
@@ -95,7 +95,7 @@ func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
 	return err
 }
 
-func (m Map[K, V]) doDecodeJson(reader io.Reader, onEntry func(key K, value V) error) error {
+func (m Map[K, V]) doDecodeJSON(reader io.Reader, onEntry func(key K, value V) error) error {
 	decoder := json.NewDecoder(reader)
 	token, err := decoder.Token()
 	if err != nil {
@@ -107,14 +107,14 @@ func (m Map[K, V]) doDecodeJson(reader io.Reader, onEntry func(key K, value V) e
 	}
 
 	for decoder.More() {
-		var rawJson json.RawMessage
-		err := decoder.Decode(&rawJson)
+		var rawJSON json.RawMessage
+		err := decoder.Decode(&rawJSON)
 		if err != nil {
 			return err
 		}
 
 		var mapEntry jsonMapEntry
-		err = json.Unmarshal(rawJson, &mapEntry)
+		err = json.Unmarshal(rawJSON, &mapEntry)
 		if err != nil {
 			return err
 		}

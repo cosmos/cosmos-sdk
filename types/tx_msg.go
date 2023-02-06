@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	fmt "fmt"
+	strings "strings"
 
 	"github.com/cosmos/gogoproto/proto"
 
@@ -101,4 +102,16 @@ func GetMsgFromTypeURL(cdc codec.Codec, input string) (Msg, error) {
 	}
 
 	return msg, nil
+}
+
+// GetModuleNameFromTypeURL assumes that module name is the second element of the msg type URL
+// e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
+// It returns an empty string if the input is not a valid type URL
+func GetModuleNameFromTypeURL(input string) string {
+	moduleName := strings.Split(input, ".")
+	if len(moduleName) > 1 {
+		return moduleName[1]
+	}
+
+	return ""
 }

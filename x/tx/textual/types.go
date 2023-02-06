@@ -8,8 +8,14 @@ import (
 
 // Screen is the abstract unit of Textual rendering.
 type Screen struct {
-	// Text is the text to display - a sequence of Unicode code points.
-	Text string
+	// Title is the text (sequence of Unicode code points) to display first,
+	// generally on the device's title section. It can be empty.
+	Title string
+
+	// Content is the text (sequence of Unicode code points) to display after
+	// the Title, generally on the device's content section. It must be
+	// non-empty.
+	Content string
 
 	// Indent is the indentation level of the screen.
 	// Zero indicates top-level. Should be less than 16.

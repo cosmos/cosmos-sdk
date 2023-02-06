@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -21,7 +21,7 @@ func TestProposalContents(t *testing.T) {
 	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
-	paramChangePool := []simtypes.ParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
+	paramChangePool := []simtypes.LegacyParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(paramChangePool)

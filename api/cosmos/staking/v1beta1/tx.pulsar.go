@@ -7559,7 +7559,7 @@ type MsgUndelegateResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	CompletionTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=completion_time,json=completionTime,proto3" json:"completion_time,omitempty"`
-	// amount returns the amount undelegated coins
+	// amount returns the amount of undelegated coins
 	//
 	// Since: cosmos-sdk 0.48
 	Amount *v1beta1.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`

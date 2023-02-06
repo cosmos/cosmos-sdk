@@ -13,52 +13,75 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	"cosmossdk.io/client/v2/autocli"
-
 	"cosmossdk.io/client/v2/autocli/flag"
 )
 
+var (
+	flagInsecure string = "insecure"
+	flagUpdate   string = "update"
+	flagConfig   string = "config"
+)
+
 func RootCommand() (*cobra.Command, error) {
-	userCfgDir, err := os.UserHomeDir()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return nil, err
 	}
 
-	configDir := path.Join(userCfgDir, DefaultDirName)
-
+	configDir := path.Join(homeDir, DefaultConfigDirName)
 	config, err := LoadConfig(configDir)
 	if err != nil {
 		return nil, err
 	}
 
-	var initChain string
 	cmd := &cobra.Command{
+		Use:   "hubl",
+		Short: "Hubl is a CLI for interacting with Cosmos SDK chains",
+		Long:  "Hubl is a CLI for interacting with Cosmos SDK chains",
+	}
+
+	// add commands
+	commands, err := RemoteCommand(config, configDir)
+	if err != nil {
+		return nil, err
+	}
+	commands = append(commands, InitCommand(config, configDir))
+
+	cmd.AddCommand(commands...)
+	return cmd, nil
+}
+
+func InitCommand(config *Config, configDir string) *cobra.Command {
+	var insecure bool
+
+	cmd := &cobra.Command{
+		Use:   "init [foochain]",
+		Short: "Initialize a new chain",
 		Long: `To configure a new chain just run this command using the --init flag and the name of the chain as it's listed in the chain registry (https://github.com/cosmos/chain-registry).
 If the chain is not listed in the chain registry, you can use any unique name.`,
-		Example: "hubl --init foochain",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if initChain != "" {
-				return reconfigure(configDir, initChain, config)
-			}
+			chainName := strings.ToLower(args[0])
 
-			return cmd.Help()
+			return reconfigure(cmd, config, configDir, chainName)
 		},
 	}
 
-	cmd.Flags().StringVar(&initChain, "init", "", "initialize a new chain with the specified name")
+	cmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow setting up insecure gRPC connection")
+
+	return cmd
+}
+
+func RemoteCommand(config *Config, configDir string) ([]*cobra.Command, error) {
+	commands := []*cobra.Command{}
 
 	for chain, chainConfig := range config.Chains {
+		chain, chainConfig := chain, chainConfig
+
+		// load chain info
 		chainInfo := NewChainInfo(configDir, chain, chainConfig)
-		err = chainInfo.Load(false)
-		if err != nil {
-			cmd.AddCommand(&cobra.Command{
-				Use:   chain,
-				Short: "Unable to load data",
-				Long:  "Unable to load data, reconfiguration needed.",
-				RunE: func(cmd *cobra.Command, args []string) error {
-					fmt.Printf("Error loading chain data for %s: %+v\n", chain, err)
-					return reconfigure(configDir, chain, config)
-				},
-			})
+		if err := chainInfo.Load(false); err != nil {
+			commands = append(commands, RemoteErrorCommand(config, configDir, chain, chainConfig, err))
 			continue
 		}
 
@@ -77,62 +100,87 @@ If the chain is not listed in the chain registry, you can use any unique name.`,
 			AddQueryConnFlags: func(command *cobra.Command) {},
 		}
 
-		var update bool
-		var reconfig bool
+		var (
+			update   bool
+			reconfig bool
+			insecure bool
+		)
 		chainCmd := &cobra.Command{
 			Use:   chain,
 			Short: fmt.Sprintf("Commands for the %s chain", chain),
 			RunE: func(cmd *cobra.Command, args []string) error {
 				if reconfig {
-					return reconfigure(configDir, chain, config)
+					return reconfigure(cmd, config, configDir, chain)
 				} else if update {
-					fmt.Printf("Updating autocli data for %s\n", chain)
-					chainInfo := NewChainInfo(configDir, chain, chainConfig)
-					err := chainInfo.Load(true)
-					return err
+					cmd.Printf("Updating autocli data for %s\n", chain)
+					return chainInfo.Load(true)
 				} else {
 					return cmd.Help()
 				}
 			},
 		}
-		chainCmd.Flags().BoolVar(&update, "update", false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
-		chainCmd.Flags().BoolVar(&reconfig, "config", false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data)")
+		chainCmd.Flags().BoolVar(&update, flagUpdate, false, "update the CLI commands for the selected chain (should be used after every chain upgrade)")
+		chainCmd.Flags().BoolVar(&reconfig, flagConfig, false, "re-configure the selected chain (allows choosing a new gRPC endpoint and refreshes data")
+		chainCmd.Flags().BoolVar(&insecure, flagInsecure, false, "allow re-configuring the selected chain using an insecure gRPC connection")
 
-		err = appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder)
-		if err != nil {
+		if err := appOpts.EnhanceRootCommandWithBuilder(chainCmd, builder); err != nil {
 			return nil, err
 		}
 
-		cmd.AddCommand(chainCmd)
+		commands = append(commands, chainCmd)
 	}
 
-	return cmd, nil
+	return commands, nil
 }
 
-func reconfigure(configDir, chain string, config *Config) error {
-	fmt.Printf("Configuring %s\n", chain)
+func RemoteErrorCommand(config *Config, configDir string, chain string, chainConfig *ChainConfig, err error) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   chain,
+		Short: "Unable to load data",
+		Long:  "Unable to load data, reconfiguration needed.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Printf("Error loading chain data for %s: %+v\n", chain, err)
+
+			return reconfigure(cmd, config, configDir, chain)
+		},
+	}
+
+	cmd.Flags().Bool(flagInsecure, chainConfig.GRPCEndpoints[0].Insecure, "allow setting up insecure gRPC connection")
+
+	return cmd
+}
+
+func reconfigure(cmd *cobra.Command, config *Config, configDir, chain string) error {
+	insecure, _ := cmd.Flags().GetBool(flagInsecure)
+
+	cmd.Printf("Configuring %s\n", chain)
 	endpoint, err := SelectGRPCEndpoints(chain)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Selected: %s\n", endpoint)
+	cmd.Printf("%s endpoint selected\n", endpoint)
 	chainConfig := &ChainConfig{
 		GRPCEndpoints: []GRPCEndpoint{
 			{
 				Endpoint: endpoint,
+				Insecure: insecure,
 			},
 		},
 	}
-	config.Chains[chain] = chainConfig
 
 	chainInfo := NewChainInfo(configDir, chain, chainConfig)
-	err = chainInfo.Load(true)
-	if err != nil {
+	if err = chainInfo.Load(true); err != nil {
 		return err
 	}
 
-	return SaveConfig(configDir, config)
+	config.Chains[chain] = chainConfig
+	if err := SaveConfig(configDir, config); err != nil {
+		return err
+	}
+
+	cmd.Printf("Configuration saved to %s\n", configDir)
+	return nil
 }
 
 type dynamicTypeResolver struct {

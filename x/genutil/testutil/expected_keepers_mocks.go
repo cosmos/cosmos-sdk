@@ -12,7 +12,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/types"
 	exported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	gomock "github.com/golang/mock/gomock"
-	types0 "github.com/tendermint/tendermint/abci/types"
+	types0 "github.com/cometbft/cometbft/abci/types"
 )
 
 // MockStakingKeeper is a mock of StakingKeeper interface.

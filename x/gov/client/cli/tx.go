@@ -20,19 +20,19 @@ import (
 
 // Proposal flags
 const (
+	FlagTitle     = "title"
+	FlagDeposit   = "deposit"
+	flagVoter     = "voter"
+	flagDepositor = "depositor"
+	flagStatus    = "status"
+	FlagMetadata  = "metadata"
+	FlagSummary   = "summary"
 	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagTitle = "title"
+	FlagProposal = "proposal"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDescription = "description"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
-	FlagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagDepositor    = "depositor"
-	flagStatus       = "status"
-	flagMetadata     = "metadata"
-	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagProposal = "proposal"
 )
 
 // ProposalFlags defines the core required fields of a legacy proposal. It is used to
@@ -108,7 +108,8 @@ Where proposal.json contains:
   "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
   "deposit": "10stake"
   "title: "My proposal"
-  "summary": "A short summary of my proposal"
+  "summary": "A short summary of my proposal",
+  "expedited": false
 }
 `,
 				version.AppName,
@@ -120,12 +121,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			proposal, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -322,7 +323,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			metadata, err := cmd.Flags().GetString(flagMetadata)
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
 			if err != nil {
 				return err
 			}
@@ -334,7 +335,7 @@ $ %s tx gov vote 1 yes --from mykey
 		},
 	}
 
-	cmd.Flags().String(flagMetadata, "", "Specify metadata of the vote")
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -377,7 +378,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 				return err
 			}
 
-			metadata, err := cmd.Flags().GetString(flagMetadata)
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
 			if err != nil {
 				return err
 			}
@@ -388,7 +389,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 		},
 	}
 
-	cmd.Flags().String(flagMetadata, "", "Specify metadata of the weighted vote")
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the weighted vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

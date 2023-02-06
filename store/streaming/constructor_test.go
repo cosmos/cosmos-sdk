@@ -3,12 +3,12 @@ package streaming_test
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store/streaming"
-	"github.com/cosmos/cosmos-sdk/store/streaming/file"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/streaming"
+	"cosmossdk.io/store/streaming/file"
+	"cosmossdk.io/store/types"
 )
 
 type fakeOptions struct{}

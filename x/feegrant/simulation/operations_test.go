@@ -5,6 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/keeper"
+	"cosmossdk.io/x/feegrant/simulation"
+	"cosmossdk.io/x/feegrant/testutil"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -14,13 +20,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type SimTestSuite struct {
@@ -89,13 +89,13 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	}{
 		{
 			simulation.DefaultWeightGrantAllowance,
-			feegrant.MsgGrantAllowance{}.Route(),
-			simulation.TypeMsgGrantAllowance,
+			feegrant.ModuleName,
+			sdk.MsgTypeURL(&feegrant.MsgGrantAllowance{}),
 		},
 		{
 			simulation.DefaultWeightRevokeAllowance,
-			feegrant.MsgRevokeAllowance{}.Route(),
-			simulation.TypeMsgRevokeAllowance,
+			feegrant.ModuleName,
+			sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{}),
 		},
 	}
 

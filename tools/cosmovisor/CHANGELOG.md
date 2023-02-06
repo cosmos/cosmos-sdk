@@ -36,6 +36,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## Client Breaking Changes
+
+* [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Cosmovisor supports only upgrade plan with a checksum. This is enforced by the `x/upgrade` module for better security.
+
+## Improvements
+
+* [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to use `x/upgrade` validation logic.
+* [#14881](https://github.com/cosmos/cosmos-sdk/pull/14881) Refactor Cosmovisor to depend only on the `x/upgrade` module.
+
 ## v1.4.0 2022-10-23
 
 ### API Breaking Changes

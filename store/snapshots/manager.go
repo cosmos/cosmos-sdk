@@ -11,10 +11,10 @@ import (
 	"sync"
 
 	sdkerrors "cosmossdk.io/errors"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
-	"github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 // Manager manages snapshot and restore operations for an app, making sure only a single
@@ -26,7 +26,7 @@ import (
 //
 //  1. In the future, ABCI should support streaming. Consider e.g. InitChain during chain
 //     upgrades, which currently passes the entire chain state as an in-memory byte slice.
-//     https://github.com/tendermint/tendermint/issues/5184
+//     https://github.com/cometbft/cometbft/issues/5184
 //
 //  2. io.ReadCloser streams automatically propagate IO errors, and can pass arbitrary
 //     errors via io.Pipe.CloseWithError().

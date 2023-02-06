@@ -10,8 +10,7 @@ func main() {
 		panic(err)
 	}
 
-	err = cmd.Execute()
-	if err != nil {
+	if err = cmd.Execute(); err != nil {
 		panic(err)
 	}
 }

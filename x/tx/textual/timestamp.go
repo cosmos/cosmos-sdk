@@ -32,7 +32,7 @@ func (vr timestampValueRenderer) Format(_ context.Context, v protoreflect.Value)
 
 	// Format the Go Time as RFC 3339.
 	s := t.Format(time.RFC3339Nano)
-	return []Screen{{Text: s}}, nil
+	return []Screen{{Content: s}}, nil
 }
 
 // Parse implements the ValueRenderer interface.
@@ -41,7 +41,7 @@ func (vr timestampValueRenderer) Parse(_ context.Context, screens []Screen) (pro
 	if len(screens) != 1 {
 		return protoreflect.Value{}, fmt.Errorf("expected single screen: %v", screens)
 	}
-	t, err := time.Parse(time.RFC3339Nano, screens[0].Text)
+	t, err := time.Parse(time.RFC3339Nano, screens[0].Content)
 	if err != nil {
 		return protoreflect.Value{}, err
 	}

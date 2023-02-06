@@ -3,9 +3,9 @@ package bank_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -365,6 +365,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
+		false,
 	)
 	require.NoError(t, err, "making goodGovProp")
 	badGovProp, err := govv1.NewMsgSubmitProposal(
@@ -376,6 +377,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 		"set default send enabled to true",
 		"Change send enabled",
 		"Modify send enabled and set to true",
+		false,
 	)
 	require.NoError(t, err, "making badGovProp")
 

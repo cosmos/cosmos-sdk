@@ -132,7 +132,7 @@ func Build(options Options) (Table, error) {
 
 		return &singleton{table}, nil
 	default:
-		return nil, ormerrors.InvalidTableDefinition.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
+		return nil, ormerrors.NoTableDescriptor.Wrapf("missing table descriptor for %s", messageDescriptor.FullName())
 	}
 
 	tableId := tableDesc.Id

@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // ABCIListener interface used to hook into the ABCI message processing of the BaseApp.

@@ -9,10 +9,10 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
@@ -54,10 +54,10 @@ func TestABCI_InitChain(t *testing.T) {
 
 	// set a value in the store on init chain
 	key, value := []byte("hello"), []byte("goodbye")
-	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+	var initChainer sdk.InitChainer = func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 		store := ctx.KVStore(capKey)
 		store.Set(key, value)
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{}, nil
 	}
 
 	query := abci.RequestQuery{
@@ -579,12 +579,12 @@ func TestABCI_EndBlock(t *testing.T) {
 		ConsensusParams: cp,
 	})
 
-	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+	app.SetEndBlocker(func(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 		return abci.ResponseEndBlock{
 			ValidatorUpdates: []abci.ValidatorUpdate{
 				{Power: 100},
 			},
-		}
+		}, nil
 	})
 	app.Seal()
 
@@ -1384,9 +1384,9 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	someKey := []byte("some-key")
 
 	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
-		bapp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		bapp.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
-			return abci.ResponseInitChain{}
+			return abci.ResponseInitChain{}, nil
 		})
 	}
 

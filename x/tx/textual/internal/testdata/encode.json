@@ -8,31 +8,36 @@
         "encoding": "81a0"
     },
     {
-        "screens": [{"text": ""}, {"indent": 0}, {"expert": false}],
+        "screens": [{"content": ""}, {"indent": 0}, {"expert": false}],
         "encoding": "83a0a0a0"
     },
     {
+        "screens": [{"title": ""}, {"content": ""}, {"indent": 0}, {"expert": false}],
+        "encoding": "84a0a0a0a0"
+    },
+    {
         "screens": [
-            {"text": "a"},
+            {"title": "1"},
+            {"content": "a"},
             {"indent": 1},
             {"expert": true}
         ],
-        "encoding": "83a1016161a10201a103f5"
+        "encoding": "84a1016131a1026161a10301a104f5"
     },
     {
         "screens": [
-            {"text": "", "indent": 4, "expert": true},
-            {"text": "a", "indent": 0, "expert": true},
-            {"text": "b", "indent": 5, "expert": false}
+            {"title": "1", "content": "", "indent": 4, "expert": true},
+            {"title": "", "content": "a", "indent": 0, "expert": true},
+            {"title": "2", "content": "b", "indent": 5, "expert": false}
         ],
-        "encoding": "83a2020403f5a201616103f5a20161620205"
+        "encoding": "83a3016131030404f5a202616104f5a30161320261620305"
     },
     {
         "screens": [
-            {"text": "start"},
-            {"text": "middle", "indent": 1},
-            {"text": "end"}
+            {"title": "first", "content": "start"},
+            {"title": "then", "content": "middle", "indent": 1},
+            {"title": "last", "content": "end"}
         ],
-        "encoding": "83a101657374617274a201666d6964646c650201a10163656e64"
+        "encoding": "83a20165666972737402657374617274a301647468656e02666d6964646c650301a201646c6173740263656e64"
     }
 ]

@@ -30,7 +30,7 @@ import (
 type ModuleDB interface {
 	ormtable.Schema
 
-	// AppModuleGenesis returns an implementation of appmodule.HasGenesis
+	// GenesisHandler returns an implementation of appmodule.HasGenesis
 	// to be embedded in or called from app module implementations.
 	// Ex:
 	//   type Keeper struct {
@@ -38,9 +38,9 @@ type ModuleDB interface {
 	//   }
 	//
 	//   func NewKeeper(db ModuleDB) *Keeper {
-	//     return &Keeper{HasGenesis: db.AppModuleGenesis()}
+	//     return &Keeper{HasGenesis: db.GenesisHandler()}
 	//   }
-	AppModuleGenesis() appmodule.HasGenesis
+	GenesisHandler() appmodule.HasGenesis
 
 	private()
 }
@@ -212,7 +212,7 @@ func (m moduleDB) EncodeEntry(entry ormkv.Entry) (k, v []byte, err error) {
 func (m moduleDB) GetTable(message proto.Message) ormtable.Table {
 	return m.tablesByName[message.ProtoReflect().Descriptor().FullName()]
 }
-func (m moduleDB) AppModuleGenesis() appmodule.HasGenesis {
+func (m moduleDB) GenesisHandler() appmodule.HasGenesis {
 	return appModuleGenesisWrapper{m}
 }
 

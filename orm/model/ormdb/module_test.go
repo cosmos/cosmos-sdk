@@ -241,13 +241,13 @@ func TestModuleDB(t *testing.T) {
 
 	// check JSON
 	target := genesis.RawJSONTarget{}
-	assert.NilError(t, db.AppModuleGenesis().DefaultGenesis(target.Target()))
+	assert.NilError(t, db.GenesisHandler().DefaultGenesis(target.Target()))
 	rawJson, err := target.JSON()
 	assert.NilError(t, err)
 	golden.Assert(t, string(rawJson), "default_json.golden")
 
 	target = genesis.RawJSONTarget{}
-	assert.NilError(t, db.AppModuleGenesis().ExportGenesis(ctx, target.Target()))
+	assert.NilError(t, db.GenesisHandler().ExportGenesis(ctx, target.Target()))
 	rawJson, err = target.JSON()
 	assert.NilError(t, err)
 
@@ -256,8 +256,8 @@ func TestModuleDB(t *testing.T) {
 }`
 	source, err := genesis.SourceFromRawJSON(json.RawMessage(goodJSON))
 	assert.NilError(t, err)
-	assert.NilError(t, db.AppModuleGenesis().ValidateGenesis(source))
-	assert.NilError(t, db.AppModuleGenesis().InitGenesis(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
+	assert.NilError(t, db.GenesisHandler().ValidateGenesis(source))
+	assert.NilError(t, db.GenesisHandler().InitGenesis(ormtable.WrapContextDefault(ormtest.NewMemoryBackend()), source))
 
 	badJSON := `{
   "testpb.Balance": 5,
@@ -266,14 +266,14 @@ func TestModuleDB(t *testing.T) {
 `
 	source, err = genesis.SourceFromRawJSON(json.RawMessage(badJSON))
 	assert.NilError(t, err)
-	assert.ErrorIs(t, db.AppModuleGenesis().ValidateGenesis(source), ormerrors.JSONValidationError)
+	assert.ErrorIs(t, db.GenesisHandler().ValidateGenesis(source), ormerrors.JSONValidationError)
 
 	backend2 := ormtest.NewMemoryBackend()
 	ctx2 := ormtable.WrapContextDefault(backend2)
 	source, err = genesis.SourceFromRawJSON(rawJson)
 	assert.NilError(t, err)
-	assert.NilError(t, db.AppModuleGenesis().ValidateGenesis(source))
-	assert.NilError(t, db.AppModuleGenesis().InitGenesis(ctx2, source))
+	assert.NilError(t, db.GenesisHandler().ValidateGenesis(source))
+	assert.NilError(t, db.GenesisHandler().InitGenesis(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
 }
 

@@ -9,6 +9,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/gov/codec"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
@@ -22,8 +23,10 @@ const (
 )
 
 var (
-	_, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
-	_          codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}
+	_, _, _, _ sdk.Msg            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
+	_, _, _, _ legacytx.LegacyMsg = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}
+
+	_ codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -83,12 +86,6 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	return nil
 }
 
-// Route implements the sdk.Msg interface.
-func (m MsgSubmitProposal) Route() string { return types.RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (m MsgSubmitProposal) Type() string { return TypeMsgSubmitProposal }
-
 // ValidateBasic implements the sdk.Msg interface.
 func (m MsgSubmitProposal) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
@@ -140,12 +137,6 @@ func NewMsgDeposit(depositor sdk.AccAddress, proposalID uint64, amount sdk.Coins
 	return &MsgDeposit{proposalID, depositor.String(), amount}
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgDeposit) Route() string { return types.RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgDeposit) Type() string { return TypeMsgDeposit }
-
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgDeposit) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
@@ -180,12 +171,6 @@ func NewMsgVote(voter sdk.AccAddress, proposalID uint64, option VoteOption) *Msg
 	return &MsgVote{proposalID, voter.String(), option}
 }
 
-// Route implements the sdk.Msg interface.
-func (msg MsgVote) Route() string { return types.RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgVote) Type() string { return TypeMsgVote }
-
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgVote) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Voter); err != nil {
@@ -216,12 +201,6 @@ func (msg MsgVote) GetSigners() []sdk.AccAddress {
 func NewMsgVoteWeighted(voter sdk.AccAddress, proposalID uint64, options WeightedVoteOptions) *MsgVoteWeighted {
 	return &MsgVoteWeighted{proposalID, voter.String(), options}
 }
-
-// Route implements the sdk.Msg interface.
-func (msg MsgVoteWeighted) Route() string { return types.RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgVoteWeighted) Type() string { return TypeMsgVoteWeighted }
 
 // ValidateBasic implements the sdk.Msg interface.
 func (msg MsgVoteWeighted) ValidateBasic() error {

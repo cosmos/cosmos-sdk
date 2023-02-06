@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"io"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkerrors "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/internal/kv"
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/internal/kv"
+	"cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
 )
 
 const (
@@ -240,6 +240,11 @@ func (st *Store) DeleteVersions(versions ...int64) error {
 // version, or the latest version below it. Any versions greater than targetVersion will be deleted.
 func (st *Store) LoadVersionForOverwriting(targetVersion int64) (int64, error) {
 	return st.tree.LoadVersionForOverwriting(targetVersion)
+}
+
+// LazyLoadVersionForOverwriting is the lazy version of LoadVersionForOverwriting.
+func (st *Store) LazyLoadVersionForOverwriting(targetVersion int64) (int64, error) {
+	return st.tree.LazyLoadVersionForOverwriting(targetVersion)
 }
 
 // Implements types.KVStore.

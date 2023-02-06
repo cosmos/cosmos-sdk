@@ -13,13 +13,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/version"
 
-	abcitypes "github.com/tendermint/tendermint/abci/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 
 	rosettatypes "github.com/coinbase/rosetta-sdk-go/types"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/tendermint/tendermint/rpc/client/http"
+	"github.com/cometbft/cometbft/rpc/client/http"
 	"google.golang.org/grpc"
 
 	crgerrs "cosmossdk.io/tools/rosetta/lib/errors"
@@ -31,8 +31,8 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	tmrpc "github.com/cometbft/cometbft/rpc/client"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	tmrpc "github.com/tendermint/tendermint/rpc/client"
 )
 
 // interface assertion

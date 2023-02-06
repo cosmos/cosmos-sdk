@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"

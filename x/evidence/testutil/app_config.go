@@ -1,21 +1,20 @@
 package testutil
 
 import (
+	_ "cosmossdk.io/x/evidence" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/evidence"       // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"       // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
-
 	"cosmossdk.io/core/appconfig"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"

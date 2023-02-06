@@ -9,13 +9,13 @@ import (
 	"time"
 
 	sdkerrors "cosmossdk.io/errors"
-	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
-	"github.com/tendermint/tendermint/rpc/client/local"
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
+	"github.com/cometbft/cometbft/rpc/client/local"
+	"github.com/cometbft/cometbft/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
@@ -76,8 +76,17 @@ func startInProcess(cfg Config, val *Validator) error {
 		app.RegisterNodeService(val.ClientCtx)
 	}
 
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+		if err != nil {
+			return err
+		}
+
+		val.grpc = grpcSrv
+	}
+
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		errCh := make(chan error)
@@ -97,21 +106,6 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.api = apiSrv
 	}
 
-	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
-		if err != nil {
-			return err
-		}
-
-		val.grpc = grpcSrv
-
-		if val.AppConfig.GRPCWeb.Enable {
-			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 

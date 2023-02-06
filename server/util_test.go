@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	tmcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	tmcfg "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -382,7 +382,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
-	if "tcp://127.0.0.1:26657" != serverCtx.Config.RPC.ListenAddress { //nolint:stylecheck
+	if serverCtx.Config.RPC.ListenAddress != "tcp://127.0.0.1:26657" {
 		t.Error("RPCListenAddress is not using default")
 	}
 }

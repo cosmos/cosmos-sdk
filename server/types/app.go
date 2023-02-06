@@ -7,17 +7,18 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // ServerStartTime defines the time duration that the server need to stay running after startup

@@ -10,15 +10,16 @@ import (
 	"syscall"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -72,7 +73,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
-	res = app.initChainer(app.deliverState.ctx, req)
+	res, err := app.initChainer(app.deliverState.ctx, req)
+	if err != nil {
+		panic(err)
+	}
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -194,7 +198,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		var err error
+		res, err = app.beginBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
@@ -217,7 +225,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		var err error
+		res, err = app.endBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
@@ -247,14 +259,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // provided by the client's request.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
-// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+// Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
 
 	// Tendermint must never call PrepareProposal with a height of 0.
-	// Ref: https://github.com/tendermint/tendermint/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		panic("PrepareProposal called with invalid height")
 	}
@@ -297,7 +309,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 // handler, it will be recovered and we will reject the proposal.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
-// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+// Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
@@ -722,6 +734,10 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	lastBlockHeight := qms.LatestVersion()
+	if lastBlockHeight == 0 {
+		return sdk.Context{}, sdkerrors.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
+	}
+
 	if height > lastBlockHeight {
 		return sdk.Context{},
 			sdkerrors.Wrap(
@@ -753,9 +769,9 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 	}
 
 	// branch the commit-multistore for safety
-	ctx := sdk.NewContext(
-		cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger,
-	).WithMinGasPrices(app.minGasPrices).WithBlockHeight(height)
+	ctx := sdk.NewContext(cacheMS, app.checkState.ctx.BlockHeader(), true, app.logger).
+		WithMinGasPrices(app.minGasPrices).
+		WithBlockHeight(height)
 
 	return ctx, nil
 }

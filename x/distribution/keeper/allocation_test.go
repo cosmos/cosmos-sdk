@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

@@ -101,10 +101,9 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
-	height, err := s.network.LatestHeight()
+	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
-	s.txHeight = height
+	s.txHeight = resp.Height
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -121,7 +120,6 @@ func (s *E2ETestSuite) TestQueryBySig() {
 	s.Require().NoError(err)
 	s.Require().NotEmpty(resp.TxResponse.TxHash)
 
-	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// get the signature out of the builder

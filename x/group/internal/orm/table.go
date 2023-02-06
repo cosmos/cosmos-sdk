@@ -6,9 +6,10 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/store/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )

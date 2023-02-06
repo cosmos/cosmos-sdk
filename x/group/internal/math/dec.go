@@ -95,7 +95,7 @@ func (x Dec) Cmp(y Dec) int {
 	return x.dec.Cmp(&y.dec)
 }
 
-func (x Dec) IsEqual(y Dec) bool {
+func (x Dec) Equal(y Dec) bool {
 	return x.dec.Cmp(&y.dec) == 0
 }
 

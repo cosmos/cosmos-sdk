@@ -16,12 +16,12 @@ on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
 * **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, proposal enters voting period
+minimum deposit is reached, the proposal enters voting period.
 * **Vote:** Participants can vote on proposals that reached MinDeposit
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
-deposits if the proposal was accepted OR if the proposal never entered voting period.
+deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period, the deposit is burned.
 
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos network.
 Features that may be added in the future are described in [Future Improvements](#future-improvements).
@@ -31,7 +31,6 @@ Features that may be added in the future are described in [Future Improvements](
 The following specification uses *ATOM* as the native staking token. The module
 can be adapted to any Proof-Of-Stake blockchain by replacing *ATOM* with the native
 staking token of the chain.
-
 
 * [Concepts](#concepts)
     * [Proposal submission](#proposal-submission)
@@ -138,18 +137,7 @@ Cosmos Hub, participants are bonded Atom holders. Unbonded Atom holders and
 other users do not get the right to participate in governance. However, they
 can submit and deposit on proposals.
 
-Note that some *participants* can be forbidden to vote on a proposal under a
-certain validator if:
-
-* *participant* bonded or unbonded Atoms to said validator after proposal
-  entered voting period.
-* *participant* became validator after proposal entered voting period.
-
-This does not prevent *participant* to vote with Atoms bonded to other
-validators. For example, if a *participant* bonded some Atoms to validator A
-before a proposal entered voting period and other Atoms to validator B after
-proposal entered voting period, only the vote under validator B will be
-forbidden.
+Note that when *participants* have bonded and unbonded Atoms, their voting power is calculated from their bonded Atom holdings only.
 
 #### Voting period
 
@@ -200,6 +188,10 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Quorum is defined as the minimum percentage of voting power that needs to be
 cast on a proposal for the result to be valid.
 
+### Expedited Proposals
+
+A proposal can be expedited, making the proposal use shorter voting duration and a higher tally threshold by its default. If an expedited proposal fails to meet the threshold within the scope of shorter voting duration, the expedited proposal is then converted to a regular proposal and restarts voting under regular voting conditions.
+
 #### Threshold
 
 Threshold is defined as the minimum proportion of `Yes` votes (excluding
@@ -218,6 +210,8 @@ This means that proposals are accepted iff:
   `Abstain` votes.
 * The proportion of `Yes` votes, excluding `Abstain` votes, at the end of
   the voting period is superior to 1/2.
+
+For expedited proposals, by default, the threshold is higher than with a *normal proposal*, namely, 66.7%.
 
 #### Inheritance
 
@@ -403,7 +397,7 @@ We will use one KVStore `Governance` to store four mappings:
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all 
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
   x/gov params.
 * A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
   us to know if a proposal is in the voting period or not with very low gas cost.
@@ -723,13 +717,13 @@ The governance module emits the following events:
 
 #### MsgVoteWeighted
 
-| Type          | Attribute Key | Attribute Value          |
-| ------------- | ------------- | ------------------------ |
-| proposal_vote | option        | {weightedVoteOptions}    |
-| proposal_vote | proposal_id   | {proposalID}             |
-| message       | module        | governance               |
-| message       | action        | vote                     |
-| message       | sender        | {senderAddress}          |
+| Type          | Attribute Key | Attribute Value       |
+| ------------- | ------------- | --------------------- |
+| proposal_vote | option        | {weightedVoteOptions} |
+| proposal_vote | proposal_id   | {proposalID}          |
+| message       | module        | governance            |
+| message       | action        | vote                  |
+| message       | sender        | {senderAddress}       |
 
 #### MsgDeposit
 
@@ -748,22 +742,17 @@ The governance module emits the following events:
 
 The governance module contains the following parameters:
 
-| Key           | Type   | Example                                                                                            |
-|---------------|--------|----------------------------------------------------------------------------------------------------|
-| depositparams | object | {"min_deposit":[{"denom":"uatom","amount":"10000000"}],"max_deposit_period":"172800000000000"}     |
-| votingparams  | object | {"voting_period":"172800000000000"}                                                                |
-| tallyparams   | object | {"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto":"0.334000000000000000"} |
-
-### SubKeys
-
-| Key                | Type             | Example                                 |
-|--------------------|------------------|-----------------------------------------|
-| min_deposit        | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period | string (time ns) | "172800000000000"                       |
-| voting_period      | string (time ns) | "172800000000000"                       |
-| quorum             | string (dec)     | "0.334000000000000000"                  |
-| threshold          | string (dec)     | "0.500000000000000000"                  |
-| veto               | string (dec)     | "0.334000000000000000"                  |
+| Key                     | Type             | Example                                 |
+| ----------------------- | ---------------- | --------------------------------------- |
+| min_deposit             | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
+| max_deposit_period      | string (time ns) | "172800000000000" (17280s)              |
+| voting_period           | string (time ns) | "172800000000000" (17280s)              |
+| quorum                  | string (dec)     | "0.334000000000000000"                  |
+| threshold               | string (dec)     | "0.500000000000000000"                  |
+| veto                    | string (dec)     | "0.334000000000000000"                  |
+| expedited_threshold     | string (time ns) | "0.667000000000000000"                  |
+| expedited_voting_period | string (time ns) | "86400000000000" (8600s)                |
+| expedited_min_deposit   | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
 
 **NOTE**: The governance module contains parameters that are objects unlike other
 modules. If only a subset of parameters are desired to be changed, only they need
@@ -873,16 +862,32 @@ Example Output:
 
 ```bash
 deposit_params:
-  max_deposit_period: "172800000000000"
+  max_deposit_period: 172800s
   min_deposit:
   - amount: "10000000"
     denom: stake
+params:
+  expedited_min_deposit:
+  - amount: "50000000"
+    denom: stake
+  expedited_threshold: "0.670000000000000000"
+  expedited_voting_period: 86400s
+  max_deposit_period: 172800s
+  min_deposit:
+  - amount: "10000000"
+    denom: stake
+  min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_burn_rate: "0.500000000000000000"
+  quorum: "0.334000000000000000"
+  threshold: "0.500000000000000000"
+  veto_threshold: "0.334000000000000000"
+  voting_period: 172800s
 tally_params:
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
 voting_params:
-  voting_period: "172800000000000"
+  voting_period: 172800s
 ```
 
 ##### proposal
@@ -1175,28 +1180,6 @@ Example:
 simd tx gov submit-legacy-proposal --title="Test Proposal" --description="testing" --type="Text" --deposit="100000000stake" --from cosmos1..
 ```
 
-Example (`cancel-software-upgrade`):
-
-```bash
-simd tx gov submit-legacy-proposal cancel-software-upgrade --title="Test Proposal" --description="testing" --deposit="100000000stake" --from cosmos1..
-```
-
-Example (`community-pool-spend`):
-
-```bash
-simd tx gov submit-legacy-proposal community-pool-spend proposal.json --from cosmos1..
-```
-
-```json
-{
-  "title": "Test Proposal",
-  "description": "testing, 1, 2, 3",
-  "recipient": "cosmos1..",
-  "amount": "10000000stake",
-  "deposit": "10000000stake"
-}
-```
-
 Example (`param-change`):
 
 ```bash
@@ -1218,10 +1201,18 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 }
 ```
 
-Example (`software-upgrade`):
+#### cancel-proposal
+
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
 
 ```bash
-simd tx gov submit-legacy-proposal software-upgrade v2 --title="Test Proposal" --description="testing, testing, 1, 2, 3" --upgrade-height 1000000 --from cosmos1..
+simd tx gov cancel-proposal [proposal-id] [flags]
+```
+
+Example:
+
+```bash
+simd tx gov cancel-proposal 1 --from cosmos1...
 ```
 
 ##### vote
@@ -1352,7 +1343,6 @@ Example Output:
   }
 }
 ```
-
 
 #### Proposals
 
@@ -2589,7 +2579,6 @@ Example Output:
   }
 }
 ```
-
 
 ## Metadata
 

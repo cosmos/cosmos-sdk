@@ -6,16 +6,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/testutil"
 	"github.com/cosmos/cosmos-sdk/x/params/types"

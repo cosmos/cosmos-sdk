@@ -102,7 +102,7 @@ Finally, a few more important parameters:
 * `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
   **local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the
   `AnteHandler` during [`CheckTx`](#checktx), mainly as a spam protection mechanism. The transaction
-  enters the [mempool](https://docs.tendermint.com/master/tendermint-core/mempool/)
+  enters the [mempool](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#mempool-methods)
   only if the gas prices of the transaction are greater than one of the minimum gas price in
   `minGasPrices` (e.g. if `minGasPrices == 1uatom,1photon`, the `gas-price` of the transaction must be
   greater than `1uatom` OR `1photon`).
@@ -130,20 +130,21 @@ Naturally, developers can add additional `options` based on their application's 
 
 ## State Updates
 
-The `BaseApp` maintains two primary volatile states and a root or main state. The main state
-is the canonical state of the application and the volatile states, `checkState` and `deliverState`,
+The `BaseApp` maintains four primary volatile states and a root or main state. The main state
+is the canonical state of the application and the volatile states, `checkState`, `deliverState`, `prepareProposalState`, `processPreposalState`,
 are used to handle state transitions in-between the main state made during [`Commit`](#commit).
 
 Internally, there is only a single `CommitMultiStore` which we refer to as the main or root state.
-From this root state, we derive two volatile states by using a mechanism called _store branching_ (performed by `CacheWrap` function).
+From this root state, we derive four volatile states by using a mechanism called _store branching_ (performed by `CacheWrap` function).
 The types can be illustrated as follows:
 
-![Types](./baseapp_state_types.png)
+![Types](./baseapp_state.png)
 
 ### InitChain State Updates
 
-During `InitChain`, the two volatile states, `checkState` and `deliverState` are set by branching
-the root `CommitMultiStore`. Any subsequent reads and writes happen on branched versions of the `CommitMultiStore`.
+During `InitChain`, the four volatile states, `checkState`, `prepareProposalState`, `processProposalState` 
+and `deliverState` are set by branching the root `CommitMultiStore`. Any subsequent reads and writes happen 
+on branched versions of the `CommitMultiStore`.
 To avoid unnecessary roundtrip to the main state, all reads to the branched store are cached.
 
 ![InitChain](./baseapp_state-initchain.png)
@@ -151,13 +152,37 @@ To avoid unnecessary roundtrip to the main state, all reads to the branched stor
 ### CheckTx State Updates
 
 During `CheckTx`, the `checkState`, which is based off of the last committed state from the root
-store, is used for any reads and writes.  Here we only execute the `AnteHandler` and verify a service router
+store, is used for any reads and writes. Here we only execute the `AnteHandler` and verify a service router
 exists for every message in the transaction. Note, when we execute the `AnteHandler`, we branch
 the already branched `checkState`.
 This has the side effect that if the `AnteHandler` fails, the state transitions won't be reflected in the `checkState`
 -- i.e. `checkState` is only updated on success.
 
 ![CheckTx](./baseapp_state-checktx.png)
+
+### PrepareProposal State Updates
+
+During `PrepareProposal`, the `prepareProposalState` is set by branching the root `CommitMultiStore`. 
+The `prepareProposalState` is used for any reads and writes that occur during the `PrepareProposal` phase.
+The function uses the `Select()` method of the mempool to iterate over the transactions. `runTx` is then called,
+which encodes and validates each transaction and from there the `AnteHandler` is executed. 
+If successful, valid transactions are returned inclusive of the events, tags, and data generated 
+during the execution of the proposal. 
+The described behavior is that of the default handler, applications have the flexibility to define their own 
+[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+
+![ProcessProposal](./baseapp_state-prepareproposal.png)
+
+### ProcessProposal State Updates
+
+During `ProcessProposal`, the `processProposalState` is set based off of the last committed state 
+from the root store and is used to process a signed proposal received from a validator.
+In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
+from the header and the main state, including the minimum gas prices, which are also set. 
+Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
+[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+
+![ProcessProposal](./baseapp_state-processproposal.png)
 
 ### BeginBlock State Updates
 
@@ -212,9 +237,9 @@ Similar to `sdk.Msg`s, [`queries`](../building-modules/02-messages-and-queries.m
 
 Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all the query routes using the application's [module manager](../building-modules/01-module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../basics/00-app-anatomy.md#app-constructor).
 
-## Main ABCI Messages
+## Main ABCI 1.0 Messages
 
-The [Application-Blockchain Interface](https://docs.tendermint.com/master/spec/abci/) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like Tendermint.
+The [Application-Blockchain Interface](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like Tendermint.
 
 The consensus engine handles two main tasks:
 
@@ -223,7 +248,63 @@ The consensus engine handles two main tasks:
 
 It is **not** the role of the consensus engine to define the state or the validity of transactions. Generally, transactions are handled by the consensus engine in the form of `[]bytes`, and relayed to the application via the ABCI to be decoded and processed. At keys moments in the networking and consensus processes (e.g. beginning of a block, commit of a block, reception of an unconfirmed transaction, ...), the consensus engine emits ABCI messages for the state-machine to act on.
 
-Developers building on top of the Cosmos SDK need not implement the ABCI themselves, as `BaseApp` comes with a built-in implementation of the interface. Let us go through the main ABCI messages that `BaseApp` implements: [`CheckTx`](#checktx) and [`DeliverTx`](#delivertx)
+Developers building on top of the Cosmos SDK need not implement the ABCI themselves, as `BaseApp` comes with a built-in implementation of the interface. Let us go through the main ABCI messages that `BaseApp` implements:
+
+* [`Prepare Proposal`](#prepare-proposal)
+* [`Process Proposal`](#process-proposal)
+* [`CheckTx`](#checktx)
+* [`DeliverTx`](#delivertx)
+
+
+### Prepare Proposal
+
+The `PrepareProposal` function is part of the new methods introduced in Application Blockchain Interface (ABCI++) in Tendermint and is an important part of the application's overall governance system. In the Cosmos SDK, it allows the application to have more fine-grained control over the transactions that are processed, and ensures that only valid transactions are committed to the blockchain.
+
+Here is how the `PrepareProposal` function can be implemented:
+
+1.  Extract the `sdk.Msg`s from the transaction.
+2.  Perform _stateful_ checks by calling `Validate()` on each of the `sdk.Msg`'s. This is done after _stateless_ checks as _stateful_ checks are more computationally expensive. If `Validate()` fails, `PrepareProposal` returns before running further checks, which saves resources.
+3.  Perform any additional checks that are specific to the application, such as checking account balances, or ensuring that certain conditions are met before a transaction is proposed.hey are processed by the consensus engine, if necessary.
+5.  Return the updated transactions to be processed by the consensus engine
+
+Note that, unlike `CheckTx()`, `PrepareProposal` process `sdk.Msg`s, so it can directly update the state. However, unlike `DeliverTx()`, it does not commit the state updates. It's important to exercise caution when using `PrepareProposal` as incorrect coding could affect the overall liveness of the network.
+
+It's important to note that `PrepareProposal` complements the `ProcessProposal` method which is executed after this method. The combination of these two methods means that it is possible to guarantee that no invalid transactions are ever committed. Furthermore, such a setup can give rise to other interesting use cases such as Oracles, threshold decryption and more.
+
+`PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+
+*   `Code (uint32)`: Response Code. `0` if successful.
+*   `Data ([]byte)`: Result bytes, if any.
+*   `Log (string):` The output of the application's logger. May be non-deterministic.
+*   `Info (string):` Additional information. May be non-deterministic.
+
+
+### Process Proposal
+
+The `ProcessProposal` function is called by the BaseApp as part of the ABCI message flow, and is executed during the `BeginBlock` phase of the consensus process. The purpose of this function is to give more control to the application for block validation, allowing it to check all transactions in a proposed block before the validator sends the prevote for the block. It allows a validator to perform application-dependent work in a proposed block, enabling features such as immediate block execution, and allows the Application to reject invalid blocks.
+
+The `ProcessProposal` function performs several key tasks, including:
+
+1.  Validating the proposed block by checking all transactions in it.
+2.  Checking the proposed block against the current state of the application, to ensure that it is valid and that it can be executed.
+3.  Updating the application's state based on the proposal, if it is valid and passes all checks.
+4.  Returning a response to Tendermint indicating the result of the proposal processing.
+
+The `ProcessProposal` is an important part of the application's overall governance system. It is used to manage the network's parameters and other key aspects of its operation. It also ensures that the coherence property is adhered to i.e. all honest validators must accept a proposal by an honest proposer.
+
+It's important to note that `ProcessProposal` complements the `PrepareProposal` method which enables the application to have more fine-grained transaction control by allowing it to reorder, drop, delay, modify, and even add transactions as they see necessary. The combination of these two methods means that it is possible to guarantee that no invalid transactions are ever committed. Furthermore, such a setup can give rise to other interesting use cases such as Oracles, threshold decryption and more.
+
+Tendermint calls it when it receives a proposal and the Tendermint algorithm has not locked on a value. The Application cannot modify the proposal at this point but can reject it if it is invalid. If that is the case, Tendermint will prevote `nil` on the proposal, which has strong liveness implications for Tendermint. As a general rule, the Application SHOULD accept a prepared proposal passed via `ProcessProposal`, even if a part of the proposal is invalid (e.g., an invalid transaction); the Application can ignore the invalid part of the prepared proposal at block execution time.
+
+However, developers must exercise greater caution when using these methods. Incorrectly coding these methods could affect liveness as Tendermint is unable to receive 2/3 valid precommits to finalize a block.
+
+`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+
+*   `Code (uint32)`: Response Code. `0` if successful.
+*   `Data ([]byte)`: Result bytes, if any.
+*   `Log (string):` The output of the application's logger. May be non-deterministic.
+*   `Info (string):` Additional information. May be non-deterministic.
+
 
 ### CheckTx
 
@@ -263,7 +344,7 @@ be rejected. In any case, the sender's account will not actually pay the fees un
 is actually included in a block, because `checkState` never gets committed to the main state. The
 `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://docs.tendermint.com/master/spec/abci/abci.html#checktx-2).
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#checktx).
 The response contains:
 
 * `Code (uint32)`: Response Code. `0` if successful.
@@ -308,7 +389,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/store/types/gas.go#L230-L2
 
 At any point, if `GasConsumed > GasWanted`, the function returns with `Code != 0` and `DeliverTx` fails.
 
-`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseDeliverTx`](https://docs.tendermint.com/master/spec/abci/abci.html#delivertx-2). The response contains:
+`DeliverTx` returns a response to the underlying consensus engine of type [`abci.ResponseDeliverTx`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#delivertx). The response contains:
 
 * `Code (uint32)`: Response Code. `0` if successful.
 * `Data ([]byte)`: Result bytes, if any.
@@ -380,9 +461,9 @@ Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effec
 
 ### InitChain
 
-The [`InitChain` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#initchain) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
+The [`InitChain` ABCI message](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying Tendermint engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
-* [Consensus Parameters](https://docs.tendermint.com/master/spec/abci/apps.html#consensus-parameters) via `setConsensusParams`.
+* [Consensus Parameters](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_app_requirements.md#consensus-parameters) via `setConsensusParams`.
 * [`checkState` and `deliverState`](#state-updates) via `setState`.
 * The [block gas meter](../basics/04-gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
@@ -390,7 +471,7 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 
 ### BeginBlock
 
-The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#beginblock) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
+The [`BeginBlock` ABCI message](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying Tendermint engine when a block proposal created by the correct proposer is received, before [`DeliverTx`](#delivertx) is run for each transaction in the block. It allows developers to have logic be executed at the beginning of each block. In the Cosmos SDK, the `BeginBlock(req abci.RequestBeginBlock)` method does the following:
 
 * Initialize [`deliverState`](#state-updates) with the latest header using the `req abci.RequestBeginBlock` passed as parameter via the `setState` function.
 
@@ -402,15 +483,15 @@ The [`BeginBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abc
 
 * Initialize the [block gas meter](../basics/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`BeginBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
-* Set the [`VoteInfos`](https://docs.tendermint.com/master/spec/abci/abci.html#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during `DeliverTx` and `EndBlock`.
+* Set the [`VoteInfos`](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_methods.md#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during `DeliverTx` and `EndBlock`.
 
 ### EndBlock
 
-The [`EndBlock` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#endblock) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction in the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
+The [`EndBlock` ABCI message](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying Tendermint engine after [`DeliverTx`](#delivertx) as been run for each transaction in the block. It allows developers to have logic be executed at the end of each block. In the Cosmos SDK, the bulk `EndBlock(req abci.RequestEndBlock)` method is to run the application's [`EndBlocker()`](../basics/00-app-anatomy.md#beginblocker-and-endblock), which mainly runs the [`EndBlocker()`](../building-modules/05-beginblock-endblock.md#beginblock) method of each of the application's modules.
 
 ### Commit
 
-The [`Commit` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#commit) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occurred during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
+The [`Commit` ABCI message](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying Tendermint engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.ResponseCommit)` function is implemented to commit all the valid state transitions that occurred during `BeginBlock`, `DeliverTx` and `EndBlock` and to reset state for the next block.
 
 To commit state-transitions, the `Commit` function calls the `Write()` function on `deliverState.ms`, where `deliverState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `deliverState.ctx.BlockHeader`) and `deliverState` to `nil`.
 
@@ -418,15 +499,14 @@ Finally, `Commit` returns the hash of the commitment of `app.cms` back to the un
 
 ### Info
 
-The [`Info` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#info) is a simple query from the underlying consensus engine, notably used to sync the latter with the application during a handshake that happens on startup. When called, the `Info(res abci.ResponseInfo)` function from `BaseApp` will return the application's name, version and the hash of the last commit of `app.cms`.
+The [`Info` ABCI message](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#info-methods) is a simple query from the underlying consensus engine, notably used to sync the latter with the application during a handshake that happens on startup. When called, the `Info(res abci.ResponseInfo)` function from `BaseApp` will return the application's name, version and the hash of the last commit of `app.cms`.
 
 ### Query
 
-The [`Query` ABCI message](https://docs.tendermint.com/master/spec/abci/abci.html#query-2) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It used to be the main entrypoint to build interfaces with the application, but with the introduction of [gRPC queries](../building-modules/04-query-services.md) in Cosmos SDK v0.40, its usage is more limited. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://docs.tendermint.com/master/spec/abci/apps.html#query).
+The [`Query` ABCI message](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#info-methods) is used to serve queries received from the underlying consensus engine, including queries received via RPC like Tendermint RPC. It used to be the main entrypoint to build interfaces with the application, but with the introduction of [gRPC queries](../building-modules/04-query-services.md) in Cosmos SDK v0.40, its usage is more limited. The application must respect a few rules when implementing the `Query` method, which are outlined [here](https://github.com/tendermint/tendermint/blob/v0.37.x/spec/abci/abci++_app_requirements.md#query).
 
 Each Tendermint `query` comes with a `path`, which is a `string` which denotes what to query. If the `path` matches a gRPC fully-qualified service method, then `BaseApp` will defer the query to the `grpcQueryRouter` and let it handle it like explained [above](#grpc-query-router). Otherwise, the `path` represents a query that is not (yet) handled by the gRPC router. `BaseApp` splits the `path` string with the `/` delimiter. By convention, the first element of the split string (`split[0]`) contains the category of `query` (`app`, `p2p`, `store` or `custom` ). The `BaseApp` implementation of the `Query(req abci.RequestQuery)` method is a simple dispatcher serving these 4 main categories of queries:
 
 * Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 * Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queries are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.
 * P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `BaseApp`'s [constructor](#constructor).
-* Custom queries, which encompass legacy queries (before the introduction of gRPC queries), are served via the `handleQueryCustom` method. The `handleQueryCustom` branches the multistore before using the `queryRoute` obtained from `app.queryRouter` to map the query to the appropriate module's [legacy `querier`](../building-modules/04-query-services.md#legacy-queriers).

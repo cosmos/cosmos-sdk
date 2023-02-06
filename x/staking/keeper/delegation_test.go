@@ -260,7 +260,7 @@ func (s *KeeperTestSuite) TestUndelegateSelfDelegationBelowMinSelfDelegation() {
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(keeper.TokensFromConsensusPower(ctx, 6)))
+	_, _, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(keeper.TokensFromConsensusPower(ctx, 6)))
 	require.NoError(err)
 
 	// end block
@@ -315,8 +315,9 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	// unbond the all self-delegation to put validator in unbonding state
 	val0AccAddr := sdk.AccAddress(addrVals[0])
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
+	_, amount, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(err)
+	require.Equal(amount, delTokens)
 
 	// end block
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
@@ -334,8 +335,10 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondingValidator() {
 	ctx = ctx.WithBlockTime(blockTime2)
 
 	// unbond some of the other delegation's shares
-	_, err = keeper.Undelegate(ctx, addrDels[1], addrVals[0], math.LegacyNewDec(6))
+	undelegateAmount := math.LegacyNewDec(6)
+	_, undelegatedAmount, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], undelegateAmount)
 	require.NoError(err)
+	require.Equal(math.LegacyNewDecFromInt(undelegatedAmount), undelegateAmount)
 
 	// retrieve the unbonding delegation
 	ubd, found := keeper.GetUnbondingDelegation(ctx, addrDels[1], addrVals[0])
@@ -382,8 +385,9 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
+	_, amount, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
 	require.NoError(err)
+	require.Equal(amount, valTokens)
 
 	// end block
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
@@ -406,13 +410,15 @@ func (s *KeeperTestSuite) TestUndelegateFromUnbondedValidator() {
 
 	// unbond some of the other delegation's shares
 	unbondTokens := keeper.TokensFromConsensusPower(ctx, 6)
-	_, err = keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(unbondTokens))
+	_, amount2, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(unbondTokens))
 	require.NoError(err)
+	require.Equal(amount2, unbondTokens)
 
 	// unbond rest of the other delegation's shares
 	remainingTokens := delTokens.Sub(unbondTokens)
-	_, err = keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(remainingTokens))
+	_, amount3, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(remainingTokens))
 	require.NoError(err)
+	require.Equal(amount3, remainingTokens)
 
 	//  now validator should be deleted from state
 	validator, found = keeper.GetValidator(ctx, addrVals[0])
@@ -458,16 +464,18 @@ func (s *KeeperTestSuite) TestUnbondingAllDelegationFromValidator() {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
+	_, amount, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(valTokens))
 	require.NoError(err)
+	require.Equal(amount, valTokens)
 
 	// end block
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
 	s.applyValidatorSetUpdates(ctx, keeper, 1)
 
 	// unbond all the remaining delegation
-	_, err = keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(delTokens))
+	_, amount2, err := keeper.Undelegate(ctx, addrDels[1], addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(err)
+	require.Equal(amount2, delTokens)
 
 	// validator should still be in state and still be in unbonding state
 	validator, found := keeper.GetValidator(ctx, addrVals[0])
@@ -744,8 +752,9 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondingValidator() {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
+	_, amount, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(err)
+	require.Equal(amount, delTokens)
 
 	// end block
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
@@ -820,8 +829,9 @@ func (s *KeeperTestSuite) TestRedelegateFromUnbondedValidator() {
 
 	// unbond the all self-delegation to put validator in unbonding state
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())
-	_, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
+	_, amount, err := keeper.Undelegate(ctx, val0AccAddr, addrVals[0], sdk.NewDecFromInt(delTokens))
 	require.NoError(err)
+	require.Equal(amount, delTokens)
 
 	// end block
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, gomock.Any())

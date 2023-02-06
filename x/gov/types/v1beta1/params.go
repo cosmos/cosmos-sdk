@@ -37,7 +37,7 @@ func DefaultDepositParams() DepositParams {
 
 // Equal checks equality of DepositParams
 func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return dp.MinDeposit.IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
+	return dp.MinDeposit.Equal(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
 }
 
 // NewTallyParams creates a new TallyParams object

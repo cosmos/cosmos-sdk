@@ -7,9 +7,9 @@ import (
 	"io"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,11 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 
-	"github.com/cosmos/cosmos-sdk/x/nft/client/cli"
-	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/client/cli"
+	nftmodule "cosmossdk.io/x/nft/module"
+	nfttestutil "cosmossdk.io/x/nft/testutil"
 )
 
 const (

@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	"cosmossdk.io/depinject"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"

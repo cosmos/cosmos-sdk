@@ -16,24 +16,25 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	tmflags "github.com/cometbft/cometbft/libs/cli/flags"
+	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcfg "github.com/tendermint/tendermint/config"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
-	tmlog "github.com/tendermint/tendermint/libs/log"
+
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -473,5 +474,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 				mempool.SenderNonceMaxTxOpt(cast.ToInt(appOpts.Get(FlagMempoolMaxTxs))),
 			),
 		),
+		baseapp.SetIAVLLazyLoading(cast.ToBool(appOpts.Get(FlagIAVLLazyLoading))),
 	}
 }

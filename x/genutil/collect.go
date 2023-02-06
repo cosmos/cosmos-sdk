@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	cfg "github.com/tendermint/tendermint/config"
-	tmtypes "github.com/tendermint/tendermint/types"
+	cfg "github.com/cometbft/cometbft/config"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -135,21 +135,22 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		// TODO abstract out staking message validation back to staking
 		msg := msgs[0].(*stakingtypes.MsgCreateValidator)
 
-		// validate delegator and validator addresses and funds against the accounts in the state
-		delAddr := msg.DelegatorAddress
+		// validate validator addresses and funds against the accounts in the state
 		valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 
-		delBal, delOk := balancesMap[delAddr]
+		valAccAddr := sdk.AccAddress(valAddr).String()
+
+		delBal, delOk := balancesMap[valAccAddr]
 		if !delOk {
 			_, file, no, ok := runtime.Caller(1)
 			if ok {
 				fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
 			}
 
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", delAddr, balancesMap)
+			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
 		}
 
 		_, valOk := balancesMap[sdk.AccAddress(valAddr).String()]

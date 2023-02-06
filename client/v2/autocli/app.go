@@ -63,6 +63,10 @@ func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
 		AddQueryConnFlags: flags.AddQueryFlagsToCmd,
 	}
 
+	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)
+}
+
+func (appOptions AppOptions) EnhanceRootCommandWithBuilder(rootCmd *cobra.Command, builder *Builder) error {
 	moduleOptions := appOptions.ModuleOptions
 	if moduleOptions == nil {
 		moduleOptions = map[string]*autocliv1.ModuleOptions{}

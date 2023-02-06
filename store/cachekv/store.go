@@ -6,14 +6,14 @@ import (
 	"sort"
 	"sync"
 
+	"cosmossdk.io/math"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/math"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv/internal"
-	"github.com/cosmos/cosmos-sdk/store/internal/conv"
-	"github.com/cosmos/cosmos-sdk/store/internal/kv"
-	"github.com/cosmos/cosmos-sdk/store/tracekv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/cachekv/internal"
+	"cosmossdk.io/store/internal/conv"
+	"cosmossdk.io/store/internal/kv"
+	"cosmossdk.io/store/tracekv"
+	"cosmossdk.io/store/types"
 )
 
 // cValue represents a cached value.
@@ -69,12 +69,11 @@ func (store *Store) Get(key []byte) (value []byte) {
 
 // Set implements types.KVStore.
 func (store *Store) Set(key []byte, value []byte) {
-	store.mtx.Lock()
-	defer store.mtx.Unlock()
-
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
 	store.setCacheValue(key, value, true)
 }
 
@@ -86,10 +85,11 @@ func (store *Store) Has(key []byte) bool {
 
 // Delete implements types.KVStore.
 func (store *Store) Delete(key []byte) {
+	types.AssertValidKey(key)
+
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	types.AssertValidKey(key)
 	store.setCacheValue(key, nil, true)
 }
 
@@ -332,9 +332,9 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// if below minSortSize, expand it to cover additional values
 	// this amortizes the cost of processing elements across multiple calls
 	if endIndex-startIndex < minSortSize {
-		endIndex = math.MinInt(startIndex+minSortSize, len(strL)-1)
+		endIndex = math.Min(startIndex+minSortSize, len(strL)-1)
 		if endIndex-startIndex < minSortSize {
-			startIndex = math.MaxInt(endIndex-minSortSize, 0)
+			startIndex = math.Max(endIndex-minSortSize, 0)
 		}
 	}
 

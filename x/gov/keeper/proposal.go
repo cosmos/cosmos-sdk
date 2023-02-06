@@ -3,9 +3,11 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"time"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -13,7 +15,7 @@ import (
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress) (v1.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
 		return v1.Proposal{}, err
@@ -85,7 +87,7 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := keeper.GetParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, metadata, submitTime, submitTime.Add(*depositPeriod), title, summary, proposer)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, expedited)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -106,6 +108,57 @@ func (keeper Keeper) SubmitProposal(ctx sdk.Context, messages []sdk.Msg, metadat
 	)
 
 	return proposal, nil
+}
+
+// CancelProposal will cancel proposal before the voting period ends
+func (keeper Keeper) CancelProposal(ctx sdk.Context, proposalID uint64, proposer string) error {
+	proposal, ok := keeper.GetProposal(ctx, proposalID)
+	if !ok {
+		return sdkerrors.Wrapf(types.ErrProposalNotFound, "proposal_id %d", proposalID)
+	}
+
+	// Checking proposal have proposer or not because old proposal doesn't have proposer field,
+	// https://github.com/cosmos/cosmos-sdk/blob/v0.46.2/proto/cosmos/gov/v1/gov.proto#L43
+	if proposal.Proposer == "" {
+		return types.ErrInvalidProposal.Wrapf("proposal %d doesn't have proposer %s, so cannot be canceled", proposalID, proposer)
+	}
+
+	// Check creator of the proposal
+	if proposal.Proposer != proposer {
+		return types.ErrInvalidProposer.Wrapf("invalid proposer %s", proposer)
+	}
+
+	// Check if proposal is active or not
+	if (proposal.Status != v1.StatusDepositPeriod) && (proposal.Status != v1.StatusVotingPeriod) {
+		return types.ErrInvalidProposal.Wrap("proposal should be in the deposit or voting period")
+	}
+
+	// Check proposal voting period is ended.
+	if proposal.VotingEndTime != nil && proposal.VotingEndTime.Before(ctx.BlockTime()) {
+		return types.ErrVotingPeriodEnded.Wrapf("voting period is already ended for this proposal %d", proposalID)
+	}
+
+	// burn the (deposits * proposal_cancel_rate) amount or sent to cancellation destination address.
+	// and deposits * (1 - proposal_cancel_rate) will be sent to depositors.
+	params := keeper.GetParams(ctx)
+	err := keeper.ChargeDeposit(ctx, proposal.Id, params.ProposalCancelDest, params.ProposalCancelRatio)
+	if err != nil {
+		return err
+	}
+
+	if proposal.VotingStartTime != nil {
+		keeper.deleteVotes(ctx, proposal.Id)
+	}
+
+	keeper.DeleteProposal(ctx, proposal.Id)
+
+	keeper.Logger(ctx).Info(
+		"proposal is canceled by proposer",
+		"proposal", proposal.Id,
+		"proposer", proposal.Proposer,
+	)
+
+	return nil
 }
 
 // GetProposal gets a proposal from store by ProposalID.
@@ -262,7 +315,12 @@ func (keeper Keeper) SetProposalID(ctx sdk.Context, proposalID uint64) {
 func (keeper Keeper) ActivateVotingPeriod(ctx sdk.Context, proposal v1.Proposal) {
 	startTime := ctx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
-	votingPeriod := keeper.GetParams(ctx).VotingPeriod
+	var votingPeriod *time.Duration
+	if proposal.Expedited {
+		votingPeriod = keeper.GetParams(ctx).ExpeditedVotingPeriod
+	} else {
+		votingPeriod = keeper.GetParams(ctx).VotingPeriod
+	}
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod

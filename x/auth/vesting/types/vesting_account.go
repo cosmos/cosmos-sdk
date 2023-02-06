@@ -352,7 +352,7 @@ func (pva PeriodicVestingAccount) Validate() error {
 	if endTime != pva.EndTime {
 		return errors.New("vesting end time does not match length of all vesting periods")
 	}
-	if !originalVesting.IsEqual(pva.OriginalVesting) {
+	if !originalVesting.Equal(pva.OriginalVesting) {
 		return errors.New("original vesting coins does not match the sum of all coins in vesting periods")
 	}
 

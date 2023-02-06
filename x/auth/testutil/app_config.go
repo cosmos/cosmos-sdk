@@ -1,22 +1,20 @@
 package testutil
 
 import (
-	_ "github.com/cosmos/cosmos-sdk/x/auth"            // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"  // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"    // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/bank"            // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"       // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module" // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/genutil"         // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/params"          // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/staking"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
 
 	"cosmossdk.io/core/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -27,7 +25,6 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -44,19 +41,16 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 				BeginBlockers: []string{
 					stakingtypes.ModuleName,
 					genutiltypes.ModuleName,
-					feegrant.ModuleName,
 				},
 				EndBlockers: []string{
 					stakingtypes.ModuleName,
 					genutiltypes.ModuleName,
-					feegrant.ModuleName,
 				},
 				InitGenesis: []string{
 					authtypes.ModuleName,
 					banktypes.ModuleName,
 					stakingtypes.ModuleName,
 					genutiltypes.ModuleName,
-					feegrant.ModuleName,
 					paramstypes.ModuleName,
 					consensustypes.ModuleName,
 					vestingtypes.ModuleName,
@@ -104,11 +98,6 @@ var AppConfig = appconfig.Compose(&appv1alpha1.Config{
 		{
 			Name:   genutiltypes.ModuleName,
 			Config: appconfig.WrapAny(&genutilmodulev1.Module{}),
-		},
-
-		{
-			Name:   feegrant.ModuleName,
-			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 		},
 	},
 })

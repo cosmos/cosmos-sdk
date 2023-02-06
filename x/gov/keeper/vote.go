@@ -3,7 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -116,6 +117,12 @@ func (keeper Keeper) IterateVotes(ctx sdk.Context, proposalID uint64, cb func(vo
 			break
 		}
 	}
+}
+
+// deleteVotes deletes the all votes from a given proposalID.
+func (keeper Keeper) deleteVotes(ctx sdk.Context, proposalID uint64) {
+	store := ctx.KVStore(keeper.storeKey)
+	store.Delete(types.VotesKey(proposalID))
 }
 
 // deleteVote deletes a vote from a given proposalID and voter from the store

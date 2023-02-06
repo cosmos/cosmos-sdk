@@ -3,8 +3,8 @@ package nft
 import (
 	"fmt"
 
+	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 func (s *E2ETestSuite) TestQueryBalanceGRPC() {

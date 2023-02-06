@@ -2,8 +2,8 @@ package testutil
 
 import (
 	"cosmossdk.io/math"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"

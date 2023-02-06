@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -805,7 +805,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	assert.NilError(t, err)
 
 	zeroRewards := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())}
-	assert.Assert(t, rewards.IsEqual(zeroRewards))
+	assert.Assert(t, rewards.Equal(zeroRewards))
 
 	events := ctx.EventManager().Events()
 	lastEvent := events[len(events)-1]

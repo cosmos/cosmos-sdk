@@ -20,19 +20,19 @@ import (
 
 // Proposal flags
 const (
+	FlagTitle     = "title"
+	FlagDeposit   = "deposit"
+	flagVoter     = "voter"
+	flagDepositor = "depositor"
+	flagStatus    = "status"
+	FlagMetadata  = "metadata"
+	FlagSummary   = "summary"
 	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagTitle = "title"
+	FlagProposal = "proposal"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagDescription = "description"
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposalType = "type"
-	FlagDeposit      = "deposit"
-	flagVoter        = "voter"
-	flagDepositor    = "depositor"
-	flagStatus       = "status"
-	flagMetadata     = "metadata"
-	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagProposal = "proposal"
 )
 
 // ProposalFlags defines the core required fields of a legacy proposal. It is used to
@@ -71,6 +71,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		NewCmdWeightedVote(),
 		NewCmdSubmitProposal(),
 		NewCmdDraftProposal(),
+		NewCmdCancelProposal(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,
@@ -107,7 +108,8 @@ Where proposal.json contains:
   "metadata: "4pIMOgIGx1vZGU=", // base64-encoded metadata
   "deposit": "10stake"
   "title: "My proposal"
-  "summary": "A short summary of my proposal"
+  "summary": "A short summary of my proposal",
+  "expedited": false
 }
 `,
 				version.AppName,
@@ -119,12 +121,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			proposal, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -135,6 +137,36 @@ Where proposal.json contains:
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+// NewCmdCancelProposal implements submitting a cancel proposal transaction command.
+func NewCmdCancelProposal() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "cancel-proposal [proposal-id]",
+		Short:   "Cancel governance proposal before the voting period ends. Must be signed by the proposal creator.",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf(`$ %s tx gov cancel-proposal 1 --from mykey`, version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// validate that the proposal id is a uint
+			proposalID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return fmt.Errorf("proposal-id %s not a valid uint, please input a valid proposal-id", args[0])
+			}
+
+			// Get proposer address
+			from := clientCtx.GetFromAddress()
+			msg := v1.NewMsgCancelProposal(proposalID, from.String())
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -291,7 +323,7 @@ $ %s tx gov vote 1 yes --from mykey
 				return err
 			}
 
-			metadata, err := cmd.Flags().GetString(flagMetadata)
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
 			if err != nil {
 				return err
 			}
@@ -303,7 +335,7 @@ $ %s tx gov vote 1 yes --from mykey
 		},
 	}
 
-	cmd.Flags().String(flagMetadata, "", "Specify metadata of the vote")
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -346,7 +378,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 				return err
 			}
 
-			metadata, err := cmd.Flags().GetString(flagMetadata)
+			metadata, err := cmd.Flags().GetString(FlagMetadata)
 			if err != nil {
 				return err
 			}
@@ -357,7 +389,7 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 		},
 	}
 
-	cmd.Flags().String(flagMetadata, "", "Specify metadata of the weighted vote")
+	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the weighted vote")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

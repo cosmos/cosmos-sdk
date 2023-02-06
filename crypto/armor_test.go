@@ -7,11 +7,10 @@ import (
 	"io"
 	"testing"
 
+	tmcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/crypto/bcrypt"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	_ "github.com/cosmos/cosmos-sdk/runtime"

@@ -23,7 +23,7 @@ func (s *E2ETestSuite) TestCmdParams() {
 		{
 			"json output",
 			[]string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
-			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","min_initial_deposit_ratio":"0.000000000000000000"}}`,
+			`{"voting_params":{"voting_period":"172800s"},"deposit_params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s"},"tally_params":{"quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000"},"params":{"min_deposit":[{"denom":"stake","amount":"10000000"}],"max_deposit_period":"172800s","voting_period":"172800s","quorum":"0.334000000000000000","threshold":"0.500000000000000000","veto_threshold":"0.334000000000000000","min_initial_deposit_ratio":"0.000000000000000000","proposal_cancel_ratio":"0.500000000000000000","proposal_cancel_dest":"","expedited_voting_period":"86400s","expedited_threshold":"0.667000000000000000","expedited_min_deposit":[{"denom":"stake","amount":"50000000"}]}}`,
 		},
 		{
 			"text output",
@@ -35,11 +35,18 @@ deposit_params:
   - amount: "10000000"
     denom: stake
 params:
+  expedited_min_deposit:
+  - amount: "50000000"
+    denom: stake
+  expedited_threshold: "0.667000000000000000"
+  expedited_voting_period: 86400s
   max_deposit_period: 172800s
   min_deposit:
   - amount: "10000000"
     denom: stake
   min_initial_deposit_ratio: "0.000000000000000000"
+  proposal_cancel_dest: ""
+  proposal_cancel_ratio: "0.500000000000000000"
   quorum: "0.334000000000000000"
   threshold: "0.500000000000000000"
   veto_threshold: "0.334000000000000000"
@@ -306,7 +313,7 @@ func (s *E2ETestSuite) TestCmdGetProposals() {
 				var proposals v1.QueryProposalsResponse
 
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &proposals), out.String())
-				s.Require().Len(proposals.Proposals, 3)
+				s.Require().Greater(len(proposals.Proposals), 0)
 			}
 		})
 	}

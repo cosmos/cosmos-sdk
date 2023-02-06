@@ -20,7 +20,7 @@ func SetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set [config] [key] [value]",
 		Short: "Set an application config value",
-		Long:  "Set an application config value. The [config] argument must be the path of the file when using the too standalone, otherwise it must be the name of the config file without the .toml extension.",
+		Long:  "Set an application config value. The [config] argument must be the path of the file when using the tool standalone, otherwise it must be the name of the config file without the .toml extension.",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			filename, inputValue := args[0], args[2]

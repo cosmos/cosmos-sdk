@@ -5,18 +5,19 @@ import (
 
 	"cosmossdk.io/core/store"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 

@@ -54,7 +54,7 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: Tendermint block pruning is dependant on this parameter in conunction
+# Note: Tendermint block pruning is dependant on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.
@@ -76,6 +76,10 @@ iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 # IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
 # Default is false.
 iavl-disable-fastnode = {{ .BaseConfig.IAVLDisableFastNode }}
+
+# IAVLLazyLoading enable/disable the lazy loading of iavl store.
+# Default is false.
+iavl-lazy-loading = {{ .BaseConfig.IAVLLazyLoading }}
 
 # AppDBBackend defines the database backend type to use for the application and snapshots DBs.
 # An empty string indicates that a fallback will be used.
@@ -176,13 +180,8 @@ max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
 # GRPCWebEnable defines if the gRPC-web should be enabled.
 # NOTE: gRPC must also be enabled, otherwise, this configuration is a no-op.
+# NOTE: gRPC-Web uses the same address as the API server.
 enable = {{ .GRPCWeb.Enable }}
-
-# Address defines the gRPC-web server address to bind to.
-address = "{{ .GRPCWeb.Address }}"
-
-# EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).
-enable-unsafe-cors = {{ .GRPCWeb.EnableUnsafeCORS }}
 
 ###############################################################################
 ###                        State Sync Configuration                         ###

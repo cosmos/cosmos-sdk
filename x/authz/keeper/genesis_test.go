@@ -4,13 +4,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
+	"github.com/golang/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -18,7 +20,6 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	authztestutil "github.com/cosmos/cosmos-sdk/x/authz/testutil"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/golang/mock/gomock"
 )
 
 type GenesisTestSuite struct {

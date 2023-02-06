@@ -187,6 +187,7 @@ For consistency between our CI and the local tests, `GOWORK=off` is set in the `
 When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
 
 * Add a CHANGELOG.md / README.md under the new package folder
+* Add the package in [`labeler.yml`](./.github/labeler.yml)
 * Add the package in [`go.work.example`](./go.work.example)
 * Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
 * Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
@@ -194,6 +195,7 @@ When extracting a package to its own go modules, some extra steps are required, 
     * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
     * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
     * Ask the team to add the project to SonarCloud
+* (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).
 
 ## Protobuf
 

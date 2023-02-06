@@ -9,7 +9,7 @@ import (
 	"math/big"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
 	"golang.org/x/crypto/ripemd160" //nolint: staticcheck
 
 	"github.com/cosmos/cosmos-sdk/codec"

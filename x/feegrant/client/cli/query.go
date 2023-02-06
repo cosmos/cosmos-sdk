@@ -6,11 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // GetQueryCmd returns the cli query commands for this module

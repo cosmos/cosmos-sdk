@@ -19,7 +19,7 @@ require (
 require (
 	cosmossdk.io/collections v0.0.0-20230204135315-697871069999 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/math v1.0.0-beta.5 // indirect
+	cosmossdk.io/math v1.0.0-beta.6 // indirect
 	cosmossdk.io/store v0.0.0-20230204135315-697871069999 // indirect
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect

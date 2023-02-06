@@ -11,13 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"google.golang.org/protobuf/proto"
-	"cosmossdk.io/x/tx/textual"
-	"cosmossdk.io/x/tx/textual/internal/testpb"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/x/tx/textual"
 	"cosmossdk.io/x/tx/textual/internal/testpb"
+
 	"google.golang.org/protobuf/testing/protocmp"
 )
 

@@ -12,7 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-proto/testpb"
 
-	"github.com/cosmos/cosmos-sdk/testutil/rapidproto"
+	"cosmossdk.io/x/tx/rapidproto"
 )
 
 // TestRegression checks that the generator still produces the same output

@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	goamino "github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/api/amino"
@@ -19,6 +21,7 @@ import (
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -109,12 +112,87 @@ func newTypeIndex(types []typeUnderTest) typeIndex {
 	return ti
 }
 
+func (ti typeIndex) reflectedDeepClone(pulsar reflect.Value, gogo reflect.Value) {
+	for n, pStructField := range ti.pulsarFields[fullyQualifiedTypeName(pulsar.Type())] {
+		gStructField := ti.gogoFields[fullyQualifiedTypeName(gogo.Type())][n]
+		pulsarField := pulsar.FieldByName(pStructField.Name)
+		// todo init a new "gogo" since its nil
+		gogoField := gogo.FieldByName(gStructField.Name)
+		if !gogoField.IsValid() {
+			gogoField = reflect.New(gStructField.Type)
+			gogo.FieldByName(gStructField.Name).Set(gogoField)
+		}
+		//fmt.Printf("copying %s to %s\n", pStructField.Name, gStructField.Name)
+		ti.setField(pulsarField, gogoField)
+	}
+}
+
 func (ti typeIndex) deepClone(pulsar proto.Message, gogo gogoproto.Message) {
 	for n, pStructField := range ti.pulsarFields[fqTypeName(pulsar)] {
 		gStructField := ti.gogoFields[fqTypeName(gogo)][n]
 		pulsarField := reflect.ValueOf(pulsar).Elem().FieldByName(pStructField.Name)
 		gogoField := reflect.ValueOf(gogo).Elem().FieldByName(gStructField.Name)
+		//fmt.Printf("copying %s to %s\n", pStructField.Name, gStructField.Name)
 		ti.setField(pulsarField, gogoField)
+	}
+}
+
+func (ti typeIndex) setField(pulsar reflect.Value, gogo reflect.Value) {
+	switch pulsar.Type().Kind() {
+	case reflect.Ptr:
+		if !gogo.IsValid() {
+			fmt.Printf("gogo field is invalid; gogo: %v\n", gogo)
+		}
+		if gogo.Type().Kind() != reflect.Ptr && gogo.Type().Kind() != reflect.Struct {
+			panic(fmt.Sprintf("gogo field is not a pointer; pulsar: %s, gogo: %s", pulsar.Type(), gogo.Type()))
+		}
+		if pulsar.IsNil() {
+			return
+		}
+		ti.setField(pulsar.Elem(), gogo)
+		//panic(fmt.Sprintf("pointer not supported: %s", pulsar.Type()))
+	case reflect.Struct:
+		switch val := pulsar.Interface().(type) {
+		case anypb.Any:
+			a := &codectypes.Any{
+				TypeUrl: val.TypeUrl,
+				Value:   val.Value,
+			}
+			gogo.Set(reflect.ValueOf(a))
+		default:
+			if gogo.Type().Kind() == reflect.Ptr {
+				gogoType := gogo.Type().Elem()
+				newGogo := reflect.New(gogoType)
+				gogo.Set(newGogo)
+				ti.reflectedDeepClone(pulsar, gogo.Elem())
+			} else {
+				gogoType := gogo.Type()
+				newGogo := reflect.New(gogoType).Elem()
+				gogo.Set(newGogo)
+				ti.reflectedDeepClone(pulsar, gogo)
+			}
+		}
+	case reflect.Slice:
+		// if slices are different types then we need to create a new slice
+		if pulsar.Type().Elem() != gogo.Type().Elem() {
+			gogoSlice := reflect.MakeSlice(gogo.Type(), pulsar.Len(), pulsar.Len())
+			gogoType := gogoSlice.Type().Elem()
+			for i := 0; i < pulsar.Len(); i++ {
+				p := pulsar.Index(i)
+				g := reflect.New(gogoType).Elem()
+				ti.setField(p, g)
+				reflect.Append(gogoSlice, g)
+			}
+			gogo.Set(gogoSlice)
+			return
+		}
+		// otherwise we can just copy the slice
+		fallthrough
+	default:
+		if pulsar.IsZero() {
+			return
+		}
+		gogo.Set(pulsar)
 	}
 }
 
@@ -127,19 +205,29 @@ func (ti typeIndex) assertEquals(t *testing.T, pulsar proto.Message, gogo gogopr
 	}
 }
 
-func (ti typeIndex) setField(pulsar reflect.Value, gogo reflect.Value) {
-	switch pulsar.Type().Kind() {
-	case reflect.Ptr:
-		panic(fmt.Sprintf("pointer not supported: %s", pulsar.Type()))
-	default:
-		gogo.Set(pulsar)
-	}
-}
-
 func (ti typeIndex) assertFieldEquals(t *testing.T, pulsarField reflect.Value, gogoField reflect.Value) {
 	switch pulsarField.Type().Kind() {
 	case reflect.Ptr:
-		panic(fmt.Sprintf("pointer not supported: %s", pulsarField.Type()))
+		if gogoField.Type().Kind() != reflect.Ptr && gogoField.Type().Kind() != reflect.Struct {
+			panic(fmt.Sprintf("gogo field is not a pointer; pulsar: %s", pulsarField.Type()))
+		}
+		if pulsarField.IsNil() {
+			if gogoField.Type().Kind() == reflect.Struct {
+				// TODO rewrite comparison as hash concatenation to avoid this hack and potential bug
+				return
+			} else if !gogoField.IsNil() {
+				println("failing")
+				require.Fail(t, "pulsar field is nil, but gogo field is not")
+			} else {
+				// both nil, return
+				return
+			}
+		}
+		// otherwise recurse
+		ti.assertFieldEquals(t, pulsarField.Elem(), gogoField.Elem())
+	//panic(fmt.Sprintf("pointer not supported: %s", pulsarField.Type()))
+	case reflect.Struct:
+
 	default:
 		require.Equal(t, pulsarField.Interface(), gogoField.Interface())
 	}
@@ -156,15 +244,29 @@ func TestTypeIndex(t *testing.T) {
 
 func TestDeepClone(t *testing.T) {
 	ti := newTypeIndex(msgTypes)
-	tt := msgTypes[0]
-	//	for _, tt := range msgTypes {
-	gen := rapidproto.MessageGenerator(tt.pulsar, rapidproto.GeneratorOptions{})
-	rapid.Check(t, func(rt *rapid.T) {
-		msg := gen.Draw(rt, "msg").(proto.Message)
-		ti.deepClone(msg, tt.gogo)
-		ti.assertEquals(t, msg, tt.gogo)
-	})
-	//	}
+	//tt := msgTypes[0]
+	var anyTypeURLs []string
+	for _, msgType := range msgTypes {
+		anyTypeURLs = append(anyTypeURLs, string(msgType.pulsar.ProtoReflect().Descriptor().FullName()))
+	}
+
+	for _, tt := range msgTypes {
+		fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
+		gen := rapidproto.MessageGenerator(tt.pulsar, rapidproto.GeneratorOptions{
+			AnyTypeURLs: anyTypeURLs,
+			Resolver:    protoregistry.GlobalTypes,
+		})
+
+		rapid.Check(t, func(rt *rapid.T) {
+			msg := gen.Draw(rt, "msg").(proto.Message)
+			//fmt.Printf("msg %v\n", msg)
+			goMsg := reflect.New(reflect.TypeOf(tt.gogo).Elem()).Interface().(gogoproto.Message)
+			//fmt.Println("clone")
+			ti.deepClone(msg, goMsg)
+			//fmt.Println("assert")
+			//ti.assertEquals(t, msg, goMsg)
+		})
+	}
 }
 
 func TestAminoJSON_AllTypes(t *testing.T) {

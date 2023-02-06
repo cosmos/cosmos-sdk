@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	FlagDenom      = "denom"
-	FlagIbcResolve = "ibc-resolve"
+	FlagDenom        = "denom"
+	FlagResolveDenom = "resolve-denom"
 )
 
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
@@ -51,7 +51,7 @@ func GetBalancesCmd() *cobra.Command {
 Example:
   $ %s query %s balances [address]
   $ %s query %s balances [address] --denom=[denom]
-  $ %s query %s balances [address] --ibc-resolve
+  $ %s query %s balances [address] --resolve-denom
 `,
 				version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
@@ -83,12 +83,12 @@ Example:
 			ctx := cmd.Context()
 
 			if denom == "" {
-				ibcResolve, err := cmd.Flags().GetBool(FlagIbcResolve)
+				resolveDenom, err := cmd.Flags().GetBool(FlagResolveDenom)
 				if err != nil {
 					return err
 				}
 
-				params := types.NewQueryAllBalancesRequest(addr, pageReq, ibcResolve)
+				params := types.NewQueryAllBalancesRequest(addr, pageReq, resolveDenom)
 
 				res, err := queryClient.AllBalances(ctx, params)
 				if err != nil {
@@ -110,7 +110,7 @@ Example:
 	}
 
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
-	cmd.Flags().Bool(FlagIbcResolve, false, "Resolve IBC hash to human-readable denom")
+	cmd.Flags().Bool(FlagResolveDenom, false, "Resolve denom to human-readable denom from metadata")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
 

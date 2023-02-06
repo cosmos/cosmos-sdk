@@ -56,6 +56,10 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
 		denom := string(key)
+
+		// IBC denom metadata will be registered in ibc-go after first mint
+		//
+		// Since: ibc-go v7
 		if req.IbcResolve {
 			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
 				denom = metadata.Display

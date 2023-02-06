@@ -22,7 +22,7 @@ message ListenEndBlockRequest {
   tendermint.abci.ResponseEndBlock res = 2;
 }
 
-// ListenBeginBlockResponse is the response type for the ListenEndBlock RPC method
+// ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
 message ListenEndBlockResponse {}
 
 // ListenDeliverTxRequest is the request type for the ListenDeliverTx RPC method
@@ -33,7 +33,7 @@ message ListenDeliverTxRequest {
   tendermint.abci.ResponseDeliverTx res          = 3;
 }
 
-// ListenBeginBlockResponse is the response type for the ListenDeliverTx RPC method
+// ListenDeliverTxResponse is the response type for the ListenDeliverTx RPC method
 message ListenDeliverTxResponse {}
 
 // ListenCommitRequest is the request type for the ListenCommit RPC method
@@ -44,7 +44,7 @@ message ListenCommitRequest {
   repeated cosmos.base.store.v1beta1.StoreKVPair change_set = 3;
 }
 
-// ListenBeginBlockResponse is the response type for the ListenCommit RPC method
+// ListenCommitResponse is the response type for the ListenCommit RPC method
 message ListenCommitResponse {}
 
 // ABCIListenerService is the service for the BaseApp ABCIListener interface

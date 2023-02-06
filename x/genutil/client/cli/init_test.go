@@ -208,8 +208,13 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
+<<<<<<< HEAD
 	svrAddr, _, err := server.FreeTCPAddr()
+=======
+	svrAddr, _, closeFn, err := network.FreeTCPAddr()
+>>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 	require.NoError(t, err)
+	require.NoError(t, closeFn())
 
 	svr, err := abci_server.NewServer(svrAddr, "socket", app)
 	require.NoError(t, err, "error creating listener")

@@ -38,7 +38,7 @@ func ShowNodeIDCmd() *cobra.Command {
 func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
-		Short: "Show this node's cometbft validator info",
+		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config

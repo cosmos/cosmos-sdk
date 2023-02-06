@@ -187,7 +187,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// This can be deleted after the CometBFT PR is merged
+// TODO update/remove after v0.37.x tag of CometBFT
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 
 // TODO tag all extracted modules after SDK refactor

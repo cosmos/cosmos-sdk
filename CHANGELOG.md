@@ -44,7 +44,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
-* (cli) [#14919](https://github.com/cosmos/cosmos-sdk/pull/#14919) Fix never assigned error when write validators.
+* (cli) [#14919](https://github.com/cosmos/cosmos-sdk/pull/14919) Fix never assigned error when write validators.
+* (x/group) [#14923](https://github.com/cosmos/cosmos-sdk/pull/14923) Fix error while using pagination in `x/group` from CLI  
 
 ## [v0.47.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc2) - 2023-01-31
 

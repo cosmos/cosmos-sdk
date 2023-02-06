@@ -14,7 +14,8 @@ import (
 
 type fileGen struct {
 	*generator.GeneratedFile
-	file *protogen.File
+	file           *protogen.File
+	genQueryServer bool
 }
 
 func (f fileGen) gen() error {
@@ -61,8 +62,8 @@ func (f fileGen) genStoreInterface(stores []*protogen.Message) {
 		f.P(name, "()", name)
 	}
 	f.P()
-	if GenQueries {
-		f.P(queryServiceName(f.file), "ServiceServer")
+	if f.genQueryServer {
+		f.P("RegisterQueryServer(", grpcPkg.Ident("ServiceRegistrar"), ")")
 	}
 	f.P()
 	f.P("doNotImplement()")
@@ -73,6 +74,9 @@ func (f fileGen) genStoreInterface(stores []*protogen.Message) {
 func (f fileGen) genStoreStruct(stores []*protogen.Message) {
 	// struct
 	f.P("type ", f.storeStructName(), " struct {")
+	if f.genQueryServer {
+		f.P("Unimplemented", strcase.ToCamel(f.fileShortName()), "QueryServiceServer")
+	}
 	for _, message := range stores {
 		f.P(f.param(message.GoIdent.GoName), " ", f.messageTableInterfaceName(message))
 	}
@@ -137,6 +141,14 @@ func (f fileGen) genStoreMethods(stores []*protogen.Message) {
 		f.P("}")
 		f.P()
 	}
+
+	if f.genQueryServer {
+		f.P("func(x ", f.storeStructName(), ") RegisterQueryServer(registrar ", grpcPkg.Ident("ServiceRegistrar"), ") {")
+		f.P("Register", queryServiceName(f.file), "ServiceServer(registrar, x)")
+		f.P("}")
+		f.P()
+	}
+
 	f.P("func(", f.storeStructName(), ") doNotImplement() {}")
 	f.P()
 }
@@ -157,7 +169,8 @@ func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
 
 	f.P("return ", f.storeStructName(), "{")
 	for _, store := range stores {
-		f.P(f.messageTableReceiverName(store), ",")
+
+		f.P(f.param(store.GoIdent.GoName), ":", f.messageTableReceiverName(store), ",")
 	}
 	f.P("}, nil")
 	f.P("}")

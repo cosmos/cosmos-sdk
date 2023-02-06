@@ -7,6 +7,7 @@ import (
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	grpc "google.golang.org/grpc"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -213,6 +214,22 @@ func NewExampleTableTable(db ormtable.Schema) (ExampleTableTable, error) {
 	return exampleTableTable{table}, nil
 }
 
+func (x testSchemaStore) GetExampleTable(ctx context.Context, req *GetExampleTableRequest) (*GetExampleTableResponse, error) {
+	res, err := x.exampleTable.Get(ctx,
+		req.U32,
+		req.I64,
+		req.Str,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetExampleTableResponse{Value: res}, nil
+}
+
+func (x testSchemaStore) ListExampleTable(ctx context.Context, req *ListExampleTableRequest) (*ListExampleTableResponse, error) {
+	return nil, nil
+}
+
 type ExampleAutoIncrementTableTable interface {
 	Insert(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) error
 	InsertReturningId(ctx context.Context, exampleAutoIncrementTable *ExampleAutoIncrementTable) (uint64, error)
@@ -366,6 +383,20 @@ func NewExampleAutoIncrementTableTable(db ormtable.Schema) (ExampleAutoIncrement
 		return nil, ormerrors.TableNotFound.Wrap(string((&ExampleAutoIncrementTable{}).ProtoReflect().Descriptor().FullName()))
 	}
 	return exampleAutoIncrementTableTable{table.(ormtable.AutoIncrementTable)}, nil
+}
+
+func (x testSchemaStore) GetExampleAutoIncrementTable(ctx context.Context, req *GetExampleAutoIncrementTableRequest) (*GetExampleAutoIncrementTableResponse, error) {
+	res, err := x.exampleAutoIncrementTable.Get(ctx,
+		req.Id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetExampleAutoIncrementTableResponse{Value: res}, nil
+}
+
+func (x testSchemaStore) ListExampleAutoIncrementTable(ctx context.Context, req *ListExampleAutoIncrementTableRequest) (*ListExampleAutoIncrementTableResponse, error) {
+	return nil, nil
 }
 
 // singleton store
@@ -530,6 +561,20 @@ func NewExampleTimestampTable(db ormtable.Schema) (ExampleTimestampTable, error)
 	return exampleTimestampTable{table.(ormtable.AutoIncrementTable)}, nil
 }
 
+func (x testSchemaStore) GetExampleTimestamp(ctx context.Context, req *GetExampleTimestampRequest) (*GetExampleTimestampResponse, error) {
+	res, err := x.exampleTimestamp.Get(ctx,
+		req.Id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetExampleTimestampResponse{Value: res}, nil
+}
+
+func (x testSchemaStore) ListExampleTimestamp(ctx context.Context, req *ListExampleTimestampRequest) (*ListExampleTimestampResponse, error) {
+	return nil, nil
+}
+
 type SimpleExampleTable interface {
 	Insert(ctx context.Context, simpleExample *SimpleExample) error
 	Update(ctx context.Context, simpleExample *SimpleExample) error
@@ -680,6 +725,20 @@ func NewSimpleExampleTable(db ormtable.Schema) (SimpleExampleTable, error) {
 	return simpleExampleTable{table}, nil
 }
 
+func (x testSchemaStore) GetSimpleExample(ctx context.Context, req *GetSimpleExampleRequest) (*GetSimpleExampleResponse, error) {
+	res, err := x.simpleExample.Get(ctx,
+		req.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetSimpleExampleResponse{Value: res}, nil
+}
+
+func (x testSchemaStore) ListSimpleExample(ctx context.Context, req *ListSimpleExampleRequest) (*ListSimpleExampleResponse, error) {
+	return nil, nil
+}
+
 type ExampleAutoIncFieldNameTable interface {
 	Insert(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) error
 	InsertReturningFoo(ctx context.Context, exampleAutoIncFieldName *ExampleAutoIncFieldName) (uint64, error)
@@ -799,6 +858,20 @@ func NewExampleAutoIncFieldNameTable(db ormtable.Schema) (ExampleAutoIncFieldNam
 	return exampleAutoIncFieldNameTable{table.(ormtable.AutoIncrementTable)}, nil
 }
 
+func (x testSchemaStore) GetExampleAutoIncFieldName(ctx context.Context, req *GetExampleAutoIncFieldNameRequest) (*GetExampleAutoIncFieldNameResponse, error) {
+	res, err := x.exampleAutoIncFieldName.Get(ctx,
+		req.Foo,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetExampleAutoIncFieldNameResponse{Value: res}, nil
+}
+
+func (x testSchemaStore) ListExampleAutoIncFieldName(ctx context.Context, req *ListExampleAutoIncFieldNameRequest) (*ListExampleAutoIncFieldNameResponse, error) {
+	return nil, nil
+}
+
 type TestSchemaStore interface {
 	ExampleTableTable() ExampleTableTable
 	ExampleAutoIncrementTableTable() ExampleAutoIncrementTableTable
@@ -807,12 +880,13 @@ type TestSchemaStore interface {
 	SimpleExampleTable() SimpleExampleTable
 	ExampleAutoIncFieldNameTable() ExampleAutoIncFieldNameTable
 
-	TestSchemaQueryServiceServer
+	RegisterQueryServer(grpc.ServiceRegistrar)
 
 	doNotImplement()
 }
 
 type testSchemaStore struct {
+	UnimplementedTestSchemaQueryServiceServer
 	exampleTable              ExampleTableTable
 	exampleAutoIncrementTable ExampleAutoIncrementTableTable
 	exampleSingleton          ExampleSingletonTable
@@ -843,6 +917,10 @@ func (x testSchemaStore) SimpleExampleTable() SimpleExampleTable {
 
 func (x testSchemaStore) ExampleAutoIncFieldNameTable() ExampleAutoIncFieldNameTable {
 	return x.exampleAutoIncFieldName
+}
+
+func (x testSchemaStore) RegisterQueryServer(registrar grpc.ServiceRegistrar) {
+	RegisterTestSchemaQueryServiceServer(registrar, x)
 }
 
 func (testSchemaStore) doNotImplement() {}
@@ -881,11 +959,11 @@ func NewTestSchemaStore(db ormtable.Schema) (TestSchemaStore, error) {
 	}
 
 	return testSchemaStore{
-		exampleTableTable,
-		exampleAutoIncrementTableTable,
-		exampleSingletonTable,
-		exampleTimestampTable,
-		simpleExampleTable,
-		exampleAutoIncFieldNameTable,
+		exampleTable:              exampleTableTable,
+		exampleAutoIncrementTable: exampleAutoIncrementTableTable,
+		exampleSingleton:          exampleSingletonTable,
+		exampleTimestamp:          exampleTimestampTable,
+		simpleExample:             simpleExampleTable,
+		exampleAutoIncFieldName:   exampleAutoIncFieldNameTable,
 	}, nil
 }

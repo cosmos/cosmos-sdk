@@ -7,6 +7,7 @@ import (
 	ormlist "github.com/cosmos/cosmos-sdk/orm/model/ormlist"
 	ormtable "github.com/cosmos/cosmos-sdk/orm/model/ormtable"
 	ormerrors "github.com/cosmos/cosmos-sdk/orm/types/ormerrors"
+	grpc "google.golang.org/grpc"
 )
 
 type BalanceTable interface {
@@ -141,6 +142,21 @@ func NewBalanceTable(db ormtable.Schema) (BalanceTable, error) {
 	return balanceTable{table}, nil
 }
 
+func (x bankStore) GetBalance(ctx context.Context, req *GetBalanceRequest) (*GetBalanceResponse, error) {
+	res, err := x.balance.Get(ctx,
+		req.Address,
+		req.Denom,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetBalanceResponse{Value: res}, nil
+}
+
+func (x bankStore) ListBalance(ctx context.Context, req *ListBalanceRequest) (*ListBalanceResponse, error) {
+	return nil, nil
+}
+
 type SupplyTable interface {
 	Insert(ctx context.Context, supply *Supply) error
 	Update(ctx context.Context, supply *Supply) error
@@ -255,16 +271,31 @@ func NewSupplyTable(db ormtable.Schema) (SupplyTable, error) {
 	return supplyTable{table}, nil
 }
 
+func (x bankStore) GetSupply(ctx context.Context, req *GetSupplyRequest) (*GetSupplyResponse, error) {
+	res, err := x.supply.Get(ctx,
+		req.Denom,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &GetSupplyResponse{Value: res}, nil
+}
+
+func (x bankStore) ListSupply(ctx context.Context, req *ListSupplyRequest) (*ListSupplyResponse, error) {
+	return nil, nil
+}
+
 type BankStore interface {
 	BalanceTable() BalanceTable
 	SupplyTable() SupplyTable
 
-	BankQueryServiceServer
+	RegisterQueryServer(grpc.ServiceRegistrar)
 
 	doNotImplement()
 }
 
 type bankStore struct {
+	UnimplementedBankQueryServiceServer
 	balance BalanceTable
 	supply  SupplyTable
 }
@@ -275,6 +306,10 @@ func (x bankStore) BalanceTable() BalanceTable {
 
 func (x bankStore) SupplyTable() SupplyTable {
 	return x.supply
+}
+
+func (x bankStore) RegisterQueryServer(registrar grpc.ServiceRegistrar) {
+	RegisterBankQueryServiceServer(registrar, x)
 }
 
 func (bankStore) doNotImplement() {}
@@ -293,7 +328,7 @@ func NewBankStore(db ormtable.Schema) (BankStore, error) {
 	}
 
 	return bankStore{
-		balanceTable,
-		supplyTable,
+		balance: balanceTable,
+		supply:  supplyTable,
 	}, nil
 }

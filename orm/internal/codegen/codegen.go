@@ -17,9 +17,8 @@ const (
 	ormListPkg  = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormlist")
 	ormErrPkg   = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/types/ormerrors")
 	ormTablePkg = protogen.GoImportPath("github.com/cosmos/cosmos-sdk/orm/model/ormtable")
+	grpcPkg     = protogen.GoImportPath("google.golang.org/grpc")
 )
-
-var GenQueries bool
 
 func ORMPluginRunner(p *protogen.Plugin) error {
 	p.SupportedFeatures = uint64(pluginpb.CodeGeneratorResponse_FEATURE_PROTO3_OPTIONAL)
@@ -32,12 +31,16 @@ func ORMPluginRunner(p *protogen.Plugin) error {
 			continue
 		}
 
+		// check if query proto file exists
+		_, hasQueryProto := p.FilesByPath[queryProtoFilename(f)]
+
 		gen := p.NewGeneratedFile(fmt.Sprintf("%s.cosmos_orm.go", f.GeneratedFilenamePrefix), f.GoImportPath)
 		cgen := &generator.GeneratedFile{
 			GeneratedFile: gen,
 			LocalPackages: map[string]bool{},
 		}
-		fgen := fileGen{GeneratedFile: cgen, file: f}
+
+		fgen := fileGen{GeneratedFile: cgen, file: f, genQueryServer: hasQueryProto}
 		err := fgen.gen()
 		if err != nil {
 			return err
@@ -58,7 +61,7 @@ func QueryProtoPluginRunner(p *protogen.Plugin) error {
 			continue
 		}
 
-		out, err := os.OpenFile(fmt.Sprintf("%s_query.proto", f.GeneratedFilenamePrefix), os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0o644)
+		out, err := os.OpenFile(queryProtoFilename(f), os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0o644)
 		if err != nil {
 			return err
 		}
@@ -90,4 +93,8 @@ func hasTables(file *protogen.File) bool {
 	}
 
 	return false
+}
+
+func queryProtoFilename(f *protogen.File) string {
+	return fmt.Sprintf("%s_query.proto", f.GeneratedFilenamePrefix)
 }

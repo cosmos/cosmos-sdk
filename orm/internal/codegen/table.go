@@ -55,6 +55,7 @@ func (t tableGen) gen() {
 	t.genTableImpl()
 	t.genTableImplGuard()
 	t.genConstructor()
+	t.genQueries()
 }
 
 func (t tableGen) getTableInterface() {
@@ -295,4 +296,5 @@ func (t tableGen) genConstructor() {
 		t.P("return ", t.messageTableReceiverName(t.msg), "{table}, nil")
 	}
 	t.P("}")
+	t.P()
 }

@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -204,17 +203,13 @@ func simulateMsgSubmitProposal(ak types.AccountKeeper, bk types.BankKeeper, k *k
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true)
+		expedited := r.Intn(2) == 0
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, expedited)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
 		case err != nil:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "unable to generate deposit"), nil, err
-		}
-
-		expedited := r.Intn(2) == 0
-		if expedited {
-			deposit = deposit.MulInt(sdkmath.NewInt(v1.DefaultMinExpeditedDepositTokensRatio))
 		}
 
 		msg, err := v1.NewMsgSubmitProposal(
@@ -297,7 +292,7 @@ func SimulateMsgDeposit(ak types.AccountKeeper, bk types.BankKeeper, k *keeper.K
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate proposalID"), nil, nil
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, false)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil
@@ -488,6 +483,7 @@ func randomDeposit(
 	k *keeper.Keeper,
 	addr sdk.AccAddress,
 	useMinAmount bool,
+	expedited bool,
 ) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -498,6 +494,9 @@ func randomDeposit(
 
 	params := k.GetParams(ctx)
 	minDeposit := params.MinDeposit
+	if expedited {
+		minDeposit = params.ExpeditedMinDeposit
+	}
 	denomIndex := r.Intn(len(minDeposit))
 	denom := minDeposit[denomIndex].Denom
 

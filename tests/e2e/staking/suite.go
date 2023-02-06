@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-	"github.com/tendermint/tendermint/rpc/client/http"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"

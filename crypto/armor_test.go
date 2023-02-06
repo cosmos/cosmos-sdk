@@ -7,10 +7,10 @@ import (
 	"io"
 	"testing"
 
+	tmcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"

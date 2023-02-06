@@ -1,7 +1,7 @@
 package errors
 
 import (
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // ResponseCheckTxWithEvents returns an ABCI ResponseCheckTx object with fields filled in

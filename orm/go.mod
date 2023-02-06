@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/orm
 go 1.19
 
 require (
-	cosmossdk.io/api v0.2.6
+	cosmossdk.io/api v0.3.0
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
@@ -31,7 +31,7 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
-	github.com/cosmos/gogoproto v1.4.3 // indirect
+	github.com/cosmos/gogoproto v1.4.4 // indirect
 	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
 	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

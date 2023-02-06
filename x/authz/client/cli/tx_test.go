@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

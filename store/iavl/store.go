@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/confio/ics23/go"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachekv"

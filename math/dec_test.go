@@ -715,7 +715,7 @@ func TestFormatDecNonDigits(t *testing.T) {
 	}
 }
 
-func TestDecPrecision(t *testing.T) {
+func TestNegativePrecisionPanic(t *testing.T) {
 	require.Panics(t, func() {
 		math.LegacyNewDecWithPrec(10, -1)
 	})

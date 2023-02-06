@@ -3,8 +3,8 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.19
 
 require (
-	cosmossdk.io/store v0.0.0-20230204135315-697871069999
-	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	cosmossdk.io/store v0.0.0-20230206083820-8cf814fb8c4c
+	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.52.3
@@ -17,7 +17,7 @@ require (
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/math v1.0.0-beta.5 // indirect
+	cosmossdk.io/math v1.0.0-beta.6 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect

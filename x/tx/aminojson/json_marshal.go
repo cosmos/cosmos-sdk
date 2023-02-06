@@ -13,14 +13,17 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/api/amino"
+	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 )
 
-type MessageEncoder func(message protoreflect.Message) (protoreflect.Value, error)
+type MessageEncoder func(protoreflect.Message) (protoreflect.Value, error)
+type FieldEncoder func(protoreflect.Value, io.Writer) error
 
 type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
 	zeroValues      map[string]func() protoreflect.Value
 	messageEncoders map[string]MessageEncoder
+	encodings       map[string]FieldEncoder
 }
 
 func NewAminoJSON() AminoJSON {
@@ -40,6 +43,21 @@ func NewAminoJSON() AminoJSON {
 				bz := message.Get(keyField).Bytes()
 				return protoreflect.ValueOfBytes(bz), nil
 			},
+			//"module_account": moduleAccountEncoder,
+		},
+		encodings: map[string]FieldEncoder{
+			"empty_string": func(v protoreflect.Value, writer io.Writer) error {
+				_, err := writer.Write([]byte(`""`))
+				return err
+			},
+			"json_default": func(v protoreflect.Value, writer io.Writer) error {
+				switch val := v.Interface().(type) {
+				case string, bool, int32, uint32, uint64, int64, protoreflect.EnumNumber:
+					return jsonMarshal(writer, val)
+				default:
+					return fmt.Errorf("unsupported type %T", val)
+				}
+			},
 		},
 	}
 	return aj
@@ -54,6 +72,21 @@ func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.marshal(vmsg, buf)
 	return buf.Bytes(), err
+}
+
+// TODO
+// move into marshalMessage
+func (aj AminoJSON) beginMarshal(msg protoreflect.Value, writer io.Writer) error {
+	_, err := writer.Write([]byte("{"))
+	if err != nil {
+		return err
+	}
+	err = aj.marshal(msg, writer)
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write([]byte("}"))
+	return err
 }
 
 func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
@@ -83,6 +116,65 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	}
 }
 
+// TODO
+// merge with marshalMessage
+func (aj AminoJSON) marshalEmbedded(msg protoreflect.Message, writer io.Writer) (bool, error) {
+	fields := msg.Descriptor().Fields()
+	first := true
+	wrote := false
+	for i := 0; i < fields.Len(); i++ {
+		f := fields.Get(i)
+		v := msg.Get(f)
+		name := getFieldName(f)
+
+		if !msg.Has(f) {
+			if omitEmpty(f) {
+				continue
+			} else {
+				zv, found := aj.getZeroValue(f)
+				if found {
+					v = zv
+				}
+			}
+		}
+
+		if !first {
+			_, err := writer.Write([]byte(","))
+			if err != nil {
+				return wrote, err
+			}
+		}
+
+		err := jsonMarshal(writer, name)
+		wrote = true
+		if err != nil {
+			return wrote, err
+		}
+
+		_, err = writer.Write([]byte(":"))
+		if err != nil {
+			return wrote, err
+		}
+
+		// encode value
+		if encoder := aj.getFieldEncoding(f); encoder != nil {
+			err = encoder(v, writer)
+			if err != nil {
+				return wrote, err
+			}
+		} else {
+			err = aj.marshal(v, writer)
+			if err != nil {
+				return wrote, err
+			}
+		}
+
+		first = false
+	}
+
+	return wrote, nil
+}
+
 func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if encoder := aj.getMessageEncoder(msg); encoder != nil {
 		encoded, err := encoder(msg)
@@ -93,6 +185,7 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	}
 
 	named := false
+
 	opts := msg.Descriptor().Options()
 	if proto.HasExtension(opts, amino.E_Name) {
 		name := proto.GetExtension(opts, amino.E_Name)
@@ -126,6 +219,17 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			}
 		}
 
+		if isFieldEmbedded(v, f) {
+			wrote, err := aj.marshalEmbedded(v.Message(), writer)
+			if err != nil {
+				return err
+			}
+			if wrote {
+				first = false
+			}
+			continue
+		}
+
 		if !first {
 			_, err = writer.Write([]byte(","))
 			if err != nil {
@@ -143,9 +247,17 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 			return err
 		}
 
-		err = aj.marshal(v, writer)
-		if err != nil {
-			return err
+		// encode value
+		if encoder := aj.getFieldEncoding(f); encoder != nil {
+			err = encoder(v, writer)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = aj.marshal(v, writer)
+			if err != nil {
+				return err
+			}
 		}
 
 		first = false
@@ -252,4 +364,56 @@ func (aj AminoJSON) getMessageEncoder(message protoreflect.Message) MessageEncod
 		}
 	}
 	return nil
+}
+
+func isFieldEmbedded(fieldValue protoreflect.Value, field protoreflect.FieldDescriptor) bool {
+	opts := field.Options()
+	if proto.HasExtension(opts, amino.E_Embed) {
+		embedded := proto.GetExtension(opts, amino.E_Embed).(bool)
+		switch fieldValue.Interface().(type) {
+		case protoreflect.Message:
+			return embedded
+		default:
+			fmt.Printf("WARN: field %s is not a message, but has the embedded option set to true. Ignoring option.\n", field.Name())
+			return false
+		}
+	}
+	return false
+}
+
+func (aj AminoJSON) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEncoder {
+	opts := field.Options()
+	if proto.HasExtension(opts, amino.E_Encoding) {
+		enc := proto.GetExtension(opts, amino.E_Encoding).(string)
+		if fn, ok := aj.encodings[enc]; ok {
+			return fn
+		}
+	}
+	return nil
+}
+
+type moduleAccountPretty struct {
+	Address       string   `json:"address"`
+	PubKey        string   `json:"public_key"`
+	AccountNumber uint64   `json:"account_number"`
+	Sequence      uint64   `json:"sequence"`
+	Name          string   `json:"name"`
+	Permissions   []string `json:"permissions"`
+}
+
+func moduleAccountEncoder(m protoreflect.Message) (protoreflect.Value, error) {
+	ma := m.Interface().(*authapi.ModuleAccount)
+	ma2 := moduleAccountPretty{
+		Address:       ma.BaseAccount.Address,
+		PubKey:        "",
+		AccountNumber: ma.BaseAccount.AccountNumber,
+		Sequence:      ma.BaseAccount.Sequence,
+		Name:          ma.Name,
+		Permissions:   ma.Permissions,
+	}
+	bz, err := json.Marshal(ma2)
+	if err != nil {
+		return protoreflect.Value{}, err
+	}
+	return protoreflect.ValueOfString(string(bz)), nil
 }

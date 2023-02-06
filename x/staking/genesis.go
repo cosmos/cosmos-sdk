@@ -12,14 +12,20 @@ import (
 )
 
 // WriteValidators returns a slice of bonded genesis validators.
+<<<<<<< HEAD
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, err error) {
+=======
+func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []tmtypes.GenesisValidator, returnErr error) {
+>>>>>>> 23d9fc45f (fix: return named error for write validators (#14919))
 	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		pk, err := validator.ConsPubKey()
 		if err != nil {
+			returnErr = err
 			return true
 		}
 		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
 		if err != nil {
+			returnErr = err
 			return true
 		}
 

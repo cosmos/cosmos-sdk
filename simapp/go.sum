@@ -60,8 +60,6 @@ cosmossdk.io/errors v1.0.0-beta.7 h1:gypHW76pTQGVnHKo6QBkb4yFOJjC+sUGRc5Al3Odj1w
 cosmossdk.io/errors v1.0.0-beta.7/go.mod h1:mz6FQMJRku4bY7aqS/Gwfcmr/ue91roMEKAmDUDpBfE=
 cosmossdk.io/math v1.0.0-beta.6 h1:WF29SiFYNde5eYvqO2kdOM9nYbDb44j3YW5B8M1m9KE=
 cosmossdk.io/math v1.0.0-beta.6/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
-cosmossdk.io/store v0.0.0-20230204135315-697871069999 h1:NrV990BIbdDngOoTrD3Hg5kqqgvy6c+ETaKGY5bSUmo=
-cosmossdk.io/store v0.0.0-20230204135315-697871069999/go.mod h1:Sf3G8SV8e8H31CD6w+o2syqCwyaoL0fe244JcPSsaD4=
 cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 h1:IwyDN/YaQmF+Pmuv8d7vRWMM/k2RjSmPBycMcmd3ICE=
 cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7/go.mod h1:1XOtuYs7jsfQkn7G3VQXB6I+2tHXKHZw2U/AafNbnlk=
 cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f h1:LMXqH69KBG/R8w18sooHtoUZ0+5hcc99m6OjBiooDAo=
@@ -1353,8 +1351,6 @@ google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQ
 google.golang.org/protobuf v1.27.1/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.28.0/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 google.golang.org/protobuf v1.28.1/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
-google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a h1:KJVqJe240LvVd+8lfzRx3hQ0UZ0fyeXEMDMHviRNQKs=
-google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af h1:rAgzfIj9FJtmJ6ZPDlxXX6Fzzix6NOpPTvVmPY5rwQg=
 google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=

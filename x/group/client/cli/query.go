@@ -52,9 +52,15 @@ func QueryGroupsByMemberCmd() *cobra.Command {
 				return err
 			}
 
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			queryClient := group.NewQueryClient(clientCtx)
 			res, err := queryClient.GroupsByMember(cmd.Context(), &group.QueryGroupsByMemberRequest{
-				Address: args[0],
+				Address:    args[0],
+				Pagination: pageReq,
 			})
 			if err != nil {
 				return err
@@ -171,6 +177,7 @@ func QueryGroupMembersCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "group-members")
 
 	return cmd
 }
@@ -207,6 +214,7 @@ func QueryGroupsByAdminCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "groups-by-admin")
 
 	return cmd
 }
@@ -248,6 +256,7 @@ func QueryGroupPoliciesByGroupCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "groups-policies-by-group")
 
 	return cmd
 }
@@ -284,6 +293,7 @@ func QueryGroupPoliciesByAdminCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "group-policies-by-admin")
 
 	return cmd
 }
@@ -355,6 +365,7 @@ func QueryProposalsByGroupPolicyCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "proposals-by-group-policy")
 
 	return cmd
 }
@@ -432,6 +443,7 @@ func QueryVotesByProposalCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "votes-by-proposal")
 
 	return cmd
 }
@@ -503,10 +515,12 @@ func QueryVotesByVoterCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "votes-by-voter")
 
 	return cmd
 }
 
+// QueryGroupsCmd creates a CLI command for Query/Groups.
 func QueryGroupsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "groups",

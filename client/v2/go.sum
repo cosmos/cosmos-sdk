@@ -49,6 +49,8 @@ cosmossdk.io/math v1.0.0-beta.6 h1:WF29SiFYNde5eYvqO2kdOM9nYbDb44j3YW5B8M1m9KE=
 cosmossdk.io/math v1.0.0-beta.6/go.mod h1:gUVtWwIzfSXqcOT+lBVz2jyjfua8DoBdzRsIyaUAT/8=
 cosmossdk.io/store v0.0.0-20230204135315-697871069999 h1:NrV990BIbdDngOoTrD3Hg5kqqgvy6c+ETaKGY5bSUmo=
 cosmossdk.io/store v0.0.0-20230204135315-697871069999/go.mod h1:Sf3G8SV8e8H31CD6w+o2syqCwyaoL0fe244JcPSsaD4=
+cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7 h1:IwyDN/YaQmF+Pmuv8d7vRWMM/k2RjSmPBycMcmd3ICE=
+cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7/go.mod h1:1XOtuYs7jsfQkn7G3VQXB6I+2tHXKHZw2U/AafNbnlk=
 cosmossdk.io/x/tx v0.1.0 h1:uyyYVjG22B+jf54N803Z99Y1uPvfuNP3K1YShoCHYL8=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.0.0-rc.1 h1:m0VOOB23frXZvAOK44usCgLWvtsxIoMCTBGJZlpmGfU=
@@ -134,6 +136,8 @@ github.com/cosmos/cosmos-db v1.0.0-rc.1 h1:SjnT8B6WKMW9WEIX32qMhnEEKcI7ZP0+G1Sa9
 github.com/cosmos/cosmos-db v1.0.0-rc.1/go.mod h1:Dnmk3flSf5lkwCqvvjNpoxjpXzhxnCAFzKHlbaForso=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1 h1:iDL5qh++NoXxG8hSy93FdYJut4XfgbShIocllGaXx/0=
 github.com/cosmos/cosmos-proto v1.0.0-beta.1/go.mod h1:8k2GNZghi5sDRFw/scPL8gMSowT1vDA+5ouxL8GjaUE=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29 h1:HJIOs0YfTumgmw8MU1QIiCHO+tz2IWoLpXNOXzLJqnE=
+github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29/go.mod h1:9dul7UbanQCWIiz4b6FZ8QcKKU28EMgvXVNCTcc6Ivk=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
@@ -951,6 +955,8 @@ google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp0
 google.golang.org/protobuf v1.26.0/go.mod h1:9q0QmTI4eRPtz6boOQmLYwt+qCgq0jsYwAQnmE0givc=
 google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a h1:KJVqJe240LvVd+8lfzRx3hQ0UZ0fyeXEMDMHviRNQKs=
 google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
+google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af h1:rAgzfIj9FJtmJ6ZPDlxXX6Fzzix6NOpPTvVmPY5rwQg=
+google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af/go.mod h1:HV8QOd/L58Z+nl8r43ehVNZIU/HEI6OcFqwMG9pJV4I=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

@@ -29,7 +29,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 )
 
 const (

@@ -42,6 +42,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
 * (store) [#14189](https://github.com/cosmos/cosmos-sdk/pull/14189) Add config `iavl-lazy-loading` to enable lazy loading of iavl store, to improve start up time of archive nodes, add method `SetLazyLoading` to `CommitMultiStore` interface.
 
+### Bug Fixes
+
+* (cli) [#14919](https://github.com/cosmos/cosmos-sdk/pull/#14919) Fix never assigned error when write validators.
+
 ## [v0.47.0-rc2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.0-rc2) - 2023-01-31
 
 ### Improvements
@@ -311,12 +315,7 @@ extension interfaces. `module.Manager.Modules` is now of type `map[string]interf
 * (snapshot) [#13400](https://github.com/cosmos/cosmos-sdk/pull/13400) Fix snapshot checksum issue in golang 1.19.
 * (server) [#13778](https://github.com/cosmos/cosmos-sdk/pull/13778) Set Cosmos SDK default endpoints to localhost to avoid unknown exposure of endpoints.
 * (x/auth) [#13877](https://github.com/cosmos/cosmos-sdk/pull/13877) Handle missing account numbers during `InitGenesis`.
-<<<<<<< HEAD
 * (x/gov) [#13918](https://github.com/cosmos/cosmos-sdk/pull/13918) Fix propagation of message errors when executing a proposal.
-=======
-* (cli) [#14509](https://github.com/cosmos/cosmos-sdk/pull/#14509) Added missing options to keyring-backend flag usage
-* (cli) [#14919](https://github.com/cosmos/cosmos-sdk/pull/#14919) Fix never assigned error when write validators.
->>>>>>> 23d9fc45f (fix: return named error for write validators (#14919))
 
 ### Deprecated
 

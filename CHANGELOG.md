@@ -39,7 +39,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
-* nothing
+### Improvements
+
+* [#498](https://github.com/provenance-io/cosmos-sdk/pull/498) Bump Tendermint to v0.34.25 (from v0.34.24).
 
 ---
 

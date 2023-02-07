@@ -7,13 +7,13 @@ import (
 	"os"
 	"path/filepath"
 
+	cfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/libs/cli"
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	cfg "github.com/tendermint/tendermint/config"
-	"github.com/tendermint/tendermint/libs/cli"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -86,7 +86,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			case clientCtx.ChainID != "":
 				chainID = clientCtx.ChainID
 			default:
-				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
+				chainID = fmt.Sprintf("test-chain-%v", cmtrand.Str(6))
 			}
 
 			// Get bip39 mnemonic

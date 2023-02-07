@@ -75,3 +75,5 @@
   - store/**/*
 "C:orm":
   - orm/**/*
+"C:log":
+  - log/*

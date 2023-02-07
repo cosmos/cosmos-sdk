@@ -16,15 +16,15 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
+	cmtflags "github.com/cometbft/cometbft/libs/cli/flags"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
-	tmcfg "github.com/tendermint/tendermint/config"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
-	tmflags "github.com/tendermint/tendermint/libs/cli/flags"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
@@ -47,8 +47,8 @@ const ServerContextKey = sdk.ContextKey("server.context")
 // server context
 type Context struct {
 	Viper  *viper.Viper
-	Config *tmcfg.Config
-	Logger tmlog.Logger
+	Config *cmtcfg.Config
+	Logger cmtlog.Logger
 }
 
 // ErrorCode contains the exit code for server exit.
@@ -63,12 +63,12 @@ func (e ErrorCode) Error() string {
 func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
-		tmcfg.DefaultConfig(),
-		tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout)),
+		cmtcfg.DefaultConfig(),
+		cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout)),
 	)
 }
 
-func NewContext(v *viper.Viper, config *tmcfg.Config, logger tmlog.Logger) *Context {
+func NewContext(v *viper.Viper, config *cmtcfg.Config, logger cmtlog.Logger) *Context {
 	return &Context{v, config, logger}
 }
 
@@ -108,15 +108,15 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 // InterceptConfigsPreRunHandler performs a pre-run function for the root daemon
 // application command. It will create a Viper literal and a default server
-// Context. The server Tendermint configuration will either be read and parsed
+// Context. The server CometBFT configuration will either be read and parsed
 // or created and saved to disk, where the server Context is updated to reflect
-// the Tendermint configuration. It takes custom app config template and config
-// settings to create a custom Tendermint configuration. If the custom template
+// the CometBFT configuration. It takes custom app config template and config
+// settings to create a custom CometBFT configuration. If the custom template
 // is empty, it uses default-template provided by the server. The Viper literal
 // is used to read and parse the application configuration. Command handlers can
-// fetch the server Context to get the Tendermint configuration or to get access
+// fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, tmConfig *tmcfg.Config) error {
+func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
 	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
@@ -142,32 +142,32 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	serverCtx.Viper.AutomaticEnv()
 
 	// intercept configuration files, using both Viper instances separately
-	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, tmConfig)
+	config, err := interceptConfigs(serverCtx.Viper, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
 	}
 
-	// return value is a tendermint configuration object
+	// return value is a CometBFT configuration object
 	serverCtx.Config = config
 	if err = bindFlags(basename, cmd, serverCtx.Viper); err != nil {
 		return err
 	}
 
-	var logger tmlog.Logger
-	if serverCtx.Viper.GetString(flags.FlagLogFormat) == tmcfg.LogFormatJSON {
-		logger = tmlog.NewTMJSONLogger(tmlog.NewSyncWriter(os.Stdout))
+	var logger cmtlog.Logger
+	if serverCtx.Viper.GetString(flags.FlagLogFormat) == cmtcfg.LogFormatJSON {
+		logger = cmtlog.NewTMJSONLogger(cmtlog.NewSyncWriter(os.Stdout))
 	} else {
-		logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
+		logger = cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	}
-	logger, err = tmflags.ParseLogLevel(config.LogLevel, logger, tmcfg.DefaultLogLevel)
+	logger, err = cmtflags.ParseLogLevel(config.LogLevel, logger, cmtcfg.DefaultLogLevel)
 	if err != nil {
 		return err
 	}
 
-	// Check if the tendermint flag for trace logging is set if it is then setup
+	// Check if the CometBFT flag for trace logging is set if it is then setup
 	// a tracing logger in this app as well.
-	if serverCtx.Viper.GetBool(tmcli.TraceFlag) {
-		logger = tmlog.NewTracingLogger(logger)
+	if serverCtx.Viper.GetBool(cmtcli.TraceFlag) {
+		logger = cmtlog.NewTracingLogger(logger)
 	}
 
 	serverCtx.Logger = logger.With("module", "server")
@@ -199,21 +199,21 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 	return nil
 }
 
-// interceptConfigs parses and updates a Tendermint configuration file or
+// interceptConfigs parses and updates a CometBFT configuration file or
 // creates a new one and saves it. It also parses and saves the application
-// configuration file. The Tendermint configuration file is parsed given a root
+// configuration file. The CometBFT configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, tmConfig *tmcfg.Config) (*tmcfg.Config, error) {
+func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
-	tmCfgFile := filepath.Join(configPath, "config.toml")
+	cmtCfgFile := filepath.Join(configPath, "config.toml")
 
-	conf := tmConfig
+	conf := cmtConfig
 
-	switch _, err := os.Stat(tmCfgFile); {
+	switch _, err := os.Stat(cmtCfgFile); {
 	case os.IsNotExist(err):
-		tmcfg.EnsureRoot(rootDir)
+		cmtcfg.EnsureRoot(rootDir)
 
 		if err = conf.ValidateBasic(); err != nil {
 			return nil, fmt.Errorf("error in config file: %w", err)
@@ -223,7 +223,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		conf.P2P.RecvRate = 5120000
 		conf.P2P.SendRate = 5120000
 		conf.Consensus.TimeoutCommit = 5 * time.Second
-		tmcfg.WriteConfigFile(tmCfgFile, conf)
+		cmtcfg.WriteConfigFile(cmtCfgFile, conf)
 
 	case err != nil:
 		return nil, err
@@ -234,7 +234,7 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		rootViper.AddConfigPath(configPath)
 
 		if err := rootViper.ReadInConfig(); err != nil {
-			return nil, fmt.Errorf("failed to read in %s: %w", tmCfgFile, err)
+			return nil, fmt.Errorf("failed to read in %s: %w", cmtCfgFile, err)
 		}
 	}
 
@@ -280,18 +280,19 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 
 // add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
-	tendermintCmd := &cobra.Command{
-		Use:   "tendermint",
-		Short: "Tendermint subcommands",
+	cometCmd := &cobra.Command{
+		Use:     "comet",
+		Aliases: []string{"cmt", "cometbft", "tendermint"},
+		Short:   "CometBFT subcommands",
 	}
 
-	tendermintCmd.AddCommand(
+	cometCmd.AddCommand(
 		ShowNodeIDCmd(),
 		ShowValidatorCmd(),
 		ShowAddressCmd(),
 		VersionCmd(),
-		tmcmd.ResetAllCmd,
-		tmcmd.ResetStateCmd,
+		cmtcmd.ResetAllCmd,
+		cmtcmd.ResetStateCmd,
 	)
 
 	startCmd := StartCmd(appCreator, defaultNodeHome)
@@ -299,7 +300,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 
 	rootCmd.AddCommand(
 		startCmd,
-		tendermintCmd,
+		cometCmd,
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator, defaultNodeHome),

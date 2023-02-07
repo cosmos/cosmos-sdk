@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
@@ -73,7 +73,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return fmt.Errorf("error exporting state: %v", err)
 			}
 
-			doc, err := tmtypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
+			doc, err := cmttypes.GenesisDocFromFile(serverCtx.Config.GenesisFile())
 			if err != nil {
 				return err
 			}
@@ -81,25 +81,25 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 			doc.AppState = exported.AppState
 			doc.Validators = exported.Validators
 			doc.InitialHeight = exported.Height
-			doc.ConsensusParams = &tmtypes.ConsensusParams{
-				Block: tmtypes.BlockParams{
+			doc.ConsensusParams = &cmttypes.ConsensusParams{
+				Block: cmttypes.BlockParams{
 					MaxBytes: exported.ConsensusParams.Block.MaxBytes,
 					MaxGas:   exported.ConsensusParams.Block.MaxGas,
 				},
-				Evidence: tmtypes.EvidenceParams{
+				Evidence: cmttypes.EvidenceParams{
 					MaxAgeNumBlocks: exported.ConsensusParams.Evidence.MaxAgeNumBlocks,
 					MaxAgeDuration:  exported.ConsensusParams.Evidence.MaxAgeDuration,
 					MaxBytes:        exported.ConsensusParams.Evidence.MaxBytes,
 				},
-				Validator: tmtypes.ValidatorParams{
+				Validator: cmttypes.ValidatorParams{
 					PubKeyTypes: exported.ConsensusParams.Validator.PubKeyTypes,
 				},
 			}
 
-			// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
+			// NOTE: CometBFT uses a custom JSON decoder for GenesisDoc
 			// (except for stuff inside AppState). Inside AppState, we're free
 			// to encode as protobuf or amino.
-			encoded, err := tmjson.Marshal(doc)
+			encoded, err := cmtjson.Marshal(doc)
 			if err != nil {
 				return err
 			}
@@ -113,8 +113,8 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 				return nil
 			}
 
-			var exportedGenDoc tmtypes.GenesisDoc
-			if err = tmjson.Unmarshal(out, &exportedGenDoc); err != nil {
+			var exportedGenDoc cmttypes.GenesisDoc
+			if err = cmtjson.Unmarshal(out, &exportedGenDoc); err != nil {
 				return err
 			}
 			if err = exportedGenDoc.SaveAs(outputDocument); err != nil {

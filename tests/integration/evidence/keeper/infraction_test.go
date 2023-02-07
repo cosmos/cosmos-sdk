@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -77,7 +77,7 @@ func initFixture(t assert.TestingT) *fixture {
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	f.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
+	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
 	f.app = app
 	f.evidenceKeeper = evidenceKeeper
 

@@ -4,9 +4,9 @@ import (
 	"math/rand"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -52,7 +52,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = suite.app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -98,7 +98,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgSend(suite.accountKeeper, suite.bankKeeper)
@@ -125,7 +125,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSend(suite.accountKeeper, suite.bankKeeper)
@@ -158,7 +158,7 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	accounts := suite.getTestingAccounts(r, accCount)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgSendToModuleAccount(suite.accountKeeper, suite.bankKeeper, moduleAccCount)
@@ -189,7 +189,7 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	accounts := suite.getTestingAccounts(r, accCount)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.accountKeeper, suite.bankKeeper, mAccCount)

@@ -3,10 +3,10 @@ package server
 import (
 	"fmt"
 
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	tversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/p2p"
-	pvm "github.com/tendermint/tendermint/privval"
-	tversion "github.com/tendermint/tendermint/version"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ShowNodeIDCmd - ported from Tendermint, dump node ID to stdout
+// ShowNodeIDCmd - ported from CometBFT, dump node ID to stdout
 func ShowNodeIDCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show-node-id",
@@ -34,11 +34,11 @@ func ShowNodeIDCmd() *cobra.Command {
 	}
 }
 
-// ShowValidatorCmd - ported from Tendermint, show this node's validator info
+// ShowValidatorCmd - ported from CometBFT, show this node's validator info
 func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
-		Short: "Show this node's tendermint validator info",
+		Short: "Show this node's CometBFT validator info",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
@@ -72,7 +72,7 @@ func ShowValidatorCmd() *cobra.Command {
 func ShowAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-address",
-		Short: "Shows this node's tendermint validator consensus address",
+		Short: "Shows this node's CometBFT validator consensus address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
@@ -88,11 +88,11 @@ func ShowAddressCmd() *cobra.Command {
 	return cmd
 }
 
-// VersionCmd prints tendermint and ABCI version numbers.
+// VersionCmd prints CometBFT and ABCI version numbers.
 func VersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Print tendermint libraries' version",
+		Short: "Print CometBFT libraries' version",
 		Long:  "Print protocols' and libraries' version numbers against which this app has been compiled.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bs, err := yaml.Marshal(&struct {

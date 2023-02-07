@@ -31,7 +31,7 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 
 	if len(bz) <= maxByteLen {
 		text := toHex(bz)
-		return []Screen{{Text: text}}, nil
+		return []Screen{{Content: text}}, nil
 	}
 
 	// For long bytes, we display the hash.
@@ -43,14 +43,14 @@ func (vr bytesValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	h := hasher.Sum(nil)
 
 	text := fmt.Sprintf("%s%s", hashPrefix, toHex(h))
-	return []Screen{{Text: text}}, nil
+	return []Screen{{Content: text}}, nil
 }
 
 func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protoreflect.Value, error) {
 	if len(screens) != 1 {
 		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
-	formatted := screens[0].Text
+	formatted := screens[0].Content
 
 	// If the formatted string starts with `SHA-256=`, then we can't actually
 	// invert to get the original bytes. In this case, we return empty bytes.

@@ -10,11 +10,11 @@ import (
 	"testing"
 
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
@@ -186,8 +186,8 @@ func TestAppImportExport(t *testing.T) {
 		}
 	}()
 
-	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctxA := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()})
+	ctxB := newApp.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()})
 	newApp.ModuleManager.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 

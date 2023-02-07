@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
-	tmcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
@@ -752,7 +752,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 				continue
 			}
 
-			saltBytes := tmcrypto.CRandBytes(16)
+			saltBytes := cmtcrypto.CRandBytes(16)
 			passwordHash, err := bcrypt.GenerateFromPassword(saltBytes, []byte(pass), 2)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)

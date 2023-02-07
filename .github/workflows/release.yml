@@ -39,7 +39,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2.2.0
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: cosmos-sdk
+          SLACK_CHANNEL: cosmos-tech
           SLACK_USERNAME: Cosmos SDK Release Bot
           SLACK_ICON: https://avatars.githubusercontent.com/t/5997665?size=64
           SLACK_COLOR: good

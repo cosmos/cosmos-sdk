@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/log"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	storetypes "cosmossdk.io/store/types"

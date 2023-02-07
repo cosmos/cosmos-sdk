@@ -19,7 +19,7 @@ const (
 )
 
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
-// provided clientCtx should have, at a minimum, a verifier, Tendermint RPC client,
+// provided clientCtx should have, at a minimum, a verifier, CometBFT RPC client,
 // and marshaler set.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{

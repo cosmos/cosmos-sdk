@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	"cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -32,7 +32,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 	app, err := simtestutil.Setup(testutil.AppConfig, &evidenceKeeper)
 	require.NoError(suite.T(), err)
 
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
 	suite.keeper = evidenceKeeper
 }
 

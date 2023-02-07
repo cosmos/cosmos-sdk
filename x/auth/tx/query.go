@@ -16,7 +16,7 @@ import (
 )
 
 // QueryTxsByEvents performs a search for transactions for a given set of events
-// via the Tendermint RPC. An event takes the form of:
+// via the CometBFT RPC. An event takes the form of:
 // "{eventAttribute}.{attributeKey} = '{attributeValue}'". Each event is
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.

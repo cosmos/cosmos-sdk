@@ -109,7 +109,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
 
-When we subscribe to emitted events on the tendermint websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
+When we subscribe to emitted events on the cometbft websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
 
 **Step-2**: Add proto definitions for typed events for msgs in each module:
 
@@ -209,7 +209,7 @@ func SubmitProposalEventHandler(ev proto.Message) (err error) {
 // should be implemented somewhere in the Cosmos SDK. The Cosmos SDK can include an EventEmitters for tm.event='Tx'
 // and/or tm.event='NewBlock' (the new block events may contain typed events)
 func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) (err error) {
-    // Instantiate and start tendermint RPC client
+    // Instantiate and start CometBFT RPC client
     client, err := cliCtx.GetNode()
     if err != nil {
         return err
@@ -260,8 +260,8 @@ func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) 
 	return group.Wait()
 }
 
-// PublishChainTxEvents events using tmclient. Waits on context shutdown signals to exit.
-func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus pubsub.Bus, mb module.BasicManager) (err error) {
+// PublishChainTxEvents events using cmtclient. Waits on context shutdown signals to exit.
+func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bus pubsub.Bus, mb module.BasicManager) (err error) {
     // Subscribe to transaction events
     txch, err := client.Subscribe(ctx, "txevents", "tm.event='Tx'", 100)
     if err != nil {
@@ -285,7 +285,7 @@ func PublishChainTxEvents(ctx context.Context, client tmclient.EventsClient, bus
                 break
             case ed := <-ch:
                 switch evt := ed.Data.(type) {
-                case tmtypes.EventDataTx:
+                case cmttypes.EventDataTx:
                     if !evt.Result.IsOK() {
                         continue
                     }

@@ -55,6 +55,21 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/gov/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovV1Params",
+          "Proposal": "GovV1Proposal",
+          "Proposals": "GovV1Proposal",
+          "Vote": "GovV1Vote",
+          "Votes": "GovV1Votes",
+          "Deposit": "GovV1Deposit",
+          "Deposits": "GovV1Deposit",
+          "TallyResult": "GovV1TallyResult"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/mint/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
@@ -114,6 +129,25 @@
       "operationIds": {
         "rename": {
           "Params": "FeegrantParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/nft/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "NftParams",
+          "Balance": "NftBalance"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/group/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GroupParams",
+          "Proposal": "GroupProposal",
+          "TallyResult": "GroupTallyResult"
         }
       }
     }

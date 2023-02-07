@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"cosmossdk.io/x/nft"
 )
 
 func (s *TestSuite) TestBatchMint() {
@@ -73,7 +72,7 @@ func (s *TestSuite) TestBatchMint() {
 		{
 			"faild with not exist class",
 			func(tokens []nft.NFT) {
-				//do nothing
+				// do nothing
 			},
 			[]nft.NFT{
 				{ClassId: "classID1", Id: "nftID1"},
@@ -197,7 +196,6 @@ func (s *TestSuite) TestBatchBurn() {
 			s.Require().Error(err)
 		})
 	}
-
 }
 
 func (s *TestSuite) TestBatchUpdate() {
@@ -266,7 +264,6 @@ func (s *TestSuite) TestBatchUpdate() {
 			s.Require().Error(err)
 		})
 	}
-
 }
 
 func (s *TestSuite) TestBatchTransfer() {
@@ -333,7 +330,6 @@ func (s *TestSuite) TestBatchTransfer() {
 			s.Require().Error(err)
 		})
 	}
-
 }
 
 func groupByClassID(tokens []nft.NFT) map[string][]nft.NFT {
@@ -351,13 +347,6 @@ func (s *TestSuite) saveClass(tokens []nft.NFT) {
 	classMap := groupByClassID(tokens)
 	for classID := range classMap {
 		err := s.nftKeeper.SaveClass(s.ctx, nft.Class{Id: classID})
-		s.Require().NoError(err)
-	}
-}
-
-func (s *TestSuite) mintNFT(tokens []nft.NFT, receiver sdk.AccAddress) {
-	for _, token := range tokens {
-		err := s.nftKeeper.Mint(s.ctx, token, receiver)
 		s.Require().NoError(err)
 	}
 }

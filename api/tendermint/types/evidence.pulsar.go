@@ -4,7 +4,7 @@ package types
 import (
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -2542,6 +2542,7 @@ type Evidence struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Sum:
+	//
 	//	*Evidence_DuplicateVoteEvidence
 	//	*Evidence_LightClientAttackEvidence
 	Sum isEvidence_Sum `protobuf_oneof:"sum"`

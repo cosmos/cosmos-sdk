@@ -3,9 +3,11 @@ package depinject
 import (
 	"bytes"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
-	"github.com/pkg/errors"
 	"reflect"
+
+	"github.com/pkg/errors"
+
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type container struct {
@@ -13,12 +15,18 @@ type container struct {
 
 	resolvers         map[string]resolver
 	interfaceBindings map[string]interfaceBinding
+	invokers          []invoker
 
-	moduleKeys map[string]*moduleKey
+	moduleKeyContext *ModuleKeyContext
 
 	resolveStack []resolveFrame
 	callerStack  []Location
 	callerMap    map[Location]bool
+}
+
+type invoker struct {
+	fn     *providerDescriptor
+	modKey *moduleKey
 }
 
 type resolveFrame struct {
@@ -40,14 +48,14 @@ func newContainer(cfg *debugConfig) *container {
 	return &container{
 		debugConfig:       cfg,
 		resolvers:         map[string]resolver{},
-		moduleKeys:        map[string]*moduleKey{},
+		moduleKeyContext:  &ModuleKeyContext{},
 		interfaceBindings: map[string]interfaceBinding{},
 		callerStack:       nil,
 		callerMap:         map[Location]bool{},
 	}
 }
 
-func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
+func (c *container) call(provider *providerDescriptor, moduleKey *moduleKey) ([]reflect.Value, error) {
 	loc := provider.Location
 	graphNode := c.locationGraphNode(loc, moduleKey)
 
@@ -87,8 +95,6 @@ func (c *container) call(provider *ProviderDescriptor, moduleKey *moduleKey) ([]
 }
 
 func (c *container) getResolver(typ reflect.Type, key *moduleKey) (resolver, error) {
-	c.logf("Resolving %v", typ)
-
 	pr, err := c.getExplicitResolver(typ, key)
 	if err != nil {
 		return nil, err
@@ -199,7 +205,7 @@ func (c *container) getExplicitResolver(typ reflect.Type, key *moduleKey) (resol
 
 var stringType = reflect.TypeOf("")
 
-func (c *container) addNode(provider *ProviderDescriptor, key *moduleKey) (interface{}, error) {
+func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (interface{}, error) {
 	providerGraphNode := c.locationGraphNode(provider.Location, key)
 	hasModuleKeyParam := false
 	hasOwnModuleKeyParam := false
@@ -353,7 +359,21 @@ func (c *container) supply(value reflect.Value, location Location) error {
 	return nil
 }
 
-func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
+func (c *container) addInvoker(provider *providerDescriptor, key *moduleKey) error {
+	// make sure there are no outputs
+	if len(provider.Outputs) > 0 {
+		return fmt.Errorf("invoker function %s should not return any outputs", provider.Location)
+	}
+
+	c.invokers = append(c.invokers, invoker{
+		fn:     provider,
+		modKey: key,
+	})
+
+	return nil
+}
+
+func (c *container) resolve(in providerInput, moduleKey *moduleKey, caller Location) (reflect.Value, error) {
 	c.resolveStack = append(c.resolveStack, resolveFrame{loc: caller, typ: in.Type})
 
 	typeGraphNode := c.typeGraphNode(in.Type)
@@ -389,7 +409,7 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 
 		markGraphNodeAsFailed(typeGraphNode)
 		return reflect.Value{}, errors.Errorf("can't resolve type %v for %s:\n%s",
-			in.Type, caller, c.formatResolveStack())
+			fullyQualifiedTypeName(in.Type), caller, c.formatResolveStack())
 	}
 
 	res, err := vr.resolve(c, moduleKey, caller)
@@ -406,17 +426,17 @@ func (c *container) resolve(in ProviderInput, moduleKey *moduleKey, caller Locat
 }
 
 func (c *container) build(loc Location, outputs ...interface{}) error {
-	var providerIn []ProviderInput
+	var providerIn []providerInput
 	for _, output := range outputs {
 		typ := reflect.TypeOf(output)
 		if typ.Kind() != reflect.Pointer {
 			return fmt.Errorf("output type must be a pointer, %s is invalid", typ)
 		}
 
-		providerIn = append(providerIn, ProviderInput{Type: typ.Elem()})
+		providerIn = append(providerIn, providerInput{Type: typ.Elem()})
 	}
 
-	desc := ProviderDescriptor{
+	desc := providerDescriptor{
 		Inputs:  providerIn,
 		Outputs: nil,
 		Fn: func(values []reflect.Value) ([]reflect.Value, error) {
@@ -426,6 +446,10 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 
 			for i, output := range outputs {
 				val := reflect.ValueOf(output)
+
+				if !values[i].CanInterface() {
+					return []reflect.Value{}, fmt.Errorf("depinject.Out struct %s on package can't have unexported field", values[i].String())
+				}
 				val.Elem().Set(values[i])
 			}
 
@@ -462,17 +486,16 @@ func (c *container) build(loc Location, outputs ...interface{}) error {
 		return err
 	}
 	c.logf("Done building container")
+	c.logf("Calling invokers")
+	for _, inv := range c.invokers {
+		_, err := c.call(inv.fn, inv.modKey)
+		if err != nil {
+			return err
+		}
+	}
+	c.logf("Done calling invokers")
 
 	return nil
-}
-
-func (c container) createOrGetModuleKey(name string) *moduleKey {
-	if s, ok := c.moduleKeys[name]; ok {
-		return s
-	}
-	s := &moduleKey{name}
-	c.moduleKeys[name] = s
-	return s
 }
 
 func (c container) formatResolveStack() string {
@@ -491,7 +514,12 @@ func fullyQualifiedTypeName(typ reflect.Type) string {
 	if typ.Kind() == reflect.Pointer || typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Array {
 		pkgType = typ.Elem()
 	}
-	return fmt.Sprintf("%s/%v", pkgType.PkgPath(), typ)
+	pkgPath := pkgType.PkgPath()
+	if pkgPath == "" {
+		return fmt.Sprintf("%v", typ)
+	}
+
+	return fmt.Sprintf("%s/%v", pkgPath, typ)
 }
 
 func bindingKeyFromTypeName(typeName string, key *moduleKey) string {

@@ -3,7 +3,7 @@ package v1
 import (
 	"fmt"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

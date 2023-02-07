@@ -3,21 +3,22 @@ package network
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"net"
+	"os"
 	"path/filepath"
 	"time"
 
-	abciclient "github.com/tendermint/tendermint/abci/client"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmtime "github.com/tendermint/tendermint/libs/time"
-	"github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/rpc/client/local"
-	"github.com/tendermint/tendermint/types"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
+	"github.com/cometbft/cometbft/rpc/client/local"
+	"github.com/cometbft/cometbft/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/server/api"
 	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -26,43 +27,42 @@ import (
 
 func startInProcess(cfg Config, val *Validator) error {
 	logger := val.Ctx.Logger
-	tmCfg := val.Ctx.Config
-	tmCfg.Instrumentation.Prometheus = false
+	cmtCfg := val.Ctx.Config
+	cmtCfg.Instrumentation.Prometheus = false
 
 	if err := val.AppConfig.ValidateBasic(); err != nil {
 		return err
 	}
 
-	app := cfg.AppConstructor(*val)
-
-	genDoc, err := types.GenesisDocFromFile(tmCfg.GenesisFile())
+	nodeKey, err := p2p.LoadOrGenNodeKey(cmtCfg.NodeKeyFile())
 	if err != nil {
 		return err
 	}
 
-	val.tmNode, err = node.New(
-		tmCfg,
+	app := cfg.AppConstructor(*val)
+	genDocProvider := node.DefaultGenesisDocProviderFunc(cmtCfg)
+
+	tmNode, err := node.NewNode( //resleak:notresource
+		cmtCfg,
+		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
+		nodeKey,
+		proxy.NewLocalClientCreator(app),
+		genDocProvider,
+		node.DefaultDBProvider,
+		node.DefaultMetricsProvider(cmtCfg.Instrumentation),
 		logger.With("module", val.Moniker),
-		abciclient.NewLocalCreator(app),
-		genDoc,
 	)
 	if err != nil {
 		return err
 	}
 
-	if err := val.tmNode.Start(); err != nil {
+	if err := tmNode.Start(); err != nil {
 		return err
 	}
+	val.tmNode = tmNode
 
 	if val.RPCAddress != "" {
-		node, ok := val.tmNode.(local.NodeService)
-		if !ok {
-			return fmt.Errorf("failed to cast %T to NodeService", val.tmNode)
-		}
-		val.RPCClient, err = local.New(node)
-		if err != nil {
-			return errors.Wrap(err, "failed to create a local node")
-		}
+		val.RPCClient = local.New(tmNode)
 	}
 
 	// We'll need a RPC client if the validator exposes a gRPC or REST endpoint.
@@ -70,15 +70,22 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.ClientCtx = val.ClientCtx.
 			WithClient(val.RPCClient)
 
-		// Add the tx service in the gRPC router.
 		app.RegisterTxService(val.ClientCtx)
-
-		// Add the tendermint queries service in the gRPC router.
 		app.RegisterTendermintService(val.ClientCtx)
+		app.RegisterNodeService(val.ClientCtx)
+	}
+
+	if val.AppConfig.GRPC.Enable {
+		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
+		if err != nil {
+			return err
+		}
+
+		val.grpc = grpcSrv
 	}
 
 	if val.APIAddress != "" {
-		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"))
+		apiSrv := api.New(val.ClientCtx, logger.With("module", "api-server"), val.grpc)
 		app.RegisterAPIRoutes(apiSrv, val.AppConfig.API)
 
 		errCh := make(chan error)
@@ -98,46 +105,31 @@ func startInProcess(cfg Config, val *Validator) error {
 		val.api = apiSrv
 	}
 
-	if val.AppConfig.GRPC.Enable {
-		grpcSrv, err := servergrpc.StartGRPCServer(val.ClientCtx, app, val.AppConfig.GRPC)
-		if err != nil {
-			return err
-		}
-
-		val.grpc = grpcSrv
-
-		if val.AppConfig.GRPCWeb.Enable {
-			val.grpcWeb, err = servergrpc.StartGRPCWeb(grpcSrv, *val.AppConfig)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
-	genTime := tmtime.Now()
+	genTime := cmttime.Now()
 
 	for i := 0; i < cfg.NumValidators; i++ {
-		tmCfg := vals[i].Ctx.Config
+		cmtCfg := vals[i].Ctx.Config
 
 		nodeDir := filepath.Join(outputDir, vals[i].Moniker, "simd")
 		gentxsDir := filepath.Join(outputDir, "gentxs")
 
-		tmCfg.Moniker = vals[i].Moniker
-		tmCfg.SetRoot(nodeDir)
+		cmtCfg.Moniker = vals[i].Moniker
+		cmtCfg.SetRoot(nodeDir)
 
 		initCfg := genutiltypes.NewInitConfig(cfg.ChainID, gentxsDir, vals[i].NodeID, vals[i].PubKey)
 
-		genFile := tmCfg.GenesisFile()
+		genFile := cmtCfg.GenesisFile()
 		genDoc, err := types.GenesisDocFromFile(genFile)
 		if err != nil {
 			return err
 		}
 
 		appState, err := genutil.GenAppStateFromConfig(cfg.Codec, cfg.TxConfig,
-			tmCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{})
+			cmtCfg, initCfg, *genDoc, banktypes.GenesisBalancesIterator{}, genutiltypes.DefaultMessageValidator)
 		if err != nil {
 			return err
 		}
@@ -193,18 +185,33 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
-	file := filepath.Join(writePath, name)
+	file := filepath.Join(dir, name)
 
-	err := tmos.EnsureDir(writePath, 0o755)
-	if err != nil {
-		return err
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("could not create directory %q: %w", dir, err)
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
-	if err != nil {
+	if err := os.WriteFile(file, contents, 0o644); err != nil { //nolint: gosec
 		return err
 	}
 
 	return nil
+}
+
+// Get a free address for a test tendermint server
+// protocol is either tcp, http, etc
+func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	closeFn = func() error {
+		return l.Close()
+	}
+
+	portI := l.Addr().(*net.TCPAddr).Port
+	port = fmt.Sprintf("%d", portI)
+	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
+	return
 }

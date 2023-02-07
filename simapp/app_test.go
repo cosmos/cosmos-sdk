@@ -2,17 +2,23 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
 
+	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/upgrade"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -23,8 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	group "github.com/cosmos/cosmos-sdk/x/group/module"
@@ -32,55 +36,51 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:             logger,
-		DB:                 db,
-		InvCheckPeriod:     0,
-		EncConfig:          encCfg,
-		HomePath:           DefaultNodeHome,
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            EmptyAppOptions{},
+		Logger:  logger,
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
-	for acc := range maccPerms {
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app v2.
+	for acc := range BlockedAddresses() {
+		var addr sdk.AccAddress
+		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
+			addr = modAddr
+		} else {
+			addr = app.AccountKeeper.GetModuleAddress(acc)
+		}
+
 		require.True(
 			t,
-			app.BankKeeper.BlockedAddr(app.AccountKeeper.GetModuleAddress(acc)),
-			"ensure that blocked addresses are properly set in bank keeper",
+			app.BankKeeper.BlockedAddr(addr),
+			fmt.Sprintf("ensure that blocked addresses are properly set in bank keeper: %s should be blocked", acc),
 		)
 	}
 
 	app.Commit()
 
-	logger2, _ := log.NewDefaultLogger("plain", "info", false)
+	logger2 := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewSimApp(logger2, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	_, err := app2.ExportAppStateAndValidators(false, []string{})
+	app2 := NewSimApp(logger2, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	_, err := app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
-}
-
-func TestGetMaccPerms(t *testing.T) {
-	dup := GetMaccPerms()
-	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
 }
 
 func TestRunMigrations(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
 	// Create a new baseapp and configurator for the purpose of this test.
-	bApp := baseapp.NewBaseApp(appName, logger, db, encCfg.TxConfig.TxDecoder())
+	bApp := baseapp.NewBaseApp(app.Name(), logger, db, app.TxConfig().TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
-	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
+	bApp.SetInterfaceRegistry(app.InterfaceRegistry())
 	app.BaseApp = bApp
 	configurator := module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
@@ -89,12 +89,14 @@ func TestRunMigrations(t *testing.T) {
 	//
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
-	for _, module := range app.ModuleManager.Modules {
-		if module.Name() == banktypes.ModuleName {
+	for name, mod := range app.ModuleManager.Modules {
+		if name == banktypes.ModuleName {
 			continue
 		}
 
-		module.RegisterServices(configurator)
+		if mod, ok := mod.(module.HasServices); ok {
+			mod.RegisterServices(configurator)
+		}
 	}
 
 	// Initialize the chain
@@ -172,7 +174,7 @@ func TestRunMigrations(t *testing.T) {
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
 			_, err = app.ModuleManager.RunMigrations(
-				app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()}), configurator,
+				app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
 					"bank":         1,
 					"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -206,16 +208,15 @@ func TestRunMigrations(t *testing.T) {
 
 func TestInitGenesisOnMigration(t *testing.T) {
 	db := dbm.NewMemDB()
-	encCfg := MakeTestEncodingConfig()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
-	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+	ctx := app.NewContext(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	// Create a mock module. This module will serve as the new module we're
 	// adding during a migration.
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
-	mockModule := mocks.NewMockAppModule(mockCtrl)
+	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
@@ -249,23 +250,22 @@ func TestInitGenesisOnMigration(t *testing.T) {
 }
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
-	encCfg := MakeTestEncodingConfig()
 	db := dbm.NewMemDB()
-	logger, _ := log.NewDefaultLogger("plain", "info", false)
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 	app := NewSimappWithCustomOptions(t, false, SetupOptions{
-		Logger:             logger,
-		DB:                 db,
-		InvCheckPeriod:     0,
-		EncConfig:          encCfg,
-		HomePath:           DefaultNodeHome,
-		SkipUpgradeHeights: map[int64]bool{},
-		AppOpts:            EmptyAppOptions{},
+		Logger:  logger,
+		DB:      db,
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
 	// make sure the upgrade keeper has version map in state
-	ctx := app.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false, cmtproto.Header{})
 	vm := app.UpgradeKeeper.GetModuleVersionMap(ctx)
 	for v, i := range app.ModuleManager.Modules {
-		require.Equal(t, vm[v], i.ConsensusVersion())
+		if i, ok := i.(module.HasConsensusVersion); ok {
+			require.Equal(t, vm[v], i.ConsensusVersion())
+		}
 	}
+
+	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
 }

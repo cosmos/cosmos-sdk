@@ -7,9 +7,13 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"cosmossdk.io/x/nft"
+	nftkeeper "cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft/simulation"
+	"cosmossdk.io/x/nft/testutil"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -19,10 +23,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -53,7 +53,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -76,16 +76,18 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.WeightSend, simulation.TypeMsgSend, simulation.TypeMsgSend},
+		{simulation.WeightSend, nft.ModuleName, simulation.TypeMsgSend},
 	}
 
 	for i, w := range weightedOps {
-		operationMsg, _, _ := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
+		suite.Require().NoError(err)
+
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
 		suite.Require().Equal(expected[i].weight, w.Weight(), "weight should be the same")
-		suite.Require().Contains(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
+		suite.Require().Equal(expected[i].opMsgRoute, operationMsg.Route, "route should be the same")
 		suite.Require().Equal(expected[i].opMsgName, operationMsg.Name, "operation Msg name should be the same")
 	}
 }
@@ -113,9 +115,9 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
-	// begin a new block
+	// begin new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},

@@ -3,21 +3,23 @@ package capability
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"time"
 
-	"cosmossdk.io/core/appmodule"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	"cosmossdk.io/core/appmodule"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
+	"cosmossdk.io/depinject"
+
+	store "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	store "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -28,7 +30,7 @@ import (
 )
 
 var (
-	_ module.AppModule           = AppModule{}
+	_ module.BeginBlockAppModule = AppModule{}
 	_ module.AppModuleBasic      = AppModuleBasic{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -102,21 +104,18 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, sealKeeper bool) AppMod
 	}
 }
 
+var _ appmodule.AppModule = AppModule{}
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
 // Name returns the capability module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
-
-// Deprecated: Route returns the capability module's message routing key.
-func (AppModule) Route() sdk.Route {
-	return sdk.Route{}
-}
-
-// QuerierRoute returns the capability module's query routing key.
-func (AppModule) QuerierRoute() string { return "" }
-
-// LegacyQuerierHandler returns the capability module's Querier.
-func (am AppModule) LegacyQuerierHandler(*codec.LegacyAmino) sdk.Querier { return nil }
 
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
@@ -159,56 +158,56 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	}
 }
 
-// EndBlock executes all ABCI EndBlock logic respective to the capability module. It
-// returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
-}
-
-func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
-			provideModuleBasic,
-			provideModule,
-		))
-}
-
-func provideModuleBasic() runtime.AppModuleBasicWrapper {
-	return runtime.WrapAppModuleBasic(AppModuleBasic{})
-}
-
-func provideModule(
-	kvStoreKey *store.KVStoreKey,
-	memStoreKey *store.MemoryStoreKey,
-	cdc codec.Codec,
-	config *modulev1.Module,
-) (*keeper.Keeper, runtime.AppModuleWrapper) {
-	k := keeper.NewKeeper(cdc, kvStoreKey, memStoreKey)
-	m := NewAppModule(cdc, *k, config.SealKeeper)
-	return k, runtime.WrapAppModule(m)
-}
-
 // GenerateGenesisState creates a randomized GenState of the capability module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// ProposalContents performs a no-op
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
-}
-
-// RandomizedParams creates randomized capability param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder for capability module's types
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return nil
+}
+
+//
+// App Wiring Setup
+//
+
+func init() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideModule),
+	)
+}
+
+//nolint:revive
+type CapabilityInputs struct {
+	depinject.In
+
+	Config *modulev1.Module
+
+	KvStoreKey  *store.KVStoreKey
+	MemStoreKey *store.MemoryStoreKey
+	Cdc         codec.Codec
+}
+
+//nolint:revive
+type CapabilityOutputs struct {
+	depinject.Out
+
+	CapabilityKeeper *keeper.Keeper
+	Module           appmodule.AppModule
+}
+
+func ProvideModule(in CapabilityInputs) CapabilityOutputs {
+	k := keeper.NewKeeper(in.Cdc, in.KvStoreKey, in.MemStoreKey)
+	m := NewAppModule(in.Cdc, *k, in.Config.SealKeeper)
+
+	return CapabilityOutputs{
+		CapabilityKeeper: k,
+		Module:           m,
+	}
 }

@@ -10,9 +10,9 @@ import (
 // generate empty strings for Name.
 var genTableModel = rapid.Custom(func(t *rapid.T) *testdata.TableModel {
 	return &testdata.TableModel{
-		Id:       rapid.Uint64().Draw(t, "id").(uint64),
-		Name:     rapid.StringN(1, 100, 150).Draw(t, "name").(string),
-		Number:   rapid.Uint64().Draw(t, "number ").(uint64),
-		Metadata: []byte(rapid.StringN(1, 100, 150).Draw(t, "metadata").(string)),
+		Id:       rapid.Uint64().Draw(t, "id"),
+		Name:     rapid.StringN(1, 100, 150).Draw(t, "name"),
+		Number:   rapid.Uint64().Draw(t, "number "),
+		Metadata: []byte(rapid.StringN(1, 100, 150).Draw(t, "metadata")),
 	}
 })

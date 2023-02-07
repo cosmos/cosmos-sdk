@@ -2,16 +2,18 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/log"
+	"github.com/cosmos/gogoproto/proto"
 
-	"github.com/tendermint/tendermint/libs/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -84,14 +86,17 @@ func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccA
 func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []sdk.Msg) ([][]byte, error) {
 	results := make([][]byte, len(msgs))
 	now := ctx.BlockTime()
+
 	for i, msg := range msgs {
 		signers := msg.GetSigners()
 		if len(signers) != 1 {
 			return nil, authz.ErrAuthorizationNumOfSigners
 		}
+
 		granter := signers[0]
 
-		// if granter != grantee then check authorization.Accept, otherwise we implicitly accept.
+		// If granter != grantee then check authorization.Accept, otherwise we
+		// implicitly accept.
 		if !granter.Equals(grantee) {
 			skey := grantStoreKey(grantee, granter, sdk.MsgTypeURL(msg))
 
@@ -113,6 +118,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			if err != nil {
 				return nil, err
 			}
+
 			if resp.Delete {
 				err = k.DeleteGrant(ctx, grantee, granter, sdk.MsgTypeURL(msg))
 			} else if resp.Updated != nil {
@@ -121,6 +127,7 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 			if err != nil {
 				return nil, err
 			}
+
 			if !resp.Accept {
 				return nil, sdkerrors.ErrUnauthorized
 			}
@@ -135,14 +142,19 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to execute message; message %v", msg)
 		}
+
 		results[i] = msgResp.Data
 
 		// emit the events from the dispatched actions
 		events := msgResp.Events
 		sdkEvents := make([]sdk.Event, 0, len(events))
-		for i := 0; i < len(events); i++ {
-			sdkEvents = append(sdkEvents, sdk.Event(events[i]))
+		for _, event := range events {
+			e := event
+			e.Attributes = append(e.Attributes, abci.EventAttribute{Key: "authz_msg_index", Value: strconv.Itoa(i)})
+
+			sdkEvents = append(sdkEvents, sdk.Event(e))
 		}
+
 		ctx.EventManager().EmitEvents(sdkEvents)
 	}
 
@@ -166,11 +178,13 @@ func (k Keeper) SaveGrant(ctx sdk.Context, grantee, granter sdk.AccAddress, auth
 	if oldGrant, found := k.getGrant(ctx, skey); found {
 		oldExp = oldGrant.Expiration
 	}
+
 	if oldExp != nil && (expiration == nil || !oldExp.Equal(*expiration)) {
 		if err = k.removeFromGrantQueue(ctx, skey, granter, grantee, *oldExp); err != nil {
 			return err
 		}
 	}
+
 	// If the expiration didn't change, then we don't remove it and we should not insert again
 	if expiration != nil && (oldExp == nil || !oldExp.Equal(*expiration)) {
 		if err = k.insertIntoGrantQueue(ctx, granter, grantee, msgType, *expiration); err != nil {
@@ -218,7 +232,7 @@ func (k Keeper) DeleteGrant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk
 func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress) ([]authz.Authorization, error) {
 	store := ctx.KVStore(k.storeKey)
 	key := grantStoreKey(grantee, granter, "")
-	iter := sdk.KVStorePrefixIterator(store, key)
+	iter := storetypes.KVStorePrefixIterator(store, key)
 	defer iter.Close()
 
 	var authorization authz.Grant
@@ -239,6 +253,25 @@ func (k Keeper) GetAuthorizations(ctx sdk.Context, grantee sdk.AccAddress, grant
 	return authorizations, nil
 }
 
+// GetAuthorization returns an Authorization and it's expiration time.
+// A nil Authorization is returned under the following circumstances:
+//   - No grant is found.
+//   - A grant is found, but it is expired.
+//   - There was an error getting the authorization from the grant.
+func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType string) (authz.Authorization, *time.Time) {
+	grant, found := k.getGrant(ctx, grantStoreKey(grantee, granter, msgType))
+	if !found || (grant.Expiration != nil && grant.Expiration.Before(ctx.BlockHeader().Time)) {
+		return nil, nil
+	}
+
+	auth, err := grant.GetAuthorization()
+	if err != nil {
+		return nil, nil
+	}
+
+	return auth, grant.Expiration
+}
+
 // IterateGrants iterates over all authorization grants
 // This function should be used with caution because it can involve significant IO operations.
 // It should not be used in query or msg services without charging additional gas.
@@ -247,7 +280,7 @@ func (k Keeper) IterateGrants(ctx sdk.Context,
 	handler func(granterAddr sdk.AccAddress, granteeAddr sdk.AccAddress, grant authz.Grant) bool,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	iter := sdk.KVStorePrefixIterator(store, GrantKey)
+	iter := storetypes.KVStorePrefixIterator(store, GrantKey)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var grant authz.Grant
@@ -346,7 +379,7 @@ func (k Keeper) removeFromGrantQueue(ctx sdk.Context, grantKey []byte, granter, 
 func (k Keeper) DequeueAndDeleteExpiredGrants(ctx sdk.Context) error {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := store.Iterator(GrantQueuePrefix, sdk.InclusiveEndBytes(GrantQueueTimePrefix(ctx.BlockTime())))
+	iterator := store.Iterator(GrantQueuePrefix, storetypes.InclusiveEndBytes(GrantQueueTimePrefix(ctx.BlockTime())))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

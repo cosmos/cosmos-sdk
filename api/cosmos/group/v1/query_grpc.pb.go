@@ -26,13 +26,13 @@ type QueryClient interface {
 	GroupInfo(ctx context.Context, in *QueryGroupInfoRequest, opts ...grpc.CallOption) (*QueryGroupInfoResponse, error)
 	// GroupPolicyInfo queries group policy info based on account address of group policy.
 	GroupPolicyInfo(ctx context.Context, in *QueryGroupPolicyInfoRequest, opts ...grpc.CallOption) (*QueryGroupPolicyInfoResponse, error)
-	// GroupMembers queries members of a group
+	// GroupMembers queries members of a group by group id.
 	GroupMembers(ctx context.Context, in *QueryGroupMembersRequest, opts ...grpc.CallOption) (*QueryGroupMembersResponse, error)
 	// GroupsByAdmin queries groups by admin address.
 	GroupsByAdmin(ctx context.Context, in *QueryGroupsByAdminRequest, opts ...grpc.CallOption) (*QueryGroupsByAdminResponse, error)
 	// GroupPoliciesByGroup queries group policies by group id.
 	GroupPoliciesByGroup(ctx context.Context, in *QueryGroupPoliciesByGroupRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByGroupResponse, error)
-	// GroupsByAdmin queries group policies by admin address.
+	// GroupPoliciesByAdmin queries group policies by admin address.
 	GroupPoliciesByAdmin(ctx context.Context, in *QueryGroupPoliciesByAdminRequest, opts ...grpc.CallOption) (*QueryGroupPoliciesByAdminResponse, error)
 	// Proposal queries a proposal based on proposal id.
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
@@ -40,7 +40,7 @@ type QueryClient interface {
 	ProposalsByGroupPolicy(ctx context.Context, in *QueryProposalsByGroupPolicyRequest, opts ...grpc.CallOption) (*QueryProposalsByGroupPolicyResponse, error)
 	// VoteByProposalVoter queries a vote by proposal id and voter.
 	VoteByProposalVoter(ctx context.Context, in *QueryVoteByProposalVoterRequest, opts ...grpc.CallOption) (*QueryVoteByProposalVoterResponse, error)
-	// VotesByProposal queries a vote by proposal.
+	// VotesByProposal queries a vote by proposal id.
 	VotesByProposal(ctx context.Context, in *QueryVotesByProposalRequest, opts ...grpc.CallOption) (*QueryVotesByProposalResponse, error)
 	// VotesByVoter queries a vote by voter.
 	VotesByVoter(ctx context.Context, in *QueryVotesByVoterRequest, opts ...grpc.CallOption) (*QueryVotesByVoterResponse, error)
@@ -52,6 +52,10 @@ type QueryClient interface {
 	// then it simply returns the `final_tally_result` state stored in the
 	// proposal itself.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
+	// Groups queries all groups in state.
+	//
+	// Since: cosmos-sdk 0.47.1
+	Groups(ctx context.Context, in *QueryGroupsRequest, opts ...grpc.CallOption) (*QueryGroupsResponse, error)
 }
 
 type queryClient struct {
@@ -179,6 +183,15 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 	return out, nil
 }
 
+func (c *queryClient) Groups(ctx context.Context, in *QueryGroupsRequest, opts ...grpc.CallOption) (*QueryGroupsResponse, error) {
+	out := new(QueryGroupsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.group.v1.Query/Groups", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -187,13 +200,13 @@ type QueryServer interface {
 	GroupInfo(context.Context, *QueryGroupInfoRequest) (*QueryGroupInfoResponse, error)
 	// GroupPolicyInfo queries group policy info based on account address of group policy.
 	GroupPolicyInfo(context.Context, *QueryGroupPolicyInfoRequest) (*QueryGroupPolicyInfoResponse, error)
-	// GroupMembers queries members of a group
+	// GroupMembers queries members of a group by group id.
 	GroupMembers(context.Context, *QueryGroupMembersRequest) (*QueryGroupMembersResponse, error)
 	// GroupsByAdmin queries groups by admin address.
 	GroupsByAdmin(context.Context, *QueryGroupsByAdminRequest) (*QueryGroupsByAdminResponse, error)
 	// GroupPoliciesByGroup queries group policies by group id.
 	GroupPoliciesByGroup(context.Context, *QueryGroupPoliciesByGroupRequest) (*QueryGroupPoliciesByGroupResponse, error)
-	// GroupsByAdmin queries group policies by admin address.
+	// GroupPoliciesByAdmin queries group policies by admin address.
 	GroupPoliciesByAdmin(context.Context, *QueryGroupPoliciesByAdminRequest) (*QueryGroupPoliciesByAdminResponse, error)
 	// Proposal queries a proposal based on proposal id.
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
@@ -201,7 +214,7 @@ type QueryServer interface {
 	ProposalsByGroupPolicy(context.Context, *QueryProposalsByGroupPolicyRequest) (*QueryProposalsByGroupPolicyResponse, error)
 	// VoteByProposalVoter queries a vote by proposal id and voter.
 	VoteByProposalVoter(context.Context, *QueryVoteByProposalVoterRequest) (*QueryVoteByProposalVoterResponse, error)
-	// VotesByProposal queries a vote by proposal.
+	// VotesByProposal queries a vote by proposal id.
 	VotesByProposal(context.Context, *QueryVotesByProposalRequest) (*QueryVotesByProposalResponse, error)
 	// VotesByVoter queries a vote by voter.
 	VotesByVoter(context.Context, *QueryVotesByVoterRequest) (*QueryVotesByVoterResponse, error)
@@ -213,6 +226,10 @@ type QueryServer interface {
 	// then it simply returns the `final_tally_result` state stored in the
 	// proposal itself.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
+	// Groups queries all groups in state.
+	//
+	// Since: cosmos-sdk 0.47.1
+	Groups(context.Context, *QueryGroupsRequest) (*QueryGroupsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -258,6 +275,9 @@ func (UnimplementedQueryServer) GroupsByMember(context.Context, *QueryGroupsByMe
 }
 func (UnimplementedQueryServer) TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TallyResult not implemented")
+}
+func (UnimplementedQueryServer) Groups(context.Context, *QueryGroupsRequest) (*QueryGroupsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Groups not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -506,6 +526,24 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Groups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGroupsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Groups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.group.v1.Query/Groups",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Groups(ctx, req.(*QueryGroupsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -564,6 +602,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TallyResult",
 			Handler:    _Query_TallyResult_Handler,
+		},
+		{
+			MethodName: "Groups",
+			Handler:    _Query_Groups_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

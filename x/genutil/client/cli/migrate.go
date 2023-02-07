@@ -6,9 +6,10 @@ import (
 	"sort"
 	"time"
 
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	tmjson "github.com/tendermint/tendermint/libs/json"
+	"golang.org/x/exp/maps"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -38,15 +39,7 @@ func GetMigrationCallback(version string) types.MigrationCallback {
 
 // GetMigrationVersions get all migration version in a sorted slice.
 func GetMigrationVersions() []string {
-	versions := make([]string, len(migrationMap))
-
-	var i int
-
-	for version := range migrationMap {
-		versions[i] = version
-		i++
-	}
-
+	versions := maps.Keys(migrationMap)
 	sort.Strings(versions)
 
 	return versions
@@ -119,7 +112,7 @@ $ %s migrate v0.36 /path/to/genesis.json --chain-id=cosmoshub-3 --genesis-time=2
 				genDoc.ChainID = chainID
 			}
 
-			bz, err := tmjson.Marshal(genDoc)
+			bz, err := cmtjson.Marshal(genDoc)
 			if err != nil {
 				return errors.Wrap(err, "failed to marshal genesis doc")
 			}

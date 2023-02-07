@@ -4,14 +4,20 @@ import (
 	"fmt"
 	"io"
 
-	dbm "github.com/tendermint/tm-db"
+	"cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	"cosmossdk.io/store/streaming"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // File for storing in-package BaseApp optional functions,
@@ -64,15 +70,30 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
+// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
+func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+}
+
+// SetIAVLLazyLoading enables/disables lazy loading of the IAVL store.
+func SetIAVLLazyLoading(lazyLoading bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetLazyLoading(lazyLoading) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
-func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
+func SetInterBlockCache(cache storetypes.MultiStorePersistentCache) func(*BaseApp) {
 	return func(app *BaseApp) { app.setInterBlockCache(cache) }
 }
 
 // SetSnapshot sets the snapshot store.
 func SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSnapshot(snapshotStore, opts) }
+}
+
+// SetMempool sets the mempool on BaseApp.
+func SetMempool(mempool mempool.Mempool) func(*BaseApp) {
+	return func(app *BaseApp) { app.SetMempool(mempool) }
 }
 
 func (app *BaseApp) SetName(name string) {
@@ -113,7 +134,7 @@ func (app *BaseApp) SetDB(db dbm.DB) {
 	app.db = db
 }
 
-func (app *BaseApp) SetCMS(cms store.CommitMultiStore) {
+func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore) {
 	if app.sealed {
 		panic("SetEndBlocker() on sealed BaseApp")
 	}
@@ -153,7 +174,7 @@ func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
 	app.anteHandler = ah
 }
 
-func (app *BaseApp) SetPostHandler(ph sdk.AnteHandler) {
+func (app *BaseApp) SetPostHandler(ph sdk.PostHandler) {
 	if app.sealed {
 		panic("SetPostHandler() on sealed BaseApp")
 	}
@@ -200,20 +221,12 @@ func (app *BaseApp) SetStoreLoader(loader StoreLoader) {
 	app.storeLoader = loader
 }
 
-// SetRouter allows us to customize the router.
-func (app *BaseApp) SetRouter(router sdk.Router) {
-	if app.sealed {
-		panic("SetRouter() on sealed BaseApp")
-	}
-	app.router = router
-}
-
 // SetSnapshot sets the snapshot store and options.
 func (app *BaseApp) SetSnapshot(snapshotStore *snapshots.Store, opts snapshottypes.SnapshotOptions) {
 	if app.sealed {
 		panic("SetSnapshot() on sealed BaseApp")
 	}
-	if snapshotStore == nil || opts.Interval == snapshottypes.SnapshotIntervalOff {
+	if snapshotStore == nil {
 		app.snapshotManager = nil
 		return
 	}
@@ -229,17 +242,75 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 }
 
 // SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
-func (app *BaseApp) SetStreamingService(s StreamingService) {
-	// add the listeners for each StoreKey
-	for key, lis := range s.Listeners() {
-		app.cms.AddListeners(key, lis)
+func (app *BaseApp) SetStreamingService(
+	appOpts servertypes.AppOptions,
+	appCodec storetypes.Codec,
+	keys map[string]*storetypes.KVStoreKey,
+) error {
+	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
+	streamers, _, err := streaming.LoadStreamingServices(appOpts, appCodec, app.logger, keys, homePath)
+	if err != nil {
+		return err
 	}
-	// register the StreamingService within the BaseApp
-	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
-	app.abciListeners = append(app.abciListeners, s)
+	// add the listeners for each StoreKey
+	for _, streamer := range streamers {
+		for key, lis := range streamer.Listeners() {
+			app.cms.AddListeners(key, lis)
+		}
+		// register the StreamingService within the BaseApp
+		// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
+		app.abciListeners = append(app.abciListeners, streamer)
+	}
+	return nil
 }
 
 // SetTxDecoder sets the TxDecoder if it wasn't provided in the BaseApp constructor.
 func (app *BaseApp) SetTxDecoder(txDecoder sdk.TxDecoder) {
 	app.txDecoder = txDecoder
+}
+
+// SetTxEncoder sets the TxEncoder if it wasn't provided in the BaseApp constructor.
+func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
+	app.txEncoder = txEncoder
+}
+
+// SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
+//
+// Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
+func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
+	app.qms = ms
+}
+
+// SetMempool sets the mempool for the BaseApp and is required for the app to start up.
+func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
+	if app.sealed {
+		panic("SetMempool() on sealed BaseApp")
+	}
+	app.mempool = mempool
+}
+
+// SetProcessProposal sets the process proposal function for the BaseApp.
+func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
+	if app.sealed {
+		panic("SetProcessProposal() on sealed BaseApp")
+	}
+	app.processProposal = handler
+}
+
+// SetPrepareProposal sets the prepare proposal function for the BaseApp.
+func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
+	if app.sealed {
+		panic("SetPrepareProposal() on sealed BaseApp")
+	}
+
+	app.prepareProposal = handler
+}
+
+// SetStoreMetrics sets the prepare proposal function for the BaseApp.
+func (app *BaseApp) SetStoreMetrics(gatherer metrics.StoreMetrics) {
+	if app.sealed {
+		panic("SetStoreMetrics() on sealed BaseApp")
+	}
+
+	app.cms.SetMetrics(gatherer)
 }

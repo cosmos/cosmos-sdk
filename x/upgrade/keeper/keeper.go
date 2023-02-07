@@ -3,24 +3,24 @@ package keeper
 import (
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
+	"github.com/cometbft/cometbft/libs/log"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	xp "cosmossdk.io/x/upgrade/exported"
+	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // Deprecated: UpgradeInfoFileName file to store upgrade information
@@ -36,6 +36,7 @@ type Keeper struct {
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and cancelling an upgrade. Usually the gov module account
+	initVersionMap     module.VersionMap               // the module version map at init genesis
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -44,8 +45,8 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) Keeper {
-	return Keeper{
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+	return &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
 		storeKey:           storeKey,
@@ -54,6 +55,28 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeKey storetypes.StoreKey, 
 		versionSetter:      vs,
 		authority:          authority,
 	}
+}
+
+// SetVersionSetter sets the interface implemented by baseapp which allows setting baseapp's protocol version field
+func (k *Keeper) SetVersionSetter(vs xp.ProtocolVersionSetter) {
+	k.versionSetter = vs
+}
+
+// GetVersionSetter gets the protocol version field of baseapp
+func (k *Keeper) GetVersionSetter() xp.ProtocolVersionSetter {
+	return k.versionSetter
+}
+
+// SetInitVersionMap sets the initial version map.
+// This is only used in app wiring and should not be used in any other context.
+func (k *Keeper) SetInitVersionMap(vm module.VersionMap) {
+	k.initVersionMap = vm
+}
+
+// GetInitVersionMap gets the initial version map
+// This is only used in upgrade InitGenesis and should not be used in any other context.
+func (k *Keeper) GetInitVersionMap() module.VersionMap {
+	return k.initVersionMap
 }
 
 // SetUpgradeHandler sets an UpgradeHandler for the upgrade specified by name. This handler will be called when the upgrade
@@ -114,7 +137,7 @@ func (k Keeper) SetModuleVersionMap(ctx sdk.Context, vm module.VersionMap) {
 // as defined in ADR-041.
 func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	it := storetypes.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 
 	vm := make(module.VersionMap)
 	defer it.Close()
@@ -132,7 +155,7 @@ func (k Keeper) GetModuleVersionMap(ctx sdk.Context) module.VersionMap {
 // GetModuleVersions gets a slice of module consensus versions
 func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	it := storetypes.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
 	mv := make([]*types.ModuleVersion, 0)
@@ -148,10 +171,10 @@ func (k Keeper) GetModuleVersions(ctx sdk.Context) []*types.ModuleVersion {
 	return mv
 }
 
-// gets the version for a given module, and returns true if it exists, false otherwise
+// getModuleVersion gets the version for a given module, and returns true if it exists, false otherwise
 func (k Keeper) getModuleVersion(ctx sdk.Context, name string) (uint64, bool) {
 	store := ctx.KVStore(k.storeKey)
-	it := sdk.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
+	it := storetypes.KVStorePrefixIterator(store, []byte{types.VersionMapByte})
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
@@ -215,7 +238,7 @@ func (k Keeper) GetUpgradedClient(ctx sdk.Context, height int64) ([]byte, bool) 
 	return bz, true
 }
 
-// SetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+// SetUpgradedConsensusState sets the expected upgraded consensus state for the next version of this chain
 // using the last height committed on this chain.
 func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz []byte) error {
 	store := ctx.KVStore(k.storeKey)
@@ -223,7 +246,7 @@ func (k Keeper) SetUpgradedConsensusState(ctx sdk.Context, planHeight int64, bz 
 	return nil
 }
 
-// GetUpgradedConsensusState set the expected upgraded consensus state for the next version of this chain
+// GetUpgradedConsensusState gets the expected upgraded consensus state for the next version of this chain
 func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]byte, bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.UpgradedConsStateKey(lastHeight))
@@ -236,7 +259,7 @@ func (k Keeper) GetUpgradedConsensusState(ctx sdk.Context, lastHeight int64) ([]
 
 // GetLastCompletedUpgrade returns the last applied upgrade name and height.
 func (k Keeper) GetLastCompletedUpgrade(ctx sdk.Context) (string, int64) {
-	iter := sdk.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	iter := storetypes.KVStoreReversePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
 	if iter.Valid() {
@@ -265,7 +288,7 @@ func encodeDoneKey(name string, height int64) []byte {
 
 // GetDoneHeight returns the height at which the given upgrade was executed
 func (k Keeper) GetDoneHeight(ctx sdk.Context, name string) int64 {
-	iter := sdk.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
+	iter := storetypes.KVStorePrefixIterator(ctx.KVStore(k.storeKey), []byte{types.DoneByte})
 	defer iter.Close()
 
 	for ; iter.Valid(); iter.Next() {
@@ -384,9 +407,8 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
 	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
-	err := tmos.EnsureDir(upgradeInfoFileDir, os.ModePerm)
-	if err != nil {
-		return "", err
+	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
+		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}
 
 	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil

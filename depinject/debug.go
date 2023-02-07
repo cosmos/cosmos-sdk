@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 // DebugOption is a functional option for running a container that controls
@@ -26,6 +26,30 @@ func StdoutLogger() DebugOption {
 func StderrLogger() DebugOption {
 	return Logger(func(s string) {
 		_, _ = fmt.Fprintln(os.Stderr, s)
+	})
+}
+
+// FileLogger is a debug option which routes logging output to a file.
+func FileLogger(filename string) DebugOption {
+	var f *os.File
+	return Logger(func(s string) {
+		var err error
+		if f == nil {
+			f, err = os.Create(filename)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		_, err = f.Write([]byte(s))
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = f.Write([]byte("\n"))
+		if err != nil {
+			panic(err)
+		}
 	})
 }
 
@@ -81,6 +105,7 @@ func Logger(logger func(string)) DebugOption {
 
 const (
 	debugContainerDot = "debug_container.dot"
+	debugContainerLog = "debug_container.log"
 )
 
 // Debug is a default debug option which sends log output to stderr, dumps
@@ -88,7 +113,7 @@ const (
 // and debug_container.svg respectively.
 func Debug() DebugOption {
 	return DebugOptions(
-		StderrLogger(),
+		FileLogger(debugContainerLog),
 		FileVisualizer(debugContainerDot),
 	)
 }
@@ -141,6 +166,7 @@ func AutoDebug() DebugOption {
 		OnError(Debug()),
 		OnSuccess(DebugCleanup(func() {
 			deleteIfExists(debugContainerDot)
+			deleteIfExists(debugContainerLog)
 		})),
 	)
 }
@@ -155,8 +181,7 @@ func deleteIfExists(filename string) {
 func DebugOptions(options ...DebugOption) DebugOption {
 	return debugOption(func(c *debugConfig) error {
 		for _, opt := range options {
-			err := opt.applyConfig(c)
-			if err != nil {
+			if err := opt.applyConfig(c); err != nil {
 				return err
 			}
 		}

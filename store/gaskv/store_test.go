@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/gaskv"
+	"cosmossdk.io/store/types"
 )
 
 func bz(s string) []byte { return []byte(s) }
@@ -25,7 +25,6 @@ func TestGasKVStoreBasic(t *testing.T) {
 	require.Equal(t, types.StoreTypeDB, st.GetStoreType())
 	require.Panics(t, func() { st.CacheWrap() })
 	require.Panics(t, func() { st.CacheWrapWithTrace(nil, nil) })
-	require.Panics(t, func() { st.CacheWrapWithListeners(nil, nil) })
 
 	require.Panics(t, func() { st.Set(nil, []byte("value")) }, "setting a nil key should panic")
 	require.Panics(t, func() { st.Set([]byte(""), []byte("value")) }, "setting an empty key should panic")

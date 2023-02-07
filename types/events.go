@@ -4,19 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 
-	"github.com/gogo/protobuf/jsonpb"
-	proto "github.com/gogo/protobuf/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/jsonpb"
+	proto "github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 )
 
+type EventManagerI interface {
+	Events() Events
+	ABCIEvents() []abci.Event
+	EmitTypedEvent(tev proto.Message) error
+	EmitTypedEvents(tevs ...proto.Message) error
+	EmitEvent(event Event)
+	EmitEvents(events Events)
+}
+
 // ----------------------------------------------------------------------------
 // Event Manager
 // ----------------------------------------------------------------------------
+
+var _ EventManagerI = (*EventManager)(nil)
 
 // EventManager implements a simple wrapper around a slice of Event objects that
 // can be emitted from.
@@ -87,8 +100,13 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		return Event{}, err
 	}
 
+	// sort the keys to ensure the order is always the same
+	keys := maps.Keys(attrMap)
+	slices.Sort(keys)
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for k, v := range attrMap {
+	for _, k := range keys {
+		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   k,
 			Value: string(v),
@@ -189,6 +207,17 @@ func (e Event) AppendAttributes(attrs ...Attribute) Event {
 	return e
 }
 
+// GetAttribute returns an attribute for a given key present in an event.
+// If the key is not found, the boolean value will be false.
+func (e Event) GetAttribute(key string) (Attribute, bool) {
+	for _, attr := range e.Attributes {
+		if attr.Key == key {
+			return Attribute{Key: attr.Key, Value: attr.Value}, true
+		}
+	}
+	return Attribute{}, false
+}
+
 // AppendEvent adds an Event to a slice of events.
 func (e Events) AppendEvent(event Event) Events {
 	return append(e, event)
@@ -210,6 +239,19 @@ func (e Events) ToABCIEvents() []abci.Event {
 	return res
 }
 
+// GetAttributes returns all attributes matching a given key present in events.
+// If the key is not found, the boolean value will be false.
+func (e Events) GetAttributes(key string) ([]Attribute, bool) {
+	attrs := make([]Attribute, 0)
+	for _, event := range e {
+		if attr, found := event.GetAttribute(key); found {
+			attrs = append(attrs, attr)
+		}
+	}
+
+	return attrs, len(attrs) > 0
+}
+
 // Common event types and attribute keys
 const (
 	EventTypeTx = "tx"
@@ -217,6 +259,7 @@ const (
 	AttributeKeyAccountSequence = "acc_seq"
 	AttributeKeySignature       = "signature"
 	AttributeKeyFee             = "fee"
+	AttributeKeyFeePayer        = "fee_payer"
 
 	EventTypeMessage = "message"
 
@@ -235,37 +278,14 @@ func (se StringEvents) String() string {
 	var sb strings.Builder
 
 	for _, e := range se {
-		sb.WriteString(fmt.Sprintf("\t\t- %s\n", e.Type))
+		fmt.Fprintf(&sb, "\t\t- %s\n", e.Type)
 
 		for _, attr := range e.Attributes {
-			sb.WriteString(fmt.Sprintf("\t\t\t- %s\n", attr.String()))
+			fmt.Fprintf(&sb, "\t\t\t- %s\n", attr)
 		}
 	}
 
 	return strings.TrimRight(sb.String(), "\n")
-}
-
-// Flatten returns a flattened version of StringEvents by grouping all attributes
-// per unique event type.
-func (se StringEvents) Flatten() StringEvents {
-	flatEvents := make(map[string][]Attribute)
-
-	for _, e := range se {
-		flatEvents[e.Type] = append(flatEvents[e.Type], e.Attributes...)
-	}
-	keys := make([]string, 0, len(flatEvents))
-	res := make(StringEvents, 0, len(flatEvents)) // appeneded to keys, same length of what is allocated to keys
-
-	for ty := range flatEvents {
-		keys = append(keys, ty)
-	}
-
-	sort.Strings(keys)
-	for _, ty := range keys {
-		res = append(res, StringEvent{Type: ty, Attributes: flatEvents[ty]})
-	}
-
-	return res
 }
 
 // StringifyEvent converts an Event object to a StringEvent object.
@@ -291,7 +311,7 @@ func StringifyEvents(events []abci.Event) StringEvents {
 		res = append(res, StringifyEvent(e))
 	}
 
-	return res.Flatten()
+	return res
 }
 
 // MarkEventsToIndex returns the set of ABCI events, where each event's attribute

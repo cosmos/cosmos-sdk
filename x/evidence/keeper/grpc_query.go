@@ -2,18 +2,18 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 
+	"cosmossdk.io/store/prefix"
+	"cosmossdk.io/x/evidence/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/cosmos/cosmos-sdk/types/query"
-
-	proto "github.com/gogo/protobuf/proto"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var _ types.QueryServer = Keeper{}
@@ -24,15 +24,20 @@ func (k Keeper) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*t
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
 
-	if req.EvidenceHash == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid hash")
+	if req.Hash == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request; hash is empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	evidence, _ := k.GetEvidence(ctx, req.EvidenceHash)
+	decodedHash, err := hex.DecodeString(req.Hash)
+	if err != nil {
+		return nil, fmt.Errorf("invalid evidence hash: %w", err)
+	}
+
+	evidence, _ := k.GetEvidence(ctx, decodedHash)
 	if evidence == nil {
-		return nil, status.Errorf(codes.NotFound, "evidence %s not found", req.EvidenceHash)
+		return nil, status.Errorf(codes.NotFound, "evidence %s not found", req.Hash)
 	}
 
 	msg, ok := evidence.(proto.Message)

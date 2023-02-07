@@ -1,11 +1,11 @@
 package transient
 
 import (
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/dbadapter"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/types"
 )
 
 var (

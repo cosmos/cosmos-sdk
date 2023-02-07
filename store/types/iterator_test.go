@@ -3,16 +3,18 @@ package types_test
 import (
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/types"
 )
 
 func newMemTestKVStore(t *testing.T) types.KVStore {
 	db := dbm.NewMemDB()
-	store, err := iavl.LoadStore(db, types.CommitID{}, false, iavl.DefaultIAVLCacheSize)
+	store, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
 	require.NoError(t, err)
 	return store
 }

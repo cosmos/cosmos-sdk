@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -30,14 +30,14 @@ func init() {
 	RegisterLegacyAminoCodec(amino)
 }
 
-// Deprecated, use fee amount and gas limit separately on TxBuilder.
+// Deprecated: use fee amount and gas limit separately on TxBuilder.
 func NewTestStdFee() StdFee {
 	return NewStdFee(100000,
 		sdk.NewCoins(sdk.NewInt64Coin("atom", 150)),
 	)
 }
 
-// Deprecated, use TxBuilder.
+// Deprecated: use TxBuilder.
 func NewTestTx(ctx sdk.Context, msgs []sdk.Msg, privs []cryptotypes.PrivKey, accNums []uint64, seqs []uint64, timeout uint64, fee StdFee) sdk.Tx {
 	sigs := make([]StdSignature, len(privs))
 	for i, priv := range privs {
@@ -150,7 +150,7 @@ func TestStdSignBytes(t *testing.T) {
 }
 
 func TestTxValidateBasic(t *testing.T) {
-	ctx := sdk.NewContext(nil, tmproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(nil, cmtproto.Header{ChainID: "mychainid"}, false, log.NewNopLogger())
 
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()

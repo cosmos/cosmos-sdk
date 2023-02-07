@@ -1,3 +1,4 @@
+//nolint:revive
 package testdata_pulsar
 
 import (

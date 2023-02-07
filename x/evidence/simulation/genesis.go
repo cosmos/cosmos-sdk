@@ -1,16 +1,15 @@
 package simulation
 
-// DONTCOVER
-
 import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // Simulation parameter constants

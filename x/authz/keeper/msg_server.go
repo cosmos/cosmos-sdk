@@ -10,13 +10,14 @@ import (
 
 var _ authz.MsgServer = Keeper{}
 
-// GrantAuthorization implements the MsgServer.Grant method to create a new grant.
+// Grant implements the MsgServer.Grant method to create a new grant.
 func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGrantResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
 	if err != nil {
 		return nil, err
 	}
+
 	// create the account if it is not in account state
 	granteeAcc := k.authKeeper.GetAccount(ctx, grantee)
 	if granteeAcc == nil {
@@ -33,6 +34,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	if err != nil {
 		return nil, err
 	}
+
 	t := authorization.MsgTypeURL()
 	if k.router.HandlerByTypeURL(t) == nil {
 		return nil, sdkerrors.ErrInvalidType.Wrapf("%s doesn't exist.", t)
@@ -46,7 +48,7 @@ func (k Keeper) Grant(goCtx context.Context, msg *authz.MsgGrant) (*authz.MsgGra
 	return &authz.MsgGrantResponse{}, nil
 }
 
-// RevokeAuthorization implements the MsgServer.Revoke method.
+// Revoke implements the MsgServer.Revoke method.
 func (k Keeper) Revoke(goCtx context.Context, msg *authz.MsgRevoke) (*authz.MsgRevokeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
@@ -73,13 +75,16 @@ func (k Keeper) Exec(goCtx context.Context, msg *authz.MsgExec) (*authz.MsgExecR
 	if err != nil {
 		return nil, err
 	}
+
 	msgs, err := msg.GetMessages()
 	if err != nil {
 		return nil, err
 	}
+
 	results, err := k.DispatchActions(ctx, grantee, msgs)
 	if err != nil {
 		return nil, err
 	}
+
 	return &authz.MsgExecResponse{Results: results}, nil
 }

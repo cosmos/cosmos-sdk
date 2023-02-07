@@ -10,21 +10,26 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
-	_ "github.com/gogo/protobuf/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
+	_ "github.com/cosmos/gogoproto/gogoproto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -35,11 +40,26 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgSubmitProposal defines an sdk.Msg type that supports submitting arbitrary
 // proposal Content.
 type MsgSubmitProposal struct {
-	Messages       []*types.Any  `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	// messages are the arbitrary messages to be executed if proposal passes.
+	Messages []*types.Any `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	// initial_deposit is the deposit value that must be paid at proposal submission.
 	InitialDeposit []types1.Coin `protobuf:"bytes,2,rep,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit"`
-	Proposer       string        `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// proposer is the account address of the proposer.
+	Proposer string `protobuf:"bytes,3,opt,name=proposer,proto3" json:"proposer,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// title is the title of the proposal.
+	//
+	// Since: cosmos-sdk 0.47
+	Title string `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
+	// summary is the summary of the proposal
+	//
+	// Since: cosmos-sdk 0.47
+	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
+	// expedided defines if the proposal is expedited or not
+	//
+	// Since: cosmos-sdk 0.48
+	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`
 }
 
 func (m *MsgSubmitProposal) Reset()         { *m = MsgSubmitProposal{} }
@@ -103,8 +123,30 @@ func (m *MsgSubmitProposal) GetMetadata() string {
 	return ""
 }
 
+func (m *MsgSubmitProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *MsgSubmitProposal) GetSummary() string {
+	if m != nil {
+		return m.Summary
+	}
+	return ""
+}
+
+func (m *MsgSubmitProposal) GetExpedited() bool {
+	if m != nil {
+		return m.Expedited
+	}
+	return false
+}
+
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
 type MsgSubmitProposalResponse struct {
+	// proposal_id defines the unique id of the proposal.
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 }
 
@@ -243,10 +285,14 @@ var xxx_messageInfo_MsgExecLegacyContentResponse proto.InternalMessageInfo
 
 // MsgVote defines a message to cast a vote.
 type MsgVote struct {
-	ProposalId uint64     `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
-	Voter      string     `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Option     VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1.VoteOption" json:"option,omitempty"`
-	Metadata   string     `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	// voter is the voter address for the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// option defines the vote option.
+	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.gov.v1.VoteOption" json:"option,omitempty"`
+	// metadata is any arbitrary metadata attached to the Vote.
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (m *MsgVote) Reset()         { *m = MsgVote{} }
@@ -349,10 +395,14 @@ var xxx_messageInfo_MsgVoteResponse proto.InternalMessageInfo
 
 // MsgVoteWeighted defines a message to cast a vote.
 type MsgVoteWeighted struct {
-	ProposalId uint64                `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
-	Voter      string                `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	Options    []*WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty"`
-	Metadata   string                `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	// voter is the voter address for the proposal.
+	Voter string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
+	// options defines the weighted vote options.
+	Options []*WeightedVoteOption `protobuf:"bytes,3,rep,name=options,proto3" json:"options,omitempty"`
+	// metadata is any arbitrary metadata attached to the VoteWeighted.
+	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (m *MsgVoteWeighted) Reset()         { *m = MsgVoteWeighted{} }
@@ -455,9 +505,12 @@ var xxx_messageInfo_MsgVoteWeightedResponse proto.InternalMessageInfo
 
 // MsgDeposit defines a message to submit a deposit to an existing proposal.
 type MsgDeposit struct {
-	ProposalId uint64        `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
-	Depositor  string        `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	Amount     []types1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
+	// proposal_id defines the unique id of the proposal.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	// depositor defines the deposit addresses from the proposals.
+	Depositor string `protobuf:"bytes,2,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	// amount to be deposited by depositor.
+	Amount []types1.Coin `protobuf:"bytes,3,rep,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }
@@ -551,6 +604,226 @@ func (m *MsgDepositResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositResponse proto.InternalMessageInfo
 
+// MsgUpdateParams is the Msg/UpdateParams request type.
+//
+// Since: cosmos-sdk 0.47
+type MsgUpdateParams struct {
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// params defines the x/gov parameters to update.
+	//
+	// NOTE: All parameters must be supplied.
+	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
+}
+
+func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
+func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateParams) ProtoMessage()    {}
+func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{10}
+}
+func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateParams.Merge(m, src)
+}
+func (m *MsgUpdateParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateParams proto.InternalMessageInfo
+
+func (m *MsgUpdateParams) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateParams) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+//
+// Since: cosmos-sdk 0.47
+type MsgUpdateParamsResponse struct {
+}
+
+func (m *MsgUpdateParamsResponse) Reset()         { *m = MsgUpdateParamsResponse{} }
+func (m *MsgUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateParamsResponse) ProtoMessage()    {}
+func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{11}
+}
+func (m *MsgUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateParamsResponse.Merge(m, src)
+}
+func (m *MsgUpdateParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
+
+// MsgCancelProposal is the Msg/CancelProposal request type.
+//
+// Since: cosmos-sdk 0.48
+type MsgCancelProposal struct {
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	Proposer   string `protobuf:"bytes,2,opt,name=proposer,proto3" json:"proposer,omitempty"`
+}
+
+func (m *MsgCancelProposal) Reset()         { *m = MsgCancelProposal{} }
+func (m *MsgCancelProposal) String() string { return proto.CompactTextString(m) }
+func (*MsgCancelProposal) ProtoMessage()    {}
+func (*MsgCancelProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{12}
+}
+func (m *MsgCancelProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCancelProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCancelProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCancelProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCancelProposal.Merge(m, src)
+}
+func (m *MsgCancelProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCancelProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCancelProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCancelProposal proto.InternalMessageInfo
+
+func (m *MsgCancelProposal) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *MsgCancelProposal) GetProposer() string {
+	if m != nil {
+		return m.Proposer
+	}
+	return ""
+}
+
+// MsgCancelProposalResponse defines the response structure for executing a
+// MsgCancelProposal message.
+//
+// Since: cosmos-sdk 0.48
+type MsgCancelProposalResponse struct {
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id"`
+	// canceled_time is the time when proposal is canceled.
+	CanceledTime time.Time `protobuf:"bytes,2,opt,name=canceled_time,json=canceledTime,proto3,stdtime" json:"canceled_time"`
+	// canceled_height defines the block height at which the proposal is canceled.
+	CanceledHeight uint64 `protobuf:"varint,3,opt,name=canceled_height,json=canceledHeight,proto3" json:"canceled_height,omitempty"`
+}
+
+func (m *MsgCancelProposalResponse) Reset()         { *m = MsgCancelProposalResponse{} }
+func (m *MsgCancelProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCancelProposalResponse) ProtoMessage()    {}
+func (*MsgCancelProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9ff8f4a63b6fc9a9, []int{13}
+}
+func (m *MsgCancelProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCancelProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCancelProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCancelProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCancelProposalResponse.Merge(m, src)
+}
+func (m *MsgCancelProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCancelProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCancelProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCancelProposalResponse proto.InternalMessageInfo
+
+func (m *MsgCancelProposalResponse) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *MsgCancelProposalResponse) GetCanceledTime() time.Time {
+	if m != nil {
+		return m.CanceledTime
+	}
+	return time.Time{}
+}
+
+func (m *MsgCancelProposalResponse) GetCanceledHeight() uint64 {
+	if m != nil {
+		return m.CanceledHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*MsgSubmitProposal)(nil), "cosmos.gov.v1.MsgSubmitProposal")
 	proto.RegisterType((*MsgSubmitProposalResponse)(nil), "cosmos.gov.v1.MsgSubmitProposalResponse")
@@ -562,58 +835,82 @@ func init() {
 	proto.RegisterType((*MsgVoteWeightedResponse)(nil), "cosmos.gov.v1.MsgVoteWeightedResponse")
 	proto.RegisterType((*MsgDeposit)(nil), "cosmos.gov.v1.MsgDeposit")
 	proto.RegisterType((*MsgDepositResponse)(nil), "cosmos.gov.v1.MsgDepositResponse")
+	proto.RegisterType((*MsgUpdateParams)(nil), "cosmos.gov.v1.MsgUpdateParams")
+	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "cosmos.gov.v1.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgCancelProposal)(nil), "cosmos.gov.v1.MsgCancelProposal")
+	proto.RegisterType((*MsgCancelProposalResponse)(nil), "cosmos.gov.v1.MsgCancelProposalResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/gov/v1/tx.proto", fileDescriptor_9ff8f4a63b6fc9a9) }
 
 var fileDescriptor_9ff8f4a63b6fc9a9 = []byte{
-	// 734 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x95, 0xcf, 0x6a, 0xdb, 0x4a,
-	0x14, 0xc6, 0xad, 0xd8, 0x37, 0x4e, 0x4e, 0x6e, 0x1c, 0x32, 0x98, 0x44, 0x16, 0x41, 0x71, 0x7c,
-	0xe1, 0x62, 0x6e, 0x88, 0x14, 0xe7, 0x96, 0x16, 0x92, 0x52, 0x88, 0xd3, 0xd0, 0x16, 0x6a, 0x5a,
-	0x14, 0x48, 0xa1, 0x14, 0x82, 0x6c, 0x4d, 0x27, 0xa2, 0x91, 0x46, 0x68, 0xc6, 0x26, 0x5e, 0xb6,
-	0x4f, 0xd0, 0xf7, 0xe8, 0xa6, 0x8b, 0xec, 0xbb, 0x2b, 0xa1, 0xab, 0xd0, 0x55, 0x56, 0xa1, 0x24,
-	0x8b, 0x42, 0x57, 0x7d, 0x84, 0x22, 0xcd, 0x48, 0x4e, 0xac, 0xfc, 0xeb, 0xa6, 0x2b, 0x4b, 0xe7,
-	0x7c, 0xdf, 0x99, 0xf3, 0xd3, 0xcc, 0xf1, 0xc0, 0x4c, 0x87, 0x32, 0x8f, 0x32, 0x93, 0xd0, 0x9e,
-	0xd9, 0x6b, 0x98, 0x7c, 0xdf, 0x08, 0x42, 0xca, 0x29, 0x9a, 0x14, 0x71, 0x83, 0xd0, 0x9e, 0xd1,
-	0x6b, 0x68, 0xba, 0x94, 0xb5, 0x6d, 0x86, 0xcd, 0x5e, 0xa3, 0x8d, 0xb9, 0xdd, 0x30, 0x3b, 0xd4,
-	0xf5, 0x85, 0x5c, 0x9b, 0xbd, 0x58, 0x26, 0x72, 0x89, 0x44, 0x99, 0x50, 0x42, 0xe3, 0x47, 0x33,
-	0x7a, 0x92, 0xd1, 0x8a, 0x90, 0xef, 0x88, 0x84, 0x5c, 0x4a, 0xa6, 0x08, 0xa5, 0x64, 0x0f, 0x9b,
-	0xf1, 0x5b, 0xbb, 0xfb, 0xda, 0xb4, 0xfd, 0xfe, 0xd0, 0x22, 0x1e, 0x23, 0xd1, 0x22, 0x1e, 0x23,
-	0x22, 0x51, 0xfb, 0xa9, 0xc0, 0x74, 0x8b, 0x91, 0xad, 0x6e, 0xdb, 0x73, 0xf9, 0xf3, 0x90, 0x06,
-	0x94, 0xd9, 0x7b, 0x68, 0x19, 0xc6, 0x3c, 0xcc, 0x98, 0x4d, 0x30, 0x53, 0x95, 0x6a, 0xbe, 0x3e,
-	0xb1, 0x52, 0x36, 0x44, 0x71, 0x23, 0x29, 0x6e, 0xac, 0xfb, 0x7d, 0x2b, 0x55, 0xa1, 0xc7, 0x30,
-	0xe5, 0xfa, 0x2e, 0x77, 0xed, 0xbd, 0x1d, 0x07, 0x07, 0x94, 0xb9, 0x5c, 0x1d, 0x89, 0x8d, 0x15,
-	0x43, 0xf6, 0x18, 0xf1, 0x1b, 0x92, 0xdf, 0xd8, 0xa0, 0xae, 0xdf, 0x2c, 0x1c, 0x9e, 0xcc, 0xe7,
-	0xac, 0x92, 0xf4, 0x3d, 0x14, 0x36, 0x74, 0x07, 0xc6, 0x82, 0xb8, 0x0f, 0x1c, 0xaa, 0xf9, 0xaa,
-	0x52, 0x1f, 0x6f, 0xaa, 0x5f, 0x0f, 0x96, 0xca, 0xb2, 0xca, 0xba, 0xe3, 0x84, 0x98, 0xb1, 0x2d,
-	0x1e, 0xba, 0x3e, 0xb1, 0x52, 0x25, 0xd2, 0xa2, 0x8e, 0xb9, 0xed, 0xd8, 0xdc, 0x56, 0x0b, 0x91,
-	0xcb, 0x4a, 0xdf, 0x57, 0x27, 0xdf, 0x7d, 0xff, 0xf8, 0x5f, 0x2a, 0xad, 0xdd, 0x87, 0x4a, 0x86,
-	0xd8, 0xc2, 0x2c, 0xa0, 0x3e, 0xc3, 0x68, 0x1e, 0x26, 0x02, 0x19, 0xdb, 0x71, 0x1d, 0x55, 0xa9,
-	0x2a, 0xf5, 0x82, 0x05, 0x49, 0xe8, 0x89, 0x53, 0x7b, 0xab, 0x40, 0xb9, 0xc5, 0xc8, 0xe6, 0x3e,
-	0xee, 0x3c, 0xc5, 0xc4, 0xee, 0xf4, 0x37, 0xa8, 0xcf, 0xb1, 0xcf, 0xd1, 0x1a, 0x14, 0x3b, 0xe2,
-	0x31, 0x76, 0x5d, 0xf1, 0xc9, 0x9a, 0x13, 0x5f, 0x0e, 0x96, 0x8a, 0xd2, 0x63, 0x25, 0x0e, 0x34,
-	0x07, 0xe3, 0x76, 0x97, 0xef, 0xd2, 0xd0, 0xe5, 0x7d, 0x75, 0x24, 0xee, 0x7f, 0x10, 0x58, 0x2d,
-	0x45, 0x00, 0x83, 0xf7, 0x9a, 0x0e, 0x73, 0x97, 0xb5, 0x90, 0x40, 0xd4, 0x3e, 0x2b, 0x50, 0x6c,
-	0x31, 0xb2, 0x4d, 0x39, 0x46, 0xcb, 0x97, 0x00, 0x35, 0xa7, 0x7e, 0x9c, 0xcc, 0x9f, 0x0f, 0x9f,
-	0x27, 0x44, 0x06, 0xfc, 0xd5, 0xa3, 0x1c, 0x87, 0xa2, 0x8f, 0x6b, 0xbe, 0xbe, 0x90, 0xa1, 0x06,
-	0x8c, 0xd2, 0x80, 0xbb, 0xd4, 0x8f, 0xb7, 0xab, 0x34, 0xd8, 0x71, 0x31, 0x00, 0x46, 0xd4, 0xc6,
-	0xb3, 0x58, 0x60, 0x49, 0xe1, 0xb5, 0xbb, 0x05, 0x11, 0xac, 0x28, 0x5d, 0x9b, 0x86, 0x29, 0xc9,
-	0x91, 0xb2, 0x1d, 0x2b, 0x69, 0xec, 0x05, 0x76, 0xc9, 0x2e, 0xc7, 0xce, 0x1f, 0x60, 0x5c, 0x83,
-	0xa2, 0x68, 0x9d, 0xa9, 0xf9, 0xf8, 0x58, 0x2f, 0x0c, 0x41, 0x26, 0xbd, 0x9c, 0x83, 0x4d, 0x1c,
-	0xb7, 0xa6, 0xad, 0xc0, 0xec, 0x10, 0x59, 0x4a, 0xfd, 0x49, 0x01, 0x68, 0x31, 0x92, 0xcc, 0xc8,
-	0xef, 0x03, 0xdf, 0x85, 0x71, 0x39, 0x97, 0xf4, 0x66, 0xe8, 0x81, 0x14, 0xdd, 0x83, 0x51, 0xdb,
-	0xa3, 0x5d, 0x9f, 0x4b, 0xee, 0x1b, 0xc7, 0x59, 0xca, 0xe5, 0x99, 0x4d, 0x0b, 0xd5, 0xca, 0x80,
-	0x06, 0x00, 0x09, 0xd7, 0xca, 0x87, 0x3c, 0xe4, 0x5b, 0x8c, 0xa0, 0x57, 0x50, 0x1a, 0xfa, 0x0b,
-	0xaa, 0x0e, 0x7d, 0xe0, 0xcc, 0xc8, 0x6a, 0xf5, 0x9b, 0x14, 0xe9, 0x50, 0x63, 0x98, 0xce, 0xce,
-	0xeb, 0x3f, 0x59, 0x7b, 0x46, 0xa4, 0x2d, 0xde, 0x42, 0x94, 0x2e, 0xf3, 0x00, 0x0a, 0xf1, 0xc8,
-	0xcd, 0x64, 0x4d, 0x51, 0x5c, 0xd3, 0x2f, 0x8f, 0xa7, 0xfe, 0x6d, 0xf8, 0xfb, 0xc2, 0xb1, 0xbe,
-	0x42, 0x9f, 0xe4, 0xb5, 0x7f, 0xaf, 0xcf, 0xa7, 0x75, 0x1f, 0x41, 0x31, 0x39, 0x38, 0x95, 0xac,
-	0x45, 0xa6, 0xb4, 0x85, 0x2b, 0x53, 0x49, 0xa1, 0xe6, 0xe6, 0xe1, 0xa9, 0xae, 0x1c, 0x9d, 0xea,
-	0xca, 0xb7, 0x53, 0x5d, 0x79, 0x7f, 0xa6, 0xe7, 0x8e, 0xce, 0xf4, 0xdc, 0xf1, 0x99, 0x9e, 0x7b,
-	0xb9, 0x48, 0x5c, 0xbe, 0xdb, 0x6d, 0x1b, 0x1d, 0xea, 0xc9, 0x3b, 0x49, 0xfe, 0x2c, 0x31, 0xe7,
-	0x8d, 0xb9, 0x1f, 0x5f, 0x6e, 0xbc, 0x1f, 0x60, 0x16, 0xdd, 0x80, 0xa3, 0xf1, 0x1f, 0xe2, 0xff,
-	0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xb7, 0xdb, 0x52, 0x42, 0x41, 0x07, 0x00, 0x00,
+	// 1042 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xe6, 0xc3, 0x4e, 0x26, 0x4d, 0xa2, 0xac, 0xdc, 0x76, 0xbd, 0x2a, 0x6b, 0x77, 0x8b,
+	0xc0, 0x4a, 0xc8, 0x2e, 0x0e, 0xb4, 0x42, 0xa6, 0x42, 0xaa, 0x43, 0x05, 0x95, 0x30, 0x54, 0x5b,
+	0x28, 0x12, 0x42, 0x8a, 0xc6, 0xde, 0x61, 0xb3, 0xc2, 0xbb, 0xb3, 0xf2, 0x8c, 0xad, 0xf8, 0x86,
+	0x38, 0xf6, 0xd4, 0x3f, 0x83, 0x63, 0x0e, 0xbd, 0xf5, 0xc4, 0xad, 0xe2, 0x54, 0x71, 0xe2, 0x54,
+	0x50, 0x22, 0x08, 0xe2, 0x9f, 0x00, 0xcd, 0xc7, 0xae, 0xf7, 0x2b, 0x1f, 0x70, 0xe0, 0x62, 0xed,
+	0xfc, 0xde, 0xc7, 0xbc, 0xf7, 0x7b, 0xf3, 0xde, 0x33, 0xb8, 0x36, 0xc0, 0x24, 0xc0, 0xc4, 0xf6,
+	0xf0, 0xc4, 0x9e, 0xb4, 0x6d, 0x7a, 0x68, 0x45, 0x23, 0x4c, 0xb1, 0xba, 0x26, 0x70, 0xcb, 0xc3,
+	0x13, 0x6b, 0xd2, 0xd6, 0x0d, 0xa9, 0xd6, 0x87, 0x04, 0xd9, 0x93, 0x76, 0x1f, 0x51, 0xd8, 0xb6,
+	0x07, 0xd8, 0x0f, 0x85, 0xba, 0x7e, 0x3d, 0xeb, 0x86, 0x59, 0x09, 0x41, 0xcd, 0xc3, 0x1e, 0xe6,
+	0x9f, 0x36, 0xfb, 0x92, 0x68, 0x5d, 0xa8, 0xef, 0x0b, 0x81, 0xbc, 0x4a, 0x8a, 0x3c, 0x8c, 0xbd,
+	0x21, 0xb2, 0xf9, 0xa9, 0x3f, 0xfe, 0xc6, 0x86, 0xe1, 0x34, 0x77, 0x49, 0x40, 0x3c, 0x76, 0x49,
+	0x40, 0x3c, 0x29, 0xd8, 0x84, 0x81, 0x1f, 0x62, 0x9b, 0xff, 0x4a, 0xa8, 0x91, 0x77, 0x43, 0xfd,
+	0x00, 0x11, 0x0a, 0x83, 0x48, 0x28, 0x98, 0xa7, 0xf3, 0x60, 0xb3, 0x47, 0xbc, 0x47, 0xe3, 0x7e,
+	0xe0, 0xd3, 0x87, 0x23, 0x1c, 0x61, 0x02, 0x87, 0xea, 0xdb, 0x60, 0x39, 0x40, 0x84, 0x40, 0x0f,
+	0x11, 0x4d, 0x69, 0x2e, 0xb4, 0x56, 0x77, 0x6b, 0x96, 0xf0, 0x64, 0xc5, 0x9e, 0xac, 0x7b, 0xe1,
+	0xd4, 0x49, 0xb4, 0xd4, 0x1e, 0xd8, 0xf0, 0x43, 0x9f, 0xfa, 0x70, 0xb8, 0xef, 0xa2, 0x08, 0x13,
+	0x9f, 0x6a, 0xf3, 0xdc, 0xb0, 0x6e, 0xc9, 0xbc, 0x18, 0x67, 0x96, 0xe4, 0xcc, 0xda, 0xc3, 0x7e,
+	0xd8, 0x5d, 0x79, 0xf1, 0xaa, 0x31, 0xf7, 0xc3, 0xe9, 0xd1, 0x96, 0xe2, 0xac, 0x4b, 0xe3, 0x0f,
+	0x85, 0xad, 0xfa, 0x2e, 0x58, 0x8e, 0x78, 0x30, 0x68, 0xa4, 0x2d, 0x34, 0x95, 0xd6, 0x4a, 0x57,
+	0xfb, 0xf9, 0xd9, 0x4e, 0x4d, 0xba, 0xba, 0xe7, 0xba, 0x23, 0x44, 0xc8, 0x23, 0x3a, 0xf2, 0x43,
+	0xcf, 0x49, 0x34, 0x55, 0x9d, 0x85, 0x4d, 0xa1, 0x0b, 0x29, 0xd4, 0x16, 0x99, 0x95, 0x93, 0x9c,
+	0xd5, 0x1a, 0x58, 0xa2, 0x3e, 0x1d, 0x22, 0x6d, 0x89, 0x0b, 0xc4, 0x41, 0xd5, 0x40, 0x95, 0x8c,
+	0x83, 0x00, 0x8e, 0xa6, 0x5a, 0x85, 0xe3, 0xf1, 0x51, 0xbd, 0x01, 0x56, 0xd0, 0x61, 0x84, 0x5c,
+	0x9f, 0x22, 0x57, 0xab, 0x36, 0x95, 0xd6, 0xb2, 0x33, 0x03, 0x3a, 0xed, 0xef, 0x4f, 0x8f, 0xb6,
+	0x92, 0x8b, 0x9f, 0x9c, 0x1e, 0x6d, 0x35, 0x44, 0x6c, 0x3b, 0xc4, 0xfd, 0x96, 0x55, 0xa5, 0xc0,
+	0xa9, 0x79, 0x17, 0xd4, 0x0b, 0xa0, 0x83, 0x48, 0x84, 0x43, 0x82, 0xd4, 0x06, 0x58, 0x8d, 0x24,
+	0xb6, 0xef, 0xbb, 0x9a, 0xd2, 0x54, 0x5a, 0x8b, 0x0e, 0x88, 0xa1, 0x07, 0xae, 0xf9, 0x5c, 0x01,
+	0xb5, 0x1e, 0xf1, 0xee, 0x1f, 0xa2, 0xc1, 0x27, 0xc8, 0x83, 0x83, 0xe9, 0x1e, 0x0e, 0x29, 0x0a,
+	0xa9, 0xfa, 0x29, 0xa8, 0x0e, 0xc4, 0x27, 0xb7, 0x3a, 0xa3, 0x52, 0x5d, 0xe3, 0xa7, 0x67, 0x3b,
+	0x7a, 0xe6, 0x31, 0xc7, 0x85, 0xe0, 0xb6, 0x4e, 0xec, 0x84, 0xe5, 0x0d, 0xc7, 0xf4, 0x00, 0x8f,
+	0x7c, 0x3a, 0xd5, 0xe6, 0x39, 0x27, 0x33, 0xa0, 0x73, 0x9b, 0xe5, 0x3d, 0x3b, 0xb3, 0xc4, 0xcd,
+	0x42, 0xe2, 0x85, 0x20, 0x4d, 0x03, 0xdc, 0x28, 0xc3, 0xe3, 0xf4, 0xcd, 0xdf, 0x15, 0x50, 0xed,
+	0x11, 0xef, 0x31, 0xa6, 0x48, 0xbd, 0x5d, 0x42, 0x45, 0xb7, 0xf6, 0xd7, 0xab, 0x46, 0x1a, 0x16,
+	0xaf, 0x26, 0x45, 0x90, 0x6a, 0x81, 0xa5, 0x09, 0xa6, 0x68, 0x24, 0x62, 0x3e, 0xe7, 0xb9, 0x08,
+	0x35, 0xb5, 0x0d, 0x2a, 0x38, 0xa2, 0x3e, 0x0e, 0xf9, 0xfb, 0x5a, 0x9f, 0xbd, 0x53, 0xc1, 0x8e,
+	0xc5, 0x62, 0xf9, 0x8c, 0x2b, 0x38, 0x52, 0xf1, 0xbc, 0xe7, 0xd5, 0x79, 0x9d, 0x11, 0x23, 0x5c,
+	0x33, 0x52, 0xae, 0x16, 0x48, 0x61, 0xfe, 0xcc, 0x4d, 0xb0, 0x21, 0x3f, 0x93, 0xd4, 0xff, 0x56,
+	0x12, 0xec, 0x4b, 0xe4, 0x7b, 0x07, 0x14, 0xb9, 0xff, 0x17, 0x05, 0xef, 0x83, 0xaa, 0xc8, 0x8c,
+	0x68, 0x0b, 0xbc, 0x57, 0x6f, 0xe6, 0x38, 0x88, 0x03, 0x4a, 0x71, 0x11, 0x5b, 0x9c, 0x4b, 0xc6,
+	0x5b, 0x59, 0x32, 0x5e, 0x2b, 0x25, 0x23, 0x76, 0x6e, 0xd6, 0xc1, 0xf5, 0x1c, 0x94, 0x90, 0xf3,
+	0x87, 0x02, 0x40, 0x8f, 0x78, 0xf1, 0x54, 0xf8, 0x8f, 0xbc, 0xdc, 0x01, 0x2b, 0x72, 0x26, 0xe1,
+	0x8b, 0xb9, 0x99, 0xa9, 0xaa, 0x77, 0x41, 0x05, 0x06, 0x78, 0x1c, 0x52, 0x49, 0xcf, 0xe5, 0x46,
+	0x99, 0xb4, 0xe9, 0x6c, 0xf3, 0x56, 0x49, 0xbc, 0x31, 0x22, 0xb4, 0x02, 0x11, 0x32, 0x33, 0xb3,
+	0x06, 0xd4, 0xd9, 0x29, 0x49, 0xff, 0xb9, 0x78, 0x1b, 0x5f, 0x44, 0x2e, 0xa4, 0xe8, 0x21, 0x1c,
+	0xc1, 0x80, 0xb0, 0x64, 0x66, 0xfd, 0xa9, 0x5c, 0x94, 0x4c, 0xa2, 0xaa, 0xbe, 0x07, 0x2a, 0x11,
+	0xf7, 0xc0, 0x19, 0x58, 0xdd, 0xbd, 0x9a, 0xab, 0xb5, 0x70, 0x9f, 0x49, 0x44, 0xe8, 0x77, 0xee,
+	0x14, 0x7b, 0xfe, 0x56, 0x2a, 0x91, 0xc3, 0x78, 0xdb, 0xe5, 0x22, 0x95, 0x75, 0x4d, 0x43, 0x49,
+	0x62, 0x4f, 0x14, 0xbe, 0x75, 0xf6, 0x60, 0x38, 0x40, 0xc3, 0xd4, 0xd6, 0x29, 0x29, 0xef, 0x46,
+	0xae, 0xbc, 0x99, 0xca, 0xa6, 0xd7, 0xc4, 0xfc, 0x65, 0xd7, 0x44, 0x67, 0x2d, 0x33, 0xbc, 0xcd,
+	0x1f, 0x15, 0x3e, 0x99, 0xb3, 0xc1, 0x24, 0x93, 0xf9, 0xdf, 0x07, 0xf5, 0x00, 0xac, 0x0d, 0xb8,
+	0x2f, 0xe4, 0xee, 0xb3, 0x75, 0x2b, 0x09, 0xd7, 0x0b, 0x73, 0xf9, 0xf3, 0x78, 0x17, 0x77, 0x97,
+	0x19, 0xeb, 0x4f, 0x7f, 0x6d, 0x28, 0xce, 0x95, 0xd8, 0x94, 0x09, 0xd5, 0x37, 0xc1, 0x46, 0xe2,
+	0xea, 0x80, 0x37, 0x07, 0x9f, 0x56, 0x8b, 0xce, 0x7a, 0x0c, 0x7f, 0xcc, 0xd1, 0xdd, 0x3f, 0x17,
+	0xc1, 0x42, 0x8f, 0x78, 0xea, 0xd7, 0x60, 0x3d, 0xb7, 0xca, 0x9b, 0xb9, 0x3a, 0x17, 0x76, 0x90,
+	0xde, 0xba, 0x48, 0x23, 0xe1, 0x02, 0x81, 0xcd, 0xe2, 0x02, 0xba, 0x55, 0x34, 0x2f, 0x28, 0xe9,
+	0xdb, 0x97, 0x50, 0x4a, 0xae, 0xf9, 0x00, 0x2c, 0xf2, 0x4d, 0x70, 0xad, 0x68, 0xc4, 0x70, 0xdd,
+	0x28, 0xc7, 0x13, 0xfb, 0xc7, 0xe0, 0x4a, 0x66, 0x9c, 0x9e, 0xa1, 0x1f, 0xcb, 0xf5, 0x37, 0xce,
+	0x97, 0x27, 0x7e, 0x3f, 0x02, 0xd5, 0x78, 0x12, 0xd5, 0x8b, 0x26, 0x52, 0xa4, 0xdf, 0x3c, 0x53,
+	0x94, 0x0e, 0x30, 0xd3, 0xd3, 0x25, 0x01, 0xa6, 0xe5, 0x65, 0x01, 0x96, 0xb5, 0x15, 0xab, 0x7e,
+	0xae, 0xa5, 0x4a, 0xaa, 0x9f, 0xd5, 0x28, 0xab, 0x7e, 0x79, 0x27, 0xe8, 0x4b, 0xdf, 0xb1, 0xb1,
+	0xd0, 0xbd, 0xff, 0xe2, 0xd8, 0x50, 0x5e, 0x1e, 0x1b, 0xca, 0x6f, 0xc7, 0x86, 0xf2, 0xf4, 0xc4,
+	0x98, 0x7b, 0x79, 0x62, 0xcc, 0xfd, 0x72, 0x62, 0xcc, 0x7d, 0xb5, 0xed, 0xf9, 0xf4, 0x60, 0xdc,
+	0xb7, 0x06, 0x38, 0x90, 0x7f, 0x66, 0xed, 0xc2, 0x9c, 0xa0, 0xd3, 0x08, 0x11, 0xf6, 0xd7, 0xb9,
+	0xc2, 0xdb, 0xe0, 0x9d, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xda, 0xbe, 0x64, 0x9b, 0x7a, 0x0b,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -628,7 +925,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// SubmitProposal defines a method to create new proposal given a content.
+	// SubmitProposal defines a method to create new proposal given the messages.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
 	// ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
 	// to execute a legacy content-based proposal.
@@ -639,6 +936,15 @@ type MsgClient interface {
 	VoteWeighted(ctx context.Context, in *MsgVoteWeighted, opts ...grpc.CallOption) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
 	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error)
+	// UpdateParams defines a governance operation for updating the x/gov module
+	// parameters. The authority is defined in the keeper.
+	//
+	// Since: cosmos-sdk 0.47
+	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CancelProposal defines a method to cancel governance proposal
+	//
+	// Since: cosmos-sdk 0.48
+	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
 }
 
 type msgClient struct {
@@ -694,9 +1000,27 @@ func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.Ca
 	return out, nil
 }
 
+func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
+	out := new(MsgUpdateParamsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/UpdateParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error) {
+	out := new(MsgCancelProposalResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Msg/CancelProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// SubmitProposal defines a method to create new proposal given a content.
+	// SubmitProposal defines a method to create new proposal given the messages.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 	// ExecLegacyContent defines a Msg to be in included in a MsgSubmitProposal
 	// to execute a legacy content-based proposal.
@@ -707,6 +1031,15 @@ type MsgServer interface {
 	VoteWeighted(context.Context, *MsgVoteWeighted) (*MsgVoteWeightedResponse, error)
 	// Deposit defines a method to add deposit on a specific proposal.
 	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)
+	// UpdateParams defines a governance operation for updating the x/gov module
+	// parameters. The authority is defined in the keeper.
+	//
+	// Since: cosmos-sdk 0.47
+	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CancelProposal defines a method to cancel governance proposal
+	//
+	// Since: cosmos-sdk 0.48
+	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -727,6 +1060,12 @@ func (*UnimplementedMsgServer) VoteWeighted(ctx context.Context, req *MsgVoteWei
 }
 func (*UnimplementedMsgServer) Deposit(ctx context.Context, req *MsgDeposit) (*MsgDepositResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+}
+func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (*UnimplementedMsgServer) CancelProposal(ctx context.Context, req *MsgCancelProposal) (*MsgCancelProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelProposal not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -823,6 +1162,42 @@ func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Msg/UpdateParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CancelProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Msg/CancelProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelProposal(ctx, req.(*MsgCancelProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.gov.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -846,6 +1221,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Deposit",
 			Handler:    _Msg_Deposit_Handler,
+		},
+		{
+			MethodName: "UpdateParams",
+			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "CancelProposal",
+			Handler:    _Msg_CancelProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -872,6 +1255,30 @@ func (m *MsgSubmitProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Expedited {
+		i--
+		if m.Expedited {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.Summary) > 0 {
+		i -= len(m.Summary)
+		copy(dAtA[i:], m.Summary)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Summary)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x2a
+	}
 	if len(m.Metadata) > 0 {
 		i -= len(m.Metadata)
 		copy(dAtA[i:], m.Metadata)
@@ -1231,6 +1638,145 @@ func (m *MsgDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpdateParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCancelProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCancelProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCancelProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Proposer) > 0 {
+		i -= len(m.Proposer)
+		copy(dAtA[i:], m.Proposer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Proposer)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCancelProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCancelProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCancelProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CanceledHeight != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.CanceledHeight))
+		i--
+		dAtA[i] = 0x18
+	}
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.CanceledTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CanceledTime):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintTx(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x12
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1267,6 +1813,17 @@ func (m *MsgSubmitProposal) Size() (n int) {
 	l = len(m.Metadata)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Summary)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Expedited {
+		n += 2
 	}
 	return n
 }
@@ -1404,6 +1961,63 @@ func (m *MsgDepositResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgUpdateParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Params.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCancelProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	l = len(m.Proposer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCancelProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.CanceledTime)
+	n += 1 + l + sovTx(uint64(l))
+	if m.CanceledHeight != 0 {
+		n += 1 + sovTx(uint64(m.CanceledHeight))
+	}
 	return n
 }
 
@@ -1574,6 +2188,90 @@ func (m *MsgSubmitProposal) Unmarshal(dAtA []byte) error {
 			}
 			m.Metadata = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Summary", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Summary = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Expedited", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Expedited = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -2415,6 +3113,393 @@ func (m *MsgDepositResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCancelProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCancelProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCancelProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proposer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCancelProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCancelProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCancelProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CanceledTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.CanceledTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CanceledHeight", wireType)
+			}
+			m.CanceledHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CanceledHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

@@ -8,7 +8,11 @@ import (
 // InitGenesis new mint genesis
 func (keeper Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, data *types.GenesisState) {
 	keeper.SetMinter(ctx, data.Minter)
-	keeper.SetParams(ctx, data.Params)
+
+	if err := keeper.SetParams(ctx, data.Params); err != nil {
+		panic(err)
+	}
+
 	ak.GetModuleAccount(ctx, types.ModuleName)
 }
 

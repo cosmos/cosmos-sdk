@@ -38,6 +38,7 @@ and https://github.com/cosmos/cosmos-sdk/pull/10454.
 These prior efforts culminated in the creation of the Cosmos SDK `orm` go module which uses protobuf annotations
 for specifying ORM table definitions. This ORM is based on the new `google.golang.org/protobuf/reflect/protoreflect`
 API and supports:
+
 * sorted indexes for all simple protobuf types (except `bytes`, `enum`, `float`, `double`) as well as `Timestamp` and `Duration`
 * unsorted `bytes` and `enum` indexes
 * composite primary and secondary keys
@@ -63,9 +64,9 @@ A code generator is included with the ORM which creates type safe wrappers aroun
 implementation and is the recommended way for modules to use the ORM.
 
 The ORM tests provide a simplified bank module demonstration which illustrates:
-- [ORM proto options](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.proto)
-- [Generated Code](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.cosmos_orm.go)
-- [Example Usage in a Module Keeper](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/model/ormdb/module_test.go)
+* [ORM proto options](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.proto)
+* [Generated Code](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.cosmos_orm.go)
+* [Example Usage in a Module Keeper](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/model/ormdb/module_test.go)
 
 ## Consequences
 
@@ -92,12 +93,13 @@ for potential improvements
 ## Further Discussions
 
 Further discussions will happen within the Cosmos SDK Framework Working Group. Current planned and ongoing work includes:
+
 * automatically generate client-facing query layer
 * client-side query libraries that transparently verify light client proofs
 * index ORM data to SQL databases
 * improve performance by:
-  * optimizing existing reflection based code to avoid unnecessary gets when doing deletes & updates of simple tables
-  * more sophisticated code generation such as making fast path reflection even faster (avoiding `switch` statements),
+    * optimizing existing reflection based code to avoid unnecessary gets when doing deletes & updates of simple tables
+    * more sophisticated code generation such as making fast path reflection even faster (avoiding `switch` statements),
   or even fully generating code that equals handwritten performance
 
 

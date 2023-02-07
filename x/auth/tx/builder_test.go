@@ -21,7 +21,7 @@ func TestTxBuilder(t *testing.T) {
 	marshaler := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	txBuilder := newBuilder(nil)
 
-	memo := "sometestmemo"
+	memo := "sometestmemo" //nolint:goconst
 	msgs := []sdk.Msg{testdata.NewTestMsg(addr)}
 	accSeq := uint64(2) // Arbitrary account sequence
 	any, err := codectypes.NewAnyWithValue(pubkey)
@@ -40,7 +40,7 @@ func TestTxBuilder(t *testing.T) {
 		Sequence: accSeq,
 	})
 
-	var sig signing.SignatureV2 = signing.SignatureV2{
+	sig := signing.SignatureV2{
 		PubKey: pubkey,
 		Data: &signing.SingleSignatureData{
 			SignMode:  signing.SignMode_SIGN_MODE_DIRECT,

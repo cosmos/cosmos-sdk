@@ -3,7 +3,7 @@ package tmservice
 import (
 	"context"
 
-	"github.com/tendermint/tendermint/rpc/coretypes"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )

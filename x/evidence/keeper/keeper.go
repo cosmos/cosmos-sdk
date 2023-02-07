@@ -3,16 +3,17 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/libs/log"
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/types"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cosmos/cosmos-sdk/log"
+
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // Keeper defines the evidence module's keeper. The keeper is responsible for
@@ -26,6 +27,7 @@ type Keeper struct {
 	slashingKeeper types.SlashingKeeper
 }
 
+// NewKeeper creates a new Keeper object.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeKey storetypes.StoreKey, stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
@@ -107,7 +109,7 @@ func (k Keeper) SetEvidence(ctx sdk.Context, evidence exported.Evidence) {
 
 // GetEvidence retrieves Evidence by hash if it exists. If no Evidence exists for
 // the given hash, (nil, false) is returned.
-func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Evidence, bool) {
+func (k Keeper) GetEvidence(ctx sdk.Context, hash cmtbytes.HexBytes) (exported.Evidence, bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
 
 	bz := store.Get(hash)
@@ -123,7 +125,7 @@ func (k Keeper) GetEvidence(ctx sdk.Context, hash tmbytes.HexBytes) (exported.Ev
 // will close and stop.
 func (k Keeper) IterateEvidence(ctx sdk.Context, cb func(exported.Evidence) bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEvidence)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {

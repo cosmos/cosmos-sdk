@@ -3,49 +3,42 @@ package simulation
 import (
 	"math/rand"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-// OpWeightSubmitCommunitySpendProposal app params key for community spend proposal
-const OpWeightSubmitCommunitySpendProposal = "op_weight_submit_community_spend_proposal"
+// Simulation operation weights constants
+const (
+	DefaultWeightMsgUpdateParams int = 50
 
-// ProposalContents defines the module weighted proposals' contents
-func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
-	return []simtypes.WeightedProposalContent{
-		simulation.NewWeightedProposalContent(
-			OpWeightSubmitCommunitySpendProposal,
-			simappparams.DefaultWeightCommunitySpendProposal,
-			SimulateCommunityPoolSpendProposalContent(k),
+	OpWeightMsgUpdateParams = "op_weight_msg_update_params" //nolint:gosec
+)
+
+// ProposalMsgs defines the module weighted proposals' contents
+func ProposalMsgs() []simtypes.WeightedProposalMsg {
+	return []simtypes.WeightedProposalMsg{
+		simulation.NewWeightedProposalMsg(
+			OpWeightMsgUpdateParams,
+			DefaultWeightMsgUpdateParams,
+			SimulateMsgUpdateParams,
 		),
 	}
 }
 
-// SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content
-func SimulateCommunityPoolSpendProposalContent(k keeper.Keeper) simtypes.ContentSimulatorFn {
-	return func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) simtypes.Content {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+// SimulateMsgUpdateParams returns a random MsgUpdateParams
+func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+	// use the default gov module account address as authority
+	var authority sdk.AccAddress = address.Module("gov")
 
-		balance := k.GetFeePool(ctx).CommunityPool
-		if balance.Empty() {
-			return nil
-		}
+	params := types.DefaultParams()
+	params.CommunityTax = simtypes.RandomDecAmount(r, sdk.NewDec(1))
+	params.WithdrawAddrEnabled = r.Intn(2) == 0
 
-		denomIndex := r.Intn(len(balance))
-		amount, err := simtypes.RandPositiveInt(r, balance[denomIndex].Amount.TruncateInt())
-		if err != nil {
-			return nil
-		}
-
-		return types.NewCommunityPoolSpendProposal(
-			simtypes.RandStringOfLength(r, 10),
-			simtypes.RandStringOfLength(r, 100),
-			simAccount.Address,
-			sdk.NewCoins(sdk.NewCoin(balance[denomIndex].Denom, amount)),
-		)
+	return &types.MsgUpdateParams{
+		Authority: authority.String(),
+		Params:    params,
 	}
 }

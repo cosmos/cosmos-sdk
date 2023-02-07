@@ -3,28 +3,25 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-// bank message types
-const (
-	TypeMsgSend           = "send"
-	TypeMsgMultiSend      = "multisend"
-	TypeMsgSetSendEnabled = "set-send-enabled"
-)
+var (
+	_ sdk.Msg = &MsgSend{}
+	_ sdk.Msg = &MsgMultiSend{}
+	_ sdk.Msg = &MsgUpdateParams{}
 
-var _ sdk.Msg = &MsgSend{}
+	_ legacytx.LegacyMsg = &MsgSend{}
+	_ legacytx.LegacyMsg = &MsgMultiSend{}
+	_ legacytx.LegacyMsg = &MsgUpdateParams{}
+)
 
 // NewMsgSend - construct a msg to send coins from one account to another.
+//
 //nolint:interfacer
 func NewMsgSend(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgSend {
 	return &MsgSend{FromAddress: fromAddr.String(), ToAddress: toAddr.String(), Amount: amount}
 }
-
-// Route Implements Msg.
-func (msg MsgSend) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgSend) Type() string { return TypeMsgSend }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSend) ValidateBasic() error {
@@ -58,25 +55,22 @@ func (msg MsgSend) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
-var _ sdk.Msg = &MsgMultiSend{}
-
 // NewMsgMultiSend - construct arbitrary multi-in, multi-out send msg.
 func NewMsgMultiSend(in []Input, out []Output) *MsgMultiSend {
 	return &MsgMultiSend{Inputs: in, Outputs: out}
 }
 
-// Route Implements Msg
-func (msg MsgMultiSend) Route() string { return RouterKey }
-
-// Type Implements Msg
-func (msg MsgMultiSend) Type() string { return TypeMsgMultiSend }
-
 // ValidateBasic Implements Msg.
 func (msg MsgMultiSend) ValidateBasic() error {
-	// this just makes sure all the inputs and outputs are properly formatted,
+	// this just makes sure the input and all the outputs are properly formatted,
 	// not that they actually have the money inside
+
 	if len(msg.Inputs) == 0 {
 		return ErrNoInputs
+	}
+
+	if len(msg.Inputs) != 1 {
+		return ErrMultipleSenders
 	}
 
 	if len(msg.Outputs) == 0 {
@@ -120,6 +114,7 @@ func (in Input) ValidateBasic() error {
 }
 
 // NewInput - create a transaction input, used with MsgMultiSend
+//
 //nolint:interfacer
 func NewInput(addr sdk.AccAddress, coins sdk.Coins) Input {
 	return Input{
@@ -146,6 +141,7 @@ func (out Output) ValidateBasic() error {
 }
 
 // NewOutput - create a transaction output, used with MsgMultiSend
+//
 //nolint:interfacer
 func NewOutput(addr sdk.AccAddress, coins sdk.Coins) Output {
 	return Output{
@@ -163,7 +159,6 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 		if err := in.ValidateBasic(); err != nil {
 			return err
 		}
-
 		totalIn = totalIn.Add(in.Coins...)
 	}
 
@@ -176,8 +171,77 @@ func ValidateInputsOutputs(inputs []Input, outputs []Output) error {
 	}
 
 	// make sure inputs and outputs match
-	if !totalIn.IsEqual(totalOut) {
+	if !totalIn.Equal(totalOut) {
 		return ErrInputOutputMismatch
+	}
+
+	return nil
+}
+
+// GetSigners returns the signer addresses that are expected to sign the result
+// of GetSignBytes.
+func (msg MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+// GetSignBytes returns the raw bytes for a MsgUpdateParams message that
+// the expected signer needs to sign.
+func (msg MsgUpdateParams) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic performs basic MsgUpdateParams message validation.
+func (msg MsgUpdateParams) ValidateBasic() error {
+	return msg.Params.Validate()
+}
+
+// NewMsgSetSendEnabled Construct a message to set one or more SendEnabled entries.
+func NewMsgSetSendEnabled(authority string, sendEnabled []*SendEnabled, useDefaultFor []string) *MsgSetSendEnabled {
+	return &MsgSetSendEnabled{
+		Authority:     authority,
+		SendEnabled:   sendEnabled,
+		UseDefaultFor: useDefaultFor,
+	}
+}
+
+// GetSignBytes implements the LegacyMsg interface.
+func (msg MsgSetSendEnabled) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for MsgSoftwareUpgrade.
+func (msg MsgSetSendEnabled) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic runs basic validation on this MsgSetSendEnabled.
+func (msg MsgSetSendEnabled) ValidateBasic() error {
+	if len(msg.Authority) > 0 {
+		if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+			return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
+		}
+	}
+
+	seen := map[string]bool{}
+	for _, se := range msg.SendEnabled {
+		if _, alreadySeen := seen[se.Denom]; alreadySeen {
+			return sdkerrors.ErrInvalidRequest.Wrapf("duplicate denom entries found for %q", se.Denom)
+		}
+
+		seen[se.Denom] = true
+
+		if err := se.Validate(); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid SendEnabled denom %q: %s", se.Denom, err)
+		}
+	}
+
+	for _, denom := range msg.UseDefaultFor {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return sdkerrors.ErrInvalidRequest.Wrapf("invalid UseDefaultFor denom %q: %s", denom, err)
+		}
 	}
 
 	return nil

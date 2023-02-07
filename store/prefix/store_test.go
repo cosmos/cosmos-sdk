@@ -4,18 +4,17 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
+	"cosmossdk.io/store/cachekv"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/tendermint/tm-db"
 
 	tiavl "github.com/cosmos/iavl"
 
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/gaskv"
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/gaskv"
+	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/types"
 )
 
 // copied from iavl/store_test.go
@@ -90,7 +89,7 @@ func testPrefixStore(t *testing.T, baseStore types.KVStore, prefix []byte) {
 
 func TestIAVLStorePrefix(t *testing.T) {
 	db := dbm.NewMemDB()
-	tree, err := tiavl.NewMutableTree(db, cacheSize)
+	tree, err := tiavl.NewMutableTree(db, cacheSize, false)
 	require.NoError(t, err)
 	iavlStore := iavl.UnsafeNewStore(tree)
 
@@ -237,7 +236,7 @@ func TestPrefixStoreReverseIteratorEdgeCase(t *testing.T) {
 	iter.Close()
 }
 
-// Tests below are ported from https://github.com/tendermint/tendermint/blob/master/libs/db/prefix_db_test.go
+// Tests below are ported from https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db_test.go
 
 func mockStoreWithStuff() types.KVStore {
 	db := dbm.NewMemDB()
@@ -248,7 +247,7 @@ func mockStoreWithStuff() types.KVStore {
 	store.Set(bz("key2"), bz("value2"))
 	store.Set(bz("key3"), bz("value3"))
 	store.Set(bz("something"), bz("else"))
-	store.Set(bz("k"), bz(sdk.PrefixValidator))
+	store.Set(bz("k"), bz("val"))
 	store.Set(bz("ke"), bz("valu"))
 	store.Set(bz("kee"), bz("valuu"))
 	return store
@@ -438,7 +437,4 @@ func TestCacheWraps(t *testing.T) {
 
 	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
 	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
-
-	cacheWrappedWithListeners := store.CacheWrapWithListeners(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithListeners)
 }

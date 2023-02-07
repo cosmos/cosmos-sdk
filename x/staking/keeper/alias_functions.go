@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -13,7 +15,7 @@ import (
 func (k Keeper) IterateValidators(ctx sdk.Context, fn func(index int64, validator types.ValidatorI) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ValidatorsKey)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -34,7 +36,7 @@ func (k Keeper) IterateBondedValidatorsByPower(ctx sdk.Context, fn func(index in
 	store := ctx.KVStore(k.storeKey)
 	maxValidators := k.MaxValidators(ctx)
 
-	iterator := sdk.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	iterator := storetypes.KVStoreReversePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -119,7 +121,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetDelegationsKey(delAddr)
 
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
+	iterator := storetypes.KVStorePrefixIterator(store, delegatorPrefixKey) // smallest to largest
 	defer iterator.Close()
 
 	for i := int64(0); iterator.Valid(); iterator.Next() {
@@ -138,7 +140,7 @@ func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
 func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Delegation) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.DelegationKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.DelegationKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

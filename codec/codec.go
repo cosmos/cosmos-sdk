@@ -1,7 +1,7 @@
 package codec
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/encoding"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,28 +22,28 @@ type (
 
 	BinaryCodec interface {
 		// Marshal returns binary encoding of v.
-		Marshal(o ProtoMarshaler) ([]byte, error)
+		Marshal(o proto.Message) ([]byte, error)
 		// MustMarshal calls Marshal and panics if error is returned.
-		MustMarshal(o ProtoMarshaler) []byte
+		MustMarshal(o proto.Message) []byte
 
 		// MarshalLengthPrefixed returns binary encoding of v with bytes length prefix.
-		MarshalLengthPrefixed(o ProtoMarshaler) ([]byte, error)
+		MarshalLengthPrefixed(o proto.Message) ([]byte, error)
 		// MustMarshalLengthPrefixed calls MarshalLengthPrefixed and panics if
 		// error is returned.
-		MustMarshalLengthPrefixed(o ProtoMarshaler) []byte
+		MustMarshalLengthPrefixed(o proto.Message) []byte
 
 		// Unmarshal parses the data encoded with Marshal method and stores the result
 		// in the value pointed to by v.
-		Unmarshal(bz []byte, ptr ProtoMarshaler) error
+		Unmarshal(bz []byte, ptr proto.Message) error
 		// MustUnmarshal calls Unmarshal and panics if error is returned.
-		MustUnmarshal(bz []byte, ptr ProtoMarshaler)
+		MustUnmarshal(bz []byte, ptr proto.Message)
 
 		// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
 		// the result in the value pointed to by v.
-		UnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler) error
+		UnmarshalLengthPrefixed(bz []byte, ptr proto.Message) error
 		// MustUnmarshalLengthPrefixed calls UnmarshalLengthPrefixed and panics if error
 		// is returned.
-		MustUnmarshalLengthPrefixed(bz []byte, ptr ProtoMarshaler)
+		MustUnmarshalLengthPrefixed(bz []byte, ptr proto.Message)
 
 		// MarshalInterface is a helper method which will wrap `i` into `Any` for correct
 		// binary interface (de)serialization.
@@ -78,6 +78,8 @@ type (
 
 	// ProtoMarshaler defines an interface a type must implement to serialize itself
 	// as a protocol buffer defined message.
+	//
+	// Deprecated: Use proto.Message instead from github.com/cosmos/gogoproto/proto.
 	ProtoMarshaler interface {
 		proto.Message // for JSON serialization
 

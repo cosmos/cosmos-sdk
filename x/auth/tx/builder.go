@@ -1,7 +1,7 @@
 package tx
 
 import (
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -189,10 +189,12 @@ func (w *wrapper) GetSignaturesV2() ([]signing.SignatureV2, error) {
 			if err != nil {
 				return nil, err
 			}
+			// sequence number is functionally a transaction nonce and referred to as such in the SDK
+			nonce := si.GetSequence()
 			res[i] = signing.SignatureV2{
 				PubKey:   pubKeys[i],
 				Data:     sigData,
-				Sequence: si.GetSequence(),
+				Sequence: nonce,
 			}
 
 		}
@@ -424,7 +426,7 @@ func (w *wrapper) AddAuxSignerData(data tx.AuxSignerData) error {
 		}
 	}
 	if w.tx.AuthInfo.Tip != nil && data.SignDoc.Tip != nil {
-		if !w.tx.AuthInfo.Tip.Amount.IsEqual(data.SignDoc.Tip.Amount) {
+		if !w.tx.AuthInfo.Tip.Amount.Equal(data.SignDoc.Tip.Amount) {
 			return sdkerrors.ErrInvalidRequest.Wrapf("TxBuilder has tip %+v, got %+v in AuxSignerData", w.tx.AuthInfo.Tip.Amount, data.SignDoc.Tip.Amount)
 		}
 		if w.tx.AuthInfo.Tip.Tipper != data.SignDoc.Tip.Tipper {

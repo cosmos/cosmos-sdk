@@ -74,8 +74,8 @@ func GetSealedConfig(ctx context.Context) (*Config, error) {
 }
 
 func (config *Config) assertNotSealed() {
-	config.mtx.Lock()
-	defer config.mtx.Unlock()
+	config.mtx.RLock()
+	defer config.mtx.RUnlock()
 
 	if config.sealed {
 		panic("Config is sealed")
@@ -91,7 +91,8 @@ func (config *Config) SetBech32PrefixForAccount(addressPrefix, pubKeyPrefix stri
 }
 
 // SetBech32PrefixForValidator builds the Config with Bech32 addressPrefix and publKeyPrefix for validators
-//  and returns the config instance
+//
+//	and returns the config instance
 func (config *Config) SetBech32PrefixForValidator(addressPrefix, pubKeyPrefix string) {
 	config.assertNotSealed()
 	config.bech32AddressPrefix["validator_addr"] = addressPrefix

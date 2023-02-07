@@ -11,12 +11,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
@@ -36,7 +36,7 @@ type MigrateTestSuite struct {
 
 func (s *MigrateTestSuite) SetupSuite() {
 	s.dir = s.T().TempDir()
-	s.cdc = simapp.MakeTestEncodingConfig().Codec
+	s.cdc = clienttestutil.MakeTestCodec(s.T())
 	s.appName = "cosmos"
 	s.priv = cryptotypes.PrivKey(secp256k1.GenPrivKey())
 	s.pub = s.priv.PubKey()

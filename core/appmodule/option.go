@@ -2,7 +2,6 @@ package appmodule
 
 import (
 	"cosmossdk.io/core/internal"
-	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
 // Option is a functional option for implementing modules.
@@ -22,12 +21,20 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 func Provide(providers ...interface{}) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {
 		for _, provider := range providers {
-			desc, err := depinject.ExtractProviderDescriptor(provider)
-			if err != nil {
-				return err
-			}
+			initializer.Providers = append(initializer.Providers, provider)
+		}
+		return nil
+	})
+}
 
-			initializer.Providers = append(initializer.Providers, desc)
+// Invoke registers invokers to run with depinject. Each invoker will be called
+// at the end of dependency graph configuration in the order in which it was defined. Invokers may not define output
+// parameters, although they may return an error, and all of their input parameters will be marked as optional so that
+// invokers impose no additional constraints on the dependency graph. Invoker functions should nil-check all inputs.
+func Invoke(invokers ...interface{}) Option {
+	return funcOption(func(initializer *internal.ModuleInitializer) error {
+		for _, invoker := range invokers {
+			initializer.Invokers = append(initializer.Invokers, invoker)
 		}
 		return nil
 	})

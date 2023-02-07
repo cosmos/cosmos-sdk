@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -37,15 +37,15 @@ func (pc MockParamChange) SimValue() simtypes.SimValFn {
 }
 
 // make sure that the MockParamChange satisfied the ParamChange interface
-var _ simtypes.ParamChange = MockParamChange{}
+var _ simtypes.LegacyParamChange = MockParamChange{}
 
 func TestSimulateParamChangeProposalContent(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
-	paramChangePool := []simtypes.ParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
+	paramChangePool := []simtypes.LegacyParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
 
 	// execute operation
 	op := simulation.SimulateParamChangeProposalContent(paramChangePool)

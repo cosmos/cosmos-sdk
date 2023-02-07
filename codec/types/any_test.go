@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -19,7 +19,7 @@ var _ proto.Message = (*errOnMarshal)(nil)
 
 var errAlways = fmt.Errorf("always erroring")
 
-func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) { //nolint:revive
 	return nil, errAlways
 }
 

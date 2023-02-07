@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -30,9 +30,9 @@ func getTestingMode(tb testing.TB) (testingMode bool, t *testing.T, b *testing.B
 // getBlockSize returns a block size as determined from the transition matrix.
 // It targets making average block size the provided parameter. The three
 // states it moves between are:
-//  - "over stuffed" blocks with average size of 2 * avgblocksize,
-//  - normal sized blocks, hitting avgBlocksize on average,
-//  - and empty blocks, with no txs / only txs scheduled from the past.
+//   - "over stuffed" blocks with average size of 2 * avgblocksize,
+//   - normal sized blocks, hitting avgBlocksize on average,
+//   - and empty blocks, with no txs / only txs scheduled from the past.
 func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize int) (state, blockSize int) {
 	// TODO: Make default blocksize transition matrix actually make the average
 	// blocksize equal to avgBlockSize.
@@ -68,7 +68,6 @@ type OperationInput struct {
 	TxGen           client.TxConfig
 	Cdc             *codec.ProtoCodec
 	Msg             sdk.Msg
-	MsgType         string
 	CoinsSpentInMsg sdk.Coins
 	Context         sdk.Context
 	SimAccount      simtypes.Account
@@ -87,12 +86,12 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 
 	coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 	if hasNeg {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "message doesn't leave room for fees"), nil, err
 	}
 
 	fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate fees"), nil, err
 	}
 	return GenAndDeliverTx(txCtx, fees)
 }
@@ -100,23 +99,24 @@ func GenAndDeliverTxWithRandFees(txCtx OperationInput) (simtypes.OperationMsg, [
 // GenAndDeliverTx generates a transactions and delivers it.
 func GenAndDeliverTx(txCtx OperationInput, fees sdk.Coins) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 	account := txCtx.AccountKeeper.GetAccount(txCtx.Context, txCtx.SimAccount.Address)
-	tx, err := helpers.GenSignedMockTx(
+	tx, err := simtestutil.GenSignedMockTx(
+		txCtx.R,
 		txCtx.TxGen,
 		[]sdk.Msg{txCtx.Msg},
 		fees,
-		helpers.DefaultGenTxGas,
+		simtestutil.DefaultGenTxGas,
 		txCtx.Context.ChainID(),
 		[]uint64{account.GetAccountNumber()},
 		[]uint64{account.GetSequence()},
 		txCtx.SimAccount.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to generate mock tx"), nil, err
 	}
 
 	_, _, err = txCtx.App.SimDeliver(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to deliver tx"), nil, err
+		return simtypes.NoOpMsg(txCtx.ModuleName, sdk.MsgTypeURL(txCtx.Msg), "unable to deliver tx"), nil, err
 	}
 
 	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil, nil

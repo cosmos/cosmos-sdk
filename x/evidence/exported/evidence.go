@@ -1,8 +1,8 @@
 package exported
 
 import (
-	"github.com/gogo/protobuf/proto"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -13,9 +13,8 @@ type Evidence interface {
 	proto.Message
 
 	Route() string
-	Type() string
 	String() string
-	Hash() tmbytes.HexBytes
+	Hash() cmtbytes.HexBytes
 	ValidateBasic() error
 
 	// Height at which the infraction occurred

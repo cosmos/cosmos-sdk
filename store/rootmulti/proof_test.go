@@ -3,19 +3,20 @@ package rootmulti
 import (
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/store/iavl"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/types"
 )
 
 func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	iStore, err := iavl.LoadStore(db, types.CommitID{}, false, iavl.DefaultIAVLCacheSize)
+	iStore, err := iavl.LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), types.CommitID{}, false, iavl.DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
 	store := iStore.(*iavl.Store)
 	require.Nil(t, err)
 	store.Set([]byte("MYKEY"), []byte("MYVALUE"))
@@ -58,7 +59,7 @@ func TestVerifyIAVLStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProof(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)
@@ -113,7 +114,7 @@ func TestVerifyMultiStoreQueryProof(t *testing.T) {
 func TestVerifyMultiStoreQueryProofAbsence(t *testing.T) {
 	// Create main tree for testing.
 	db := dbm.NewMemDB()
-	store := NewStore(db, log.NewNopLogger())
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	iavlStoreKey := types.NewKVStoreKey("iavlStoreKey")
 
 	store.MountStoreWithDB(iavlStoreKey, types.StoreTypeIAVL, nil)

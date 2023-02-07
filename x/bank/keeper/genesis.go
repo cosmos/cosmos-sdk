@@ -10,7 +10,9 @@ import (
 
 // InitGenesis initializes the bank module's state from a given genesis state.
 func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
-	k.SetParams(ctx, genState.Params)
+	if err := k.SetParams(ctx, genState.Params); err != nil {
+		panic(err)
+	}
 
 	for _, se := range genState.GetAllSendEnabled() {
 		k.SetSendEnabled(ctx, se.Denom, se.Enabled)
@@ -29,7 +31,7 @@ func (k BaseKeeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		totalSupply = totalSupply.Add(balance.Coins...)
 	}
 
-	if !genState.Supply.Empty() && !genState.Supply.IsEqual(totalSupply) {
+	if !genState.Supply.Empty() && !genState.Supply.Equal(totalSupply) {
 		panic(fmt.Errorf("genesis supply is incorrect, expected %v, got %v", genState.Supply, totalSupply))
 	}
 

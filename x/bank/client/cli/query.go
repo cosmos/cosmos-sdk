@@ -14,11 +14,12 @@ import (
 )
 
 const (
-	FlagDenom = "denom"
+	FlagDenom        = "denom"
+	FlagResolveDenom = "resolve-denom"
 )
 
 // GetQueryCmd returns the parent command for all x/bank CLi query commands. The
-// provided clientCtx should have, at a minimum, a verifier, Tendermint RPC client,
+// provided clientCtx should have, at a minimum, a verifier, CometBFT RPC client,
 // and marshaler set.
 func GetQueryCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -31,6 +32,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetBalancesCmd(),
+		GetSpendableBalancesCmd(),
 		GetCmdQueryTotalSupply(),
 		GetCmdDenomsMetadata(),
 		GetCmdQuerySendEnabled(),
@@ -49,8 +51,9 @@ func GetBalancesCmd() *cobra.Command {
 Example:
   $ %s query %s balances [address]
   $ %s query %s balances [address] --denom=[denom]
+  $ %s query %s balances [address] --resolve-denom
 `,
-				version.AppName, types.ModuleName, version.AppName, types.ModuleName,
+				version.AppName, types.ModuleName, version.AppName, types.ModuleName, version.AppName, types.ModuleName,
 			),
 		),
 		Args: cobra.ExactArgs(1),
@@ -59,6 +62,7 @@ Example:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -75,17 +79,27 @@ Example:
 			if err != nil {
 				return err
 			}
+
 			ctx := cmd.Context()
+
 			if denom == "" {
-				params := types.NewQueryAllBalancesRequest(addr, pageReq)
+				resolveDenom, err := cmd.Flags().GetBool(FlagResolveDenom)
+				if err != nil {
+					return err
+				}
+
+				params := types.NewQueryAllBalancesRequest(addr, pageReq, resolveDenom)
+
 				res, err := queryClient.AllBalances(ctx, params)
 				if err != nil {
 					return err
 				}
+
 				return clientCtx.PrintProto(res)
 			}
 
 			params := types.NewQueryBalanceRequest(addr, denom)
+
 			res, err := queryClient.Balance(ctx, params)
 			if err != nil {
 				return err
@@ -96,8 +110,69 @@ Example:
 	}
 
 	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
+	cmd.Flags().Bool(FlagResolveDenom, false, "Resolve denom to human-readable denom from metadata")
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "all balances")
+
+	return cmd
+}
+
+func GetSpendableBalancesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "spendable-balances [address]",
+		Short:   "Query for account spendable balances by address",
+		Example: fmt.Sprintf("$ %s query %s spendable-balances [address]", version.AppName, types.ModuleName),
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			denom, err := cmd.Flags().GetString(FlagDenom)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			ctx := cmd.Context()
+
+			if denom == "" {
+				params := types.NewQuerySpendableBalancesRequest(addr, pageReq)
+
+				res, err := queryClient.SpendableBalances(ctx, params)
+				if err != nil {
+					return err
+				}
+
+				return clientCtx.PrintProto(res)
+			}
+
+			params := types.NewQuerySpendableBalanceByDenomRequest(addr, denom)
+
+			res, err := queryClient.SpendableBalanceByDenom(ctx, params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	cmd.Flags().String(FlagDenom, "", "The specific balance denomination to query for")
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "spendable balances")
 
 	return cmd
 }
@@ -125,6 +200,7 @@ To query for the client metadata of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -178,6 +254,7 @@ To query for the total supply of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			denom, err := cmd.Flags().GetString(FlagDenom)
 			if err != nil {
 				return err
@@ -190,6 +267,7 @@ To query for the total supply of a specific coin denomination use:
 			if err != nil {
 				return err
 			}
+
 			if denom == "" {
 				res, err := queryClient.TotalSupply(ctx, &types.QueryTotalSupplyRequest{Pagination: pageReq})
 				if err != nil {
@@ -222,7 +300,7 @@ func GetCmdQuerySendEnabled() *cobra.Command {
 		Long: strings.TrimSpace(`Query for send enabled entries that have been specifically set.
 
 To look up one or more specific denoms, supply them as arguments to this command.
-To look up all denoms, do not provide any arguemnts.
+To look up all denoms, do not provide any arguments.
 `,
 		),
 		Example: strings.TrimSpace(

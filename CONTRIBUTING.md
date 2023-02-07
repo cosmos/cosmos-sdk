@@ -1,27 +1,28 @@
 # Contributing
 
-* [Contributing](#contributing)
-    * [Teams Dev Calls](#teams-dev-calls)
-    * [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
-    * [Development Procedure](#development-procedure)
-        * [Testing](#testing)
-        * [Pull Requests](#pull-requests)
-        * [Pull Request Templates](#pull-request-templates)
-        * [Requesting Reviews](#requesting-reviews)
-        * [Updating Documentation](#updating-documentation)
-    * [Dependencies](#dependencies)
-    * [Protobuf](#protobuf)
-    * [Branching Model and Release](#branching-model-and-release)
-        * [PR Targeting](#pr-targeting)
-    * [Code Owner Membership](#code-owner-membership)
-    * [Concept & Feature Approval Process](#concept--feature-approval-process)
-        * [Strategy Discovery](#strategy-discovery)
-        * [Concept Approval](#concept-approval)
-            * [Time Bound Period](#time-bound-period)
-            * [Approval Committee & Decision Making](#approval-committee--decision-making)
-            * [Committee Members](#committee-members)
-            * [Committee Criteria](#committee-criteria)
-        * [Implementation & Release Approval](#implementation--release-approval)
+* [Teams Dev Calls](#teams-dev-calls)
+* [Architecture Decision Records (ADR)](#architecture-decision-records-adr)
+* [Development Procedure](#development-procedure)
+    * [Testing](#testing)
+    * [Pull Requests](#pull-requests)
+    * [Pull Request Templates](#pull-request-templates)
+    * [Requesting Reviews](#requesting-reviews)
+    * [Updating Documentation](#updating-documentation)
+* [Dependencies](#dependencies)
+    * [`go.work`](#gowork)
+    * [`go.mod`](#gomod)
+* [Protobuf](#protobuf)
+* [Branching Model and Release](#branching-model-and-release)
+    * [PR Targeting](#pr-targeting)
+* [Code Owner Membership](#code-owner-membership)
+* [Concept & Feature Approval Process](#concept--feature-approval-process)
+    * [Strategy Discovery](#strategy-discovery)
+    * [Concept Approval](#concept-approval)
+        * [Time Bound Period](#time-bound-period)
+        * [Approval Committee & Decision Making](#approval-committee--decision-making)
+        * [Committee Members](#committee-members)
+        * [Committee Criteria](#committee-criteria)
+    * [Implementation & Release Approval](#implementation--release-approval)
 
 Thank you for considering making contributions to the Cosmos SDK and related repositories!
 
@@ -30,7 +31,7 @@ discussion or proposing code changes. To ensure a smooth workflow for all
 contributors, the general procedure for contributing has been established:
 
 1. Start by browsing [new issues](https://github.com/cosmos/cosmos-sdk/issues) and [discussions](https://github.com/cosmos/cosmos-sdk/discussions). If you are looking for something interesting or if you have something in your mind, there is a chance it had been discussed.
-   * Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)?
+   * Looking for a good place to start contributing? How about checking out some [good first issues](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) or [bugs](https://github.com/cosmos/cosmos-sdk/issues?q=is%3Aopen+is%3Aissue+label%3A%22T%3A+Bug%22)?
 2. Determine whether a GitHub issue or discussion is more appropriate for your needs:
    1. If want to propose something new that requires specification or an additional design, or you would like to change a process, start with a [new discussion](https://github.com/cosmos/cosmos-sdk/discussions/new). With discussions, we can better handle the design process using discussion threads. A discussion usually leads to one or more issues.
    2. If the issue you want addressed is a specific proposal or a bug, then open a [new issue](https://github.com/cosmos/cosmos-sdk/issues/new/choose).
@@ -52,20 +53,18 @@ taken place in a GitHub issue, that PR runs a high likelihood of being rejected.
 
 ## Teams Dev Calls
 
-The Cosmos SDK has many stakeholders contributing and shaping the project. Regen Network Development leads the Cosmos SDK R&D, and welcomes long-term contributors and additional maintainers from other projects. We use self-organizing principles to coordinate and collaborate across organizations in structured "Working Groups" that focus on specific problem domains or architectural components of the Cosmos SDK.
+The Cosmos SDK has many stakeholders contributing and shaping the project. The Core SDK team is composed of Interchain GmbH and Regen Network Development developers. Any long-term contributors and additional maintainers from other projects are welcome. We use self-organizing principles to coordinate and collaborate across organizations in structured "EPIC" that focus on specific problem domains or architectural components of the Cosmos SDK.
 
-The developers are organized in working groups which are listed on a ["Working Groups & Arch Process" Github Issue](https://github.com/cosmos/cosmos-sdk/issues/9058) (pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues)).
+The developers work in sprints, which are available in a [GitHub Project](https://github.com/orgs/cosmos/projects/26/views/22). The current EPICs are pinned at the top of the [issues list](https://github.com/cosmos/cosmos-sdk/issues).
 
-The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the \#dev-announcements channel.
+The important development announcements are shared on [Discord](https://discord.com/invite/cosmosnetwork) in the `#dev-announcements` channel.
 
 To synchronize we have few major meetings:
 
-* Architecture calls: bi-weekly on Fridays at 14:00 UTC (alternating with the grooming meeting below).
-* Grooming / Planning: bi-weekly on Fridays at 14:00 UTC (alternating with the architecture meeting above).
-* Cosmos Community SDK Development Call on the last Wednesday of every month at 17:00 UTC.
-* Cosmos Roadmap Prioritization every 4 weeks on Tuesday at 15:00 UTC (limited participation).
+* Cosmos SDK Sprint Review on Monday and Thursday at 14:00 UTC (limited participation to core devs).
+* Cosmos SDK Community Call on Thursday at 16:00 UTC.
 
-If you would like to join one of those calls, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Cory Levinson from Regen Network (cory@regen.network).
+If you would like to join one of the community call, then please contact us on [Discord](https://discord.com/invite/cosmosnetwork) or reach out directly to Marko (@tac0turtle).
 
 ## Architecture Decision Records (ADR)
 
@@ -109,7 +108,7 @@ Then:
    Draft PRs also helps the core team provide early feedback and ensure the work is in the right direction.
 2. When the code is complete, change your PR from `Draft` to `Ready for Review`.
 3. Go through the actions for each checkbox present in the PR template description. The PR actions are automatically provided for each new PR.
-4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format).
+4. Be sure to include a relevant changelog entry in the `Unreleased` section of `CHANGELOG.md` (see file for log format). The entry should be on top of all others changes in the section.
 
 PRs must have a category prefix that is based on the type of changes being made (for example, `fix`, `feat`,
 `refactor`, `docs`, and so on). The *type* must be included in the PR title as a prefix (for example,
@@ -160,7 +159,7 @@ If you open a PR on the Cosmos SDK, it is mandatory to update the relevant docum
 
 * If your change relates to the core SDK (baseapp, store, ...), be sure to update the content in `docs/basics/`, `docs/core/` and/or `docs/building-modules/` folders.
 * If your changes relate to the core of the CLI (not specifically to module's CLI/Rest), then modify the content in the `docs/run-node/` folder.
-* If your changes relate to a module, then be sure to update the module's spec in `x/moduleName/docs/spec/`.
+* If your changes relate to a module, then be sure to update the module's spec in `x/{moduleName}/README.md`.
 
 When writing documentation, follow the [Documentation Writing Guidelines](./docs/DOC_WRITING_GUIDELINES.md).
 
@@ -176,9 +175,31 @@ get away with telling people they can just `go get` our software.
 Since some dependencies are not under our control, a third party may break our
 build, in which case we can fall back on `go mod tidy -v`.
 
+### `go.work`
+
+The Cosmos SDK is a multi-module repo, for this reason, the use of a `go.work` file is handy. 
+We provide a [`go.work.example`](./go.work.example) that contains all the modules used in the SDK.
+Do note that contributions modifying multiple Go modules should be submitted as separate PRs, this allows us to tag the changes and avoid `replace`s.
+For consistency between our CI and the local tests, `GOWORK=off` is set in the `Makefile`. This means that the `go.work` file is not used when using `make test` or any other `make` command.
+
+### `go.mod`
+
+When extracting a package to its own go modules, some extra steps are required, for keeping our CI checks and Dev UX:
+
+* Add a CHANGELOG.md / README.md under the new package folder
+* Add the package in [`labeler.yml`](./.github/labeler.yml)
+* Add the package in [`go.work.example`](./go.work.example)
+* Add weekly dependabot checks (see [dependabot.yml](./.github/dependabot.yml))
+* Add tests to github workflow [test.yml](.github/workflows/test.yml) (under submodules)
+* Configure SonarCloud
+    * Add `sonar-projects.properties` (see math [sonar-projects.properties](./math/sonar-projects.properties) for example)
+    * Add a GitHub Workflow entry for running the scans (see [test.yml](.github/workflows/test.yml))
+    * Ask the team to add the project to SonarCloud
+* (optional) Configure a `cosmossdk.io` vanity url by submitting a PR to [cosmos/vanity](https://github.com/cosmos/vanity).
+
 ## Protobuf
 
-We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/gogo/protobuf) to generate code for use in Cosmos SDK.
+We use [Protocol Buffers](https://developers.google.com/protocol-buffers) along with [gogoproto](https://github.com/cosmos/gogoproto) to generate code for use in Cosmos SDK.
 
 For deterministic behavior around Protobuf tooling, everything is containerized using Docker. Make sure to have Docker installed on your machine, or head to [Docker's website](https://docs.docker.com/get-docker/) to install it.
 
@@ -199,7 +220,6 @@ For example, in vscode your `.vscode/settings.json` should look like:
     "protoc": {
         "options": [
         "--proto_path=${workspaceRoot}/proto",
-        "--proto_path=${workspaceRoot}/third_party/proto"
         ]
     }
 }
@@ -279,8 +299,7 @@ is broken up into three distinct stages: **Strategy Discovery**, **Concept Appro
 
 #### Time Bound Period
 
-* Once a PR for an ADR is opened, reviewers are expected to perform a first
-  review within 1 week of pull request being open
+* Once a PR for an ADR is opened, reviewers are expected to perform a first review within 1 week of pull request being open
 * Time bound period for individual ADR Pull Requests to be merged should not exceed 2 weeks
 * Total time bound period for an ADR to reach a decision (`ABANDONED | ACCEPTED | REJECTED`) should not exceed 4 weeks
 

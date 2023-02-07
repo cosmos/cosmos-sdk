@@ -6,23 +6,25 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/feegrant/simulation"
+	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 )
 
 var (
 	granterPk   = ed25519.GenPrivKey().PubKey()
 	granterAddr = sdk.AccAddress(granterPk.Address())
-	granteePk   = ed25519.GenPrivKey().PubKey()
 	granteeAddr = sdk.AccAddress(granterPk.Address())
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	var cdc codec.Codec
+	depinject.Inject(feegranttestutil.AppConfig, &cdc)
 	dec := simulation.NewDecodeStore(cdc)
 
 	grant, err := feegrant.NewGrant(granterAddr, granteeAddr, &feegrant.BasicAllowance{
@@ -36,7 +38,7 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: []byte(feegrant.FeeAllowanceKeyPrefix), Value: grantBz},
+			{Key: feegrant.FeeAllowanceKeyPrefix, Value: grantBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

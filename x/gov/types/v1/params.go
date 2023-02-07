@@ -1,197 +1,210 @@
 package v1
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Default period for deposits & voting
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultPeriod                         time.Duration = time.Hour * 24 * 2 // 2 days
+	DefaultExpeditedPeriod                time.Duration = time.Hour * 24 * 1 // 1 day
+	DefaultMinExpeditedDepositTokensRatio               = 5
 )
 
 // Default governance params
 var (
-	DefaultMinDepositTokens = sdk.NewInt(10000000)
-	DefaultQuorum           = sdk.NewDecWithPrec(334, 3)
-	DefaultThreshold        = sdk.NewDecWithPrec(5, 1)
-	DefaultVetoThreshold    = sdk.NewDecWithPrec(334, 3)
+	DefaultMinDepositTokens          = sdk.NewInt(10000000)
+	DefaultMinExpeditedDepositTokens = DefaultMinDepositTokens.Mul(math.NewInt(DefaultMinExpeditedDepositTokensRatio))
+	DefaultQuorum                    = sdk.NewDecWithPrec(334, 3)
+	DefaultThreshold                 = sdk.NewDecWithPrec(5, 1)
+	DefaultExpeditedThreshold        = sdk.NewDecWithPrec(667, 3)
+	DefaultVetoThreshold             = sdk.NewDecWithPrec(334, 3)
+	DefaultMinInitialDepositRatio    = sdk.ZeroDec()
+	DefaultProposalCancelRatio       = sdk.MustNewDecFromStr("0.5")
+	DefaultProposalCancelDestAddress = ""
 )
 
-// Parameter store key
-var (
-	ParamStoreKeyDepositParams = []byte("depositparams")
-	ParamStoreKeyVotingParams  = []byte("votingparams")
-	ParamStoreKeyTallyParams   = []byte("tallyparams")
-)
-
-// ParamKeyTable - Key declaration for parameters
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable(
-		paramtypes.NewParamSetPair(ParamStoreKeyDepositParams, DepositParams{}, validateDepositParams),
-		paramtypes.NewParamSetPair(ParamStoreKeyVotingParams, VotingParams{}, validateVotingParams),
-		paramtypes.NewParamSetPair(ParamStoreKeyTallyParams, TallyParams{}, validateTallyParams),
-	)
-}
-
-// NewDepositParams creates a new DepositParams object
-func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod time.Duration) DepositParams {
+// Deprecated: NewDepositParams creates a new DepositParams object
+func NewDepositParams(minDeposit sdk.Coins, maxDepositPeriod *time.Duration) DepositParams {
 	return DepositParams{
 		MinDeposit:       minDeposit,
-		MaxDepositPeriod: &maxDepositPeriod,
+		MaxDepositPeriod: maxDepositPeriod,
 	}
 }
 
-// DefaultDepositParams default parameters for deposits
-func DefaultDepositParams() DepositParams {
-	return NewDepositParams(
+// Deprecated: NewTallyParams creates a new TallyParams object
+func NewTallyParams(quorum, threshold, vetoThreshold string) TallyParams {
+	return TallyParams{
+		Quorum:        quorum,
+		Threshold:     threshold,
+		VetoThreshold: vetoThreshold,
+	}
+}
+
+// Deprecated: NewVotingParams creates a new VotingParams object
+func NewVotingParams(votingPeriod *time.Duration) VotingParams {
+	return VotingParams{
+		VotingPeriod: votingPeriod,
+	}
+}
+
+// NewParams creates a new Params instance with given values.
+func NewParams(
+	minDeposit, expeditedminDeposit sdk.Coins, maxDepositPeriod, votingPeriod, expeditedVotingPeriod time.Duration,
+	quorum, threshold, expeditedThreshold, vetoThreshold, minInitialDepositRatio, proposalCancelRatio, proposalCancelDest string,
+) Params {
+	return Params{
+		MinDeposit:             minDeposit,
+		ExpeditedMinDeposit:    expeditedminDeposit,
+		MaxDepositPeriod:       &maxDepositPeriod,
+		VotingPeriod:           &votingPeriod,
+		ExpeditedVotingPeriod:  &expeditedVotingPeriod,
+		Quorum:                 quorum,
+		Threshold:              threshold,
+		ExpeditedThreshold:     expeditedThreshold,
+		VetoThreshold:          vetoThreshold,
+		MinInitialDepositRatio: minInitialDepositRatio,
+		ProposalCancelRatio:    proposalCancelRatio,
+		ProposalCancelDest:     proposalCancelDest,
+	}
+}
+
+// DefaultParams returns the default governance params
+func DefaultParams() Params {
+	return NewParams(
 		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinDepositTokens)),
+		sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, DefaultMinExpeditedDepositTokens)),
 		DefaultPeriod,
+		DefaultPeriod,
+		DefaultExpeditedPeriod,
+		DefaultQuorum.String(),
+		DefaultThreshold.String(),
+		DefaultExpeditedThreshold.String(),
+		DefaultVetoThreshold.String(),
+		DefaultMinInitialDepositRatio.String(),
+		DefaultProposalCancelRatio.String(),
+		DefaultProposalCancelDestAddress,
 	)
 }
 
-// Equal checks equality of DepositParams
-func (dp DepositParams) Equal(dp2 DepositParams) bool {
-	return sdk.Coins(dp.MinDeposit).IsEqual(dp2.MinDeposit) && dp.MaxDepositPeriod == dp2.MaxDepositPeriod
-}
-
-func validateDepositParams(i interface{}) error {
-	v, ok := i.(DepositParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+// ValidateBasic performs basic validation on governance parameters.
+func (p Params) ValidateBasic() error {
+	minDeposit := sdk.Coins(p.MinDeposit)
+	if minDeposit.Empty() || !minDeposit.IsValid() {
+		return fmt.Errorf("invalid minimum deposit: %s", minDeposit)
 	}
 
-	if !sdk.Coins(v.MinDeposit).IsValid() {
-		return fmt.Errorf("invalid minimum deposit: %s", v.MinDeposit)
-	}
-	if v.MaxDepositPeriod == nil || v.MaxDepositPeriod.Seconds() <= 0 {
-		return fmt.Errorf("maximum deposit period must be positive: %d", v.MaxDepositPeriod)
-	}
-
-	return nil
-}
-
-// NewTallyParams creates a new TallyParams object
-func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
-	return TallyParams{
-		Quorum:        quorum.String(),
-		Threshold:     threshold.String(),
-		VetoThreshold: vetoThreshold.String(),
-	}
-}
-
-// DefaultTallyParams default parameters for tallying
-func DefaultTallyParams() TallyParams {
-	return NewTallyParams(DefaultQuorum, DefaultThreshold, DefaultVetoThreshold)
-}
-
-// Equal checks equality of TallyParams
-func (tp TallyParams) Equal(other TallyParams) bool {
-	return tp.Quorum == other.Quorum && tp.Threshold == other.Threshold && tp.VetoThreshold == other.VetoThreshold
-}
-
-func validateTallyParams(i interface{}) error {
-	v, ok := i.(TallyParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+	if minExpeditedDeposit := sdk.Coins(p.ExpeditedMinDeposit); minExpeditedDeposit.Empty() || !minExpeditedDeposit.IsValid() {
+		return fmt.Errorf("invalid expedited minimum deposit: %s", minExpeditedDeposit)
+	} else if minExpeditedDeposit.IsAllLTE(minDeposit) {
+		return fmt.Errorf("expedited minimum deposit must be greater than minimum deposit: %s", minExpeditedDeposit)
 	}
 
-	quorum, err := sdk.NewDecFromStr(v.Quorum)
+	if p.MaxDepositPeriod == nil {
+		return fmt.Errorf("maximum deposit period must not be nil: %d", p.MaxDepositPeriod)
+	}
+
+	if p.MaxDepositPeriod.Seconds() <= 0 {
+		return fmt.Errorf("maximum deposit period must be positive: %d", p.MaxDepositPeriod)
+	}
+
+	quorum, err := sdk.NewDecFromStr(p.Quorum)
 	if err != nil {
 		return fmt.Errorf("invalid quorum string: %w", err)
 	}
 	if quorum.IsNegative() {
 		return fmt.Errorf("quorom cannot be negative: %s", quorum)
 	}
-	if quorum.GT(sdk.OneDec()) {
-		return fmt.Errorf("quorom too large: %s", v)
+	if quorum.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("quorom too large: %s", p.Quorum)
 	}
 
-	threshold, err := sdk.NewDecFromStr(v.Threshold)
+	threshold, err := sdk.NewDecFromStr(p.Threshold)
 	if err != nil {
 		return fmt.Errorf("invalid threshold string: %w", err)
 	}
 	if !threshold.IsPositive() {
 		return fmt.Errorf("vote threshold must be positive: %s", threshold)
 	}
-	if threshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("vote threshold too large: %s", v)
+	if threshold.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("vote threshold too large: %s", threshold)
 	}
 
-	vetoThreshold, err := sdk.NewDecFromStr(v.VetoThreshold)
+	expeditedThreshold, err := sdk.NewDecFromStr(p.ExpeditedThreshold)
+	if err != nil {
+		return fmt.Errorf("invalid expedited threshold string: %w", err)
+	}
+	if !threshold.IsPositive() {
+		return fmt.Errorf("expedited vote threshold must be positive: %s", threshold)
+	}
+	if threshold.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("expedited vote threshold too large: %s", threshold)
+	}
+	if expeditedThreshold.LTE(threshold) {
+		return fmt.Errorf("expedited vote threshold %s, must be greater than the regular threshold %s", expeditedThreshold, threshold)
+	}
+
+	vetoThreshold, err := sdk.NewDecFromStr(p.VetoThreshold)
 	if err != nil {
 		return fmt.Errorf("invalid vetoThreshold string: %w", err)
 	}
 	if !vetoThreshold.IsPositive() {
 		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
 	}
-	if vetoThreshold.GT(sdk.OneDec()) {
-		return fmt.Errorf("veto threshold too large: %s", v)
+	if vetoThreshold.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("veto threshold too large: %s", vetoThreshold)
+	}
+
+	if p.VotingPeriod == nil {
+		return fmt.Errorf("voting period must not be nil: %d", p.VotingPeriod)
+	}
+	if p.VotingPeriod.Seconds() <= 0 {
+		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)
+	}
+
+	if p.ExpeditedVotingPeriod == nil {
+		return fmt.Errorf("expedited voting period must not be nil: %d", p.ExpeditedVotingPeriod)
+	}
+	if p.ExpeditedVotingPeriod.Seconds() <= 0 {
+		return fmt.Errorf("expedited voting period must be positive: %s", p.ExpeditedVotingPeriod)
+	}
+	if p.ExpeditedVotingPeriod.Seconds() >= p.VotingPeriod.Seconds() {
+		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
+	}
+
+	minInitialDepositRatio, err := sdk.NewDecFromStr(p.MinInitialDepositRatio)
+	if err != nil {
+		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
+	}
+	if minInitialDepositRatio.IsNegative() {
+		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
+	}
+	if minInitialDepositRatio.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
+	}
+
+	proposalCancelRate, err := sdk.NewDecFromStr(p.ProposalCancelRatio)
+	if err != nil {
+		return fmt.Errorf("invalid burn rate of cancel proposal: %w", err)
+	}
+	if proposalCancelRate.IsNegative() {
+		return fmt.Errorf("burn rate of cancel proposal must be positive: %s", proposalCancelRate)
+	}
+	if proposalCancelRate.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("burn rate of cancel proposal is too large: %s", proposalCancelRate)
+	}
+
+	if len(p.ProposalCancelDest) != 0 {
+		_, err := sdk.AccAddressFromBech32(p.ProposalCancelDest)
+		if err != nil {
+			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
+		}
 	}
 
 	return nil
-}
-
-// NewVotingParams creates a new VotingParams object
-func NewVotingParams(votingPeriod time.Duration) VotingParams {
-	return VotingParams{
-		VotingPeriod: &votingPeriod,
-	}
-}
-
-// DefaultVotingParams default parameters for voting
-func DefaultVotingParams() VotingParams {
-	return NewVotingParams(DefaultPeriod)
-}
-
-// Equal checks equality of TallyParams
-func (vp VotingParams) Equal(other VotingParams) bool {
-	return vp.VotingPeriod == other.VotingPeriod
-}
-
-func validateVotingParams(i interface{}) error {
-	v, ok := i.(VotingParams)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.VotingPeriod == nil {
-		return errors.New("voting period must not be nil")
-	}
-
-	if v.VotingPeriod.Seconds() <= 0 {
-		return fmt.Errorf("voting period must be positive: %s", v.VotingPeriod)
-	}
-
-	return nil
-}
-
-// Params returns all of the governance params
-type Params struct {
-	VotingParams  VotingParams  `json:"voting_params" yaml:"voting_params"`
-	TallyParams   TallyParams   `json:"tally_params" yaml:"tally_params"`
-	DepositParams DepositParams `json:"deposit_params" yaml:"deposit_params"`
-}
-
-func (gp Params) String() string {
-	return gp.VotingParams.String() + "\n" +
-		gp.TallyParams.String() + "\n" + gp.DepositParams.String()
-}
-
-// NewParams creates a new gov Params instance
-func NewParams(vp VotingParams, tp TallyParams, dp DepositParams) Params {
-	return Params{
-		VotingParams:  vp,
-		DepositParams: dp,
-		TallyParams:   tp,
-	}
-}
-
-// DefaultParams default governance params
-func DefaultParams() Params {
-	return NewParams(DefaultVotingParams(), DefaultTallyParams(), DefaultDepositParams())
 }

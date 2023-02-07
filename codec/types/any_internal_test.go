@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func (d Dog) Greet() string { return d.Name }
 func (d *Dog) Reset()                  { d.Name = "" }
 func (d *Dog) String() string          { return d.Name }
 func (d *Dog) ProtoMessage()           {}
-func (d *Dog) XXX_MessageName() string { return "tests/dog" }
+func (d *Dog) XXX_MessageName() string { return "tests/dog" } //nolint:revive
 
 type Animal interface {
 	Greet() string

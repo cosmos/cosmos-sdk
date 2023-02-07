@@ -8,14 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var header = tmproto.Header{
+var header = cmtproto.Header{
 	ChainID: "hello",
 	Height:  5,
 }
@@ -59,7 +59,7 @@ func TestValidateBasic(t *testing.T) {
 	// Ensure validators are not sorted
 	for sort.IsSorted(types.Validators(validators)) {
 		rand.Shuffle(len(validators), func(i, j int) {
-			it := validators[i]
+			it := validators[i] //nolint:gocritic
 			validators[i] = validators[j]
 			validators[j] = it
 		})

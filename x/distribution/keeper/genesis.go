@@ -12,7 +12,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	var moduleHoldings sdk.DecCoins
 
 	k.SetFeePool(ctx, data.FeePool)
-	k.SetParams(ctx, data.Params)
+
+	if err := k.SetParams(ctx, data.Params); err != nil {
+		panic(err)
+	}
 
 	for _, dwi := range data.DelegatorWithdrawInfos {
 		delegatorAddress := sdk.MustAccAddressFromBech32(dwi.DelegatorAddress)
@@ -90,7 +93,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	if balances.IsZero() {
 		k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 	}
-	if !balances.IsEqual(moduleHoldingsInt) {
+	if !balances.Equal(moduleHoldingsInt) {
 		panic(fmt.Sprintf("distribution module balance does not match the module holdings: %s <-> %s", balances, moduleHoldingsInt))
 	}
 }

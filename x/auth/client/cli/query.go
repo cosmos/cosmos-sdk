@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -46,6 +46,7 @@ func GetQueryCmd() *cobra.Command {
 		GetAccountsCmd(),
 		QueryParamsCmd(),
 		QueryModuleAccountsCmd(),
+		QueryModuleAccountByNameCmd(),
 	)
 
 	return cmd
@@ -129,23 +130,26 @@ func GetAccountCmd() *cobra.Command {
 // GetAccountAddressByIDCmd returns a query account that will display the account address of a given account id.
 func GetAccountAddressByIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "address-by-id [id]",
-		Short:   "Query for account address by account id",
+		Use:     "address-by-acc-num [acc-num]",
+		Aliases: []string{"address-by-id"},
+		Short:   "Query for an address by account number",
 		Args:    cobra.ExactArgs(1),
-		Example: fmt.Sprintf("%s q auth address-by-id 1", version.AppName),
+		Example: fmt.Sprintf("%s q auth address-by-acc-num 1", version.AppName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			id, err := strconv.ParseInt(args[0], 10, 64)
+			accNum, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.AccountAddressByID(cmd.Context(), &types.QueryAccountAddressByIDRequest{Id: id})
+			res, err := queryClient.AccountAddressByID(cmd.Context(), &types.QueryAccountAddressByIDRequest{
+				AccountId: accNum,
+			})
 			if err != nil {
 				return err
 			}
@@ -218,6 +222,40 @@ func QueryModuleAccountsCmd() *cobra.Command {
 	return cmd
 }
 
+// QueryModuleAccountByNameCmd returns a command to
+func QueryModuleAccountByNameCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "module-account [module-name]",
+		Short:   "Query module account info by module name",
+		Args:    cobra.ExactArgs(1),
+		Example: fmt.Sprintf("%s q auth module-account auth", version.AppName),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			moduleName := args[0]
+			if len(moduleName) == 0 {
+				return fmt.Errorf("module name should not be empty")
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.ModuleAccountByName(context.Background(), &types.QueryModuleAccountByNameRequest{Name: moduleName})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // QueryTxsByEventsCmd returns a command to search through transactions by events.
 func QueryTxsByEventsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -259,7 +297,7 @@ $ %s query txs --%s 'message.sender=cosmos1...&message.action=withdraw_delegator
 				}
 
 				tokens := strings.Split(event, "=")
-				if tokens[0] == tmtypes.TxHeightKey {
+				if tokens[0] == cmttypes.TxHeightKey {
 					event = fmt.Sprintf("%s=%s", tokens[0], tokens[1])
 				} else {
 					event = fmt.Sprintf("%s='%s'", tokens[0], tokens[1])
@@ -333,7 +371,7 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 				}
 			case typeSig:
 				{
-					sigParts, err := parseSigArgs(args)
+					sigParts, err := ParseSigArgs(args)
 					if err != nil {
 						return err
 					}
@@ -391,8 +429,8 @@ $ %s query tx --%s=%s <sig1_base64>,<sig2_base64...>
 	return cmd
 }
 
-// parseSigArgs parses comma-separated signatures from the CLI arguments.
-func parseSigArgs(args []string) ([]string, error) {
+// ParseSigArgs parses comma-separated signatures from the CLI arguments.
+func ParseSigArgs(args []string) ([]string, error) {
 	if len(args) != 1 || args[0] == "" {
 		return nil, fmt.Errorf("argument should be comma-separated signatures")
 	}

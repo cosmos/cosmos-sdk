@@ -1,20 +1,20 @@
 run:
-  tests: false
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  timeout: 5m
+  tests: true
+  timeout: 10m
+  sort-results: true
+  allow-parallel-runners: true
+  exclude-dir: testutil/testdata_pulsar
+  concurrency: 4
 
 linters:
   disable-all: true
   enable:
-    - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - exportloopref
     - goconst
     - gocritic
-    - gofmt
-    - goimports
+    - gofumpt
     - gosec
     - gosimple
     - govet
@@ -22,13 +22,11 @@ linters:
     - misspell
     - nakedret
     - nolintlint
-    - revive
     - staticcheck
-    - structcheck
+    - revive
     - stylecheck
     - typecheck
     - unconvert
-    - unparam
     - unused
 
 issues:
@@ -36,12 +34,6 @@ issues:
     - text: "Use of weak random number generator"
       linters:
         - gosec
-    - text: "comment on exported var"
-      linters:
-        - golint
-    - text: "don't use an underscore in package name"
-      linters:
-        - golint
     - text: "ST1003:"
       linters:
         - stylecheck
@@ -54,6 +46,9 @@ issues:
       text: "SA1019:"
       linters:
         - staticcheck
+    - text: "leading space"
+      linters:
+        - nolintlint
 
   max-issues-per-linter: 10000
   max-same-issues: 10000

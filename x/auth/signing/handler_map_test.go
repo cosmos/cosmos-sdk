@@ -51,7 +51,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 	}
 
 	var (
-		chainId        = "test-chain"
+		chainID        = "test-chain"
 		accNum  uint64 = 7
 		seqNum  uint64 = 7
 	)
@@ -61,7 +61,7 @@ func TestHandlerMap_GetSignBytes(t *testing.T) {
 
 	signingData := signing.SignerData{
 		Address:       addr1.String(),
-		ChainID:       chainId,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      seqNum,
 		PubKey:        priv1.PubKey(),

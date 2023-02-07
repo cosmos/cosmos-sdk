@@ -33,6 +33,11 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if len(records) == 0 {
+		cmd.Println("No records were found in keyring")
+		return nil
+	}
+
 	if ok, _ := cmd.Flags().GetBool(flagListNames); !ok {
 		return printKeyringRecords(cmd.OutOrStdout(), records, clientCtx.OutputFormat)
 	}
@@ -42,4 +47,24 @@ func runListCmd(cmd *cobra.Command, _ []string) error {
 	}
 
 	return nil
+}
+
+// ListKeyTypesCmd lists all key types.
+func ListKeyTypesCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "list-key-types",
+		Short: "List all key types",
+		Long:  `Return a list of all supported key types (also known as algos)`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			cmd.Println("Supported key types/algos:")
+			keyring, _ := clientCtx.Keyring.SupportedAlgorithms()
+			cmd.Printf("%+q\n", keyring)
+			return nil
+		},
+	}
 }

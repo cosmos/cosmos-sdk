@@ -2,7 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
-	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +12,7 @@ import (
 type DelegationI interface {
 	GetDelegatorAddr() sdk.AccAddress // delegator sdk.AccAddress for the bond
 	GetValidatorAddr() sdk.ValAddress // validator operator address
-	GetShares() sdk.Dec               // amount of validator's shares held in this delegation
+	GetShares() math.LegacyDec        // amount of validator's shares held in this delegation
 }
 
 // ValidatorI expected validator functions
@@ -25,17 +25,17 @@ type ValidatorI interface {
 	IsUnbonding() bool                                       // check if has status unbonding
 	GetOperator() sdk.ValAddress                             // operator address to receive/return validators coins
 	ConsPubKey() (cryptotypes.PubKey, error)                 // validation consensus pubkey (cryptotypes.PubKey)
-	TmConsPublicKey() (tmprotocrypto.PublicKey, error)       // validation consensus pubkey (Tendermint)
+	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)      // validation consensus pubkey (CometBFT)
 	GetConsAddr() (sdk.ConsAddress, error)                   // validation consensus address
 	GetTokens() math.Int                                     // validation tokens
 	GetBondedTokens() math.Int                               // validator bonded tokens
-	GetConsensusPower(math.Int) int64                        // validation power in tendermint
-	GetCommission() sdk.Dec                                  // validator commission rate
+	GetConsensusPower(math.Int) int64                        // validation power in CometBFT
+	GetCommission() math.LegacyDec                           // validator commission rate
 	GetMinSelfDelegation() math.Int                          // validator minimum self delegation
-	GetDelegatorShares() sdk.Dec                             // total outstanding delegator shares
-	TokensFromShares(sdk.Dec) sdk.Dec                        // token worth of provided delegator shares
-	TokensFromSharesTruncated(sdk.Dec) sdk.Dec               // token worth of provided delegator shares, truncated
-	TokensFromSharesRoundUp(sdk.Dec) sdk.Dec                 // token worth of provided delegator shares, rounded up
+	GetDelegatorShares() math.LegacyDec                      // total outstanding delegator shares
+	TokensFromShares(sdk.Dec) math.LegacyDec                 // token worth of provided delegator shares
+	TokensFromSharesTruncated(sdk.Dec) math.LegacyDec        // token worth of provided delegator shares, truncated
+	TokensFromSharesRoundUp(sdk.Dec) math.LegacyDec          // token worth of provided delegator shares, rounded up
 	SharesFromTokens(amt math.Int) (sdk.Dec, error)          // shares worth of delegator's bond
 	SharesFromTokensTruncated(amt math.Int) (sdk.Dec, error) // truncated shares worth of delegator's bond
 }

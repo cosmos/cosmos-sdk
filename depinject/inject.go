@@ -7,8 +7,9 @@ package depinject
 // can be provided by the container.
 //
 // Ex:
-//  var x int
-//  Inject(Provide(func() int { return 1 }), &x)
+//
+//	var x int
+//	Inject(Provide(func() int { return 1 }), &x)
 //
 // Inject uses the debug mode provided by AutoDebug which means there will be
 // verbose debugging information if there is an error and nothing upon success.
@@ -31,6 +32,9 @@ func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interf
 		return err
 	}
 
+	// always generate graph on exit
+	defer cfg.generateGraph()
+
 	// debug cleanup
 	defer func() {
 		for _, f := range cfg.cleanup {
@@ -38,33 +42,28 @@ func inject(loc Location, debugOpt DebugOption, config Config, outputs ...interf
 		}
 	}()
 
-	err = doInject(cfg, loc, debugOpt, config, outputs...)
-	if err != nil {
+	if err = doInject(cfg, loc, debugOpt, config, outputs...); err != nil {
 		cfg.logf("Error: %v", err)
 		if cfg.onError != nil {
-			err2 := cfg.onError.applyConfig(cfg)
-			if err2 != nil {
+			if err2 := cfg.onError.applyConfig(cfg); err2 != nil {
 				return err2
 			}
 		}
+
 		return err
-	} else {
-		if cfg.onSuccess != nil {
-			err2 := cfg.onSuccess.applyConfig(cfg)
-			if err2 != nil {
-				return err2
-			}
-		}
-		return nil
 	}
+
+	if cfg.onSuccess != nil {
+		if err2 := cfg.onSuccess.applyConfig(cfg); err2 != nil {
+			return err2
+		}
+	}
+	return nil
 }
 
 func doInject(cfg *debugConfig, loc Location, debugOpt DebugOption, config Config, outputs ...interface{}) error {
-	defer cfg.generateGraph() // always generate graph on exit
-
 	if debugOpt != nil {
-		err := debugOpt.applyConfig(cfg)
-		if err != nil {
+		if err := debugOpt.applyConfig(cfg); err != nil {
 			return err
 		}
 	}

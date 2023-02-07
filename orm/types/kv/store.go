@@ -3,7 +3,7 @@
 package kv
 
 import (
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 )
 
 // ReadonlyStore is an interface for readonly access to a kv-store.
@@ -33,7 +33,7 @@ type ReadonlyStore interface {
 	ReverseIterator(start, end []byte) (Iterator, error)
 }
 
-// Iterator aliases github.com/tendermint/tm-db.Iterator.
+// Iterator aliases github.com/cosmos/cosmos-db.Iterator.
 type Iterator = dbm.Iterator
 
 // Store is an interface for writing to a kv-store.

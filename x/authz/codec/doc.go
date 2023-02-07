@@ -6,13 +6,12 @@ can be (de)serialized properly.
 Amino types should be ideally registered inside this codec within the init function of each module's
 codec.go file as follows:
 
-func init() {
-	// ...
+	func init() {
+		// ...
 
-	RegisterLegacyAminoCodec(authzcodec.Amino)
-}
+		RegisterLegacyAminoCodec(authzcodec.Amino)
+	}
 
 The codec instance is put inside this package and not the x/authz package in order to avoid any dependency cycle.
-
 */
 package codec

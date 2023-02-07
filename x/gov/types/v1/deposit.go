@@ -7,6 +7,7 @@ import (
 )
 
 // NewDeposit creates a new Deposit instance
+//
 //nolint:interfacer
 func NewDeposit(proposalID uint64, depositor sdk.AccAddress, amount sdk.Coins) Deposit {
 	return Deposit{proposalID, depositor.String(), amount}
@@ -30,6 +31,7 @@ func (d Deposits) Equal(other Deposits) bool {
 	return true
 }
 
+// String implements stringer interface
 func (d Deposits) String() string {
 	if len(d) == 0 {
 		return "[]"

@@ -26,6 +26,18 @@ type MsgClient interface {
 	Send(ctx context.Context, in *MsgSend, opts ...grpc.CallOption) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
+	// UpdateParams defines a governance operation for updating the x/bank module parameters.
+	// The authority is defined in the keeper.
+	//
+	// Since: cosmos-sdk 0.47
+	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// SetSendEnabled is a governance operation for setting the SendEnabled flag
+	// on any number of Denoms. Only the entries to add or update should be
+	// included. Entries that already exist in the store, but that aren't
+	// included in this message, will be left unchanged.
+	//
+	// Since: cosmos-sdk 0.47
+	SetSendEnabled(ctx context.Context, in *MsgSetSendEnabled, opts ...grpc.CallOption) (*MsgSetSendEnabledResponse, error)
 }
 
 type msgClient struct {
@@ -54,6 +66,24 @@ func (c *msgClient) MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grp
 	return out, nil
 }
 
+func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
+	out := new(MsgUpdateParamsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/UpdateParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetSendEnabled(ctx context.Context, in *MsgSetSendEnabled, opts ...grpc.CallOption) (*MsgSetSendEnabledResponse, error) {
+	out := new(MsgSetSendEnabledResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.bank.v1beta1.Msg/SetSendEnabled", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -62,6 +92,18 @@ type MsgServer interface {
 	Send(context.Context, *MsgSend) (*MsgSendResponse, error)
 	// MultiSend defines a method for sending coins from some accounts to other accounts.
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
+	// UpdateParams defines a governance operation for updating the x/bank module parameters.
+	// The authority is defined in the keeper.
+	//
+	// Since: cosmos-sdk 0.47
+	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// SetSendEnabled is a governance operation for setting the SendEnabled flag
+	// on any number of Denoms. Only the entries to add or update should be
+	// included. Entries that already exist in the store, but that aren't
+	// included in this message, will be left unchanged.
+	//
+	// Since: cosmos-sdk 0.47
+	SetSendEnabled(context.Context, *MsgSetSendEnabled) (*MsgSetSendEnabledResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -74,6 +116,12 @@ func (UnimplementedMsgServer) Send(context.Context, *MsgSend) (*MsgSendResponse,
 }
 func (UnimplementedMsgServer) MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultiSend not implemented")
+}
+func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) SetSendEnabled(context.Context, *MsgSetSendEnabled) (*MsgSetSendEnabledResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetSendEnabled not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -124,6 +172,42 @@ func _Msg_MultiSend_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Msg/UpdateParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetSendEnabled_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetSendEnabled)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetSendEnabled(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.bank.v1beta1.Msg/SetSendEnabled",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetSendEnabled(ctx, req.(*MsgSetSendEnabled))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -138,6 +222,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MultiSend",
 			Handler:    _Msg_MultiSend_Handler,
+		},
+		{
+			MethodName: "UpdateParams",
+			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "SetSendEnabled",
+			Handler:    _Msg_SetSendEnabled_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

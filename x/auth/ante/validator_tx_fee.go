@@ -3,6 +3,7 @@ package ante
 import (
 	"math"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -28,7 +29,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 
 			// Determine the required fees by multiplying each required minimum gas
 			// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-			glDec := sdk.NewDec(int64(gas))
+			glDec := sdkmath.LegacyNewDec(int64(gas))
 			for i, gp := range minGasPrices {
 				fee := gp.Amount.Mul(glDec)
 				requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
@@ -40,18 +41,21 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 		}
 	}
 
-	priority := getTxPriority(feeCoins)
+	priority := getTxPriority(feeCoins, int64(gas))
 	return feeCoins, priority, nil
 }
 
-// getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the fee
+// getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price
 // provided in a transaction.
-func getTxPriority(fee sdk.Coins) int64 {
+// NOTE: This implementation should be used with a great consideration as it opens potential attack vectors
+// where txs with multiple coins could not be prioritize as expected.
+func getTxPriority(fee sdk.Coins, gas int64) int64 {
 	var priority int64
 	for _, c := range fee {
 		p := int64(math.MaxInt64)
-		if c.Amount.IsInt64() {
-			p = c.Amount.Int64()
+		gasPrice := c.Amount.QuoRaw(gas)
+		if gasPrice.IsInt64() {
+			p = gasPrice.Int64()
 		}
 		if priority == 0 || p < priority {
 			priority = p

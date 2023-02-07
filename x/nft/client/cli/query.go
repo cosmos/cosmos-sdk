@@ -6,12 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/x/nft"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // Flag names and values
@@ -164,12 +164,6 @@ $ %s query %s nfts <class-id> --owner=<owner>
 			classID, err := cmd.Flags().GetString(FlagClassID)
 			if err != nil {
 				return err
-			}
-
-			if len(classID) > 0 {
-				if err := nft.ValidateClassID(classID); err != nil {
-					return err
-				}
 			}
 
 			if len(owner) == 0 && len(classID) == 0 {

@@ -3,10 +3,10 @@ package cachekv_test
 import (
 	"testing"
 
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
 )
 
 var sink interface{}

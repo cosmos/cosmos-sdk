@@ -3,7 +3,7 @@ package listenkv
 import (
 	"io"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 )
 
 var _ types.KVStore = &Store{}
@@ -139,12 +139,6 @@ func (s *Store) CacheWrap() types.CacheWrap {
 // Store cannot be cache wrapped.
 func (s *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.CacheWrap {
 	panic("cannot CacheWrapWithTrace a ListenKVStore")
-}
-
-// CacheWrapWithListeners implements the KVStore interface. It panics as a
-// Store cannot be cache wrapped.
-func (s *Store) CacheWrapWithListeners(_ types.StoreKey, _ []types.WriteListener) types.CacheWrap {
-	panic("cannot CacheWrapWithListeners a ListenKVStore")
 }
 
 // onWrite writes a KVStore operation to all of the WriteListeners

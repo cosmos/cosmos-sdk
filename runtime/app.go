@@ -4,20 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"golang.org/x/exp/slices"
 
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -34,6 +37,7 @@ import (
 // See simapp/app.go for an example of this setup.
 type App struct {
 	*baseapp.BaseApp
+
 	ModuleManager     *module.Manager
 	configurator      module.Configurator
 	config            *runtimev1alpha1.Module
@@ -42,10 +46,12 @@ type App struct {
 	cdc               codec.Codec
 	amino             *codec.LegacyAmino
 	basicManager      module.BasicManager
-	beginBlockers     []func(sdk.Context, abci.RequestBeginBlock)
-	endBlockers       []func(sdk.Context, abci.RequestEndBlock) []abci.ValidatorUpdate
 	baseAppOptions    []BaseAppOption
 	msgServiceRouter  *baseapp.MsgServiceRouter
+	appConfig         *appv1alpha1.Config
+	// initChainer is the init chainer function defined by the app config.
+	// this is only required if the chain wants to add special InitChainer logic.
+	initChainer sdk.InitChainer
 }
 
 // RegisterModules registers the provided modules with the module manager and
@@ -57,12 +63,12 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 		if _, ok := a.ModuleManager.Modules[name]; ok {
 			return fmt.Errorf("AppModule named %q already exists", name)
 		}
-		a.ModuleManager.Modules[name] = appModule
 
 		if _, ok := a.basicManager[name]; ok {
 			return fmt.Errorf("AppModuleBasic named %q already exists", name)
 		}
 
+		a.ModuleManager.Modules[name] = appModule
 		a.basicManager[name] = appModule
 		appModule.RegisterInterfaces(a.interfaceRegistry)
 		appModule.RegisterLegacyAminoCodec(a.amino)
@@ -73,12 +79,11 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // Load finishes all initialization operations and loads the app.
 func (a *App) Load(loadLatest bool) error {
-	a.configurator = module.NewConfigurator(a.cdc, a.MsgServiceRouter(), a.GRPCQueryRouter())
-	a.ModuleManager.RegisterServices(a.configurator)
-
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)
-		a.SetInitChainer(a.InitChainer)
+		if a.initChainer == nil {
+			a.SetInitChainer(a.InitChainer)
+		}
 	}
 
 	if len(a.config.ExportGenesis) != 0 {
@@ -97,6 +102,10 @@ func (a *App) Load(loadLatest bool) error {
 		a.SetEndBlocker(a.EndBlocker)
 	}
 
+	if len(a.config.OrderMigrations) != 0 {
+		a.ModuleManager.SetOrderMigrations(a.config.OrderMigrations...)
+	}
+
 	if loadLatest {
 		if err := a.LoadLatestVersion(); err != nil {
 			return err
@@ -107,17 +116,17 @@ func (a *App) Load(loadLatest bool) error {
 }
 
 // BeginBlocker application updates every begin block
-func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (a *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) (abci.ResponseBeginBlock, error) {
 	return a.ModuleManager.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block
-func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (a *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) (abci.ResponseEndBlock, error) {
 	return a.ModuleManager.EndBlock(ctx, req)
 }
 
 // InitChainer initializes the chain.
-func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (a *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 	var genesisState map[string]json.RawMessage
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -131,8 +140,12 @@ func (a *App) RegisterAPIRoutes(apiSvr *api.Server, _ config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	// Register node gRPC service for grpc-gateway.
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
 	a.basicManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -153,11 +166,39 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 	)
 }
 
+// RegisterNodeService registers the node gRPC service on the app gRPC router.
+func (a *App) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
+}
+
+// Configurator returns the app's configurator.
 func (a *App) Configurator() module.Configurator {
 	return a.configurator
 }
 
-// UnsafeFindStoreKey FindStoreKey fetches a registered StoreKey from the App in linear time.
+// LoadHeight loads a particular height
+func (a *App) LoadHeight(height int64) error {
+	return a.LoadVersion(height)
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return a.basicManager.DefaultGenesis(a.cdc)
+}
+
+// GetStoreKeys returns all the stored store keys.
+func (a *App) GetStoreKeys() []storetypes.StoreKey {
+	return a.storeKeys
+}
+
+// SetInitChainer sets the init chainer function
+// It wraps `BaseApp.SetInitChainer` to allow setting a custom init chainer from an app.
+func (a *App) SetInitChainer(initChainer sdk.InitChainer) {
+	a.initChainer = initChainer
+	a.BaseApp.SetInitChainer(initChainer)
+}
+
+// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
 //
 // NOTE: This should only be used in testing.
 func (a *App) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {

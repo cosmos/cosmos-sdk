@@ -25,7 +25,6 @@ type ABCIApplicationClient interface {
 	Echo(ctx context.Context, in *RequestEcho, opts ...grpc.CallOption) (*ResponseEcho, error)
 	Flush(ctx context.Context, in *RequestFlush, opts ...grpc.CallOption) (*ResponseFlush, error)
 	Info(ctx context.Context, in *RequestInfo, opts ...grpc.CallOption) (*ResponseInfo, error)
-	SetOption(ctx context.Context, in *RequestSetOption, opts ...grpc.CallOption) (*ResponseSetOption, error)
 	DeliverTx(ctx context.Context, in *RequestDeliverTx, opts ...grpc.CallOption) (*ResponseDeliverTx, error)
 	CheckTx(ctx context.Context, in *RequestCheckTx, opts ...grpc.CallOption) (*ResponseCheckTx, error)
 	Query(ctx context.Context, in *RequestQuery, opts ...grpc.CallOption) (*ResponseQuery, error)
@@ -37,6 +36,8 @@ type ABCIApplicationClient interface {
 	OfferSnapshot(ctx context.Context, in *RequestOfferSnapshot, opts ...grpc.CallOption) (*ResponseOfferSnapshot, error)
 	LoadSnapshotChunk(ctx context.Context, in *RequestLoadSnapshotChunk, opts ...grpc.CallOption) (*ResponseLoadSnapshotChunk, error)
 	ApplySnapshotChunk(ctx context.Context, in *RequestApplySnapshotChunk, opts ...grpc.CallOption) (*ResponseApplySnapshotChunk, error)
+	PrepareProposal(ctx context.Context, in *RequestPrepareProposal, opts ...grpc.CallOption) (*ResponsePrepareProposal, error)
+	ProcessProposal(ctx context.Context, in *RequestProcessProposal, opts ...grpc.CallOption) (*ResponseProcessProposal, error)
 }
 
 type aBCIApplicationClient struct {
@@ -68,15 +69,6 @@ func (c *aBCIApplicationClient) Flush(ctx context.Context, in *RequestFlush, opt
 func (c *aBCIApplicationClient) Info(ctx context.Context, in *RequestInfo, opts ...grpc.CallOption) (*ResponseInfo, error) {
 	out := new(ResponseInfo)
 	err := c.cc.Invoke(ctx, "/tendermint.abci.ABCIApplication/Info", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aBCIApplicationClient) SetOption(ctx context.Context, in *RequestSetOption, opts ...grpc.CallOption) (*ResponseSetOption, error) {
-	out := new(ResponseSetOption)
-	err := c.cc.Invoke(ctx, "/tendermint.abci.ABCIApplication/SetOption", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,6 +174,24 @@ func (c *aBCIApplicationClient) ApplySnapshotChunk(ctx context.Context, in *Requ
 	return out, nil
 }
 
+func (c *aBCIApplicationClient) PrepareProposal(ctx context.Context, in *RequestPrepareProposal, opts ...grpc.CallOption) (*ResponsePrepareProposal, error) {
+	out := new(ResponsePrepareProposal)
+	err := c.cc.Invoke(ctx, "/tendermint.abci.ABCIApplication/PrepareProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aBCIApplicationClient) ProcessProposal(ctx context.Context, in *RequestProcessProposal, opts ...grpc.CallOption) (*ResponseProcessProposal, error) {
+	out := new(ResponseProcessProposal)
+	err := c.cc.Invoke(ctx, "/tendermint.abci.ABCIApplication/ProcessProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ABCIApplicationServer is the server API for ABCIApplication service.
 // All implementations must embed UnimplementedABCIApplicationServer
 // for forward compatibility
@@ -189,7 +199,6 @@ type ABCIApplicationServer interface {
 	Echo(context.Context, *RequestEcho) (*ResponseEcho, error)
 	Flush(context.Context, *RequestFlush) (*ResponseFlush, error)
 	Info(context.Context, *RequestInfo) (*ResponseInfo, error)
-	SetOption(context.Context, *RequestSetOption) (*ResponseSetOption, error)
 	DeliverTx(context.Context, *RequestDeliverTx) (*ResponseDeliverTx, error)
 	CheckTx(context.Context, *RequestCheckTx) (*ResponseCheckTx, error)
 	Query(context.Context, *RequestQuery) (*ResponseQuery, error)
@@ -201,6 +210,8 @@ type ABCIApplicationServer interface {
 	OfferSnapshot(context.Context, *RequestOfferSnapshot) (*ResponseOfferSnapshot, error)
 	LoadSnapshotChunk(context.Context, *RequestLoadSnapshotChunk) (*ResponseLoadSnapshotChunk, error)
 	ApplySnapshotChunk(context.Context, *RequestApplySnapshotChunk) (*ResponseApplySnapshotChunk, error)
+	PrepareProposal(context.Context, *RequestPrepareProposal) (*ResponsePrepareProposal, error)
+	ProcessProposal(context.Context, *RequestProcessProposal) (*ResponseProcessProposal, error)
 	mustEmbedUnimplementedABCIApplicationServer()
 }
 
@@ -216,9 +227,6 @@ func (UnimplementedABCIApplicationServer) Flush(context.Context, *RequestFlush) 
 }
 func (UnimplementedABCIApplicationServer) Info(context.Context, *RequestInfo) (*ResponseInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Info not implemented")
-}
-func (UnimplementedABCIApplicationServer) SetOption(context.Context, *RequestSetOption) (*ResponseSetOption, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetOption not implemented")
 }
 func (UnimplementedABCIApplicationServer) DeliverTx(context.Context, *RequestDeliverTx) (*ResponseDeliverTx, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeliverTx not implemented")
@@ -252,6 +260,12 @@ func (UnimplementedABCIApplicationServer) LoadSnapshotChunk(context.Context, *Re
 }
 func (UnimplementedABCIApplicationServer) ApplySnapshotChunk(context.Context, *RequestApplySnapshotChunk) (*ResponseApplySnapshotChunk, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplySnapshotChunk not implemented")
+}
+func (UnimplementedABCIApplicationServer) PrepareProposal(context.Context, *RequestPrepareProposal) (*ResponsePrepareProposal, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PrepareProposal not implemented")
+}
+func (UnimplementedABCIApplicationServer) ProcessProposal(context.Context, *RequestProcessProposal) (*ResponseProcessProposal, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProcessProposal not implemented")
 }
 func (UnimplementedABCIApplicationServer) mustEmbedUnimplementedABCIApplicationServer() {}
 
@@ -316,24 +330,6 @@ func _ABCIApplication_Info_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ABCIApplicationServer).Info(ctx, req.(*RequestInfo))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ABCIApplication_SetOption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RequestSetOption)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ABCIApplicationServer).SetOption(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tendermint.abci.ABCIApplication/SetOption",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ABCIApplicationServer).SetOption(ctx, req.(*RequestSetOption))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -536,6 +532,42 @@ func _ABCIApplication_ApplySnapshotChunk_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ABCIApplication_PrepareProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestPrepareProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ABCIApplicationServer).PrepareProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tendermint.abci.ABCIApplication/PrepareProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ABCIApplicationServer).PrepareProposal(ctx, req.(*RequestPrepareProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ABCIApplication_ProcessProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestProcessProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ABCIApplicationServer).ProcessProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tendermint.abci.ABCIApplication/ProcessProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ABCIApplicationServer).ProcessProposal(ctx, req.(*RequestProcessProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ABCIApplication_ServiceDesc is the grpc.ServiceDesc for ABCIApplication service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -554,10 +586,6 @@ var ABCIApplication_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Info",
 			Handler:    _ABCIApplication_Info_Handler,
-		},
-		{
-			MethodName: "SetOption",
-			Handler:    _ABCIApplication_SetOption_Handler,
 		},
 		{
 			MethodName: "DeliverTx",
@@ -602,6 +630,14 @@ var ABCIApplication_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ApplySnapshotChunk",
 			Handler:    _ABCIApplication_ApplySnapshotChunk_Handler,
+		},
+		{
+			MethodName: "PrepareProposal",
+			Handler:    _ABCIApplication_PrepareProposal_Handler,
+		},
+		{
+			MethodName: "ProcessProposal",
+			Handler:    _ABCIApplication_ProcessProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

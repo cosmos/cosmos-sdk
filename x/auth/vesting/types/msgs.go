@@ -5,24 +5,21 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-// TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
-const TypeMsgCreateVestingAccount = "msg_create_vesting_account"
+var (
+	_ sdk.Msg = &MsgCreateVestingAccount{}
+	_ sdk.Msg = &MsgCreatePermanentLockedAccount{}
+	_ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
 
-// TypeMsgCreatePermanentLockedAccount defines the type value for a MsgCreatePermanentLockedAccount.
-const TypeMsgCreatePermanentLockedAccount = "msg_create_permanent_locked_account"
-
-// TypeMsgCreatePeriodicVestingAccount defines the type value for a MsgCreateVestingAccount.
-const TypeMsgCreatePeriodicVestingAccount = "msg_create_periodic_vesting_account"
-
-var _ sdk.Msg = &MsgCreateVestingAccount{}
-
-var _ sdk.Msg = &MsgCreatePermanentLockedAccount{}
-
-var _ sdk.Msg = &MsgCreatePeriodicVestingAccount{}
+	_ legacytx.LegacyMsg = &MsgCreateVestingAccount{}
+	_ legacytx.LegacyMsg = &MsgCreatePermanentLockedAccount{}
+	_ legacytx.LegacyMsg = &MsgCreatePeriodicVestingAccount{}
+)
 
 // NewMsgCreateVestingAccount returns a reference to a new MsgCreateVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins, endTime int64, delayed bool) *MsgCreateVestingAccount {
 	return &MsgCreateVestingAccount{
@@ -33,12 +30,6 @@ func NewMsgCreateVestingAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coin
 		Delayed:     delayed,
 	}
 }
-
-// Route returns the message route for a MsgCreateVestingAccount.
-func (msg MsgCreateVestingAccount) Route() string { return RouterKey }
-
-// Type returns the message type for a MsgCreateVestingAccount.
-func (msg MsgCreateVestingAccount) Type() string { return TypeMsgCreateVestingAccount }
 
 // ValidateBasic Implements Msg.
 func (msg MsgCreateVestingAccount) ValidateBasic() error {
@@ -77,6 +68,7 @@ func (msg MsgCreateVestingAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePermanentLockedAccount returns a reference to a new MsgCreatePermanentLockedAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount sdk.Coins) *MsgCreatePermanentLockedAccount {
 	return &MsgCreatePermanentLockedAccount{
@@ -85,12 +77,6 @@ func NewMsgCreatePermanentLockedAccount(fromAddr, toAddr sdk.AccAddress, amount 
 		Amount:      amount,
 	}
 }
-
-// Route returns the message route for a MsgCreatePermanentLockedAccount.
-func (msg MsgCreatePermanentLockedAccount) Route() string { return RouterKey }
-
-// Type returns the message type for a MsgCreatePermanentLockedAccount.
-func (msg MsgCreatePermanentLockedAccount) Type() string { return TypeMsgCreatePermanentLockedAccount }
 
 // ValidateBasic Implements Msg.
 func (msg MsgCreatePermanentLockedAccount) ValidateBasic() error {
@@ -125,6 +111,7 @@ func (msg MsgCreatePermanentLockedAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgCreatePeriodicVestingAccount returns a reference to a new MsgCreatePeriodicVestingAccount.
+//
 //nolint:interfacer
 func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTime int64, periods []Period) *MsgCreatePeriodicVestingAccount {
 	return &MsgCreatePeriodicVestingAccount{
@@ -134,12 +121,6 @@ func NewMsgCreatePeriodicVestingAccount(fromAddr, toAddr sdk.AccAddress, startTi
 		VestingPeriods: periods,
 	}
 }
-
-// Route returns the message route for a MsgCreatePeriodicVestingAccount.
-func (msg MsgCreatePeriodicVestingAccount) Route() string { return RouterKey }
-
-// Type returns the message type for a MsgCreatePeriodicVestingAccount.
-func (msg MsgCreatePeriodicVestingAccount) Type() string { return TypeMsgCreatePeriodicVestingAccount }
 
 // GetSigners returns the expected signers for a MsgCreatePeriodicVestingAccount.
 func (msg MsgCreatePeriodicVestingAccount) GetSigners() []sdk.AccAddress {

@@ -30,7 +30,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	}
 
 	var (
-		chainId              = "test-chain"
+		chainID              = "test-chain"
 		accNum        uint64 = 7
 		seqNum        uint64 = 7
 		timeoutHeight uint64 = 10
@@ -47,7 +47,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	handler := stdTxSignModeHandler{}
 	signingData := signing.SignerData{
 		Address:       addr1.String(),
-		ChainID:       chainId,
+		ChainID:       chainID,
 		AccountNumber: accNum,
 		Sequence:      seqNum,
 		PubKey:        priv1.PubKey(),
@@ -55,7 +55,7 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 	signBz, err := handler.GetSignBytes(signingtypes.SignMode_SIGN_MODE_LEGACY_AMINO_JSON, signingData, tx)
 	require.NoError(t, err)
 
-	expectedSignBz := StdSignBytes(chainId, accNum, seqNum, timeoutHeight, fee, msgs, memo, nil)
+	expectedSignBz := StdSignBytes(chainID, accNum, seqNum, timeoutHeight, fee, msgs, memo, nil)
 
 	require.Equal(t, expectedSignBz, signBz)
 

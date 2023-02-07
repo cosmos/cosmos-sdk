@@ -52,6 +52,7 @@ as to how to do this, with some developers arguing for larger vs smaller
 module scopes. There are pros and cons to both approaches (which will be
 discussed below in the [Consequences](#consequences) section), but the
 approach being adopted is the following:
+
 * a go module should generally be scoped to a specific coherent set of
 functionality (such as math, errors, store, etc.)
 * when code is removed from the core SDK and moved to a new module path, every 

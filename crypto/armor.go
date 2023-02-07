@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
+	"io"
 
-	"github.com/tendermint/crypto/bcrypt"
-	"github.com/tendermint/tendermint/crypto"
-	"golang.org/x/crypto/openpgp/armor" // nolint: staticcheck
+	"github.com/cometbft/cometbft/crypto"
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -235,7 +235,7 @@ func DecodeArmor(armorStr string) (blockType string, headers map[string]string, 
 	if err != nil {
 		return "", nil, nil, err
 	}
-	data, err = ioutil.ReadAll(block.Body)
+	data, err = io.ReadAll(block.Body)
 	if err != nil {
 		return "", nil, nil, err
 	}

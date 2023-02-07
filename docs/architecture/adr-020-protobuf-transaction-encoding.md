@@ -57,7 +57,7 @@ compatibility.
 In order to facilitate signing, transactions are separated into `TxBody`,
 which will be re-used by `SignDoc` below, and `signatures`:
 
-```proto
+```protobuf
 // types/types.proto
 package cosmos_sdk.v1;
 
@@ -190,7 +190,7 @@ the wire. This has the advantages of:
 Signatures are structured using the `SignDoc` below which reuses the serialization of
 `TxBody` and `AuthInfo` and only adds the fields which are needed for signatures:
 
-```proto
+```protobuf
 // types/types.proto
 message SignDoc {
     // A protobuf serialization of a TxBody that matches the representation in TxRaw.
@@ -295,7 +295,7 @@ The following public keys are implemented: secp256k1, secp256r1, ed25519 and leg
 
 Ex:
 
-```proto
+```protobuf
 message PubKey {
     bytes key = 1;
 }
@@ -408,7 +408,7 @@ To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
 1. Encode `SignDocAux` (with the same requirement that fields must be serialized
    in order):
 
-    ```proto
+    ```protobuf
     // types/types.proto
     message SignDocAux {
         bytes body_bytes = 1;

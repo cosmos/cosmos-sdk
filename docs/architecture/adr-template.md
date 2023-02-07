@@ -21,6 +21,10 @@
 > This section describes the forces at play, including technological, political, social, and project local. These forces are probably in tension, and should be called out as such. The language in this section is value-neutral. It is simply describing facts. It should clearly explain the problem and motivation that the proposal aims to resolve.
 > {context body}
 
+## Alternatives
+
+> This section describes alternative designs to the chosen design. This section is important and if an adr does not have any alternatives then it should be considered that the ADR was not thought through. 
+
 ## Decision
 
 > This section describes our response to these forces. It is stated in full sentences, with active voice. "We will ..."

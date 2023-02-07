@@ -6,15 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft/module"
+	"cosmossdk.io/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/depinject"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 var (
@@ -23,9 +22,8 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	var cdc codec.Codec
-	depinject.Inject(testutil.AppConfig, &cdc)
-	dec := simulation.NewDecodeStore(cdc)
+	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
+	dec := simulation.NewDecodeStore(encCfg.Codec)
 
 	class := nft.Class{
 		Id:          "ClassID",
@@ -34,7 +32,7 @@ func TestDecodeStore(t *testing.T) {
 		Description: "ClassDescription",
 		Uri:         "ClassURI",
 	}
-	classBz, err := cdc.Marshal(&class)
+	classBz, err := encCfg.Codec.Marshal(&class)
 	require.NoError(t, err)
 
 	nft := nft.NFT{
@@ -42,7 +40,7 @@ func TestDecodeStore(t *testing.T) {
 		Id:      "NFTID",
 		Uri:     "NFTURI",
 	}
-	nftBz, err := cdc.Marshal(&nft)
+	nftBz, err := encCfg.Codec.Marshal(&nft)
 	require.NoError(t, err)
 
 	nftOfClassByOwnerValue := []byte{0x01}
@@ -52,11 +50,11 @@ func TestDecodeStore(t *testing.T) {
 
 	kvPairs := kv.Pairs{
 		Pairs: []kv.Pair{
-			{Key: []byte(keeper.ClassKey), Value: classBz},
-			{Key: []byte(keeper.NFTKey), Value: nftBz},
-			{Key: []byte(keeper.NFTOfClassByOwnerKey), Value: nftOfClassByOwnerValue},
-			{Key: []byte(keeper.OwnerKey), Value: ownerAddr1},
-			{Key: []byte(keeper.ClassTotalSupply), Value: totalSupplyBz},
+			{Key: keeper.ClassKey, Value: classBz},
+			{Key: keeper.NFTKey, Value: nftBz},
+			{Key: keeper.NFTOfClassByOwnerKey, Value: nftOfClassByOwnerValue},
+			{Key: keeper.OwnerKey, Value: ownerAddr1},
+			{Key: keeper.ClassTotalSupply, Value: totalSupplyBz},
 			{Key: []byte{0x99}, Value: []byte{0x99}},
 		},
 	}

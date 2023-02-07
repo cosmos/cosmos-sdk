@@ -2,7 +2,8 @@ package keeper // noalias
 
 import (
 	"bytes"
-	"math/rand"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -22,7 +23,7 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	store := ctx.KVStore(keeper.storeKey)
 	deleted := false
 
-	iterator := sdk.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
+	iterator := storetypes.KVStorePrefixIterator(store, types.ValidatorsByPowerIndexKey)
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -54,16 +55,4 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 	}
 
 	return validator
-}
-
-// RandomValidator returns a random validator given access to the keeper and ctx
-func RandomValidator(r *rand.Rand, keeper *Keeper, ctx sdk.Context) (val types.Validator, ok bool) {
-	vals := keeper.GetAllValidators(ctx)
-	if len(vals) == 0 {
-		return types.Validator{}, false
-	}
-
-	i := r.Intn(len(vals))
-
-	return vals[i], true
 }

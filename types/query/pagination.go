@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"math"
 
-	db "github.com/tendermint/tm-db"
+	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/types"
 )
 
 // DefaultPage is the default `page` number for queries.

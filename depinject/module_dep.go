@@ -3,11 +3,11 @@ package depinject
 import (
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/depinject/internal/graphviz"
+	"cosmossdk.io/depinject/internal/graphviz"
 )
 
 type moduleDepProvider struct {
-	provider        *ProviderDescriptor
+	provider        *providerDescriptor
 	calledForModule map[*moduleKey]bool
 	valueMap        map[*moduleKey][]reflect.Value
 }

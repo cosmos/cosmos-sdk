@@ -2,8 +2,8 @@ package types
 
 import (
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // DistributionKeeper expected distribution keeper (noalias)
@@ -14,14 +14,14 @@ type DistributionKeeper interface {
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	IterateAccounts(ctx sdk.Context, process func(authtypes.AccountI) (stop bool))
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI // only used for simulation
+	IterateAccounts(ctx sdk.Context, process func(sdk.AccountI) (stop bool))
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) sdk.AccountI // only used for simulation
 
 	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+	GetModuleAccount(ctx sdk.Context, moduleName string) sdk.ModuleAccountI
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	SetModuleAccount(sdk.Context, authtypes.ModuleAccountI)
+	SetModuleAccount(sdk.Context, sdk.ModuleAccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
@@ -61,6 +61,7 @@ type ValidatorSet interface {
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
 	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
+	SlashWithInfractionReason(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec, Infraction) math.Int
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 
@@ -102,4 +103,11 @@ type StakingHooks interface {
 	BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is removed
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error
+	AfterUnbondingInitiated(ctx sdk.Context, id uint64) error
 }
+
+// StakingHooksWrapper is a wrapper for modules to inject StakingHooks using depinject.
+type StakingHooksWrapper struct{ StakingHooks }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (StakingHooksWrapper) IsOnePerModuleType() {}

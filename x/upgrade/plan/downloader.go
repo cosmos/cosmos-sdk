@@ -17,8 +17,10 @@ import (
 // This is an opinionated directory structure that corresponds with Cosmovisor requirements.
 // If the url is not an archive, it is downloaded and saved to {dstRoot}/bin/{daemonName}.
 // If the url is an archive, it is downloaded and unpacked to {dstRoot}.
-//    If the archive does not contain a /bin/{daemonName} file, then this will attempt to move /{daemonName} to /bin/{daemonName}.
-//    If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
+//
+//	If the archive does not contain a /bin/{daemonName} file, then this will attempt to move /{daemonName} to /bin/{daemonName}.
+//	If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
+//
 // Note: Because a checksum is required, this function cannot be used to download non-archive directories.
 // If dstRoot already exists, some or all of its contents might be updated.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
@@ -74,9 +76,9 @@ func downloadUpgradeAsArchive(dstDir, url, daemonName string) error {
 
 // EnsureBinary checks that the given file exists as a regular file and is executable.
 // An error is returned if:
-//  - The file does not exist.
-//  - The path exists, but is one of: Dir, Symlink, NamedPipe, Socket, Device, CharDevice, or Irregular.
-//  - The file exists, is not executable by all three of User, Group, and Other, and cannot be made executable.
+//   - The file does not exist.
+//   - The path exists, but is one of: Dir, Symlink, NamedPipe, Socket, Device, CharDevice, or Irregular.
+//   - The file exists, is not executable by all three of User, Group, and Other, and cannot be made executable.
 func EnsureBinary(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -99,11 +101,11 @@ func EnsureBinary(path string) error {
 // The provided url must contain a checksum parameter that matches the file being downloaded.
 // If there isn't an error, the content returned by the url will be returned as a string.
 // Returns an error if:
-//  - The url is not a URL or does not contain a checksum parameter.
-//  - Downloading the URL fails.
-//  - The checksum does not match what is returned by the URL.
-//  - The URL does not return a regular file.
-//  - The downloaded file is empty or only whitespace.
+//   - The url is not a URL or does not contain a checksum parameter.
+//   - Downloading the URL fails.
+//   - The checksum does not match what is returned by the URL.
+//   - The URL does not return a regular file.
+//   - The downloaded file is empty or only whitespace.
 func DownloadURLWithChecksum(url string) (string, error) {
 	if err := ValidateIsURLWithChecksum(url); err != nil {
 		return "", err

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tendermint/tendermint/rpc/coretypes"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,7 +16,7 @@ import (
 )
 
 // QueryTxsByEvents performs a search for transactions for a given set of events
-// via the Tendermint RPC. An event takes the form of:
+// via the CometBFT RPC. An event takes the form of:
 // "{eventAttribute}.{attributeKey} = '{attributeValue}'". Each event is
 // concatenated with an 'AND' operand. It returns a slice of Info object
 // containing txs and metadata. An error is returned if the query fails.
@@ -27,11 +27,11 @@ func QueryTxsByEvents(clientCtx client.Context, events []string, page, limit int
 	}
 
 	if page <= 0 {
-		return nil, errors.New("page must greater than 0")
+		return nil, errors.New("page must be greater than 0")
 	}
 
 	if limit <= 0 {
-		return nil, errors.New("limit must greater than 0")
+		return nil, errors.New("limit must be greater than 0")
 	}
 
 	// XXX: implement ANY

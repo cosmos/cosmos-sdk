@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/mempool"
+	"github.com/cometbft/cometbft/rpc/client/mock"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/rpc/client/mock"
-	"github.com/tendermint/tendermint/rpc/coretypes"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -20,15 +21,11 @@ type MockClient struct {
 	err error
 }
 
-func (c MockClient) BroadcastTxCommit(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
+func (c MockClient) BroadcastTxAsync(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
-func (c MockClient) BroadcastTxAsync(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return nil, c.err
-}
-
-func (c MockClient) BroadcastTxSync(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c MockClient) BroadcastTxSync(ctx context.Context, tx cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
@@ -42,14 +39,13 @@ func CreateContextWithErrorAndMode(err error, mode string) Context {
 // Test the correct code is returned when
 func TestBroadcastError(t *testing.T) {
 	errors := map[error]uint32{
-		tmtypes.ErrTxInCache:       sdkerrors.ErrTxInMempoolCache.ABCICode(),
-		tmtypes.ErrTxTooLarge{}:    sdkerrors.ErrTxTooLarge.ABCICode(),
-		tmtypes.ErrMempoolIsFull{}: sdkerrors.ErrMempoolIsFull.ABCICode(),
+		mempool.ErrTxInCache:       sdkerrors.ErrTxInMempoolCache.ABCICode(),
+		mempool.ErrTxTooLarge{}:    sdkerrors.ErrTxTooLarge.ABCICode(),
+		mempool.ErrMempoolIsFull{}: sdkerrors.ErrMempoolIsFull.ABCICode(),
 	}
 
 	modes := []string{
 		flags.BroadcastAsync,
-		flags.BroadcastBlock,
 		flags.BroadcastSync,
 	}
 

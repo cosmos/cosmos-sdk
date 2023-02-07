@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cosmos/cosmos-sdk/log"
+
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -119,12 +120,12 @@ func (k *Keeper) InitMemStore(ctx sdk.Context) {
 	}
 
 	// create context with no block gas meter to ensure we do not consume gas during local initialization logic.
-	noGasCtx := ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter())
+	noGasCtx := ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	// check if memory store has not been initialized yet by checking if initialized flag is nil.
 	if !k.IsInitialized(noGasCtx) {
 		prefixStore := prefix.NewStore(noGasCtx.KVStore(k.storeKey), types.KeyPrefixIndexCapability)
-		iterator := sdk.KVStorePrefixIterator(prefixStore, nil)
+		iterator := storetypes.KVStorePrefixIterator(prefixStore, nil)
 
 		// initialize the in-memory store for all persisted capabilities
 		defer iterator.Close()

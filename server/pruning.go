@@ -6,7 +6,8 @@ import (
 
 	"github.com/spf13/cast"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/server/types"
 )
 

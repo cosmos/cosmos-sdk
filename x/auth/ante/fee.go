@@ -37,9 +37,26 @@ func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKee
 }
 
 func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	fee, priority, err := dfd.txFeeChecker(ctx, tx)
-	if err != nil {
-		return ctx, err
+	feeTx, ok := tx.(sdk.FeeTx)
+	if !ok {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+	}
+
+	if !simulate && ctx.BlockHeight() > 0 && feeTx.GetGas() == 0 {
+		return ctx, sdkerrors.Wrap(sdkerrors.ErrInvalidGasLimit, "must provide positive gas")
+	}
+
+	var (
+		priority int64
+		err      error
+	)
+
+	fee := feeTx.GetFee()
+	if !simulate {
+		fee, priority, err = dfd.txFeeChecker(ctx, tx)
+		if err != nil {
+			return ctx, err
+		}
 	}
 	if err := dfd.checkDeductFee(ctx, tx, fee); err != nil {
 		return ctx, err
@@ -72,7 +89,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		} else if !feeGranter.Equals(feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
-				return sdkerrors.Wrapf(err, "%s does not not allow to pay fees for %s", feeGranter, feePayer)
+				return sdkerrors.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
 			}
 		}
 
@@ -92,16 +109,20 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		}
 	}
 
-	events := sdk.Events{sdk.NewEvent(sdk.EventTypeTx,
-		sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-	)}
+	events := sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeTx,
+			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+		),
+	}
 	ctx.EventManager().EmitEvents(events)
 
 	return nil
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc types.AccountI, fees sdk.Coins) error {
+func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc sdk.AccountI, fees sdk.Coins) error {
 	if !fees.IsValid() {
 		return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}

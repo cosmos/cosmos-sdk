@@ -1,7 +1,5 @@
 package simulation
 
-// DONTCOVER
-
 import (
 	"encoding/json"
 	"fmt"

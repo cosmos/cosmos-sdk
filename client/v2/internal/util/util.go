@@ -1,10 +1,11 @@
 package util
 
 import (
-	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
+
+	"cosmossdk.io/client/v2/internal/strcase"
 )
 
 func DescriptorKebabName(descriptor protoreflect.Descriptor) string {

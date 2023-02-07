@@ -44,6 +44,8 @@ func TestParams_Validate(t *testing.T) {
 				require.NoError(t, got)
 				return
 			}
+
+			require.NotEmpty(t, tt.params.String())
 			require.Equal(t, tt.wantErr, got)
 		})
 	}

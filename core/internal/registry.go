@@ -8,7 +8,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	"github.com/cosmos/cosmos-sdk/depinject"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang
@@ -20,7 +19,8 @@ type ModuleInitializer struct {
 	ConfigGoType       reflect.Type
 	ConfigProtoMessage proto.Message
 	Error              error
-	Providers          []depinject.ProviderDescriptor
+	Providers          []interface{}
+	Invokers           []interface{}
 }
 
 // ModulesByProtoMessageName should be used to retrieve modules by their protobuf name.

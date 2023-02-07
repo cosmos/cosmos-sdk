@@ -4,10 +4,9 @@ import (
 	"math/rand"
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/params/simulation"
@@ -19,10 +18,10 @@ func TestProposalContents(t *testing.T) {
 	s := rand.NewSource(1)
 	r := rand.New(s)
 
-	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
 	accounts := simtypes.RandomAccounts(r, 3)
 
-	paramChangePool := []simtypes.ParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
+	paramChangePool := []simtypes.LegacyParamChange{MockParamChange{1}, MockParamChange{2}, MockParamChange{3}}
 
 	// execute ProposalContents function
 	weightedProposalContent := simulation.ProposalContents(paramChangePool)
@@ -32,7 +31,7 @@ func TestProposalContents(t *testing.T) {
 
 	// tests w0 interface:
 	require.Equal(t, simulation.OpWeightSubmitParamChangeProposal, w0.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightParamChangeProposal, w0.DefaultWeight())
+	require.Equal(t, simulation.DefaultWeightParamChangeProposal, w0.DefaultWeight())
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 

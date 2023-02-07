@@ -5,13 +5,16 @@ import (
 	"io"
 	"time"
 
-	"github.com/gogo/protobuf/grpc"
+	dbm "github.com/cosmos/cosmos-db"
+
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/log"
+	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -48,10 +51,16 @@ type (
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
 		// simulation, fetching txs by hash...).
-		RegisterTxService(clientCtx client.Context)
+		RegisterTxService(client.Context)
 
-		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
-		RegisterTendermintService(clientCtx client.Context)
+		// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
+		RegisterTendermintService(client.Context)
+
+		// RegisterNodeService registers the node gRPC Query service.
+		RegisterNodeService(client.Context)
+
+		// CommitMultiStore return the multistore instance
+		CommitMultiStore() storetypes.CommitMultiStore
 	}
 
 	// AppCreator is a function that allows us to lazily initialize an
@@ -67,14 +76,14 @@ type (
 		// AppState is the application state as JSON.
 		AppState json.RawMessage
 		// Validators is the exported validator set.
-		Validators []tmtypes.GenesisValidator
+		Validators []cmttypes.GenesisValidator
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.
-		ConsensusParams *tmproto.ConsensusParams
+		ConsensusParams *cmtproto.ConsensusParams
 	}
 
 	// AppExporter is a function that dumps all app state to
 	// JSON-serializable structure and returns the current validator set.
-	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string, AppOptions) (ExportedApp, error)
+	AppExporter func(log.Logger, dbm.DB, io.Writer, int64, bool, []string, AppOptions, []string) (ExportedApp, error)
 )

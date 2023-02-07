@@ -3,19 +3,22 @@ package keeper_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	tmtime "github.com/tendermint/tendermint/libs/time"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft/module"
+	nfttestutil "cosmossdk.io/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 const (
@@ -37,34 +40,32 @@ type TestSuite struct {
 	addrs       []sdk.AccAddress
 	queryClient nft.QueryClient
 	nftKeeper   keeper.Keeper
+
+	encCfg moduletestutil.TestEncodingConfig
 }
 
 func (s *TestSuite) SetupTest() {
-	var (
-		interfaceRegistry codectypes.InterfaceRegistry
-		bankKeeper        bankkeeper.Keeper
-		stakingKeeper     *stakingkeeper.Keeper
-		nftKeeper         keeper.Keeper
-	)
+	// suite setup
+	s.addrs = simtestutil.CreateIncrementalAccounts(3)
+	s.encCfg = moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
-	app, err := simtestutil.Setup(
-		testutil.AppConfig,
-		&interfaceRegistry,
-		&nftKeeper,
-		&bankKeeper,
-		&stakingKeeper,
-	)
-	s.Require().NoError(err)
+	key := storetypes.NewKVStoreKey(nft.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	ctx = ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
-	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
+	// gomock initializations
+	ctrl := gomock.NewController(s.T())
+	accountKeeper := nfttestutil.NewMockAccountKeeper(ctrl)
+	bankKeeper := nfttestutil.NewMockBankKeeper(ctrl)
+	accountKeeper.EXPECT().GetModuleAddress("nft").Return(s.addrs[0]).AnyTimes()
+
+	nftKeeper := keeper.NewKeeper(key, s.encCfg.Codec, accountKeeper, bankKeeper)
+	queryHelper := baseapp.NewQueryServerTestHelper(ctx, s.encCfg.InterfaceRegistry)
 	nft.RegisterQueryServer(queryHelper, nftKeeper)
 
-	s.ctx = ctx
-	s.queryClient = nft.NewQueryClient(queryHelper)
-	s.addrs = simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(30000000))
 	s.nftKeeper = nftKeeper
+	s.queryClient = nft.NewQueryClient(queryHelper)
+	s.ctx = ctx
 }
 
 func TestTestSuite(t *testing.T) {

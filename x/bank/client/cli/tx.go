@@ -138,7 +138,6 @@ When using '--dry-run' a key name cannot be used, only a bech32 address.
 	}
 
 	cmd.Flags().Bool(FlagSplit, false, "Send the equally split token amount to each address")
-
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

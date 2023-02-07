@@ -5,16 +5,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/armon/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/armon/go-metrics"
-	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -70,7 +69,15 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	cp := ctx.ConsensusParams()
 	if cp != nil && cp.Validator != nil {
-		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
+		pkType := pk.Type()
+		hasKeyType := false
+		for _, keyType := range cp.Validator.PubKeyTypes {
+			if pkType == keyType {
+				hasKeyType = true
+				break
+			}
+		}
+		if !hasKeyType {
 			return nil, sdkerrors.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
@@ -93,11 +100,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	if err != nil {
-		return nil, err
-	}
-
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
@@ -105,14 +107,14 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+	if err := k.Hooks().AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
 		return nil, err
 	}
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
 	// NOTE source will always be from a wallet which are unbonded
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
+	_, err = k.Keeper.Delegate(ctx, sdk.AccAddress(valAddr), msg.Value.Amount, types.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +124,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 			types.EventTypeCreateValidator,
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Value.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -161,7 +158,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+		if err := k.Hooks().BeforeValidatorModified(ctx, valAddr); err != nil {
 			return nil, err
 		}
 
@@ -187,11 +184,6 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 			types.EventTypeEditValidator,
 			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
 			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddress),
 		),
 	})
 
@@ -233,7 +225,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "delegate")
 			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", msg.Type()},
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
@@ -246,11 +238,6 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyNewShares, newShares.String()),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -298,7 +285,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
 			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", msg.Type()},
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
@@ -312,11 +299,6 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
@@ -351,16 +333,18 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		)
 	}
 
-	completionTime, err := k.Keeper.Undelegate(ctx, delegatorAddress, addr, shares)
+	completionTime, undelegatedAmt, err := k.Keeper.Undelegate(ctx, delegatorAddress, addr, shares)
 	if err != nil {
 		return nil, err
 	}
+
+	undelegatedCoin := sdk.NewCoin(msg.Amount.Denom, undelegatedAmt)
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
 			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
 			telemetry.SetGaugeWithLabels(
-				[]string{"tx", "msg", msg.Type()},
+				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
 				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
@@ -371,18 +355,14 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		sdk.NewEvent(
 			types.EventTypeUnbond,
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, undelegatedCoin.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			sdk.NewAttribute(sdk.AttributeKeySender, msg.DelegatorAddress),
 		),
 	})
 
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
+		Amount:         undelegatedCoin,
 	}, nil
 }
 
@@ -491,4 +471,19 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	)
 
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
+}
+
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if k.authority != msg.Authority {
+		return nil, sdkerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+
+	// store params
+	if err := k.SetParams(ctx, msg.Params); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

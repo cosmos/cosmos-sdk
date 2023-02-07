@@ -3,30 +3,27 @@ package streaming_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	serverTypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/store/streaming"
-	"github.com/cosmos/cosmos-sdk/store/streaming/file"
-	"github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/store/streaming"
+	"cosmossdk.io/store/streaming/file"
+	"cosmossdk.io/store/types"
 )
 
 type fakeOptions struct{}
 
-func (f *fakeOptions) Get(string) interface{} { return nil }
+func (f *fakeOptions) Get(key string) interface{} {
+	if key == "streamers.file.write_dir" {
+		return "data/file_streamer"
+	}
+	return nil
+}
 
 var (
-	mockOptions       = new(fakeOptions)
-	mockKeys          = []types.StoreKey{sdk.NewKVStoreKey("mockKey1"), sdk.NewKVStoreKey("mockKey2")}
-	interfaceRegistry = codecTypes.NewInterfaceRegistry()
-	testMarshaller    = codec.NewProtoCodec(interfaceRegistry)
+	mockOptions    = new(fakeOptions)
+	mockKeys       = []types.StoreKey{types.NewKVStoreKey("mockKey1"), types.NewKVStoreKey("mockKey2")}
+	testMarshaller = types.NewTestCodec()
 )
 
 func TestStreamingServiceConstructor(t *testing.T) {
@@ -38,7 +35,7 @@ func TestStreamingServiceConstructor(t *testing.T) {
 	var expectedType streaming.ServiceConstructor
 	require.IsType(t, expectedType, constructor)
 
-	serv, err := constructor(mockOptions, mockKeys, testMarshaller)
+	serv, err := constructor(mockOptions, mockKeys, testMarshaller, log.NewNopLogger(), "path/to/data")
 	require.Nil(t, err)
 	require.IsType(t, &file.StreamingService{}, serv)
 	listeners := serv.Listeners()
@@ -49,17 +46,15 @@ func TestStreamingServiceConstructor(t *testing.T) {
 }
 
 func TestLoadStreamingServices(t *testing.T) {
-	db := dbm.NewMemDB()
-	encCdc := simapp.MakeTestEncodingConfig()
-	keys := sdk.NewKVStoreKeys("mockKey1", "mockKey2")
-	bApp := baseapp.NewBaseApp("appName", log.NewNopLogger(), db, nil)
+	encCdc := types.NewTestCodec()
+	keys := types.NewKVStoreKeys("mockKey1", "mockKey2")
 
 	testCases := map[string]struct {
-		appOpts            serverTypes.AppOptions
+		appOpts            streaming.AppOptions
 		activeStreamersLen int
 	}{
 		"empty app options": {
-			appOpts: simapp.EmptyAppOptions{},
+			appOpts: emptyAppOptions{},
 		},
 		"all StoreKeys exposed": {
 			appOpts:            streamingAppOptions{keys: []string{"*"}},
@@ -76,7 +71,7 @@ func TestLoadStreamingServices(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			activeStreamers, _, err := streaming.LoadStreamingServices(bApp, tc.appOpts, encCdc.Codec, keys)
+			activeStreamers, _, err := streaming.LoadStreamingServices(tc.appOpts, encCdc, log.NewNopLogger(), keys, "path/to/data")
 			require.NoError(t, err)
 			require.Equal(t, tc.activeStreamersLen, len(activeStreamers))
 		})
@@ -93,7 +88,15 @@ func (ao streamingAppOptions) Get(o string) interface{} {
 		return []string{"file"}
 	case "streamers.file.keys":
 		return ao.keys
+	case "streamers.file.write_dir":
+		return "data/file_streamer"
 	default:
 		return nil
 	}
+}
+
+type emptyAppOptions struct{}
+
+func (ao emptyAppOptions) Get(o string) interface{} {
+	return nil
 }

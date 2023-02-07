@@ -3,19 +3,20 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/x/upgrade/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type msgServer struct {
-	Keeper
+	*Keeper
 }
 
 // NewMsgServerImpl returns an implementation of the upgrade MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(k Keeper) types.MsgServer {
+func NewMsgServerImpl(k *Keeper) types.MsgServer {
 	return &msgServer{
 		Keeper: k,
 	}

@@ -4,8 +4,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// DONTCOVER
-
 // query endpoints supported by the governance Querier
 const (
 	QueryParams    = "params"
@@ -22,7 +20,7 @@ const (
 	ParamTallying = "tallying"
 )
 
-// QueryProposalParams Params for queries:
+// QueryProposalParams is used for queries:
 // - 'custom/gov/proposal'
 // - 'custom/gov/deposits'
 // - 'custom/gov/tally'
@@ -37,7 +35,7 @@ func NewQueryProposalParams(proposalID uint64) QueryProposalParams {
 	}
 }
 
-// QueryProposalVotesParams used for queries to 'custom/gov/votes'.
+// QueryProposalVotesParams is used to query 'custom/gov/votes'.
 type QueryProposalVotesParams struct {
 	ProposalID uint64
 	Page       int
@@ -53,7 +51,7 @@ func NewQueryProposalVotesParams(proposalID uint64, page, limit int) QueryPropos
 	}
 }
 
-// QueryDepositParams params for query 'custom/gov/deposit'
+// QueryDepositParams is used to query 'custom/gov/deposit'
 type QueryDepositParams struct {
 	ProposalID uint64
 	Depositor  sdk.AccAddress
@@ -67,7 +65,7 @@ func NewQueryDepositParams(proposalID uint64, depositor sdk.AccAddress) QueryDep
 	}
 }
 
-// QueryVoteParams Params for query 'custom/gov/vote'
+// QueryVoteParams is used to query 'custom/gov/vote'
 type QueryVoteParams struct {
 	ProposalID uint64
 	Voter      sdk.AccAddress
@@ -81,7 +79,7 @@ func NewQueryVoteParams(proposalID uint64, voter sdk.AccAddress) QueryVoteParams
 	}
 }
 
-// QueryProposalsParams Params for query 'custom/gov/proposals'
+// QueryProposalsParams is used to query 'custom/gov/proposals'
 type QueryProposalsParams struct {
 	Page           int
 	Limit          int

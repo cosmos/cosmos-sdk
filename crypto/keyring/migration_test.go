@@ -134,6 +134,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 	s.Require().NoError(s.ks.SetItem(item))
 
 	k2, err := s.ks.migrate(n1)
+	s.Require().NoError(err)
 	s.Require().Equal(k2.Name, k1.Name)
 
 	pub, err := k2.GetPubKey()
@@ -191,12 +192,12 @@ func (s *MigrationTestSuite) TestMigrateAllLegacyMultiOffline() {
 
 	s.Require().NoError(s.ks.SetItem(item))
 
-	err = s.kb.MigrateAll()
+	_, err = s.kb.MigrateAll()
 	s.Require().NoError(err)
 }
 
 func (s *MigrationTestSuite) TestMigrateAllNoItem() {
-	err := s.kb.MigrateAll()
+	_, err := s.kb.MigrateAll()
 	s.Require().NoError(err)
 }
 

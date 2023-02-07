@@ -140,7 +140,7 @@ replace (
 
 	// The following is to test committingClient (allowing parallel queries during
 	// write transactions):
-	github.com/tendermint/tendermint => github.com/agoric-labs/tendermint v0.34.23-alpha.agoric.1
+	github.com/tendermint/tendermint => github.com/agoric-labs/tendermint v0.34.23-alpha.agoric.2
 
 	// latest grpc doesn't work with with our modified proto compiler, so we need to enforce
 	// the following version across all dependencies.

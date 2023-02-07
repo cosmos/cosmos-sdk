@@ -70,7 +70,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(pk[:])
+	cmp, err := btcec.ParsePubKey(pk)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %v", err)
 	}
@@ -98,16 +98,9 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 	}
 
 	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
-	sig, err := priv.Sign(crypto.Sha256(message))
-	if err != nil {
-		return nil, err
-	}
+	sig := ecdsa.Sign(priv, crypto.Sha256(message))
 
-	// Need to return DER as the ledger does
-	var r, s btcec.ModNScalar
-	r.SetByteSlice(sig.R.Bytes())
-	s.SetByteSlice(sig.S.Bytes())
-	return ecdsa.NewSignature(&r, &s).Serialize(), nil
+	return sig.Serialize(), nil
 }
 
 // ShowAddressSECP256K1 shows the address for the corresponding bip32 derivation path

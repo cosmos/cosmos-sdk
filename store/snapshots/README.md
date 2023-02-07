@@ -10,7 +10,7 @@ will not contain historical data from previous heights.
 This document describes the Cosmos SDK implementation of the ABCI state sync
 interface, for more information on Tendermint state sync in general see:
 
-* [Tendermint Core State Sync for Developers](https://medium.com/tendermint/tendermint-core-state-sync-for-developers-70a96ba3ee35)
+* [Tendermint Core State Sync for Developers](https://medium.com/cometbft/cometbft-core-state-sync-for-developers-70a96ba3ee35)
 * [ABCI State Sync Spec](https://docs.tendermint.com/master/spec/abci/apps.html#state-sync)
 * [ABCI State Sync Method/Type Reference](https://docs.tendermint.com/master/spec/abci/abci.html#state-sync)
 

@@ -63,7 +63,7 @@ type Config struct {
 	// Network defines the network name
 	Network string
 	// TendermintRPC defines the endpoint to connect to
-	// tendermint RPC, specifying 'tcp://' before is not
+	// CometBFT RPC, specifying 'tcp://' before is not
 	// required, usually it's at port 26657 of the
 	TendermintRPC string
 	// GRPCEndpoint defines the cosmos application gRPC endpoint
@@ -140,7 +140,7 @@ func (c *Config) validate() error {
 		return fmt.Errorf("grpc endpoint not provided")
 	}
 	if c.TendermintRPC == "" {
-		return fmt.Errorf("tendermint rpc not provided")
+		return fmt.Errorf("cometbft rpc not provided")
 	}
 	if !strings.HasPrefix(c.TendermintRPC, "tcp://") {
 		c.TendermintRPC = fmt.Sprintf("tcp://%s", c.TendermintRPC)
@@ -257,7 +257,7 @@ func ServerFromConfig(conf *Config) (crg.Server, error) {
 func SetFlags(flags *pflag.FlagSet) {
 	flags.String(FlagBlockchain, DefaultBlockchain, "the blockchain type")
 	flags.String(FlagNetwork, DefaultNetwork, "the network name")
-	flags.String(FlagTendermintEndpoint, DefaultTendermintEndpoint, "the tendermint rpc endpoint, without tcp://")
+	flags.String(FlagTendermintEndpoint, DefaultTendermintEndpoint, "the cometbft rpc endpoint, without tcp://")
 	flags.String(FlagGRPCEndpoint, DefaultGRPCEndpoint, "the app gRPC endpoint")
 	flags.String(FlagAddr, DefaultAddr, "the address rosetta will bind to")
 	flags.Int(FlagRetries, DefaultRetries, "the number of retries that will be done before quitting")

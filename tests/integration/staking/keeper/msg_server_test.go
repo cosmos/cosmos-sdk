@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -37,7 +37,7 @@ func TestCancelUnbondingDelegation(t *testing.T) {
 		&stakingKeeper, &bankKeeper, &accountKeeper)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 	msgServer := keeper.NewMsgServerImpl(stakingKeeper)
 	bondDenom := stakingKeeper.BondDenom(ctx)
 

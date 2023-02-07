@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
+	abci_server "github.com/cometbft/cometbft/abci/server"
+	"github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	abci_server "github.com/tendermint/tendermint/abci/server"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -209,8 +209,9 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
-	svrAddr, _, err := network.FreeTCPAddr()
+	svrAddr, _, closeFn, err := network.FreeTCPAddr()
 	require.NoError(t, err)
+	require.NoError(t, closeFn())
 
 	svr, err := abci_server.NewServer(svrAddr, "socket", app)
 	require.NoError(t, err, "error creating listener")

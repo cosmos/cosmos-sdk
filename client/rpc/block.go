@@ -8,9 +8,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 
+	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tm "github.com/tendermint/tendermint/proto/tendermint/types"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 // GetChainHeight returns the current blockchain height.
@@ -57,7 +57,7 @@ func QueryBlocksByEvents(clientCtx client.Context, page, limit int, query string
 }
 
 // get block by height
-func GetBlockByHeight(clientCtx client.Context, height *int64) (*tm.Block, error) {
+func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
 	if err != nil {
@@ -80,7 +80,7 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*tm.Block, error
 	return out, nil
 }
 
-func GetBlockByHash(clientCtx client.Context, hashHexString string) (*tm.Block, error) {
+func GetBlockByHash(clientCtx client.Context, hashHexString string) (*cmt.Block, error) {
 	hash, err := hex.DecodeString(hashHexString)
 	if err != nil {
 		return nil, err
@@ -108,14 +108,14 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*tm.Block, 
 	return out, nil
 }
 
-func mkBlockResult(resBlock *coretypes.ResultBlock) (*tm.Block, error) {
+func mkBlockResult(resBlock *coretypes.ResultBlock) (*cmt.Block, error) {
 	return sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
-func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*tm.Block, error) {
+func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*cmt.Block, error) {
 	var err error
-	out := make([]*tm.Block, len(resBlocks))
+	out := make([]*cmt.Block, len(resBlocks))
 	for i := range resBlocks {
 		out[i], err = mkBlockResult(resBlocks[i])
 		if err != nil {

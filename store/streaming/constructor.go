@@ -9,7 +9,7 @@ import (
 
 	"cosmossdk.io/store/streaming/file"
 	"cosmossdk.io/store/types"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/spf13/cast"
 )

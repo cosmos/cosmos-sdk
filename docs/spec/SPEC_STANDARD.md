@@ -79,24 +79,24 @@ English fragments where necessary to explain further functionality such as sched
 
 Pseudocode for structs can be written in a simple language like Typescript or golang, as interfaces.
 
-Example Typescript pseudocode struct:
+Example Golang pseudocode struct:
 
-```typescript
-interface CacheKVStore {
-  cache: Map<Key, Value>
+```go
+type CacheKVStore interface {
+  cache: map[Key]Value
   parent: KVStore
   deleted: Key
 }
 ```
 
-Pseudocode for algorithms should be written in simple Typescript, as functions.
+Pseudocode for algorithms should be written in simple Golang, as functions.
 
 Example pseudocode algorithm:
 
-```typescript
-function get(
-  store: CacheKVStore,
-  key: Key): Value {
+```go
+func get(
+  store CacheKVStore,
+  key Key) Value {
 
   value = store.cache.get(Key)
   if (value !== null) {

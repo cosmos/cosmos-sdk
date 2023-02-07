@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	ics23 "github.com/confio/ics23/go"
-	"github.com/tendermint/tendermint/crypto/merkle"
-	tmmerkle "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	tmmerkle "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	sdkerrors "cosmossdk.io/errors"
 	sdkmaps "cosmossdk.io/store/internal/maps"

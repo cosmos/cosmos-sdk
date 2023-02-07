@@ -9,7 +9,7 @@ import (
 	db "github.com/cosmos/cosmos-db"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning"

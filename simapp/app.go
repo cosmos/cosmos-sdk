@@ -14,8 +14,8 @@ import (
 	"cosmossdk.io/core/appmodule"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 
 	simappparams "cosmossdk.io/simapp/params"
 	"cosmossdk.io/x/evidence"

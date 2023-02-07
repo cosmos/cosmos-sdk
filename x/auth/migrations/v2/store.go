@@ -23,7 +23,7 @@ import (
 
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

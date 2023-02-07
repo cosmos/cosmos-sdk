@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	tmtypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
+	tmtypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 )
 
 func TestRegisterError(t *testing.T) {

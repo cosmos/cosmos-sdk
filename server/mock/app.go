@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 
 	db "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/types"
 	"google.golang.org/grpc"
 
 	storetypes "cosmossdk.io/store/types"

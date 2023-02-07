@@ -12,8 +12,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	"github.com/cometbft/cometbft/libs/log"
+	tmtime "github.com/cometbft/cometbft/types/time"
 
 	storetypes "cosmossdk.io/store/types"
 

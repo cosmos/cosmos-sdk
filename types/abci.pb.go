@@ -8,7 +8,7 @@ import (
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	types1 "github.com/tendermint/tendermint/abci/types"
+	types1 "github.com/cometbft/cometbft/abci/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

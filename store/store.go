@@ -2,7 +2,7 @@ package store
 
 import (
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"cosmossdk.io/store/cache"
 	"cosmossdk.io/store/metrics"

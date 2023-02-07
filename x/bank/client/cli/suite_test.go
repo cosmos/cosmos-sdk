@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	rpcclientmock "github.com/tendermint/tendermint/rpc/client/mock"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"

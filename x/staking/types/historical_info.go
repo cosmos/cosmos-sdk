@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/gogoproto/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

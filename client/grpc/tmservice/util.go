@@ -2,7 +2,7 @@ package tmservice
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmprototypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 // convertHeader converts tendermint header to sdk header

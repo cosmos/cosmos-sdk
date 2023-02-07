@@ -3,6 +3,7 @@ go 1.19
 module github.com/cosmos/cosmos-sdk
 
 require (
+	github.com/cometbft/cometbft v0.0.0-20230124105515-d35439670429
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0
 	cosmossdk.io/core v0.5.1
@@ -161,7 +162,8 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	// use informal systems fork of tendermint
-	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.37.0-rc2
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.0.0-20230123201206-1cd531c119a5
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230124105515-d35439670429
 )
 
 retract (

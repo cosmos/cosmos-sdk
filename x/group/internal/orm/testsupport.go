@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/gaskv"

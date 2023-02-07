@@ -146,6 +146,7 @@ type BaseApp struct { //nolint: maligned
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
 
+        // record the time at begin block, used to measure block delivery time at commit event
 	blockStartTime time.Time
 }
 

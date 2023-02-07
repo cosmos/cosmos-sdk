@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math/big"
 
-	tmcrypto "github.com/tendermint/tendermint/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,13 +32,13 @@ type PubKey struct {
 	ecdsa.PublicKey
 
 	// cache
-	address tmcrypto.Address
+	address cmtcrypto.Address
 }
 
 // Address gets the address associated with a pubkey. If no address exists, it returns a newly created ADR-28 address
 // for ECDSA keys.
 // protoName is a concrete proto structure id.
-func (pk *PubKey) Address(protoName string) tmcrypto.Address {
+func (pk *PubKey) Address(protoName string) cmtcrypto.Address {
 	if pk.address == nil {
 		pk.address = address.Hash(protoName, pk.Bytes())
 	}

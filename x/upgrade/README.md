@@ -22,9 +22,9 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-    * [CLI](#cli)
-    * [REST](#rest)
-    * [gRPC](#grpc)
+  * [CLI](#cli)
+  * [REST](#rest)
+  * [gRPC](#grpc)
 * [Resources](#resources)
 
 ## Concepts
@@ -314,6 +314,23 @@ info: ""
 name: test-upgrade
 time: "0001-01-01T00:00:00Z"
 upgraded_client_state: null
+```
+
+#### Transactions
+
+The upgrade module supports the following transactions:
+
+* `software-proposal` - submits an upgrade proposal:
+
+```bash
+simd tx upgrade software-upgrade v2 --title="Test Proposal" --summary="testing" --deposit="100000000stake" --upgrade-height 1000000 \
+--upgrade-info '{ "binaries": { "linux/amd64":"https://example.com/simd.zip?checksum=sha256:aec070645fe53ee3b3763059376134f058cc337247c978add178b6ccdfb0019f" } }' --from cosmos1..
+```
+
+* `cancel-software-upgrade` - cancels a previously submitted upgrade proposal:
+
+```bash
+simd tx upgrade cancel-software-upgrade --title="Test Proposal" --summary="testing" --deposit="100000000stake" --from cosmos1..
 ```
 
 ### REST

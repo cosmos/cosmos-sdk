@@ -5,8 +5,8 @@ import (
 	"sort"
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"pgregory.net/rapid"
 
 	storetypes "cosmossdk.io/store/types"
@@ -49,7 +49,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.Require()
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,

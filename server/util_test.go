@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	tmcfg "github.com/tendermint/tendermint/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -30,7 +30,7 @@ var errCanceledInPreRun = errors.New("canceled in prerun")
 // Used in each test to run the function under test via Cobra
 // but to always halt the command
 func preRunETestImpl(cmd *cobra.Command, args []string) error {
-	err := server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
+	err := server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig())
 	if err != nil {
 		return err
 	}
@@ -435,7 +435,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Run StartCmd.
 	cmd = server.StartCmd(nil, tempDir)
 	cmd.PreRunE = func(cmd *cobra.Command, _ []string) error {
-		return server.InterceptConfigsPreRunHandler(cmd, "", nil, tmcfg.DefaultConfig())
+		return server.InterceptConfigsPreRunHandler(cmd, "", nil, cmtcfg.DefaultConfig())
 	}
 	err = cmd.ExecuteContext(ctx)
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())

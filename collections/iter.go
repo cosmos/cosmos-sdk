@@ -121,7 +121,6 @@ func (r *Range[K]) Descending() *Range[K] {
 
 // test sentinel error
 var (
-	errRange = errors.New("collections: range error")
 	errOrder = errors.New("collections: invalid order")
 )
 
@@ -161,6 +160,7 @@ func iteratorFromRanger[K, V any](ctx context.Context, m Map[K, V], r Ranger[K])
 	} else {
 		endBytes = nextBytesPrefixKey(m.prefix)
 	}
+
 	return newIterator(ctx, startBytes, endBytes, order, m)
 }
 

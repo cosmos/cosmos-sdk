@@ -98,16 +98,16 @@ func NewModuleDB(schema *ormv1alpha1.ModuleSchemaDescriptor, options ModuleDBOpt
 		switch entry.StorageType {
 		case ormv1alpha1.StorageType_STORAGE_TYPE_DEFAULT_UNSPECIFIED:
 			service := options.KVStoreService
-			if service == nil {
-				return nil, fmt.Errorf("missing KVStoreService")
-			}
-
-			backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
-				kvStore := service.OpenKVStore(ctx)
-				return ormtable.NewBackend(ormtable.BackendOptions{
-					CommitmentStore: kvStore,
-					IndexStore:      kvStore,
-				}), nil
+			if service != nil {
+				// for testing purposes, the ORM allows KVStoreService to be omitted
+				// and a default test backend can be used
+				backendResolver = func(ctx context.Context) (ormtable.ReadBackend, error) {
+					kvStore := service.OpenKVStore(ctx)
+					return ormtable.NewBackend(ormtable.BackendOptions{
+						CommitmentStore: kvStore,
+						IndexStore:      kvStore,
+					}), nil
+				}
 			}
 		case ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY:
 			service := options.MemoryStoreService

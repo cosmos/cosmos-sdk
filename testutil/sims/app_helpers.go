@@ -7,12 +7,12 @@ import (
 
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -32,25 +32,25 @@ const DefaultGenTxGas = 10000000
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &tmproto.ConsensusParams{
-	Block: &tmproto.BlockParams{
+var DefaultConsensusParams = &cmtproto.ConsensusParams{
+	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   2000000,
 	},
-	Evidence: &tmproto.EvidenceParams{
+	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &tmproto.ValidatorParams{
+	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
 }
 
 // CreateRandomValidatorSet creates a validator set with one random validator
-func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -58,9 +58,9 @@ func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	}
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
+	validator := cmttypes.NewValidator(pubKey, 1)
 
-	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 }
 
 type GenesisAccount struct {
@@ -74,7 +74,7 @@ type GenesisAccount struct {
 // BaseAppOption defines the additional operations that must be run on baseapp before app start.
 // AtGenesis defines if the app started should already have produced block or not.
 type StartupConfig struct {
-	ValidatorSet    func() (*tmtypes.ValidatorSet, error)
+	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
@@ -153,7 +153,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}
@@ -170,7 +170,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
 		app.Commit()
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{
 			Height:             app.LastBlockHeight() + 1,
 			AppHash:            app.LastCommitID().Hash,
 			ValidatorsHash:     valSet.Hash(),
@@ -185,7 +185,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 func GenesisStateWithValSet(
 	codec codec.Codec,
 	genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet,
+	valSet *cmttypes.ValidatorSet,
 	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {

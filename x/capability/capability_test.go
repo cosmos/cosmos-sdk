@@ -3,9 +3,9 @@ package capability_test
 import (
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -47,7 +47,7 @@ func (suite *CapabilityTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{Height: 1})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{Height: 1})
 }
 
 // The following test case mocks a specific bug discovered in https://github.com/cosmos/cosmos-sdk/issues/9800
@@ -64,12 +64,12 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	newSk1 := newKeeper.ScopeToModule(banktypes.ModuleName)
 
 	// Mock App startup
-	ctx := suite.app.BaseApp.NewUncachedContext(false, tmproto.Header{})
+	ctx := suite.app.BaseApp.NewUncachedContext(false, cmtproto.Header{})
 	newKeeper.Seal()
 	suite.Require().False(newKeeper.IsInitialized(ctx), "memstore initialized flag set before BeginBlock")
 
 	// Mock app beginblock and ensure that no gas has been consumed and memstore is initialized
-	ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{}).WithBlockGasMeter(storetypes.NewGasMeter(50))
+	ctx = suite.app.BaseApp.NewContext(false, cmtproto.Header{}).WithBlockGasMeter(storetypes.NewGasMeter(50))
 	prevGas := ctx.BlockGasMeter().GasConsumed()
 	restartedModule := capability.NewAppModule(suite.cdc, *newKeeper, true)
 	restartedModule.BeginBlock(ctx, abci.RequestBeginBlock{})
@@ -85,7 +85,7 @@ func (suite *CapabilityTestSuite) TestInitializeMemStore() {
 	suite.Require().True(ok)
 
 	// Ensure that the second transaction can still receive capability even if first tx fails.
-	ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx = suite.app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	cap1, ok = newSk1.GetCapability(ctx, "transfer")
 	suite.Require().True(ok)

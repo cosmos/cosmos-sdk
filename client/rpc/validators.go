@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -57,7 +57,7 @@ func ValidatorCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flags.FlagNode, "tcp://localhost:26657", "<host>:<port> to Tendermint RPC interface for this chain")
+	cmd.Flags().String(flags.FlagNode, "tcp://localhost:26657", "<host>:<port> to CometBFT RPC interface for this chain")
 	cmd.Flags().StringP(flags.FlagOutput, "o", "text", "Output format (text|json)")
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, 100, "Query number of results returned per page")
@@ -100,7 +100,7 @@ func (rvo ResultValidatorsOutput) String() string {
 	return b.String()
 }
 
-func validatorOutput(validator *tmtypes.Validator) (ValidatorOutput, error) {
+func validatorOutput(validator *cmttypes.Validator) (ValidatorOutput, error) {
 	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err

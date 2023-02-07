@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	modulev1 "cosmossdk.io/api/cosmos/capability/module/v1"
 	"cosmossdk.io/depinject"
@@ -161,11 +161,6 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // GenerateGenesisState creates a randomized GenState of the capability module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
-}
-
-// ProposalContents performs a no-op
-func (am AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for capability module's types

@@ -8,6 +8,7 @@ use (
 	./core
 	./depinject
 	./errors
+	./log
 	./math
 	./orm
 	./simapp
@@ -22,4 +23,5 @@ use (
 	./x/circuit
 	./x/feegrant
 	./x/evidence
+	./x/upgrade
 )

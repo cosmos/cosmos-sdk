@@ -19,11 +19,11 @@ import (
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/libs/log"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -71,8 +71,8 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -249,7 +249,7 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
+func (ps *paramStore) Set(_ sdk.Context, value *cmtproto.ConsensusParams) {
 	bz, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
@@ -267,7 +267,7 @@ func (ps *paramStore) Has(_ sdk.Context) bool {
 	return ok
 }
 
-func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+func (ps paramStore) Get(ctx sdk.Context) (*cmtproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamStoreKey)
 	if err != nil {
 		panic(err)
@@ -277,7 +277,7 @@ func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
 		return nil, errors.New("params not found")
 	}
 
-	var params tmproto.ConsensusParams
+	var params cmtproto.ConsensusParams
 	if err := json.Unmarshal(bz, &params); err != nil {
 		panic(err)
 	}

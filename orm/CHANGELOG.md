@@ -42,4 +42,4 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State-machine Breaking Changes
 
-- [12273](https://github.com/cosmos/cosmos-sdk/pull/12273) The timestamp encoding was reworked to properly handle nil values. Existing users will need to manually migrate their data to the new encoding before upgrading.
+- [12273](https://github.com/cosmos/cosmos-sdk/pull/12273) The timestamp key encoding was reworked to properly handle nil values. Existing users will need to manually migrate their data to the new encoding before upgrading.

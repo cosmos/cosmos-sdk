@@ -134,7 +134,7 @@ rpc-read-timeout = 10
 # RPCWriteTimeout defines the CometBFT RPC write timeout (in seconds).
 rpc-write-timeout = 0
 
-# RPCMaxBodyBytes defines the CometBFT maximum response body (in bytes).
+# RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes).
 rpc-max-body-bytes = 1000000
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).

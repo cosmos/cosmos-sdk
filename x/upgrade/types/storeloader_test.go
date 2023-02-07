@@ -8,7 +8,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -127,7 +127,7 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				origapp.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: i}})
+				origapp.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: i}})
 				res := origapp.Commit()
 				require.NotNil(t, res.Data)
 			}
@@ -143,7 +143,7 @@ func TestSetLoader(t *testing.T) {
 			require.Nil(t, err)
 
 			// "execute" one block
-			app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: upgradeHeight}})
+			app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: upgradeHeight}})
 			res := app.Commit()
 			require.NotNil(t, res.Data)
 

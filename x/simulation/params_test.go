@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"testing"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +39,7 @@ func TestNewWeightedProposalContent(t *testing.T) {
 	require.Equal(t, key, pContent.AppParamsKey())
 	require.Equal(t, weight, pContent.DefaultWeight())
 
-	ctx := sdk.NewContext(nil, tmproto.Header{}, true, nil)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, true, nil)
 	require.Equal(t, content, pContent.ContentSimulatorFn()(nil, ctx, nil))
 }
 

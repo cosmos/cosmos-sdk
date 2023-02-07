@@ -3,7 +3,7 @@ package ante_test
 import (
 	"testing"
 
-	tmcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -13,7 +13,7 @@ import (
 // This benchmark is used to asses the ante.Secp256k1ToR1GasFactor value
 func BenchmarkSig(b *testing.B) {
 	require := require.New(b)
-	msg := tmcrypto.CRandBytes(1000)
+	msg := cmtcrypto.CRandBytes(1000)
 
 	skK := secp256k1.GenPrivKey()
 	pkK := skK.PubKey()

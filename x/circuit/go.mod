@@ -3,8 +3,9 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.19
 
 require (
-	cosmossdk.io/store v0.0.0-20230206083820-8cf814fb8c4c
-	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
+	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
+	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.52.3
@@ -90,13 +91,10 @@ require (
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
-	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a // indirect
+	google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// This can be deleted after the CometBFT PR is merged
-replace github.com/cosmos/cosmos-sdk => ../..

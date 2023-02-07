@@ -265,7 +265,7 @@ func (c *Client) coins(ctx context.Context) (sdk.Coins, error) {
 		// get next key
 		page := supply.GetPagination()
 		if page == nil {
-			return nil, crgerrs.WrapError(crgerrs.ErrCodec, fmt.Sprintf("error pagination"))
+			return nil, crgerrs.WrapError(crgerrs.ErrCodec, "error pagination")
 		}
 		nextKey := page.GetNextKey()
 

@@ -13,7 +13,7 @@ import (
 const (
 	AppConfig    = "app.toml"
 	ClientConfig = "client.toml"
-	TMConfig     = "config.toml"
+	CMTConfig    = "config.toml"
 )
 
 // MigrationMap defines a mapping from a version to a transformation plan.

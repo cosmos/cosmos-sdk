@@ -3,8 +3,9 @@ module github.com/cosmos/cosmos-sdk/x/circuit
 go 1.19
 
 require (
-	cosmossdk.io/store v0.0.0-20230204135315-697871069999
-	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
+	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.52.3
@@ -17,7 +18,7 @@ require (
 	cosmossdk.io/core v0.5.1 // indirect
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0-beta.7 // indirect
-	cosmossdk.io/math v1.0.0-beta.5 // indirect
+	cosmossdk.io/math v1.0.0-beta.6 // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
@@ -34,7 +35,6 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
-	github.com/cosmos/cosmos-sdk/log v0.0.0-20230203122834-2c67b11220f1 // indirect
 	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
 	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -91,13 +91,10 @@ require (
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20230202175211-008b39050e57 // indirect
-	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a // indirect
+	google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-// This can be deleted after the CometBFT PR is merged
-replace github.com/cosmos/cosmos-sdk => ../..

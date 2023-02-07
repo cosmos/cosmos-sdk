@@ -80,7 +80,7 @@ func FuzzPagination(f *testing.F) {
 		}
 
 		// Now try to paginate it.
-		req := types.NewQueryAllBalancesRequest(addr1, qr)
+		req := types.NewQueryAllBalancesRequest(addr1, qr, false)
 		balResult := sdk.NewCoins()
 		authStore := suite.ctx.KVStore(suite.app.UnsafeFindStoreKey(types.StoreKey))
 		balancesStore := prefix.NewStore(authStore, types.BalancesPrefix)

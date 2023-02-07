@@ -5,9 +5,9 @@ go 1.19
 require (
 	cosmossdk.io/api v0.3.0
 	cosmossdk.io/depinject v1.0.0-alpha.3
-	cosmossdk.io/math v1.0.0-beta.5
+	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
-	cosmossdk.io/store v0.0.0-20230204135315-697871069999
+	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
@@ -16,15 +16,15 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
-	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a
+	google.golang.org/protobuf v1.28.2-0.20230206090356-358fe40267af
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
-	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547
 )
 
 require (

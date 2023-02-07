@@ -4,6 +4,15 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Consensus Engine
+
+The Cosmos SDK has migrated to CometBFT as its default consensus engine.
+This is a breaking changes that needs chains to re-generate their protos.
+Some functions has been renamed to reflect the naming change, following an exhaustive list:
+
+* `client.TendermintRPC` -> `client.CometRPC`
+* `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:

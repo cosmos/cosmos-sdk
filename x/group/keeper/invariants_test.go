@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/suite"
@@ -41,7 +41,7 @@ func (s *invariantTestSuite) SetupSuite() {
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	_ = cms.LoadLatestVersion()
-	sdkCtx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+	sdkCtx := sdk.NewContext(cms, cmtproto.Header{}, false, log.NewNopLogger())
 
 	s.ctx = sdkCtx
 	s.cdc = cdc

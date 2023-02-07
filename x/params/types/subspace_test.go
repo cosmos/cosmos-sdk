@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/suite"
@@ -46,7 +46,7 @@ func (suite *SubspaceTestSuite) SetupTest() {
 	suite.NoError(err)
 
 	ss := types.NewSubspace(suite.cdc, suite.amino, key, tkey, "testsubspace")
-	suite.ctx = sdk.NewContext(ms, tmproto.Header{}, false, log.NewNopLogger())
+	suite.ctx = sdk.NewContext(ms, cmtproto.Header{}, false, log.NewNopLogger())
 	suite.ss = ss.WithKeyTable(paramKeyTable())
 }
 

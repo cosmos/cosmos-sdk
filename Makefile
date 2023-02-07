@@ -316,6 +316,7 @@ test-sim-benchmark-invariants:
 
 .PHONY: \
 test-sim-nondeterminism \
+test-sim-nondeterminism-streaming \
 test-sim-custom-genesis-fast \
 test-sim-import-export \
 test-sim-after-import \

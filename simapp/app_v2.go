@@ -4,19 +4,12 @@ package simapp
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
-
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/store/streaming"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -26,10 +19,11 @@ import (
 	nftmodule "cosmossdk.io/x/nft/module"
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	"github.com/tendermint/tendermint/libs/log"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -250,23 +244,7 @@ func NewSimApp(
 	app.App = appBuilder.Build(logger, db, traceStore, baseAppOptions...)
 
 	// register streaming services
-	streamingCfg := cast.ToStringMap(appOpts.Get(baseapp.StreamingTomlKey))
-	for service := range streamingCfg {
-		pluginKey := fmt.Sprintf("%s.%s.%s", baseapp.StreamingTomlKey, service, baseapp.StreamingABCIPluginTomlKey)
-		pluginName := strings.TrimSpace(cast.ToString(appOpts.Get(pluginKey)))
-		if len(pluginName) > 0 {
-			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
-			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
-			if err != nil {
-				fmt.Printf("failed to load streaming plugin: %s", err)
-				os.Exit(1)
-			}
-			if err := baseapp.RegisterStreamingPlugin(app.BaseApp, appOpts, app.kvStoreKeys(), plugin); err != nil {
-				fmt.Printf("failed to register streaming plugin: %s", err)
-				os.Exit(1)
-			}
-		}
-	}
+	app.RegisterStreamingServices(appOpts, app.kvStoreKeys())
 
 	/****  Module Options ****/
 

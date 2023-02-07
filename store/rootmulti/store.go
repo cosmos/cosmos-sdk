@@ -78,6 +78,11 @@ type Store struct {
 
 	metrics metrics.StoreMetrics
 
+	// listenersMx is a sync.Mutex used by state listeners attached to StoreKeys.
+	// The operations involved with state listening are mutating and destructive;
+	// adding listeners (CacheMultiStore, CacheMultiStoreWithVersion) and popping
+	// the current block's state changes (PopStateCache) need to be synchronized.
+	// Therefore, the listenersMx is used to synchronize between calls.
 	listenersMx sync.Mutex
 }
 

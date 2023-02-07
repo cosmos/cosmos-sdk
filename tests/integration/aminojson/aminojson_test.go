@@ -24,7 +24,9 @@ import (
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -45,8 +47,10 @@ var msgTypes = []typeUnderTest{
 	// auth
 	{gogo: &authtypes.Params{}, pulsar: &authapi.Params{}},
 	{gogo: &authtypes.BaseAccount{}, pulsar: &authapi.BaseAccount{}},
-	// punting since the structs have a different shape
-	//{gogo: &authtypes.ModuleAccount{}, pulsar: &authapi.ModuleAccount{}},
+
+	// omitted from the test because of the custom MarshalJSON. It is tested separately. Pulsar types
+	// may be generated with data which is invalid for the gogo type, but valid for the pulsar type.
+	{gogo: &authtypes.ModuleAccount{}, pulsar: &authapi.ModuleAccount{}},
 
 	// missing name extension, do we need it?
 	// {gogo: &authtypes.ModuleCredential{}, pulsar: &authapi.ModuleCredential{}},
@@ -211,6 +215,21 @@ func newGogoMessage(t reflect.Type) gogoproto.Message {
 	}
 }
 
+func postFixPulsarMessage(msg proto.Message) proto.Message {
+	switch m := msg.(type) {
+	case *authapi.ModuleAccount:
+		if m.BaseAccount == nil {
+			m.BaseAccount = &authapi.BaseAccount{}
+		}
+		_, _, bz := testdata.KeyTestPubAddr()
+		text, _ := bech32.ConvertAndEncode("cosmos", bz)
+		m.BaseAccount.Address = text
+		return m
+	default:
+		return msg
+	}
+}
+
 func Test_newGogoMessage(t *testing.T) {
 	ma := &authtypes.ModuleAccount{}
 	rma := newGogoMessage(reflect.TypeOf(ma).Elem())
@@ -321,13 +340,14 @@ func TestAminoJSON_AllTypes(t *testing.T) {
 				}
 			}()
 			msg := gen.Draw(t, "msg")
+			msg = postFixPulsarMessage(msg)
 			//goMsg := reflect.New(reflect.TypeOf(tt.gogo).Elem()).Interface().(gogoproto.Message)
 			goMsg := newGogoMessage(reflect.TypeOf(tt.gogo).Elem())
 			ti.deepClone(msg, goMsg)
 			gogobz, err := cdc.MarshalJSON(goMsg)
 			require.NoError(t, err, "failed to marshal gogo message")
 			pulsarbz, err := aj.MarshalAmino(msg)
-			require.Equal(t, pulsarbz, gogobz)
+			require.Equal(t, string(gogobz), string(pulsarbz))
 		})
 	}
 }
@@ -382,6 +402,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsarBytes, err := aj.MarshalAmino(tc.pulsar)
 			require.NoError(t, err)
 
+			fmt.Printf("pulsar: %s\n", string(pulsarBytes))
 			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)
 		})
 	}
@@ -391,7 +412,6 @@ func TestModuleAccount(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&authapi.ModuleAccount{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		fmt.Printf("msg: %v\n", msg)
 		_, err := aminojson.NewAminoJSON().MarshalAmino(msg)
 		assert.NilError(t, err)
 	})

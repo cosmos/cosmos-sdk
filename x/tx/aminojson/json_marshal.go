@@ -16,7 +16,7 @@ import (
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 )
 
-type MessageEncoder func(protoreflect.Message) (protoreflect.Value, error)
+type MessageEncoder func(protoreflect.Message, io.Writer) error
 type FieldEncoder func(protoreflect.Value, io.Writer) error
 
 type AminoJSON struct {
@@ -34,16 +34,19 @@ func NewAminoJSON() AminoJSON {
 			},
 		},
 		messageEncoders: map[string]MessageEncoder{
-			"key_field": func(message protoreflect.Message) (protoreflect.Value, error) {
-				keyField := message.Descriptor().Fields().ByName("key")
+			"key_field": func(msg protoreflect.Message, w io.Writer) error {
+				keyField := msg.Descriptor().Fields().ByName("key")
 				if keyField == nil {
-					return protoreflect.Value{}, errors.New(
-						`message encoder for key_field: no field named "key" found`)
+					return errors.New(`message encoder for key_field: no field named "key" found`)
 				}
-				bz := message.Get(keyField).Bytes()
-				return protoreflect.ValueOfBytes(bz), nil
+				bz := msg.Get(keyField).Bytes()
+				_, err := fmt.Fprintf(w, `"%s"`, base64.StdEncoding.EncodeToString(bz))
+				if err != nil {
+					return err
+				}
+				return nil
 			},
-			//"module_account": moduleAccountEncoder,
+			"module_account": moduleAccountEncoder,
 		},
 		encodings: map[string]FieldEncoder{
 			"empty_string": func(v protoreflect.Value, writer io.Writer) error {
@@ -117,7 +120,7 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 }
 
 // TODO
-// merge with marshalMessage
+// merge with marshalMessage or if embed ends up not being needed delete it.
 func (aj AminoJSON) marshalEmbedded(msg protoreflect.Message, writer io.Writer) (bool, error) {
 	fields := msg.Descriptor().Fields()
 	first := true
@@ -177,11 +180,8 @@ func (aj AminoJSON) marshalEmbedded(msg protoreflect.Message, writer io.Writer) 
 
 func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
 	if encoder := aj.getMessageEncoder(msg); encoder != nil {
-		encoded, err := encoder(msg)
-		if err != nil {
-			return err
-		}
-		return aj.marshal(encoded, writer)
+		err := encoder(msg, writer)
+		return err
 	}
 
 	named := false
@@ -401,19 +401,34 @@ type moduleAccountPretty struct {
 	Permissions   []string `json:"permissions"`
 }
 
-func moduleAccountEncoder(m protoreflect.Message) (protoreflect.Value, error) {
-	ma := m.Interface().(*authapi.ModuleAccount)
-	ma2 := moduleAccountPretty{
-		Address:       ma.BaseAccount.Address,
-		PubKey:        "",
-		AccountNumber: ma.BaseAccount.AccountNumber,
-		Sequence:      ma.BaseAccount.Sequence,
-		Name:          ma.Name,
-		Permissions:   ma.Permissions,
+type typeWrapper struct {
+	Type  string `json:"type"`
+	Value any    `json:"value"`
+}
+
+// moduleAccountEncoder replicates the behavior in
+// https://github.com/cosmos/cosmos-sdk/blob/41a3dfeced2953beba3a7d11ec798d17ee19f506/x/auth/types/account.go#L230-L2549
+func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
+	ma := msg.Interface().(*authapi.ModuleAccount)
+	pretty := moduleAccountPretty{
+		PubKey:      "",
+		Name:        ma.Name,
+		Permissions: ma.Permissions,
 	}
-	bz, err := json.Marshal(ma2)
+	if ma.BaseAccount != nil {
+		pretty.Address = ma.BaseAccount.Address
+		pretty.AccountNumber = ma.BaseAccount.AccountNumber
+		pretty.Sequence = ma.BaseAccount.Sequence
+	} else {
+		pretty.Address = ""
+		pretty.AccountNumber = 0
+		pretty.Sequence = 0
+	}
+
+	bz, err := json.Marshal(typeWrapper{Type: "cosmos-sdk/ModuleAccount", Value: pretty})
 	if err != nil {
-		return protoreflect.Value{}, err
+		return err
 	}
-	return protoreflect.ValueOfString(string(bz)), nil
+	_, err = w.Write(bz)
+	return err
 }

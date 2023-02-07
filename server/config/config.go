@@ -122,11 +122,7 @@ type APIConfig struct {
 	// RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
 	RPCWriteTimeout uint `mapstructure:"rpc-write-timeout"`
 
-<<<<<<< HEAD
-	// RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
-=======
-	// RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes)
->>>>>>> a186d2a69 (docs: correct `rpc-max-body-bytes` config description (#14935))
+	// RPCMaxBodyBytes defines the Tendermint maximum request body (in bytes)
 	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
 
 	// TODO: TLS/Proxy configuration.

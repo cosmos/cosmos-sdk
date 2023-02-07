@@ -146,11 +146,7 @@ rpc-read-timeout = {{ .API.RPCReadTimeout }}
 # RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds).
 rpc-write-timeout = {{ .API.RPCWriteTimeout }}
 
-<<<<<<< HEAD
-# RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes).
-=======
-# RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes).
->>>>>>> a186d2a69 (docs: correct `rpc-max-body-bytes` config description (#14935))
+# RPCMaxBodyBytes defines the Tendermint maximum request body (in bytes).
 rpc-max-body-bytes = {{ .API.RPCMaxBodyBytes }}
 
 # EnableUnsafeCORS defines if CORS should be enabled (unsafe - use it at your own risk).

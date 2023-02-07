@@ -1051,15 +1051,11 @@ func GetLatestVersion(db dbm.DB) int64 {
 // Commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
-<<<<<<< HEAD
 
-	for key, store := range storeMap {
-=======
-	storeKeys := keysFromStoreKeyMap(storeMap)
+	storeKeys := keysForStoreKeyMap(storeMap)
 
 	for _, key := range storeKeys {
 		store := storeMap[key]
->>>>>>> 1344ff137 (fix: exclude mem store from commit info (#14931))
 		last := store.LastCommitID()
 
 		// If a commit event execution is interrupted, a new iavl store's version

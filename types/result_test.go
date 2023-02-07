@@ -14,7 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tm "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmt "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -142,14 +143,14 @@ txhash: "74657374"
 }
 
 func (s *resultTestSuite) TestNewSearchBlocksResult() {
-	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*tm.Block{})
+	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*cmtt.Block{})
 	s.Require().Equal(&sdk.SearchBlocksResult{
 		TotalCount: 150,
 		Count:      20,
 		PageNumber: 2,
 		PageTotal:  8,
 		Limit:      20,
-		Blocks:     []*tm.Block{},
+		Blocks:     []*cmtt.Block{},
 	}, got)
 }
 
@@ -158,20 +159,20 @@ func (s *resultTestSuite) TestResponseResultBlock() {
 	timestampStr := timestamp.UTC().Format(time.RFC3339)
 
 	//  create a block
-	resultBlock := &coretypes.ResultBlock{Block: &tmtypes.Block{
-		Header: tmtypes.Header{
+	resultBlock := &coretypes.ResultBlock{Block: &cmt.Block{
+		Header: cmt.Header{
 			Height: 10,
 			Time:   timestamp,
 		},
-		Evidence: tmtypes.EvidenceData{
-			Evidence: make(tmtypes.EvidenceList, 0),
+		Evidence: cmt.EvidenceData{
+			Evidence: make(cmt.EvidenceList, 0),
 		},
 	}}
 
 	blk, err := resultBlock.Block.ToProto()
 	s.Require().NoError(err)
 
-	want := &tm.Block{
+	want := &cmtt.Block{
 		Header:   blk.Header,
 		Evidence: blk.Evidence,
 	}

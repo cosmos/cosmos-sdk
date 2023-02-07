@@ -172,8 +172,8 @@ func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
-		Long: strings.TrimSpace(fmt.Sprintf(`
-Example:
+		Long:  "Query for a specific committed block using the TenderMint RPC `block` and `block_by_hash` method",
+		Example: strings.TrimSpace(fmt.Sprintf(`
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>
 `,
@@ -190,54 +190,54 @@ $ %s query block --%s=%s <hash>
 
 			switch typ {
 			case auth.TypeHeight:
-				{
-					if args[0] == "" {
-						return fmt.Errorf("argument should be a block height")
-					}
 
-					var height *int64
+				if args[0] == "" {
+					return fmt.Errorf("argument should be a block height")
+				}
 
-					// optional height
-					if len(args) > 0 {
-						h, err := strconv.Atoi(args[0])
-						if err != nil {
-							return err
-						}
-						if h > 0 {
-							tmp := int64(h)
-							height = &tmp
-						}
-					}
+				var height *int64
 
-					output, err := rpc.GetBlockByHeight(clientCtx, height)
+				// optional height
+				if len(args) > 0 {
+					h, err := strconv.Atoi(args[0])
 					if err != nil {
 						return err
 					}
-
-					if output.Header.Height == 0 {
-						return fmt.Errorf("no block found with height %s", args[0])
+					if h > 0 {
+						tmp := int64(h)
+						height = &tmp
 					}
-
-					return clientCtx.PrintProto(output)
 				}
+
+				output, err := rpc.GetBlockByHeight(clientCtx, height)
+				if err != nil {
+					return err
+				}
+
+				if output.Header.Height == 0 {
+					return fmt.Errorf("no block found with height %s", args[0])
+				}
+
+				return clientCtx.PrintProto(output)
+
 			case auth.TypeHash:
-				{
-					if args[0] == "" {
-						return fmt.Errorf("argument should be a tx hash")
-					}
 
-					// If hash is given, then query the tx by hash.
-					output, err := rpc.GetBlockByHash(clientCtx, args[0])
-					if err != nil {
-						return err
-					}
-
-					if output.Header.AppHash == nil {
-						return fmt.Errorf("no block found with hash %s", args[0])
-					}
-
-					return clientCtx.PrintProto(output)
+				if args[0] == "" {
+					return fmt.Errorf("argument should be a tx hash")
 				}
+
+				// If hash is given, then query the tx by hash.
+				output, err := rpc.GetBlockByHash(clientCtx, args[0])
+				if err != nil {
+					return err
+				}
+
+				if output.Header.AppHash == nil {
+					return fmt.Errorf("no block found with hash %s", args[0])
+				}
+
+				return clientCtx.PrintProto(output)
+
 			default:
 				return fmt.Errorf("unknown --%s value %s", auth.FlagType, typ)
 			}

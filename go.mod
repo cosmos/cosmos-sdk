@@ -3,12 +3,25 @@ module github.com/cosmos/cosmos-sdk
 go 1.18
 
 require (
+<<<<<<< HEAD
 	cosmossdk.io/core v0.5.1
 	github.com/99designs/keyring v1.1.6
 	github.com/armon/go-metrics v0.4.0
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816
 	github.com/btcsuite/btcd v0.22.2
 	github.com/coinbase/rosetta-sdk-go v0.7.0
+=======
+	cosmossdk.io/errors v1.0.0-beta.7
+	cosmossdk.io/math v1.0.0-beta.3
+	github.com/99designs/keyring v1.2.1
+	github.com/armon/go-metrics v0.4.1
+	github.com/bgentry/speakeasy v0.1.0
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
+	github.com/celestiaorg/smt v0.3.0
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
+	github.com/cockroachdb/apd/v2 v2.0.2
+	github.com/coinbase/rosetta-sdk-go v0.7.9
+>>>>>>> 0b6451402 (build(deps): bump btcd in v0.46 (#14846))
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/btcutil v1.0.4
 	github.com/cosmos/go-bip39 v1.0.0
@@ -62,7 +75,12 @@ require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+<<<<<<< HEAD
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+=======
+	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+>>>>>>> 0b6451402 (build(deps): bump btcd in v0.46 (#14846))
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/errors v1.9.1 // indirect

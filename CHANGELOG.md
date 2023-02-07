@@ -37,6 +37,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## Improvements
 
 * (store) [#14410](https://github.com/cosmos/cosmos-sdk/pull/14410) `rootmulti.Store.loadVersion` has validation to check if all the module stores' height is correct, it will error if any module store has incorrect height.
@@ -48,9 +49,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#14583](https://github.com/cosmos/cosmos-sdk/pull/14583) Add support for Core API.
 
 ## [v0.45.13](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.45.13) - 2023-02-09
+=======
+## [v0.46.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.9) - 2022-02-07
+>>>>>>> 0b6451402 (build(deps): bump btcd in v0.46 (#14846))
 
 ### Improvements
 
+* (deps) [#14846](https://github.com/cosmos/cosmos-sdk/pull/14846) Bump btcd.
 * (deps) Bump Tendermint version to [v0.34.26](https://github.com/informalsystems/tendermint/releases/tag/v0.34.26).
 
 ### Bug Fixes

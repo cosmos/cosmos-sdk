@@ -47,8 +47,8 @@ This specification assumes that there exists a cache implementation accessible t
 
 The inter-block cache requires that the cache implementation to provide methods to create a cache, add a key/value pair, remove a key/value pair and retrieve the value associated to a key. In this specification, we assume that a `Cache` feature offers this functionality through the following methods:
 
-* `func NewCache(size int)` creates a new cache with `size` capacity and returns it.
-* `func Get(key string)` attempts to retrieve a key/value pair from `Cache.` It returns `(value []byte, success bool)`. If `Cache` contains the key, it `value` contains the associated value and `success=true`. Otherwise, `success=false` and `value` should be ignored.
+* `NewCache(size int)` creates a new cache with `size` capacity and returns it.
+* `Get(key string)` attempts to retrieve a key/value pair from `Cache.` It returns `(value []byte, success bool)`. If `Cache` contains the key, it `value` contains the associated value and `success=true`. Otherwise, `success=false` and `value` should be ignored.
 * `Add(key string, value []byte)` inserts a key/value pair into the `Cache`.
 * `Remove(key string)` removes the key/value pair identified by `key` from `Cache`.
 

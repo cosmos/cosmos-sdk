@@ -6,9 +6,10 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/armon/go-metrics v0.4.1
-	github.com/cometbft/cometbft v0.0.0-20230202201700-d159562d0d96
+	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/confio/ics23/go v0.9.0
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/cosmos/iavl v0.20.0-alpha3
 	github.com/golang/mock v1.6.0

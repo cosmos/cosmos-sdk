@@ -6,7 +6,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"

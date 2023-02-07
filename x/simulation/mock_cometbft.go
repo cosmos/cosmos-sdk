@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type mockValidator struct {
@@ -60,7 +60,7 @@ func (vals mockValidators) getKeys() []string {
 }
 
 // randomProposer picks a random proposer from the current validator set
-func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
+func (vals mockValidators) randomProposer(r *rand.Rand) cmtbytes.HexBytes {
 	keys := vals.getKeys()
 	if len(keys) == 0 {
 		return nil
@@ -77,7 +77,7 @@ func (vals mockValidators) randomProposer(r *rand.Rand) tmbytes.HexBytes {
 	return pk.Address()
 }
 
-// updateValidators mimics Tendermint's update logic.
+// updateValidators mimics CometBFT's update logic.
 func updateValidators(
 	tb testing.TB,
 	r *rand.Rand,
@@ -117,7 +117,7 @@ func updateValidators(
 func RandomRequestBeginBlock(r *rand.Rand, params Params,
 	validators mockValidators, pastTimes []time.Time,
 	pastVoteInfos [][]abci.VoteInfo,
-	event func(route, op, evResult string), header tmproto.Header,
+	event func(route, op, evResult string), header cmtproto.Header,
 ) abci.RequestBeginBlock {
 	if len(validators) == 0 {
 		return abci.RequestBeginBlock{
@@ -181,7 +181,7 @@ func RandomRequestBeginBlock(r *rand.Rand, params Params,
 		vals := voteInfos
 
 		if r.Float64() < params.PastEvidenceFraction() && header.Height > 1 {
-			height = int64(r.Intn(int(header.Height)-1)) + 1 // Tendermint starts at height 1
+			height = int64(r.Intn(int(header.Height)-1)) + 1 // CometBFT starts at height 1
 			// array indices offset by one
 			time = pastTimes[height-1]
 			vals = pastVoteInfos[height-1]

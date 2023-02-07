@@ -4,6 +4,15 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Consensus Engine
+
+The Cosmos SDK has migrated to CometBFT as its default consensus engine.
+This is a breaking changes that needs chains to re-generate their protos.
+Some functions has been renamed to reflect the naming change, following an exhaustive list:
+
+* `client.TendermintRPC` -> `client.CometRPC`
+* `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
@@ -56,6 +65,10 @@ This is no longer the case, the assertion has been loosened to only require modu
 ### Modules
 
 #### `x/gov`
+
+##### Expedited Proposals
+
+The `gov` v1 module has been updated to support the ability to expedite governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
 
 ##### Cancelling Proposals
 
@@ -172,6 +185,16 @@ This allows you to remove the replace directive `replace github.com/gogo/protobu
 Please use the `ghcr.io/cosmos/proto-builder` image (version >= `0.11.5`) for generating protobuf files.
 
 See which buf commit for `cosmos/cosmos-sdk` to pin in your `buf.yaml` file [here](./proto/README.md).
+
+#### Gogoproto Import Paths
+
+The SDK made a [patch fix](https://github.com/cosmos/gogoproto/pull/32) on its gogoproto repository to require that each proto file's package name matches its OS import path (relatively to a protobuf root import path, usually the root `proto/` folder, set by the `protoc -I` flag).
+
+For example, assuming you put all your proto files in subfolders inside your root `proto/` folder, then a proto file with package name `myapp.mymodule.v1` should be found in the `proto/myapp/mymodule/v1/` folder. If it is in another folder, the proto generation command will throw an error.
+
+If you are using a custom folder structure for your proto files, please reorganize them so that their OS path matches their proto package name.
+
+This is to allow the proto FileDescriptSets to be correctly registered, and this standardized OS import paths allows [Hubl](https://github.com/cosmos/cosmos-sdk/tree/main/tools/hubl) to reflectively talk to any chain.
 
 #### `{accepts,implements}_interface` proto annotations
 

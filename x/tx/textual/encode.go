@@ -7,22 +7,25 @@ import (
 )
 
 var (
-	textKey   = cbor.NewUint(1)
-	indentKey = cbor.NewUint(2)
-	expertKey = cbor.NewUint(3)
+	titleKey   = cbor.NewUint(1)
+	contentKey = cbor.NewUint(2)
+	indentKey  = cbor.NewUint(3)
+	expertKey  = cbor.NewUint(4)
 )
 
 // encode encodes an array of screens according to the CDDL:
 //
 //	screens = [* screen]
 //	screen = {
-//	  ? text_key: tstr,
+//	  ? title_key: tstr,
+//	  ? content_key: tstr,
 //	  ? indent_key: uint,
 //	  ? expert_key: bool,
 //	}
 //	text_key = 1
-//	indent_key = 2
-//	expert_key = 3
+//	content_key = 2
+//	indent_key = 3
+//	expert_key = 4
 //
 // with empty values ("", 0, false) omitted from the screen map.
 func encode(screens []Screen, w io.Writer) error {
@@ -35,8 +38,11 @@ func encode(screens []Screen, w io.Writer) error {
 
 func (s Screen) Cbor() cbor.Cbor {
 	m := cbor.NewMap()
-	if s.Text != "" {
-		m = m.Add(textKey, cbor.NewText(s.Text))
+	if s.Title != "" {
+		m = m.Add(titleKey, cbor.NewText(s.Title))
+	}
+	if s.Content != "" {
+		m = m.Add(contentKey, cbor.NewText(s.Content))
 	}
 	if s.Indent > 0 {
 		// #nosec G701

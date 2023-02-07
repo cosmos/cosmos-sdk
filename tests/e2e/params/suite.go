@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"cosmossdk.io/depinject"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -78,7 +78,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 		// Make sure not to forget to persist `myParams` into the actual store,
 		// this is done in InitChain.
-		app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+		app.SetInitChainer(func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 			subspace.SetParamSet(ctx, &paramSet)
 
 			return app.InitChainer(ctx, req)

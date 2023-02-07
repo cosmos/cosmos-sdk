@@ -3,23 +3,25 @@ package server
 import (
 	"fmt"
 
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cobra"
-	tmcmd "github.com/tendermint/tendermint/cmd/tendermint/commands"
 )
 
-// NewRollbackCmd creates a command to rollback tendermint and multistore state by one height.
+// NewRollbackCmd creates a command to rollback CometBFT and multistore state by one height.
 func NewRollbackCmd(appCreator types.AppCreator, defaultNodeHome string) *cobra.Command {
+	var removeBlock bool
+
 	cmd := &cobra.Command{
 		Use:   "rollback",
-		Short: "rollback cosmos-sdk and tendermint state by one height",
+		Short: "rollback Cosmos SDK and CometBFT state by one height",
 		Long: `
 A state rollback is performed to recover from an incorrect application state transition,
-when Tendermint has persisted an incorrect app hash and is thus unable to make
+when CometBFT has persisted an incorrect app hash and is thus unable to make
 progress. Rollback overwrites a state at height n with the state at height n - 1.
 The application also rolls back to height n - 1. No blocks are removed, so upon
-restarting Tendermint the transactions in block n will be re-executed against the
+restarting CometBFT the transactions in block n will be re-executed against the
 application.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -31,10 +33,10 @@ application.
 				return err
 			}
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
-			// rollback tendermint state
-			height, hash, err := tmcmd.RollbackState(ctx.Config)
+			// rollback CometBFT state
+			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
 			if err != nil {
-				return fmt.Errorf("failed to rollback tendermint state: %w", err)
+				return fmt.Errorf("failed to rollback cometbft state: %w", err)
 			}
 			// rollback the multistore
 
@@ -48,5 +50,6 @@ application.
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
+	cmd.Flags().BoolVar(&removeBlock, "hard", false, "remove last block as well as state")
 	return cmd
 }

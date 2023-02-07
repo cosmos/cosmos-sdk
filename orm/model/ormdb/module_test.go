@@ -8,9 +8,15 @@ import (
 	"strings"
 	"testing"
 
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	ormmodulev1alpha1 "cosmossdk.io/api/cosmos/orm/module/v1alpha1"
 	ormv1alpha1 "cosmossdk.io/api/cosmos/orm/v1alpha1"
+	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/depinject"
 
 	"github.com/golang/mock/gomock"
 
@@ -19,6 +25,7 @@ import (
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 
+	_ "github.com/cosmos/cosmos-sdk/orm" // required for ORM module registration
 	"github.com/cosmos/cosmos-sdk/orm/internal/testkv"
 	"github.com/cosmos/cosmos-sdk/orm/internal/testpb"
 	"github.com/cosmos/cosmos-sdk/orm/model/ormdb"
@@ -30,6 +37,13 @@ import (
 
 // These tests use a simulated bank keeper. Addresses and balances use
 // string and uint64 types respectively for simplicity.
+
+func init() {
+	// this registers the test module with the module registry
+	appmodule.Register(&testpb.Module{},
+		appmodule.Provide(NewKeeper),
+	)
+}
 
 var TestBankSchema = &ormv1alpha1.ModuleSchemaDescriptor{
 	SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
@@ -192,36 +206,7 @@ func TestModuleDB(t *testing.T) {
 	k, err := NewKeeper(db)
 	assert.NilError(t, err)
 
-	// mint coins
-	denom := "foo"
-	acct1 := "bob"
-	err = k.Mint(ctx, acct1, denom, 100)
-	assert.NilError(t, err)
-	bal, err := k.Balance(ctx, acct1, denom)
-	assert.NilError(t, err)
-	assert.Equal(t, uint64(100), bal)
-	supply, err := k.Supply(ctx, denom)
-	assert.NilError(t, err)
-	assert.Equal(t, uint64(100), supply)
-
-	// send coins
-	acct2 := "sally"
-	err = k.Send(ctx, acct1, acct2, denom, 30)
-	bal, err = k.Balance(ctx, acct1, denom)
-	assert.NilError(t, err)
-	assert.Equal(t, uint64(70), bal)
-	bal, err = k.Balance(ctx, acct2, denom)
-	assert.NilError(t, err)
-	assert.Equal(t, uint64(30), bal)
-
-	// burn coins
-	err = k.Burn(ctx, acct2, denom, 3)
-	bal, err = k.Balance(ctx, acct2, denom)
-	assert.NilError(t, err)
-	assert.Equal(t, uint64(27), bal)
-	supply, err = k.Supply(ctx, denom)
-	assert.NilError(t, err)
-	assert.Equal(t, uint64(97), supply)
+	runSimpleBankTests(t, k, ctx)
 
 	// check debug output
 	golden.Assert(t, debugBuf.String(), "bank_scenario.golden")
@@ -275,6 +260,39 @@ func TestModuleDB(t *testing.T) {
 	assert.NilError(t, db.ValidateJSON(source))
 	assert.NilError(t, db.ImportJSON(ctx2, source))
 	testkv.AssertBackendsEqual(t, backend, backend2)
+}
+
+func runSimpleBankTests(t *testing.T, k Keeper, ctx context.Context) {
+	// mint coins
+	denom := "foo"
+	acct1 := "bob"
+	err := k.Mint(ctx, acct1, denom, 100)
+	assert.NilError(t, err)
+	bal, err := k.Balance(ctx, acct1, denom)
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(100), bal)
+	supply, err := k.Supply(ctx, denom)
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(100), supply)
+
+	// send coins
+	acct2 := "sally"
+	err = k.Send(ctx, acct1, acct2, denom, 30)
+	bal, err = k.Balance(ctx, acct1, denom)
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(70), bal)
+	bal, err = k.Balance(ctx, acct2, denom)
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(30), bal)
+
+	// burn coins
+	err = k.Burn(ctx, acct2, denom, 3)
+	bal, err = k.Balance(ctx, acct2, denom)
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(27), bal)
+	supply, err = k.Supply(ctx, denom)
+	assert.NilError(t, err)
+	assert.Equal(t, uint64(97), supply)
 }
 
 func TestHooks(t *testing.T) {
@@ -344,13 +362,25 @@ type testStoreService struct {
 	db dbm.DB
 }
 
+func (t testStoreService) OpenKVStore(context.Context) store.KVStore {
+	return t.db
+}
+
 func (t testStoreService) OpenMemoryStore(context.Context) store.KVStore {
 	return t.db
 }
 
 func TestGetBackendResolver(t *testing.T) {
-	_, err := ormdb.NewModuleDB(TestBankSchema, ormdb.ModuleDBOptions{})
-	assert.ErrorContains(t, err, "missing KVStoreService")
+	_, err := ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
+		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
+			{
+				Id:            1,
+				ProtoFileName: testpb.File_testpb_bank_proto.Path(),
+				StorageType:   ormv1alpha1.StorageType_STORAGE_TYPE_MEMORY,
+			},
+		},
+	}, ormdb.ModuleDBOptions{})
+	assert.ErrorContains(t, err, "missing MemoryStoreService")
 
 	_, err = ormdb.NewModuleDB(&ormv1alpha1.ModuleSchemaDescriptor{
 		SchemaFile: []*ormv1alpha1.ModuleSchemaDescriptor_FileEntry{
@@ -364,4 +394,24 @@ func TestGetBackendResolver(t *testing.T) {
 		MemoryStoreService: testStoreService{db: dbm.NewMemDB()},
 	})
 	assert.NilError(t, err)
+}
+
+func ProvideTestRuntime() store.KVStoreService {
+	return testStoreService{db: dbm.NewMemDB()}
+}
+
+func TestAppConfigModule(t *testing.T) {
+	appCfg := appconfig.Compose(&appv1alpha1.Config{
+		Modules: []*appv1alpha1.ModuleConfig{
+			{Name: "bank", Config: appconfig.WrapAny(&testpb.Module{})},
+			{Name: "orm", Config: appconfig.WrapAny(&ormmodulev1alpha1.Module{})},
+		},
+	})
+	var k Keeper
+	err := depinject.Inject(depinject.Configs(
+		appCfg, depinject.Provide(ProvideTestRuntime),
+	), &k)
+	assert.NilError(t, err)
+
+	runSimpleBankTests(t, k, context.Background())
 }

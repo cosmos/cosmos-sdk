@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -57,8 +57,8 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 // validateGenDoc reads a genesis file and validates that it is a correct
 // Tendermint GenesisDoc. This function does not do any cosmos-related
 // validation.
-func validateGenDoc(importGenesisFile string) (*tmtypes.GenesisDoc, error) {
-	genDoc, err := tmtypes.GenesisDocFromFile(importGenesisFile)
+func validateGenDoc(importGenesisFile string) (*cmttypes.GenesisDoc, error) {
+	genDoc, err := cmttypes.GenesisDocFromFile(importGenesisFile)
 	if err != nil {
 		return nil, fmt.Errorf("%s. Make sure that"+
 			" you have correctly migrated all Tendermint consensus params, please see the"+

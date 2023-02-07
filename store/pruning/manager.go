@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cosmos/cosmos-sdk/log"
 
 	"cosmossdk.io/store/pruning/types"
 )

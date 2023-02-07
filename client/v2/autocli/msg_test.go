@@ -2,17 +2,19 @@ package autocli
 
 import (
 	"bytes"
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/client/v2/internal/testpb"
 	"encoding/json"
 	"fmt"
+	"net"
+	"strings"
+	"testing"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gotest.tools/v3/assert"
-	"net"
-	"strings"
-	"testing"
+
+	"cosmossdk.io/client/v2/internal/testpb"
 )
 
 var testCmdMsgDesc = &autocliv1.ServiceCommandDescriptor{
@@ -119,7 +121,7 @@ func TestMsgOptions(t *testing.T) {
 	conn := testMsgExec(t,
 		"send", "5", "6",
 		"--uint32", "7",
-		"--u64",
+		"--u64", "5",
 	)
 	response := conn.out.String()
 	var output testpb.MsgRequest

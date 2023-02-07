@@ -165,8 +165,10 @@ func (t TimestampCodec) ComputeBufferSize(protoreflect.Value) (int, error) {
 }
 
 // TimestampV0Codec encodes a google.protobuf.Timestamp value as 12 bytes using
-// Int64Codec for seconds followed by Int32Codec for nanos. This allows for
-// sorted iteration.
+// Int64Codec for seconds followed by Int32Codec for nanos. This type does not
+// encode nil values correctly, but is retained in order to allow users of the
+// previous encoding to successfully migrate from this encoding to the new encoding
+// specified by TimestampCodec.
 type TimestampV0Codec struct{}
 
 var (

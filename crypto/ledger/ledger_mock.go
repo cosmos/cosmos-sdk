@@ -58,7 +58,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := btcec.PrivKeyFromBytes(btcec.S256(), derivedPriv)
+	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv)
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -72,7 +72,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	}
 
 	// re-serialize in the 33-byte compressed format
-	cmp, err := btcec.ParsePubKey(pk, btcec.S256())
+	cmp, err := btcec.ParsePubKey(pk)
 	if err != nil {
 		return nil, "", fmt.Errorf("error parsing public key: %w", err)
 	}
@@ -103,11 +103,8 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), derivedPriv)
-	sig, err := priv.Sign(crypto.Sha256(message))
-	if err != nil {
-		return nil, err
-	}
+	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
+	sig := ecdsa.Sign(priv, crypto.Sha256(message))
 
 	return sig.Serialize(), nil
 }

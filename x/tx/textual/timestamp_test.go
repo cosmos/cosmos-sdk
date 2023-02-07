@@ -52,7 +52,7 @@ func TestTimestampJsonTestcases(t *testing.T) {
 				}
 				require.NoError(t, err)
 				require.Equal(t, 1, len(screens))
-				require.Equal(t, tc.Text, screens[0].Text)
+				require.Equal(t, tc.Text, screens[0].Content)
 			}
 
 			val, err := rend.Parse(context.Background(), screens)

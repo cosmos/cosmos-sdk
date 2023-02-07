@@ -22,7 +22,7 @@ that allows for the submission and handling of arbitrary evidence of misbehavior
 as equivocation and counterfactual signing.
 
 The evidence module differs from standard evidence handling which typically expects the
-underlying consensus engine, e.g. Tendermint, to automatically submit evidence when
+underlying consensus engine, e.g. CometBFT, to automatically submit evidence when
 it is discovered by allowing clients and foreign chains to submit more complex evidence
 directly.
 
@@ -54,7 +54,7 @@ type Evidence interface {
 
 	Route() string
 	String() string
-	Hash() tmbytes.HexBytes
+	Hash() cmtbytes.HexBytes
 	ValidateBasic() error
 
 	// Height at which the infraction occurred
@@ -206,8 +206,8 @@ The evidence module does not contain any parameters.
 
 ### Evidence Handling
 
-Tendermint blocks can include
-[Evidence](https://github.com/tendermint/tendermint/blob/master/docs/spec/blockchain/blockchain.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
+CometBFT blocks can include
+[Evidence](https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#evidence) that indicates if a validator committed malicious behavior. The relevant information is forwarded to the application as ABCI Evidence in `abci.RequestBeginBlock` so that the validator can be punished accordingly.
 
 #### Equivocation
 
@@ -216,7 +216,7 @@ The Cosmos SDK handles two types of evidence inside the ABCI `BeginBlock`:
 * `DuplicateVoteEvidence`,
 * `LightClientAttackEvidence`.
 
-The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the Tendermint concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
+The evidence module handles these two evidence types the same way. First, the Cosmos SDK converts the CometBFT concrete evidence type to an SDK `Evidence` interface using `Equivocation` as the concrete type.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/evidence/v1beta1/evidence.proto#L12-L32

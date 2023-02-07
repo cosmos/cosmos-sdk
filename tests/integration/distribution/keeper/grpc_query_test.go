@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -50,7 +50,7 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, f.interfaceRegistry)
 	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(f.distrKeeper))

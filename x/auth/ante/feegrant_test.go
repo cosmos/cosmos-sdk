@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 
 	storetypes "cosmossdk.io/store/types"
 

@@ -17,53 +17,86 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestGetSetProposal() {
-	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
-	suite.Require().NoError(err)
-	proposalID := proposal.Id
-	suite.govKeeper.SetProposal(suite.ctx, proposal)
+	testCases := map[string]struct {
+		expedited bool
+	}{
+		"regular proposal": {},
+		"expedited proposal": {
+			expedited: true,
+		},
+	}
 
-	gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID)
-	suite.Require().True(ok)
-	suite.Require().Equal(proposal, gotProposal)
+	for _, tc := range testCases {
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
+		suite.Require().NoError(err)
+		proposalID := proposal.Id
+		suite.govKeeper.SetProposal(suite.ctx, proposal)
+
+		gotProposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposalID)
+		suite.Require().True(ok)
+		suite.Require().Equal(proposal, gotProposal)
+	}
 }
 
 func (suite *KeeperTestSuite) TestDeleteProposal() {
-	// delete non-existing proposal
-	suite.Require().PanicsWithValue(fmt.Sprintf("couldn't find proposal with id#%d", 10),
-		func() {
-			suite.govKeeper.DeleteProposal(suite.ctx, 10)
+	testCases := map[string]struct {
+		expedited bool
+	}{
+		"regular proposal": {},
+		"expedited proposal": {
+			expedited: true,
 		},
-	)
-	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
-	suite.Require().NoError(err)
-	proposalID := proposal.Id
-	suite.govKeeper.SetProposal(suite.ctx, proposal)
-	suite.Require().NotPanics(func() {
-		suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
-	}, "")
+	}
+
+	for _, tc := range testCases {
+		// delete non-existing proposal
+		suite.Require().PanicsWithValue(fmt.Sprintf("couldn't find proposal with id#%d", 10),
+			func() {
+				suite.govKeeper.DeleteProposal(suite.ctx, 10)
+			},
+		)
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
+		suite.Require().NoError(err)
+		proposalID := proposal.Id
+		suite.govKeeper.SetProposal(suite.ctx, proposal)
+		suite.Require().NotPanics(func() {
+			suite.govKeeper.DeleteProposal(suite.ctx, proposalID)
+		}, "")
+	}
 }
 
 func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
-	tp := TestProposal
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
-	suite.Require().NoError(err)
+	testCases := map[string]struct {
+		expedited bool
+	}{
+		"regular proposal": {},
+		"expedited proposal": {
+			expedited: true,
+		},
+	}
 
-	suite.Require().Nil(proposal.VotingStartTime)
+	for _, tc := range testCases {
+		tp := TestProposal
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
+		suite.Require().NoError(err)
 
-	suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
+		suite.Require().Nil(proposal.VotingStartTime)
 
-	proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
-	suite.Require().True(ok)
-	suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
+		suite.govKeeper.ActivateVotingPeriod(suite.ctx, proposal)
 
-	activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
-	suite.Require().True(activeIterator.Valid())
+		proposal, ok := suite.govKeeper.GetProposal(suite.ctx, proposal.Id)
+		suite.Require().True(ok)
+		suite.Require().True(proposal.VotingStartTime.Equal(suite.ctx.BlockHeader().Time))
 
-	proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
-	suite.Require().Equal(proposalID, proposal.Id)
-	activeIterator.Close()
+		activeIterator := suite.govKeeper.ActiveProposalQueueIterator(suite.ctx, *proposal.VotingEndTime)
+		suite.Require().True(activeIterator.Valid())
+
+		proposalID := types.GetProposalIDFromBytes(activeIterator.Value())
+		suite.Require().Equal(proposalID, proposal.Id)
+		activeIterator.Close()
+	}
 }
 
 type invalidProposalRoute struct{ v1beta1.TextProposal }
@@ -79,26 +112,28 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 		content     v1beta1.Content
 		authority   string
 		metadata    string
+		expedited   bool
 		expectedErr error
 	}{
-		{&tp, govAcct, "", nil},
+		{&tp, govAcct, "", false, nil},
+		{&tp, govAcct, "", true, nil},
 		// Keeper does not check the validity of title and description, no error
-		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", nil},
-		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", nil},
-		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", nil},
-		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", nil},
+		{&v1beta1.TextProposal{Title: "", Description: "description"}, govAcct, "", false, nil},
+		{&v1beta1.TextProposal{Title: strings.Repeat("1234567890", 100), Description: "description"}, govAcct, "", false, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: ""}, govAcct, "", false, nil},
+		{&v1beta1.TextProposal{Title: "title", Description: strings.Repeat("1234567890", 1000)}, govAcct, "", true, nil},
 		// error when metadata is too long (>10000)
-		{&tp, govAcct, strings.Repeat("a", 100001), types.ErrMetadataTooLong},
+		{&tp, govAcct, strings.Repeat("a", 100001), true, types.ErrMetadataTooLong},
 		// error when signer is not gov acct
-		{&tp, randomAddr.String(), "", types.ErrInvalidSigner},
+		{&tp, randomAddr.String(), "", false, types.ErrInvalidSigner},
 		// error only when invalid route
-		{&invalidProposalRoute{}, govAcct, "", types.ErrNoProposalHandlerExists},
+		{&invalidProposalRoute{}, govAcct, "", false, types.ErrNoProposalHandlerExists},
 	}
 
 	for i, tc := range testCases {
 		prop, err := v1.NewLegacyContent(tc.content, tc.authority)
 		suite.Require().NoError(err)
-		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), tc.expedited)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
@@ -111,7 +146,7 @@ func (suite *KeeperTestSuite) TestGetProposalsFiltered() {
 
 	for _, s := range status {
 		for i := 0; i < 50; i++ {
-			p, err := v1.NewProposal(TestProposal, proposalID, time.Now(), time.Now(), "", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+			p, err := v1.NewProposal(TestProposal, proposalID, time.Now(), time.Now(), "metadata", "title", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 			suite.Require().NoError(err)
 
 			p.Status = s
@@ -165,11 +200,11 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
 	prop, err := v1.NewLegacyContent(&tp, govAcct)
 	suite.Require().NoError(err)
-	proposalResp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0])
+	proposalResp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0], false)
 	suite.Require().NoError(err)
 	proposalID := proposalResp.Id
 
-	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1])
+	proposal2Resp, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
 	proposal2ID := proposal2Resp.Id
 	makeProposalPass := func() {
 		proposal2, ok := suite.govKeeper.GetProposal(suite.ctx, proposal2ID)

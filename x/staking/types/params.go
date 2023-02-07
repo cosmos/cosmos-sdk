@@ -100,6 +100,10 @@ func (p Params) Validate() error {
 		return err
 	}
 
+	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -55,7 +55,7 @@ A typical testing flow might look like the following:
 		baseURL := val.APIAddress
 
 		// Use baseURL to make API HTTP requests or use val.RPCClient to make direct
-		// Tendermint RPC calls.
+		// CometBFT RPC calls.
 		// ...
 	}
 

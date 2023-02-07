@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -40,7 +40,7 @@ func (s *VestingAccountTestSuite) SetupTest() {
 
 	key := storetypes.NewKVStoreKey(authtypes.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+	s.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,

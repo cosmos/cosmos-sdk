@@ -30,7 +30,7 @@ func (er enumValueRenderer) Format(_ context.Context, v protoreflect.Value) ([]S
 		return nil, fmt.Errorf("cannot get enum %s variant of number %d", er.ed.FullName(), v.Enum())
 	}
 
-	return []Screen{{Text: string(evd.Name())}}, nil
+	return []Screen{{Content: string(evd.Name())}}, nil
 
 }
 
@@ -39,7 +39,7 @@ func (er enumValueRenderer) Parse(_ context.Context, screens []Screen) (protoref
 		return nilValue, fmt.Errorf("expected single screen: %v", screens)
 	}
 
-	formatted := screens[0].Text
+	formatted := screens[0].Content
 
 	// Loop through all enum variants until we find the one matching the
 	// formatted screen's one.

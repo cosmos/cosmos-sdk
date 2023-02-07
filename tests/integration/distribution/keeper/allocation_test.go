@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -36,7 +36,7 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	addrs := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 3, sdk.NewInt(1234))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
@@ -79,7 +79,7 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())
@@ -172,7 +172,7 @@ func TestAllocateTokensTruncation(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// reset fee pool
 	distrKeeper.SetFeePool(ctx, disttypes.InitialFeePool())

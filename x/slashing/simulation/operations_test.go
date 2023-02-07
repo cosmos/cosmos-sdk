@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"cosmossdk.io/math"
 
@@ -60,16 +60,16 @@ func (suite *SimTestSuite) SetupTest() {
 	accounts := simtypes.RandomAccounts(suite.r, 4)
 
 	// create validator (non random as using a seed)
-	createValidator := func() (*tmtypes.ValidatorSet, error) {
+	createValidator := func() (*cmttypes.ValidatorSet, error) {
 		account := accounts[0]
 		tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create pubkey: %w", err)
 		}
 
-		validator := tmtypes.NewValidator(tmPk, 1)
+		validator := cmttypes.NewValidator(tmPk, 1)
 
-		return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 	}
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
@@ -91,7 +91,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	// remove genesis validator account
 	suite.accounts = accounts[1:]
@@ -172,7 +172,7 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.distrKeeper.SetDelegatorStartingInfo(ctx, validator0.GetOperator(), val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200))
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: blockTime}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash, Time: blockTime}})
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)

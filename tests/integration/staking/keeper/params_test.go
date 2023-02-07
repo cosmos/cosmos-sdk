@@ -3,7 +3,7 @@ package keeper
 import (
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -26,7 +26,7 @@ func TestParams(t *testing.T) {
 		simtestutil.DefaultStartUpConfig(),
 		&stakingKeeper)
 	assert.NilError(t, err)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	expParams := types.DefaultParams()
 

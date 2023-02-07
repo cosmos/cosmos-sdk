@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/math"
 
@@ -60,11 +60,11 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 
 	// set historical info at 5, 4 which should be pruned
 	// and check that it has been stored
-	h4 := tmproto.Header{
+	h4 := cmtproto.Header{
 		ChainID: "HelloChain",
 		Height:  4,
 	}
-	h5 := tmproto.Header{
+	h5 := cmtproto.Header{
 		ChainID: "HelloChain",
 		Height:  5,
 	}
@@ -99,7 +99,7 @@ func (s *KeeperTestSuite) TestTrackHistoricalInfo() {
 	require.True(IsValSetSorted(vals, keeper.PowerReduction(ctx)))
 
 	// Set Header for BeginBlock context
-	header := tmproto.Header{
+	header := cmtproto.Header{
 		ChainID: "HelloChain",
 		Height:  10,
 	}
@@ -136,9 +136,9 @@ func (s *KeeperTestSuite) TestGetAllHistoricalInfo() {
 		testutil.NewValidator(s.T(), addrVals[1], PKs[1]),
 	}
 
-	header1 := tmproto.Header{ChainID: "HelloChain", Height: 10}
-	header2 := tmproto.Header{ChainID: "HelloChain", Height: 11}
-	header3 := tmproto.Header{ChainID: "HelloChain", Height: 12}
+	header1 := cmtproto.Header{ChainID: "HelloChain", Height: 10}
+	header2 := cmtproto.Header{ChainID: "HelloChain", Height: 11}
+	header3 := cmtproto.Header{ChainID: "HelloChain", Height: 12}
 
 	hist1 := stakingtypes.HistoricalInfo{Header: header1, Valset: valSet}
 	hist2 := stakingtypes.HistoricalInfo{Header: header2, Valset: valSet}

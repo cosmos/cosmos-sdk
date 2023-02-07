@@ -12,15 +12,15 @@ import (
 	"path"
 	"testing"
 
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -170,7 +170,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, *c
 		t.Fatalf("error creating config folder: %s", err)
 	}
 
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	logger := cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	db := dbm.NewMemDB()
 	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 

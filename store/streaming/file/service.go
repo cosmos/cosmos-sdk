@@ -12,7 +12,7 @@ import (
 
 	"cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/log"
 
 	"cosmossdk.io/store/types"
 )

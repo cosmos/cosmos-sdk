@@ -8,14 +8,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
-// keeper definines the circuit module's keeper.
+// Keeper defines the circuit module's keeper.
 type Keeper struct {
 	key storetypes.StoreKey
 
 	authority string
 }
 
-// contructs a new Circuit Keeper instance
+// NewKeeper constructs a new Circuit Keeper instance
 func NewKeeper(storeKey storetypes.StoreKey, authority string) Keeper {
 	return Keeper{
 		key:       storeKey,
@@ -72,11 +72,19 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 	store := ctx.KVStore(k.key)
 
 	iter := sdk.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
-	defer iter.Close()
+	defer func(iter sdk.Iterator) {
+		err := iter.Close()
+		if err != nil {
+
+		}
+	}(iter)
 
 	for ; iter.Valid(); iter.Next() {
 		var perms types.Permissions
-		proto.Unmarshal(iter.Value(), &perms)
+		err := proto.Unmarshal(iter.Value(), &perms)
+		if err != nil {
+			return
+		}
 
 		if cb(iter.Key()[len(types.AccountPermissionPrefix):], perms) {
 			break
@@ -88,11 +96,19 @@ func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(address []byte, pe
 	store := ctx.KVStore(k.key)
 
 	iter := sdk.KVStorePrefixIterator(store, types.DisableListPrefix)
-	defer iter.Close()
+	defer func(iter sdk.Iterator) {
+		err := iter.Close()
+		if err != nil {
+
+		}
+	}(iter)
 
 	for ; iter.Valid(); iter.Next() {
 		var perms types.Permissions
-		proto.Unmarshal(iter.Value(), &perms)
+		err := proto.Unmarshal(iter.Value(), &perms)
+		if err != nil {
+			return
+		}
 
 		if cb(iter.Key()[len(types.DisableListPrefix):], perms) {
 			break

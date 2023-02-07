@@ -56,7 +56,7 @@ func (mock LedgerSECP256K1Mock) GetPublicKeySECP256K1(derivationPath []uint32) (
 		return nil, err
 	}
 
-	_, pubkeyObject := btcec.PrivKeyFromBytes(btcec.S256(), derivedPriv)
+	_, pubkeyObject := btcec.PrivKeyFromBytes(derivedPriv)
 
 	return pubkeyObject.SerializeUncompressed(), nil
 }
@@ -97,7 +97,7 @@ func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message [
 		return nil, err
 	}
 
-	priv, _ := btcec.PrivKeyFromBytes(btcec.S256(), derivedPriv)
+	priv, _ := btcec.PrivKeyFromBytes(derivedPriv)
 	sig, err := priv.Sign(crypto.Sha256(message))
 	if err != nil {
 		return nil, err

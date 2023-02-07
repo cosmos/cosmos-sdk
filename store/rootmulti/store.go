@@ -966,7 +966,12 @@ func (rs *Store) RollbackToVersion(target int64) error {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
-			_, err := store.(*iavl.Store).LoadVersionForOverwriting(target)
+			var err error
+			if rs.lazyLoading {
+				_, err = store.(*iavl.Store).LazyLoadVersionForOverwriting(target)
+			} else {
+				_, err = store.(*iavl.Store).LoadVersionForOverwriting(target)
+			}
 			if err != nil {
 				return err
 			}

@@ -138,6 +138,10 @@ replace (
 
 	github.com/jhump/protoreflect => github.com/jhump/protoreflect v1.9.0
 
+	// The following is to test committingClient (allowing parallel queries during
+	// write transactions):
+	github.com/tendermint/tendermint => github.com/agoric-labs/tendermint v0.34.23-alpha.agoric.2
+
 	// latest grpc doesn't work with with our modified proto compiler, so we need to enforce
 	// the following version across all dependencies.
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2

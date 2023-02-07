@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/log"
 
 	storetypes "cosmossdk.io/store/types"
 

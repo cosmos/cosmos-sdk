@@ -119,7 +119,6 @@ func (s *ConverterTestSuite) TestMsgToMetaMetaToMsg() {
 		ToAddress:   "addr2",
 		Amount:      sdk.NewCoins(sdk.NewInt64Coin("test", 10)),
 	}
-	msg.Route()
 
 	meta, err := s.c.ToRosetta().Meta(msg)
 	s.Require().NoError(err)

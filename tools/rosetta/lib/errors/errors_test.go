@@ -3,7 +3,7 @@ package errors
 import (
 	"testing"
 
-	tmtypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
+	cmttypes "github.com/cometbft/cometbft/rpc/jsonrpc/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,7 +57,7 @@ func TestToRosetta(t *testing.T) {
 	// wrong type
 	assert.NotNil(t, ToRosetta(&MyError{}))
 
-	tmErr := &tmtypes.RPCError{}
+	tmErr := &cmttypes.RPCError{}
 	// RpcError case
 	assert.NotNil(t, ToRosetta(tmErr))
 }

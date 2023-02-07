@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	"github.com/cometbft/cometbft/libs/rand"
-	tmcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"golang.org/x/exp/maps"
 
 	sdkmaps "cosmossdk.io/store/internal/maps"
@@ -14,7 +14,7 @@ import (
 type SimpleResult struct {
 	Key      []byte
 	Value    []byte
-	Proof    *tmcrypto.Proof
+	Proof    *cmtprotocrypto.Proof
 	RootHash []byte
 }
 

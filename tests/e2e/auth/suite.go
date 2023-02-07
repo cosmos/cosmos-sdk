@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -223,7 +223,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 
 	for _, tc := range cases {
 		cmd := authcli.GetSignCommand()
-		tmcli.PrepareBaseCmd(cmd, "", "")
+		cmtcli.PrepareBaseCmd(cmd, "", "")
 		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
 		if tc.expErr {
 			s.Require().Error(err)

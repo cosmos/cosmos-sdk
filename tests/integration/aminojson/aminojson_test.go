@@ -215,7 +215,7 @@ func newGogoMessage(t reflect.Type) gogoproto.Message {
 	}
 }
 
-func postFixPulsarMessage(msg proto.Message) proto.Message {
+func postFixPulsarMessage(msg proto.Message) {
 	switch m := msg.(type) {
 	case *authapi.ModuleAccount:
 		if m.BaseAccount == nil {
@@ -224,9 +224,16 @@ func postFixPulsarMessage(msg proto.Message) proto.Message {
 		_, _, bz := testdata.KeyTestPubAddr()
 		text, _ := bech32.ConvertAndEncode("cosmos", bz)
 		m.BaseAccount.Address = text
-		return m
-	default:
-		return msg
+	case *authapi.MsgUpdateParams:
+		// params is required in the gogo message
+		if m.Params == nil {
+			m.Params = &authapi.Params{}
+		}
+	case *authzapi.MsgGrant:
+		// grant is required in the gogo message
+		if m.Grant == nil {
+			m.Grant = &authzapi.Grant{}
+		}
 	}
 }
 
@@ -340,7 +347,7 @@ func TestAminoJSON_AllTypes(t *testing.T) {
 				}
 			}()
 			msg := gen.Draw(t, "msg")
-			msg = postFixPulsarMessage(msg)
+			postFixPulsarMessage(msg)
 			//goMsg := reflect.New(reflect.TypeOf(tt.gogo).Elem()).Interface().(gogoproto.Message)
 			goMsg := newGogoMessage(reflect.TypeOf(tt.gogo).Elem())
 			ti.deepClone(msg, goMsg)
@@ -358,6 +365,8 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
 	cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
 	cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
+	cdc.RegisterConcrete(&authtypes.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams", nil)
+
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
 
@@ -369,6 +378,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"auth/module_account": {
 			gogo:   &authtypes.ModuleAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(addr1)},
 			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}},
+		},
+		"auth/msg_update_params": {
+			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
+			pulsar: &authapi.MsgUpdateParams{Params: &authapi.Params{TxSigLimit: 10}},
 		},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},

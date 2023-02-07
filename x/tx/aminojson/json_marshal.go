@@ -72,30 +72,66 @@ func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
 
 func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
-	err := aj.marshal(vmsg, buf)
+	//vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
+	err := aj.beginMarshal(message.ProtoReflect(), buf)
 	return buf.Bytes(), err
 }
 
 // TODO
 // move into marshalMessage
-func (aj AminoJSON) beginMarshal(msg protoreflect.Value, writer io.Writer) error {
-	_, err := writer.Write([]byte("{"))
+func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
+	if encoder := aj.getMessageEncoder(msg); encoder != nil {
+		err := encoder(msg, writer)
+		return err
+	}
+
+	named := false
+
+	opts := msg.Descriptor().Options()
+	if proto.HasExtension(opts, amino.E_Name) {
+		name := proto.GetExtension(opts, amino.E_Name)
+		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
+		if err != nil {
+			return err
+		}
+		named = true
+	}
+
+	//if encoder := aj.getMessageEncoder(msg); encoder != nil {
+	//	err := encoder(msg, writer)
+	//	if err != nil {
+	//		return err
+	//	}
+	//} else {
+	err := aj.marshal(protoreflect.ValueOfMessage(msg), writer)
 	if err != nil {
 		return err
 	}
-	err = aj.marshal(msg, writer)
-	if err != nil {
-		return err
+	//}
+
+	if named {
+		_, err := writer.Write([]byte("}"))
+		if err != nil {
+			return err
+		}
 	}
-	_, err = writer.Write([]byte("}"))
-	return err
+
+	return nil
 }
 
 func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
-		return aj.marshalMessage(val, writer)
+		_, err := writer.Write([]byte("{"))
+		if err != nil {
+			return err
+		}
+		err = aj.marshalMessage(val, writer)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write([]byte("}"))
+		return err
 
 	case protoreflect.Map:
 		return errors.New("maps are not supported")
@@ -113,6 +149,9 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	case []byte:
 		_, err := fmt.Fprintf(writer, `"%s"`, base64.StdEncoding.EncodeToString(val))
 		return err
+
+		// TODO timestamp
+		// this is what is breaking MsgGrant
 
 	default:
 		return errors.Errorf("unknown type %T", val)
@@ -184,22 +223,23 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		return err
 	}
 
-	named := false
+	//named := false
 
-	opts := msg.Descriptor().Options()
-	if proto.HasExtension(opts, amino.E_Name) {
-		name := proto.GetExtension(opts, amino.E_Name)
-		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
-		if err != nil {
-			return err
-		}
-		named = true
-	}
+	//opts := msg.Descriptor().Options()
+	//if proto.HasExtension(opts, amino.E_Name) {
+	//	name := proto.GetExtension(opts, amino.E_Name)
+	//	_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
+	//	if err != nil {
+	//		return err
+	//	}
+	//	named = true
+	//}
 
-	_, err := writer.Write([]byte("{"))
-	if err != nil {
-		return err
-	}
+	//_, err := writer.Write([]byte("{"))
+	//if err != nil {
+	//	return err
+	//}
+	var err error
 
 	fields := msg.Descriptor().Fields()
 	first := true
@@ -263,17 +303,17 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		first = false
 	}
 
-	_, err = writer.Write([]byte("}"))
-	if err != nil {
-		return err
-	}
-
-	if named {
-		_, err = writer.Write([]byte("}"))
-		if err != nil {
-			return err
-		}
-	}
+	//_, err = writer.Write([]byte("}"))
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if named {
+	//	_, err = writer.Write([]byte("}"))
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 
 	return nil
 }
@@ -426,6 +466,7 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 	}
 
 	bz, err := json.Marshal(typeWrapper{Type: "cosmos-sdk/ModuleAccount", Value: pretty})
+	//bz, err := json.Marshal(pretty)
 	if err != nil {
 		return err
 	}

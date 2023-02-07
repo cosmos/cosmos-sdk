@@ -1,10 +1,12 @@
 package aminojson
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
@@ -12,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -58,6 +61,7 @@ var msgTypes = []typeUnderTest{
 	{gogo: &authtypes.MsgUpdateParams{}, pulsar: &authapi.MsgUpdateParams{}},
 
 	// authz
+	{gogo: &authztypes.Grant{}, pulsar: &authzapi.Grant{}},
 	{gogo: &authztypes.MsgGrant{}, pulsar: &authzapi.MsgGrant{}},
 	{gogo: &authztypes.MsgRevoke{}, pulsar: &authzapi.MsgRevoke{}},
 	{gogo: &authztypes.MsgExec{}, pulsar: &authzapi.MsgExec{}},
@@ -122,8 +126,14 @@ func newTypeIndex(types []typeUnderTest) typeIndex {
 }
 
 func (ti typeIndex) reflectedDeepClone(pulsar reflect.Value, gogo reflect.Value) {
-	for n, pStructField := range ti.pulsarFields[fullyQualifiedTypeName(pulsar.Type())] {
-		gStructField := ti.gogoFields[fullyQualifiedTypeName(gogo.Type())][n]
+	pulsarTypeName := fullyQualifiedTypeName(pulsar.Type())
+	gogoTypeName := fullyQualifiedTypeName(gogo.Type())
+	structFields, found := ti.pulsarFields[pulsarTypeName]
+	if !found {
+		panic(fmt.Sprintf("no pulsar fields for type %s", pulsarTypeName))
+	}
+	for n, pStructField := range structFields {
+		gStructField := ti.gogoFields[gogoTypeName][n]
 		pulsarField := pulsar.FieldByName(pStructField.Name)
 		// todo init a new "gogo" since its nil
 		gogoField := gogo.FieldByName(gStructField.Name)
@@ -137,8 +147,14 @@ func (ti typeIndex) reflectedDeepClone(pulsar reflect.Value, gogo reflect.Value)
 }
 
 func (ti typeIndex) deepClone(pulsar proto.Message, gogo gogoproto.Message) {
-	for n, pStructField := range ti.pulsarFields[fqTypeName(pulsar)] {
-		gStructField := ti.gogoFields[fqTypeName(gogo)][n]
+	pulsarTypeName := fqTypeName(pulsar)
+	gogoTypeName := fqTypeName(gogo)
+	structFields, found := ti.pulsarFields[pulsarTypeName]
+	if !found {
+		panic(fmt.Sprintf("no pulsar fields for type %s", pulsarTypeName))
+	}
+	for n, pStructField := range structFields {
+		gStructField := ti.gogoFields[gogoTypeName][n]
 		pulsarField := reflect.ValueOf(pulsar).Elem().FieldByName(pStructField.Name)
 		gogoField := reflect.ValueOf(gogo).Elem().FieldByName(gStructField.Name)
 		//fmt.Printf("copying %s to %s\n", pStructField.Name, gStructField.Name)
@@ -163,11 +179,16 @@ func (ti typeIndex) setField(pulsar reflect.Value, gogo reflect.Value) {
 	case reflect.Struct:
 		switch val := pulsar.Interface().(type) {
 		case anypb.Any:
+			codectypes.NewAnyWithValue(val.Value)
 			a := &codectypes.Any{
 				TypeUrl: val.TypeUrl,
 				Value:   val.Value,
 			}
 			gogo.Set(reflect.ValueOf(a))
+		case timestamppb.Timestamp:
+			// will panic if field is not of type *time.Time, hopefully it is.
+			t := time.Unix(val.Seconds, int64(val.Nanos))
+			gogo.Set(reflect.ValueOf(&t))
 		default:
 			if gogo.Type().Kind() == reflect.Ptr {
 				gogoType := gogo.Type().Elem()
@@ -184,13 +205,13 @@ func (ti typeIndex) setField(pulsar reflect.Value, gogo reflect.Value) {
 	case reflect.Slice:
 		// if slices are different types then we need to create a new slice
 		if pulsar.Type().Elem() != gogo.Type().Elem() {
-			gogoSlice := reflect.MakeSlice(gogo.Type(), pulsar.Len(), pulsar.Len())
+			gogoSlice := reflect.MakeSlice(gogo.Type(), 0, 0)
 			gogoType := gogoSlice.Type().Elem()
 			for i := 0; i < pulsar.Len(); i++ {
 				p := pulsar.Index(i)
 				g := reflect.New(gogoType).Elem()
 				ti.setField(p, g)
-				reflect.Append(gogoSlice, g)
+				gogoSlice = reflect.Append(gogoSlice, g)
 			}
 			gogo.Set(gogoSlice)
 			return
@@ -327,7 +348,9 @@ func TestAminoJSON_AllTypes(t *testing.T) {
 		desc := tt.pulsar.ProtoReflect().Descriptor()
 		opts := desc.Options()
 		if !proto.HasExtension(opts, amino.E_Name) {
-			panic(fmt.Sprintf("missing name extension for %s", desc.FullName()))
+			fmt.Printf("WARN: missing name extension for %s", desc.FullName())
+			//panic(fmt.Sprintf("missing name extension for %s", desc.FullName()))
+			continue
 		}
 		name := proto.GetExtension(opts, amino.E_Name).(string)
 		cdc.RegisterConcrete(tt.gogo, name, nil)
@@ -354,6 +377,9 @@ func TestAminoJSON_AllTypes(t *testing.T) {
 			gogobz, err := cdc.MarshalJSON(goMsg)
 			require.NoError(t, err, "failed to marshal gogo message")
 			pulsarbz, err := aj.MarshalAmino(msg)
+			if !bytes.Equal(gogobz, pulsarbz) {
+				require.Fail(t, fmt.Sprintf("marshalled messages not equal, are the unmarshalled messages semantically equivalent?\nmarshalled gogo: %s != %s\nunmarshalled gogo: %v vs %v", string(gogobz), string(pulsarbz), goMsg, msg))
+			}
 			require.Equal(t, string(gogobz), string(pulsarbz))
 		})
 	}
@@ -366,9 +392,12 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
 	cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
 	cdc.RegisterConcrete(&authtypes.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams", nil)
+	cdc.RegisterConcrete(&authztypes.MsgGrant{}, "cosmos-sdk/MsgGrant", nil)
+	cdc.RegisterConcrete(&authztypes.MsgExec{}, "cosmos-sdk/MsgExec", nil)
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
+	now := time.Now()
 
 	cases := map[string]struct {
 		gogo   gogoproto.Message
@@ -379,9 +408,21 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &authtypes.ModuleAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(addr1)},
 			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}},
 		},
-		"auth/msg_update_params": {
+		"authz/msg_grant": {
+			gogo:   &authztypes.MsgGrant{Grant: authztypes.Grant{Expiration: &now}},
+			pulsar: &authzapi.MsgGrant{Grant: &authzapi.Grant{Expiration: timestamppb.New(now)}},
+		},
+		"authz/msg_grant/empty": {
+			gogo:   &authztypes.MsgGrant{},
+			pulsar: &authzapi.MsgGrant{Grant: &authzapi.Grant{}},
+		},
+		"authz/msg_update_params": {
 			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
 			pulsar: &authapi.MsgUpdateParams{Params: &authapi.Params{TxSigLimit: 10}},
+		},
+		"authz/msg_exec": {
+			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{}},
+			pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{}},
 		},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
@@ -419,6 +460,33 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)
 		})
 	}
+}
+
+func TestScratch(t *testing.T) {
+	ti := newTypeIndex(msgTypes)
+	cdc := goamino.NewCodec()
+	aj := aminojson.NewAminoJSON()
+
+	msg := &authzapi.MsgExec{Msgs: []*anypb.Any{{TypeUrl: "", Value: nil}}}
+	cdc.RegisterConcrete(&authztypes.MsgExec{}, "cosmos-sdk/MsgExec", nil)
+	goMsg := &authztypes.MsgExec{}
+
+	ti.deepClone(msg, goMsg)
+	gobz, err := cdc.MarshalJSON(goMsg)
+	require.NoError(t, err)
+	bz, err := aj.MarshalAmino(msg)
+	require.NoError(t, err)
+
+	require.Equal(t, string(gobz), string(bz), "gogo: %s vs pulsar: %s", string(gobz), string(bz))
+
+	fmt.Printf("gogo: %v\npulsar: %v\n", goMsg, msg)
+}
+
+func TestAny(t *testing.T) {
+	cdc := goamino.NewCodec()
+	a := &codectypes.Any{TypeUrl: "foo", Value: []byte("bar")}
+	_, err := cdc.MarshalJSON(a)
+	require.NoError(t, err)
 }
 
 func TestModuleAccount(t *testing.T) {

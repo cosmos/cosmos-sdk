@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"github.com/pkg/errors"
@@ -70,6 +71,10 @@ func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
 	aj.messageEncoders[name] = encoder
 }
 
+func (aj AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) {
+	aj.encodings[name] = encoder
+}
+
 func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
 	//vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
@@ -97,17 +102,10 @@ func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) err
 		named = true
 	}
 
-	//if encoder := aj.getMessageEncoder(msg); encoder != nil {
-	//	err := encoder(msg, writer)
-	//	if err != nil {
-	//		return err
-	//	}
-	//} else {
 	err := aj.marshal(protoreflect.ValueOfMessage(msg), writer)
 	if err != nil {
 		return err
 	}
-	//}
 
 	if named {
 		_, err := writer.Write([]byte("}"))
@@ -120,17 +118,12 @@ func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) err
 }
 
 func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
+	// TODO timestamp
+	// this is what is breaking MsgGrant
+
 	switch val := value.Interface().(type) {
 	case protoreflect.Message:
-		_, err := writer.Write([]byte("{"))
-		if err != nil {
-			return err
-		}
-		err = aj.marshalMessage(val, writer)
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write([]byte("}"))
+		err := aj.marshalMessage(val, writer)
 		return err
 
 	case protoreflect.Map:
@@ -149,9 +142,6 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 	case []byte:
 		_, err := fmt.Fprintf(writer, `"%s"`, base64.StdEncoding.EncodeToString(val))
 		return err
-
-		// TODO timestamp
-		// this is what is breaking MsgGrant
 
 	default:
 		return errors.Errorf("unknown type %T", val)
@@ -218,28 +208,26 @@ func (aj AminoJSON) marshalEmbedded(msg protoreflect.Message, writer io.Writer) 
 }
 
 func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) error {
+	if msg == nil {
+		return errors.New("nil message")
+	}
+
 	if encoder := aj.getMessageEncoder(msg); encoder != nil {
 		err := encoder(msg, writer)
 		return err
 	}
 
-	//named := false
+	switch msg.Descriptor().FullName() {
+	// replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
+	case timestampFullName:
+		err := marshalTimestamp(msg, writer)
+		return err
+	}
 
-	//opts := msg.Descriptor().Options()
-	//if proto.HasExtension(opts, amino.E_Name) {
-	//	name := proto.GetExtension(opts, amino.E_Name)
-	//	_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
-	//	if err != nil {
-	//		return err
-	//	}
-	//	named = true
-	//}
-
-	//_, err := writer.Write([]byte("{"))
-	//if err != nil {
-	//	return err
-	//}
-	var err error
+	_, err := writer.Write([]byte("{"))
+	if err != nil {
+		return err
+	}
 
 	fields := msg.Descriptor().Fields()
 	first := true
@@ -255,6 +243,12 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 				zv, found := aj.getZeroValue(f)
 				if found {
 					v = zv
+				} else if f.Cardinality() == protoreflect.Repeated {
+					// TODO
+					// not sure yet
+					fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
+				} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
+					return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
 				}
 			}
 		}
@@ -303,19 +297,8 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		first = false
 	}
 
-	//_, err = writer.Write([]byte("}"))
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//if named {
-	//	_, err = writer.Write([]byte("}"))
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-
-	return nil
+	_, err = writer.Write([]byte("}"))
+	return err
 }
 
 func jsonMarshal(w io.Writer, v interface{}) error {
@@ -471,5 +454,48 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 		return err
 	}
 	_, err = w.Write(bz)
+	return err
+}
+
+const (
+	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
+)
+
+const (
+	secondsName protoreflect.Name = "seconds"
+	nanosName   protoreflect.Name = "nanos"
+)
+
+func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
+	// PROTO3 SPEC:
+	// Uses RFC 3339, where generated output will always be Z-normalized and uses 0, 3, 6 or 9 fractional digits.
+	// Offsets other than "Z" are also accepted.
+
+	fields := message.Descriptor().Fields()
+	secondsField := fields.ByName(secondsName)
+	if secondsField == nil {
+		return fmt.Errorf("expected seconds field")
+	}
+
+	nanosField := fields.ByName(nanosName)
+	if nanosField == nil {
+		return fmt.Errorf("expected nanos field")
+	}
+
+	seconds := message.Get(secondsField).Int()
+	nanos := message.Get(nanosField).Int()
+	if nanos < 0 {
+		return fmt.Errorf("nanos must be non-negative on timestamp %v", message)
+	}
+
+	t := time.Unix(seconds, nanos).UTC()
+	var str string
+	if nanos == 0 {
+		str = t.Format(time.RFC3339)
+	} else {
+		str = t.Format(time.RFC3339Nano)
+	}
+
+	_, err := fmt.Fprintf(writer, `"%s"`, str)
 	return err
 }

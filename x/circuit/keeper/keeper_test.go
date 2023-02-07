@@ -49,7 +49,7 @@ func TestGetAuthority(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 	authority := f.keeper.GetAuthority()
-	assert.Equal(t, f.mockAddr, authority)
+	assert.Equal(t, string(f.mockAddr), authority)
 }
 
 // require.Equal(suite.T(), suite.mockAddr.String(), suite.keeper.GetAuthority())

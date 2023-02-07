@@ -58,7 +58,11 @@ func (c CompactUint64Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (c CompactUint64Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	_, err := w.Write(EncodeCompactUint64(value.Uint()))
+	var x uint64
+	if value.IsValid() {
+		x = value.Uint()
+	}
+	_, err := w.Write(EncodeCompactUint64(x))
 	return err
 }
 

@@ -29,7 +29,10 @@ func (i Int64Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (i Int64Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	x := value.Int()
+	var x int64
+	if value.IsValid() {
+		x = value.Int()
+	}
 	if x >= -1 {
 		y := uint64(x) + int64Max + 1
 		return binary.Write(w, binary.BigEndian, y)

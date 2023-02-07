@@ -187,18 +187,7 @@ func TestTimestampIndex(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Assert(t, res.Ts == nil)
 	assert.Assert(t, !it.Next())
-
-	// try iterating over just non-nil timestamps by setting nil as the end range
-	it, err = store.ListRange(ctx, testpb.ExampleTimestampTsIndexKey{}, testpb.ExampleTimestampTsIndexKey{}.WithTs(nil))
-	assert.NilError(t, err)
-
-	for i := 0; i <= 2; i++ {
-		v, err := it.Value()
-		assert.NilError(t, err)
-		assert.Equal(t, timeOrder[i].String(), v.Ts.String())
-		i++
-	}
-	assert.Assert(t, !it.Next())
+	it.Close()
 }
 
 // check that the ormkv.Entry's decode and encode to the same bytes

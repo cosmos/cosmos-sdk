@@ -43,15 +43,16 @@ type TestAccount struct {
 
 // AnteTestSuite is a test suite to be used with ante handler tests.
 type AnteTestSuite struct {
-	anteHandler    sdk.AnteHandler
-	ctx            sdk.Context
-	clientCtx      client.Context
-	txBuilder      client.TxBuilder
-	accountKeeper  keeper.AccountKeeper
-	bankKeeper     *authtestutil.MockBankKeeper
-	txBankKeeper   *txtestutil.MockBankKeeper
-	feeGrantKeeper *antetestutil.MockFeegrantKeeper
-	encCfg         moduletestutil.TestEncodingConfig
+	anteHandler          sdk.AnteHandler
+	ctx                  sdk.Context
+	clientCtx            client.Context
+	txBuilder            client.TxBuilder
+	accountKeeper        keeper.AccountKeeper
+	bankKeeper           *authtestutil.MockBankKeeper
+	txBankKeeper         *txtestutil.MockBankKeeper
+	feeGrantKeeper       *antetestutil.MockFeegrantKeeper
+	encCfg               moduletestutil.TestEncodingConfig
+	circuitBreakerKeeper *antetestutil.MockCircuitBreakerKeeper
 }
 
 // SetupTest setups a new test, with new app, context, and anteHandler.
@@ -61,6 +62,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
 	suite.txBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.feeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
+	suite.circuitBreakerKeeper = antetestutil.NewMockCircuitBreakerKeeper(ctrl)
 
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
@@ -93,11 +95,12 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
-			AccountKeeper:   suite.accountKeeper,
-			BankKeeper:      suite.bankKeeper,
-			FeegrantKeeper:  suite.feeGrantKeeper,
-			SignModeHandler: suite.encCfg.TxConfig.SignModeHandler(),
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			AccountKeeper:        suite.accountKeeper,
+			BankKeeper:           suite.bankKeeper,
+			CircuitBreakerKeeper: suite.circuitBreakerKeeper,
+			FeegrantKeeper:       suite.feeGrantKeeper,
+			SignModeHandler:      suite.encCfg.TxConfig.SignModeHandler(),
+			SigGasConsumer:       ante.DefaultSigVerificationGasConsumer,
 		},
 	)
 
@@ -163,6 +166,7 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
 	tx, txErr := suite.CreateTestTx(suite.ctx, args.privs, args.accNums, args.accSeqs, args.chainID, signing.SignMode_SIGN_MODE_DIRECT)
+
 	newCtx, anteErr := suite.anteHandler(suite.ctx, tx, tc.simulate)
 
 	if tc.expPass {

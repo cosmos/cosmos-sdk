@@ -3,7 +3,7 @@ package keeper
 import (
 	proto "github.com/cosmos/gogoproto/proto"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
@@ -71,8 +71,8 @@ func (k *Keeper) EnableMsg(ctx sdk.Context, msgURL string) {
 func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, perms types.Permissions) (stop bool)) {
 	store := ctx.KVStore(k.key)
 
-	iter := sdk.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
-	defer func(iter sdk.Iterator) {
+	iter := storetypes.KVStorePrefixIterator(store, types.AccountPermissionPrefix)
+	defer func(iter storetypes.Iterator) {
 		err := iter.Close()
 		if err != nil {
 
@@ -95,8 +95,8 @@ func (k *Keeper) IteratePermissions(ctx sdk.Context, cb func(address []byte, per
 func (k *Keeper) IterateDisableLists(ctx sdk.Context, cb func(address []byte, perms types.Permissions) (stop bool)) {
 	store := ctx.KVStore(k.key)
 
-	iter := sdk.KVStorePrefixIterator(store, types.DisableListPrefix)
-	defer func(iter sdk.Iterator) {
+	iter := storetypes.KVStorePrefixIterator(store, types.DisableListPrefix)
+	defer func(iter storetypes.Iterator) {
 		err := iter.Close()
 		if err != nil {
 

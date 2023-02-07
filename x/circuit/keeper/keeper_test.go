@@ -1,47 +1,45 @@
 package keeper_test
 
 import (
+	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 )
 
 type fixture struct {
-	cdc          codec.Codec
-	ctx          sdk.Context
-	keeper       keeper.Keeper
-	mockAddr     sdk.AccAddress
-	mockPerms    types.Permissions
-	mockMsgURL   string
-	mockStoreKey storetypes.StoreKey
+	cdc        codec.Codec
+	ctx        sdk.Context
+	keeper     keeper.Keeper
+	mockAddr   sdk.AccAddress
+	mockPerms  types.Permissions
+	mockMsgURL string
 }
 
 func initFixture(t *testing.T) *fixture {
-	mockStoreKey := sdk.NewKVStoreKey("test")
+	mockStoreKey := storetypes.NewKVStoreKey("test")
 	mockAddr := sdk.AccAddress([]byte("mock_address"))
 	keeperX := keeper.NewKeeper(mockStoreKey, string(mockAddr))
 	mockMsgURL := "mock_url"
-	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, sdk.NewTransientStoreKey("transient_test"))
-	ctx := mockCtx.Ctx.WithBlockHeader(tmproto.Header{})
+	mockCtx := testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := mockCtx.Ctx.WithBlockHeader(cmproto.Header{})
 	mockPerms := types.Permissions{
 		Level: 3,
 	}
 
 	return &fixture{
-		ctx:          ctx,
-		keeper:       keeperX,
-		mockAddr:     mockAddr,
-		mockPerms:    mockPerms,
-		mockMsgURL:   mockMsgURL,
-		mockStoreKey: mockStoreKey,
+		ctx:        ctx,
+		keeper:     keeperX,
+		mockAddr:   mockAddr,
+		mockPerms:  mockPerms,
+		mockMsgURL: mockMsgURL,
 	}
 }
 

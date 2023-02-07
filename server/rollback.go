@@ -3,10 +3,11 @@ package server
 import (
 	"fmt"
 
+	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/spf13/cobra"
-	tmcmd "github.com/cometbft/cometbft/cmd/tendermint/commands"
 )
 
 // NewRollbackCmd creates a command to rollback tendermint and multistore state by one height.
@@ -32,7 +33,8 @@ application.
 			}
 			app := appCreator(ctx.Logger, db, nil, ctx.Viper)
 			// rollback tendermint state
-			height, hash, err := tmcmd.RollbackState(ctx.Config)
+			// TODO: check if we should pass false or true here
+			height, hash, err := tmcmd.RollbackState(ctx.Config, false)
 			if err != nil {
 				return fmt.Errorf("failed to rollback tendermint state: %w", err)
 			}

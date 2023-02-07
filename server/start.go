@@ -7,14 +7,14 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/cometbft/cometbft/abci/server"
-	tcmd "github.com/cometbft/cometbft/cmd/tendermint/commands"
+	tcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 

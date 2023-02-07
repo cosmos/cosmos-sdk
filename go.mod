@@ -3,13 +3,12 @@ go 1.19
 module github.com/cosmos/cosmos-sdk
 
 require (
-	github.com/cometbft/cometbft v0.0.0-20230124105515-d35439670429
 	cosmossdk.io/api v0.2.6
 	cosmossdk.io/collections v0.0.0-20230202103518-eb86b68caea0
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
 	cosmossdk.io/errors v1.0.0-beta.7
-	cosmossdk.io/math v1.0.0-beta.4
+	cosmossdk.io/math v1.0.0-beta.5
 	cosmossdk.io/store v0.0.0-20230202103518-eb86b68caea0
 	cosmossdk.io/x/tx v0.1.0
 	github.com/99designs/keyring v1.2.1
@@ -18,6 +17,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/cockroachdb/apd/v2 v2.0.2
+	github.com/cometbft/cometbft v0.0.0-20230124105515-d35439670429
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v0.0.0-20230119180254-161cf3632b7c
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
@@ -51,12 +51,11 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/go-amino v0.16.0
-	github.com/tendermint/tendermint v0.37.0-rc2
 	golang.org/x/crypto v0.5.0
 	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
 	google.golang.org/genproto v0.0.0-20230125152338-dcaf20b6aeaa
 	google.golang.org/grpc v1.52.3
-	google.golang.org/protobuf v1.28.1
+	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
 	sigs.k8s.io/yaml v1.3.0
@@ -76,8 +75,8 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20220817183557-09c6e030a677 // indirect
 	github.com/cockroachdb/redact v1.1.3 // indirect
+	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
-	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.0-alpha3 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -137,7 +136,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
-	github.com/tendermint/tm-db v0.6.7 // indirect
+	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
@@ -153,8 +152,17 @@ require (
 )
 
 replace (
+	cosmossdk.io/api => ./api
+	cosmossdk.io/collections => ./collections
+	cosmossdk.io/core => ./core
+	cosmossdk.io/depinject => ./depinject
+	cosmossdk.io/errors => ./errors
+	cosmossdk.io/math => ./math
+	cosmossdk.io/store => ./store
+	cosmossdk.io/x/tx => ./x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
@@ -163,7 +171,6 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	// use informal systems fork of tendermint
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.0.0-20230123201206-1cd531c119a5
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230124105515-d35439670429
 )
 
 retract (

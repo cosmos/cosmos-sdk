@@ -16,15 +16,15 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"github.com/spf13/cast"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
-	tmcmd "github.com/cometbft/cometbft/cmd/tendermint/commands"
+	tmcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	tmflags "github.com/cometbft/cometbft/libs/cli/flags"
 	tmlog "github.com/cometbft/cometbft/libs/log"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"

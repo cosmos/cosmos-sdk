@@ -153,6 +153,9 @@ func (app *BaseApp) FilterPeerByID(info string) abci.ResponseQuery {
 
 // BeginBlock implements the ABCI application interface.
 func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeginBlock) {
+	// record the begin block time, will be used to measure block delivery time at commit event
+	app.blockStartTime = time.Now()
+
 	if app.cms.TracingEnabled() {
 		app.cms.SetTracingContext(storetypes.TraceContext(
 			map[string]interface{}{"blockHeight": req.Header.Height},
@@ -424,6 +427,10 @@ func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliv
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() abci.ResponseCommit {
+	if !app.blockStartTime.IsZero() {
+		defer telemetry.MeasureSince(app.blockStartTime, "blockdelivery")
+	}
+
 	header := app.deliverState.ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 

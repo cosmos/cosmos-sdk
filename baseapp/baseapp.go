@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -144,6 +145,8 @@ type BaseApp struct { //nolint: maligned
 	// abciListeners for hooking into the ABCI message processing of the BaseApp
 	// and exposing the requests and responses to external consumers
 	abciListeners []storetypes.ABCIListener
+
+	blockStartTime time.Time
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -134,11 +134,15 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
-				return startStandAlone(serverCtx, appCreator)
+				return wrapCPUProfile(serverCtx, func() error {
+					return startStandAlone(serverCtx, appCreator)
+				})
 			}
 
 			// amino is needed here for backwards compatibility of REST routes
-			err = startInProcess(serverCtx, clientCtx, appCreator)
+			err = wrapCPUProfile(serverCtx, func() error {
+				return startInProcess(serverCtx, clientCtx, appCreator)
+			})
 			errCode, ok := err.(ErrorCode)
 			if !ok {
 				return err
@@ -249,7 +253,6 @@ func startStandAlone(ctx *Context, appCreator types.AppCreator) error {
 func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.AppCreator) error {
 	cfg := ctx.Config
 	home := cfg.RootDir
-	var cpuProfileCleanup func()
 
 	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
 		f, err := os.Create(cpuProfile)
@@ -260,14 +263,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
 		if err := pprof.StartCPUProfile(f); err != nil {
 			return err
-		}
-
-		cpuProfileCleanup = func() {
-			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
-			pprof.StopCPUProfile()
-			if err := f.Close(); err != nil {
-				ctx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
-			}
 		}
 	}
 
@@ -464,10 +459,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 			_ = tmNode.Stop()
 		}
 
-		if cpuProfileCleanup != nil {
-			cpuProfileCleanup()
-		}
-
 		if apiSrv != nil {
 			_ = apiSrv.Close()
 		}
@@ -484,4 +475,41 @@ func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
 		return nil, nil
 	}
 	return telemetry.New(cfg.Telemetry)
+}
+
+// wrapCPUProfile runs callback in a goroutine, then wait for quit signals.
+func wrapCPUProfile(ctx *Context, callback func() error) error {
+	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
+		f, err := os.Create(cpuProfile)
+		if err != nil {
+			return err
+		}
+
+		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return err
+		}
+
+		defer func() {
+			ctx.Logger.Info("stopping CPU profiler", "profile", cpuProfile)
+			pprof.StopCPUProfile()
+			if err := f.Close(); err != nil {
+				ctx.Logger.Info("failed to close cpu-profile file", "profile", cpuProfile, "err", err.Error())
+			}
+		}()
+	}
+
+	errCh := make(chan error)
+	go func() {
+		errCh <- callback()
+	}()
+
+	select {
+	case err := <-errCh:
+		return err
+
+	case <-time.After(types.ServerStartTime):
+	}
+
+	return WaitForQuitSignals()
 }

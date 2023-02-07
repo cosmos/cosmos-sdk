@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
 
 	"cosmossdk.io/store/pruning/types"
 )

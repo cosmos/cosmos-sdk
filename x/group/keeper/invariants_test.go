@@ -3,15 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/suite"
-
-	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"

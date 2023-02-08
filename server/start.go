@@ -15,6 +15,7 @@ import (
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -33,7 +34,7 @@ import (
 
 const (
 	// CometBFT full-node start flags
-	flagWithTendermint     = "with-tendermint"
+	flagWithComet          = "with-comet"
 	flagAddress            = "address"
 	flagTransport          = "transport"
 	flagTraceStore         = "trace-store"
@@ -131,8 +132,8 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				return err
 			}
 
-			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
-			if !withTM {
+			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
+			if !withCMT {
 				serverCtx.Logger.Info("starting ABCI without CometBFT")
 				return startStandAlone(serverCtx, appCreator)
 			}
@@ -150,7 +151,7 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	}
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	cmd.Flags().Bool(flagWithTendermint, true, "Run abci app embedded in-process with CometBFT")
+	cmd.Flags().Bool(flagWithComet, true, "Run abci app embedded in-process with CometBFT")
 	cmd.Flags().String(flagAddress, "tcp://0.0.0.0:26658", "Listen address")
 	cmd.Flags().String(flagTransport, "socket", "Transport protocol: socket, grpc")
 	cmd.Flags().String(flagTraceStore, "", "Enable KVStore tracing to an output file")
@@ -188,6 +189,15 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
+
+	// support old flags name for backwards compatibility
+	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+		if name == "with-tendermint" {
+			name = flagWithComet
+		}
+
+		return pflag.NormalizedName(name)
+	})
 
 	// add support for all CometBFT-specific command line options
 	tcmd.AddNodeFlags(cmd)

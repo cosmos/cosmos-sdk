@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// convertHeader converts cometbft header to sdk header
+// convertHeader converts CometBFT header to sdk header
 func convertHeader(h cmtprototypes.Header) Header {
 	return Header{
 		Version:            h.Version,
@@ -25,7 +25,7 @@ func convertHeader(h cmtprototypes.Header) Header {
 	}
 }
 
-// convertBlock converts cometbft block to sdk block
+// convertBlock converts CometBFT block to sdk block
 func convertBlock(tmblock *cmtprototypes.Block) *Block {
 	b := new(Block)
 

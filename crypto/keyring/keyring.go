@@ -194,7 +194,7 @@ func New(
 	case BackendPass:
 		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
-		return nil, fmt.Errorf("unknown keyring backend %v", backend)
+		return nil, errors.Wrap(ErrUnknownBacked, backend)
 	}
 
 	if err != nil {
@@ -317,7 +317,7 @@ func (ks keystore) ExportPrivKeyArmorByAddress(address sdk.Address, encryptPassp
 func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	if k, err := ks.Key(uid); err == nil {
 		if uid == k.Name {
-			return fmt.Errorf("cannot overwrite key: %s", uid)
+			return errors.Wrap(ErrOverwriteKey, uid)
 		}
 	}
 
@@ -336,7 +336,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 
 func (ks keystore) ImportPubKey(uid, armor string) error {
 	if _, err := ks.Key(uid); err == nil {
-		return fmt.Errorf("cannot overwrite key: %s", uid)
+		return errors.Wrap(ErrOverwriteKey, uid)
 	}
 
 	pubBytes, _, err := crypto.UnarmorPubKeyBytes(armor)
@@ -401,17 +401,14 @@ func (ks keystore) SignByAddress(address sdk.Address, msg []byte, signMode signi
 
 func (ks keystore) SaveLedgerKey(uid string, algo SignatureAlgo, hrp string, coinType, account, index uint32) (*Record, error) {
 	if !ks.options.SupportedAlgosLedger.Contains(algo) {
-		return nil, fmt.Errorf(
-			"%w: signature algo %s is not defined in the keyring options",
-			ErrUnsupportedSigningAlgo, algo.Name(),
-		)
+		return nil, errors.Wrap(ErrUnsupportedSigningAlgo, fmt.Sprintf("signature algo %s is not defined in the keyring options", algo.Name()))
 	}
 
 	hdPath := hd.NewFundraiserParams(account, coinType, index)
 
 	priv, _, err := ledger.NewPrivKeySecp256k1(*hdPath, hrp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate ledger key: %w", err)
+		return nil, errors.CombineErrors(ErrLedgerGenerateKey, err)
 	}
 
 	return ks.writeLedgerKey(uid, priv.PubKey(), hdPath)
@@ -451,7 +448,7 @@ func (ks keystore) DeleteByAddress(address sdk.Address) error {
 func (ks keystore) Rename(oldName, newName string) error {
 	_, err := ks.Key(newName)
 	if err == nil {
-		return fmt.Errorf("rename failed: %s already exists in the keyring", newName)
+		return errors.Wrap(ErrKeyAlreadyExists, fmt.Sprintf("rename failed, %s", newName))
 	}
 
 	armor, err := ks.ExportPrivKeyArmor(oldName, passPhrase)
@@ -623,7 +620,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 			return nil, nil, err
 		}
 	default:
-		return nil, nil, fmt.Errorf("got invalid sign mode %d, expected LEGACY_AMINO_JSON or TEXTUAL", signMode)
+		return nil, nil, errors.Wrap(ErrInvalidSignMode, fmt.Sprintf("%v", signMode))
 	}
 
 	if !priv.PubKey().VerifySignature(msg, sig) {
@@ -696,7 +693,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 		case err == nil:
 			keyhash, err = os.ReadFile(keyhashFilePath)
 			if err != nil {
-				return "", fmt.Errorf("failed to read %s: %v", keyhashFilePath, err)
+				return "", errors.Wrap(err, fmt.Sprintf("failed to read %s", keyhashFilePath))
 			}
 
 			keyhashStored = true
@@ -705,7 +702,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			keyhashStored = false
 
 		default:
-			return "", fmt.Errorf("failed to open %s: %v", keyhashFilePath, err)
+			return "", errors.Wrap(err, fmt.Sprintf("failed to open %s", keyhashFilePath))
 		}
 
 		failureCounter := 0
@@ -713,7 +710,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 		for {
 			failureCounter++
 			if failureCounter > maxPassphraseEntryAttempts {
-				return "", fmt.Errorf("too many failed passphrase attempts")
+				return "", ErrMaxPassPhraseAttempts
 			}
 
 			buf := bufio.NewReader(buf)
@@ -794,12 +791,12 @@ func (ks keystore) writeRecord(k *Record) error {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("public key %s already exists in keybase", key)
+		return errors.Wrap(ErrKeyAlreadyExists, key)
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return fmt.Errorf("unable to serialize record; %+w", err)
+		return errors.CombineErrors(ErrUnableToSerialize, err)
 	}
 
 	item := keyring.Item{
@@ -939,18 +936,18 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	// 4. Try to decode with amino
 	legacyInfo, err := unMarshalLegacyInfo(item.Data)
 	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal item.Data, err: %w", err)
+		return nil, errors.Wrap(err, "unable to unmarshal item.Data")
 	}
 
 	// 5. Convert and serialize info using proto
 	k, err = ks.convertFromLegacyInfo(legacyInfo)
 	if err != nil {
-		return nil, fmt.Errorf("convertFromLegacyInfo, err: %w", err)
+		return nil, errors.Wrap(err, "convertFromLegacyInfo")
 	}
 
 	serializedRecord, err := ks.cdc.Marshal(k)
 	if err != nil {
-		return nil, fmt.Errorf("unable to serialize record, err: %w", err)
+		return nil, errors.CombineErrors(ErrUnableToSerialize, err)
 	}
 
 	item = keyring.Item{
@@ -960,7 +957,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 
 	// 6. Overwrite the keyring entry with the new proto-encoded key.
 	if err := ks.SetItem(item); err != nil {
-		return nil, fmt.Errorf("unable to set keyring.Item, err: %w", err)
+		return nil, errors.Wrap(err, "unable to set keyring.Item")
 	}
 
 	fmt.Printf("Successfully migrated key %s.\n", key)

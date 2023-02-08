@@ -11,16 +11,15 @@ require (
 	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
-	// TODO to replace by a tagged version of rosetta
-	cosmossdk.io/tools/rosetta v0.2.1-0.20230205135133-41a3dfeced29
+	cosmossdk.io/tools/rosetta v0.2.0
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.0.0-20230117113717-50e7c4a4ceff
 	cosmossdk.io/x/nft v0.0.0-20230113085233-fae3332d62fc
 	cosmossdk.io/x/upgrade v0.0.0-20230127052425-54c8e1568335
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
-	// this version is not used as it is always replaced by the latest cosmos-sdk version
-	github.com/cosmos/cosmos-sdk v0.47.0-rc2
+	// this version is not used as it is always replaced by the latest Cosmos SDK version
+	github.com/cosmos/cosmos-sdk v0.48.0
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
@@ -193,6 +192,7 @@ require (
 replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/log => ../log
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft

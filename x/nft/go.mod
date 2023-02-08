@@ -152,6 +152,7 @@ require (
 // Replace here are pending PRs, or version to be tagged.
 replace (
 	cosmossdk.io/log => ../../log
+	// TODO use instead a tagged version of the SDK (with CometBFT) when available
 	github.com/cosmos/cosmos-sdk => ../..
 )
 

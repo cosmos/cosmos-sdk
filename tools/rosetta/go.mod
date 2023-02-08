@@ -8,7 +8,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	github.com/cosmos/cosmos-sdk v0.48.0
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/rs/zerolog v1.29.0
 	github.com/spf13/cobra v1.6.1
@@ -138,6 +138,6 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/log => ../../log
-	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
+	// TODO use instead a tagged version of the SDK (with CometBFT) when available
 	github.com/cosmos/cosmos-sdk => ../..
 )

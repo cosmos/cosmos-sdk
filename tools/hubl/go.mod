@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	cosmossdk.io/api v0.3.0
-	// TODO use a tagged version of client/v2 when client/v2 is tagged with a released SDK version
 	cosmossdk.io/client/v2 v2.0.0-20230205135133-41a3dfeced29
 	github.com/cockroachdb/errors v1.9.1
 	github.com/hashicorp/go-multierror v1.1.1
@@ -125,5 +124,6 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/log => ../../log
+	// TODO this can be removed when client/v2 is released with CometBFT changes in the SDK
 	github.com/cosmos/cosmos-sdk => ../..
 )

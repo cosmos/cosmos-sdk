@@ -7,141 +7,86 @@ import "testpb/bank.proto";
 
 // BankQueryService queries the state of the tables specified by testpb/bank.proto.
 service BankQueryService {
-  // Get queries the Balance table by its primary key.
-  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse) {}
-  // ListBalance queries the Balance table using prefix and range queries against defined indexes.
-  rpc ListBalance(ListBalanceRequest) returns (ListBalanceResponse) {}
-  // Get queries the Supply table by its primary key.
-  rpc GetSupply(GetSupplyRequest) returns (GetSupplyResponse) {}
-  // ListSupply queries the Supply table using prefix and range queries against defined indexes.
-  rpc ListSupply(ListSupplyRequest) returns (ListSupplyResponse) {}
+  // Balance queries the Balance table by its primary key.
+  rpc Balance(BalanceRequest) returns (BalanceResponse) {}
+  // Balances queries the Balance table using the primary key index.
+  rpc Balances(BalancesRequest) returns (BalancesResponse) {}
+  // BalancesByDenom queries the Balance table using the primary key index.
+  rpc BalancesByDenom(BalancesByDenomRequest) returns (BalancesByDenomResponse) {}
+  // Supply queries the Supply table by its primary key.
+  rpc Supply(SupplyRequest) returns (SupplyResponse) {}
+  // Supplies queries the Supply table using the primary key index.
+  rpc Supplies(SuppliesRequest) returns (SuppliesResponse) {}
 }
 
-// GetBalanceRequest is the BankQuery/GetBalanceRequest request type.
-message GetBalanceRequest {
+// BalanceRequest is the BankQuery/BalanceRequest request type.
+message BalanceRequest {
   // address specifies the value of the address field in the primary key.
   string address = 1;
   // denom specifies the value of the denom field in the primary key.
   string denom = 2;
 }
 
-// GetBalanceResponse is the BankQuery/GetBalanceResponse response type.
-message GetBalanceResponse {
+// BalanceResponse is the BankQuery/BalanceResponse response type.
+message BalanceResponse {
   // value is the response value.
   Balance value = 1;
 }
 
-// ListBalanceRequest is the BankQuery/ListBalanceRequest request type.
-message ListBalanceRequest {
-  // IndexKey specifies the value of an index key to use in prefix and range queries.
-  message IndexKey {
-    // key specifies the index key value.
-    oneof key {
-      // address_denom specifies the value of the AddressDenom index key to use in the query.
-      AddressDenom address_denom = 1;
-      // denom specifies the value of the Denom index key to use in the query.
-      Denom denom = 2;
-    }
-    
-    message AddressDenom {
-      // address is the value of the address field in the index.
-      // It can be omitted to query for all valid values of that field in this segment of the index.
-      optional string address = 1;
-      // denom is the value of the denom field in the index.
-      // It can be omitted to query for all valid values of that field in this segment of the index.
-      optional string denom = 2;
-    }
-    
-    message Denom {
-      // denom is the value of the denom field in the index.
-      // It can be omitted to query for all valid values of that field in this segment of the index.
-      optional string denom = 1;
-    }
-  }
-  
-  // query specifies the type of query - either a prefix or range query.
-  oneof query {
-    // prefix_query specifies the index key value to use for the prefix query.
-    IndexKey prefix_query = 1;
-    // range_query specifies the index key from/to values to use for the range query.
-    RangeQuery range_query = 2;
-  }
+// BalancesRequest is the BankQuery/BalancesRequest request type.
+message BalancesRequest {
+  // address is the value of the address field in the index.
+  // It can be omitted to query for all valid values of that field in this segment of the index.
+  optional string address = 1;
   // pagination specifies optional pagination parameters.
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
-  
-  // RangeQuery specifies the from/to index keys for a range query.
-  message RangeQuery {
-    // from is the index key to use for the start of the range query.
-    // To query from the start of an index, specify an index key for that index with empty values.
-    IndexKey from = 1;
-    // to is the index key to use for the end of the range query.
-    // The index key type MUST be the same as the index key type used for from.
-    // To query from to the end of an index it can be omitted.
-    IndexKey to = 2;
-  }
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// ListBalanceResponse is the BankQuery/ListBalanceResponse response type.
-message ListBalanceResponse {
+// BalancesResponse is the BankQuery/BalancesResponse response type.
+message BalancesResponse {
   // values are the results of the query.
   repeated Balance values = 1;
   // pagination is the pagination response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// GetSupplyRequest is the BankQuery/GetSupplyRequest request type.
-message GetSupplyRequest {
+// BalancesByDenomRequest is the BankQuery/BalancesByDenomRequest request type.
+message BalancesByDenomRequest {
+  // denom is the value of the denom field in the index.
+  // It can be omitted to query for all valid values of that field in this segment of the index.
+  optional string denom = 1;
+  // pagination specifies optional pagination parameters.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// BalancesByDenomResponse is the BankQuery/BalancesByDenomResponse response type.
+message BalancesByDenomResponse {
+  // values are the results of the query.
+  repeated Balance values = 1;
+  // pagination is the pagination response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// SupplyRequest is the BankQuery/SupplyRequest request type.
+message SupplyRequest {
   // denom specifies the value of the denom field in the primary key.
   string denom = 1;
 }
 
-// GetSupplyResponse is the BankQuery/GetSupplyResponse response type.
-message GetSupplyResponse {
+// SupplyResponse is the BankQuery/SupplyResponse response type.
+message SupplyResponse {
   // value is the response value.
   Supply value = 1;
 }
 
-// ListSupplyRequest is the BankQuery/ListSupplyRequest request type.
-message ListSupplyRequest {
-  // IndexKey specifies the value of an index key to use in prefix and range queries.
-  message IndexKey {
-    // key specifies the index key value.
-    oneof key {
-      // denom specifies the value of the Denom index key to use in the query.
-      Denom denom = 1;
-    }
-    
-    message Denom {
-      // denom is the value of the denom field in the index.
-      // It can be omitted to query for all valid values of that field in this segment of the index.
-      optional string denom = 1;
-    }
-  }
-  
-  // query specifies the type of query - either a prefix or range query.
-  oneof query {
-    // prefix_query specifies the index key value to use for the prefix query.
-    IndexKey prefix_query = 1;
-    // range_query specifies the index key from/to values to use for the range query.
-    RangeQuery range_query = 2;
-  }
+// SuppliesRequest is the BankQuery/SuppliesRequest request type.
+message SuppliesRequest {
   // pagination specifies optional pagination parameters.
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
-  
-  // RangeQuery specifies the from/to index keys for a range query.
-  message RangeQuery {
-    // from is the index key to use for the start of the range query.
-    // To query from the start of an index, specify an index key for that index with empty values.
-    IndexKey from = 1;
-    // to is the index key to use for the end of the range query.
-    // The index key type MUST be the same as the index key type used for from.
-    // To query from to the end of an index it can be omitted.
-    IndexKey to = 2;
-  }
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// ListSupplyResponse is the BankQuery/ListSupplyResponse response type.
-message ListSupplyResponse {
+// SuppliesResponse is the BankQuery/SuppliesResponse response type.
+message SuppliesResponse {
   // values are the results of the query.
   repeated Supply values = 1;
   // pagination is the pagination response.

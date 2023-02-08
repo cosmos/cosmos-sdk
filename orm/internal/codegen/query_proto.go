@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
+	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
@@ -84,10 +86,10 @@ func (g queryProtoGen) gen() error {
 
 func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.TableDescriptor) error {
 	name := msg.Desc.Name()
-	g.svc.F("// Get queries the %s table by its primary key.", name)
-	g.svc.F("rpc Get%s(Get%sRequest) returns (Get%sResponse) {}", name, name, name) // TODO grpc gateway
+	g.svc.F("// %s queries the %s table by its primary key.", name, name)
+	g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", name, name, name) // TODO grpc gateway
 
-	g.startRequestType("Get%sRequest", name)
+	g.startRequestType("%sRequest", name)
 	g.msgs.Indent()
 	primaryKeyFields := fieldnames.CommaSeparatedFieldNames(desc.PrimaryKey.Fields)
 	fields := msg.Desc.Fields()
@@ -103,7 +105,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 
 	g.msgs.F("}")
 	g.msgs.F("")
-	g.startResponseType("Get%sResponse", name)
+	g.startResponseType("%sResponse", name)
 	g.msgs.Indent()
 	g.msgs.F("// value is the response value.")
 	g.msgs.F("%s value = 1;", name)
@@ -111,13 +113,14 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 	g.msgs.F("}")
 	g.msgs.F("")
 
+	// unique index methods
 	for _, idx := range desc.Index {
 		if !idx.Unique {
 			continue
 		}
 
 		fieldsCamel := fieldsToCamelCase(idx.Fields)
-		methodName := fmt.Sprintf("Get%sBy%s", name, fieldsCamel)
+		methodName := fmt.Sprintf("%sBy%s", name, fieldsCamel)
 		g.svc.F("// %s queries the %s table by its %s index", methodName, name, fieldsCamel)
 		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", methodName, methodName, methodName) // TODO grpc gateway
 
@@ -144,99 +147,116 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 	}
 
 	g.imports["cosmos/base/query/v1beta1/pagination.proto"] = true
-	g.svc.F("// List%s queries the %s table using prefix and range queries against defined indexes.", name, name)
-	g.svc.F("rpc List%s(List%sRequest) returns (List%sResponse) {}", name, name, name) // TODO grpc gateway
-	g.startRequestType("List%sRequest", name)
-	g.msgs.Indent()
-	g.msgs.F("// IndexKey specifies the value of an index key to use in prefix and range queries.")
-	g.msgs.F("message IndexKey {")
-	g.msgs.Indent()
 
-	indexFields := []string{desc.PrimaryKey.Fields}
-	// the primary key has field number 1
-	fieldNums := []uint32{1}
+	// primary key list method
+	pluralMethod := pluralName(string(name))
+	g.svc.F("// %s queries the %s table using the primary key index.", pluralMethod, name)
+	g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", pluralMethod, pluralMethod, pluralMethod) // TODO grpc gateway
+	keyFields := primaryKeyFields.Names()
+	keyFields = keyFields[:len(keyFields)-1]
+	g.listRequestResponseTypes(name, pluralMethod, keyFields, fields)
+
 	for _, index := range desc.Index {
-		indexFields = append(indexFields, index.Fields)
-		// index field numbers are their id + 1
-		fieldNums = append(fieldNums, index.Id+1)
-	}
-
-	g.msgs.F("// key specifies the index key value.")
-	g.msgs.F("oneof key {")
-	g.msgs.Indent()
-	for i, fields := range indexFields {
-		fieldName := fieldsToSnakeCase(fields)
-		typeName := fieldsToCamelCase(fields)
-		g.msgs.F("// %s specifies the value of the %s index key to use in the query.", fieldName, typeName)
-		g.msgs.F("%s %s = %d;", typeName, fieldName, fieldNums[i])
-	}
-	g.msgs.Dedent()
-	g.msgs.F("}")
-
-	for _, fieldNames := range indexFields {
-		g.msgs.F("")
-		g.msgs.F("message %s {", fieldsToCamelCase(fieldNames))
-		g.msgs.Indent()
-		for i, fieldName := range fieldnames.CommaSeparatedFieldNames(fieldNames).Names() {
-			g.msgs.F("// %s is the value of the %s field in the index.", fieldName, fieldName)
-			g.msgs.F("// It can be omitted to query for all valid values of that field in this segment of the index.")
-			g.msgs.F("optional %s %s = %d;", g.fieldType(fields.ByName(fieldName)), fieldName, i+1)
+		keyFields := fieldnames.CommaSeparatedFieldNames(index.Fields).Names()
+		camelNames := make([]string, len(keyFields))
+		for i, field := range keyFields {
+			camelNames[i] = strcase.ToCamel(string(field))
 		}
-		g.msgs.Dedent()
-		g.msgs.F("}")
+		methodName := pluralMethod + "By" + strings.Join(camelNames, "")
+		g.svc.F("// %s queries the %s table using the primary key index.", methodName, name)
+		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", methodName, methodName, methodName) // TODO grpc gateway
+		g.listRequestResponseTypes(name, methodName, keyFields, fields)
 	}
 
-	g.msgs.Dedent()
-	g.msgs.F("}")
-	g.msgs.F("")
-	g.msgs.F("// query specifies the type of query - either a prefix or range query.")
-	g.msgs.F("oneof query {")
-	g.msgs.Indent()
-	g.msgs.F("// prefix_query specifies the index key value to use for the prefix query.")
-	g.msgs.F("IndexKey prefix_query = 1;")
-	g.msgs.F("// range_query specifies the index key from/to values to use for the range query.")
-	g.msgs.F("RangeQuery range_query = 2;")
-	g.msgs.Dedent()
-	g.msgs.F("}")
-
-	g.msgs.F("// pagination specifies optional pagination parameters.")
-	g.msgs.F("cosmos.base.query.v1beta1.PageRequest pagination = 3;")
-	g.msgs.F("")
-	g.msgs.F("// RangeQuery specifies the from/to index keys for a range query.")
-	g.msgs.F("message RangeQuery {")
-	g.msgs.Indent()
-	g.msgs.F("// from is the index key to use for the start of the range query.")
-	g.msgs.F("// To query from the start of an index, specify an index key for that index with empty values.")
-	g.msgs.F("IndexKey from = 1;")
-	g.msgs.F("// to is the index key to use for the end of the range query.")
-	g.msgs.F("// The index key type MUST be the same as the index key type used for from.")
-	g.msgs.F("// To query from to the end of an index it can be omitted.")
-	g.msgs.F("IndexKey to = 2;")
-	g.msgs.Dedent()
-	g.msgs.F("}")
-	g.msgs.Dedent()
-	g.msgs.F("}")
-	g.msgs.F("")
-	g.startResponseType("List%sResponse", name)
-	g.msgs.Indent()
-	g.msgs.F("// values are the results of the query.")
-	g.msgs.F("repeated %s values = 1;", name)
-	g.msgs.F("// pagination is the pagination response.")
-	g.msgs.F("cosmos.base.query.v1beta1.PageResponse pagination = 2;")
-	g.msgs.Dedent()
-	g.msgs.F("}")
-	g.msgs.F("")
+	//g.msgs.Indent()
+	//g.msgs.F("// IndexKey specifies the value of an index key to use in prefix and range queries.")
+	//g.msgs.F("message IndexKey {")
+	//g.msgs.Indent()
+	//indexFields := []string{desc.PrimaryKey.Fields}
+	//// the primary key has field number 1
+	//fieldNums := []uint32{1}
+	//for _, index := range desc.Index {
+	//	indexFields = append(indexFields, index.Fields)
+	//	// index field numbers are their id + 1
+	//	fieldNums = append(fieldNums, index.Id+1)
+	//}
+	//
+	//g.msgs.F("// key specifies the index key value.")
+	//g.msgs.F("oneof key {")
+	//g.msgs.Indent()
+	//for i, fields := range indexFields {
+	//	fieldName := fieldsToSnakeCase(fields)
+	//	typeName := fieldsToCamelCase(fields)
+	//	g.msgs.F("// %s specifies the value of the %s index key to use in the query.", fieldName, typeName)
+	//	g.msgs.F("%s %s = %d;", typeName, fieldName, fieldNums[i])
+	//}
+	//g.msgs.Dedent()
+	//g.msgs.F("}")
+	//
+	//for _, fieldNames := range indexFields {
+	//	g.msgs.F("")
+	//	g.msgs.F("message %s {", fieldsToCamelCase(fieldNames))
+	//	g.msgs.Indent()
+	//	for i, fieldName := range fieldnames.CommaSeparatedFieldNames(fieldNames).Names() {
+	//		g.msgs.F("// %s is the value of the %s field in the index.", fieldName, fieldName)
+	//		g.msgs.F("// It can be omitted to query for all valid values of that field in this segment of the index.")
+	//		g.msgs.F("optional %s %s = %d;", g.fieldType(fields.ByName(fieldName)), fieldName, i+1)
+	//	}
+	//	g.msgs.Dedent()
+	//	g.msgs.F("}")
+	//}
+	//
+	//g.msgs.Dedent()
+	//g.msgs.F("}")
+	//g.msgs.F("")
+	//g.msgs.F("// query specifies the type of query - either a prefix or range query.")
+	//g.msgs.F("oneof query {")
+	//g.msgs.Indent()
+	//g.msgs.F("// prefix_query specifies the index key value to use for the prefix query.")
+	//g.msgs.F("IndexKey prefix_query = 1;")
+	//g.msgs.F("// range_query specifies the index key from/to values to use for the range query.")
+	//g.msgs.F("RangeQuery range_query = 2;")
+	//g.msgs.Dedent()
+	//g.msgs.F("}")
+	//
+	//g.msgs.F("// pagination specifies optional pagination parameters.")
+	//g.msgs.F("cosmos.base.query.v1beta1.PageRequest pagination = 3;")
+	//g.msgs.F("")
+	//g.msgs.F("// RangeQuery specifies the from/to index keys for a range query.")
+	//g.msgs.F("message RangeQuery {")
+	//g.msgs.Indent()
+	//g.msgs.F("// from is the index key to use for the start of the range query.")
+	//g.msgs.F("// To query from the start of an index, specify an index key for that index with empty values.")
+	//g.msgs.F("IndexKey from = 1;")
+	//g.msgs.F("// to is the index key to use for the end of the range query.")
+	//g.msgs.F("// The index key type MUST be the same as the index key type used for from.")
+	//g.msgs.F("// To query from to the end of an index it can be omitted.")
+	//g.msgs.F("IndexKey to = 2;")
+	//g.msgs.Dedent()
+	//g.msgs.F("}")
+	//g.msgs.Dedent()
+	//g.msgs.F("}")
+	//g.msgs.F("")
+	//g.startResponseType("%sResponse", listMethodName)
+	//g.msgs.Indent()
+	//g.msgs.F("// values are the results of the query.")
+	//g.msgs.F("repeated %s values = 1;", name)
+	//g.msgs.F("// pagination is the pagination response.")
+	//g.msgs.F("cosmos.base.query.v1beta1.PageResponse pagination = 2;")
+	//g.msgs.Dedent()
+	//g.msgs.F("}")
+	//g.msgs.F("")
 	return nil
 }
 
 func (g queryProtoGen) genSingletonRPCMethods(msg *protogen.Message) error {
 	name := msg.Desc.Name()
-	g.svc.F("// Get%s queries the %s singleton.", name, name)
-	g.svc.F("rpc Get%s (Get%sRequest) returns (Get%sResponse) {}", name, name, name) // TODO grpc gateway
-	g.startRequestType("Get%sRequest", name)
+	g.svc.F("// %s queries the %s singleton.", name, name)
+	g.svc.F("rpc %s (%sRequest) returns (%sResponse) {}", name, name, name) // TODO grpc gateway
+	g.startRequestType("%sRequest", name)
 	g.msgs.F("}")
 	g.msgs.F("")
-	g.startRequestType("Get%sResponse", name)
+	g.startRequestType("%sResponse", name)
 	g.msgs.Indent()
 	g.msgs.F("%s value = 1;", name)
 	g.msgs.Dedent()
@@ -257,6 +277,33 @@ func (g queryProtoGen) startRequestResponseType(typ string, format string, args 
 	msgTypeName := fmt.Sprintf(format, args...)
 	g.msgs.F("// %s is the %s/%s %s type.", msgTypeName, queryServiceName(g.File), msgTypeName, typ)
 	g.msgs.F("message %s {", msgTypeName)
+}
+
+func (g queryProtoGen) listRequestResponseTypes(name protoreflect.Name, methodName string, keyFields []protoreflect.Name, fields protoreflect.FieldDescriptors) {
+	g.startRequestType("%sRequest", methodName)
+	g.msgs.Indent()
+	i := 1
+	for ; i <= len(keyFields); i++ {
+		fieldName := keyFields[i-1]
+		g.msgs.F("// %s is the value of the %s field in the index.", fieldName, fieldName)
+		g.msgs.F("// It can be omitted to query for all valid values of that field in this segment of the index.")
+		g.msgs.F("optional %s %s = %d;", g.fieldType(fields.ByName(fieldName)), fieldName, i)
+	}
+	g.msgs.F("// pagination specifies optional pagination parameters.")
+	g.msgs.F("cosmos.base.query.v1beta1.PageRequest pagination = %d;", i)
+	g.msgs.Dedent()
+	g.msgs.F("}")
+	g.msgs.F("")
+
+	g.startResponseType("%sResponse", methodName)
+	g.msgs.Indent()
+	g.msgs.F("// values are the results of the query.")
+	g.msgs.F("repeated %s values = 1;", name)
+	g.msgs.F("// pagination is the pagination response.")
+	g.msgs.F("cosmos.base.query.v1beta1.PageResponse pagination = 2;")
+	g.msgs.Dedent()
+	g.msgs.F("}")
+	g.msgs.F("")
 }
 
 func queryServiceName(file *protogen.File) string {
@@ -317,4 +364,14 @@ func (w *writer) updateIndent() {
 func (w *writer) Dedent() {
 	w.indent -= 1
 	w.updateIndent()
+}
+
+var pluralClient = pluralize.NewClient()
+
+func pluralName(name string) string {
+	if pluralClient.IsPlural(name) {
+		return fmt.Sprintf("List%s", name)
+	}
+
+	return pluralClient.Plural(name)
 }

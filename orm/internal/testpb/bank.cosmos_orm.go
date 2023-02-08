@@ -142,19 +142,15 @@ func NewBalanceTable(db ormtable.Schema) (BalanceTable, error) {
 	return balanceTable{table}, nil
 }
 
-func (x bankStore) GetBalance(ctx context.Context, req *GetBalanceRequest) (*GetBalanceResponse, error) {
-	res, err := x.balance.Get(ctx,
+func (x bankStoreQueryServer) Balance(ctx context.Context, req *BalanceRequest) (*BalanceResponse, error) {
+	res, err := x.bankStore.balance.Get(ctx,
 		req.Address,
 		req.Denom,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &GetBalanceResponse{Value: res}, nil
-}
-
-func (x bankStore) ListBalance(ctx context.Context, req *ListBalanceRequest) (*ListBalanceResponse, error) {
-	return nil, nil
+	return &BalanceResponse{Value: res}, nil
 }
 
 type SupplyTable interface {
@@ -271,18 +267,14 @@ func NewSupplyTable(db ormtable.Schema) (SupplyTable, error) {
 	return supplyTable{table}, nil
 }
 
-func (x bankStore) GetSupply(ctx context.Context, req *GetSupplyRequest) (*GetSupplyResponse, error) {
-	res, err := x.supply.Get(ctx,
+func (x bankStoreQueryServer) Supply(ctx context.Context, req *SupplyRequest) (*SupplyResponse, error) {
+	res, err := x.bankStore.supply.Get(ctx,
 		req.Denom,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return &GetSupplyResponse{Value: res}, nil
-}
-
-func (x bankStore) ListSupply(ctx context.Context, req *ListSupplyRequest) (*ListSupplyResponse, error) {
-	return nil, nil
+	return &SupplyResponse{Value: res}, nil
 }
 
 type BankStore interface {
@@ -295,7 +287,6 @@ type BankStore interface {
 }
 
 type bankStore struct {
-	UnimplementedBankQueryServiceServer
 	balance BalanceTable
 	supply  SupplyTable
 }
@@ -308,8 +299,13 @@ func (x bankStore) SupplyTable() SupplyTable {
 	return x.supply
 }
 
+type bankStoreQueryServer struct {
+	UnimplementedBankQueryServiceServer
+	bankStore
+}
+
 func (x bankStore) RegisterQueryServer(registrar grpc.ServiceRegistrar) {
-	RegisterBankQueryServiceServer(registrar, x)
+	RegisterBankQueryServiceServer(registrar, bankStoreQueryServer{bankStore: x})
 }
 
 func (bankStore) doNotImplement() {}

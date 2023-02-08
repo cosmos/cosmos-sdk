@@ -23,8 +23,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// GetBalanceRequest is the BankQuery/GetBalanceRequest request type.
-type GetBalanceRequest struct {
+// BalanceRequest is the BankQuery/BalanceRequest request type.
+type BalanceRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -35,8 +35,8 @@ type GetBalanceRequest struct {
 	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
 }
 
-func (x *GetBalanceRequest) Reset() {
-	*x = GetBalanceRequest{}
+func (x *BalanceRequest) Reset() {
+	*x = BalanceRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -44,13 +44,13 @@ func (x *GetBalanceRequest) Reset() {
 	}
 }
 
-func (x *GetBalanceRequest) String() string {
+func (x *BalanceRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetBalanceRequest) ProtoMessage() {}
+func (*BalanceRequest) ProtoMessage() {}
 
-func (x *GetBalanceRequest) ProtoReflect() protoreflect.Message {
+func (x *BalanceRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -62,27 +62,27 @@ func (x *GetBalanceRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetBalanceRequest.ProtoReflect.Descriptor instead.
-func (*GetBalanceRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use BalanceRequest.ProtoReflect.Descriptor instead.
+func (*BalanceRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetBalanceRequest) GetAddress() string {
+func (x *BalanceRequest) GetAddress() string {
 	if x != nil {
 		return x.Address
 	}
 	return ""
 }
 
-func (x *GetBalanceRequest) GetDenom() string {
+func (x *BalanceRequest) GetDenom() string {
 	if x != nil {
 		return x.Denom
 	}
 	return ""
 }
 
-// GetBalanceResponse is the BankQuery/GetBalanceResponse response type.
-type GetBalanceResponse struct {
+// BalanceResponse is the BankQuery/BalanceResponse response type.
+type BalanceResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -91,8 +91,8 @@ type GetBalanceResponse struct {
 	Value *Balance `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GetBalanceResponse) Reset() {
-	*x = GetBalanceResponse{}
+func (x *BalanceResponse) Reset() {
+	*x = BalanceResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -100,13 +100,13 @@ func (x *GetBalanceResponse) Reset() {
 	}
 }
 
-func (x *GetBalanceResponse) String() string {
+func (x *BalanceResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetBalanceResponse) ProtoMessage() {}
+func (*BalanceResponse) ProtoMessage() {}
 
-func (x *GetBalanceResponse) ProtoReflect() protoreflect.Message {
+func (x *BalanceResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -118,36 +118,33 @@ func (x *GetBalanceResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetBalanceResponse.ProtoReflect.Descriptor instead.
-func (*GetBalanceResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use BalanceResponse.ProtoReflect.Descriptor instead.
+func (*BalanceResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetBalanceResponse) GetValue() *Balance {
+func (x *BalanceResponse) GetValue() *Balance {
 	if x != nil {
 		return x.Value
 	}
 	return nil
 }
 
-// ListBalanceRequest is the BankQuery/ListBalanceRequest request type.
-type ListBalanceRequest struct {
+// BalancesRequest is the BankQuery/BalancesRequest request type.
+type BalancesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListBalanceRequest_PrefixQuery
-	//	*ListBalanceRequest_RangeQuery_
-	Query isListBalanceRequest_Query `protobuf_oneof:"query"`
+	// address is the value of the address field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Address *string `protobuf:"bytes,1,opt,name=address,proto3,oneof" json:"address,omitempty"`
 	// pagination specifies optional pagination parameters.
-	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListBalanceRequest) Reset() {
-	*x = ListBalanceRequest{}
+func (x *BalancesRequest) Reset() {
+	*x = BalancesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -155,13 +152,13 @@ func (x *ListBalanceRequest) Reset() {
 	}
 }
 
-func (x *ListBalanceRequest) String() string {
+func (x *BalancesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListBalanceRequest) ProtoMessage() {}
+func (*BalancesRequest) ProtoMessage() {}
 
-func (x *ListBalanceRequest) ProtoReflect() protoreflect.Message {
+func (x *BalancesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -173,59 +170,27 @@ func (x *ListBalanceRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListBalanceRequest.ProtoReflect.Descriptor instead.
-func (*ListBalanceRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use BalancesRequest.ProtoReflect.Descriptor instead.
+func (*BalancesRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{2}
 }
 
-func (m *ListBalanceRequest) GetQuery() isListBalanceRequest_Query {
-	if m != nil {
-		return m.Query
+func (x *BalancesRequest) GetAddress() string {
+	if x != nil && x.Address != nil {
+		return *x.Address
 	}
-	return nil
+	return ""
 }
 
-func (x *ListBalanceRequest) GetPrefixQuery() *ListBalanceRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListBalanceRequest_PrefixQuery); ok {
-		return x.PrefixQuery
-	}
-	return nil
-}
-
-func (x *ListBalanceRequest) GetRangeQuery() *ListBalanceRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListBalanceRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListBalanceRequest) GetPagination() *v1beta1.PageRequest {
+func (x *BalancesRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-type isListBalanceRequest_Query interface {
-	isListBalanceRequest_Query()
-}
-
-type ListBalanceRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListBalanceRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListBalanceRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListBalanceRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListBalanceRequest_PrefixQuery) isListBalanceRequest_Query() {}
-
-func (*ListBalanceRequest_RangeQuery_) isListBalanceRequest_Query() {}
-
-// ListBalanceResponse is the BankQuery/ListBalanceResponse response type.
-type ListBalanceResponse struct {
+// BalancesResponse is the BankQuery/BalancesResponse response type.
+type BalancesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -236,8 +201,8 @@ type ListBalanceResponse struct {
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListBalanceResponse) Reset() {
-	*x = ListBalanceResponse{}
+func (x *BalancesResponse) Reset() {
+	*x = BalancesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -245,13 +210,13 @@ func (x *ListBalanceResponse) Reset() {
 	}
 }
 
-func (x *ListBalanceResponse) String() string {
+func (x *BalancesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListBalanceResponse) ProtoMessage() {}
+func (*BalancesResponse) ProtoMessage() {}
 
-func (x *ListBalanceResponse) ProtoReflect() protoreflect.Message {
+func (x *BalancesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -263,37 +228,40 @@ func (x *ListBalanceResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListBalanceResponse.ProtoReflect.Descriptor instead.
-func (*ListBalanceResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use BalancesResponse.ProtoReflect.Descriptor instead.
+func (*BalancesResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ListBalanceResponse) GetValues() []*Balance {
+func (x *BalancesResponse) GetValues() []*Balance {
 	if x != nil {
 		return x.Values
 	}
 	return nil
 }
 
-func (x *ListBalanceResponse) GetPagination() *v1beta1.PageResponse {
+func (x *BalancesResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-// GetSupplyRequest is the BankQuery/GetSupplyRequest request type.
-type GetSupplyRequest struct {
+// BalancesByDenomRequest is the BankQuery/BalancesByDenomRequest request type.
+type BalancesByDenomRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// denom specifies the value of the denom field in the primary key.
-	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// denom is the value of the denom field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Denom *string `protobuf:"bytes,1,opt,name=denom,proto3,oneof" json:"denom,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetSupplyRequest) Reset() {
-	*x = GetSupplyRequest{}
+func (x *BalancesByDenomRequest) Reset() {
+	*x = BalancesByDenomRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -301,13 +269,13 @@ func (x *GetSupplyRequest) Reset() {
 	}
 }
 
-func (x *GetSupplyRequest) String() string {
+func (x *BalancesByDenomRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSupplyRequest) ProtoMessage() {}
+func (*BalancesByDenomRequest) ProtoMessage() {}
 
-func (x *GetSupplyRequest) ProtoReflect() protoreflect.Message {
+func (x *BalancesByDenomRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -319,30 +287,39 @@ func (x *GetSupplyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSupplyRequest.ProtoReflect.Descriptor instead.
-func (*GetSupplyRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use BalancesByDenomRequest.ProtoReflect.Descriptor instead.
+func (*BalancesByDenomRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetSupplyRequest) GetDenom() string {
-	if x != nil {
-		return x.Denom
+func (x *BalancesByDenomRequest) GetDenom() string {
+	if x != nil && x.Denom != nil {
+		return *x.Denom
 	}
 	return ""
 }
 
-// GetSupplyResponse is the BankQuery/GetSupplyResponse response type.
-type GetSupplyResponse struct {
+func (x *BalancesByDenomRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// BalancesByDenomResponse is the BankQuery/BalancesByDenomResponse response type.
+type BalancesByDenomResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// value is the response value.
-	Value *Supply `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// values are the results of the query.
+	Values []*Balance `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetSupplyResponse) Reset() {
-	*x = GetSupplyResponse{}
+func (x *BalancesByDenomResponse) Reset() {
+	*x = BalancesByDenomResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -350,13 +327,13 @@ func (x *GetSupplyResponse) Reset() {
 	}
 }
 
-func (x *GetSupplyResponse) String() string {
+func (x *BalancesByDenomResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSupplyResponse) ProtoMessage() {}
+func (*BalancesByDenomResponse) ProtoMessage() {}
 
-func (x *GetSupplyResponse) ProtoReflect() protoreflect.Message {
+func (x *BalancesByDenomResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -368,36 +345,37 @@ func (x *GetSupplyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSupplyResponse.ProtoReflect.Descriptor instead.
-func (*GetSupplyResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use BalancesByDenomResponse.ProtoReflect.Descriptor instead.
+func (*BalancesByDenomResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetSupplyResponse) GetValue() *Supply {
+func (x *BalancesByDenomResponse) GetValues() []*Balance {
 	if x != nil {
-		return x.Value
+		return x.Values
 	}
 	return nil
 }
 
-// ListSupplyRequest is the BankQuery/ListSupplyRequest request type.
-type ListSupplyRequest struct {
+func (x *BalancesByDenomResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// SupplyRequest is the BankQuery/SupplyRequest request type.
+type SupplyRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListSupplyRequest_PrefixQuery
-	//	*ListSupplyRequest_RangeQuery_
-	Query isListSupplyRequest_Query `protobuf_oneof:"query"`
-	// pagination specifies optional pagination parameters.
-	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// denom specifies the value of the denom field in the primary key.
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 }
 
-func (x *ListSupplyRequest) Reset() {
-	*x = ListSupplyRequest{}
+func (x *SupplyRequest) Reset() {
+	*x = SupplyRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -405,13 +383,13 @@ func (x *ListSupplyRequest) Reset() {
 	}
 }
 
-func (x *ListSupplyRequest) String() string {
+func (x *SupplyRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListSupplyRequest) ProtoMessage() {}
+func (*SupplyRequest) ProtoMessage() {}
 
-func (x *ListSupplyRequest) ProtoReflect() protoreflect.Message {
+func (x *SupplyRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -423,71 +401,30 @@ func (x *ListSupplyRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListSupplyRequest.ProtoReflect.Descriptor instead.
-func (*ListSupplyRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use SupplyRequest.ProtoReflect.Descriptor instead.
+func (*SupplyRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{6}
 }
 
-func (m *ListSupplyRequest) GetQuery() isListSupplyRequest_Query {
-	if m != nil {
-		return m.Query
-	}
-	return nil
-}
-
-func (x *ListSupplyRequest) GetPrefixQuery() *ListSupplyRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListSupplyRequest_PrefixQuery); ok {
-		return x.PrefixQuery
-	}
-	return nil
-}
-
-func (x *ListSupplyRequest) GetRangeQuery() *ListSupplyRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListSupplyRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListSupplyRequest) GetPagination() *v1beta1.PageRequest {
+func (x *SupplyRequest) GetDenom() string {
 	if x != nil {
-		return x.Pagination
+		return x.Denom
 	}
-	return nil
+	return ""
 }
 
-type isListSupplyRequest_Query interface {
-	isListSupplyRequest_Query()
-}
-
-type ListSupplyRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListSupplyRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListSupplyRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListSupplyRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListSupplyRequest_PrefixQuery) isListSupplyRequest_Query() {}
-
-func (*ListSupplyRequest_RangeQuery_) isListSupplyRequest_Query() {}
-
-// ListSupplyResponse is the BankQuery/ListSupplyResponse response type.
-type ListSupplyResponse struct {
+// SupplyResponse is the BankQuery/SupplyResponse response type.
+type SupplyResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// values are the results of the query.
-	Values []*Supply `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
-	// pagination is the pagination response.
-	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// value is the response value.
+	Value *Supply `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *ListSupplyResponse) Reset() {
-	*x = ListSupplyResponse{}
+func (x *SupplyResponse) Reset() {
+	*x = SupplyResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -495,13 +432,13 @@ func (x *ListSupplyResponse) Reset() {
 	}
 }
 
-func (x *ListSupplyResponse) String() string {
+func (x *SupplyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListSupplyResponse) ProtoMessage() {}
+func (*SupplyResponse) ProtoMessage() {}
 
-func (x *ListSupplyResponse) ProtoReflect() protoreflect.Message {
+func (x *SupplyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -513,41 +450,30 @@ func (x *ListSupplyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListSupplyResponse.ProtoReflect.Descriptor instead.
-func (*ListSupplyResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use SupplyResponse.ProtoReflect.Descriptor instead.
+func (*SupplyResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_bank_query_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *ListSupplyResponse) GetValues() []*Supply {
+func (x *SupplyResponse) GetValue() *Supply {
 	if x != nil {
-		return x.Values
+		return x.Value
 	}
 	return nil
 }
 
-func (x *ListSupplyResponse) GetPagination() *v1beta1.PageResponse {
-	if x != nil {
-		return x.Pagination
-	}
-	return nil
-}
-
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListBalanceRequest_IndexKey struct {
+// SuppliesRequest is the BankQuery/SuppliesRequest request type.
+type SuppliesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListBalanceRequest_IndexKey_AddressDenom_
-	//	*ListBalanceRequest_IndexKey_Denom_
-	Key isListBalanceRequest_IndexKey_Key `protobuf_oneof:"key"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListBalanceRequest_IndexKey) Reset() {
-	*x = ListBalanceRequest_IndexKey{}
+func (x *SuppliesRequest) Reset() {
+	*x = SuppliesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -555,13 +481,13 @@ func (x *ListBalanceRequest_IndexKey) Reset() {
 	}
 }
 
-func (x *ListBalanceRequest_IndexKey) String() string {
+func (x *SuppliesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListBalanceRequest_IndexKey) ProtoMessage() {}
+func (*SuppliesRequest) ProtoMessage() {}
 
-func (x *ListBalanceRequest_IndexKey) ProtoReflect() protoreflect.Message {
+func (x *SuppliesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -573,67 +499,32 @@ func (x *ListBalanceRequest_IndexKey) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListBalanceRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListBalanceRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{2, 0}
+// Deprecated: Use SuppliesRequest.ProtoReflect.Descriptor instead.
+func (*SuppliesRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_bank_query_proto_rawDescGZIP(), []int{8}
 }
 
-func (m *ListBalanceRequest_IndexKey) GetKey() isListBalanceRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
+func (x *SuppliesRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
 	}
 	return nil
 }
 
-func (x *ListBalanceRequest_IndexKey) GetAddressDenom() *ListBalanceRequest_IndexKey_AddressDenom {
-	if x, ok := x.GetKey().(*ListBalanceRequest_IndexKey_AddressDenom_); ok {
-		return x.AddressDenom
-	}
-	return nil
-}
-
-func (x *ListBalanceRequest_IndexKey) GetDenom() *ListBalanceRequest_IndexKey_Denom {
-	if x, ok := x.GetKey().(*ListBalanceRequest_IndexKey_Denom_); ok {
-		return x.Denom
-	}
-	return nil
-}
-
-type isListBalanceRequest_IndexKey_Key interface {
-	isListBalanceRequest_IndexKey_Key()
-}
-
-type ListBalanceRequest_IndexKey_AddressDenom_ struct {
-	// address_denom specifies the value of the AddressDenom index key to use in the query.
-	AddressDenom *ListBalanceRequest_IndexKey_AddressDenom `protobuf:"bytes,1,opt,name=address_denom,json=addressDenom,proto3,oneof"`
-}
-
-type ListBalanceRequest_IndexKey_Denom_ struct {
-	// denom specifies the value of the Denom index key to use in the query.
-	Denom *ListBalanceRequest_IndexKey_Denom `protobuf:"bytes,2,opt,name=denom,proto3,oneof"`
-}
-
-func (*ListBalanceRequest_IndexKey_AddressDenom_) isListBalanceRequest_IndexKey_Key() {}
-
-func (*ListBalanceRequest_IndexKey_Denom_) isListBalanceRequest_IndexKey_Key() {}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListBalanceRequest_RangeQuery struct {
+// SuppliesResponse is the BankQuery/SuppliesResponse response type.
+type SuppliesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListBalanceRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListBalanceRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	// values are the results of the query.
+	Values []*Supply `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListBalanceRequest_RangeQuery) Reset() {
-	*x = ListBalanceRequest_RangeQuery{}
+func (x *SuppliesResponse) Reset() {
+	*x = SuppliesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_bank_query_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -641,13 +532,13 @@ func (x *ListBalanceRequest_RangeQuery) Reset() {
 	}
 }
 
-func (x *ListBalanceRequest_RangeQuery) String() string {
+func (x *SuppliesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListBalanceRequest_RangeQuery) ProtoMessage() {}
+func (*SuppliesResponse) ProtoMessage() {}
 
-func (x *ListBalanceRequest_RangeQuery) ProtoReflect() protoreflect.Message {
+func (x *SuppliesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_bank_query_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -659,311 +550,23 @@ func (x *ListBalanceRequest_RangeQuery) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListBalanceRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListBalanceRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{2, 1}
+// Deprecated: Use SuppliesResponse.ProtoReflect.Descriptor instead.
+func (*SuppliesResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_bank_query_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *ListBalanceRequest_RangeQuery) GetFrom() *ListBalanceRequest_IndexKey {
+func (x *SuppliesResponse) GetValues() []*Supply {
 	if x != nil {
-		return x.From
+		return x.Values
 	}
 	return nil
 }
 
-func (x *ListBalanceRequest_RangeQuery) GetTo() *ListBalanceRequest_IndexKey {
+func (x *SuppliesResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
-		return x.To
+		return x.Pagination
 	}
 	return nil
-}
-
-type ListBalanceRequest_IndexKey_AddressDenom struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// address is the value of the address field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Address *string `protobuf:"bytes,1,opt,name=address,proto3,oneof" json:"address,omitempty"`
-	// denom is the value of the denom field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Denom *string `protobuf:"bytes,2,opt,name=denom,proto3,oneof" json:"denom,omitempty"`
-}
-
-func (x *ListBalanceRequest_IndexKey_AddressDenom) Reset() {
-	*x = ListBalanceRequest_IndexKey_AddressDenom{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_bank_query_proto_msgTypes[10]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListBalanceRequest_IndexKey_AddressDenom) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListBalanceRequest_IndexKey_AddressDenom) ProtoMessage() {}
-
-func (x *ListBalanceRequest_IndexKey_AddressDenom) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_bank_query_proto_msgTypes[10]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListBalanceRequest_IndexKey_AddressDenom.ProtoReflect.Descriptor instead.
-func (*ListBalanceRequest_IndexKey_AddressDenom) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{2, 0, 0}
-}
-
-func (x *ListBalanceRequest_IndexKey_AddressDenom) GetAddress() string {
-	if x != nil && x.Address != nil {
-		return *x.Address
-	}
-	return ""
-}
-
-func (x *ListBalanceRequest_IndexKey_AddressDenom) GetDenom() string {
-	if x != nil && x.Denom != nil {
-		return *x.Denom
-	}
-	return ""
-}
-
-type ListBalanceRequest_IndexKey_Denom struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// denom is the value of the denom field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Denom *string `protobuf:"bytes,1,opt,name=denom,proto3,oneof" json:"denom,omitempty"`
-}
-
-func (x *ListBalanceRequest_IndexKey_Denom) Reset() {
-	*x = ListBalanceRequest_IndexKey_Denom{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_bank_query_proto_msgTypes[11]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListBalanceRequest_IndexKey_Denom) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListBalanceRequest_IndexKey_Denom) ProtoMessage() {}
-
-func (x *ListBalanceRequest_IndexKey_Denom) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_bank_query_proto_msgTypes[11]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListBalanceRequest_IndexKey_Denom.ProtoReflect.Descriptor instead.
-func (*ListBalanceRequest_IndexKey_Denom) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{2, 0, 1}
-}
-
-func (x *ListBalanceRequest_IndexKey_Denom) GetDenom() string {
-	if x != nil && x.Denom != nil {
-		return *x.Denom
-	}
-	return ""
-}
-
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListSupplyRequest_IndexKey struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListSupplyRequest_IndexKey_Denom_
-	Key isListSupplyRequest_IndexKey_Key `protobuf_oneof:"key"`
-}
-
-func (x *ListSupplyRequest_IndexKey) Reset() {
-	*x = ListSupplyRequest_IndexKey{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_bank_query_proto_msgTypes[12]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSupplyRequest_IndexKey) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSupplyRequest_IndexKey) ProtoMessage() {}
-
-func (x *ListSupplyRequest_IndexKey) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_bank_query_proto_msgTypes[12]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSupplyRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListSupplyRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{6, 0}
-}
-
-func (m *ListSupplyRequest_IndexKey) GetKey() isListSupplyRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
-	}
-	return nil
-}
-
-func (x *ListSupplyRequest_IndexKey) GetDenom() *ListSupplyRequest_IndexKey_Denom {
-	if x, ok := x.GetKey().(*ListSupplyRequest_IndexKey_Denom_); ok {
-		return x.Denom
-	}
-	return nil
-}
-
-type isListSupplyRequest_IndexKey_Key interface {
-	isListSupplyRequest_IndexKey_Key()
-}
-
-type ListSupplyRequest_IndexKey_Denom_ struct {
-	// denom specifies the value of the Denom index key to use in the query.
-	Denom *ListSupplyRequest_IndexKey_Denom `protobuf:"bytes,1,opt,name=denom,proto3,oneof"`
-}
-
-func (*ListSupplyRequest_IndexKey_Denom_) isListSupplyRequest_IndexKey_Key() {}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListSupplyRequest_RangeQuery struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListSupplyRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListSupplyRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
-}
-
-func (x *ListSupplyRequest_RangeQuery) Reset() {
-	*x = ListSupplyRequest_RangeQuery{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_bank_query_proto_msgTypes[13]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSupplyRequest_RangeQuery) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSupplyRequest_RangeQuery) ProtoMessage() {}
-
-func (x *ListSupplyRequest_RangeQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_bank_query_proto_msgTypes[13]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSupplyRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListSupplyRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{6, 1}
-}
-
-func (x *ListSupplyRequest_RangeQuery) GetFrom() *ListSupplyRequest_IndexKey {
-	if x != nil {
-		return x.From
-	}
-	return nil
-}
-
-func (x *ListSupplyRequest_RangeQuery) GetTo() *ListSupplyRequest_IndexKey {
-	if x != nil {
-		return x.To
-	}
-	return nil
-}
-
-type ListSupplyRequest_IndexKey_Denom struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// denom is the value of the denom field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Denom *string `protobuf:"bytes,1,opt,name=denom,proto3,oneof" json:"denom,omitempty"`
-}
-
-func (x *ListSupplyRequest_IndexKey_Denom) Reset() {
-	*x = ListSupplyRequest_IndexKey_Denom{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_bank_query_proto_msgTypes[14]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSupplyRequest_IndexKey_Denom) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSupplyRequest_IndexKey_Denom) ProtoMessage() {}
-
-func (x *ListSupplyRequest_IndexKey_Denom) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_bank_query_proto_msgTypes[14]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSupplyRequest_IndexKey_Denom.ProtoReflect.Descriptor instead.
-func (*ListSupplyRequest_IndexKey_Denom) Descriptor() ([]byte, []int) {
-	return file_testpb_bank_query_proto_rawDescGZIP(), []int{6, 0, 0}
-}
-
-func (x *ListSupplyRequest_IndexKey_Denom) GetDenom() string {
-	if x != nil && x.Denom != nil {
-		return *x.Denom
-	}
-	return ""
 }
 
 var File_testpb_bank_query_proto protoreflect.FileDescriptor
@@ -975,141 +578,100 @@ var file_testpb_bank_query_proto_rawDesc = []byte{
 	0x75, 0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67,
 	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x74,
 	0x65, 0x73, 0x74, 0x70, 0x62, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x22, 0x43, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x3b, 0x0a, 0x12, 0x47, 0x65, 0x74, 0x42, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x74, 0x65, 0x73,
-	0x74, 0x70, 0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x22, 0xb3, 0x05, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e,
-	0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x48, 0x0a, 0x0c, 0x70, 0x72, 0x65,
-	0x66, 0x69, 0x78, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x23, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c,
-	0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65,
-	0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x12, 0x48, 0x0a, 0x0b, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x5f, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48,
-	0x00, 0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x46, 0x0a,
-	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61,
-	0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0xbb, 0x02, 0x0a, 0x08, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b,
-	0x65, 0x79, 0x12, 0x57, 0x0a, 0x0d, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x64, 0x65,
-	0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x30, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x48, 0x00, 0x52, 0x0c, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x41, 0x0a, 0x05, 0x64,
-	0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x74, 0x65, 0x73,
-	0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e,
-	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x48, 0x00, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x1a, 0x5e,
-	0x0a, 0x0c, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x1d,
-	0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48,
-	0x00, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x88, 0x01, 0x01, 0x12, 0x19, 0x0a,
-	0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x48, 0x01, 0x52, 0x05,
-	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x88, 0x01, 0x01, 0x42, 0x0a, 0x0a, 0x08, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x42, 0x08, 0x0a, 0x06, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x1a, 0x2c,
-	0x0a, 0x05, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x19, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x88,
-	0x01, 0x01, 0x42, 0x08, 0x0a, 0x06, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x05, 0x0a, 0x03,
-	0x6b, 0x65, 0x79, 0x1a, 0x7a, 0x0a, 0x0a, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x12, 0x37, 0x0a, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x23, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c,
-	0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65,
-	0x78, 0x4b, 0x65, 0x79, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12, 0x33, 0x0a, 0x02, 0x74, 0x6f,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x02, 0x74, 0x6f, 0x42,
-	0x07, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0x87, 0x01, 0x0a, 0x13, 0x4c, 0x69, 0x73,
-	0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x27, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x0f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
-	0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67,
-	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72,
-	0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x22, 0x28, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x39, 0x0a, 0x11,
-	0x47, 0x65, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x24, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x0e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79,
-	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xf4, 0x03, 0x0a, 0x11, 0x4c, 0x69, 0x73, 0x74,
-	0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x47, 0x0a,
-	0x0c, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73,
-	0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49,
-	0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x66, 0x69,
-	0x78, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x47, 0x0a, 0x0b, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x5f,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x48, 0x00, 0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12,
-	0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20,
+	0x22, 0x40, 0x0a, 0x0e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05,
+	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x22, 0x38, 0x0a, 0x0f, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x42, 0x61,
+	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x84, 0x01, 0x0a,
+	0x0f, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x1d, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x48, 0x00, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x88, 0x01, 0x01, 0x12,
+	0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
 	0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
 	0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67,
-	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x81, 0x01, 0x0a, 0x08, 0x49, 0x6e, 0x64, 0x65,
-	0x78, 0x4b, 0x65, 0x79, 0x12, 0x40, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73,
-	0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49,
-	0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x48, 0x00, 0x52,
-	0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x1a, 0x2c, 0x0a, 0x05, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12,
-	0x19, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00,
-	0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x88, 0x01, 0x01, 0x42, 0x08, 0x0a, 0x06, 0x5f, 0x64,
-	0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x05, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x1a, 0x78, 0x0a, 0x0a, 0x52,
-	0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x36, 0x0a, 0x04, 0x66, 0x72, 0x6f,
-	0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x04, 0x66, 0x72, 0x6f,
-	0x6d, 0x12, 0x32, 0x0a, 0x02, 0x74, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c,
-	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65,
-	0x79, 0x52, 0x02, 0x74, 0x6f, 0x42, 0x07, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0x85,
-	0x01, 0x0a, 0x12, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x26, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53,
-	0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a,
-	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61,
-	0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69,
-	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32, 0xae, 0x02, 0x0a, 0x10, 0x42, 0x61, 0x6e, 0x6b, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x45, 0x0a, 0x0a, 0x47,
-	0x65, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x19, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65,
-	0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x48, 0x0a, 0x0b, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
-	0x65, 0x12, 0x1a, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42,
-	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e,
-	0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x42, 0x0a, 0x09,
-	0x47, 0x65, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74,
-	0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x12, 0x45, 0x0a, 0x0a, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x19,
-	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70,
-	0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x86, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x0e, 0x42, 0x61, 0x6e, 0x6b, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x6f, 0x72, 0x6d, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72,
-	0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58,
-	0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x0a, 0x0a, 0x08, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x22, 0x84, 0x01, 0x0a, 0x10, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x85, 0x01, 0x0a, 0x16, 0x42,
+	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x88, 0x01, 0x01,
+	0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61,
+	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x08, 0x0a, 0x06, 0x5f, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x22, 0x8b, 0x01, 0x0a, 0x17, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x42,
+	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27,
+	0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52,
+	0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x22, 0x25, 0x0a, 0x0d, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x36, 0x0a, 0x0e, 0x53, 0x75, 0x70, 0x70, 0x6c,
+	0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x24, 0x0a, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22,
+	0x59, 0x0a, 0x0f, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x83, 0x01, 0x0a, 0x10, 0x53,
+	0x75, 0x70, 0x70, 0x6c, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x26, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x0e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52,
+	0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x32, 0xe3, 0x02, 0x0a, 0x10, 0x42, 0x61, 0x6e, 0x6b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3c, 0x0a, 0x07, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x12, 0x16, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x00, 0x12, 0x3f, 0x0a, 0x08, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x12,
+	0x17, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x54, 0x0a, 0x0f, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73,
+	0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x1e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0x2e, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x73, 0x42, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x39, 0x0a, 0x06, 0x53, 0x75,
+	0x70, 0x70, 0x6c, 0x79, 0x12, 0x15, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x75,
+	0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x74, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x3f, 0x0a, 0x08, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x69, 0x65,
+	0x73, 0x12, 0x17, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x75, 0x70, 0x70, 0x6c,
+	0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x74, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x2e, 0x53, 0x75, 0x70, 0x70, 0x6c, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x86, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x0e, 0x42, 0x61, 0x6e, 0x6b, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x6f, 0x72, 0x6d, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e,
+	0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa,
+	0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1124,61 +686,50 @@ func file_testpb_bank_query_proto_rawDescGZIP() []byte {
 	return file_testpb_bank_query_proto_rawDescData
 }
 
-var file_testpb_bank_query_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_testpb_bank_query_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_testpb_bank_query_proto_goTypes = []interface{}{
-	(*GetBalanceRequest)(nil),                        // 0: testpb.GetBalanceRequest
-	(*GetBalanceResponse)(nil),                       // 1: testpb.GetBalanceResponse
-	(*ListBalanceRequest)(nil),                       // 2: testpb.ListBalanceRequest
-	(*ListBalanceResponse)(nil),                      // 3: testpb.ListBalanceResponse
-	(*GetSupplyRequest)(nil),                         // 4: testpb.GetSupplyRequest
-	(*GetSupplyResponse)(nil),                        // 5: testpb.GetSupplyResponse
-	(*ListSupplyRequest)(nil),                        // 6: testpb.ListSupplyRequest
-	(*ListSupplyResponse)(nil),                       // 7: testpb.ListSupplyResponse
-	(*ListBalanceRequest_IndexKey)(nil),              // 8: testpb.ListBalanceRequest.IndexKey
-	(*ListBalanceRequest_RangeQuery)(nil),            // 9: testpb.ListBalanceRequest.RangeQuery
-	(*ListBalanceRequest_IndexKey_AddressDenom)(nil), // 10: testpb.ListBalanceRequest.IndexKey.AddressDenom
-	(*ListBalanceRequest_IndexKey_Denom)(nil),        // 11: testpb.ListBalanceRequest.IndexKey.Denom
-	(*ListSupplyRequest_IndexKey)(nil),               // 12: testpb.ListSupplyRequest.IndexKey
-	(*ListSupplyRequest_RangeQuery)(nil),             // 13: testpb.ListSupplyRequest.RangeQuery
-	(*ListSupplyRequest_IndexKey_Denom)(nil),         // 14: testpb.ListSupplyRequest.IndexKey.Denom
-	(*Balance)(nil),                                  // 15: testpb.Balance
-	(*v1beta1.PageRequest)(nil),                      // 16: cosmos.base.query.v1beta1.PageRequest
-	(*v1beta1.PageResponse)(nil),                     // 17: cosmos.base.query.v1beta1.PageResponse
-	(*Supply)(nil),                                   // 18: testpb.Supply
+	(*BalanceRequest)(nil),          // 0: testpb.BalanceRequest
+	(*BalanceResponse)(nil),         // 1: testpb.BalanceResponse
+	(*BalancesRequest)(nil),         // 2: testpb.BalancesRequest
+	(*BalancesResponse)(nil),        // 3: testpb.BalancesResponse
+	(*BalancesByDenomRequest)(nil),  // 4: testpb.BalancesByDenomRequest
+	(*BalancesByDenomResponse)(nil), // 5: testpb.BalancesByDenomResponse
+	(*SupplyRequest)(nil),           // 6: testpb.SupplyRequest
+	(*SupplyResponse)(nil),          // 7: testpb.SupplyResponse
+	(*SuppliesRequest)(nil),         // 8: testpb.SuppliesRequest
+	(*SuppliesResponse)(nil),        // 9: testpb.SuppliesResponse
+	(*Balance)(nil),                 // 10: testpb.Balance
+	(*v1beta1.PageRequest)(nil),     // 11: cosmos.base.query.v1beta1.PageRequest
+	(*v1beta1.PageResponse)(nil),    // 12: cosmos.base.query.v1beta1.PageResponse
+	(*Supply)(nil),                  // 13: testpb.Supply
 }
 var file_testpb_bank_query_proto_depIdxs = []int32{
-	15, // 0: testpb.GetBalanceResponse.value:type_name -> testpb.Balance
-	8,  // 1: testpb.ListBalanceRequest.prefix_query:type_name -> testpb.ListBalanceRequest.IndexKey
-	9,  // 2: testpb.ListBalanceRequest.range_query:type_name -> testpb.ListBalanceRequest.RangeQuery
-	16, // 3: testpb.ListBalanceRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	15, // 4: testpb.ListBalanceResponse.values:type_name -> testpb.Balance
-	17, // 5: testpb.ListBalanceResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	18, // 6: testpb.GetSupplyResponse.value:type_name -> testpb.Supply
-	12, // 7: testpb.ListSupplyRequest.prefix_query:type_name -> testpb.ListSupplyRequest.IndexKey
-	13, // 8: testpb.ListSupplyRequest.range_query:type_name -> testpb.ListSupplyRequest.RangeQuery
-	16, // 9: testpb.ListSupplyRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	18, // 10: testpb.ListSupplyResponse.values:type_name -> testpb.Supply
-	17, // 11: testpb.ListSupplyResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	10, // 12: testpb.ListBalanceRequest.IndexKey.address_denom:type_name -> testpb.ListBalanceRequest.IndexKey.AddressDenom
-	11, // 13: testpb.ListBalanceRequest.IndexKey.denom:type_name -> testpb.ListBalanceRequest.IndexKey.Denom
-	8,  // 14: testpb.ListBalanceRequest.RangeQuery.from:type_name -> testpb.ListBalanceRequest.IndexKey
-	8,  // 15: testpb.ListBalanceRequest.RangeQuery.to:type_name -> testpb.ListBalanceRequest.IndexKey
-	14, // 16: testpb.ListSupplyRequest.IndexKey.denom:type_name -> testpb.ListSupplyRequest.IndexKey.Denom
-	12, // 17: testpb.ListSupplyRequest.RangeQuery.from:type_name -> testpb.ListSupplyRequest.IndexKey
-	12, // 18: testpb.ListSupplyRequest.RangeQuery.to:type_name -> testpb.ListSupplyRequest.IndexKey
-	0,  // 19: testpb.BankQueryService.GetBalance:input_type -> testpb.GetBalanceRequest
-	2,  // 20: testpb.BankQueryService.ListBalance:input_type -> testpb.ListBalanceRequest
-	4,  // 21: testpb.BankQueryService.GetSupply:input_type -> testpb.GetSupplyRequest
-	6,  // 22: testpb.BankQueryService.ListSupply:input_type -> testpb.ListSupplyRequest
-	1,  // 23: testpb.BankQueryService.GetBalance:output_type -> testpb.GetBalanceResponse
-	3,  // 24: testpb.BankQueryService.ListBalance:output_type -> testpb.ListBalanceResponse
-	5,  // 25: testpb.BankQueryService.GetSupply:output_type -> testpb.GetSupplyResponse
-	7,  // 26: testpb.BankQueryService.ListSupply:output_type -> testpb.ListSupplyResponse
-	23, // [23:27] is the sub-list for method output_type
-	19, // [19:23] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	10, // 0: testpb.BalanceResponse.value:type_name -> testpb.Balance
+	11, // 1: testpb.BalancesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	10, // 2: testpb.BalancesResponse.values:type_name -> testpb.Balance
+	12, // 3: testpb.BalancesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	11, // 4: testpb.BalancesByDenomRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	10, // 5: testpb.BalancesByDenomResponse.values:type_name -> testpb.Balance
+	12, // 6: testpb.BalancesByDenomResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	13, // 7: testpb.SupplyResponse.value:type_name -> testpb.Supply
+	11, // 8: testpb.SuppliesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	13, // 9: testpb.SuppliesResponse.values:type_name -> testpb.Supply
+	12, // 10: testpb.SuppliesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	0,  // 11: testpb.BankQueryService.Balance:input_type -> testpb.BalanceRequest
+	2,  // 12: testpb.BankQueryService.Balances:input_type -> testpb.BalancesRequest
+	4,  // 13: testpb.BankQueryService.BalancesByDenom:input_type -> testpb.BalancesByDenomRequest
+	6,  // 14: testpb.BankQueryService.Supply:input_type -> testpb.SupplyRequest
+	8,  // 15: testpb.BankQueryService.Supplies:input_type -> testpb.SuppliesRequest
+	1,  // 16: testpb.BankQueryService.Balance:output_type -> testpb.BalanceResponse
+	3,  // 17: testpb.BankQueryService.Balances:output_type -> testpb.BalancesResponse
+	5,  // 18: testpb.BankQueryService.BalancesByDenom:output_type -> testpb.BalancesByDenomResponse
+	7,  // 19: testpb.BankQueryService.Supply:output_type -> testpb.SupplyResponse
+	9,  // 20: testpb.BankQueryService.Supplies:output_type -> testpb.SuppliesResponse
+	16, // [16:21] is the sub-list for method output_type
+	11, // [11:16] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_testpb_bank_query_proto_init() }
@@ -1189,7 +740,7 @@ func file_testpb_bank_query_proto_init() {
 	file_testpb_bank_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_testpb_bank_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetBalanceRequest); i {
+			switch v := v.(*BalanceRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1201,7 +752,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetBalanceResponse); i {
+			switch v := v.(*BalanceResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1213,7 +764,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListBalanceRequest); i {
+			switch v := v.(*BalancesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1225,7 +776,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListBalanceResponse); i {
+			switch v := v.(*BalancesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1237,7 +788,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSupplyRequest); i {
+			switch v := v.(*BalancesByDenomRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1249,7 +800,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSupplyResponse); i {
+			switch v := v.(*BalancesByDenomResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1261,7 +812,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSupplyRequest); i {
+			switch v := v.(*SupplyRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1273,7 +824,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSupplyResponse); i {
+			switch v := v.(*SupplyResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1285,7 +836,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListBalanceRequest_IndexKey); i {
+			switch v := v.(*SuppliesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1297,67 +848,7 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 		file_testpb_bank_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListBalanceRequest_RangeQuery); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_bank_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListBalanceRequest_IndexKey_AddressDenom); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_bank_query_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListBalanceRequest_IndexKey_Denom); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_bank_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSupplyRequest_IndexKey); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_bank_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSupplyRequest_RangeQuery); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_bank_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSupplyRequest_IndexKey_Denom); i {
+			switch v := v.(*SuppliesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1369,31 +860,15 @@ func file_testpb_bank_query_proto_init() {
 			}
 		}
 	}
-	file_testpb_bank_query_proto_msgTypes[2].OneofWrappers = []interface{}{
-		(*ListBalanceRequest_PrefixQuery)(nil),
-		(*ListBalanceRequest_RangeQuery_)(nil),
-	}
-	file_testpb_bank_query_proto_msgTypes[6].OneofWrappers = []interface{}{
-		(*ListSupplyRequest_PrefixQuery)(nil),
-		(*ListSupplyRequest_RangeQuery_)(nil),
-	}
-	file_testpb_bank_query_proto_msgTypes[8].OneofWrappers = []interface{}{
-		(*ListBalanceRequest_IndexKey_AddressDenom_)(nil),
-		(*ListBalanceRequest_IndexKey_Denom_)(nil),
-	}
-	file_testpb_bank_query_proto_msgTypes[10].OneofWrappers = []interface{}{}
-	file_testpb_bank_query_proto_msgTypes[11].OneofWrappers = []interface{}{}
-	file_testpb_bank_query_proto_msgTypes[12].OneofWrappers = []interface{}{
-		(*ListSupplyRequest_IndexKey_Denom_)(nil),
-	}
-	file_testpb_bank_query_proto_msgTypes[14].OneofWrappers = []interface{}{}
+	file_testpb_bank_query_proto_msgTypes[2].OneofWrappers = []interface{}{}
+	file_testpb_bank_query_proto_msgTypes[4].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_testpb_bank_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

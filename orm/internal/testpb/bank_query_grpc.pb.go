@@ -22,14 +22,16 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BankQueryServiceClient interface {
-	// Get queries the Balance table by its primary key.
-	GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error)
-	// ListBalance queries the Balance table using prefix and range queries against defined indexes.
-	ListBalance(ctx context.Context, in *ListBalanceRequest, opts ...grpc.CallOption) (*ListBalanceResponse, error)
-	// Get queries the Supply table by its primary key.
-	GetSupply(ctx context.Context, in *GetSupplyRequest, opts ...grpc.CallOption) (*GetSupplyResponse, error)
-	// ListSupply queries the Supply table using prefix and range queries against defined indexes.
-	ListSupply(ctx context.Context, in *ListSupplyRequest, opts ...grpc.CallOption) (*ListSupplyResponse, error)
+	// Balance queries the Balance table by its primary key.
+	Balance(ctx context.Context, in *BalanceRequest, opts ...grpc.CallOption) (*BalanceResponse, error)
+	// Balances queries the Balance table using the primary key index.
+	Balances(ctx context.Context, in *BalancesRequest, opts ...grpc.CallOption) (*BalancesResponse, error)
+	// BalancesByDenom queries the Balance table using the primary key index.
+	BalancesByDenom(ctx context.Context, in *BalancesByDenomRequest, opts ...grpc.CallOption) (*BalancesByDenomResponse, error)
+	// Supply queries the Supply table by its primary key.
+	Supply(ctx context.Context, in *SupplyRequest, opts ...grpc.CallOption) (*SupplyResponse, error)
+	// Supplies queries the Supply table using the primary key index.
+	Supplies(ctx context.Context, in *SuppliesRequest, opts ...grpc.CallOption) (*SuppliesResponse, error)
 }
 
 type bankQueryServiceClient struct {
@@ -40,36 +42,45 @@ func NewBankQueryServiceClient(cc grpc.ClientConnInterface) BankQueryServiceClie
 	return &bankQueryServiceClient{cc}
 }
 
-func (c *bankQueryServiceClient) GetBalance(ctx context.Context, in *GetBalanceRequest, opts ...grpc.CallOption) (*GetBalanceResponse, error) {
-	out := new(GetBalanceResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/GetBalance", in, out, opts...)
+func (c *bankQueryServiceClient) Balance(ctx context.Context, in *BalanceRequest, opts ...grpc.CallOption) (*BalanceResponse, error) {
+	out := new(BalanceResponse)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/Balance", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bankQueryServiceClient) ListBalance(ctx context.Context, in *ListBalanceRequest, opts ...grpc.CallOption) (*ListBalanceResponse, error) {
-	out := new(ListBalanceResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/ListBalance", in, out, opts...)
+func (c *bankQueryServiceClient) Balances(ctx context.Context, in *BalancesRequest, opts ...grpc.CallOption) (*BalancesResponse, error) {
+	out := new(BalancesResponse)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/Balances", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bankQueryServiceClient) GetSupply(ctx context.Context, in *GetSupplyRequest, opts ...grpc.CallOption) (*GetSupplyResponse, error) {
-	out := new(GetSupplyResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/GetSupply", in, out, opts...)
+func (c *bankQueryServiceClient) BalancesByDenom(ctx context.Context, in *BalancesByDenomRequest, opts ...grpc.CallOption) (*BalancesByDenomResponse, error) {
+	out := new(BalancesByDenomResponse)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/BalancesByDenom", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *bankQueryServiceClient) ListSupply(ctx context.Context, in *ListSupplyRequest, opts ...grpc.CallOption) (*ListSupplyResponse, error) {
-	out := new(ListSupplyResponse)
-	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/ListSupply", in, out, opts...)
+func (c *bankQueryServiceClient) Supply(ctx context.Context, in *SupplyRequest, opts ...grpc.CallOption) (*SupplyResponse, error) {
+	out := new(SupplyResponse)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/Supply", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bankQueryServiceClient) Supplies(ctx context.Context, in *SuppliesRequest, opts ...grpc.CallOption) (*SuppliesResponse, error) {
+	out := new(SuppliesResponse)
+	err := c.cc.Invoke(ctx, "/testpb.BankQueryService/Supplies", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,14 +91,16 @@ func (c *bankQueryServiceClient) ListSupply(ctx context.Context, in *ListSupplyR
 // All implementations must embed UnimplementedBankQueryServiceServer
 // for forward compatibility
 type BankQueryServiceServer interface {
-	// Get queries the Balance table by its primary key.
-	GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error)
-	// ListBalance queries the Balance table using prefix and range queries against defined indexes.
-	ListBalance(context.Context, *ListBalanceRequest) (*ListBalanceResponse, error)
-	// Get queries the Supply table by its primary key.
-	GetSupply(context.Context, *GetSupplyRequest) (*GetSupplyResponse, error)
-	// ListSupply queries the Supply table using prefix and range queries against defined indexes.
-	ListSupply(context.Context, *ListSupplyRequest) (*ListSupplyResponse, error)
+	// Balance queries the Balance table by its primary key.
+	Balance(context.Context, *BalanceRequest) (*BalanceResponse, error)
+	// Balances queries the Balance table using the primary key index.
+	Balances(context.Context, *BalancesRequest) (*BalancesResponse, error)
+	// BalancesByDenom queries the Balance table using the primary key index.
+	BalancesByDenom(context.Context, *BalancesByDenomRequest) (*BalancesByDenomResponse, error)
+	// Supply queries the Supply table by its primary key.
+	Supply(context.Context, *SupplyRequest) (*SupplyResponse, error)
+	// Supplies queries the Supply table using the primary key index.
+	Supplies(context.Context, *SuppliesRequest) (*SuppliesResponse, error)
 	mustEmbedUnimplementedBankQueryServiceServer()
 }
 
@@ -95,17 +108,20 @@ type BankQueryServiceServer interface {
 type UnimplementedBankQueryServiceServer struct {
 }
 
-func (UnimplementedBankQueryServiceServer) GetBalance(context.Context, *GetBalanceRequest) (*GetBalanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBalance not implemented")
+func (UnimplementedBankQueryServiceServer) Balance(context.Context, *BalanceRequest) (*BalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Balance not implemented")
 }
-func (UnimplementedBankQueryServiceServer) ListBalance(context.Context, *ListBalanceRequest) (*ListBalanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListBalance not implemented")
+func (UnimplementedBankQueryServiceServer) Balances(context.Context, *BalancesRequest) (*BalancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Balances not implemented")
 }
-func (UnimplementedBankQueryServiceServer) GetSupply(context.Context, *GetSupplyRequest) (*GetSupplyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSupply not implemented")
+func (UnimplementedBankQueryServiceServer) BalancesByDenom(context.Context, *BalancesByDenomRequest) (*BalancesByDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BalancesByDenom not implemented")
 }
-func (UnimplementedBankQueryServiceServer) ListSupply(context.Context, *ListSupplyRequest) (*ListSupplyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListSupply not implemented")
+func (UnimplementedBankQueryServiceServer) Supply(context.Context, *SupplyRequest) (*SupplyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Supply not implemented")
+}
+func (UnimplementedBankQueryServiceServer) Supplies(context.Context, *SuppliesRequest) (*SuppliesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Supplies not implemented")
 }
 func (UnimplementedBankQueryServiceServer) mustEmbedUnimplementedBankQueryServiceServer() {}
 
@@ -120,74 +136,92 @@ func RegisterBankQueryServiceServer(s grpc.ServiceRegistrar, srv BankQueryServic
 	s.RegisterService(&BankQueryService_ServiceDesc, srv)
 }
 
-func _BankQueryService_GetBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBalanceRequest)
+func _BankQueryService_Balance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BalanceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServiceServer).GetBalance(ctx, in)
+		return srv.(BankQueryServiceServer).Balance(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQueryService/GetBalance",
+		FullMethod: "/testpb.BankQueryService/Balance",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServiceServer).GetBalance(ctx, req.(*GetBalanceRequest))
+		return srv.(BankQueryServiceServer).Balance(ctx, req.(*BalanceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BankQueryService_ListBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListBalanceRequest)
+func _BankQueryService_Balances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BalancesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServiceServer).ListBalance(ctx, in)
+		return srv.(BankQueryServiceServer).Balances(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQueryService/ListBalance",
+		FullMethod: "/testpb.BankQueryService/Balances",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServiceServer).ListBalance(ctx, req.(*ListBalanceRequest))
+		return srv.(BankQueryServiceServer).Balances(ctx, req.(*BalancesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BankQueryService_GetSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSupplyRequest)
+func _BankQueryService_BalancesByDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BalancesByDenomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServiceServer).GetSupply(ctx, in)
+		return srv.(BankQueryServiceServer).BalancesByDenom(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQueryService/GetSupply",
+		FullMethod: "/testpb.BankQueryService/BalancesByDenom",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServiceServer).GetSupply(ctx, req.(*GetSupplyRequest))
+		return srv.(BankQueryServiceServer).BalancesByDenom(ctx, req.(*BalancesByDenomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BankQueryService_ListSupply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListSupplyRequest)
+func _BankQueryService_Supply_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SupplyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BankQueryServiceServer).ListSupply(ctx, in)
+		return srv.(BankQueryServiceServer).Supply(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.BankQueryService/ListSupply",
+		FullMethod: "/testpb.BankQueryService/Supply",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BankQueryServiceServer).ListSupply(ctx, req.(*ListSupplyRequest))
+		return srv.(BankQueryServiceServer).Supply(ctx, req.(*SupplyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BankQueryService_Supplies_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SuppliesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BankQueryServiceServer).Supplies(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.BankQueryService/Supplies",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BankQueryServiceServer).Supplies(ctx, req.(*SuppliesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,20 +234,24 @@ var BankQueryService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BankQueryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetBalance",
-			Handler:    _BankQueryService_GetBalance_Handler,
+			MethodName: "Balance",
+			Handler:    _BankQueryService_Balance_Handler,
 		},
 		{
-			MethodName: "ListBalance",
-			Handler:    _BankQueryService_ListBalance_Handler,
+			MethodName: "Balances",
+			Handler:    _BankQueryService_Balances_Handler,
 		},
 		{
-			MethodName: "GetSupply",
-			Handler:    _BankQueryService_GetSupply_Handler,
+			MethodName: "BalancesByDenom",
+			Handler:    _BankQueryService_BalancesByDenom_Handler,
 		},
 		{
-			MethodName: "ListSupply",
-			Handler:    _BankQueryService_ListSupply_Handler,
+			MethodName: "Supply",
+			Handler:    _BankQueryService_Supply_Handler,
+		},
+		{
+			MethodName: "Supplies",
+			Handler:    _BankQueryService_Supplies_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

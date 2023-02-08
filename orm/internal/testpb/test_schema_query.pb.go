@@ -24,8 +24,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// GetExampleTableRequest is the TestSchemaQuery/GetExampleTableRequest request type.
-type GetExampleTableRequest struct {
+// ExampleTableRequest is the TestSchemaQuery/ExampleTableRequest request type.
+type ExampleTableRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -38,8 +38,8 @@ type GetExampleTableRequest struct {
 	Str string `protobuf:"bytes,3,opt,name=str,proto3" json:"str,omitempty"`
 }
 
-func (x *GetExampleTableRequest) Reset() {
-	*x = GetExampleTableRequest{}
+func (x *ExampleTableRequest) Reset() {
+	*x = ExampleTableRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -47,13 +47,13 @@ func (x *GetExampleTableRequest) Reset() {
 	}
 }
 
-func (x *GetExampleTableRequest) String() string {
+func (x *ExampleTableRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleTableRequest) ProtoMessage() {}
+func (*ExampleTableRequest) ProtoMessage() {}
 
-func (x *GetExampleTableRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTableRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -65,34 +65,34 @@ func (x *GetExampleTableRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleTableRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleTableRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTableRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTableRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *GetExampleTableRequest) GetU32() uint32 {
+func (x *ExampleTableRequest) GetU32() uint32 {
 	if x != nil {
 		return x.U32
 	}
 	return 0
 }
 
-func (x *GetExampleTableRequest) GetI64() int64 {
+func (x *ExampleTableRequest) GetI64() int64 {
 	if x != nil {
 		return x.I64
 	}
 	return 0
 }
 
-func (x *GetExampleTableRequest) GetStr() string {
+func (x *ExampleTableRequest) GetStr() string {
 	if x != nil {
 		return x.Str
 	}
 	return ""
 }
 
-// GetExampleTableResponse is the TestSchemaQuery/GetExampleTableResponse response type.
-type GetExampleTableResponse struct {
+// ExampleTableResponse is the TestSchemaQuery/ExampleTableResponse response type.
+type ExampleTableResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -101,8 +101,8 @@ type GetExampleTableResponse struct {
 	Value *ExampleTable `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GetExampleTableResponse) Reset() {
-	*x = GetExampleTableResponse{}
+func (x *ExampleTableResponse) Reset() {
+	*x = ExampleTableResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -110,13 +110,13 @@ func (x *GetExampleTableResponse) Reset() {
 	}
 }
 
-func (x *GetExampleTableResponse) String() string {
+func (x *ExampleTableResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleTableResponse) ProtoMessage() {}
+func (*ExampleTableResponse) ProtoMessage() {}
 
-func (x *GetExampleTableResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTableResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -128,20 +128,20 @@ func (x *GetExampleTableResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleTableResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleTableResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTableResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTableResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetExampleTableResponse) GetValue() *ExampleTable {
+func (x *ExampleTableResponse) GetValue() *ExampleTable {
 	if x != nil {
 		return x.Value
 	}
 	return nil
 }
 
-// GetExampleTableByU64StrRequest is the TestSchemaQuery/GetExampleTableByU64StrRequest request type.
-type GetExampleTableByU64StrRequest struct {
+// ExampleTableByU64StrRequest is the TestSchemaQuery/ExampleTableByU64StrRequest request type.
+type ExampleTableByU64StrRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -150,8 +150,8 @@ type GetExampleTableByU64StrRequest struct {
 	Str string `protobuf:"bytes,2,opt,name=str,proto3" json:"str,omitempty"`
 }
 
-func (x *GetExampleTableByU64StrRequest) Reset() {
-	*x = GetExampleTableByU64StrRequest{}
+func (x *ExampleTableByU64StrRequest) Reset() {
+	*x = ExampleTableByU64StrRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -159,13 +159,13 @@ func (x *GetExampleTableByU64StrRequest) Reset() {
 	}
 }
 
-func (x *GetExampleTableByU64StrRequest) String() string {
+func (x *ExampleTableByU64StrRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleTableByU64StrRequest) ProtoMessage() {}
+func (*ExampleTableByU64StrRequest) ProtoMessage() {}
 
-func (x *GetExampleTableByU64StrRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTableByU64StrRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -177,27 +177,27 @@ func (x *GetExampleTableByU64StrRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleTableByU64StrRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleTableByU64StrRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTableByU64StrRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTableByU64StrRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GetExampleTableByU64StrRequest) GetU64() uint64 {
+func (x *ExampleTableByU64StrRequest) GetU64() uint64 {
 	if x != nil {
 		return x.U64
 	}
 	return 0
 }
 
-func (x *GetExampleTableByU64StrRequest) GetStr() string {
+func (x *ExampleTableByU64StrRequest) GetStr() string {
 	if x != nil {
 		return x.Str
 	}
 	return ""
 }
 
-// GetExampleTableByU64StrResponse is the TestSchemaQuery/GetExampleTableByU64StrResponse response type.
-type GetExampleTableByU64StrResponse struct {
+// ExampleTableByU64StrResponse is the TestSchemaQuery/ExampleTableByU64StrResponse response type.
+type ExampleTableByU64StrResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -205,8 +205,8 @@ type GetExampleTableByU64StrResponse struct {
 	Value *ExampleTable `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GetExampleTableByU64StrResponse) Reset() {
-	*x = GetExampleTableByU64StrResponse{}
+func (x *ExampleTableByU64StrResponse) Reset() {
+	*x = ExampleTableByU64StrResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -214,13 +214,13 @@ func (x *GetExampleTableByU64StrResponse) Reset() {
 	}
 }
 
-func (x *GetExampleTableByU64StrResponse) String() string {
+func (x *ExampleTableByU64StrResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleTableByU64StrResponse) ProtoMessage() {}
+func (*ExampleTableByU64StrResponse) ProtoMessage() {}
 
-func (x *GetExampleTableByU64StrResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTableByU64StrResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -232,36 +232,36 @@ func (x *GetExampleTableByU64StrResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleTableByU64StrResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleTableByU64StrResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTableByU64StrResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTableByU64StrResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetExampleTableByU64StrResponse) GetValue() *ExampleTable {
+func (x *ExampleTableByU64StrResponse) GetValue() *ExampleTable {
 	if x != nil {
 		return x.Value
 	}
 	return nil
 }
 
-// ListExampleTableRequest is the TestSchemaQuery/ListExampleTableRequest request type.
-type ListExampleTableRequest struct {
+// ExampleTablesRequest is the TestSchemaQuery/ExampleTablesRequest request type.
+type ExampleTablesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListExampleTableRequest_PrefixQuery
-	//	*ListExampleTableRequest_RangeQuery_
-	Query isListExampleTableRequest_Query `protobuf_oneof:"query"`
+	// u32 is the value of the u32 field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	U32 *uint32 `protobuf:"varint,1,opt,name=u32,proto3,oneof" json:"u32,omitempty"`
+	// i64 is the value of the i64 field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	I64 *int64 `protobuf:"varint,2,opt,name=i64,proto3,oneof" json:"i64,omitempty"`
 	// pagination specifies optional pagination parameters.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTableRequest) Reset() {
-	*x = ListExampleTableRequest{}
+func (x *ExampleTablesRequest) Reset() {
+	*x = ExampleTablesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -269,13 +269,13 @@ func (x *ListExampleTableRequest) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest) String() string {
+func (x *ExampleTablesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest) ProtoMessage() {}
+func (*ExampleTablesRequest) ProtoMessage() {}
 
-func (x *ListExampleTableRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -287,59 +287,34 @@ func (x *ListExampleTableRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTablesRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4}
 }
 
-func (m *ListExampleTableRequest) GetQuery() isListExampleTableRequest_Query {
-	if m != nil {
-		return m.Query
+func (x *ExampleTablesRequest) GetU32() uint32 {
+	if x != nil && x.U32 != nil {
+		return *x.U32
 	}
-	return nil
+	return 0
 }
 
-func (x *ListExampleTableRequest) GetPrefixQuery() *ListExampleTableRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListExampleTableRequest_PrefixQuery); ok {
-		return x.PrefixQuery
+func (x *ExampleTablesRequest) GetI64() int64 {
+	if x != nil && x.I64 != nil {
+		return *x.I64
 	}
-	return nil
+	return 0
 }
 
-func (x *ListExampleTableRequest) GetRangeQuery() *ListExampleTableRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListExampleTableRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListExampleTableRequest) GetPagination() *v1beta1.PageRequest {
+func (x *ExampleTablesRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-type isListExampleTableRequest_Query interface {
-	isListExampleTableRequest_Query()
-}
-
-type ListExampleTableRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListExampleTableRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListExampleTableRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListExampleTableRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListExampleTableRequest_PrefixQuery) isListExampleTableRequest_Query() {}
-
-func (*ListExampleTableRequest_RangeQuery_) isListExampleTableRequest_Query() {}
-
-// ListExampleTableResponse is the TestSchemaQuery/ListExampleTableResponse response type.
-type ListExampleTableResponse struct {
+// ExampleTablesResponse is the TestSchemaQuery/ExampleTablesResponse response type.
+type ExampleTablesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -350,8 +325,8 @@ type ListExampleTableResponse struct {
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTableResponse) Reset() {
-	*x = ListExampleTableResponse{}
+func (x *ExampleTablesResponse) Reset() {
+	*x = ExampleTablesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -359,13 +334,13 @@ func (x *ListExampleTableResponse) Reset() {
 	}
 }
 
-func (x *ListExampleTableResponse) String() string {
+func (x *ExampleTablesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableResponse) ProtoMessage() {}
+func (*ExampleTablesResponse) ProtoMessage() {}
 
-func (x *ListExampleTableResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -377,37 +352,43 @@ func (x *ListExampleTableResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableResponse.ProtoReflect.Descriptor instead.
-func (*ListExampleTableResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTablesResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ListExampleTableResponse) GetValues() []*ExampleTable {
+func (x *ExampleTablesResponse) GetValues() []*ExampleTable {
 	if x != nil {
 		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleTableResponse) GetPagination() *v1beta1.PageResponse {
+func (x *ExampleTablesResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-// GetExampleAutoIncrementTableRequest is the TestSchemaQuery/GetExampleAutoIncrementTableRequest request type.
-type GetExampleAutoIncrementTableRequest struct {
+// ExampleTablesByU64StrRequest is the TestSchemaQuery/ExampleTablesByU64StrRequest request type.
+type ExampleTablesByU64StrRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// id specifies the value of the id field in the primary key.
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// u64 is the value of the u64 field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	U64 *uint64 `protobuf:"varint,1,opt,name=u64,proto3,oneof" json:"u64,omitempty"`
+	// str is the value of the str field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Str *string `protobuf:"bytes,2,opt,name=str,proto3,oneof" json:"str,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetExampleAutoIncrementTableRequest) Reset() {
-	*x = GetExampleAutoIncrementTableRequest{}
+func (x *ExampleTablesByU64StrRequest) Reset() {
+	*x = ExampleTablesByU64StrRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -415,13 +396,13 @@ func (x *GetExampleAutoIncrementTableRequest) Reset() {
 	}
 }
 
-func (x *GetExampleAutoIncrementTableRequest) String() string {
+func (x *ExampleTablesByU64StrRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleAutoIncrementTableRequest) ProtoMessage() {}
+func (*ExampleTablesByU64StrRequest) ProtoMessage() {}
 
-func (x *GetExampleAutoIncrementTableRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesByU64StrRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -433,30 +414,46 @@ func (x *GetExampleAutoIncrementTableRequest) ProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleAutoIncrementTableRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleAutoIncrementTableRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesByU64StrRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTablesByU64StrRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetExampleAutoIncrementTableRequest) GetId() uint64 {
-	if x != nil {
-		return x.Id
+func (x *ExampleTablesByU64StrRequest) GetU64() uint64 {
+	if x != nil && x.U64 != nil {
+		return *x.U64
 	}
 	return 0
 }
 
-// GetExampleAutoIncrementTableResponse is the TestSchemaQuery/GetExampleAutoIncrementTableResponse response type.
-type GetExampleAutoIncrementTableResponse struct {
+func (x *ExampleTablesByU64StrRequest) GetStr() string {
+	if x != nil && x.Str != nil {
+		return *x.Str
+	}
+	return ""
+}
+
+func (x *ExampleTablesByU64StrRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleTablesByU64StrResponse is the TestSchemaQuery/ExampleTablesByU64StrResponse response type.
+type ExampleTablesByU64StrResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// value is the response value.
-	Value *ExampleAutoIncrementTable `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetExampleAutoIncrementTableResponse) Reset() {
-	*x = GetExampleAutoIncrementTableResponse{}
+func (x *ExampleTablesByU64StrResponse) Reset() {
+	*x = ExampleTablesByU64StrResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -464,13 +461,13 @@ func (x *GetExampleAutoIncrementTableResponse) Reset() {
 	}
 }
 
-func (x *GetExampleAutoIncrementTableResponse) String() string {
+func (x *ExampleTablesByU64StrResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleAutoIncrementTableResponse) ProtoMessage() {}
+func (*ExampleTablesByU64StrResponse) ProtoMessage() {}
 
-func (x *GetExampleAutoIncrementTableResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesByU64StrResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -482,29 +479,43 @@ func (x *GetExampleAutoIncrementTableResponse) ProtoReflect() protoreflect.Messa
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleAutoIncrementTableResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleAutoIncrementTableResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesByU64StrResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTablesByU64StrResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *GetExampleAutoIncrementTableResponse) GetValue() *ExampleAutoIncrementTable {
+func (x *ExampleTablesByU64StrResponse) GetValues() []*ExampleTable {
 	if x != nil {
-		return x.Value
+		return x.Values
 	}
 	return nil
 }
 
-// GetExampleAutoIncrementTableByXRequest is the TestSchemaQuery/GetExampleAutoIncrementTableByXRequest request type.
-type GetExampleAutoIncrementTableByXRequest struct {
+func (x *ExampleTablesByU64StrResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleTablesByStrU32Request is the TestSchemaQuery/ExampleTablesByStrU32Request request type.
+type ExampleTablesByStrU32Request struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	X string `protobuf:"bytes,1,opt,name=x,proto3" json:"x,omitempty"`
+	// str is the value of the str field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Str *string `protobuf:"bytes,1,opt,name=str,proto3,oneof" json:"str,omitempty"`
+	// u32 is the value of the u32 field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	U32 *uint32 `protobuf:"varint,2,opt,name=u32,proto3,oneof" json:"u32,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetExampleAutoIncrementTableByXRequest) Reset() {
-	*x = GetExampleAutoIncrementTableByXRequest{}
+func (x *ExampleTablesByStrU32Request) Reset() {
+	*x = ExampleTablesByStrU32Request{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -512,13 +523,13 @@ func (x *GetExampleAutoIncrementTableByXRequest) Reset() {
 	}
 }
 
-func (x *GetExampleAutoIncrementTableByXRequest) String() string {
+func (x *ExampleTablesByStrU32Request) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleAutoIncrementTableByXRequest) ProtoMessage() {}
+func (*ExampleTablesByStrU32Request) ProtoMessage() {}
 
-func (x *GetExampleAutoIncrementTableByXRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesByStrU32Request) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -530,29 +541,46 @@ func (x *GetExampleAutoIncrementTableByXRequest) ProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleAutoIncrementTableByXRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleAutoIncrementTableByXRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesByStrU32Request.ProtoReflect.Descriptor instead.
+func (*ExampleTablesByStrU32Request) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetExampleAutoIncrementTableByXRequest) GetX() string {
-	if x != nil {
-		return x.X
+func (x *ExampleTablesByStrU32Request) GetStr() string {
+	if x != nil && x.Str != nil {
+		return *x.Str
 	}
 	return ""
 }
 
-// GetExampleAutoIncrementTableByXResponse is the TestSchemaQuery/GetExampleAutoIncrementTableByXResponse response type.
-type GetExampleAutoIncrementTableByXResponse struct {
+func (x *ExampleTablesByStrU32Request) GetU32() uint32 {
+	if x != nil && x.U32 != nil {
+		return *x.U32
+	}
+	return 0
+}
+
+func (x *ExampleTablesByStrU32Request) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleTablesByStrU32Response is the TestSchemaQuery/ExampleTablesByStrU32Response response type.
+type ExampleTablesByStrU32Response struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value *ExampleAutoIncrementTable `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetExampleAutoIncrementTableByXResponse) Reset() {
-	*x = GetExampleAutoIncrementTableByXResponse{}
+func (x *ExampleTablesByStrU32Response) Reset() {
+	*x = ExampleTablesByStrU32Response{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -560,13 +588,13 @@ func (x *GetExampleAutoIncrementTableByXResponse) Reset() {
 	}
 }
 
-func (x *GetExampleAutoIncrementTableByXResponse) String() string {
+func (x *ExampleTablesByStrU32Response) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleAutoIncrementTableByXResponse) ProtoMessage() {}
+func (*ExampleTablesByStrU32Response) ProtoMessage() {}
 
-func (x *GetExampleAutoIncrementTableByXResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesByStrU32Response) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -578,36 +606,43 @@ func (x *GetExampleAutoIncrementTableByXResponse) ProtoReflect() protoreflect.Me
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleAutoIncrementTableByXResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleAutoIncrementTableByXResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesByStrU32Response.ProtoReflect.Descriptor instead.
+func (*ExampleTablesByStrU32Response) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *GetExampleAutoIncrementTableByXResponse) GetValue() *ExampleAutoIncrementTable {
+func (x *ExampleTablesByStrU32Response) GetValues() []*ExampleTable {
 	if x != nil {
-		return x.Value
+		return x.Values
 	}
 	return nil
 }
 
-// ListExampleAutoIncrementTableRequest is the TestSchemaQuery/ListExampleAutoIncrementTableRequest request type.
-type ListExampleAutoIncrementTableRequest struct {
+func (x *ExampleTablesByStrU32Response) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleTablesByBzStrRequest is the TestSchemaQuery/ExampleTablesByBzStrRequest request type.
+type ExampleTablesByBzStrRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListExampleAutoIncrementTableRequest_PrefixQuery
-	//	*ListExampleAutoIncrementTableRequest_RangeQuery_
-	Query isListExampleAutoIncrementTableRequest_Query `protobuf_oneof:"query"`
+	// bz is the value of the bz field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Bz []byte `protobuf:"bytes,1,opt,name=bz,proto3,oneof" json:"bz,omitempty"`
+	// str is the value of the str field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Str *string `protobuf:"bytes,2,opt,name=str,proto3,oneof" json:"str,omitempty"`
 	// pagination specifies optional pagination parameters.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleAutoIncrementTableRequest) Reset() {
-	*x = ListExampleAutoIncrementTableRequest{}
+func (x *ExampleTablesByBzStrRequest) Reset() {
+	*x = ExampleTablesByBzStrRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -615,13 +650,13 @@ func (x *ListExampleAutoIncrementTableRequest) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncrementTableRequest) String() string {
+func (x *ExampleTablesByBzStrRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncrementTableRequest) ProtoMessage() {}
+func (*ExampleTablesByBzStrRequest) ProtoMessage() {}
 
-func (x *ListExampleAutoIncrementTableRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesByBzStrRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -633,73 +668,46 @@ func (x *ListExampleAutoIncrementTableRequest) ProtoReflect() protoreflect.Messa
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncrementTableRequest.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncrementTableRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesByBzStrRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTablesByBzStrRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{10}
 }
 
-func (m *ListExampleAutoIncrementTableRequest) GetQuery() isListExampleAutoIncrementTableRequest_Query {
-	if m != nil {
-		return m.Query
+func (x *ExampleTablesByBzStrRequest) GetBz() []byte {
+	if x != nil {
+		return x.Bz
 	}
 	return nil
 }
 
-func (x *ListExampleAutoIncrementTableRequest) GetPrefixQuery() *ListExampleAutoIncrementTableRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListExampleAutoIncrementTableRequest_PrefixQuery); ok {
-		return x.PrefixQuery
+func (x *ExampleTablesByBzStrRequest) GetStr() string {
+	if x != nil && x.Str != nil {
+		return *x.Str
 	}
-	return nil
+	return ""
 }
 
-func (x *ListExampleAutoIncrementTableRequest) GetRangeQuery() *ListExampleAutoIncrementTableRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListExampleAutoIncrementTableRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListExampleAutoIncrementTableRequest) GetPagination() *v1beta1.PageRequest {
+func (x *ExampleTablesByBzStrRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-type isListExampleAutoIncrementTableRequest_Query interface {
-	isListExampleAutoIncrementTableRequest_Query()
-}
-
-type ListExampleAutoIncrementTableRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListExampleAutoIncrementTableRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListExampleAutoIncrementTableRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListExampleAutoIncrementTableRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListExampleAutoIncrementTableRequest_PrefixQuery) isListExampleAutoIncrementTableRequest_Query() {
-}
-
-func (*ListExampleAutoIncrementTableRequest_RangeQuery_) isListExampleAutoIncrementTableRequest_Query() {
-}
-
-// ListExampleAutoIncrementTableResponse is the TestSchemaQuery/ListExampleAutoIncrementTableResponse response type.
-type ListExampleAutoIncrementTableResponse struct {
+// ExampleTablesByBzStrResponse is the TestSchemaQuery/ExampleTablesByBzStrResponse response type.
+type ExampleTablesByBzStrResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// values are the results of the query.
-	Values []*ExampleAutoIncrementTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	Values []*ExampleTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
 	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleAutoIncrementTableResponse) Reset() {
-	*x = ListExampleAutoIncrementTableResponse{}
+func (x *ExampleTablesByBzStrResponse) Reset() {
+	*x = ExampleTablesByBzStrResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -707,13 +715,13 @@ func (x *ListExampleAutoIncrementTableResponse) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncrementTableResponse) String() string {
+func (x *ExampleTablesByBzStrResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncrementTableResponse) ProtoMessage() {}
+func (*ExampleTablesByBzStrResponse) ProtoMessage() {}
 
-func (x *ListExampleAutoIncrementTableResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTablesByBzStrResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -725,34 +733,37 @@ func (x *ListExampleAutoIncrementTableResponse) ProtoReflect() protoreflect.Mess
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncrementTableResponse.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncrementTableResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTablesByBzStrResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTablesByBzStrResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *ListExampleAutoIncrementTableResponse) GetValues() []*ExampleAutoIncrementTable {
+func (x *ExampleTablesByBzStrResponse) GetValues() []*ExampleTable {
 	if x != nil {
 		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleAutoIncrementTableResponse) GetPagination() *v1beta1.PageResponse {
+func (x *ExampleTablesByBzStrResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-// GetExampleSingletonRequest is the TestSchemaQuery/GetExampleSingletonRequest request type.
-type GetExampleSingletonRequest struct {
+// ExampleAutoIncrementTableRequest is the TestSchemaQuery/ExampleAutoIncrementTableRequest request type.
+type ExampleAutoIncrementTableRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	// id specifies the value of the id field in the primary key.
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *GetExampleSingletonRequest) Reset() {
-	*x = GetExampleSingletonRequest{}
+func (x *ExampleAutoIncrementTableRequest) Reset() {
+	*x = ExampleAutoIncrementTableRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -760,13 +771,13 @@ func (x *GetExampleSingletonRequest) Reset() {
 	}
 }
 
-func (x *GetExampleSingletonRequest) String() string {
+func (x *ExampleAutoIncrementTableRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleSingletonRequest) ProtoMessage() {}
+func (*ExampleAutoIncrementTableRequest) ProtoMessage() {}
 
-func (x *GetExampleSingletonRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTableRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -778,22 +789,30 @@ func (x *GetExampleSingletonRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleSingletonRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleSingletonRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTableRequest.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTableRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{12}
 }
 
-// GetExampleSingletonResponse is the TestSchemaQuery/GetExampleSingletonResponse request type.
-type GetExampleSingletonResponse struct {
+func (x *ExampleAutoIncrementTableRequest) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+// ExampleAutoIncrementTableResponse is the TestSchemaQuery/ExampleAutoIncrementTableResponse response type.
+type ExampleAutoIncrementTableResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value *ExampleSingleton `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// value is the response value.
+	Value *ExampleAutoIncrementTable `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GetExampleSingletonResponse) Reset() {
-	*x = GetExampleSingletonResponse{}
+func (x *ExampleAutoIncrementTableResponse) Reset() {
+	*x = ExampleAutoIncrementTableResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -801,13 +820,13 @@ func (x *GetExampleSingletonResponse) Reset() {
 	}
 }
 
-func (x *GetExampleSingletonResponse) String() string {
+func (x *ExampleAutoIncrementTableResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleSingletonResponse) ProtoMessage() {}
+func (*ExampleAutoIncrementTableResponse) ProtoMessage() {}
 
-func (x *GetExampleSingletonResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTableResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -819,30 +838,29 @@ func (x *GetExampleSingletonResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleSingletonResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleSingletonResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTableResponse.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTableResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *GetExampleSingletonResponse) GetValue() *ExampleSingleton {
+func (x *ExampleAutoIncrementTableResponse) GetValue() *ExampleAutoIncrementTable {
 	if x != nil {
 		return x.Value
 	}
 	return nil
 }
 
-// GetExampleTimestampRequest is the TestSchemaQuery/GetExampleTimestampRequest request type.
-type GetExampleTimestampRequest struct {
+// ExampleAutoIncrementTableByXRequest is the TestSchemaQuery/ExampleAutoIncrementTableByXRequest request type.
+type ExampleAutoIncrementTableByXRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// id specifies the value of the id field in the primary key.
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	X string `protobuf:"bytes,1,opt,name=x,proto3" json:"x,omitempty"`
 }
 
-func (x *GetExampleTimestampRequest) Reset() {
-	*x = GetExampleTimestampRequest{}
+func (x *ExampleAutoIncrementTableByXRequest) Reset() {
+	*x = ExampleAutoIncrementTableByXRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -850,13 +868,13 @@ func (x *GetExampleTimestampRequest) Reset() {
 	}
 }
 
-func (x *GetExampleTimestampRequest) String() string {
+func (x *ExampleAutoIncrementTableByXRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleTimestampRequest) ProtoMessage() {}
+func (*ExampleAutoIncrementTableByXRequest) ProtoMessage() {}
 
-func (x *GetExampleTimestampRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTableByXRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -868,30 +886,29 @@ func (x *GetExampleTimestampRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleTimestampRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleTimestampRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTableByXRequest.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTableByXRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *GetExampleTimestampRequest) GetId() uint64 {
+func (x *ExampleAutoIncrementTableByXRequest) GetX() string {
 	if x != nil {
-		return x.Id
+		return x.X
 	}
-	return 0
+	return ""
 }
 
-// GetExampleTimestampResponse is the TestSchemaQuery/GetExampleTimestampResponse response type.
-type GetExampleTimestampResponse struct {
+// ExampleAutoIncrementTableByXResponse is the TestSchemaQuery/ExampleAutoIncrementTableByXResponse response type.
+type ExampleAutoIncrementTableByXResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// value is the response value.
-	Value *ExampleTimestamp `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value *ExampleAutoIncrementTable `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GetExampleTimestampResponse) Reset() {
-	*x = GetExampleTimestampResponse{}
+func (x *ExampleAutoIncrementTableByXResponse) Reset() {
+	*x = ExampleAutoIncrementTableByXResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -899,13 +916,13 @@ func (x *GetExampleTimestampResponse) Reset() {
 	}
 }
 
-func (x *GetExampleTimestampResponse) String() string {
+func (x *ExampleAutoIncrementTableByXResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleTimestampResponse) ProtoMessage() {}
+func (*ExampleAutoIncrementTableByXResponse) ProtoMessage() {}
 
-func (x *GetExampleTimestampResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTableByXResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -917,36 +934,30 @@ func (x *GetExampleTimestampResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleTimestampResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleTimestampResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTableByXResponse.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTableByXResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *GetExampleTimestampResponse) GetValue() *ExampleTimestamp {
+func (x *ExampleAutoIncrementTableByXResponse) GetValue() *ExampleAutoIncrementTable {
 	if x != nil {
 		return x.Value
 	}
 	return nil
 }
 
-// ListExampleTimestampRequest is the TestSchemaQuery/ListExampleTimestampRequest request type.
-type ListExampleTimestampRequest struct {
+// ExampleAutoIncrementTablesRequest is the TestSchemaQuery/ExampleAutoIncrementTablesRequest request type.
+type ExampleAutoIncrementTablesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListExampleTimestampRequest_PrefixQuery
-	//	*ListExampleTimestampRequest_RangeQuery_
-	Query isListExampleTimestampRequest_Query `protobuf_oneof:"query"`
 	// pagination specifies optional pagination parameters.
-	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTimestampRequest) Reset() {
-	*x = ListExampleTimestampRequest{}
+func (x *ExampleAutoIncrementTablesRequest) Reset() {
+	*x = ExampleAutoIncrementTablesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -954,13 +965,13 @@ func (x *ListExampleTimestampRequest) Reset() {
 	}
 }
 
-func (x *ListExampleTimestampRequest) String() string {
+func (x *ExampleAutoIncrementTablesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTimestampRequest) ProtoMessage() {}
+func (*ExampleAutoIncrementTablesRequest) ProtoMessage() {}
 
-func (x *ListExampleTimestampRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTablesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -972,71 +983,32 @@ func (x *ListExampleTimestampRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTimestampRequest.ProtoReflect.Descriptor instead.
-func (*ListExampleTimestampRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTablesRequest.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTablesRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{16}
 }
 
-func (m *ListExampleTimestampRequest) GetQuery() isListExampleTimestampRequest_Query {
-	if m != nil {
-		return m.Query
-	}
-	return nil
-}
-
-func (x *ListExampleTimestampRequest) GetPrefixQuery() *ListExampleTimestampRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListExampleTimestampRequest_PrefixQuery); ok {
-		return x.PrefixQuery
-	}
-	return nil
-}
-
-func (x *ListExampleTimestampRequest) GetRangeQuery() *ListExampleTimestampRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListExampleTimestampRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListExampleTimestampRequest) GetPagination() *v1beta1.PageRequest {
+func (x *ExampleAutoIncrementTablesRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-type isListExampleTimestampRequest_Query interface {
-	isListExampleTimestampRequest_Query()
-}
-
-type ListExampleTimestampRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListExampleTimestampRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListExampleTimestampRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListExampleTimestampRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListExampleTimestampRequest_PrefixQuery) isListExampleTimestampRequest_Query() {}
-
-func (*ListExampleTimestampRequest_RangeQuery_) isListExampleTimestampRequest_Query() {}
-
-// ListExampleTimestampResponse is the TestSchemaQuery/ListExampleTimestampResponse response type.
-type ListExampleTimestampResponse struct {
+// ExampleAutoIncrementTablesResponse is the TestSchemaQuery/ExampleAutoIncrementTablesResponse response type.
+type ExampleAutoIncrementTablesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// values are the results of the query.
-	Values []*ExampleTimestamp `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	Values []*ExampleAutoIncrementTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
 	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTimestampResponse) Reset() {
-	*x = ListExampleTimestampResponse{}
+func (x *ExampleAutoIncrementTablesResponse) Reset() {
+	*x = ExampleAutoIncrementTablesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1044,13 +1016,13 @@ func (x *ListExampleTimestampResponse) Reset() {
 	}
 }
 
-func (x *ListExampleTimestampResponse) String() string {
+func (x *ExampleAutoIncrementTablesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTimestampResponse) ProtoMessage() {}
+func (*ExampleAutoIncrementTablesResponse) ProtoMessage() {}
 
-func (x *ListExampleTimestampResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTablesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1062,37 +1034,40 @@ func (x *ListExampleTimestampResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTimestampResponse.ProtoReflect.Descriptor instead.
-func (*ListExampleTimestampResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTablesResponse.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTablesResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *ListExampleTimestampResponse) GetValues() []*ExampleTimestamp {
+func (x *ExampleAutoIncrementTablesResponse) GetValues() []*ExampleAutoIncrementTable {
 	if x != nil {
 		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleTimestampResponse) GetPagination() *v1beta1.PageResponse {
+func (x *ExampleAutoIncrementTablesResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-// GetSimpleExampleRequest is the TestSchemaQuery/GetSimpleExampleRequest request type.
-type GetSimpleExampleRequest struct {
+// ExampleAutoIncrementTablesByXRequest is the TestSchemaQuery/ExampleAutoIncrementTablesByXRequest request type.
+type ExampleAutoIncrementTablesByXRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// name specifies the value of the name field in the primary key.
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// x is the value of the x field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	X *string `protobuf:"bytes,1,opt,name=x,proto3,oneof" json:"x,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetSimpleExampleRequest) Reset() {
-	*x = GetSimpleExampleRequest{}
+func (x *ExampleAutoIncrementTablesByXRequest) Reset() {
+	*x = ExampleAutoIncrementTablesByXRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1100,13 +1075,13 @@ func (x *GetSimpleExampleRequest) Reset() {
 	}
 }
 
-func (x *GetSimpleExampleRequest) String() string {
+func (x *ExampleAutoIncrementTablesByXRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSimpleExampleRequest) ProtoMessage() {}
+func (*ExampleAutoIncrementTablesByXRequest) ProtoMessage() {}
 
-func (x *GetSimpleExampleRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTablesByXRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1118,30 +1093,39 @@ func (x *GetSimpleExampleRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSimpleExampleRequest.ProtoReflect.Descriptor instead.
-func (*GetSimpleExampleRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTablesByXRequest.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTablesByXRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *GetSimpleExampleRequest) GetName() string {
-	if x != nil {
-		return x.Name
+func (x *ExampleAutoIncrementTablesByXRequest) GetX() string {
+	if x != nil && x.X != nil {
+		return *x.X
 	}
 	return ""
 }
 
-// GetSimpleExampleResponse is the TestSchemaQuery/GetSimpleExampleResponse response type.
-type GetSimpleExampleResponse struct {
+func (x *ExampleAutoIncrementTablesByXRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleAutoIncrementTablesByXResponse is the TestSchemaQuery/ExampleAutoIncrementTablesByXResponse response type.
+type ExampleAutoIncrementTablesByXResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// value is the response value.
-	Value *SimpleExample `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleAutoIncrementTable `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetSimpleExampleResponse) Reset() {
-	*x = GetSimpleExampleResponse{}
+func (x *ExampleAutoIncrementTablesByXResponse) Reset() {
+	*x = ExampleAutoIncrementTablesByXResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1149,13 +1133,13 @@ func (x *GetSimpleExampleResponse) Reset() {
 	}
 }
 
-func (x *GetSimpleExampleResponse) String() string {
+func (x *ExampleAutoIncrementTablesByXResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSimpleExampleResponse) ProtoMessage() {}
+func (*ExampleAutoIncrementTablesByXResponse) ProtoMessage() {}
 
-func (x *GetSimpleExampleResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncrementTablesByXResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1167,29 +1151,34 @@ func (x *GetSimpleExampleResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSimpleExampleResponse.ProtoReflect.Descriptor instead.
-func (*GetSimpleExampleResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleAutoIncrementTablesByXResponse.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncrementTablesByXResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *GetSimpleExampleResponse) GetValue() *SimpleExample {
+func (x *ExampleAutoIncrementTablesByXResponse) GetValues() []*ExampleAutoIncrementTable {
 	if x != nil {
-		return x.Value
+		return x.Values
 	}
 	return nil
 }
 
-// GetSimpleExampleByUniqueRequest is the TestSchemaQuery/GetSimpleExampleByUniqueRequest request type.
-type GetSimpleExampleByUniqueRequest struct {
+func (x *ExampleAutoIncrementTablesByXResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleSingletonRequest is the TestSchemaQuery/ExampleSingletonRequest request type.
+type ExampleSingletonRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Unique string `protobuf:"bytes,1,opt,name=unique,proto3" json:"unique,omitempty"`
 }
 
-func (x *GetSimpleExampleByUniqueRequest) Reset() {
-	*x = GetSimpleExampleByUniqueRequest{}
+func (x *ExampleSingletonRequest) Reset() {
+	*x = ExampleSingletonRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1197,13 +1186,13 @@ func (x *GetSimpleExampleByUniqueRequest) Reset() {
 	}
 }
 
-func (x *GetSimpleExampleByUniqueRequest) String() string {
+func (x *ExampleSingletonRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSimpleExampleByUniqueRequest) ProtoMessage() {}
+func (*ExampleSingletonRequest) ProtoMessage() {}
 
-func (x *GetSimpleExampleByUniqueRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleSingletonRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1215,29 +1204,22 @@ func (x *GetSimpleExampleByUniqueRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSimpleExampleByUniqueRequest.ProtoReflect.Descriptor instead.
-func (*GetSimpleExampleByUniqueRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleSingletonRequest.ProtoReflect.Descriptor instead.
+func (*ExampleSingletonRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *GetSimpleExampleByUniqueRequest) GetUnique() string {
-	if x != nil {
-		return x.Unique
-	}
-	return ""
-}
-
-// GetSimpleExampleByUniqueResponse is the TestSchemaQuery/GetSimpleExampleByUniqueResponse response type.
-type GetSimpleExampleByUniqueResponse struct {
+// ExampleSingletonResponse is the TestSchemaQuery/ExampleSingletonResponse request type.
+type ExampleSingletonResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Value *SimpleExample `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Value *ExampleSingleton `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *GetSimpleExampleByUniqueResponse) Reset() {
-	*x = GetSimpleExampleByUniqueResponse{}
+func (x *ExampleSingletonResponse) Reset() {
+	*x = ExampleSingletonResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1245,13 +1227,13 @@ func (x *GetSimpleExampleByUniqueResponse) Reset() {
 	}
 }
 
-func (x *GetSimpleExampleByUniqueResponse) String() string {
+func (x *ExampleSingletonResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetSimpleExampleByUniqueResponse) ProtoMessage() {}
+func (*ExampleSingletonResponse) ProtoMessage() {}
 
-func (x *GetSimpleExampleByUniqueResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleSingletonResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1263,36 +1245,30 @@ func (x *GetSimpleExampleByUniqueResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetSimpleExampleByUniqueResponse.ProtoReflect.Descriptor instead.
-func (*GetSimpleExampleByUniqueResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleSingletonResponse.ProtoReflect.Descriptor instead.
+func (*ExampleSingletonResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *GetSimpleExampleByUniqueResponse) GetValue() *SimpleExample {
+func (x *ExampleSingletonResponse) GetValue() *ExampleSingleton {
 	if x != nil {
 		return x.Value
 	}
 	return nil
 }
 
-// ListSimpleExampleRequest is the TestSchemaQuery/ListSimpleExampleRequest request type.
-type ListSimpleExampleRequest struct {
+// ExampleTimestampRequest is the TestSchemaQuery/ExampleTimestampRequest request type.
+type ExampleTimestampRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListSimpleExampleRequest_PrefixQuery
-	//	*ListSimpleExampleRequest_RangeQuery_
-	Query isListSimpleExampleRequest_Query `protobuf_oneof:"query"`
-	// pagination specifies optional pagination parameters.
-	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// id specifies the value of the id field in the primary key.
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *ListSimpleExampleRequest) Reset() {
-	*x = ListSimpleExampleRequest{}
+func (x *ExampleTimestampRequest) Reset() {
+	*x = ExampleTimestampRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1300,13 +1276,13 @@ func (x *ListSimpleExampleRequest) Reset() {
 	}
 }
 
-func (x *ListSimpleExampleRequest) String() string {
+func (x *ExampleTimestampRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListSimpleExampleRequest) ProtoMessage() {}
+func (*ExampleTimestampRequest) ProtoMessage() {}
 
-func (x *ListSimpleExampleRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTimestampRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1318,71 +1294,30 @@ func (x *ListSimpleExampleRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListSimpleExampleRequest.ProtoReflect.Descriptor instead.
-func (*ListSimpleExampleRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTimestampRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTimestampRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{22}
 }
 
-func (m *ListSimpleExampleRequest) GetQuery() isListSimpleExampleRequest_Query {
-	if m != nil {
-		return m.Query
-	}
-	return nil
-}
-
-func (x *ListSimpleExampleRequest) GetPrefixQuery() *ListSimpleExampleRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListSimpleExampleRequest_PrefixQuery); ok {
-		return x.PrefixQuery
-	}
-	return nil
-}
-
-func (x *ListSimpleExampleRequest) GetRangeQuery() *ListSimpleExampleRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListSimpleExampleRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListSimpleExampleRequest) GetPagination() *v1beta1.PageRequest {
+func (x *ExampleTimestampRequest) GetId() uint64 {
 	if x != nil {
-		return x.Pagination
+		return x.Id
 	}
-	return nil
+	return 0
 }
 
-type isListSimpleExampleRequest_Query interface {
-	isListSimpleExampleRequest_Query()
-}
-
-type ListSimpleExampleRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListSimpleExampleRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListSimpleExampleRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListSimpleExampleRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListSimpleExampleRequest_PrefixQuery) isListSimpleExampleRequest_Query() {}
-
-func (*ListSimpleExampleRequest_RangeQuery_) isListSimpleExampleRequest_Query() {}
-
-// ListSimpleExampleResponse is the TestSchemaQuery/ListSimpleExampleResponse response type.
-type ListSimpleExampleResponse struct {
+// ExampleTimestampResponse is the TestSchemaQuery/ExampleTimestampResponse response type.
+type ExampleTimestampResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// values are the results of the query.
-	Values []*SimpleExample `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
-	// pagination is the pagination response.
-	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	// value is the response value.
+	Value *ExampleTimestamp `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *ListSimpleExampleResponse) Reset() {
-	*x = ListSimpleExampleResponse{}
+func (x *ExampleTimestampResponse) Reset() {
+	*x = ExampleTimestampResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1390,13 +1325,13 @@ func (x *ListSimpleExampleResponse) Reset() {
 	}
 }
 
-func (x *ListSimpleExampleResponse) String() string {
+func (x *ExampleTimestampResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListSimpleExampleResponse) ProtoMessage() {}
+func (*ExampleTimestampResponse) ProtoMessage() {}
 
-func (x *ListSimpleExampleResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTimestampResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1408,37 +1343,30 @@ func (x *ListSimpleExampleResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListSimpleExampleResponse.ProtoReflect.Descriptor instead.
-func (*ListSimpleExampleResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTimestampResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTimestampResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{23}
 }
 
-func (x *ListSimpleExampleResponse) GetValues() []*SimpleExample {
+func (x *ExampleTimestampResponse) GetValue() *ExampleTimestamp {
 	if x != nil {
-		return x.Values
+		return x.Value
 	}
 	return nil
 }
 
-func (x *ListSimpleExampleResponse) GetPagination() *v1beta1.PageResponse {
-	if x != nil {
-		return x.Pagination
-	}
-	return nil
-}
-
-// GetExampleAutoIncFieldNameRequest is the TestSchemaQuery/GetExampleAutoIncFieldNameRequest request type.
-type GetExampleAutoIncFieldNameRequest struct {
+// ExampleTimestampsRequest is the TestSchemaQuery/ExampleTimestampsRequest request type.
+type ExampleTimestampsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// foo specifies the value of the foo field in the primary key.
-	Foo uint64 `protobuf:"varint,1,opt,name=foo,proto3" json:"foo,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetExampleAutoIncFieldNameRequest) Reset() {
-	*x = GetExampleAutoIncFieldNameRequest{}
+func (x *ExampleTimestampsRequest) Reset() {
+	*x = ExampleTimestampsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1446,13 +1374,13 @@ func (x *GetExampleAutoIncFieldNameRequest) Reset() {
 	}
 }
 
-func (x *GetExampleAutoIncFieldNameRequest) String() string {
+func (x *ExampleTimestampsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleAutoIncFieldNameRequest) ProtoMessage() {}
+func (*ExampleTimestampsRequest) ProtoMessage() {}
 
-func (x *GetExampleAutoIncFieldNameRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTimestampsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1464,30 +1392,32 @@ func (x *GetExampleAutoIncFieldNameRequest) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleAutoIncFieldNameRequest.ProtoReflect.Descriptor instead.
-func (*GetExampleAutoIncFieldNameRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTimestampsRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTimestampsRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *GetExampleAutoIncFieldNameRequest) GetFoo() uint64 {
+func (x *ExampleTimestampsRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
-		return x.Foo
+		return x.Pagination
 	}
-	return 0
+	return nil
 }
 
-// GetExampleAutoIncFieldNameResponse is the TestSchemaQuery/GetExampleAutoIncFieldNameResponse response type.
-type GetExampleAutoIncFieldNameResponse struct {
+// ExampleTimestampsResponse is the TestSchemaQuery/ExampleTimestampsResponse response type.
+type ExampleTimestampsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// value is the response value.
-	Value *ExampleAutoIncFieldName `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleTimestamp `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *GetExampleAutoIncFieldNameResponse) Reset() {
-	*x = GetExampleAutoIncFieldNameResponse{}
+func (x *ExampleTimestampsResponse) Reset() {
+	*x = ExampleTimestampsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1495,13 +1425,13 @@ func (x *GetExampleAutoIncFieldNameResponse) Reset() {
 	}
 }
 
-func (x *GetExampleAutoIncFieldNameResponse) String() string {
+func (x *ExampleTimestampsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetExampleAutoIncFieldNameResponse) ProtoMessage() {}
+func (*ExampleTimestampsResponse) ProtoMessage() {}
 
-func (x *GetExampleAutoIncFieldNameResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTimestampsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1513,36 +1443,40 @@ func (x *GetExampleAutoIncFieldNameResponse) ProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetExampleAutoIncFieldNameResponse.ProtoReflect.Descriptor instead.
-func (*GetExampleAutoIncFieldNameResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTimestampsResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTimestampsResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{25}
 }
 
-func (x *GetExampleAutoIncFieldNameResponse) GetValue() *ExampleAutoIncFieldName {
+func (x *ExampleTimestampsResponse) GetValues() []*ExampleTimestamp {
 	if x != nil {
-		return x.Value
+		return x.Values
 	}
 	return nil
 }
 
-// ListExampleAutoIncFieldNameRequest is the TestSchemaQuery/ListExampleAutoIncFieldNameRequest request type.
-type ListExampleAutoIncFieldNameRequest struct {
+func (x *ExampleTimestampsResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// ExampleTimestampsByTsRequest is the TestSchemaQuery/ExampleTimestampsByTsRequest request type.
+type ExampleTimestampsByTsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query specifies the type of query - either a prefix or range query.
-	//
-	// Types that are assignable to Query:
-	//	*ListExampleAutoIncFieldNameRequest_PrefixQuery
-	//	*ListExampleAutoIncFieldNameRequest_RangeQuery_
-	Query isListExampleAutoIncFieldNameRequest_Query `protobuf_oneof:"query"`
+	// ts is the value of the ts field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Ts *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=ts,proto3,oneof" json:"ts,omitempty"`
 	// pagination specifies optional pagination parameters.
-	Pagination *v1beta1.PageRequest `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleAutoIncFieldNameRequest) Reset() {
-	*x = ListExampleAutoIncFieldNameRequest{}
+func (x *ExampleTimestampsByTsRequest) Reset() {
+	*x = ExampleTimestampsByTsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1550,13 +1484,13 @@ func (x *ListExampleAutoIncFieldNameRequest) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncFieldNameRequest) String() string {
+func (x *ExampleTimestampsByTsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncFieldNameRequest) ProtoMessage() {}
+func (*ExampleTimestampsByTsRequest) ProtoMessage() {}
 
-func (x *ListExampleAutoIncFieldNameRequest) ProtoReflect() protoreflect.Message {
+func (x *ExampleTimestampsByTsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1568,71 +1502,39 @@ func (x *ListExampleAutoIncFieldNameRequest) ProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncFieldNameRequest.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncFieldNameRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTimestampsByTsRequest.ProtoReflect.Descriptor instead.
+func (*ExampleTimestampsByTsRequest) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{26}
 }
 
-func (m *ListExampleAutoIncFieldNameRequest) GetQuery() isListExampleAutoIncFieldNameRequest_Query {
-	if m != nil {
-		return m.Query
+func (x *ExampleTimestampsByTsRequest) GetTs() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Ts
 	}
 	return nil
 }
 
-func (x *ListExampleAutoIncFieldNameRequest) GetPrefixQuery() *ListExampleAutoIncFieldNameRequest_IndexKey {
-	if x, ok := x.GetQuery().(*ListExampleAutoIncFieldNameRequest_PrefixQuery); ok {
-		return x.PrefixQuery
-	}
-	return nil
-}
-
-func (x *ListExampleAutoIncFieldNameRequest) GetRangeQuery() *ListExampleAutoIncFieldNameRequest_RangeQuery {
-	if x, ok := x.GetQuery().(*ListExampleAutoIncFieldNameRequest_RangeQuery_); ok {
-		return x.RangeQuery
-	}
-	return nil
-}
-
-func (x *ListExampleAutoIncFieldNameRequest) GetPagination() *v1beta1.PageRequest {
+func (x *ExampleTimestampsByTsRequest) GetPagination() *v1beta1.PageRequest {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-type isListExampleAutoIncFieldNameRequest_Query interface {
-	isListExampleAutoIncFieldNameRequest_Query()
-}
-
-type ListExampleAutoIncFieldNameRequest_PrefixQuery struct {
-	// prefix_query specifies the index key value to use for the prefix query.
-	PrefixQuery *ListExampleAutoIncFieldNameRequest_IndexKey `protobuf:"bytes,1,opt,name=prefix_query,json=prefixQuery,proto3,oneof"`
-}
-
-type ListExampleAutoIncFieldNameRequest_RangeQuery_ struct {
-	// range_query specifies the index key from/to values to use for the range query.
-	RangeQuery *ListExampleAutoIncFieldNameRequest_RangeQuery `protobuf:"bytes,2,opt,name=range_query,json=rangeQuery,proto3,oneof"`
-}
-
-func (*ListExampleAutoIncFieldNameRequest_PrefixQuery) isListExampleAutoIncFieldNameRequest_Query() {}
-
-func (*ListExampleAutoIncFieldNameRequest_RangeQuery_) isListExampleAutoIncFieldNameRequest_Query() {}
-
-// ListExampleAutoIncFieldNameResponse is the TestSchemaQuery/ListExampleAutoIncFieldNameResponse response type.
-type ListExampleAutoIncFieldNameResponse struct {
+// ExampleTimestampsByTsResponse is the TestSchemaQuery/ExampleTimestampsByTsResponse response type.
+type ExampleTimestampsByTsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// values are the results of the query.
-	Values []*ExampleAutoIncFieldName `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	Values []*ExampleTimestamp `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
 	// pagination is the pagination response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleAutoIncFieldNameResponse) Reset() {
-	*x = ListExampleAutoIncFieldNameResponse{}
+func (x *ExampleTimestampsByTsResponse) Reset() {
+	*x = ExampleTimestampsByTsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1640,13 +1542,13 @@ func (x *ListExampleAutoIncFieldNameResponse) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncFieldNameResponse) String() string {
+func (x *ExampleTimestampsByTsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncFieldNameResponse) ProtoMessage() {}
+func (*ExampleTimestampsByTsResponse) ProtoMessage() {}
 
-func (x *ListExampleAutoIncFieldNameResponse) ProtoReflect() protoreflect.Message {
+func (x *ExampleTimestampsByTsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1658,43 +1560,37 @@ func (x *ListExampleAutoIncFieldNameResponse) ProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncFieldNameResponse.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncFieldNameResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExampleTimestampsByTsResponse.ProtoReflect.Descriptor instead.
+func (*ExampleTimestampsByTsResponse) Descriptor() ([]byte, []int) {
 	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{27}
 }
 
-func (x *ListExampleAutoIncFieldNameResponse) GetValues() []*ExampleAutoIncFieldName {
+func (x *ExampleTimestampsByTsResponse) GetValues() []*ExampleTimestamp {
 	if x != nil {
 		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleAutoIncFieldNameResponse) GetPagination() *v1beta1.PageResponse {
+func (x *ExampleTimestampsByTsResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
 		return x.Pagination
 	}
 	return nil
 }
 
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListExampleTableRequest_IndexKey struct {
+// SimpleExampleRequest is the TestSchemaQuery/SimpleExampleRequest request type.
+type SimpleExampleRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListExampleTableRequest_IndexKey_U_32I_64Str
-	//	*ListExampleTableRequest_IndexKey_U_64Str
-	//	*ListExampleTableRequest_IndexKey_StrU_32
-	//	*ListExampleTableRequest_IndexKey_BzStr_
-	Key isListExampleTableRequest_IndexKey_Key `protobuf_oneof:"key"`
+	// name specifies the value of the name field in the primary key.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (x *ListExampleTableRequest_IndexKey) Reset() {
-	*x = ListExampleTableRequest_IndexKey{}
+func (x *SimpleExampleRequest) Reset() {
+	*x = SimpleExampleRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1702,13 +1598,13 @@ func (x *ListExampleTableRequest_IndexKey) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest_IndexKey) String() string {
+func (x *SimpleExampleRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest_IndexKey) ProtoMessage() {}
+func (*SimpleExampleRequest) ProtoMessage() {}
 
-func (x *ListExampleTableRequest_IndexKey) ProtoReflect() protoreflect.Message {
+func (x *SimpleExampleRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1720,95 +1616,30 @@ func (x *ListExampleTableRequest_IndexKey) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4, 0}
+// Deprecated: Use SimpleExampleRequest.ProtoReflect.Descriptor instead.
+func (*SimpleExampleRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{28}
 }
 
-func (m *ListExampleTableRequest_IndexKey) GetKey() isListExampleTableRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
+func (x *SimpleExampleRequest) GetName() string {
+	if x != nil {
+		return x.Name
 	}
-	return nil
+	return ""
 }
 
-func (x *ListExampleTableRequest_IndexKey) GetU_32I_64Str() *ListExampleTableRequest_IndexKey_U32I64Str {
-	if x, ok := x.GetKey().(*ListExampleTableRequest_IndexKey_U_32I_64Str); ok {
-		return x.U_32I_64Str
-	}
-	return nil
-}
-
-func (x *ListExampleTableRequest_IndexKey) GetU_64Str() *ListExampleTableRequest_IndexKey_U64Str {
-	if x, ok := x.GetKey().(*ListExampleTableRequest_IndexKey_U_64Str); ok {
-		return x.U_64Str
-	}
-	return nil
-}
-
-func (x *ListExampleTableRequest_IndexKey) GetStrU_32() *ListExampleTableRequest_IndexKey_StrU32 {
-	if x, ok := x.GetKey().(*ListExampleTableRequest_IndexKey_StrU_32); ok {
-		return x.StrU_32
-	}
-	return nil
-}
-
-func (x *ListExampleTableRequest_IndexKey) GetBzStr() *ListExampleTableRequest_IndexKey_BzStr {
-	if x, ok := x.GetKey().(*ListExampleTableRequest_IndexKey_BzStr_); ok {
-		return x.BzStr
-	}
-	return nil
-}
-
-type isListExampleTableRequest_IndexKey_Key interface {
-	isListExampleTableRequest_IndexKey_Key()
-}
-
-type ListExampleTableRequest_IndexKey_U_32I_64Str struct {
-	// u_32_i_64_str specifies the value of the U32I64Str index key to use in the query.
-	U_32I_64Str *ListExampleTableRequest_IndexKey_U32I64Str `protobuf:"bytes,1,opt,name=u_32_i_64_str,json=u32I64Str,proto3,oneof"`
-}
-
-type ListExampleTableRequest_IndexKey_U_64Str struct {
-	// u_64_str specifies the value of the U64Str index key to use in the query.
-	U_64Str *ListExampleTableRequest_IndexKey_U64Str `protobuf:"bytes,2,opt,name=u_64_str,json=u64Str,proto3,oneof"`
-}
-
-type ListExampleTableRequest_IndexKey_StrU_32 struct {
-	// str_u_32 specifies the value of the StrU32 index key to use in the query.
-	StrU_32 *ListExampleTableRequest_IndexKey_StrU32 `protobuf:"bytes,3,opt,name=str_u_32,json=strU32,proto3,oneof"`
-}
-
-type ListExampleTableRequest_IndexKey_BzStr_ struct {
-	// bz_str specifies the value of the BzStr index key to use in the query.
-	BzStr *ListExampleTableRequest_IndexKey_BzStr `protobuf:"bytes,4,opt,name=bz_str,json=bzStr,proto3,oneof"`
-}
-
-func (*ListExampleTableRequest_IndexKey_U_32I_64Str) isListExampleTableRequest_IndexKey_Key() {}
-
-func (*ListExampleTableRequest_IndexKey_U_64Str) isListExampleTableRequest_IndexKey_Key() {}
-
-func (*ListExampleTableRequest_IndexKey_StrU_32) isListExampleTableRequest_IndexKey_Key() {}
-
-func (*ListExampleTableRequest_IndexKey_BzStr_) isListExampleTableRequest_IndexKey_Key() {}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListExampleTableRequest_RangeQuery struct {
+// SimpleExampleResponse is the TestSchemaQuery/SimpleExampleResponse response type.
+type SimpleExampleResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListExampleTableRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListExampleTableRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	// value is the response value.
+	Value *SimpleExample `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *ListExampleTableRequest_RangeQuery) Reset() {
-	*x = ListExampleTableRequest_RangeQuery{}
+func (x *SimpleExampleResponse) Reset() {
+	*x = SimpleExampleResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1816,13 +1647,13 @@ func (x *ListExampleTableRequest_RangeQuery) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest_RangeQuery) String() string {
+func (x *SimpleExampleResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest_RangeQuery) ProtoMessage() {}
+func (*SimpleExampleResponse) ProtoMessage() {}
 
-func (x *ListExampleTableRequest_RangeQuery) ProtoReflect() protoreflect.Message {
+func (x *SimpleExampleResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1834,43 +1665,29 @@ func (x *ListExampleTableRequest_RangeQuery) ProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4, 1}
+// Deprecated: Use SimpleExampleResponse.ProtoReflect.Descriptor instead.
+func (*SimpleExampleResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *ListExampleTableRequest_RangeQuery) GetFrom() *ListExampleTableRequest_IndexKey {
+func (x *SimpleExampleResponse) GetValue() *SimpleExample {
 	if x != nil {
-		return x.From
+		return x.Value
 	}
 	return nil
 }
 
-func (x *ListExampleTableRequest_RangeQuery) GetTo() *ListExampleTableRequest_IndexKey {
-	if x != nil {
-		return x.To
-	}
-	return nil
-}
-
-type ListExampleTableRequest_IndexKey_U32I64Str struct {
+// SimpleExampleByUniqueRequest is the TestSchemaQuery/SimpleExampleByUniqueRequest request type.
+type SimpleExampleByUniqueRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// u32 is the value of the u32 field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	U32 *uint32 `protobuf:"varint,1,opt,name=u32,proto3,oneof" json:"u32,omitempty"`
-	// i64 is the value of the i64 field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	I64 *int64 `protobuf:"varint,2,opt,name=i64,proto3,oneof" json:"i64,omitempty"`
-	// str is the value of the str field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Str *string `protobuf:"bytes,3,opt,name=str,proto3,oneof" json:"str,omitempty"`
+	Unique string `protobuf:"bytes,1,opt,name=unique,proto3" json:"unique,omitempty"`
 }
 
-func (x *ListExampleTableRequest_IndexKey_U32I64Str) Reset() {
-	*x = ListExampleTableRequest_IndexKey_U32I64Str{}
+func (x *SimpleExampleByUniqueRequest) Reset() {
+	*x = SimpleExampleByUniqueRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1878,13 +1695,13 @@ func (x *ListExampleTableRequest_IndexKey_U32I64Str) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest_IndexKey_U32I64Str) String() string {
+func (x *SimpleExampleByUniqueRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest_IndexKey_U32I64Str) ProtoMessage() {}
+func (*SimpleExampleByUniqueRequest) ProtoMessage() {}
 
-func (x *ListExampleTableRequest_IndexKey_U32I64Str) ProtoReflect() protoreflect.Message {
+func (x *SimpleExampleByUniqueRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1896,47 +1713,29 @@ func (x *ListExampleTableRequest_IndexKey_U32I64Str) ProtoReflect() protoreflect
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest_IndexKey_U32I64Str.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest_IndexKey_U32I64Str) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4, 0, 0}
+// Deprecated: Use SimpleExampleByUniqueRequest.ProtoReflect.Descriptor instead.
+func (*SimpleExampleByUniqueRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *ListExampleTableRequest_IndexKey_U32I64Str) GetU32() uint32 {
-	if x != nil && x.U32 != nil {
-		return *x.U32
-	}
-	return 0
-}
-
-func (x *ListExampleTableRequest_IndexKey_U32I64Str) GetI64() int64 {
-	if x != nil && x.I64 != nil {
-		return *x.I64
-	}
-	return 0
-}
-
-func (x *ListExampleTableRequest_IndexKey_U32I64Str) GetStr() string {
-	if x != nil && x.Str != nil {
-		return *x.Str
+func (x *SimpleExampleByUniqueRequest) GetUnique() string {
+	if x != nil {
+		return x.Unique
 	}
 	return ""
 }
 
-type ListExampleTableRequest_IndexKey_U64Str struct {
+// SimpleExampleByUniqueResponse is the TestSchemaQuery/SimpleExampleByUniqueResponse response type.
+type SimpleExampleByUniqueResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// u64 is the value of the u64 field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	U64 *uint64 `protobuf:"varint,1,opt,name=u64,proto3,oneof" json:"u64,omitempty"`
-	// str is the value of the str field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Str *string `protobuf:"bytes,2,opt,name=str,proto3,oneof" json:"str,omitempty"`
+	Value *SimpleExample `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *ListExampleTableRequest_IndexKey_U64Str) Reset() {
-	*x = ListExampleTableRequest_IndexKey_U64Str{}
+func (x *SimpleExampleByUniqueResponse) Reset() {
+	*x = SimpleExampleByUniqueResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1944,13 +1743,13 @@ func (x *ListExampleTableRequest_IndexKey_U64Str) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest_IndexKey_U64Str) String() string {
+func (x *SimpleExampleByUniqueResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest_IndexKey_U64Str) ProtoMessage() {}
+func (*SimpleExampleByUniqueResponse) ProtoMessage() {}
 
-func (x *ListExampleTableRequest_IndexKey_U64Str) ProtoReflect() protoreflect.Message {
+func (x *SimpleExampleByUniqueResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1962,40 +1761,30 @@ func (x *ListExampleTableRequest_IndexKey_U64Str) ProtoReflect() protoreflect.Me
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest_IndexKey_U64Str.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest_IndexKey_U64Str) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4, 0, 1}
+// Deprecated: Use SimpleExampleByUniqueResponse.ProtoReflect.Descriptor instead.
+func (*SimpleExampleByUniqueResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{31}
 }
 
-func (x *ListExampleTableRequest_IndexKey_U64Str) GetU64() uint64 {
-	if x != nil && x.U64 != nil {
-		return *x.U64
+func (x *SimpleExampleByUniqueResponse) GetValue() *SimpleExample {
+	if x != nil {
+		return x.Value
 	}
-	return 0
+	return nil
 }
 
-func (x *ListExampleTableRequest_IndexKey_U64Str) GetStr() string {
-	if x != nil && x.Str != nil {
-		return *x.Str
-	}
-	return ""
-}
-
-type ListExampleTableRequest_IndexKey_StrU32 struct {
+// SimpleExamplesRequest is the TestSchemaQuery/SimpleExamplesRequest request type.
+type SimpleExamplesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// str is the value of the str field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Str *string `protobuf:"bytes,1,opt,name=str,proto3,oneof" json:"str,omitempty"`
-	// u32 is the value of the u32 field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	U32 *uint32 `protobuf:"varint,2,opt,name=u32,proto3,oneof" json:"u32,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTableRequest_IndexKey_StrU32) Reset() {
-	*x = ListExampleTableRequest_IndexKey_StrU32{}
+func (x *SimpleExamplesRequest) Reset() {
+	*x = SimpleExamplesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2003,13 +1792,13 @@ func (x *ListExampleTableRequest_IndexKey_StrU32) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest_IndexKey_StrU32) String() string {
+func (x *SimpleExamplesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest_IndexKey_StrU32) ProtoMessage() {}
+func (*SimpleExamplesRequest) ProtoMessage() {}
 
-func (x *ListExampleTableRequest_IndexKey_StrU32) ProtoReflect() protoreflect.Message {
+func (x *SimpleExamplesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2021,40 +1810,32 @@ func (x *ListExampleTableRequest_IndexKey_StrU32) ProtoReflect() protoreflect.Me
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest_IndexKey_StrU32.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest_IndexKey_StrU32) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4, 0, 2}
+// Deprecated: Use SimpleExamplesRequest.ProtoReflect.Descriptor instead.
+func (*SimpleExamplesRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{32}
 }
 
-func (x *ListExampleTableRequest_IndexKey_StrU32) GetStr() string {
-	if x != nil && x.Str != nil {
-		return *x.Str
+func (x *SimpleExamplesRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
 	}
-	return ""
+	return nil
 }
 
-func (x *ListExampleTableRequest_IndexKey_StrU32) GetU32() uint32 {
-	if x != nil && x.U32 != nil {
-		return *x.U32
-	}
-	return 0
-}
-
-type ListExampleTableRequest_IndexKey_BzStr struct {
+// SimpleExamplesResponse is the TestSchemaQuery/SimpleExamplesResponse response type.
+type SimpleExamplesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// bz is the value of the bz field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Bz []byte `protobuf:"bytes,1,opt,name=bz,proto3,oneof" json:"bz,omitempty"`
-	// str is the value of the str field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Str *string `protobuf:"bytes,2,opt,name=str,proto3,oneof" json:"str,omitempty"`
+	// values are the results of the query.
+	Values []*SimpleExample `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTableRequest_IndexKey_BzStr) Reset() {
-	*x = ListExampleTableRequest_IndexKey_BzStr{}
+func (x *SimpleExamplesResponse) Reset() {
+	*x = SimpleExamplesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2062,13 +1843,13 @@ func (x *ListExampleTableRequest_IndexKey_BzStr) Reset() {
 	}
 }
 
-func (x *ListExampleTableRequest_IndexKey_BzStr) String() string {
+func (x *SimpleExamplesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTableRequest_IndexKey_BzStr) ProtoMessage() {}
+func (*SimpleExamplesResponse) ProtoMessage() {}
 
-func (x *ListExampleTableRequest_IndexKey_BzStr) ProtoReflect() protoreflect.Message {
+func (x *SimpleExamplesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2080,41 +1861,40 @@ func (x *ListExampleTableRequest_IndexKey_BzStr) ProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTableRequest_IndexKey_BzStr.ProtoReflect.Descriptor instead.
-func (*ListExampleTableRequest_IndexKey_BzStr) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{4, 0, 3}
+// Deprecated: Use SimpleExamplesResponse.ProtoReflect.Descriptor instead.
+func (*SimpleExamplesResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{33}
 }
 
-func (x *ListExampleTableRequest_IndexKey_BzStr) GetBz() []byte {
+func (x *SimpleExamplesResponse) GetValues() []*SimpleExample {
 	if x != nil {
-		return x.Bz
+		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleTableRequest_IndexKey_BzStr) GetStr() string {
-	if x != nil && x.Str != nil {
-		return *x.Str
+func (x *SimpleExamplesResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
 	}
-	return ""
+	return nil
 }
 
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListExampleAutoIncrementTableRequest_IndexKey struct {
+// SimpleExamplesByUniqueRequest is the TestSchemaQuery/SimpleExamplesByUniqueRequest request type.
+type SimpleExamplesByUniqueRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListExampleAutoIncrementTableRequest_IndexKey_Id_
-	//	*ListExampleAutoIncrementTableRequest_IndexKey_X_
-	Key isListExampleAutoIncrementTableRequest_IndexKey_Key `protobuf_oneof:"key"`
+	// unique is the value of the unique field in the index.
+	// It can be omitted to query for all valid values of that field in this segment of the index.
+	Unique *string `protobuf:"bytes,1,opt,name=unique,proto3,oneof" json:"unique,omitempty"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey) Reset() {
-	*x = ListExampleAutoIncrementTableRequest_IndexKey{}
+func (x *SimpleExamplesByUniqueRequest) Reset() {
+	*x = SimpleExamplesByUniqueRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2122,13 +1902,13 @@ func (x *ListExampleAutoIncrementTableRequest_IndexKey) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey) String() string {
+func (x *SimpleExamplesByUniqueRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncrementTableRequest_IndexKey) ProtoMessage() {}
+func (*SimpleExamplesByUniqueRequest) ProtoMessage() {}
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey) ProtoReflect() protoreflect.Message {
+func (x *SimpleExamplesByUniqueRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2140,69 +1920,39 @@ func (x *ListExampleAutoIncrementTableRequest_IndexKey) ProtoReflect() protorefl
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncrementTableRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncrementTableRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{10, 0}
+// Deprecated: Use SimpleExamplesByUniqueRequest.ProtoReflect.Descriptor instead.
+func (*SimpleExamplesByUniqueRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{34}
 }
 
-func (m *ListExampleAutoIncrementTableRequest_IndexKey) GetKey() isListExampleAutoIncrementTableRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
+func (x *SimpleExamplesByUniqueRequest) GetUnique() string {
+	if x != nil && x.Unique != nil {
+		return *x.Unique
+	}
+	return ""
+}
+
+func (x *SimpleExamplesByUniqueRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
 	}
 	return nil
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey) GetId() *ListExampleAutoIncrementTableRequest_IndexKey_Id {
-	if x, ok := x.GetKey().(*ListExampleAutoIncrementTableRequest_IndexKey_Id_); ok {
-		return x.Id
-	}
-	return nil
-}
-
-func (x *ListExampleAutoIncrementTableRequest_IndexKey) GetX() *ListExampleAutoIncrementTableRequest_IndexKey_X {
-	if x, ok := x.GetKey().(*ListExampleAutoIncrementTableRequest_IndexKey_X_); ok {
-		return x.X
-	}
-	return nil
-}
-
-type isListExampleAutoIncrementTableRequest_IndexKey_Key interface {
-	isListExampleAutoIncrementTableRequest_IndexKey_Key()
-}
-
-type ListExampleAutoIncrementTableRequest_IndexKey_Id_ struct {
-	// id specifies the value of the Id index key to use in the query.
-	Id *ListExampleAutoIncrementTableRequest_IndexKey_Id `protobuf:"bytes,1,opt,name=id,proto3,oneof"`
-}
-
-type ListExampleAutoIncrementTableRequest_IndexKey_X_ struct {
-	// x specifies the value of the X index key to use in the query.
-	X *ListExampleAutoIncrementTableRequest_IndexKey_X `protobuf:"bytes,2,opt,name=x,proto3,oneof"`
-}
-
-func (*ListExampleAutoIncrementTableRequest_IndexKey_Id_) isListExampleAutoIncrementTableRequest_IndexKey_Key() {
-}
-
-func (*ListExampleAutoIncrementTableRequest_IndexKey_X_) isListExampleAutoIncrementTableRequest_IndexKey_Key() {
-}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListExampleAutoIncrementTableRequest_RangeQuery struct {
+// SimpleExamplesByUniqueResponse is the TestSchemaQuery/SimpleExamplesByUniqueResponse response type.
+type SimpleExamplesByUniqueResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListExampleAutoIncrementTableRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListExampleAutoIncrementTableRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	// values are the results of the query.
+	Values []*SimpleExample `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleAutoIncrementTableRequest_RangeQuery) Reset() {
-	*x = ListExampleAutoIncrementTableRequest_RangeQuery{}
+func (x *SimpleExamplesByUniqueResponse) Reset() {
+	*x = SimpleExamplesByUniqueResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2210,13 +1960,13 @@ func (x *ListExampleAutoIncrementTableRequest_RangeQuery) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_RangeQuery) String() string {
+func (x *SimpleExamplesByUniqueResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncrementTableRequest_RangeQuery) ProtoMessage() {}
+func (*SimpleExamplesByUniqueResponse) ProtoMessage() {}
 
-func (x *ListExampleAutoIncrementTableRequest_RangeQuery) ProtoReflect() protoreflect.Message {
+func (x *SimpleExamplesByUniqueResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2228,37 +1978,37 @@ func (x *ListExampleAutoIncrementTableRequest_RangeQuery) ProtoReflect() protore
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncrementTableRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncrementTableRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{10, 1}
+// Deprecated: Use SimpleExamplesByUniqueResponse.ProtoReflect.Descriptor instead.
+func (*SimpleExamplesByUniqueResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_RangeQuery) GetFrom() *ListExampleAutoIncrementTableRequest_IndexKey {
+func (x *SimpleExamplesByUniqueResponse) GetValues() []*SimpleExample {
 	if x != nil {
-		return x.From
+		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleAutoIncrementTableRequest_RangeQuery) GetTo() *ListExampleAutoIncrementTableRequest_IndexKey {
+func (x *SimpleExamplesByUniqueResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
-		return x.To
+		return x.Pagination
 	}
 	return nil
 }
 
-type ListExampleAutoIncrementTableRequest_IndexKey_Id struct {
+// ExampleAutoIncFieldNameRequest is the TestSchemaQuery/ExampleAutoIncFieldNameRequest request type.
+type ExampleAutoIncFieldNameRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// id is the value of the id field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Id *uint64 `protobuf:"varint,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
+	// foo specifies the value of the foo field in the primary key.
+	Foo uint64 `protobuf:"varint,1,opt,name=foo,proto3" json:"foo,omitempty"`
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_Id) Reset() {
-	*x = ListExampleAutoIncrementTableRequest_IndexKey_Id{}
+func (x *ExampleAutoIncFieldNameRequest) Reset() {
+	*x = ExampleAutoIncFieldNameRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2266,13 +2016,13 @@ func (x *ListExampleAutoIncrementTableRequest_IndexKey_Id) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_Id) String() string {
+func (x *ExampleAutoIncFieldNameRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncrementTableRequest_IndexKey_Id) ProtoMessage() {}
+func (*ExampleAutoIncFieldNameRequest) ProtoMessage() {}
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_Id) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncFieldNameRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2284,30 +2034,30 @@ func (x *ListExampleAutoIncrementTableRequest_IndexKey_Id) ProtoReflect() protor
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncrementTableRequest_IndexKey_Id.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncrementTableRequest_IndexKey_Id) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{10, 0, 0}
+// Deprecated: Use ExampleAutoIncFieldNameRequest.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncFieldNameRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{36}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_Id) GetId() uint64 {
-	if x != nil && x.Id != nil {
-		return *x.Id
+func (x *ExampleAutoIncFieldNameRequest) GetFoo() uint64 {
+	if x != nil {
+		return x.Foo
 	}
 	return 0
 }
 
-type ListExampleAutoIncrementTableRequest_IndexKey_X struct {
+// ExampleAutoIncFieldNameResponse is the TestSchemaQuery/ExampleAutoIncFieldNameResponse response type.
+type ExampleAutoIncFieldNameResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// x is the value of the x field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	X *string `protobuf:"bytes,1,opt,name=x,proto3,oneof" json:"x,omitempty"`
+	// value is the response value.
+	Value *ExampleAutoIncFieldName `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_X) Reset() {
-	*x = ListExampleAutoIncrementTableRequest_IndexKey_X{}
+func (x *ExampleAutoIncFieldNameResponse) Reset() {
+	*x = ExampleAutoIncFieldNameResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2315,13 +2065,13 @@ func (x *ListExampleAutoIncrementTableRequest_IndexKey_X) Reset() {
 	}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_X) String() string {
+func (x *ExampleAutoIncFieldNameResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleAutoIncrementTableRequest_IndexKey_X) ProtoMessage() {}
+func (*ExampleAutoIncFieldNameResponse) ProtoMessage() {}
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_X) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncFieldNameResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2333,34 +2083,30 @@ func (x *ListExampleAutoIncrementTableRequest_IndexKey_X) ProtoReflect() protore
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleAutoIncrementTableRequest_IndexKey_X.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncrementTableRequest_IndexKey_X) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{10, 0, 1}
+// Deprecated: Use ExampleAutoIncFieldNameResponse.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncFieldNameResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{37}
 }
 
-func (x *ListExampleAutoIncrementTableRequest_IndexKey_X) GetX() string {
-	if x != nil && x.X != nil {
-		return *x.X
+func (x *ExampleAutoIncFieldNameResponse) GetValue() *ExampleAutoIncFieldName {
+	if x != nil {
+		return x.Value
 	}
-	return ""
+	return nil
 }
 
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListExampleTimestampRequest_IndexKey struct {
+// ExampleAutoIncFieldNamesRequest is the TestSchemaQuery/ExampleAutoIncFieldNamesRequest request type.
+type ExampleAutoIncFieldNamesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListExampleTimestampRequest_IndexKey_Id_
-	//	*ListExampleTimestampRequest_IndexKey_Ts_
-	Key isListExampleTimestampRequest_IndexKey_Key `protobuf_oneof:"key"`
+	// pagination specifies optional pagination parameters.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTimestampRequest_IndexKey) Reset() {
-	*x = ListExampleTimestampRequest_IndexKey{}
+func (x *ExampleAutoIncFieldNamesRequest) Reset() {
+	*x = ExampleAutoIncFieldNamesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2368,13 +2114,13 @@ func (x *ListExampleTimestampRequest_IndexKey) Reset() {
 	}
 }
 
-func (x *ListExampleTimestampRequest_IndexKey) String() string {
+func (x *ExampleAutoIncFieldNamesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTimestampRequest_IndexKey) ProtoMessage() {}
+func (*ExampleAutoIncFieldNamesRequest) ProtoMessage() {}
 
-func (x *ListExampleTimestampRequest_IndexKey) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncFieldNamesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2386,67 +2132,32 @@ func (x *ListExampleTimestampRequest_IndexKey) ProtoReflect() protoreflect.Messa
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTimestampRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListExampleTimestampRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{16, 0}
+// Deprecated: Use ExampleAutoIncFieldNamesRequest.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncFieldNamesRequest) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{38}
 }
 
-func (m *ListExampleTimestampRequest_IndexKey) GetKey() isListExampleTimestampRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
+func (x *ExampleAutoIncFieldNamesRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
 	}
 	return nil
 }
 
-func (x *ListExampleTimestampRequest_IndexKey) GetId() *ListExampleTimestampRequest_IndexKey_Id {
-	if x, ok := x.GetKey().(*ListExampleTimestampRequest_IndexKey_Id_); ok {
-		return x.Id
-	}
-	return nil
-}
-
-func (x *ListExampleTimestampRequest_IndexKey) GetTs() *ListExampleTimestampRequest_IndexKey_Ts {
-	if x, ok := x.GetKey().(*ListExampleTimestampRequest_IndexKey_Ts_); ok {
-		return x.Ts
-	}
-	return nil
-}
-
-type isListExampleTimestampRequest_IndexKey_Key interface {
-	isListExampleTimestampRequest_IndexKey_Key()
-}
-
-type ListExampleTimestampRequest_IndexKey_Id_ struct {
-	// id specifies the value of the Id index key to use in the query.
-	Id *ListExampleTimestampRequest_IndexKey_Id `protobuf:"bytes,1,opt,name=id,proto3,oneof"`
-}
-
-type ListExampleTimestampRequest_IndexKey_Ts_ struct {
-	// ts specifies the value of the Ts index key to use in the query.
-	Ts *ListExampleTimestampRequest_IndexKey_Ts `protobuf:"bytes,2,opt,name=ts,proto3,oneof"`
-}
-
-func (*ListExampleTimestampRequest_IndexKey_Id_) isListExampleTimestampRequest_IndexKey_Key() {}
-
-func (*ListExampleTimestampRequest_IndexKey_Ts_) isListExampleTimestampRequest_IndexKey_Key() {}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListExampleTimestampRequest_RangeQuery struct {
+// ExampleAutoIncFieldNamesResponse is the TestSchemaQuery/ExampleAutoIncFieldNamesResponse response type.
+type ExampleAutoIncFieldNamesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListExampleTimestampRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListExampleTimestampRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	// values are the results of the query.
+	Values []*ExampleAutoIncFieldName `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	// pagination is the pagination response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (x *ListExampleTimestampRequest_RangeQuery) Reset() {
-	*x = ListExampleTimestampRequest_RangeQuery{}
+func (x *ExampleAutoIncFieldNamesResponse) Reset() {
+	*x = ExampleAutoIncFieldNamesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_testpb_test_schema_query_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2454,13 +2165,13 @@ func (x *ListExampleTimestampRequest_RangeQuery) Reset() {
 	}
 }
 
-func (x *ListExampleTimestampRequest_RangeQuery) String() string {
+func (x *ExampleAutoIncFieldNamesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListExampleTimestampRequest_RangeQuery) ProtoMessage() {}
+func (*ExampleAutoIncFieldNamesResponse) ProtoMessage() {}
 
-func (x *ListExampleTimestampRequest_RangeQuery) ProtoReflect() protoreflect.Message {
+func (x *ExampleAutoIncFieldNamesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_testpb_test_schema_query_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2472,546 +2183,23 @@ func (x *ListExampleTimestampRequest_RangeQuery) ProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListExampleTimestampRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListExampleTimestampRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{16, 1}
+// Deprecated: Use ExampleAutoIncFieldNamesResponse.ProtoReflect.Descriptor instead.
+func (*ExampleAutoIncFieldNamesResponse) Descriptor() ([]byte, []int) {
+	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{39}
 }
 
-func (x *ListExampleTimestampRequest_RangeQuery) GetFrom() *ListExampleTimestampRequest_IndexKey {
+func (x *ExampleAutoIncFieldNamesResponse) GetValues() []*ExampleAutoIncFieldName {
 	if x != nil {
-		return x.From
+		return x.Values
 	}
 	return nil
 }
 
-func (x *ListExampleTimestampRequest_RangeQuery) GetTo() *ListExampleTimestampRequest_IndexKey {
+func (x *ExampleAutoIncFieldNamesResponse) GetPagination() *v1beta1.PageResponse {
 	if x != nil {
-		return x.To
+		return x.Pagination
 	}
 	return nil
-}
-
-type ListExampleTimestampRequest_IndexKey_Id struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// id is the value of the id field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Id *uint64 `protobuf:"varint,1,opt,name=id,proto3,oneof" json:"id,omitempty"`
-}
-
-func (x *ListExampleTimestampRequest_IndexKey_Id) Reset() {
-	*x = ListExampleTimestampRequest_IndexKey_Id{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[40]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListExampleTimestampRequest_IndexKey_Id) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListExampleTimestampRequest_IndexKey_Id) ProtoMessage() {}
-
-func (x *ListExampleTimestampRequest_IndexKey_Id) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[40]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListExampleTimestampRequest_IndexKey_Id.ProtoReflect.Descriptor instead.
-func (*ListExampleTimestampRequest_IndexKey_Id) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{16, 0, 0}
-}
-
-func (x *ListExampleTimestampRequest_IndexKey_Id) GetId() uint64 {
-	if x != nil && x.Id != nil {
-		return *x.Id
-	}
-	return 0
-}
-
-type ListExampleTimestampRequest_IndexKey_Ts struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// ts is the value of the ts field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Ts *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=ts,proto3,oneof" json:"ts,omitempty"`
-}
-
-func (x *ListExampleTimestampRequest_IndexKey_Ts) Reset() {
-	*x = ListExampleTimestampRequest_IndexKey_Ts{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[41]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListExampleTimestampRequest_IndexKey_Ts) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListExampleTimestampRequest_IndexKey_Ts) ProtoMessage() {}
-
-func (x *ListExampleTimestampRequest_IndexKey_Ts) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[41]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListExampleTimestampRequest_IndexKey_Ts.ProtoReflect.Descriptor instead.
-func (*ListExampleTimestampRequest_IndexKey_Ts) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{16, 0, 1}
-}
-
-func (x *ListExampleTimestampRequest_IndexKey_Ts) GetTs() *timestamppb.Timestamp {
-	if x != nil {
-		return x.Ts
-	}
-	return nil
-}
-
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListSimpleExampleRequest_IndexKey struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListSimpleExampleRequest_IndexKey_Name_
-	//	*ListSimpleExampleRequest_IndexKey_Unique_
-	Key isListSimpleExampleRequest_IndexKey_Key `protobuf_oneof:"key"`
-}
-
-func (x *ListSimpleExampleRequest_IndexKey) Reset() {
-	*x = ListSimpleExampleRequest_IndexKey{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[42]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSimpleExampleRequest_IndexKey) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSimpleExampleRequest_IndexKey) ProtoMessage() {}
-
-func (x *ListSimpleExampleRequest_IndexKey) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[42]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSimpleExampleRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListSimpleExampleRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{22, 0}
-}
-
-func (m *ListSimpleExampleRequest_IndexKey) GetKey() isListSimpleExampleRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
-	}
-	return nil
-}
-
-func (x *ListSimpleExampleRequest_IndexKey) GetName() *ListSimpleExampleRequest_IndexKey_Name {
-	if x, ok := x.GetKey().(*ListSimpleExampleRequest_IndexKey_Name_); ok {
-		return x.Name
-	}
-	return nil
-}
-
-func (x *ListSimpleExampleRequest_IndexKey) GetUnique() *ListSimpleExampleRequest_IndexKey_Unique {
-	if x, ok := x.GetKey().(*ListSimpleExampleRequest_IndexKey_Unique_); ok {
-		return x.Unique
-	}
-	return nil
-}
-
-type isListSimpleExampleRequest_IndexKey_Key interface {
-	isListSimpleExampleRequest_IndexKey_Key()
-}
-
-type ListSimpleExampleRequest_IndexKey_Name_ struct {
-	// name specifies the value of the Name index key to use in the query.
-	Name *ListSimpleExampleRequest_IndexKey_Name `protobuf:"bytes,1,opt,name=name,proto3,oneof"`
-}
-
-type ListSimpleExampleRequest_IndexKey_Unique_ struct {
-	// unique specifies the value of the Unique index key to use in the query.
-	Unique *ListSimpleExampleRequest_IndexKey_Unique `protobuf:"bytes,2,opt,name=unique,proto3,oneof"`
-}
-
-func (*ListSimpleExampleRequest_IndexKey_Name_) isListSimpleExampleRequest_IndexKey_Key() {}
-
-func (*ListSimpleExampleRequest_IndexKey_Unique_) isListSimpleExampleRequest_IndexKey_Key() {}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListSimpleExampleRequest_RangeQuery struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListSimpleExampleRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListSimpleExampleRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
-}
-
-func (x *ListSimpleExampleRequest_RangeQuery) Reset() {
-	*x = ListSimpleExampleRequest_RangeQuery{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[43]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSimpleExampleRequest_RangeQuery) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSimpleExampleRequest_RangeQuery) ProtoMessage() {}
-
-func (x *ListSimpleExampleRequest_RangeQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[43]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSimpleExampleRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListSimpleExampleRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{22, 1}
-}
-
-func (x *ListSimpleExampleRequest_RangeQuery) GetFrom() *ListSimpleExampleRequest_IndexKey {
-	if x != nil {
-		return x.From
-	}
-	return nil
-}
-
-func (x *ListSimpleExampleRequest_RangeQuery) GetTo() *ListSimpleExampleRequest_IndexKey {
-	if x != nil {
-		return x.To
-	}
-	return nil
-}
-
-type ListSimpleExampleRequest_IndexKey_Name struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// name is the value of the name field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Name *string `protobuf:"bytes,1,opt,name=name,proto3,oneof" json:"name,omitempty"`
-}
-
-func (x *ListSimpleExampleRequest_IndexKey_Name) Reset() {
-	*x = ListSimpleExampleRequest_IndexKey_Name{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[44]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSimpleExampleRequest_IndexKey_Name) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSimpleExampleRequest_IndexKey_Name) ProtoMessage() {}
-
-func (x *ListSimpleExampleRequest_IndexKey_Name) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[44]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSimpleExampleRequest_IndexKey_Name.ProtoReflect.Descriptor instead.
-func (*ListSimpleExampleRequest_IndexKey_Name) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{22, 0, 0}
-}
-
-func (x *ListSimpleExampleRequest_IndexKey_Name) GetName() string {
-	if x != nil && x.Name != nil {
-		return *x.Name
-	}
-	return ""
-}
-
-type ListSimpleExampleRequest_IndexKey_Unique struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// unique is the value of the unique field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Unique *string `protobuf:"bytes,1,opt,name=unique,proto3,oneof" json:"unique,omitempty"`
-}
-
-func (x *ListSimpleExampleRequest_IndexKey_Unique) Reset() {
-	*x = ListSimpleExampleRequest_IndexKey_Unique{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[45]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListSimpleExampleRequest_IndexKey_Unique) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListSimpleExampleRequest_IndexKey_Unique) ProtoMessage() {}
-
-func (x *ListSimpleExampleRequest_IndexKey_Unique) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[45]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListSimpleExampleRequest_IndexKey_Unique.ProtoReflect.Descriptor instead.
-func (*ListSimpleExampleRequest_IndexKey_Unique) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{22, 0, 1}
-}
-
-func (x *ListSimpleExampleRequest_IndexKey_Unique) GetUnique() string {
-	if x != nil && x.Unique != nil {
-		return *x.Unique
-	}
-	return ""
-}
-
-// IndexKey specifies the value of an index key to use in prefix and range queries.
-type ListExampleAutoIncFieldNameRequest_IndexKey struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// key specifies the index key value.
-	//
-	// Types that are assignable to Key:
-	//	*ListExampleAutoIncFieldNameRequest_IndexKey_Foo_
-	Key isListExampleAutoIncFieldNameRequest_IndexKey_Key `protobuf_oneof:"key"`
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey) Reset() {
-	*x = ListExampleAutoIncFieldNameRequest_IndexKey{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[46]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListExampleAutoIncFieldNameRequest_IndexKey) ProtoMessage() {}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[46]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListExampleAutoIncFieldNameRequest_IndexKey.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncFieldNameRequest_IndexKey) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{26, 0}
-}
-
-func (m *ListExampleAutoIncFieldNameRequest_IndexKey) GetKey() isListExampleAutoIncFieldNameRequest_IndexKey_Key {
-	if m != nil {
-		return m.Key
-	}
-	return nil
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey) GetFoo() *ListExampleAutoIncFieldNameRequest_IndexKey_Foo {
-	if x, ok := x.GetKey().(*ListExampleAutoIncFieldNameRequest_IndexKey_Foo_); ok {
-		return x.Foo
-	}
-	return nil
-}
-
-type isListExampleAutoIncFieldNameRequest_IndexKey_Key interface {
-	isListExampleAutoIncFieldNameRequest_IndexKey_Key()
-}
-
-type ListExampleAutoIncFieldNameRequest_IndexKey_Foo_ struct {
-	// foo specifies the value of the Foo index key to use in the query.
-	Foo *ListExampleAutoIncFieldNameRequest_IndexKey_Foo `protobuf:"bytes,1,opt,name=foo,proto3,oneof"`
-}
-
-func (*ListExampleAutoIncFieldNameRequest_IndexKey_Foo_) isListExampleAutoIncFieldNameRequest_IndexKey_Key() {
-}
-
-// RangeQuery specifies the from/to index keys for a range query.
-type ListExampleAutoIncFieldNameRequest_RangeQuery struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// from is the index key to use for the start of the range query.
-	// To query from the start of an index, specify an index key for that index with empty values.
-	From *ListExampleAutoIncFieldNameRequest_IndexKey `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	// to is the index key to use for the end of the range query.
-	// The index key type MUST be the same as the index key type used for from.
-	// To query from to the end of an index it can be omitted.
-	To *ListExampleAutoIncFieldNameRequest_IndexKey `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_RangeQuery) Reset() {
-	*x = ListExampleAutoIncFieldNameRequest_RangeQuery{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[47]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_RangeQuery) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListExampleAutoIncFieldNameRequest_RangeQuery) ProtoMessage() {}
-
-func (x *ListExampleAutoIncFieldNameRequest_RangeQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[47]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListExampleAutoIncFieldNameRequest_RangeQuery.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncFieldNameRequest_RangeQuery) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{26, 1}
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_RangeQuery) GetFrom() *ListExampleAutoIncFieldNameRequest_IndexKey {
-	if x != nil {
-		return x.From
-	}
-	return nil
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_RangeQuery) GetTo() *ListExampleAutoIncFieldNameRequest_IndexKey {
-	if x != nil {
-		return x.To
-	}
-	return nil
-}
-
-type ListExampleAutoIncFieldNameRequest_IndexKey_Foo struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// foo is the value of the foo field in the index.
-	// It can be omitted to query for all valid values of that field in this segment of the index.
-	Foo *uint64 `protobuf:"varint,1,opt,name=foo,proto3,oneof" json:"foo,omitempty"`
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey_Foo) Reset() {
-	*x = ListExampleAutoIncFieldNameRequest_IndexKey_Foo{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_testpb_test_schema_query_proto_msgTypes[48]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey_Foo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListExampleAutoIncFieldNameRequest_IndexKey_Foo) ProtoMessage() {}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey_Foo) ProtoReflect() protoreflect.Message {
-	mi := &file_testpb_test_schema_query_proto_msgTypes[48]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListExampleAutoIncFieldNameRequest_IndexKey_Foo.ProtoReflect.Descriptor instead.
-func (*ListExampleAutoIncFieldNameRequest_IndexKey_Foo) Descriptor() ([]byte, []int) {
-	return file_testpb_test_schema_query_proto_rawDescGZIP(), []int{26, 0, 0}
-}
-
-func (x *ListExampleAutoIncFieldNameRequest_IndexKey_Foo) GetFoo() uint64 {
-	if x != nil && x.Foo != nil {
-		return *x.Foo
-	}
-	return 0
 }
 
 var File_testpb_test_schema_query_proto protoreflect.FileDescriptor
@@ -3026,470 +2214,421 @@ var file_testpb_test_schema_query_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x18, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2f, 0x74, 0x65,
 	0x73, 0x74, 0x5f, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x4e, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62,
-	0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x69,
-	0x36, 0x34, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34, 0x12, 0x10, 0x0a,
-	0x03, 0x73, 0x74, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x22,
-	0x45, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62,
-	0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2a, 0x0a, 0x05, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x44, 0x0a, 0x1e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74,
-	0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x75, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74,
-	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x22, 0x4d, 0x0a, 0x1f,
-	0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42,
-	0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x2a, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14,
-	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54,
-	0x61, 0x62, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x9c, 0x08, 0x0a, 0x17,
-	0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x4d, 0x0a, 0x0c, 0x70, 0x72, 0x65, 0x66, 0x69,
-	0x78, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49,
-	0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x66, 0x69,
-	0x78, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x4d, 0x0a, 0x0b, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x5f,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e,
-	0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x00, 0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x8a, 0x05,
-	0x0a, 0x08, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x12, 0x56, 0x0a, 0x0d, 0x75, 0x5f,
-	0x33, 0x32, 0x5f, 0x69, 0x5f, 0x36, 0x34, 0x5f, 0x73, 0x74, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x32, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x55, 0x33, 0x32, 0x49,
-	0x36, 0x34, 0x53, 0x74, 0x72, 0x48, 0x00, 0x52, 0x09, 0x75, 0x33, 0x32, 0x49, 0x36, 0x34, 0x53,
-	0x74, 0x72, 0x12, 0x4b, 0x0a, 0x08, 0x75, 0x5f, 0x36, 0x34, 0x5f, 0x73, 0x74, 0x72, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x2f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x55,
-	0x36, 0x34, 0x53, 0x74, 0x72, 0x48, 0x00, 0x52, 0x06, 0x75, 0x36, 0x34, 0x53, 0x74, 0x72, 0x12,
-	0x4b, 0x0a, 0x08, 0x73, 0x74, 0x72, 0x5f, 0x75, 0x5f, 0x33, 0x32, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x2f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x53, 0x74, 0x72, 0x55,
-	0x33, 0x32, 0x48, 0x00, 0x52, 0x06, 0x73, 0x74, 0x72, 0x55, 0x33, 0x32, 0x12, 0x47, 0x0a, 0x06,
-	0x62, 0x7a, 0x5f, 0x73, 0x74, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e,
-	0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x48, 0x00, 0x52, 0x05,
-	0x62, 0x7a, 0x53, 0x74, 0x72, 0x1a, 0x68, 0x0a, 0x09, 0x55, 0x33, 0x32, 0x49, 0x36, 0x34, 0x53,
-	0x74, 0x72, 0x12, 0x15, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x48,
-	0x00, 0x52, 0x03, 0x75, 0x33, 0x32, 0x88, 0x01, 0x01, 0x12, 0x15, 0x0a, 0x03, 0x69, 0x36, 0x34,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x48, 0x01, 0x52, 0x03, 0x69, 0x36, 0x34, 0x88, 0x01, 0x01,
-	0x12, 0x15, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x48, 0x02, 0x52,
-	0x03, 0x73, 0x74, 0x72, 0x88, 0x01, 0x01, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x75, 0x33, 0x32, 0x42,
-	0x06, 0x0a, 0x04, 0x5f, 0x69, 0x36, 0x34, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x73, 0x74, 0x72, 0x1a,
-	0x46, 0x0a, 0x06, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x12, 0x15, 0x0a, 0x03, 0x75, 0x36, 0x34,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x03, 0x75, 0x36, 0x34, 0x88, 0x01, 0x01,
-	0x12, 0x15, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x48, 0x01, 0x52,
-	0x03, 0x73, 0x74, 0x72, 0x88, 0x01, 0x01, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x75, 0x36, 0x34, 0x42,
-	0x06, 0x0a, 0x04, 0x5f, 0x73, 0x74, 0x72, 0x1a, 0x46, 0x0a, 0x06, 0x53, 0x74, 0x72, 0x55, 0x33,
-	0x32, 0x12, 0x15, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00,
-	0x52, 0x03, 0x73, 0x74, 0x72, 0x88, 0x01, 0x01, 0x12, 0x15, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0d, 0x48, 0x01, 0x52, 0x03, 0x75, 0x33, 0x32, 0x88, 0x01, 0x01, 0x42,
-	0x06, 0x0a, 0x04, 0x5f, 0x73, 0x74, 0x72, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x75, 0x33, 0x32, 0x1a,
-	0x42, 0x0a, 0x05, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x12, 0x13, 0x0a, 0x02, 0x62, 0x7a, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x02, 0x62, 0x7a, 0x88, 0x01, 0x01, 0x12, 0x15, 0x0a,
-	0x03, 0x73, 0x74, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x48, 0x01, 0x52, 0x03, 0x73, 0x74,
-	0x72, 0x88, 0x01, 0x01, 0x42, 0x05, 0x0a, 0x03, 0x5f, 0x62, 0x7a, 0x42, 0x06, 0x0a, 0x04, 0x5f,
-	0x73, 0x74, 0x72, 0x42, 0x05, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x1a, 0x84, 0x01, 0x0a, 0x0a, 0x52,
-	0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x3c, 0x0a, 0x04, 0x66, 0x72, 0x6f,
-	0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65,
-	0x79, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12, 0x38, 0x0a, 0x02, 0x74, 0x6f, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73,
-	0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x02, 0x74,
-	0x6f, 0x42, 0x07, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0x91, 0x01, 0x0a, 0x18, 0x4c,
-	0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x35,
-	0x0a, 0x23, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
-	0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x5f, 0x0a, 0x24, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d,
+	0x4b, 0x0a, 0x13, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x33, 0x32, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x36, 0x34, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x69, 0x36, 0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74,
+	0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x74, 0x72, 0x22, 0x42, 0x0a, 0x14,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2a, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x22, 0x41, 0x0a, 0x1b, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x10, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x75, 0x36,
+	0x34, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x73, 0x74, 0x72, 0x22, 0x4a, 0x0a, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61,
+	0x62, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x2a, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22,
+	0x9c, 0x01, 0x0a, 0x14, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x15, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0d, 0x48, 0x00, 0x52, 0x03, 0x75, 0x33, 0x32, 0x88, 0x01, 0x01, 0x12,
+	0x15, 0x0a, 0x03, 0x69, 0x36, 0x34, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x48, 0x01, 0x52, 0x03,
+	0x69, 0x36, 0x34, 0x88, 0x01, 0x01, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x06,
+	0x0a, 0x04, 0x5f, 0x75, 0x33, 0x32, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x69, 0x36, 0x34, 0x22, 0x8e,
+	0x01, 0x0a, 0x15, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
+	0xa4, 0x01, 0x0a, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x15, 0x0a, 0x03, 0x75, 0x36, 0x34, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52,
+	0x03, 0x75, 0x36, 0x34, 0x88, 0x01, 0x01, 0x12, 0x15, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x48, 0x01, 0x52, 0x03, 0x73, 0x74, 0x72, 0x88, 0x01, 0x01, 0x12, 0x46,
+	0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50,
+	0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69,
+	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x75, 0x36, 0x34, 0x42, 0x06,
+	0x0a, 0x04, 0x5f, 0x73, 0x74, 0x72, 0x22, 0x96, 0x01, 0x0a, 0x1d, 0x45, 0x78, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
+	0xa4, 0x01, 0x0a, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x53, 0x74, 0x72, 0x55, 0x33, 0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x15, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52,
+	0x03, 0x73, 0x74, 0x72, 0x88, 0x01, 0x01, 0x12, 0x15, 0x0a, 0x03, 0x75, 0x33, 0x32, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0d, 0x48, 0x01, 0x52, 0x03, 0x75, 0x33, 0x32, 0x88, 0x01, 0x01, 0x12, 0x46,
+	0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50,
+	0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69,
+	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x73, 0x74, 0x72, 0x42, 0x06,
+	0x0a, 0x04, 0x5f, 0x75, 0x33, 0x32, 0x22, 0x96, 0x01, 0x0a, 0x1d, 0x45, 0x78, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x53, 0x74, 0x72, 0x55, 0x33, 0x32,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
+	0xa0, 0x01, 0x0a, 0x1b, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x13, 0x0a, 0x02, 0x62, 0x7a, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x48, 0x00, 0x52, 0x02, 0x62,
+	0x7a, 0x88, 0x01, 0x01, 0x12, 0x15, 0x0a, 0x03, 0x73, 0x74, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x48, 0x01, 0x52, 0x03, 0x73, 0x74, 0x72, 0x88, 0x01, 0x01, 0x12, 0x46, 0x0a, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x42, 0x05, 0x0a, 0x03, 0x5f, 0x62, 0x7a, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x73,
+	0x74, 0x72, 0x22, 0x95, 0x01, 0x0a, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61,
+	0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x32, 0x0a, 0x20, 0x45, 0x78,
+	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65,
+	0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e,
+	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x5c,
+	0x0a, 0x21, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
+	0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
 	0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74,
-	0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74,
-	0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x36, 0x0a, 0x26, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e,
-	0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x58, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01, 0x78, 0x22, 0x62,
-	0x0a, 0x27, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
+	0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x33, 0x0a, 0x23,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65,
+	0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x58, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x01,
+	0x78, 0x22, 0x5f, 0x0a, 0x24, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
 	0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79,
 	0x58, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x05, 0x76, 0x61, 0x6c,
 	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
 	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
 	0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x22, 0xb9, 0x05, 0x0a, 0x24, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54,
-	0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x5a, 0x0a, 0x0c, 0x70,
-	0x72, 0x65, 0x66, 0x69, 0x78, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x35, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45,
+	0x75, 0x65, 0x22, 0x6b, 0x0a, 0x21, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74,
+	0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
+	0xa8, 0x01, 0x0a, 0x22, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49,
+	0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x39, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65,
+	0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x87, 0x01, 0x0a, 0x24, 0x45,
 	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d,
-	0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e,
-	0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x66,
-	0x69, 0x78, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x5a, 0x0a, 0x0b, 0x72, 0x61, 0x6e, 0x67, 0x65,
-	0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x37, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61,
-	0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e, 0x67, 0x65,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x00, 0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52,
-	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0xe6, 0x01, 0x0a, 0x08,
-	0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x12, 0x4a, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x38, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
-	0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x49, 0x64, 0x48, 0x00,
-	0x52, 0x02, 0x69, 0x64, 0x12, 0x47, 0x0a, 0x01, 0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x37, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e,
-	0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e,
-	0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x58, 0x48, 0x00, 0x52, 0x01, 0x78, 0x1a, 0x20, 0x0a,
-	0x02, 0x49, 0x64, 0x12, 0x13, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48,
-	0x00, 0x52, 0x02, 0x69, 0x64, 0x88, 0x01, 0x01, 0x42, 0x05, 0x0a, 0x03, 0x5f, 0x69, 0x64, 0x1a,
-	0x1c, 0x0a, 0x01, 0x58, 0x12, 0x11, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48,
-	0x00, 0x52, 0x01, 0x78, 0x88, 0x01, 0x01, 0x42, 0x04, 0x0a, 0x02, 0x5f, 0x78, 0x42, 0x05, 0x0a,
-	0x03, 0x6b, 0x65, 0x79, 0x1a, 0x9e, 0x01, 0x0a, 0x0a, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x12, 0x49, 0x0a, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x35, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d,
-	0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e,
-	0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12, 0x45,
-	0x0a, 0x02, 0x74, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x35, 0x2e, 0x74, 0x65, 0x73,
-	0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41,
+	0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x58, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x11, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00,
+	0x52, 0x01, 0x78, 0x88, 0x01, 0x01, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04,
+	0x0a, 0x02, 0x5f, 0x78, 0x22, 0xab, 0x01, 0x0a, 0x25, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62,
+	0x6c, 0x65, 0x73, 0x42, 0x79, 0x58, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x39,
+	0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41,
 	0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65,
-	0x79, 0x52, 0x02, 0x74, 0x6f, 0x42, 0x07, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0xab,
-	0x01, 0x0a, 0x25, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75,
-	0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x39, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
-	0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x1c, 0x0a, 0x1a,
-	0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65,
-	0x74, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x4d, 0x0a, 0x1b, 0x47, 0x65,
-	0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74,
-	0x6f, 0x6e, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x2c, 0x0a, 0x1a, 0x47, 0x65, 0x74,
-	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x4d, 0x0a, 0x1b, 0x47, 0x65, 0x74, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x9d, 0x05, 0x0a, 0x1b, 0x4c, 0x69, 0x73, 0x74, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x51, 0x0a, 0x0c, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78,
-	0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70, 0x72,
-	0x65, 0x66, 0x69, 0x78, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x51, 0x0a, 0x0b, 0x72, 0x61, 0x6e,
-	0x67, 0x65, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e,
-	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x00,
-	0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x46, 0x0a, 0x0a,
-	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71,
-	0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x1a, 0xf7, 0x01, 0x0a, 0x08, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65,
-	0x79, 0x12, 0x41, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2f, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x49, 0x64, 0x48, 0x00,
-	0x52, 0x02, 0x69, 0x64, 0x12, 0x41, 0x0a, 0x02, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x2f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x54,
-	0x73, 0x48, 0x00, 0x52, 0x02, 0x74, 0x73, 0x1a, 0x20, 0x0a, 0x02, 0x49, 0x64, 0x12, 0x13, 0x0a,
-	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x02, 0x69, 0x64, 0x88,
-	0x01, 0x01, 0x42, 0x05, 0x0a, 0x03, 0x5f, 0x69, 0x64, 0x1a, 0x3c, 0x0a, 0x02, 0x54, 0x73, 0x12,
-	0x2f, 0x0a, 0x02, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x48, 0x00, 0x52, 0x02, 0x74, 0x73, 0x88, 0x01, 0x01,
-	0x42, 0x05, 0x0a, 0x03, 0x5f, 0x74, 0x73, 0x42, 0x05, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x1a, 0x8c,
-	0x01, 0x0a, 0x0a, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x40, 0x0a,
-	0x04, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12,
-	0x3c, 0x0a, 0x02, 0x74, 0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x02, 0x74, 0x6f, 0x42, 0x07, 0x0a,
-	0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0x99, 0x01, 0x0a, 0x1c, 0x4c, 0x69, 0x73, 0x74, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67,
+	0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67,
 	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72,
 	0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x22, 0x2d, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x22, 0x47, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2b, 0x0a,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x39, 0x0a, 0x1f, 0x47, 0x65,
-	0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79,
+	0x6f, 0x6e, 0x22, 0x19, 0x0a, 0x17, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e,
+	0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x4a, 0x0a,
+	0x18, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74,
+	0x6f, 0x6e, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x29, 0x0a, 0x17, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x02, 0x69, 0x64, 0x22, 0x4a, 0x0a, 0x18, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x22, 0x62, 0x0a, 0x18, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x96, 0x01, 0x0a, 0x19, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x06, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x9e, 0x01,
+	0x0a, 0x1c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x73, 0x42, 0x79, 0x54, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2f,
+	0x0a, 0x02, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x48, 0x00, 0x52, 0x02, 0x74, 0x73, 0x88, 0x01, 0x01, 0x12,
+	0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67,
+	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x05, 0x0a, 0x03, 0x5f, 0x74, 0x73, 0x22, 0x9a,
+	0x01, 0x0a, 0x1d, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x73, 0x42, 0x79, 0x54, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x30, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x18, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
+	0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52,
+	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x2a, 0x0a, 0x14, 0x53,
+	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x44, 0x0a, 0x15, 0x53, 0x69, 0x6d, 0x70, 0x6c,
+	0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x2b, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x15, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x36, 0x0a,
+	0x1c, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79,
 	0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x16, 0x0a,
 	0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x75,
-	0x6e, 0x69, 0x71, 0x75, 0x65, 0x22, 0x4f, 0x0a, 0x20, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70,
-	0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2b, 0x0a, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x96, 0x05, 0x0a, 0x18, 0x4c, 0x69, 0x73, 0x74, 0x53,
-	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x4e, 0x0a, 0x0c, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x5f, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65,
-	0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x12, 0x4e, 0x0a, 0x0b, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x5f, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e, 0x67, 0x65,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x00, 0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52,
-	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0xff, 0x01, 0x0a, 0x08,
-	0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x12, 0x44, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65,
-	0x79, 0x2e, 0x4e, 0x61, 0x6d, 0x65, 0x48, 0x00, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x4a,
-	0x0a, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x30,
-	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70,
-	0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65,
-	0x48, 0x00, 0x52, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x1a, 0x28, 0x0a, 0x04, 0x4e, 0x61,
-	0x6d, 0x65, 0x12, 0x17, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x48, 0x00, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x88, 0x01, 0x01, 0x42, 0x07, 0x0a, 0x05, 0x5f,
-	0x6e, 0x61, 0x6d, 0x65, 0x1a, 0x30, 0x0a, 0x06, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x12, 0x1b,
-	0x0a, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00,
-	0x52, 0x06, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x88, 0x01, 0x01, 0x42, 0x09, 0x0a, 0x07, 0x5f,
-	0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x42, 0x05, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x1a, 0x86, 0x01,
-	0x0a, 0x0a, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x3d, 0x0a, 0x04,
-	0x66, 0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x74, 0x65, 0x73,
-	0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64,
-	0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12, 0x39, 0x0a, 0x02, 0x74,
-	0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b,
-	0x65, 0x79, 0x52, 0x02, 0x74, 0x6f, 0x42, 0x07, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22,
-	0x93, 0x01, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a,
-	0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a,
-	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71,
+	0x6e, 0x69, 0x71, 0x75, 0x65, 0x22, 0x4c, 0x0a, 0x1d, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2b, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53,
+	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x22, 0x5f, 0x0a, 0x15, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71,
 	0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x35, 0x0a, 0x21, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x90, 0x01, 0x0a, 0x16, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x2d, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x15, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47,
+	0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50,
+	0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67,
+	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x8f, 0x01, 0x0a, 0x1d, 0x53, 0x69, 0x6d, 0x70,
+	0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71,
+	0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x06, 0x75, 0x6e, 0x69,
+	0x71, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x06, 0x75, 0x6e, 0x69,
+	0x71, 0x75, 0x65, 0x88, 0x01, 0x01, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x09,
+	0x0a, 0x07, 0x5f, 0x75, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x22, 0x98, 0x01, 0x0a, 0x1e, 0x53, 0x69,
+	0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x55, 0x6e,
+	0x69, 0x71, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x06,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x74,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x32, 0x0a, 0x1e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41,
+	0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x6f, 0x6f, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x03, 0x66, 0x6f, 0x6f, 0x22, 0x58, 0x0a, 0x1f, 0x45, 0x78, 0x61, 0x6d,
 	0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e,
-	0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x66, 0x6f,
-	0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x66, 0x6f, 0x6f, 0x22, 0x5b, 0x0a, 0x22,
-	0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e,
-	0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x35, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61,
-	0x6d, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xcd, 0x04, 0x0a, 0x22, 0x4c, 0x69,
-	0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
-	0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x58, 0x0a, 0x0c, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x33, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49,
-	0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x48, 0x00, 0x52, 0x0b, 0x70,
-	0x72, 0x65, 0x66, 0x69, 0x78, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x58, 0x0a, 0x0b, 0x72, 0x61,
-	0x6e, 0x67, 0x65, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x35, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64,
-	0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x61, 0x6e, 0x67,
-	0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x48, 0x00, 0x52, 0x0a, 0x72, 0x61, 0x6e, 0x67, 0x65, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x84, 0x01, 0x0a,
-	0x08, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x12, 0x4b, 0x0a, 0x03, 0x66, 0x6f, 0x6f,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x37, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49,
-	0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x2e, 0x46, 0x6f, 0x6f, 0x48,
-	0x00, 0x52, 0x03, 0x66, 0x6f, 0x6f, 0x1a, 0x24, 0x0a, 0x03, 0x46, 0x6f, 0x6f, 0x12, 0x15, 0x0a,
-	0x03, 0x66, 0x6f, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00, 0x52, 0x03, 0x66, 0x6f,
-	0x6f, 0x88, 0x01, 0x01, 0x42, 0x06, 0x0a, 0x04, 0x5f, 0x66, 0x6f, 0x6f, 0x42, 0x05, 0x0a, 0x03,
-	0x6b, 0x65, 0x79, 0x1a, 0x9a, 0x01, 0x0a, 0x0a, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x12, 0x47, 0x0a, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x33, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c,
-	0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64,
-	0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x04, 0x66, 0x72, 0x6f, 0x6d, 0x12, 0x43, 0x0a, 0x02, 0x74,
-	0x6f, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x33, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
-	0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x2e, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4b, 0x65, 0x79, 0x52, 0x02, 0x74, 0x6f,
-	0x42, 0x07, 0x0a, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79, 0x22, 0xa7, 0x01, 0x0a, 0x23, 0x4c, 0x69,
-	0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
-	0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x37, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61,
-	0x6d, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61,
-	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x32, 0xf9, 0x0b, 0x0a, 0x16, 0x54, 0x65, 0x73, 0x74, 0x53, 0x63, 0x68, 0x65,
-	0x6d, 0x61, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x54,
-	0x0a, 0x0f, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c,
-	0x65, 0x12, 0x1e, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x12, 0x6c, 0x0a, 0x17, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x12,
-	0x26, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
-	0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x57, 0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
-	0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x7b, 0x0a, 0x1c, 0x47,
-	0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
-	0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x2b, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41,
-	0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
-	0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x84, 0x01, 0x0a, 0x1f, 0x47, 0x65, 0x74,
-	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65,
-	0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x58, 0x12, 0x2e, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62,
-	0x6c, 0x65, 0x42, 0x79, 0x58, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62,
-	0x6c, 0x65, 0x42, 0x79, 0x58, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x7e, 0x0a, 0x1d, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75,
+	0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x05, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49,
+	0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x22, 0x69, 0x0a, 0x1f, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74,
+	0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xa4, 0x01,
+	0x0a, 0x20, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
+	0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e,
+	0x61, 0x6d, 0x65, 0x52, 0x06, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x32, 0x82, 0x10, 0x0a, 0x16, 0x54, 0x65, 0x73, 0x74, 0x53, 0x63, 0x68,
+	0x65, 0x6d, 0x61, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
+	0x4b, 0x0a, 0x0c, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x12,
+	0x1b, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x74,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62,
+	0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x14,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x36,
+	0x34, 0x53, 0x74, 0x72, 0x12, 0x23, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78,
+	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53,
+	0x74, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42,
+	0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x4e, 0x0a, 0x0d, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c,
+	0x65, 0x73, 0x12, 0x1c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
+	0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x66, 0x0a, 0x15, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c,
+	0x65, 0x73, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x12, 0x24, 0x2e, 0x74, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x25, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
+	0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x55, 0x36, 0x34, 0x53, 0x74, 0x72, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x15, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x53, 0x74, 0x72, 0x55,
+	0x33, 0x32, 0x12, 0x24, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x53, 0x74, 0x72, 0x55, 0x33,
+	0x32, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42,
+	0x79, 0x53, 0x74, 0x72, 0x55, 0x33, 0x32, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x63, 0x0a, 0x14, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c,
+	0x65, 0x73, 0x42, 0x79, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x12, 0x23, 0x2e, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73,
+	0x42, 0x79, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54,
+	0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x42, 0x7a, 0x53, 0x74, 0x72, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x72, 0x0a, 0x19, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
+	0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61,
+	0x62, 0x6c, 0x65, 0x12, 0x28, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e,
+	0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75,
 	0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65,
-	0x12, 0x2c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x7b, 0x0a, 0x1c, 0x45, 0x78,
 	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65,
-	0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d,
-	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d,
-	0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74,
-	0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x60, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e,
-	0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x12, 0x22, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65,
-	0x74, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e, 0x74, 0x65, 0x73,
-	0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69,
-	0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x12, 0x60, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x22, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x23, 0x2e, 0x74, 0x65,
-	0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x24, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x57, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x53,
-	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x12, 0x1f, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45,
-	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65,
-	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x12, 0x6f, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
-	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x12, 0x27, 0x2e,
-	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65,
-	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e,
-	0x47, 0x65, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x00, 0x12, 0x5a, 0x0a, 0x11, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65,
-	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x12, 0x20, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70,
-	0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x74, 0x65, 0x73, 0x74,
-	0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x75,
-	0x0a, 0x1a, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f,
-	0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x29, 0x2e, 0x74,
-	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
-	0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0x2e, 0x47, 0x65, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49,
-	0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x78, 0x0a, 0x1b, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x61,
-	0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64,
-	0x4e, 0x61, 0x6d, 0x65, 0x12, 0x2a, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
-	0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2b, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78,
+	0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x58, 0x12, 0x2b, 0x2e, 0x74, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49,
+	0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x58,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72,
+	0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x42, 0x79, 0x58, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x75, 0x0a, 0x1a, 0x45, 0x78, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54,
+	0x61, 0x62, 0x6c, 0x65, 0x73, 0x12, 0x29, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d,
+	0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x2a, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c,
+	0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61,
+	0x62, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x7e,
+	0x0a, 0x1d, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63,
+	0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x58, 0x12,
+	0x2c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62,
+	0x6c, 0x65, 0x73, 0x42, 0x79, 0x58, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75,
+	0x74, 0x6f, 0x49, 0x6e, 0x63, 0x72, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x58, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x57,
+	0x0a, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74,
+	0x6f, 0x6e, 0x12, 0x1f, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x6e, 0x67, 0x6c, 0x65, 0x74, 0x6f, 0x6e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x57, 0x0a, 0x10, 0x45, 0x78, 0x61, 0x6d, 0x70,
+	0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x1f, 0x2e, 0x74, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x74,
+	0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x5a, 0x0a, 0x11, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x73, 0x12, 0x20, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62,
+	0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x15,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x73, 0x42, 0x79, 0x54, 0x73, 0x12, 0x24, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x73,
+	0x42, 0x79, 0x54, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x74, 0x65,
+	0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x73, 0x42, 0x79, 0x54, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x4e, 0x0a, 0x0d, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
+	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x12, 0x1c, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53,
+	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d,
+	0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x15, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
+	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x12, 0x24, 0x2e,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d,
+	0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71,
+	0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x51, 0x0a, 0x0e,
+	0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x12, 0x1d,
+	0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78,
+	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1e, 0x2e,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61,
+	0x6d, 0x70, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x69, 0x0a, 0x16, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x12, 0x25, 0x2e, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65,
+	0x73, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x26, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65,
+	0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x73, 0x42, 0x79, 0x55, 0x6e, 0x69, 0x71, 0x75, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6c, 0x0a, 0x17, 0x45, 0x78,
 	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c,
-	0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42,
-	0x8c, 0x01, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x14,
-	0x54, 0x65, 0x73, 0x74, 0x53, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x6f, 0x72, 0x6d, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61,
-	0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02,
-	0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62,
-	0xe2, 0x02, 0x12, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x64, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x26, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45,
+	0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65,
+	0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75,
+	0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6f, 0x0a, 0x18, 0x45, 0x78, 0x61, 0x6d,
+	0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e,
+	0x61, 0x6d, 0x65, 0x73, 0x12, 0x27, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78,
+	0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75, 0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c,
+	0x64, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e,
+	0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x2e, 0x45, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x41, 0x75,
+	0x74, 0x6f, 0x49, 0x6e, 0x63, 0x46, 0x69, 0x65, 0x6c, 0x64, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x8c, 0x01, 0x0a, 0x0a, 0x63, 0x6f,
+	0x6d, 0x2e, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x42, 0x14, 0x54, 0x65, 0x73, 0x74, 0x53, 0x63,
+	0x68, 0x65, 0x6d, 0x61, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x30, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x6f,
+	0x72, 0x6d, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74,
+	0x70, 0x62, 0xa2, 0x02, 0x03, 0x54, 0x58, 0x58, 0xaa, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70,
+	0x62, 0xca, 0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0xe2, 0x02, 0x12, 0x54, 0x65, 0x73,
+	0x74, 0x70, 0x62, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x06, 0x54, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3504,157 +2643,147 @@ func file_testpb_test_schema_query_proto_rawDescGZIP() []byte {
 	return file_testpb_test_schema_query_proto_rawDescData
 }
 
-var file_testpb_test_schema_query_proto_msgTypes = make([]protoimpl.MessageInfo, 49)
+var file_testpb_test_schema_query_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_testpb_test_schema_query_proto_goTypes = []interface{}{
-	(*GetExampleTableRequest)(nil),                           // 0: testpb.GetExampleTableRequest
-	(*GetExampleTableResponse)(nil),                          // 1: testpb.GetExampleTableResponse
-	(*GetExampleTableByU64StrRequest)(nil),                   // 2: testpb.GetExampleTableByU64StrRequest
-	(*GetExampleTableByU64StrResponse)(nil),                  // 3: testpb.GetExampleTableByU64StrResponse
-	(*ListExampleTableRequest)(nil),                          // 4: testpb.ListExampleTableRequest
-	(*ListExampleTableResponse)(nil),                         // 5: testpb.ListExampleTableResponse
-	(*GetExampleAutoIncrementTableRequest)(nil),              // 6: testpb.GetExampleAutoIncrementTableRequest
-	(*GetExampleAutoIncrementTableResponse)(nil),             // 7: testpb.GetExampleAutoIncrementTableResponse
-	(*GetExampleAutoIncrementTableByXRequest)(nil),           // 8: testpb.GetExampleAutoIncrementTableByXRequest
-	(*GetExampleAutoIncrementTableByXResponse)(nil),          // 9: testpb.GetExampleAutoIncrementTableByXResponse
-	(*ListExampleAutoIncrementTableRequest)(nil),             // 10: testpb.ListExampleAutoIncrementTableRequest
-	(*ListExampleAutoIncrementTableResponse)(nil),            // 11: testpb.ListExampleAutoIncrementTableResponse
-	(*GetExampleSingletonRequest)(nil),                       // 12: testpb.GetExampleSingletonRequest
-	(*GetExampleSingletonResponse)(nil),                      // 13: testpb.GetExampleSingletonResponse
-	(*GetExampleTimestampRequest)(nil),                       // 14: testpb.GetExampleTimestampRequest
-	(*GetExampleTimestampResponse)(nil),                      // 15: testpb.GetExampleTimestampResponse
-	(*ListExampleTimestampRequest)(nil),                      // 16: testpb.ListExampleTimestampRequest
-	(*ListExampleTimestampResponse)(nil),                     // 17: testpb.ListExampleTimestampResponse
-	(*GetSimpleExampleRequest)(nil),                          // 18: testpb.GetSimpleExampleRequest
-	(*GetSimpleExampleResponse)(nil),                         // 19: testpb.GetSimpleExampleResponse
-	(*GetSimpleExampleByUniqueRequest)(nil),                  // 20: testpb.GetSimpleExampleByUniqueRequest
-	(*GetSimpleExampleByUniqueResponse)(nil),                 // 21: testpb.GetSimpleExampleByUniqueResponse
-	(*ListSimpleExampleRequest)(nil),                         // 22: testpb.ListSimpleExampleRequest
-	(*ListSimpleExampleResponse)(nil),                        // 23: testpb.ListSimpleExampleResponse
-	(*GetExampleAutoIncFieldNameRequest)(nil),                // 24: testpb.GetExampleAutoIncFieldNameRequest
-	(*GetExampleAutoIncFieldNameResponse)(nil),               // 25: testpb.GetExampleAutoIncFieldNameResponse
-	(*ListExampleAutoIncFieldNameRequest)(nil),               // 26: testpb.ListExampleAutoIncFieldNameRequest
-	(*ListExampleAutoIncFieldNameResponse)(nil),              // 27: testpb.ListExampleAutoIncFieldNameResponse
-	(*ListExampleTableRequest_IndexKey)(nil),                 // 28: testpb.ListExampleTableRequest.IndexKey
-	(*ListExampleTableRequest_RangeQuery)(nil),               // 29: testpb.ListExampleTableRequest.RangeQuery
-	(*ListExampleTableRequest_IndexKey_U32I64Str)(nil),       // 30: testpb.ListExampleTableRequest.IndexKey.U32I64Str
-	(*ListExampleTableRequest_IndexKey_U64Str)(nil),          // 31: testpb.ListExampleTableRequest.IndexKey.U64Str
-	(*ListExampleTableRequest_IndexKey_StrU32)(nil),          // 32: testpb.ListExampleTableRequest.IndexKey.StrU32
-	(*ListExampleTableRequest_IndexKey_BzStr)(nil),           // 33: testpb.ListExampleTableRequest.IndexKey.BzStr
-	(*ListExampleAutoIncrementTableRequest_IndexKey)(nil),    // 34: testpb.ListExampleAutoIncrementTableRequest.IndexKey
-	(*ListExampleAutoIncrementTableRequest_RangeQuery)(nil),  // 35: testpb.ListExampleAutoIncrementTableRequest.RangeQuery
-	(*ListExampleAutoIncrementTableRequest_IndexKey_Id)(nil), // 36: testpb.ListExampleAutoIncrementTableRequest.IndexKey.Id
-	(*ListExampleAutoIncrementTableRequest_IndexKey_X)(nil),  // 37: testpb.ListExampleAutoIncrementTableRequest.IndexKey.X
-	(*ListExampleTimestampRequest_IndexKey)(nil),             // 38: testpb.ListExampleTimestampRequest.IndexKey
-	(*ListExampleTimestampRequest_RangeQuery)(nil),           // 39: testpb.ListExampleTimestampRequest.RangeQuery
-	(*ListExampleTimestampRequest_IndexKey_Id)(nil),          // 40: testpb.ListExampleTimestampRequest.IndexKey.Id
-	(*ListExampleTimestampRequest_IndexKey_Ts)(nil),          // 41: testpb.ListExampleTimestampRequest.IndexKey.Ts
-	(*ListSimpleExampleRequest_IndexKey)(nil),                // 42: testpb.ListSimpleExampleRequest.IndexKey
-	(*ListSimpleExampleRequest_RangeQuery)(nil),              // 43: testpb.ListSimpleExampleRequest.RangeQuery
-	(*ListSimpleExampleRequest_IndexKey_Name)(nil),           // 44: testpb.ListSimpleExampleRequest.IndexKey.Name
-	(*ListSimpleExampleRequest_IndexKey_Unique)(nil),         // 45: testpb.ListSimpleExampleRequest.IndexKey.Unique
-	(*ListExampleAutoIncFieldNameRequest_IndexKey)(nil),      // 46: testpb.ListExampleAutoIncFieldNameRequest.IndexKey
-	(*ListExampleAutoIncFieldNameRequest_RangeQuery)(nil),    // 47: testpb.ListExampleAutoIncFieldNameRequest.RangeQuery
-	(*ListExampleAutoIncFieldNameRequest_IndexKey_Foo)(nil),  // 48: testpb.ListExampleAutoIncFieldNameRequest.IndexKey.Foo
-	(*ExampleTable)(nil),                                     // 49: testpb.ExampleTable
-	(*v1beta1.PageRequest)(nil),                              // 50: cosmos.base.query.v1beta1.PageRequest
-	(*v1beta1.PageResponse)(nil),                             // 51: cosmos.base.query.v1beta1.PageResponse
-	(*ExampleAutoIncrementTable)(nil),                        // 52: testpb.ExampleAutoIncrementTable
-	(*ExampleSingleton)(nil),                                 // 53: testpb.ExampleSingleton
-	(*ExampleTimestamp)(nil),                                 // 54: testpb.ExampleTimestamp
-	(*SimpleExample)(nil),                                    // 55: testpb.SimpleExample
-	(*ExampleAutoIncFieldName)(nil),                          // 56: testpb.ExampleAutoIncFieldName
-	(*timestamppb.Timestamp)(nil),                            // 57: google.protobuf.Timestamp
+	(*ExampleTableRequest)(nil),                   // 0: testpb.ExampleTableRequest
+	(*ExampleTableResponse)(nil),                  // 1: testpb.ExampleTableResponse
+	(*ExampleTableByU64StrRequest)(nil),           // 2: testpb.ExampleTableByU64StrRequest
+	(*ExampleTableByU64StrResponse)(nil),          // 3: testpb.ExampleTableByU64StrResponse
+	(*ExampleTablesRequest)(nil),                  // 4: testpb.ExampleTablesRequest
+	(*ExampleTablesResponse)(nil),                 // 5: testpb.ExampleTablesResponse
+	(*ExampleTablesByU64StrRequest)(nil),          // 6: testpb.ExampleTablesByU64StrRequest
+	(*ExampleTablesByU64StrResponse)(nil),         // 7: testpb.ExampleTablesByU64StrResponse
+	(*ExampleTablesByStrU32Request)(nil),          // 8: testpb.ExampleTablesByStrU32Request
+	(*ExampleTablesByStrU32Response)(nil),         // 9: testpb.ExampleTablesByStrU32Response
+	(*ExampleTablesByBzStrRequest)(nil),           // 10: testpb.ExampleTablesByBzStrRequest
+	(*ExampleTablesByBzStrResponse)(nil),          // 11: testpb.ExampleTablesByBzStrResponse
+	(*ExampleAutoIncrementTableRequest)(nil),      // 12: testpb.ExampleAutoIncrementTableRequest
+	(*ExampleAutoIncrementTableResponse)(nil),     // 13: testpb.ExampleAutoIncrementTableResponse
+	(*ExampleAutoIncrementTableByXRequest)(nil),   // 14: testpb.ExampleAutoIncrementTableByXRequest
+	(*ExampleAutoIncrementTableByXResponse)(nil),  // 15: testpb.ExampleAutoIncrementTableByXResponse
+	(*ExampleAutoIncrementTablesRequest)(nil),     // 16: testpb.ExampleAutoIncrementTablesRequest
+	(*ExampleAutoIncrementTablesResponse)(nil),    // 17: testpb.ExampleAutoIncrementTablesResponse
+	(*ExampleAutoIncrementTablesByXRequest)(nil),  // 18: testpb.ExampleAutoIncrementTablesByXRequest
+	(*ExampleAutoIncrementTablesByXResponse)(nil), // 19: testpb.ExampleAutoIncrementTablesByXResponse
+	(*ExampleSingletonRequest)(nil),               // 20: testpb.ExampleSingletonRequest
+	(*ExampleSingletonResponse)(nil),              // 21: testpb.ExampleSingletonResponse
+	(*ExampleTimestampRequest)(nil),               // 22: testpb.ExampleTimestampRequest
+	(*ExampleTimestampResponse)(nil),              // 23: testpb.ExampleTimestampResponse
+	(*ExampleTimestampsRequest)(nil),              // 24: testpb.ExampleTimestampsRequest
+	(*ExampleTimestampsResponse)(nil),             // 25: testpb.ExampleTimestampsResponse
+	(*ExampleTimestampsByTsRequest)(nil),          // 26: testpb.ExampleTimestampsByTsRequest
+	(*ExampleTimestampsByTsResponse)(nil),         // 27: testpb.ExampleTimestampsByTsResponse
+	(*SimpleExampleRequest)(nil),                  // 28: testpb.SimpleExampleRequest
+	(*SimpleExampleResponse)(nil),                 // 29: testpb.SimpleExampleResponse
+	(*SimpleExampleByUniqueRequest)(nil),          // 30: testpb.SimpleExampleByUniqueRequest
+	(*SimpleExampleByUniqueResponse)(nil),         // 31: testpb.SimpleExampleByUniqueResponse
+	(*SimpleExamplesRequest)(nil),                 // 32: testpb.SimpleExamplesRequest
+	(*SimpleExamplesResponse)(nil),                // 33: testpb.SimpleExamplesResponse
+	(*SimpleExamplesByUniqueRequest)(nil),         // 34: testpb.SimpleExamplesByUniqueRequest
+	(*SimpleExamplesByUniqueResponse)(nil),        // 35: testpb.SimpleExamplesByUniqueResponse
+	(*ExampleAutoIncFieldNameRequest)(nil),        // 36: testpb.ExampleAutoIncFieldNameRequest
+	(*ExampleAutoIncFieldNameResponse)(nil),       // 37: testpb.ExampleAutoIncFieldNameResponse
+	(*ExampleAutoIncFieldNamesRequest)(nil),       // 38: testpb.ExampleAutoIncFieldNamesRequest
+	(*ExampleAutoIncFieldNamesResponse)(nil),      // 39: testpb.ExampleAutoIncFieldNamesResponse
+	(*ExampleTable)(nil),                          // 40: testpb.ExampleTable
+	(*v1beta1.PageRequest)(nil),                   // 41: cosmos.base.query.v1beta1.PageRequest
+	(*v1beta1.PageResponse)(nil),                  // 42: cosmos.base.query.v1beta1.PageResponse
+	(*ExampleAutoIncrementTable)(nil),             // 43: testpb.ExampleAutoIncrementTable
+	(*ExampleSingleton)(nil),                      // 44: testpb.ExampleSingleton
+	(*ExampleTimestamp)(nil),                      // 45: testpb.ExampleTimestamp
+	(*timestamppb.Timestamp)(nil),                 // 46: google.protobuf.Timestamp
+	(*SimpleExample)(nil),                         // 47: testpb.SimpleExample
+	(*ExampleAutoIncFieldName)(nil),               // 48: testpb.ExampleAutoIncFieldName
 }
 var file_testpb_test_schema_query_proto_depIdxs = []int32{
-	49, // 0: testpb.GetExampleTableResponse.value:type_name -> testpb.ExampleTable
-	49, // 1: testpb.GetExampleTableByU64StrResponse.value:type_name -> testpb.ExampleTable
-	28, // 2: testpb.ListExampleTableRequest.prefix_query:type_name -> testpb.ListExampleTableRequest.IndexKey
-	29, // 3: testpb.ListExampleTableRequest.range_query:type_name -> testpb.ListExampleTableRequest.RangeQuery
-	50, // 4: testpb.ListExampleTableRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	49, // 5: testpb.ListExampleTableResponse.values:type_name -> testpb.ExampleTable
-	51, // 6: testpb.ListExampleTableResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	52, // 7: testpb.GetExampleAutoIncrementTableResponse.value:type_name -> testpb.ExampleAutoIncrementTable
-	52, // 8: testpb.GetExampleAutoIncrementTableByXResponse.value:type_name -> testpb.ExampleAutoIncrementTable
-	34, // 9: testpb.ListExampleAutoIncrementTableRequest.prefix_query:type_name -> testpb.ListExampleAutoIncrementTableRequest.IndexKey
-	35, // 10: testpb.ListExampleAutoIncrementTableRequest.range_query:type_name -> testpb.ListExampleAutoIncrementTableRequest.RangeQuery
-	50, // 11: testpb.ListExampleAutoIncrementTableRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	52, // 12: testpb.ListExampleAutoIncrementTableResponse.values:type_name -> testpb.ExampleAutoIncrementTable
-	51, // 13: testpb.ListExampleAutoIncrementTableResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	53, // 14: testpb.GetExampleSingletonResponse.value:type_name -> testpb.ExampleSingleton
-	54, // 15: testpb.GetExampleTimestampResponse.value:type_name -> testpb.ExampleTimestamp
-	38, // 16: testpb.ListExampleTimestampRequest.prefix_query:type_name -> testpb.ListExampleTimestampRequest.IndexKey
-	39, // 17: testpb.ListExampleTimestampRequest.range_query:type_name -> testpb.ListExampleTimestampRequest.RangeQuery
-	50, // 18: testpb.ListExampleTimestampRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	54, // 19: testpb.ListExampleTimestampResponse.values:type_name -> testpb.ExampleTimestamp
-	51, // 20: testpb.ListExampleTimestampResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	55, // 21: testpb.GetSimpleExampleResponse.value:type_name -> testpb.SimpleExample
-	55, // 22: testpb.GetSimpleExampleByUniqueResponse.value:type_name -> testpb.SimpleExample
-	42, // 23: testpb.ListSimpleExampleRequest.prefix_query:type_name -> testpb.ListSimpleExampleRequest.IndexKey
-	43, // 24: testpb.ListSimpleExampleRequest.range_query:type_name -> testpb.ListSimpleExampleRequest.RangeQuery
-	50, // 25: testpb.ListSimpleExampleRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	55, // 26: testpb.ListSimpleExampleResponse.values:type_name -> testpb.SimpleExample
-	51, // 27: testpb.ListSimpleExampleResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	56, // 28: testpb.GetExampleAutoIncFieldNameResponse.value:type_name -> testpb.ExampleAutoIncFieldName
-	46, // 29: testpb.ListExampleAutoIncFieldNameRequest.prefix_query:type_name -> testpb.ListExampleAutoIncFieldNameRequest.IndexKey
-	47, // 30: testpb.ListExampleAutoIncFieldNameRequest.range_query:type_name -> testpb.ListExampleAutoIncFieldNameRequest.RangeQuery
-	50, // 31: testpb.ListExampleAutoIncFieldNameRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	56, // 32: testpb.ListExampleAutoIncFieldNameResponse.values:type_name -> testpb.ExampleAutoIncFieldName
-	51, // 33: testpb.ListExampleAutoIncFieldNameResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	30, // 34: testpb.ListExampleTableRequest.IndexKey.u_32_i_64_str:type_name -> testpb.ListExampleTableRequest.IndexKey.U32I64Str
-	31, // 35: testpb.ListExampleTableRequest.IndexKey.u_64_str:type_name -> testpb.ListExampleTableRequest.IndexKey.U64Str
-	32, // 36: testpb.ListExampleTableRequest.IndexKey.str_u_32:type_name -> testpb.ListExampleTableRequest.IndexKey.StrU32
-	33, // 37: testpb.ListExampleTableRequest.IndexKey.bz_str:type_name -> testpb.ListExampleTableRequest.IndexKey.BzStr
-	28, // 38: testpb.ListExampleTableRequest.RangeQuery.from:type_name -> testpb.ListExampleTableRequest.IndexKey
-	28, // 39: testpb.ListExampleTableRequest.RangeQuery.to:type_name -> testpb.ListExampleTableRequest.IndexKey
-	36, // 40: testpb.ListExampleAutoIncrementTableRequest.IndexKey.id:type_name -> testpb.ListExampleAutoIncrementTableRequest.IndexKey.Id
-	37, // 41: testpb.ListExampleAutoIncrementTableRequest.IndexKey.x:type_name -> testpb.ListExampleAutoIncrementTableRequest.IndexKey.X
-	34, // 42: testpb.ListExampleAutoIncrementTableRequest.RangeQuery.from:type_name -> testpb.ListExampleAutoIncrementTableRequest.IndexKey
-	34, // 43: testpb.ListExampleAutoIncrementTableRequest.RangeQuery.to:type_name -> testpb.ListExampleAutoIncrementTableRequest.IndexKey
-	40, // 44: testpb.ListExampleTimestampRequest.IndexKey.id:type_name -> testpb.ListExampleTimestampRequest.IndexKey.Id
-	41, // 45: testpb.ListExampleTimestampRequest.IndexKey.ts:type_name -> testpb.ListExampleTimestampRequest.IndexKey.Ts
-	38, // 46: testpb.ListExampleTimestampRequest.RangeQuery.from:type_name -> testpb.ListExampleTimestampRequest.IndexKey
-	38, // 47: testpb.ListExampleTimestampRequest.RangeQuery.to:type_name -> testpb.ListExampleTimestampRequest.IndexKey
-	57, // 48: testpb.ListExampleTimestampRequest.IndexKey.Ts.ts:type_name -> google.protobuf.Timestamp
-	44, // 49: testpb.ListSimpleExampleRequest.IndexKey.name:type_name -> testpb.ListSimpleExampleRequest.IndexKey.Name
-	45, // 50: testpb.ListSimpleExampleRequest.IndexKey.unique:type_name -> testpb.ListSimpleExampleRequest.IndexKey.Unique
-	42, // 51: testpb.ListSimpleExampleRequest.RangeQuery.from:type_name -> testpb.ListSimpleExampleRequest.IndexKey
-	42, // 52: testpb.ListSimpleExampleRequest.RangeQuery.to:type_name -> testpb.ListSimpleExampleRequest.IndexKey
-	48, // 53: testpb.ListExampleAutoIncFieldNameRequest.IndexKey.foo:type_name -> testpb.ListExampleAutoIncFieldNameRequest.IndexKey.Foo
-	46, // 54: testpb.ListExampleAutoIncFieldNameRequest.RangeQuery.from:type_name -> testpb.ListExampleAutoIncFieldNameRequest.IndexKey
-	46, // 55: testpb.ListExampleAutoIncFieldNameRequest.RangeQuery.to:type_name -> testpb.ListExampleAutoIncFieldNameRequest.IndexKey
-	0,  // 56: testpb.TestSchemaQueryService.GetExampleTable:input_type -> testpb.GetExampleTableRequest
-	2,  // 57: testpb.TestSchemaQueryService.GetExampleTableByU64Str:input_type -> testpb.GetExampleTableByU64StrRequest
-	4,  // 58: testpb.TestSchemaQueryService.ListExampleTable:input_type -> testpb.ListExampleTableRequest
-	6,  // 59: testpb.TestSchemaQueryService.GetExampleAutoIncrementTable:input_type -> testpb.GetExampleAutoIncrementTableRequest
-	8,  // 60: testpb.TestSchemaQueryService.GetExampleAutoIncrementTableByX:input_type -> testpb.GetExampleAutoIncrementTableByXRequest
-	10, // 61: testpb.TestSchemaQueryService.ListExampleAutoIncrementTable:input_type -> testpb.ListExampleAutoIncrementTableRequest
-	12, // 62: testpb.TestSchemaQueryService.GetExampleSingleton:input_type -> testpb.GetExampleSingletonRequest
-	14, // 63: testpb.TestSchemaQueryService.GetExampleTimestamp:input_type -> testpb.GetExampleTimestampRequest
-	16, // 64: testpb.TestSchemaQueryService.ListExampleTimestamp:input_type -> testpb.ListExampleTimestampRequest
-	18, // 65: testpb.TestSchemaQueryService.GetSimpleExample:input_type -> testpb.GetSimpleExampleRequest
-	20, // 66: testpb.TestSchemaQueryService.GetSimpleExampleByUnique:input_type -> testpb.GetSimpleExampleByUniqueRequest
-	22, // 67: testpb.TestSchemaQueryService.ListSimpleExample:input_type -> testpb.ListSimpleExampleRequest
-	24, // 68: testpb.TestSchemaQueryService.GetExampleAutoIncFieldName:input_type -> testpb.GetExampleAutoIncFieldNameRequest
-	26, // 69: testpb.TestSchemaQueryService.ListExampleAutoIncFieldName:input_type -> testpb.ListExampleAutoIncFieldNameRequest
-	1,  // 70: testpb.TestSchemaQueryService.GetExampleTable:output_type -> testpb.GetExampleTableResponse
-	3,  // 71: testpb.TestSchemaQueryService.GetExampleTableByU64Str:output_type -> testpb.GetExampleTableByU64StrResponse
-	5,  // 72: testpb.TestSchemaQueryService.ListExampleTable:output_type -> testpb.ListExampleTableResponse
-	7,  // 73: testpb.TestSchemaQueryService.GetExampleAutoIncrementTable:output_type -> testpb.GetExampleAutoIncrementTableResponse
-	9,  // 74: testpb.TestSchemaQueryService.GetExampleAutoIncrementTableByX:output_type -> testpb.GetExampleAutoIncrementTableByXResponse
-	11, // 75: testpb.TestSchemaQueryService.ListExampleAutoIncrementTable:output_type -> testpb.ListExampleAutoIncrementTableResponse
-	13, // 76: testpb.TestSchemaQueryService.GetExampleSingleton:output_type -> testpb.GetExampleSingletonResponse
-	15, // 77: testpb.TestSchemaQueryService.GetExampleTimestamp:output_type -> testpb.GetExampleTimestampResponse
-	17, // 78: testpb.TestSchemaQueryService.ListExampleTimestamp:output_type -> testpb.ListExampleTimestampResponse
-	19, // 79: testpb.TestSchemaQueryService.GetSimpleExample:output_type -> testpb.GetSimpleExampleResponse
-	21, // 80: testpb.TestSchemaQueryService.GetSimpleExampleByUnique:output_type -> testpb.GetSimpleExampleByUniqueResponse
-	23, // 81: testpb.TestSchemaQueryService.ListSimpleExample:output_type -> testpb.ListSimpleExampleResponse
-	25, // 82: testpb.TestSchemaQueryService.GetExampleAutoIncFieldName:output_type -> testpb.GetExampleAutoIncFieldNameResponse
-	27, // 83: testpb.TestSchemaQueryService.ListExampleAutoIncFieldName:output_type -> testpb.ListExampleAutoIncFieldNameResponse
-	70, // [70:84] is the sub-list for method output_type
-	56, // [56:70] is the sub-list for method input_type
-	56, // [56:56] is the sub-list for extension type_name
-	56, // [56:56] is the sub-list for extension extendee
-	0,  // [0:56] is the sub-list for field type_name
+	40, // 0: testpb.ExampleTableResponse.value:type_name -> testpb.ExampleTable
+	40, // 1: testpb.ExampleTableByU64StrResponse.value:type_name -> testpb.ExampleTable
+	41, // 2: testpb.ExampleTablesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	40, // 3: testpb.ExampleTablesResponse.values:type_name -> testpb.ExampleTable
+	42, // 4: testpb.ExampleTablesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 5: testpb.ExampleTablesByU64StrRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	40, // 6: testpb.ExampleTablesByU64StrResponse.values:type_name -> testpb.ExampleTable
+	42, // 7: testpb.ExampleTablesByU64StrResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 8: testpb.ExampleTablesByStrU32Request.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	40, // 9: testpb.ExampleTablesByStrU32Response.values:type_name -> testpb.ExampleTable
+	42, // 10: testpb.ExampleTablesByStrU32Response.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 11: testpb.ExampleTablesByBzStrRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	40, // 12: testpb.ExampleTablesByBzStrResponse.values:type_name -> testpb.ExampleTable
+	42, // 13: testpb.ExampleTablesByBzStrResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	43, // 14: testpb.ExampleAutoIncrementTableResponse.value:type_name -> testpb.ExampleAutoIncrementTable
+	43, // 15: testpb.ExampleAutoIncrementTableByXResponse.value:type_name -> testpb.ExampleAutoIncrementTable
+	41, // 16: testpb.ExampleAutoIncrementTablesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	43, // 17: testpb.ExampleAutoIncrementTablesResponse.values:type_name -> testpb.ExampleAutoIncrementTable
+	42, // 18: testpb.ExampleAutoIncrementTablesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 19: testpb.ExampleAutoIncrementTablesByXRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	43, // 20: testpb.ExampleAutoIncrementTablesByXResponse.values:type_name -> testpb.ExampleAutoIncrementTable
+	42, // 21: testpb.ExampleAutoIncrementTablesByXResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	44, // 22: testpb.ExampleSingletonResponse.value:type_name -> testpb.ExampleSingleton
+	45, // 23: testpb.ExampleTimestampResponse.value:type_name -> testpb.ExampleTimestamp
+	41, // 24: testpb.ExampleTimestampsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	45, // 25: testpb.ExampleTimestampsResponse.values:type_name -> testpb.ExampleTimestamp
+	42, // 26: testpb.ExampleTimestampsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	46, // 27: testpb.ExampleTimestampsByTsRequest.ts:type_name -> google.protobuf.Timestamp
+	41, // 28: testpb.ExampleTimestampsByTsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	45, // 29: testpb.ExampleTimestampsByTsResponse.values:type_name -> testpb.ExampleTimestamp
+	42, // 30: testpb.ExampleTimestampsByTsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	47, // 31: testpb.SimpleExampleResponse.value:type_name -> testpb.SimpleExample
+	47, // 32: testpb.SimpleExampleByUniqueResponse.value:type_name -> testpb.SimpleExample
+	41, // 33: testpb.SimpleExamplesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	47, // 34: testpb.SimpleExamplesResponse.values:type_name -> testpb.SimpleExample
+	42, // 35: testpb.SimpleExamplesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	41, // 36: testpb.SimpleExamplesByUniqueRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	47, // 37: testpb.SimpleExamplesByUniqueResponse.values:type_name -> testpb.SimpleExample
+	42, // 38: testpb.SimpleExamplesByUniqueResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	48, // 39: testpb.ExampleAutoIncFieldNameResponse.value:type_name -> testpb.ExampleAutoIncFieldName
+	41, // 40: testpb.ExampleAutoIncFieldNamesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	48, // 41: testpb.ExampleAutoIncFieldNamesResponse.values:type_name -> testpb.ExampleAutoIncFieldName
+	42, // 42: testpb.ExampleAutoIncFieldNamesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	0,  // 43: testpb.TestSchemaQueryService.ExampleTable:input_type -> testpb.ExampleTableRequest
+	2,  // 44: testpb.TestSchemaQueryService.ExampleTableByU64Str:input_type -> testpb.ExampleTableByU64StrRequest
+	4,  // 45: testpb.TestSchemaQueryService.ExampleTables:input_type -> testpb.ExampleTablesRequest
+	6,  // 46: testpb.TestSchemaQueryService.ExampleTablesByU64Str:input_type -> testpb.ExampleTablesByU64StrRequest
+	8,  // 47: testpb.TestSchemaQueryService.ExampleTablesByStrU32:input_type -> testpb.ExampleTablesByStrU32Request
+	10, // 48: testpb.TestSchemaQueryService.ExampleTablesByBzStr:input_type -> testpb.ExampleTablesByBzStrRequest
+	12, // 49: testpb.TestSchemaQueryService.ExampleAutoIncrementTable:input_type -> testpb.ExampleAutoIncrementTableRequest
+	14, // 50: testpb.TestSchemaQueryService.ExampleAutoIncrementTableByX:input_type -> testpb.ExampleAutoIncrementTableByXRequest
+	16, // 51: testpb.TestSchemaQueryService.ExampleAutoIncrementTables:input_type -> testpb.ExampleAutoIncrementTablesRequest
+	18, // 52: testpb.TestSchemaQueryService.ExampleAutoIncrementTablesByX:input_type -> testpb.ExampleAutoIncrementTablesByXRequest
+	20, // 53: testpb.TestSchemaQueryService.ExampleSingleton:input_type -> testpb.ExampleSingletonRequest
+	22, // 54: testpb.TestSchemaQueryService.ExampleTimestamp:input_type -> testpb.ExampleTimestampRequest
+	24, // 55: testpb.TestSchemaQueryService.ExampleTimestamps:input_type -> testpb.ExampleTimestampsRequest
+	26, // 56: testpb.TestSchemaQueryService.ExampleTimestampsByTs:input_type -> testpb.ExampleTimestampsByTsRequest
+	28, // 57: testpb.TestSchemaQueryService.SimpleExample:input_type -> testpb.SimpleExampleRequest
+	30, // 58: testpb.TestSchemaQueryService.SimpleExampleByUnique:input_type -> testpb.SimpleExampleByUniqueRequest
+	32, // 59: testpb.TestSchemaQueryService.SimpleExamples:input_type -> testpb.SimpleExamplesRequest
+	34, // 60: testpb.TestSchemaQueryService.SimpleExamplesByUnique:input_type -> testpb.SimpleExamplesByUniqueRequest
+	36, // 61: testpb.TestSchemaQueryService.ExampleAutoIncFieldName:input_type -> testpb.ExampleAutoIncFieldNameRequest
+	38, // 62: testpb.TestSchemaQueryService.ExampleAutoIncFieldNames:input_type -> testpb.ExampleAutoIncFieldNamesRequest
+	1,  // 63: testpb.TestSchemaQueryService.ExampleTable:output_type -> testpb.ExampleTableResponse
+	3,  // 64: testpb.TestSchemaQueryService.ExampleTableByU64Str:output_type -> testpb.ExampleTableByU64StrResponse
+	5,  // 65: testpb.TestSchemaQueryService.ExampleTables:output_type -> testpb.ExampleTablesResponse
+	7,  // 66: testpb.TestSchemaQueryService.ExampleTablesByU64Str:output_type -> testpb.ExampleTablesByU64StrResponse
+	9,  // 67: testpb.TestSchemaQueryService.ExampleTablesByStrU32:output_type -> testpb.ExampleTablesByStrU32Response
+	11, // 68: testpb.TestSchemaQueryService.ExampleTablesByBzStr:output_type -> testpb.ExampleTablesByBzStrResponse
+	13, // 69: testpb.TestSchemaQueryService.ExampleAutoIncrementTable:output_type -> testpb.ExampleAutoIncrementTableResponse
+	15, // 70: testpb.TestSchemaQueryService.ExampleAutoIncrementTableByX:output_type -> testpb.ExampleAutoIncrementTableByXResponse
+	17, // 71: testpb.TestSchemaQueryService.ExampleAutoIncrementTables:output_type -> testpb.ExampleAutoIncrementTablesResponse
+	19, // 72: testpb.TestSchemaQueryService.ExampleAutoIncrementTablesByX:output_type -> testpb.ExampleAutoIncrementTablesByXResponse
+	21, // 73: testpb.TestSchemaQueryService.ExampleSingleton:output_type -> testpb.ExampleSingletonResponse
+	23, // 74: testpb.TestSchemaQueryService.ExampleTimestamp:output_type -> testpb.ExampleTimestampResponse
+	25, // 75: testpb.TestSchemaQueryService.ExampleTimestamps:output_type -> testpb.ExampleTimestampsResponse
+	27, // 76: testpb.TestSchemaQueryService.ExampleTimestampsByTs:output_type -> testpb.ExampleTimestampsByTsResponse
+	29, // 77: testpb.TestSchemaQueryService.SimpleExample:output_type -> testpb.SimpleExampleResponse
+	31, // 78: testpb.TestSchemaQueryService.SimpleExampleByUnique:output_type -> testpb.SimpleExampleByUniqueResponse
+	33, // 79: testpb.TestSchemaQueryService.SimpleExamples:output_type -> testpb.SimpleExamplesResponse
+	35, // 80: testpb.TestSchemaQueryService.SimpleExamplesByUnique:output_type -> testpb.SimpleExamplesByUniqueResponse
+	37, // 81: testpb.TestSchemaQueryService.ExampleAutoIncFieldName:output_type -> testpb.ExampleAutoIncFieldNameResponse
+	39, // 82: testpb.TestSchemaQueryService.ExampleAutoIncFieldNames:output_type -> testpb.ExampleAutoIncFieldNamesResponse
+	63, // [63:83] is the sub-list for method output_type
+	43, // [43:63] is the sub-list for method input_type
+	43, // [43:43] is the sub-list for extension type_name
+	43, // [43:43] is the sub-list for extension extendee
+	0,  // [0:43] is the sub-list for field type_name
 }
 
 func init() { file_testpb_test_schema_query_proto_init() }
@@ -3665,7 +2794,7 @@ func file_testpb_test_schema_query_proto_init() {
 	file_testpb_test_schema_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_testpb_test_schema_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleTableRequest); i {
+			switch v := v.(*ExampleTableRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3677,7 +2806,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleTableResponse); i {
+			switch v := v.(*ExampleTableResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3689,7 +2818,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleTableByU64StrRequest); i {
+			switch v := v.(*ExampleTableByU64StrRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3701,7 +2830,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleTableByU64StrResponse); i {
+			switch v := v.(*ExampleTableByU64StrResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3713,7 +2842,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest); i {
+			switch v := v.(*ExampleTablesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3725,7 +2854,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableResponse); i {
+			switch v := v.(*ExampleTablesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3737,7 +2866,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleAutoIncrementTableRequest); i {
+			switch v := v.(*ExampleTablesByU64StrRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3749,7 +2878,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleAutoIncrementTableResponse); i {
+			switch v := v.(*ExampleTablesByU64StrResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3761,7 +2890,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleAutoIncrementTableByXRequest); i {
+			switch v := v.(*ExampleTablesByStrU32Request); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3773,7 +2902,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleAutoIncrementTableByXResponse); i {
+			switch v := v.(*ExampleTablesByStrU32Response); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3785,7 +2914,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncrementTableRequest); i {
+			switch v := v.(*ExampleTablesByBzStrRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3797,7 +2926,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncrementTableResponse); i {
+			switch v := v.(*ExampleTablesByBzStrResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3809,7 +2938,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleSingletonRequest); i {
+			switch v := v.(*ExampleAutoIncrementTableRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3821,7 +2950,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleSingletonResponse); i {
+			switch v := v.(*ExampleAutoIncrementTableResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3833,7 +2962,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleTimestampRequest); i {
+			switch v := v.(*ExampleAutoIncrementTableByXRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3845,7 +2974,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleTimestampResponse); i {
+			switch v := v.(*ExampleAutoIncrementTableByXResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3857,7 +2986,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTimestampRequest); i {
+			switch v := v.(*ExampleAutoIncrementTablesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3869,7 +2998,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTimestampResponse); i {
+			switch v := v.(*ExampleAutoIncrementTablesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3881,7 +3010,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSimpleExampleRequest); i {
+			switch v := v.(*ExampleAutoIncrementTablesByXRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3893,7 +3022,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSimpleExampleResponse); i {
+			switch v := v.(*ExampleAutoIncrementTablesByXResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3905,7 +3034,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSimpleExampleByUniqueRequest); i {
+			switch v := v.(*ExampleSingletonRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3917,7 +3046,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSimpleExampleByUniqueResponse); i {
+			switch v := v.(*ExampleSingletonResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3929,7 +3058,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSimpleExampleRequest); i {
+			switch v := v.(*ExampleTimestampRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3941,7 +3070,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSimpleExampleResponse); i {
+			switch v := v.(*ExampleTimestampResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3953,7 +3082,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleAutoIncFieldNameRequest); i {
+			switch v := v.(*ExampleTimestampsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3965,7 +3094,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetExampleAutoIncFieldNameResponse); i {
+			switch v := v.(*ExampleTimestampsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3977,7 +3106,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncFieldNameRequest); i {
+			switch v := v.(*ExampleTimestampsByTsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3989,7 +3118,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncFieldNameResponse); i {
+			switch v := v.(*ExampleTimestampsByTsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4001,7 +3130,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest_IndexKey); i {
+			switch v := v.(*SimpleExampleRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4013,7 +3142,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest_RangeQuery); i {
+			switch v := v.(*SimpleExampleResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4025,7 +3154,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest_IndexKey_U32I64Str); i {
+			switch v := v.(*SimpleExampleByUniqueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4037,7 +3166,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest_IndexKey_U64Str); i {
+			switch v := v.(*SimpleExampleByUniqueResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4049,7 +3178,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest_IndexKey_StrU32); i {
+			switch v := v.(*SimpleExamplesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4061,7 +3190,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTableRequest_IndexKey_BzStr); i {
+			switch v := v.(*SimpleExamplesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4073,7 +3202,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncrementTableRequest_IndexKey); i {
+			switch v := v.(*SimpleExamplesByUniqueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4085,7 +3214,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncrementTableRequest_RangeQuery); i {
+			switch v := v.(*SimpleExamplesByUniqueResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4097,7 +3226,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncrementTableRequest_IndexKey_Id); i {
+			switch v := v.(*ExampleAutoIncFieldNameRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4109,7 +3238,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncrementTableRequest_IndexKey_X); i {
+			switch v := v.(*ExampleAutoIncFieldNameResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4121,7 +3250,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTimestampRequest_IndexKey); i {
+			switch v := v.(*ExampleAutoIncFieldNamesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4133,115 +3262,7 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 		file_testpb_test_schema_query_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTimestampRequest_RangeQuery); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTimestampRequest_IndexKey_Id); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleTimestampRequest_IndexKey_Ts); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSimpleExampleRequest_IndexKey); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSimpleExampleRequest_RangeQuery); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSimpleExampleRequest_IndexKey_Name); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListSimpleExampleRequest_IndexKey_Unique); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncFieldNameRequest_IndexKey); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncFieldNameRequest_RangeQuery); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_testpb_test_schema_query_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListExampleAutoIncFieldNameRequest_IndexKey_Foo); i {
+			switch v := v.(*ExampleAutoIncFieldNamesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4253,65 +3274,20 @@ func file_testpb_test_schema_query_proto_init() {
 			}
 		}
 	}
-	file_testpb_test_schema_query_proto_msgTypes[4].OneofWrappers = []interface{}{
-		(*ListExampleTableRequest_PrefixQuery)(nil),
-		(*ListExampleTableRequest_RangeQuery_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[10].OneofWrappers = []interface{}{
-		(*ListExampleAutoIncrementTableRequest_PrefixQuery)(nil),
-		(*ListExampleAutoIncrementTableRequest_RangeQuery_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[16].OneofWrappers = []interface{}{
-		(*ListExampleTimestampRequest_PrefixQuery)(nil),
-		(*ListExampleTimestampRequest_RangeQuery_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[22].OneofWrappers = []interface{}{
-		(*ListSimpleExampleRequest_PrefixQuery)(nil),
-		(*ListSimpleExampleRequest_RangeQuery_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[26].OneofWrappers = []interface{}{
-		(*ListExampleAutoIncFieldNameRequest_PrefixQuery)(nil),
-		(*ListExampleAutoIncFieldNameRequest_RangeQuery_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[28].OneofWrappers = []interface{}{
-		(*ListExampleTableRequest_IndexKey_U_32I_64Str)(nil),
-		(*ListExampleTableRequest_IndexKey_U_64Str)(nil),
-		(*ListExampleTableRequest_IndexKey_StrU_32)(nil),
-		(*ListExampleTableRequest_IndexKey_BzStr_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[30].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[31].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[32].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[33].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[34].OneofWrappers = []interface{}{
-		(*ListExampleAutoIncrementTableRequest_IndexKey_Id_)(nil),
-		(*ListExampleAutoIncrementTableRequest_IndexKey_X_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[36].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[37].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[38].OneofWrappers = []interface{}{
-		(*ListExampleTimestampRequest_IndexKey_Id_)(nil),
-		(*ListExampleTimestampRequest_IndexKey_Ts_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[40].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[41].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[42].OneofWrappers = []interface{}{
-		(*ListSimpleExampleRequest_IndexKey_Name_)(nil),
-		(*ListSimpleExampleRequest_IndexKey_Unique_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[44].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[45].OneofWrappers = []interface{}{}
-	file_testpb_test_schema_query_proto_msgTypes[46].OneofWrappers = []interface{}{
-		(*ListExampleAutoIncFieldNameRequest_IndexKey_Foo_)(nil),
-	}
-	file_testpb_test_schema_query_proto_msgTypes[48].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[4].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[6].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[8].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[10].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[18].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[26].OneofWrappers = []interface{}{}
+	file_testpb_test_schema_query_proto_msgTypes[34].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_testpb_test_schema_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   49,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

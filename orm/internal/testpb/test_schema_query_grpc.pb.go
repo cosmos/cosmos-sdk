@@ -22,34 +22,46 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TestSchemaQueryServiceClient interface {
-	// Get queries the ExampleTable table by its primary key.
-	GetExampleTable(ctx context.Context, in *GetExampleTableRequest, opts ...grpc.CallOption) (*GetExampleTableResponse, error)
-	// GetExampleTableByU64Str queries the ExampleTable table by its U64Str index
-	GetExampleTableByU64Str(ctx context.Context, in *GetExampleTableByU64StrRequest, opts ...grpc.CallOption) (*GetExampleTableByU64StrResponse, error)
-	// ListExampleTable queries the ExampleTable table using prefix and range queries against defined indexes.
-	ListExampleTable(ctx context.Context, in *ListExampleTableRequest, opts ...grpc.CallOption) (*ListExampleTableResponse, error)
-	// Get queries the ExampleAutoIncrementTable table by its primary key.
-	GetExampleAutoIncrementTable(ctx context.Context, in *GetExampleAutoIncrementTableRequest, opts ...grpc.CallOption) (*GetExampleAutoIncrementTableResponse, error)
-	// GetExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
-	GetExampleAutoIncrementTableByX(ctx context.Context, in *GetExampleAutoIncrementTableByXRequest, opts ...grpc.CallOption) (*GetExampleAutoIncrementTableByXResponse, error)
-	// ListExampleAutoIncrementTable queries the ExampleAutoIncrementTable table using prefix and range queries against defined indexes.
-	ListExampleAutoIncrementTable(ctx context.Context, in *ListExampleAutoIncrementTableRequest, opts ...grpc.CallOption) (*ListExampleAutoIncrementTableResponse, error)
-	// GetExampleSingleton queries the ExampleSingleton singleton.
-	GetExampleSingleton(ctx context.Context, in *GetExampleSingletonRequest, opts ...grpc.CallOption) (*GetExampleSingletonResponse, error)
-	// Get queries the ExampleTimestamp table by its primary key.
-	GetExampleTimestamp(ctx context.Context, in *GetExampleTimestampRequest, opts ...grpc.CallOption) (*GetExampleTimestampResponse, error)
-	// ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.
-	ListExampleTimestamp(ctx context.Context, in *ListExampleTimestampRequest, opts ...grpc.CallOption) (*ListExampleTimestampResponse, error)
-	// Get queries the SimpleExample table by its primary key.
-	GetSimpleExample(ctx context.Context, in *GetSimpleExampleRequest, opts ...grpc.CallOption) (*GetSimpleExampleResponse, error)
-	// GetSimpleExampleByUnique queries the SimpleExample table by its Unique index
-	GetSimpleExampleByUnique(ctx context.Context, in *GetSimpleExampleByUniqueRequest, opts ...grpc.CallOption) (*GetSimpleExampleByUniqueResponse, error)
-	// ListSimpleExample queries the SimpleExample table using prefix and range queries against defined indexes.
-	ListSimpleExample(ctx context.Context, in *ListSimpleExampleRequest, opts ...grpc.CallOption) (*ListSimpleExampleResponse, error)
-	// Get queries the ExampleAutoIncFieldName table by its primary key.
-	GetExampleAutoIncFieldName(ctx context.Context, in *GetExampleAutoIncFieldNameRequest, opts ...grpc.CallOption) (*GetExampleAutoIncFieldNameResponse, error)
-	// ListExampleAutoIncFieldName queries the ExampleAutoIncFieldName table using prefix and range queries against defined indexes.
-	ListExampleAutoIncFieldName(ctx context.Context, in *ListExampleAutoIncFieldNameRequest, opts ...grpc.CallOption) (*ListExampleAutoIncFieldNameResponse, error)
+	// ExampleTable queries the ExampleTable table by its primary key.
+	ExampleTable(ctx context.Context, in *ExampleTableRequest, opts ...grpc.CallOption) (*ExampleTableResponse, error)
+	// ExampleTableByU64Str queries the ExampleTable table by its U64Str index
+	ExampleTableByU64Str(ctx context.Context, in *ExampleTableByU64StrRequest, opts ...grpc.CallOption) (*ExampleTableByU64StrResponse, error)
+	// ExampleTables queries the ExampleTable table using the primary key index.
+	ExampleTables(ctx context.Context, in *ExampleTablesRequest, opts ...grpc.CallOption) (*ExampleTablesResponse, error)
+	// ExampleTablesByU64Str queries the ExampleTable table using the primary key index.
+	ExampleTablesByU64Str(ctx context.Context, in *ExampleTablesByU64StrRequest, opts ...grpc.CallOption) (*ExampleTablesByU64StrResponse, error)
+	// ExampleTablesByStrU32 queries the ExampleTable table using the primary key index.
+	ExampleTablesByStrU32(ctx context.Context, in *ExampleTablesByStrU32Request, opts ...grpc.CallOption) (*ExampleTablesByStrU32Response, error)
+	// ExampleTablesByBzStr queries the ExampleTable table using the primary key index.
+	ExampleTablesByBzStr(ctx context.Context, in *ExampleTablesByBzStrRequest, opts ...grpc.CallOption) (*ExampleTablesByBzStrResponse, error)
+	// ExampleAutoIncrementTable queries the ExampleAutoIncrementTable table by its primary key.
+	ExampleAutoIncrementTable(ctx context.Context, in *ExampleAutoIncrementTableRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTableResponse, error)
+	// ExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
+	ExampleAutoIncrementTableByX(ctx context.Context, in *ExampleAutoIncrementTableByXRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTableByXResponse, error)
+	// ExampleAutoIncrementTables queries the ExampleAutoIncrementTable table using the primary key index.
+	ExampleAutoIncrementTables(ctx context.Context, in *ExampleAutoIncrementTablesRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTablesResponse, error)
+	// ExampleAutoIncrementTablesByX queries the ExampleAutoIncrementTable table using the primary key index.
+	ExampleAutoIncrementTablesByX(ctx context.Context, in *ExampleAutoIncrementTablesByXRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTablesByXResponse, error)
+	// ExampleSingleton queries the ExampleSingleton singleton.
+	ExampleSingleton(ctx context.Context, in *ExampleSingletonRequest, opts ...grpc.CallOption) (*ExampleSingletonResponse, error)
+	// ExampleTimestamp queries the ExampleTimestamp table by its primary key.
+	ExampleTimestamp(ctx context.Context, in *ExampleTimestampRequest, opts ...grpc.CallOption) (*ExampleTimestampResponse, error)
+	// ExampleTimestamps queries the ExampleTimestamp table using the primary key index.
+	ExampleTimestamps(ctx context.Context, in *ExampleTimestampsRequest, opts ...grpc.CallOption) (*ExampleTimestampsResponse, error)
+	// ExampleTimestampsByTs queries the ExampleTimestamp table using the primary key index.
+	ExampleTimestampsByTs(ctx context.Context, in *ExampleTimestampsByTsRequest, opts ...grpc.CallOption) (*ExampleTimestampsByTsResponse, error)
+	// SimpleExample queries the SimpleExample table by its primary key.
+	SimpleExample(ctx context.Context, in *SimpleExampleRequest, opts ...grpc.CallOption) (*SimpleExampleResponse, error)
+	// SimpleExampleByUnique queries the SimpleExample table by its Unique index
+	SimpleExampleByUnique(ctx context.Context, in *SimpleExampleByUniqueRequest, opts ...grpc.CallOption) (*SimpleExampleByUniqueResponse, error)
+	// SimpleExamples queries the SimpleExample table using the primary key index.
+	SimpleExamples(ctx context.Context, in *SimpleExamplesRequest, opts ...grpc.CallOption) (*SimpleExamplesResponse, error)
+	// SimpleExamplesByUnique queries the SimpleExample table using the primary key index.
+	SimpleExamplesByUnique(ctx context.Context, in *SimpleExamplesByUniqueRequest, opts ...grpc.CallOption) (*SimpleExamplesByUniqueResponse, error)
+	// ExampleAutoIncFieldName queries the ExampleAutoIncFieldName table by its primary key.
+	ExampleAutoIncFieldName(ctx context.Context, in *ExampleAutoIncFieldNameRequest, opts ...grpc.CallOption) (*ExampleAutoIncFieldNameResponse, error)
+	// ExampleAutoIncFieldNames queries the ExampleAutoIncFieldName table using the primary key index.
+	ExampleAutoIncFieldNames(ctx context.Context, in *ExampleAutoIncFieldNamesRequest, opts ...grpc.CallOption) (*ExampleAutoIncFieldNamesResponse, error)
 }
 
 type testSchemaQueryServiceClient struct {
@@ -60,126 +72,180 @@ func NewTestSchemaQueryServiceClient(cc grpc.ClientConnInterface) TestSchemaQuer
 	return &testSchemaQueryServiceClient{cc}
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleTable(ctx context.Context, in *GetExampleTableRequest, opts ...grpc.CallOption) (*GetExampleTableResponse, error) {
-	out := new(GetExampleTableResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleTable", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTable(ctx context.Context, in *ExampleTableRequest, opts ...grpc.CallOption) (*ExampleTableResponse, error) {
+	out := new(ExampleTableResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleTableByU64Str(ctx context.Context, in *GetExampleTableByU64StrRequest, opts ...grpc.CallOption) (*GetExampleTableByU64StrResponse, error) {
-	out := new(GetExampleTableByU64StrResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleTableByU64Str", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTableByU64Str(ctx context.Context, in *ExampleTableByU64StrRequest, opts ...grpc.CallOption) (*ExampleTableByU64StrResponse, error) {
+	out := new(ExampleTableByU64StrResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTableByU64Str", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) ListExampleTable(ctx context.Context, in *ListExampleTableRequest, opts ...grpc.CallOption) (*ListExampleTableResponse, error) {
-	out := new(ListExampleTableResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ListExampleTable", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTables(ctx context.Context, in *ExampleTablesRequest, opts ...grpc.CallOption) (*ExampleTablesResponse, error) {
+	out := new(ExampleTablesResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTables", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleAutoIncrementTable(ctx context.Context, in *GetExampleAutoIncrementTableRequest, opts ...grpc.CallOption) (*GetExampleAutoIncrementTableResponse, error) {
-	out := new(GetExampleAutoIncrementTableResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleAutoIncrementTable", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTablesByU64Str(ctx context.Context, in *ExampleTablesByU64StrRequest, opts ...grpc.CallOption) (*ExampleTablesByU64StrResponse, error) {
+	out := new(ExampleTablesByU64StrResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTablesByU64Str", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleAutoIncrementTableByX(ctx context.Context, in *GetExampleAutoIncrementTableByXRequest, opts ...grpc.CallOption) (*GetExampleAutoIncrementTableByXResponse, error) {
-	out := new(GetExampleAutoIncrementTableByXResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleAutoIncrementTableByX", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTablesByStrU32(ctx context.Context, in *ExampleTablesByStrU32Request, opts ...grpc.CallOption) (*ExampleTablesByStrU32Response, error) {
+	out := new(ExampleTablesByStrU32Response)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTablesByStrU32", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) ListExampleAutoIncrementTable(ctx context.Context, in *ListExampleAutoIncrementTableRequest, opts ...grpc.CallOption) (*ListExampleAutoIncrementTableResponse, error) {
-	out := new(ListExampleAutoIncrementTableResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ListExampleAutoIncrementTable", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTablesByBzStr(ctx context.Context, in *ExampleTablesByBzStrRequest, opts ...grpc.CallOption) (*ExampleTablesByBzStrResponse, error) {
+	out := new(ExampleTablesByBzStrResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTablesByBzStr", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleSingleton(ctx context.Context, in *GetExampleSingletonRequest, opts ...grpc.CallOption) (*GetExampleSingletonResponse, error) {
-	out := new(GetExampleSingletonResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleSingleton", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleAutoIncrementTable(ctx context.Context, in *ExampleAutoIncrementTableRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTableResponse, error) {
+	out := new(ExampleAutoIncrementTableResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleTimestamp(ctx context.Context, in *GetExampleTimestampRequest, opts ...grpc.CallOption) (*GetExampleTimestampResponse, error) {
-	out := new(GetExampleTimestampResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleTimestamp", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleAutoIncrementTableByX(ctx context.Context, in *ExampleAutoIncrementTableByXRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTableByXResponse, error) {
+	out := new(ExampleAutoIncrementTableByXResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTableByX", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) ListExampleTimestamp(ctx context.Context, in *ListExampleTimestampRequest, opts ...grpc.CallOption) (*ListExampleTimestampResponse, error) {
-	out := new(ListExampleTimestampResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ListExampleTimestamp", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleAutoIncrementTables(ctx context.Context, in *ExampleAutoIncrementTablesRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTablesResponse, error) {
+	out := new(ExampleAutoIncrementTablesResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTables", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetSimpleExample(ctx context.Context, in *GetSimpleExampleRequest, opts ...grpc.CallOption) (*GetSimpleExampleResponse, error) {
-	out := new(GetSimpleExampleResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetSimpleExample", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleAutoIncrementTablesByX(ctx context.Context, in *ExampleAutoIncrementTablesByXRequest, opts ...grpc.CallOption) (*ExampleAutoIncrementTablesByXResponse, error) {
+	out := new(ExampleAutoIncrementTablesByXResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTablesByX", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetSimpleExampleByUnique(ctx context.Context, in *GetSimpleExampleByUniqueRequest, opts ...grpc.CallOption) (*GetSimpleExampleByUniqueResponse, error) {
-	out := new(GetSimpleExampleByUniqueResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetSimpleExampleByUnique", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleSingleton(ctx context.Context, in *ExampleSingletonRequest, opts ...grpc.CallOption) (*ExampleSingletonResponse, error) {
+	out := new(ExampleSingletonResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleSingleton", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) ListSimpleExample(ctx context.Context, in *ListSimpleExampleRequest, opts ...grpc.CallOption) (*ListSimpleExampleResponse, error) {
-	out := new(ListSimpleExampleResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ListSimpleExample", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTimestamp(ctx context.Context, in *ExampleTimestampRequest, opts ...grpc.CallOption) (*ExampleTimestampResponse, error) {
+	out := new(ExampleTimestampResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTimestamp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) GetExampleAutoIncFieldName(ctx context.Context, in *GetExampleAutoIncFieldNameRequest, opts ...grpc.CallOption) (*GetExampleAutoIncFieldNameResponse, error) {
-	out := new(GetExampleAutoIncFieldNameResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/GetExampleAutoIncFieldName", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTimestamps(ctx context.Context, in *ExampleTimestampsRequest, opts ...grpc.CallOption) (*ExampleTimestampsResponse, error) {
+	out := new(ExampleTimestampsResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTimestamps", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testSchemaQueryServiceClient) ListExampleAutoIncFieldName(ctx context.Context, in *ListExampleAutoIncFieldNameRequest, opts ...grpc.CallOption) (*ListExampleAutoIncFieldNameResponse, error) {
-	out := new(ListExampleAutoIncFieldNameResponse)
-	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ListExampleAutoIncFieldName", in, out, opts...)
+func (c *testSchemaQueryServiceClient) ExampleTimestampsByTs(ctx context.Context, in *ExampleTimestampsByTsRequest, opts ...grpc.CallOption) (*ExampleTimestampsByTsResponse, error) {
+	out := new(ExampleTimestampsByTsResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleTimestampsByTs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) SimpleExample(ctx context.Context, in *SimpleExampleRequest, opts ...grpc.CallOption) (*SimpleExampleResponse, error) {
+	out := new(SimpleExampleResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/SimpleExample", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) SimpleExampleByUnique(ctx context.Context, in *SimpleExampleByUniqueRequest, opts ...grpc.CallOption) (*SimpleExampleByUniqueResponse, error) {
+	out := new(SimpleExampleByUniqueResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/SimpleExampleByUnique", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) SimpleExamples(ctx context.Context, in *SimpleExamplesRequest, opts ...grpc.CallOption) (*SimpleExamplesResponse, error) {
+	out := new(SimpleExamplesResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/SimpleExamples", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) SimpleExamplesByUnique(ctx context.Context, in *SimpleExamplesByUniqueRequest, opts ...grpc.CallOption) (*SimpleExamplesByUniqueResponse, error) {
+	out := new(SimpleExamplesByUniqueResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/SimpleExamplesByUnique", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) ExampleAutoIncFieldName(ctx context.Context, in *ExampleAutoIncFieldNameRequest, opts ...grpc.CallOption) (*ExampleAutoIncFieldNameResponse, error) {
+	out := new(ExampleAutoIncFieldNameResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleAutoIncFieldName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *testSchemaQueryServiceClient) ExampleAutoIncFieldNames(ctx context.Context, in *ExampleAutoIncFieldNamesRequest, opts ...grpc.CallOption) (*ExampleAutoIncFieldNamesResponse, error) {
+	out := new(ExampleAutoIncFieldNamesResponse)
+	err := c.cc.Invoke(ctx, "/testpb.TestSchemaQueryService/ExampleAutoIncFieldNames", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -190,34 +256,46 @@ func (c *testSchemaQueryServiceClient) ListExampleAutoIncFieldName(ctx context.C
 // All implementations must embed UnimplementedTestSchemaQueryServiceServer
 // for forward compatibility
 type TestSchemaQueryServiceServer interface {
-	// Get queries the ExampleTable table by its primary key.
-	GetExampleTable(context.Context, *GetExampleTableRequest) (*GetExampleTableResponse, error)
-	// GetExampleTableByU64Str queries the ExampleTable table by its U64Str index
-	GetExampleTableByU64Str(context.Context, *GetExampleTableByU64StrRequest) (*GetExampleTableByU64StrResponse, error)
-	// ListExampleTable queries the ExampleTable table using prefix and range queries against defined indexes.
-	ListExampleTable(context.Context, *ListExampleTableRequest) (*ListExampleTableResponse, error)
-	// Get queries the ExampleAutoIncrementTable table by its primary key.
-	GetExampleAutoIncrementTable(context.Context, *GetExampleAutoIncrementTableRequest) (*GetExampleAutoIncrementTableResponse, error)
-	// GetExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
-	GetExampleAutoIncrementTableByX(context.Context, *GetExampleAutoIncrementTableByXRequest) (*GetExampleAutoIncrementTableByXResponse, error)
-	// ListExampleAutoIncrementTable queries the ExampleAutoIncrementTable table using prefix and range queries against defined indexes.
-	ListExampleAutoIncrementTable(context.Context, *ListExampleAutoIncrementTableRequest) (*ListExampleAutoIncrementTableResponse, error)
-	// GetExampleSingleton queries the ExampleSingleton singleton.
-	GetExampleSingleton(context.Context, *GetExampleSingletonRequest) (*GetExampleSingletonResponse, error)
-	// Get queries the ExampleTimestamp table by its primary key.
-	GetExampleTimestamp(context.Context, *GetExampleTimestampRequest) (*GetExampleTimestampResponse, error)
-	// ListExampleTimestamp queries the ExampleTimestamp table using prefix and range queries against defined indexes.
-	ListExampleTimestamp(context.Context, *ListExampleTimestampRequest) (*ListExampleTimestampResponse, error)
-	// Get queries the SimpleExample table by its primary key.
-	GetSimpleExample(context.Context, *GetSimpleExampleRequest) (*GetSimpleExampleResponse, error)
-	// GetSimpleExampleByUnique queries the SimpleExample table by its Unique index
-	GetSimpleExampleByUnique(context.Context, *GetSimpleExampleByUniqueRequest) (*GetSimpleExampleByUniqueResponse, error)
-	// ListSimpleExample queries the SimpleExample table using prefix and range queries against defined indexes.
-	ListSimpleExample(context.Context, *ListSimpleExampleRequest) (*ListSimpleExampleResponse, error)
-	// Get queries the ExampleAutoIncFieldName table by its primary key.
-	GetExampleAutoIncFieldName(context.Context, *GetExampleAutoIncFieldNameRequest) (*GetExampleAutoIncFieldNameResponse, error)
-	// ListExampleAutoIncFieldName queries the ExampleAutoIncFieldName table using prefix and range queries against defined indexes.
-	ListExampleAutoIncFieldName(context.Context, *ListExampleAutoIncFieldNameRequest) (*ListExampleAutoIncFieldNameResponse, error)
+	// ExampleTable queries the ExampleTable table by its primary key.
+	ExampleTable(context.Context, *ExampleTableRequest) (*ExampleTableResponse, error)
+	// ExampleTableByU64Str queries the ExampleTable table by its U64Str index
+	ExampleTableByU64Str(context.Context, *ExampleTableByU64StrRequest) (*ExampleTableByU64StrResponse, error)
+	// ExampleTables queries the ExampleTable table using the primary key index.
+	ExampleTables(context.Context, *ExampleTablesRequest) (*ExampleTablesResponse, error)
+	// ExampleTablesByU64Str queries the ExampleTable table using the primary key index.
+	ExampleTablesByU64Str(context.Context, *ExampleTablesByU64StrRequest) (*ExampleTablesByU64StrResponse, error)
+	// ExampleTablesByStrU32 queries the ExampleTable table using the primary key index.
+	ExampleTablesByStrU32(context.Context, *ExampleTablesByStrU32Request) (*ExampleTablesByStrU32Response, error)
+	// ExampleTablesByBzStr queries the ExampleTable table using the primary key index.
+	ExampleTablesByBzStr(context.Context, *ExampleTablesByBzStrRequest) (*ExampleTablesByBzStrResponse, error)
+	// ExampleAutoIncrementTable queries the ExampleAutoIncrementTable table by its primary key.
+	ExampleAutoIncrementTable(context.Context, *ExampleAutoIncrementTableRequest) (*ExampleAutoIncrementTableResponse, error)
+	// ExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
+	ExampleAutoIncrementTableByX(context.Context, *ExampleAutoIncrementTableByXRequest) (*ExampleAutoIncrementTableByXResponse, error)
+	// ExampleAutoIncrementTables queries the ExampleAutoIncrementTable table using the primary key index.
+	ExampleAutoIncrementTables(context.Context, *ExampleAutoIncrementTablesRequest) (*ExampleAutoIncrementTablesResponse, error)
+	// ExampleAutoIncrementTablesByX queries the ExampleAutoIncrementTable table using the primary key index.
+	ExampleAutoIncrementTablesByX(context.Context, *ExampleAutoIncrementTablesByXRequest) (*ExampleAutoIncrementTablesByXResponse, error)
+	// ExampleSingleton queries the ExampleSingleton singleton.
+	ExampleSingleton(context.Context, *ExampleSingletonRequest) (*ExampleSingletonResponse, error)
+	// ExampleTimestamp queries the ExampleTimestamp table by its primary key.
+	ExampleTimestamp(context.Context, *ExampleTimestampRequest) (*ExampleTimestampResponse, error)
+	// ExampleTimestamps queries the ExampleTimestamp table using the primary key index.
+	ExampleTimestamps(context.Context, *ExampleTimestampsRequest) (*ExampleTimestampsResponse, error)
+	// ExampleTimestampsByTs queries the ExampleTimestamp table using the primary key index.
+	ExampleTimestampsByTs(context.Context, *ExampleTimestampsByTsRequest) (*ExampleTimestampsByTsResponse, error)
+	// SimpleExample queries the SimpleExample table by its primary key.
+	SimpleExample(context.Context, *SimpleExampleRequest) (*SimpleExampleResponse, error)
+	// SimpleExampleByUnique queries the SimpleExample table by its Unique index
+	SimpleExampleByUnique(context.Context, *SimpleExampleByUniqueRequest) (*SimpleExampleByUniqueResponse, error)
+	// SimpleExamples queries the SimpleExample table using the primary key index.
+	SimpleExamples(context.Context, *SimpleExamplesRequest) (*SimpleExamplesResponse, error)
+	// SimpleExamplesByUnique queries the SimpleExample table using the primary key index.
+	SimpleExamplesByUnique(context.Context, *SimpleExamplesByUniqueRequest) (*SimpleExamplesByUniqueResponse, error)
+	// ExampleAutoIncFieldName queries the ExampleAutoIncFieldName table by its primary key.
+	ExampleAutoIncFieldName(context.Context, *ExampleAutoIncFieldNameRequest) (*ExampleAutoIncFieldNameResponse, error)
+	// ExampleAutoIncFieldNames queries the ExampleAutoIncFieldName table using the primary key index.
+	ExampleAutoIncFieldNames(context.Context, *ExampleAutoIncFieldNamesRequest) (*ExampleAutoIncFieldNamesResponse, error)
 	mustEmbedUnimplementedTestSchemaQueryServiceServer()
 }
 
@@ -225,47 +303,65 @@ type TestSchemaQueryServiceServer interface {
 type UnimplementedTestSchemaQueryServiceServer struct {
 }
 
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleTable(context.Context, *GetExampleTableRequest) (*GetExampleTableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleTable not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTable(context.Context, *ExampleTableRequest) (*ExampleTableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTable not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleTableByU64Str(context.Context, *GetExampleTableByU64StrRequest) (*GetExampleTableByU64StrResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleTableByU64Str not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTableByU64Str(context.Context, *ExampleTableByU64StrRequest) (*ExampleTableByU64StrResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTableByU64Str not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) ListExampleTable(context.Context, *ListExampleTableRequest) (*ListExampleTableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListExampleTable not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTables(context.Context, *ExampleTablesRequest) (*ExampleTablesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTables not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleAutoIncrementTable(context.Context, *GetExampleAutoIncrementTableRequest) (*GetExampleAutoIncrementTableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleAutoIncrementTable not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTablesByU64Str(context.Context, *ExampleTablesByU64StrRequest) (*ExampleTablesByU64StrResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTablesByU64Str not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleAutoIncrementTableByX(context.Context, *GetExampleAutoIncrementTableByXRequest) (*GetExampleAutoIncrementTableByXResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleAutoIncrementTableByX not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTablesByStrU32(context.Context, *ExampleTablesByStrU32Request) (*ExampleTablesByStrU32Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTablesByStrU32 not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) ListExampleAutoIncrementTable(context.Context, *ListExampleAutoIncrementTableRequest) (*ListExampleAutoIncrementTableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListExampleAutoIncrementTable not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTablesByBzStr(context.Context, *ExampleTablesByBzStrRequest) (*ExampleTablesByBzStrResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTablesByBzStr not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleSingleton(context.Context, *GetExampleSingletonRequest) (*GetExampleSingletonResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleSingleton not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleAutoIncrementTable(context.Context, *ExampleAutoIncrementTableRequest) (*ExampleAutoIncrementTableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleAutoIncrementTable not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleTimestamp(context.Context, *GetExampleTimestampRequest) (*GetExampleTimestampResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleTimestamp not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleAutoIncrementTableByX(context.Context, *ExampleAutoIncrementTableByXRequest) (*ExampleAutoIncrementTableByXResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleAutoIncrementTableByX not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) ListExampleTimestamp(context.Context, *ListExampleTimestampRequest) (*ListExampleTimestampResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListExampleTimestamp not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleAutoIncrementTables(context.Context, *ExampleAutoIncrementTablesRequest) (*ExampleAutoIncrementTablesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleAutoIncrementTables not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetSimpleExample(context.Context, *GetSimpleExampleRequest) (*GetSimpleExampleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSimpleExample not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleAutoIncrementTablesByX(context.Context, *ExampleAutoIncrementTablesByXRequest) (*ExampleAutoIncrementTablesByXResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleAutoIncrementTablesByX not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetSimpleExampleByUnique(context.Context, *GetSimpleExampleByUniqueRequest) (*GetSimpleExampleByUniqueResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSimpleExampleByUnique not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleSingleton(context.Context, *ExampleSingletonRequest) (*ExampleSingletonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleSingleton not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) ListSimpleExample(context.Context, *ListSimpleExampleRequest) (*ListSimpleExampleResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListSimpleExample not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTimestamp(context.Context, *ExampleTimestampRequest) (*ExampleTimestampResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTimestamp not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) GetExampleAutoIncFieldName(context.Context, *GetExampleAutoIncFieldNameRequest) (*GetExampleAutoIncFieldNameResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExampleAutoIncFieldName not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTimestamps(context.Context, *ExampleTimestampsRequest) (*ExampleTimestampsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTimestamps not implemented")
 }
-func (UnimplementedTestSchemaQueryServiceServer) ListExampleAutoIncFieldName(context.Context, *ListExampleAutoIncFieldNameRequest) (*ListExampleAutoIncFieldNameResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListExampleAutoIncFieldName not implemented")
+func (UnimplementedTestSchemaQueryServiceServer) ExampleTimestampsByTs(context.Context, *ExampleTimestampsByTsRequest) (*ExampleTimestampsByTsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleTimestampsByTs not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) SimpleExample(context.Context, *SimpleExampleRequest) (*SimpleExampleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimpleExample not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) SimpleExampleByUnique(context.Context, *SimpleExampleByUniqueRequest) (*SimpleExampleByUniqueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimpleExampleByUnique not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) SimpleExamples(context.Context, *SimpleExamplesRequest) (*SimpleExamplesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimpleExamples not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) SimpleExamplesByUnique(context.Context, *SimpleExamplesByUniqueRequest) (*SimpleExamplesByUniqueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimpleExamplesByUnique not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) ExampleAutoIncFieldName(context.Context, *ExampleAutoIncFieldNameRequest) (*ExampleAutoIncFieldNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleAutoIncFieldName not implemented")
+}
+func (UnimplementedTestSchemaQueryServiceServer) ExampleAutoIncFieldNames(context.Context, *ExampleAutoIncFieldNamesRequest) (*ExampleAutoIncFieldNamesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExampleAutoIncFieldNames not implemented")
 }
 func (UnimplementedTestSchemaQueryServiceServer) mustEmbedUnimplementedTestSchemaQueryServiceServer() {
 }
@@ -281,254 +377,362 @@ func RegisterTestSchemaQueryServiceServer(s grpc.ServiceRegistrar, srv TestSchem
 	s.RegisterService(&TestSchemaQueryService_ServiceDesc, srv)
 }
 
-func _TestSchemaQueryService_GetExampleTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleTableRequest)
+func _TestSchemaQueryService_ExampleTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTableRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleTable(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTable(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleTable",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTable",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleTable(ctx, req.(*GetExampleTableRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTable(ctx, req.(*ExampleTableRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetExampleTableByU64Str_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleTableByU64StrRequest)
+func _TestSchemaQueryService_ExampleTableByU64Str_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTableByU64StrRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleTableByU64Str(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTableByU64Str(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleTableByU64Str",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTableByU64Str",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleTableByU64Str(ctx, req.(*GetExampleTableByU64StrRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTableByU64Str(ctx, req.(*ExampleTableByU64StrRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_ListExampleTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListExampleTableRequest)
+func _TestSchemaQueryService_ExampleTables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTablesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).ListExampleTable(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTables(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/ListExampleTable",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTables",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).ListExampleTable(ctx, req.(*ListExampleTableRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTables(ctx, req.(*ExampleTablesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetExampleAutoIncrementTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleAutoIncrementTableRequest)
+func _TestSchemaQueryService_ExampleTablesByU64Str_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTablesByU64StrRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleAutoIncrementTable(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTablesByU64Str(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleAutoIncrementTable",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTablesByU64Str",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleAutoIncrementTable(ctx, req.(*GetExampleAutoIncrementTableRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTablesByU64Str(ctx, req.(*ExampleTablesByU64StrRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetExampleAutoIncrementTableByX_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleAutoIncrementTableByXRequest)
+func _TestSchemaQueryService_ExampleTablesByStrU32_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTablesByStrU32Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleAutoIncrementTableByX(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTablesByStrU32(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleAutoIncrementTableByX",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTablesByStrU32",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleAutoIncrementTableByX(ctx, req.(*GetExampleAutoIncrementTableByXRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTablesByStrU32(ctx, req.(*ExampleTablesByStrU32Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_ListExampleAutoIncrementTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListExampleAutoIncrementTableRequest)
+func _TestSchemaQueryService_ExampleTablesByBzStr_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTablesByBzStrRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).ListExampleAutoIncrementTable(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTablesByBzStr(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/ListExampleAutoIncrementTable",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTablesByBzStr",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).ListExampleAutoIncrementTable(ctx, req.(*ListExampleAutoIncrementTableRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTablesByBzStr(ctx, req.(*ExampleTablesByBzStrRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetExampleSingleton_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleSingletonRequest)
+func _TestSchemaQueryService_ExampleAutoIncrementTable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleAutoIncrementTableRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleSingleton(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTable(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleSingleton",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleAutoIncrementTable",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleSingleton(ctx, req.(*GetExampleSingletonRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTable(ctx, req.(*ExampleAutoIncrementTableRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetExampleTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleTimestampRequest)
+func _TestSchemaQueryService_ExampleAutoIncrementTableByX_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleAutoIncrementTableByXRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleTimestamp(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTableByX(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleTimestamp",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleAutoIncrementTableByX",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleTimestamp(ctx, req.(*GetExampleTimestampRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTableByX(ctx, req.(*ExampleAutoIncrementTableByXRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_ListExampleTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListExampleTimestampRequest)
+func _TestSchemaQueryService_ExampleAutoIncrementTables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleAutoIncrementTablesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).ListExampleTimestamp(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTables(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/ListExampleTimestamp",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleAutoIncrementTables",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).ListExampleTimestamp(ctx, req.(*ListExampleTimestampRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTables(ctx, req.(*ExampleAutoIncrementTablesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetSimpleExample_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSimpleExampleRequest)
+func _TestSchemaQueryService_ExampleAutoIncrementTablesByX_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleAutoIncrementTablesByXRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetSimpleExample(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTablesByX(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetSimpleExample",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleAutoIncrementTablesByX",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetSimpleExample(ctx, req.(*GetSimpleExampleRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncrementTablesByX(ctx, req.(*ExampleAutoIncrementTablesByXRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetSimpleExampleByUnique_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetSimpleExampleByUniqueRequest)
+func _TestSchemaQueryService_ExampleSingleton_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleSingletonRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetSimpleExampleByUnique(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleSingleton(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetSimpleExampleByUnique",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleSingleton",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetSimpleExampleByUnique(ctx, req.(*GetSimpleExampleByUniqueRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleSingleton(ctx, req.(*ExampleSingletonRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_ListSimpleExample_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListSimpleExampleRequest)
+func _TestSchemaQueryService_ExampleTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTimestampRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).ListSimpleExample(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTimestamp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/ListSimpleExample",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTimestamp",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).ListSimpleExample(ctx, req.(*ListSimpleExampleRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTimestamp(ctx, req.(*ExampleTimestampRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_GetExampleAutoIncFieldName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetExampleAutoIncFieldNameRequest)
+func _TestSchemaQueryService_ExampleTimestamps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTimestampsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).GetExampleAutoIncFieldName(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTimestamps(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/GetExampleAutoIncFieldName",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTimestamps",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).GetExampleAutoIncFieldName(ctx, req.(*GetExampleAutoIncFieldNameRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTimestamps(ctx, req.(*ExampleTimestampsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestSchemaQueryService_ListExampleAutoIncFieldName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListExampleAutoIncFieldNameRequest)
+func _TestSchemaQueryService_ExampleTimestampsByTs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleTimestampsByTsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestSchemaQueryServiceServer).ListExampleAutoIncFieldName(ctx, in)
+		return srv.(TestSchemaQueryServiceServer).ExampleTimestampsByTs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/testpb.TestSchemaQueryService/ListExampleAutoIncFieldName",
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleTimestampsByTs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestSchemaQueryServiceServer).ListExampleAutoIncFieldName(ctx, req.(*ListExampleAutoIncFieldNameRequest))
+		return srv.(TestSchemaQueryServiceServer).ExampleTimestampsByTs(ctx, req.(*ExampleTimestampsByTsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_SimpleExample_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimpleExampleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).SimpleExample(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/SimpleExample",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).SimpleExample(ctx, req.(*SimpleExampleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_SimpleExampleByUnique_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimpleExampleByUniqueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).SimpleExampleByUnique(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/SimpleExampleByUnique",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).SimpleExampleByUnique(ctx, req.(*SimpleExampleByUniqueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_SimpleExamples_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimpleExamplesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).SimpleExamples(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/SimpleExamples",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).SimpleExamples(ctx, req.(*SimpleExamplesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_SimpleExamplesByUnique_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimpleExamplesByUniqueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).SimpleExamplesByUnique(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/SimpleExamplesByUnique",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).SimpleExamplesByUnique(ctx, req.(*SimpleExamplesByUniqueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_ExampleAutoIncFieldName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleAutoIncFieldNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncFieldName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleAutoIncFieldName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncFieldName(ctx, req.(*ExampleAutoIncFieldNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TestSchemaQueryService_ExampleAutoIncFieldNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExampleAutoIncFieldNamesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncFieldNames(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/testpb.TestSchemaQueryService/ExampleAutoIncFieldNames",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSchemaQueryServiceServer).ExampleAutoIncFieldNames(ctx, req.(*ExampleAutoIncFieldNamesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -541,60 +745,84 @@ var TestSchemaQueryService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TestSchemaQueryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetExampleTable",
-			Handler:    _TestSchemaQueryService_GetExampleTable_Handler,
+			MethodName: "ExampleTable",
+			Handler:    _TestSchemaQueryService_ExampleTable_Handler,
 		},
 		{
-			MethodName: "GetExampleTableByU64Str",
-			Handler:    _TestSchemaQueryService_GetExampleTableByU64Str_Handler,
+			MethodName: "ExampleTableByU64Str",
+			Handler:    _TestSchemaQueryService_ExampleTableByU64Str_Handler,
 		},
 		{
-			MethodName: "ListExampleTable",
-			Handler:    _TestSchemaQueryService_ListExampleTable_Handler,
+			MethodName: "ExampleTables",
+			Handler:    _TestSchemaQueryService_ExampleTables_Handler,
 		},
 		{
-			MethodName: "GetExampleAutoIncrementTable",
-			Handler:    _TestSchemaQueryService_GetExampleAutoIncrementTable_Handler,
+			MethodName: "ExampleTablesByU64Str",
+			Handler:    _TestSchemaQueryService_ExampleTablesByU64Str_Handler,
 		},
 		{
-			MethodName: "GetExampleAutoIncrementTableByX",
-			Handler:    _TestSchemaQueryService_GetExampleAutoIncrementTableByX_Handler,
+			MethodName: "ExampleTablesByStrU32",
+			Handler:    _TestSchemaQueryService_ExampleTablesByStrU32_Handler,
 		},
 		{
-			MethodName: "ListExampleAutoIncrementTable",
-			Handler:    _TestSchemaQueryService_ListExampleAutoIncrementTable_Handler,
+			MethodName: "ExampleTablesByBzStr",
+			Handler:    _TestSchemaQueryService_ExampleTablesByBzStr_Handler,
 		},
 		{
-			MethodName: "GetExampleSingleton",
-			Handler:    _TestSchemaQueryService_GetExampleSingleton_Handler,
+			MethodName: "ExampleAutoIncrementTable",
+			Handler:    _TestSchemaQueryService_ExampleAutoIncrementTable_Handler,
 		},
 		{
-			MethodName: "GetExampleTimestamp",
-			Handler:    _TestSchemaQueryService_GetExampleTimestamp_Handler,
+			MethodName: "ExampleAutoIncrementTableByX",
+			Handler:    _TestSchemaQueryService_ExampleAutoIncrementTableByX_Handler,
 		},
 		{
-			MethodName: "ListExampleTimestamp",
-			Handler:    _TestSchemaQueryService_ListExampleTimestamp_Handler,
+			MethodName: "ExampleAutoIncrementTables",
+			Handler:    _TestSchemaQueryService_ExampleAutoIncrementTables_Handler,
 		},
 		{
-			MethodName: "GetSimpleExample",
-			Handler:    _TestSchemaQueryService_GetSimpleExample_Handler,
+			MethodName: "ExampleAutoIncrementTablesByX",
+			Handler:    _TestSchemaQueryService_ExampleAutoIncrementTablesByX_Handler,
 		},
 		{
-			MethodName: "GetSimpleExampleByUnique",
-			Handler:    _TestSchemaQueryService_GetSimpleExampleByUnique_Handler,
+			MethodName: "ExampleSingleton",
+			Handler:    _TestSchemaQueryService_ExampleSingleton_Handler,
 		},
 		{
-			MethodName: "ListSimpleExample",
-			Handler:    _TestSchemaQueryService_ListSimpleExample_Handler,
+			MethodName: "ExampleTimestamp",
+			Handler:    _TestSchemaQueryService_ExampleTimestamp_Handler,
 		},
 		{
-			MethodName: "GetExampleAutoIncFieldName",
-			Handler:    _TestSchemaQueryService_GetExampleAutoIncFieldName_Handler,
+			MethodName: "ExampleTimestamps",
+			Handler:    _TestSchemaQueryService_ExampleTimestamps_Handler,
 		},
 		{
-			MethodName: "ListExampleAutoIncFieldName",
-			Handler:    _TestSchemaQueryService_ListExampleAutoIncFieldName_Handler,
+			MethodName: "ExampleTimestampsByTs",
+			Handler:    _TestSchemaQueryService_ExampleTimestampsByTs_Handler,
+		},
+		{
+			MethodName: "SimpleExample",
+			Handler:    _TestSchemaQueryService_SimpleExample_Handler,
+		},
+		{
+			MethodName: "SimpleExampleByUnique",
+			Handler:    _TestSchemaQueryService_SimpleExampleByUnique_Handler,
+		},
+		{
+			MethodName: "SimpleExamples",
+			Handler:    _TestSchemaQueryService_SimpleExamples_Handler,
+		},
+		{
+			MethodName: "SimpleExamplesByUnique",
+			Handler:    _TestSchemaQueryService_SimpleExamplesByUnique_Handler,
+		},
+		{
+			MethodName: "ExampleAutoIncFieldName",
+			Handler:    _TestSchemaQueryService_ExampleAutoIncFieldName_Handler,
+		},
+		{
+			MethodName: "ExampleAutoIncFieldNames",
+			Handler:    _TestSchemaQueryService_ExampleAutoIncFieldNames_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

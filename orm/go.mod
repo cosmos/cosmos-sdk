@@ -9,6 +9,7 @@ require (
 	cosmossdk.io/errors v1.0.0-beta.7
 	github.com/cosmos/cosmos-db v0.0.0-20221226095112-f3c38ecb5e32
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1
+	github.com/gertd/go-pluralize v0.2.1
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/iancoleman/strcase v0.2.0

@@ -74,9 +74,6 @@ func (f fileGen) genStoreInterface(stores []*protogen.Message) {
 func (f fileGen) genStoreStruct(stores []*protogen.Message) {
 	// struct
 	f.P("type ", f.storeStructName(), " struct {")
-	if f.genQueryServer {
-		f.P("Unimplemented", strcase.ToCamel(f.fileShortName()), "QueryServiceServer")
-	}
 	for _, message := range stores {
 		f.P(f.param(message.GoIdent.GoName), " ", f.messageTableInterfaceName(message))
 	}
@@ -134,22 +131,29 @@ func (f fileGen) messageConstructorName(m *protogen.Message) string {
 
 func (f fileGen) genStoreMethods(stores []*protogen.Message) {
 	// getters
+	storeStructName := f.storeStructName()
 	for _, msg := range stores {
 		name := f.messageTableInterfaceName(msg)
-		f.P("func(x ", f.storeStructName(), ") ", name, "() ", name, "{")
+		f.P("func(x ", storeStructName, ") ", name, "() ", name, "{")
 		f.P("return x.", f.param(msg.GoIdent.GoName))
 		f.P("}")
 		f.P()
 	}
 
 	if f.genQueryServer {
-		f.P("func(x ", f.storeStructName(), ") RegisterQueryServer(registrar ", grpcPkg.Ident("ServiceRegistrar"), ") {")
-		f.P("Register", queryServiceName(f.file), "ServiceServer(registrar, x)")
+		f.P("type ", storeStructName, "QueryServer struct {")
+		f.P("Unimplemented", strcase.ToCamel(f.fileShortName()), "QueryServiceServer")
+		f.P(storeStructName)
+		f.P("}")
+
+		f.P("func(x ", storeStructName, ") RegisterQueryServer(registrar ", grpcPkg.Ident("ServiceRegistrar"), ") {")
+		f.P("Register", queryServiceName(f.file), "ServiceServer(registrar, ", storeStructName, "QueryServer{",
+			storeStructName, ":x})")
 		f.P("}")
 		f.P()
 	}
 
-	f.P("func(", f.storeStructName(), ") doNotImplement() {}")
+	f.P("func(", storeStructName, ") doNotImplement() {}")
 	f.P()
 }
 

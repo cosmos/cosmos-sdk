@@ -60,13 +60,6 @@ func (t tableGen) indexKeyInterfaceName() string {
 	return t.msg.GoIdent.GoName + "IndexKey"
 }
 
-func (t tableGen) genIndexKey(idxKeyName string) {
-	t.P("type ", idxKeyName, " struct {")
-	t.P("vs []interface{}")
-	t.P("}")
-	t.P()
-}
-
 func (t tableGen) indexKeyParts(names []protoreflect.Name) string {
 	cnames := make([]string, len(names))
 	for i, name := range names {

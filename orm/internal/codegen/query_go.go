@@ -7,9 +7,10 @@ func (t tableGen) genQueries() {
 
 	name := t.msg.Desc.Name()
 
+	storeStructName := t.storeStructName()
 	// gen Get method
-	t.P("func (x ", t.storeStructName(), ") Get", name, "(ctx ", contextPkg.Ident("Context"), ", req *Get", name, "Request) (*Get", name, "Response, error) {")
-	t.P("res, err := x.", t.param(t.msg.GoIdent.GoName), ".Get(ctx, ", "")
+	t.P("func (x ", storeStructName, "QueryServer) ", name, "(ctx ", contextPkg.Ident("Context"), ", req *", name, "Request) (*", name, "Response, error) {")
+	t.P("res, err := x.", storeStructName, ".", t.param(t.msg.GoIdent.GoName), ".Get(ctx, ", "")
 	for _, name := range t.primaryKeyFields.Names() {
 		for _, field := range t.msg.Fields {
 			if field.Desc.Name() == name {
@@ -19,12 +20,12 @@ func (t tableGen) genQueries() {
 	}
 	t.P(")")
 	t.P("if err != nil { return nil, err }")
-	t.P("return &Get", name, "Response{Value: res}, nil")
+	t.P("return &", name, "Response{Value: res}, nil")
 	t.P("}")
 	t.P()
 
 	// gen List method
-	t.P("func (x ", t.storeStructName(), ") List", name, "(ctx ", contextPkg.Ident("Context"), ", req *List", name, "Request) (*List", name, "Response, error) {")
-	t.P("return nil, nil")
-	t.P("}")
+	//t.P("func (x ", t.storeStructName(), ") List", name, "(ctx ", contextPkg.Ident("Context"), ", req *List", name, "Request) (*List", name, "Response, error) {")
+	//t.P("return nil, nil")
+	//t.P("}")
 }

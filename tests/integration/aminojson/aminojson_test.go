@@ -1,6 +1,7 @@
 package aminojson
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -28,6 +29,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
@@ -53,13 +56,14 @@ var equivTypes = []equivalentType{
 	// auth
 	et(&authtypes.Params{}, &authapi.Params{}),
 	et(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, &ed25519.PubKey{}),
+	et(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, &ed25519.PubKey{}),
 }
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
 	//aminoCdc := goamino.NewCodec()
 	//protoCdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
-	//aj := aminojson.NewAminoJSON()
+	aj := aminojson.NewAminoJSON()
 
 	//for _, tt := range equivTypes {
 	//	desc := tt.pulsar.ProtoReflect().Descriptor()
@@ -89,27 +93,38 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				}
 			}()
 			msg := gen.Draw(t, "msg")
+			postFixPulsarMessage(msg)
 			protoBz, err := proto.Marshal(msg)
 			require.NoError(t, err)
 			err = encCfg.Codec.Unmarshal(protoBz, tt.gogo)
 			require.NoError(t, err)
+			legacyAminoJson, err := encCfg.Amino.MarshalJSON(tt.gogo)
+			aminoJson, err := aj.MarshalAmino(msg)
+			if !bytes.Equal(legacyAminoJson, aminoJson) {
+				require.Fail(t, fmt.Sprintf("legacy: %s vs %s", string(legacyAminoJson), string(aminoJson)))
+			}
 		})
 	}
 }
 
 func TestAminoJSON_LegacyParity(t *testing.T) {
-	cdc := goamino.NewCodec()
-	cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
-	cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
-	cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
-	cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
-	cdc.RegisterConcrete(&authtypes.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams", nil)
-	cdc.RegisterConcrete(&authztypes.MsgGrant{}, "cosmos-sdk/MsgGrant", nil)
-	cdc.RegisterConcrete(&authztypes.MsgExec{}, "cosmos-sdk/MsgExec", nil)
+	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
+		distribution.AppModuleBasic{})
+	//cdc
+	//cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
+	//cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
+	//cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
+	//cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
+	//cdc.RegisterConcrete(&authtypes.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams", nil)
+	//cdc.RegisterConcrete(&authztypes.MsgGrant{}, "cosmos-sdk/MsgGrant", nil)
+	//cdc.RegisterConcrete(&authztypes.MsgExec{}, "cosmos-sdk/MsgExec", nil)
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
 	now := time.Now()
+
+	genericAuth, _ := codectypes.NewAnyWithValue(&authztypes.GenericAuthorization{Msg: "foo"})
+	genericAuthPulsar, _ := anypb.New(&authzapi.GenericAuthorization{Msg: "foo"})
 
 	cases := map[string]struct {
 		gogo   gogoproto.Message
@@ -121,12 +136,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}},
 		},
 		"authz/msg_grant": {
-			gogo:   &authztypes.MsgGrant{Grant: authztypes.Grant{Expiration: &now}},
-			pulsar: &authzapi.MsgGrant{Grant: &authzapi.Grant{Expiration: timestamppb.New(now)}},
-		},
-		"authz/msg_grant/empty": {
-			gogo:   &authztypes.MsgGrant{},
-			pulsar: &authzapi.MsgGrant{Grant: &authzapi.Grant{}},
+			gogo: &authztypes.MsgGrant{
+				Grant: authztypes.Grant{Expiration: &now, Authorization: genericAuth}},
+			pulsar: &authzapi.MsgGrant{
+				Grant: &authzapi.Grant{Expiration: timestamppb.New(now), Authorization: genericAuthPulsar}},
 		},
 		"authz/msg_update_params": {
 			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
@@ -162,7 +175,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			gogoBytes, err := cdc.MarshalJSON(tc.gogo)
+			gogoBytes, err := encCfg.Amino.MarshalJSON(tc.gogo)
 			require.NoError(t, err)
 
 			pulsarBytes, err := aj.MarshalAmino(tc.pulsar)

@@ -85,21 +85,12 @@ func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 // TODO
 // move into marshalMessage
 func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) error {
-	if encoder := aj.getMessageEncoder(msg); encoder != nil {
-		err := encoder(msg, writer)
-		return err
-	}
-
-	named := false
-
-	opts := msg.Descriptor().Options()
-	if proto.HasExtension(opts, amino.E_Name) {
-		name := proto.GetExtension(opts, amino.E_Name)
+	name, named := getMessageName(msg)
+	if named {
 		_, err := writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, name)))
 		if err != nil {
 			return err
 		}
-		named = true
 	}
 
 	err := aj.marshal(protoreflect.ValueOfMessage(msg), writer)
@@ -108,7 +99,7 @@ func (aj AminoJSON) beginMarshal(msg protoreflect.Message, writer io.Writer) err
 	}
 
 	if named {
-		_, err := writer.Write([]byte("}"))
+		_, err = writer.Write([]byte("}"))
 		if err != nil {
 			return err
 		}
@@ -212,15 +203,16 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		return errors.New("nil message")
 	}
 
-	if encoder := aj.getMessageEncoder(msg); encoder != nil {
-		err := encoder(msg, writer)
-		return err
+	switch msg.Descriptor().FullName() {
+	case timestampFullName:
+		// replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
+		return marshalTimestamp(msg, writer)
+	case anyFullName:
+		return aj.marshalAny(msg, writer)
 	}
 
-	switch msg.Descriptor().FullName() {
-	// replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
-	case timestampFullName:
-		err := marshalTimestamp(msg, writer)
+	if encoder := aj.getMessageEncoder(msg); encoder != nil {
+		err := encoder(msg, writer)
 		return err
 	}
 
@@ -344,6 +336,15 @@ func (aj AminoJSON) marshalList(list protoreflect.List, writer io.Writer) error 
 	return err
 }
 
+func getMessageName(msg protoreflect.Message) (string, bool) {
+	opts := msg.Descriptor().Options()
+	if proto.HasExtension(opts, amino.E_Name) {
+		name := proto.GetExtension(opts, amino.E_Name)
+		return name.(string), true
+	}
+	return "", false
+}
+
 // omitEmpty returns true if the field should be omitted if empty. Empty field omission is the default behavior.
 func omitEmpty(field protoreflect.FieldDescriptor) bool {
 	opts := field.Options()
@@ -448,7 +449,7 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 		pretty.Sequence = 0
 	}
 
-	bz, err := json.Marshal(typeWrapper{Type: "cosmos-sdk/ModuleAccount", Value: pretty})
+	bz, err := json.Marshal(pretty)
 	//bz, err := json.Marshal(pretty)
 	if err != nil {
 		return err
@@ -459,6 +460,7 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 
 const (
 	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
+	anyFullName                             = "google.protobuf.Any"
 )
 
 const (

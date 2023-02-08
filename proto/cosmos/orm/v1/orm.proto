@@ -52,8 +52,9 @@ message PrimaryKeyDescriptor {
   //   with a 32-bit unsigned varint in non-terminal segments.
   //   - int32, sint32, int64, sint64, sfixed32, sfixed64 are encoded as fixed width bytes with
   //   an encoding that enables sorted iteration.
-  //   - google.protobuf.Timestamp and google.protobuf.Duration are encoded
-  //   as 12 bytes using an encoding that enables sorted iteration.
+  //   - google.protobuf.Timestamp is encoded with an encoding that enables sorted iteration
+  //   and takes 1-9 bytes. When iterating, nil values are always ordered last.
+  //   - google.protobuf.Duration is encoded as 12 bytes using an encoding that enables sorted iteration.
   //   - enum fields are encoded using varint encoding and do not support sorted
   //   iteration.
   //   - bool fields are encoded as a single byte 0 or 1.

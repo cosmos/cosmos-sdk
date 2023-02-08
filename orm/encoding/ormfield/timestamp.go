@@ -14,6 +14,8 @@ import (
 // - nanos (which can range from 0 to 999,999,999) is encoded as:
 //   - []byte{0x0} for zero nanos
 //   - 4 fixed bytes with the bit mask 0xC0 applied to the first byte
+//
+// When iterating over timestamp indexes, nil values will always be ordered last.
 type TimestampCodec struct{}
 
 const (

@@ -68,9 +68,9 @@ func (s *SimTestSuite) SetupTest() {
 
 	// create validator set with single validator
 	account := accounts[0]
-	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
+	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
 	require.NoError(s.T(), err)
-	validator := cmttypes.NewValidator(tmPk, 1)
+	validator := cmttypes.NewValidator(cmtPk, 1)
 
 	startupCfg := simtestutil.DefaultStartUpConfig()
 	startupCfg.GenesisAccounts = accs

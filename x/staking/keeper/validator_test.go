@@ -249,7 +249,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	require.Equal(int64(100), validators[1].GetConsensusPower(keeper.PowerReduction(ctx)))
 
 	// test multiple value change
-	//  tendermintUpdate set: {c1, c3} -> {c1', c3'}
+	// tendermintUpdate set: {c1, c3} -> {c1', c3'}
 	delTokens1 := keeper.TokensFromConsensusPower(ctx, 20)
 	delTokens2 := keeper.TokensFromConsensusPower(ctx, 30)
 	validators[0], _ = validators[0].RemoveDelShares(sdk.NewDecFromInt(delTokens1))
@@ -261,7 +261,7 @@ func (s *KeeperTestSuite) TestApplyAndReturnValidatorSetUpdatesPowerDecrease() {
 	require.Equal(int64(80), validators[0].GetConsensusPower(keeper.PowerReduction(ctx)))
 	require.Equal(int64(70), validators[1].GetConsensusPower(keeper.PowerReduction(ctx)))
 
-	// Tendermint updates should reflect power change
+	// CometBFT updates should reflect power change
 	updates := s.applyValidatorSetUpdates(ctx, keeper, 2)
 	require.Equal(validators[0].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[0])
 	require.Equal(validators[1].ABCIValidatorUpdate(keeper.PowerReduction(ctx)), updates[1])

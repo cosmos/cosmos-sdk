@@ -2,11 +2,11 @@
 // source: cosmos/base/tendermint/v1beta1/query.proto
 
 /*
-Package tmservice is a reverse proxy.
+Package cmtservice is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package tmservice
+package cmtservice
 
 import (
 	"context"

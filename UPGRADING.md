@@ -38,6 +38,9 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 #### GoLevelDB
 
 GoLevelDB version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
+See related issues:
+- [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+- [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
 
 ### Protobuf
 

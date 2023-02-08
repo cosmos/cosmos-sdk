@@ -1,12 +1,12 @@
-package tmservice
+package cmtservice
 
 import (
-	tmprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// convertHeader converts tendermint header to sdk header
-func convertHeader(h tmprototypes.Header) Header {
+// convertHeader converts CometBFT header to sdk header
+func convertHeader(h cmtprototypes.Header) Header {
 	return Header{
 		Version:            h.Version,
 		ChainID:            h.ChainID,
@@ -25,8 +25,8 @@ func convertHeader(h tmprototypes.Header) Header {
 	}
 }
 
-// convertBlock converts tendermint block to sdk block
-func convertBlock(tmblock *tmprototypes.Block) *Block {
+// convertBlock converts CometBFT block to sdk block
+func convertBlock(tmblock *cmtprototypes.Block) *Block {
 	b := new(Block)
 
 	b.Header = convertHeader(tmblock.Header)

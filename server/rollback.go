@@ -36,7 +36,7 @@ application.
 			// rollback CometBFT state
 			height, hash, err := cmtcmd.RollbackState(ctx.Config, removeBlock)
 			if err != nil {
-				return fmt.Errorf("failed to rollback cometbft state: %w", err)
+				return fmt.Errorf("failed to rollback CometBFT state: %w", err)
 			}
 			// rollback the multistore
 

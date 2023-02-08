@@ -213,6 +213,11 @@ func postFixPulsarMessage(msg proto.Message) {
 		_, _, bz := testdata.KeyTestPubAddr()
 		text, _ := bech32.ConvertAndEncode("cosmos", bz)
 		m.BaseAccount.Address = text
+
+		// see negative test
+		if len(m.Permissions) == 0 {
+			m.Permissions = nil
+		}
 	case *authapi.MsgUpdateParams:
 		// params is required in the gogo message
 		if m.Params == nil {

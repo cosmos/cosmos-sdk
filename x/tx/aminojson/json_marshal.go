@@ -40,12 +40,16 @@ func NewAminoJSON() AminoJSON {
 				if keyField == nil {
 					return errors.New(`message encoder for key_field: no field named "key" found`)
 				}
+
 				bz := msg.Get(keyField).Bytes()
-				_, err := fmt.Fprintf(w, `"%s"`, base64.StdEncoding.EncodeToString(bz))
-				if err != nil {
+
+				if len(bz) == 0 {
+					_, err := fmt.Fprint(w, "null")
 					return err
 				}
-				return nil
+
+				_, err := fmt.Fprintf(w, `"%s"`, base64.StdEncoding.EncodeToString(bz))
+				return err
 			},
 			"module_account": moduleAccountEncoder,
 		},
@@ -431,7 +435,7 @@ type typeWrapper struct {
 }
 
 // moduleAccountEncoder replicates the behavior in
-// https://github.com/cosmos/cosmos-sdk/blob/41a3dfeced2953beba3a7d11ec798d17ee19f506/x/auth/types/account.go#L230-L2549
+// https://github.com/cosmos/cosmos-sdk/blob/41a3dfeced2953beba3a7d11ec798d17ee19f506/x/auth/types/account.go#L230-L254
 func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 	ma := msg.Interface().(*authapi.ModuleAccount)
 	pretty := moduleAccountPretty{

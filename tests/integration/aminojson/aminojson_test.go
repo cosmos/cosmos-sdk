@@ -1,7 +1,6 @@
 package aminojson
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
@@ -61,22 +59,7 @@ var equivTypes = []equivalentType{
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
-	//aminoCdc := goamino.NewCodec()
-	//protoCdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
 	aj := aminojson.NewAminoJSON()
-
-	//for _, tt := range equivTypes {
-	//	desc := tt.pulsar.ProtoReflect().Descriptor()
-	//	opts := desc.Options()
-	//	if !proto.HasExtension(opts, amino.E_Name) {
-	//		fmt.Printf("WARN: missing name extension for %s\n", desc.FullName())
-	//		continue
-	//	}
-	//	name := proto.GetExtension(opts, amino.E_Name).(string)
-	//	aminoCdc.RegisterConcrete(tt.gogo, name, nil)
-	//}
-
-	//params := &authapi.Params{}
 
 	for _, tt := range equivTypes {
 		genOpts := rapidproto.GeneratorOptions{
@@ -100,9 +83,11 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 			require.NoError(t, err)
 			legacyAminoJson, err := encCfg.Amino.MarshalJSON(tt.gogo)
 			aminoJson, err := aj.MarshalAmino(msg)
-			if !bytes.Equal(legacyAminoJson, aminoJson) {
-				require.Fail(t, fmt.Sprintf("legacy: %s vs %s", string(legacyAminoJson), string(aminoJson)))
-			}
+			require.Equal(t, string(legacyAminoJson), string(aminoJson),
+				"gogo: %s vs %s", string(legacyAminoJson), string(aminoJson))
+			//if !bytes.Equal(legacyAminoJson, aminoJson) {
+			//	require.Fail(t, fmt.Sprintf("legacy: %s vs %s", string(legacyAminoJson), string(aminoJson)))
+			//}
 		})
 	}
 }
@@ -110,14 +95,6 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 func TestAminoJSON_LegacyParity(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
 		distribution.AppModuleBasic{})
-	//cdc
-	//cdc.RegisterConcrete(authtypes.Params{}, "cosmos-sdk/x/auth/Params", nil)
-	//cdc.RegisterConcrete(disttypes.MsgWithdrawDelegatorReward{}, "cosmos-sdk/MsgWithdrawDelegationReward", nil)
-	//cdc.RegisterConcrete(&ed25519.PubKey{}, cryptotypes.PubKeyName, nil)
-	//cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
-	//cdc.RegisterConcrete(&authtypes.MsgUpdateParams{}, "cosmos-sdk/x/auth/MsgUpdateParams", nil)
-	//cdc.RegisterConcrete(&authztypes.MsgGrant{}, "cosmos-sdk/MsgGrant", nil)
-	//cdc.RegisterConcrete(&authztypes.MsgExec{}, "cosmos-sdk/MsgExec", nil)
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
@@ -132,8 +109,9 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
-			gogo:   &authtypes.ModuleAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(addr1)},
-			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}},
+			gogo: &authtypes.ModuleAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(addr1),
+				Permissions: []string{}},
+			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
@@ -215,23 +193,21 @@ func TestAny(t *testing.T) {
 }
 
 func TestModuleAccount(t *testing.T) {
-	cdc := goamino.NewCodec()
-	params := &authapi.Params{}
-	cdc.RegisterConcrete(&authtypes.ModuleAccount{}, "cosmos-sdk/ModuleAccount", nil)
-	cdc.RegisterConcrete(&authtypes.BaseAccount{}, "cosmos-sdk/BaseAccount", nil)
-	cdc.RegisterConcrete(&authtypes.Params{}, "cosmos-sdk/Params", nil)
-	paramsName := params.ProtoReflect().Descriptor().FullName()
+	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, authzmodule.AppModuleBasic{},
+		distribution.AppModuleBasic{})
 
-	gen := rapidproto.MessageGenerator(&authapi.BaseAccount{}, rapidproto.GeneratorOptions{
-		AnyTypeURLs: []string{string(paramsName)},
-		Resolver:    protoregistry.GlobalTypes,
-	})
-	rapid.Check(t, func(t *rapid.T) {
-		msg := gen.Draw(t, "msg")
-		bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
-		assert.NilError(t, err)
-		gogobz, err := cdc.MarshalJSON(msg)
-		require.NoError(t, err)
-		require.Equal(t, string(gogobz), string(bz), "gogo: %s vs pulsar: %s", string(gogobz), string(bz))
-	})
+	aj := aminojson.NewAminoJSON()
+	addr1 := types.AccAddress([]byte("addr1"))
+	pulsar := &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}}
+	gogo := &authtypes.ModuleAccount{}
+
+	protoBz, err := proto.Marshal(pulsar)
+	require.NoError(t, err)
+	err = encCfg.Codec.Unmarshal(protoBz, gogo)
+	require.NoError(t, err)
+	legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
+	aminoJson, err := aj.MarshalAmino(pulsar)
+	// yes this is expected.  empty []string is not the same as nil []string.  this is a bug in gogo.
+	require.NotEqual(t, string(legacyAminoJson), string(aminoJson),
+		"gogo: %s vs %s", string(legacyAminoJson), string(aminoJson))
 }

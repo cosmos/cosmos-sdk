@@ -68,7 +68,7 @@ var (
 func init() {
 	closeFns := []func() error{}
 	for i := 0; i < 200; i++ {
-		_, port, closeFn, err := FreeTCPAddr()
+		_, port, closeFn, err := server.FreeTCPAddr()
 		if err != nil {
 			panic(err)
 		}
@@ -400,10 +400,11 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			}
 			appCfg.GRPC.Enable = true
 
-			_, grpcWebPort, err := server.FreeTCPAddr()
-			if err != nil {
-				return nil, err
+			if len(portPool) == 0 {
+				return nil, fmt.Errorf("failed to get port for GRPC Web server")
 			}
+
+			grpcWebPort := <-portPool
 			appCfg.GRPCWeb.Address = fmt.Sprintf("0.0.0.0:%s", grpcWebPort)
 			appCfg.GRPCWeb.Enable = true
 		}

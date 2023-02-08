@@ -3,6 +3,8 @@ managed:
   enabled: true
   go_package_prefix:
     default: github.com/cosmos/cosmos-sdk/orm/internal
+    except:
+      - buf.build/googleapis/googleapis
     override:
       buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
 plugins:
@@ -13,5 +15,8 @@ plugins:
     out: .
     opt: paths=source_relative
   - name: go-cosmos-orm
+    out: .
+    opt: paths=source_relative
+  - remote: buf.build/grpc-ecosystem/plugins/grpc-gateway:v2.6.0-1
     out: .
     opt: paths=source_relative

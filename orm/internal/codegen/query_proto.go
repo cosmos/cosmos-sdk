@@ -94,13 +94,13 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 	g.svc.F("rpc %s(%sRequest) returns (%sResponse) {", name, name, name)
 	g.svc.Indent()
 	g.svc.F("option (google.api.http) = {")
-	restName := pluralRestName(msg.Desc.FullName())
+	restPath := makeRestPath(msg.Desc.FullName())
 	g.svc.Indent()
 	var pathSegments []string
 	for _, fieldName := range primaryKeyFields.Names() {
 		pathSegments = append(pathSegments, fmt.Sprintf("{%s}", fieldName))
 	}
-	g.svc.F(`get: "%s/%s"`, restName, strings.Join(pathSegments, "/"))
+	g.svc.F(`get: "/%s/%s"`, restPath, strings.Join(pathSegments, "/"))
 	g.svc.Dedent()
 	g.svc.F("};")
 	g.svc.Dedent()
@@ -137,11 +137,25 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 		fieldsCamel := fieldsToCamelCase(idx.Fields)
 		methodName := fmt.Sprintf("%sBy%s", name, fieldsCamel)
 		g.svc.F("// %s queries the %s table by its %s index", methodName, name, fieldsCamel)
-		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", methodName, methodName, methodName) // TODO grpc gateway
+		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {", methodName, methodName, methodName)
+		g.svc.Indent()
+		g.svc.F("option (google.api.http) = {")
+		g.svc.Indent()
+		var pathSegments []string
+		fieldNames := fieldnames.CommaSeparatedFieldNames(idx.Fields)
+		for _, fieldName := range fieldNames.Names() {
+			pathSegments = append(pathSegments, fmt.Sprintf("{%s}", fieldName))
+		}
+		g.svc.F(`get: "/%s;index=%s/%s"`, restPath,
+			fieldsToKebabCase(idx.Fields),
+			strings.Join(pathSegments, "/"))
+		g.svc.Dedent()
+		g.svc.F("};")
+		g.svc.Dedent()
+		g.svc.F("}")
 
 		g.startRequestType("%sRequest", methodName)
 		g.msgs.Indent()
-		fieldNames := fieldnames.CommaSeparatedFieldNames(idx.Fields)
 		for i, fieldName := range fieldNames.Names() {
 			field := fields.ByName(fieldName)
 			if field == nil {
@@ -164,7 +178,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 	g.imports["cosmos/base/query/v1beta1/pagination.proto"] = true
 
 	// primary key list method
-	pluralMethod := pluralMethodName(name)
+	pluralMethod := makePluralMethodName(name)
 	g.svc.F("// %s queries the %s table using the primary key index.", pluralMethod, name)
 	g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", pluralMethod, pluralMethod, pluralMethod) // TODO grpc gateway
 	keyFields := primaryKeyFields.Names()
@@ -383,7 +397,7 @@ func (w *writer) Dedent() {
 
 var pluralClient = pluralize.NewClient()
 
-func pluralMethodName(name protoreflect.Name) string {
+func makePluralMethodName(name protoreflect.Name) string {
 	str := string(name)
 	if pluralClient.IsPlural(str) {
 		return fmt.Sprintf("List%s", str)
@@ -392,7 +406,7 @@ func pluralMethodName(name protoreflect.Name) string {
 	return pluralClient.Plural(str)
 }
 
-func pluralRestName(fullName protoreflect.FullName) string {
+func makeRestPath(fullName protoreflect.FullName) string {
 	name := fullName.Name()
 	parent := fullName.Parent()
 	url := strings.Replace(string(parent), ".", "/", -1)

@@ -10,6 +10,8 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	ormv1 "cosmossdk.io/api/cosmos/orm/v1"
+
+	"github.com/cosmos/cosmos-sdk/orm/internal/fieldnames"
 )
 
 type fileGen struct {
@@ -181,19 +183,28 @@ func (f fileGen) genStoreConstructor(stores []*protogen.Message) {
 }
 
 func fieldsToCamelCase(fields string) string {
-	splitFields := strings.Split(fields, ",")
+	splitFields := fieldnames.CommaSeparatedFieldNames(fields).Names()
 	camelFields := make([]string, len(splitFields))
 	for i, field := range splitFields {
-		camelFields[i] = strcase.ToCamel(field)
+		camelFields[i] = strcase.ToCamel(string(field))
 	}
 	return strings.Join(camelFields, "")
 }
 
 func fieldsToSnakeCase(fields string) string {
-	splitFields := strings.Split(fields, ",")
+	splitFields := fieldnames.CommaSeparatedFieldNames(fields).Names()
 	camelFields := make([]string, len(splitFields))
 	for i, field := range splitFields {
-		camelFields[i] = strcase.ToSnake(field)
+		camelFields[i] = strcase.ToSnake(string(field))
 	}
 	return strings.Join(camelFields, "_")
+}
+
+func fieldsToKebabCase(fields string) string {
+	splitFields := fieldnames.CommaSeparatedFieldNames(fields).Names()
+	fieldStrs := make([]string, len(splitFields))
+	for i, field := range splitFields {
+		fieldStrs[i] = string(field)
+	}
+	return strings.Join(fieldStrs, "-")
 }

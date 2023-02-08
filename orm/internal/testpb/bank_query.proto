@@ -11,7 +11,7 @@ service BankQueryService {
   // Balance queries the Balance table by its primary key.
   rpc Balance(BalanceRequest) returns (BalanceResponse) {
     option (google.api.http) = {
-      get: "testpb/balances/{address}/{denom}"
+      get: "/testpb/balances/{address}/{denom}"
     };
   }
   // Balances queries the Balance table using the primary key index.
@@ -21,7 +21,7 @@ service BankQueryService {
   // Supply queries the Supply table by its primary key.
   rpc Supply(SupplyRequest) returns (SupplyResponse) {
     option (google.api.http) = {
-      get: "testpb/supplies/{denom}"
+      get: "/testpb/supplies/{denom}"
     };
   }
   // Supplies queries the Supply table using the primary key index.

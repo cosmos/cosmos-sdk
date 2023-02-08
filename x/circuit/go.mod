@@ -4,8 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
-	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230207163452-bd8e9f2d1206
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/regen-network/gocuke v0.6.2
 	google.golang.org/grpc v1.52.3
@@ -35,6 +34,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547 // indirect
 	github.com/cucumber/common/gherkin/go/v22 v22.0.0 // indirect
 	github.com/cucumber/common/messages/go/v17 v17.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

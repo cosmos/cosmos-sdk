@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
 	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
-	"github.com/cosmos/cosmos-sdk/log"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"

@@ -68,9 +68,9 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 		t.Fatal("config.toml created as empty file")
 	}
 
-	// Test that tendermint config is initialized
+	// Test that cometbft config is initialized
 	if serverCtx.Config == nil {
-		t.Fatal("tendermint config not created")
+		t.Fatal("cometbft config not created")
 	}
 
 	// Test that app.toml is created

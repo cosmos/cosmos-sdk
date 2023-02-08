@@ -22,8 +22,9 @@ import (
 // ValidatorCommand returns the validator set for a given height
 func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tendermint-validator-set [height]",
-		Short: "Get the full tendermint validator set at given height",
+		Use:   "comet-validator-set [height]",
+		Aliases: []string{"cometbft-validator-set", "tendermint-validator-set"},
+		Short: "Get the full cometbft validator set at given height",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

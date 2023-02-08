@@ -277,16 +277,11 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-	// Clean up the traceWriter in the cpuProfileCleanup routine that is invoked
-	// when the server is shutting down.
-	fn := cpuProfileCleanup
-	cpuProfileCleanup = func() {
-		if fn != nil {
-			fn()
-		}
-
-		// if flagTraceStore is not used then traceWriter is nil
-		if traceWriter != nil {
+	// Clean up the traceWriter when the server is shutting down.
+	var traceWriterCleanup func()
+	// if flagTraceStore is not used then traceWriter is nil
+	if traceWriter != nil {
+		traceWriterCleanup = func() {
 			if err = traceWriter.Close(); err != nil {
 				ctx.Logger.Error("failed to close trace writer", "err", err)
 			}
@@ -457,6 +452,10 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+		}
+
+		if traceWriterCleanup != nil {
+			traceWriterCleanup()
 		}
 
 		if apiSrv != nil {

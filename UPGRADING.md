@@ -35,6 +35,10 @@ ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsup
 
 <!-- TODO: write database migration tool -->
 
+#### GoLevelDB
+
+GoLevelDB version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
+
 ### Protobuf
 
 The SDK is in the process of removing all `gogoproto` annotations.

@@ -1,10 +1,10 @@
 package v2
 
 import (
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -7,6 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-20230104083136-11f46a0bae58
 	cosmossdk.io/core v0.5.1
 	cosmossdk.io/depinject v1.0.0-alpha.3
+	cosmossdk.io/log v0.0.0
 	cosmossdk.io/math v1.0.0-beta.6
 	cosmossdk.io/store v0.0.0-20230206092147-e03195e4b8a7
 	cosmossdk.io/tools/confix v0.0.0-20230120150717-4f6f6c00021f
@@ -20,7 +21,6 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2
-	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547
 	github.com/golang/mock v1.6.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
@@ -188,17 +188,20 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// TODO update/remove after v0.37.x tag of CometBFT
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-
-// TODO tag all extracted modules after SDK refactor
+// Here are the short-lived replace from the SimApp
+// Replace here are pending PRs, or version to be tagged
 replace (
+	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/log => ../log
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
+	// TODO update/remove after v0.37.x tag of CometBFT
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 )
 
+// Below are the long-lived replace of the SimApp
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

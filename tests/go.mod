@@ -16,7 +16,6 @@ require (
 	github.com/cosmos/cosmos-db v1.0.0-rc.1
 	// this version is not used as it is always replaced by the latest cosmos-sdk version
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2
-	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547
 	github.com/cosmos/gogoproto v1.4.4
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
@@ -26,6 +25,8 @@ require (
 	gotest.tools/v3 v3.4.0
 	pgregory.net/rapid v0.5.5
 )
+
+require cosmossdk.io/log v0.0.0
 
 require (
 	cloud.google.com/go v0.105.0 // indirect
@@ -125,6 +126,7 @@ require (
 	github.com/linxGnu/grocksdb v1.7.14 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
@@ -145,6 +147,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/rs/cors v1.8.3 // indirect
+	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
@@ -180,17 +183,21 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// This can be deleted after the CometBFT PR is merged
-replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-
-// TODO tag all extracted modules after SDK refactor
+// Here are the short-lived replaced for tests
+// Replace here are pending PRs, or version to be tagged.
+// It must be in sync with SimApp temporary replaces
 replace (
+	// TODO tag all extracted modules after SDK refactor
+	cosmossdk.io/log => ../log
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/upgrade => ../x/upgrade
+	// This can be deleted after the CometBFT PR is merged
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 )
 
+// Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp

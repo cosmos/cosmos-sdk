@@ -206,7 +206,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 	}
 
 	var genesis cmttypes.GenesisDoc
-	// NOTE: CometNFT uses a custom JSON decoder for GenesisDoc
+	// NOTE: CometBFT uses a custom JSON decoder for GenesisDoc
 	err = cmtjson.Unmarshal(bytes, &genesis)
 	if err != nil {
 		panic(err)

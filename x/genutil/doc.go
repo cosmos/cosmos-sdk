@@ -5,6 +5,6 @@ for usage within a blockchain application. Namely:
   - commands for collection and creation of gentxs
   - initchain processing of gentxs
   - Genesis file validation
-  - Tendermint related initialization
+  - CometBFT related initialization
 */
 package genutil

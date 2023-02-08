@@ -23,11 +23,13 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -363,15 +365,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.APIAddress != "" {
 				apiListenAddr = cfg.APIAddress
 			} else {
-<<<<<<< HEAD
-				var err error
-				apiListenAddr, _, err = server.FreeTCPAddr()
-				if err != nil {
-					return nil, err
-=======
 				if len(portPool) == 0 {
 					return nil, fmt.Errorf("failed to get port for API server")
->>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 				}
 				port := <-portPool
 				apiListenAddr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
@@ -387,14 +382,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.RPCAddress != "" {
 				tmCfg.RPC.ListenAddress = cfg.RPCAddress
 			} else {
-<<<<<<< HEAD
-				rpcAddr, _, err := server.FreeTCPAddr()
-				if err != nil {
-					return nil, err
-=======
 				if len(portPool) == 0 {
 					return nil, fmt.Errorf("failed to get port for RPC server")
->>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 				}
 				port := <-portPool
 				tmCfg.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%s", port)
@@ -403,14 +392,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			if cfg.GRPCAddress != "" {
 				appCfg.GRPC.Address = cfg.GRPCAddress
 			} else {
-<<<<<<< HEAD
-				_, grpcPort, err := server.FreeTCPAddr()
-				if err != nil {
-					return nil, err
-=======
 				if len(portPool) == 0 {
 					return nil, fmt.Errorf("failed to get port for GRPC server")
->>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 				}
 				port := <-portPool
 				appCfg.GRPC.Address = fmt.Sprintf("0.0.0.0:%s", port)
@@ -451,27 +434,15 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		tmCfg.Moniker = nodeDirName
 		monikers[i] = nodeDirName
 
-<<<<<<< HEAD
-		proxyAddr, _, err := server.FreeTCPAddr()
-		if err != nil {
-			return nil, err
-=======
 		if len(portPool) == 0 {
 			return nil, fmt.Errorf("failed to get port for Proxy server")
->>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 		}
 		port := <-portPool
 		proxyAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)
 		tmCfg.ProxyApp = proxyAddr
 
-<<<<<<< HEAD
-		p2pAddr, _, err := server.FreeTCPAddr()
-		if err != nil {
-			return nil, err
-=======
 		if len(portPool) == 0 {
 			return nil, fmt.Errorf("failed to get port for Proxy server")
->>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 		}
 		port = <-portPool
 		p2pAddr := fmt.Sprintf("tcp://0.0.0.0:%s", port)

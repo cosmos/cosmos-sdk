@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -208,11 +209,7 @@ func TestStartStandAlone(t *testing.T) {
 	app, err := mock.NewApp(home, logger)
 	require.NoError(t, err)
 
-<<<<<<< HEAD
-	svrAddr, _, err := server.FreeTCPAddr()
-=======
 	svrAddr, _, closeFn, err := network.FreeTCPAddr()
->>>>>>> 5e57be076 (test: use a queue of open ports for tests (#14893))
 	require.NoError(t, err)
 	require.NoError(t, closeFn())
 

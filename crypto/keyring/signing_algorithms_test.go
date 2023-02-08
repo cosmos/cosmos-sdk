@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewSigningAlgoByString(t *testing.T) {
@@ -29,7 +28,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"notsupportedalgo",
 			false,
 			nil,
-			fmt.Errorf("provided algorithm \"notsupportedalgo\" is not supported"),
+			ErrAlgoNotSupported,
 		},
 	}
 
@@ -41,7 +40,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			if tt.isSupported {
 				require.Equal(t, hd.Secp256k1, algorithm)
 			} else {
-				require.EqualError(t, err, tt.expectedErr.Error())
+				require.ErrorIs(t, err, tt.expectedErr)
 			}
 		})
 	}

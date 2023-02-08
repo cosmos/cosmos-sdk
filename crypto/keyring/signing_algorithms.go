@@ -1,10 +1,14 @@
 package keyring
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/cockroachdb/errors"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"strings"
+)
+
+var (
+	// ErrAlgoNotSupported is used when an algo is not on the supported SigningAlgoList.
+	ErrAlgoNotSupported = errors.New("algorithm is not supported")
 )
 
 // SignatureAlgo defines the interface for a keyring supported algorithm.
@@ -21,7 +25,7 @@ func NewSigningAlgoFromString(str string, algoList SigningAlgoList) (SignatureAl
 			return algo, nil
 		}
 	}
-	return nil, fmt.Errorf("provided algorithm %q is not supported", str)
+	return nil, errors.Wrap(ErrAlgoNotSupported, str)
 }
 
 // SigningAlgoList is a slice of signature algorithms

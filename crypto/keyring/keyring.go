@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/99designs/keyring"
+	"github.com/cockroachdb/errors"
 	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/pkg/errors"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -386,8 +386,7 @@ func (ks keystore) Sign(uid string, msg []byte, signMode signing.SignMode) ([]by
 		if err != nil {
 			return nil, nil, err
 		}
-
-		return nil, pub, errors.New("cannot sign with offline keys")
+		return nil, pub, ErrOfflineSign
 	}
 }
 
@@ -512,7 +511,7 @@ func (ks keystore) KeyByAddress(address sdk.Address) (*Record, error) {
 
 func wrapKeyNotFound(err error, msg string) error {
 	if err == keyring.ErrKeyNotFound {
-		return sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, msg)
+		return errors.Wrap(sdkerrors.ErrKeyNotFound, msg)
 	}
 	return err
 }
@@ -567,11 +566,11 @@ func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase stri
 
 	privKey := algo.Generate()(derivedPriv)
 
-	// check if the a key already exists with the same address and return an error
+	// check if the key already exists with the same address and return an error
 	// if found
 	address := sdk.AccAddress(privKey.PubKey().Address())
 	if _, err := ks.KeyByAddress(address); err == nil {
-		return nil, errors.New("duplicated address created")
+		return nil, ErrDuplicatedAddress
 	}
 
 	return ks.writeLocalKey(name, privKey)
@@ -602,7 +601,7 @@ func (ks keystore) SupportedAlgorithms() (SigningAlgoList, SigningAlgoList) {
 func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byte, pub types.PubKey, err error) {
 	ledgerInfo := k.GetLedger()
 	if ledgerInfo == nil {
-		return nil, nil, errors.New("not a ledger object")
+		return nil, nil, ErrNotLedgerObj
 	}
 
 	path := ledgerInfo.GetPath()
@@ -628,7 +627,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 	}
 
 	if !priv.PubKey().VerifySignature(msg, sig) {
-		return nil, nil, errors.New("Ledger generated an invalid signature. Perhaps you have multiple ledgers and need to try another one")
+		return nil, nil, ErrLedgerInvalidSignature
 	}
 
 	return sig, priv.PubKey(), nil
@@ -927,7 +926,7 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	}
 
 	if len(item.Data) == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, key)
+		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, key)
 	}
 
 	// 2. Try to deserialize using proto
@@ -984,7 +983,7 @@ func (ks keystore) SetItem(item keyring.Item) error {
 
 func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 	if info == nil {
-		return nil, errors.New("unable to convert LegacyInfo to Record cause info is nil")
+		return nil, errors.Wrap(ErrLegacyToRecord, "info is nil")
 	}
 
 	name := info.GetName()
@@ -1010,7 +1009,7 @@ func (ks keystore) convertFromLegacyInfo(info LegacyInfo) (*Record, error) {
 
 		return NewLedgerRecord(name, pk, path)
 	default:
-		return nil, errors.New("unknown LegacyInfo type")
+		return nil, ErrUnknownLegacyType
 
 	}
 }

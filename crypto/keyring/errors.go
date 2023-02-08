@@ -1,13 +1,24 @@
 package keyring
 
-import "github.com/pkg/errors"
+import "github.com/cockroachdb/errors"
 
 var (
 	// ErrUnsupportedSigningAlgo is raised when the caller tries to use a
 	// different signing scheme than secp256k1.
 	ErrUnsupportedSigningAlgo = errors.New("unsupported signing algo")
-
 	// ErrUnsupportedLanguage is raised when the caller tries to use a
 	// different language than english for creating a mnemonic sentence.
 	ErrUnsupportedLanguage = errors.New("unsupported language: only english is supported")
+	// ErrOfflineSign is raised when trying to sign offline record.
+	ErrOfflineSign = errors.New("cannot sign with offline keys")
+	// ErrDuplicatedAddress is raised when creating a key with the same address as a key that already exists.
+	ErrDuplicatedAddress = errors.New("duplicated address created")
+	// ErrNotLedgerObj is raised when record.GetLedger() returns nil.
+	ErrNotLedgerObj = errors.New("not a ledger object")
+	// ErrLedgerInvalidSignature is raised when ledger generates an invalid signature.
+	ErrLedgerInvalidSignature = errors.New("Ledger generated an invalid signature. Perhaps you have multiple ledgers and need to try another one")
+	// ErrLegacyToRecord is raised when cannot be converted to a Record
+	ErrLegacyToRecord = errors.New("unable to convert LegacyInfo to Record")
+	// ErrUnknownLegacyType is raised when a LegacyInfo type is unknown.
+	ErrUnknownLegacyType = errors.New("unknown LegacyInfo type")
 )

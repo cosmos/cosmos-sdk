@@ -24,7 +24,7 @@ const (
 	DefaultAddr = ":8080"
 	// DefaultRetries is the default number of retries
 	DefaultRetries = 5
-	// DefaultCometEndpoint is the default value for the CometNFT endpoint
+	// DefaultCometEndpoint is the default value for the CometBFT endpoint
 	DefaultCometEndpoint = "localhost:26657"
 	// DefaultGRPCEndpoint is the default value for the gRPC endpoint
 	DefaultGRPCEndpoint = "localhost:9090"

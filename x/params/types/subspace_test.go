@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/depinject"

@@ -3,18 +3,27 @@ syntax = "proto3";
 package testpb;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "google/api/annotations.proto";
 import "testpb/bank.proto";
 
 // BankQueryService queries the state of the tables specified by testpb/bank.proto.
 service BankQueryService {
   // Balance queries the Balance table by its primary key.
-  rpc Balance(BalanceRequest) returns (BalanceResponse) {}
+  rpc Balance(BalanceRequest) returns (BalanceResponse) {
+    option (google.api.http) = {
+      get: "testpb/balances/{address}/{denom}"
+    };
+  }
   // Balances queries the Balance table using the primary key index.
   rpc Balances(BalancesRequest) returns (BalancesResponse) {}
   // BalancesByDenom queries the Balance table using the primary key index.
   rpc BalancesByDenom(BalancesByDenomRequest) returns (BalancesByDenomResponse) {}
   // Supply queries the Supply table by its primary key.
-  rpc Supply(SupplyRequest) returns (SupplyResponse) {}
+  rpc Supply(SupplyRequest) returns (SupplyResponse) {
+    option (google.api.http) = {
+      get: "testpb/supplies/{denom}"
+    };
+  }
   // Supplies queries the Supply table using the primary key index.
   rpc Supplies(SuppliesRequest) returns (SuppliesResponse) {}
 }

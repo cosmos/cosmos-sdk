@@ -10,9 +10,9 @@ import (
 // Defines commons keys for logging
 const ModuleKey = "module"
 
-var LoggerKey struct{}
+var ContextKey struct{}
 
-func NewLogger(key, value string) *zerolog.Logger {
+func NewZeroLogger(key, value string) *zerolog.Logger {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.Kitchen}
 	logger := zerolog.New(output).With().Str(key, value).Timestamp().Logger()
 	return &logger

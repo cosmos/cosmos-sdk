@@ -459,7 +459,6 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
-		changeSet = nil
 	}
 
 	app.logger.Info("commit synced", "commit", fmt.Sprintf("%X", commitID))

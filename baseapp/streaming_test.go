@@ -46,9 +46,7 @@ func (m *MockABCIListener) ListenCommit(ctx context.Context, res abci.ResponseCo
 	return nil
 }
 
-var (
-	distKey1 = storetypes.NewKVStoreKey("distKey1")
-)
+var distKey1 = storetypes.NewKVStoreKey("distKey1")
 
 func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	anteKey := []byte("ante-key")

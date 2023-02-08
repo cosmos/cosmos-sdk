@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"

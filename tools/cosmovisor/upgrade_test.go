@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -93,7 +94,7 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg cosmovisor.Config, target strin
 func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	home := copyTestData(s.T(), "validate")
 	cfg := &cosmovisor.Config{Home: home, Name: "dummyd", AllowDownloadBinaries: true}
-	logger := cosmovisor.NewLogger()
+	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
 
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -126,7 +127,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 }
 
 func (s *upgradeTestSuite) TestUpgradeBinary() {
-	logger := cosmovisor.NewLogger()
+	logger := log.NewZeroLogger(log.ModuleKey, "cosmovisor")
 
 	cases := map[string]struct {
 		url         string

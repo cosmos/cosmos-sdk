@@ -16,6 +16,8 @@ import (
 //   - 4 fixed bytes with the bit mask 0xC0 applied to the first byte
 //
 // When iterating over timestamp indexes, nil values will always be ordered last.
+//
+// Values for seconds and nanos outside the ranges specified by google.protobuf.Timestamp will be rejected.
 type TimestampCodec struct{}
 
 const (

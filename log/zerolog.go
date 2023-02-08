@@ -23,7 +23,7 @@ func NewZeroLogger(key, value string) *zerolog.Logger {
 	return &logger
 }
 
-// TODO: add filtered logging in ZeroLog: https://github.com/cosmos/cosmos-sdk/pull/13236
+// TODO: add filtered logging in ZeroLog: https://github.com/cosmos/cosmos-sdk/pull/13236 / https://github.com/cosmos/cosmos-sdk/issues/13699#issuecomment-1354887644
 
 // ZeroLogWrapper provides a wrapper around a zerolog.Logger instance. It implements
 // Tendermint's Logger interface.

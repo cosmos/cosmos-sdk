@@ -7,11 +7,19 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 ### Consensus Engine
 
 The Cosmos SDK has migrated to CometBFT as its default consensus engine.
-This is a breaking changes that needs chains to re-generate their protos.
-Some functions has been renamed to reflect the naming change, following an exhaustive list:
+CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
+Due to the import changes, this is a breaking change that needs chains to re-generate their protos.
+Some functions have been renamed to reflect the naming change, following an exhaustive list:
 
 * `client.TendermintRPC` -> `client.CometRPC`
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
+* Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+
+Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.
+However, these commands and flags is still supported for backward compatibility.
+
+For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
 
 ### Configuration
 

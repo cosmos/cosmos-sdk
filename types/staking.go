@@ -11,8 +11,8 @@ import (
 // validators are expected to sign blocks beginning at block 11+X.
 //
 // This value is constant as this should not change without a hard fork.
-// For Tendermint this should be set to 1 block, for more details see:
-// https://tendermint.com/docs/spec/abci/apps.html#endblock
+// For CometBFT this should be set to 1 block, for more details see:
+// https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#consensusblock-execution-methods
 const ValidatorUpdateDelay int64 = 1
 
 var (

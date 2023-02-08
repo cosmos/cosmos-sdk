@@ -198,7 +198,7 @@ func writeFile(name string, dir string, contents []byte) error {
 	return nil
 }
 
-// Get a free address for a test tendermint server
+// Get a free address for a test CometBFT server
 // protocol is either tcp, http, etc
 func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 	l, err := net.Listen("tcp", "localhost:0")

@@ -5,7 +5,7 @@ import (
 
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
-	tversion "github.com/cometbft/cometbft/version"
+	cmtversion "github.com/cometbft/cometbft/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
@@ -49,7 +49,7 @@ func ShowValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			sdkPK, err := cryptocodec.FromTmPubKeyInterface(pk)
+			sdkPK, err := cryptocodec.FromCmtPubKeyInterface(pk)
 			if err != nil {
 				return err
 			}
@@ -96,21 +96,21 @@ func VersionCmd() *cobra.Command {
 		Long:  "Print protocols' and libraries' version numbers against which this app has been compiled.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bs, err := yaml.Marshal(&struct {
-				Tendermint    string
+				CometBFT      string
 				ABCI          string
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				Tendermint:    tversion.TMCoreSemVer,
-				ABCI:          tversion.ABCIVersion,
-				BlockProtocol: tversion.BlockProtocol,
-				P2PProtocol:   tversion.P2PProtocol,
+				CometBFT:      cmtversion.TMCoreSemVer,
+				ABCI:          cmtversion.ABCIVersion,
+				BlockProtocol: cmtversion.BlockProtocol,
+				P2PProtocol:   cmtversion.P2PProtocol,
 			})
 			if err != nil {
 				return err
 			}
 
-			fmt.Println(string(bs))
+			cmd.Print(string(bs))
 			return nil
 		},
 	}

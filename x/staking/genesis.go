@@ -19,15 +19,15 @@ func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.Ge
 			returnErr = err
 			return true
 		}
-		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
 		if err != nil {
 			returnErr = err
 			return true
 		}
 
 		vals = append(vals, cmttypes.GenesisValidator{
-			Address: sdk.ConsAddress(tmPk.Address()).Bytes(),
-			PubKey:  tmPk,
+			Address: sdk.ConsAddress(cmtPk.Address()).Bytes(),
+			PubKey:  cmtPk,
 			Power:   validator.GetConsensusPower(keeper.PowerReduction(ctx)),
 			Name:    validator.GetMoniker(),
 		})

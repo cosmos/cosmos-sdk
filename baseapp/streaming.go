@@ -33,11 +33,11 @@ func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, ke
 			logLevel := cast.ToString(appOpts.Get(flags.FlagLogLevel))
 			plugin, err := streaming.NewStreamingPlugin(pluginName, logLevel)
 			if err != nil {
-				fmt.Printf("failed to load streaming plugin: %s", err)
+				app.logger.Error("failed to load streaming plugin", "error", err)
 				os.Exit(1)
 			}
 			if err := app.registerStreamingPlugin(appOpts, keys, plugin); err != nil {
-				fmt.Printf("failed to register streaming plugin: %s", err)
+				app.logger.Error("failed to register streaming plugin", "error", err)
 				os.Exit(1)
 			}
 		}

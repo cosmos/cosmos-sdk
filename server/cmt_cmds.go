@@ -92,7 +92,7 @@ func ShowAddressCmd() *cobra.Command {
 func VersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Print CometBFT and ABCI version numbers",
+		Short: "Print CometBFT libraries' version",
 		Long:  "Print protocols' and libraries' version numbers against which this app has been compiled.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			bs, err := yaml.Marshal(&struct {

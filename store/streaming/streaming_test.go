@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"

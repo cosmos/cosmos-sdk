@@ -3,8 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.19
 
 require (
-	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
-	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
+	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230207163452-bd8e9f2d1206
 	github.com/creachadair/atomicfile v0.2.8
 	github.com/creachadair/tomledit v0.0.24
 	github.com/spf13/cobra v1.6.1
@@ -44,6 +43,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.1 // indirect
+	github.com/cosmos/cosmos-sdk/log v0.0.0-20230205202151-a4539a4ee547 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.4.4 // indirect

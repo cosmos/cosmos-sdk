@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/store/gaskv"

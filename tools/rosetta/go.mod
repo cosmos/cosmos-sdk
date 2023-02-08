@@ -3,11 +3,11 @@ module cosmossdk.io/tools/rosetta
 go 1.19
 
 require (
+	cosmossdk.io/log v0.0.0
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
-	// TODO to replace by a tagged version of the SDK (with CometBFT) when available
 	github.com/cosmos/cosmos-sdk v0.46.0-beta2.0.20230205135133-41a3dfeced29
 	github.com/cosmos/rosetta-sdk-go v0.10.0
 	github.com/rs/zerolog v1.29.0
@@ -53,6 +53,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
+	github.com/fatih/color v1.13.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/getsentry/sentry-go v0.17.0 // indirect
@@ -75,10 +76,13 @@ require (
 	github.com/gtank/merlin v0.1.1 // indirect
 	github.com/gtank/ristretto255 v0.1.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-hclog v1.2.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/go-plugin v1.4.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
@@ -93,8 +97,10 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
+	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
+	github.com/oklog/run v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/petermattis/goid v0.0.0-20221215004737-a150e88a970d // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -132,4 +138,14 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+// Here are the short-lived replace of Rosetta
+// Replace here are pending PRs, or version to be tagged
+replace (
+	cosmossdk.io/log => ../../log
+	// This can be removed when https://github.com/cosmos/cosmos-sdk/pull/14207 is merged and /store is bumped
+	cosmossdk.io/store => ../../store
+	// TODO use instead a tagged version of the SDK (with CometBFT) when available
+	github.com/cosmos/cosmos-sdk => ../..
 )

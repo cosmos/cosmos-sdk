@@ -142,52 +142,10 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 // BuildQueryMethodCommand creates a gRPC query command for the given service method. This can be used to auto-generate
 // just a single command for a single service rpc method.
 func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	if options == nil {
-		// use the defaults
-		options = &autocliv1.RpcCommandOptions{}
-	}
-
-	if options.Skip {
-		return nil, nil
-	}
-
-	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
-
-	long := options.Long
-	if long == "" {
-		long = util.DescriptorDocs(descriptor)
-	}
-
 	getClientConn := b.GetClientConn
+	serviceDescriptor := descriptor.Parent().(protoreflect.ServiceDescriptor)
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
-
-	inputDesc := descriptor.Input()
-	inputType := util.ResolveMessageType(b.TypeResolver, inputDesc)
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
-
-	use := options.Use
-	if use == "" {
-		use = protoNameToCliName(descriptor.Name())
-	}
-
-	cmd := &cobra.Command{
-		Use:        use,
-		Long:       long,
-		Short:      options.Short,
-		Example:    options.Example,
-		Aliases:    options.Alias,
-		SuggestFor: options.SuggestFor,
-		Deprecated: options.Deprecated,
-		Version:    options.Version,
-	}
-
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd.Args = binder.CobraArgs
-
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",
 		UseProtoNames:   true,
@@ -196,13 +154,8 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 		Resolver:        b.TypeResolver,
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
 		clientConn, err := getClientConn(cmd)
-		if err != nil {
-			return err
-		}
-
-		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err
 		}
@@ -221,6 +174,9 @@ func (b *Builder) BuildQueryMethodCommand(descriptor protoreflect.MethodDescript
 
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 		return err
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	if b.AddQueryConnFlags != nil {

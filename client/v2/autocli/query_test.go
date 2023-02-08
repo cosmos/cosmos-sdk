@@ -181,7 +181,7 @@ func TestOptions(t *testing.T) {
 		"echo",
 		"1", "abc", `{"denom":"foo","amount":"1"}`,
 		"-u", "27", // shorthand
-		"--u64", // no opt default value
+		"--u64", "10", // no opt default value
 	)
 	lastReq := conn.lastRequest.(*testpb.EchoRequest)
 	assert.Equal(t, uint32(27), lastReq.U32) // shorthand got set

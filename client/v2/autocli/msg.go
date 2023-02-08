@@ -1,11 +1,10 @@
 package autocli
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/client/v2/internal/util"
 	"fmt"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/cockroachdb/errors"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -140,44 +139,6 @@ func (b *Builder) AddMsgServiceCommands(cmd *cobra.Command, cmdDescriptor *autoc
 }
 
 func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor, options *autocliv1.RpcCommandOptions) (*cobra.Command, error) {
-	if options == nil {
-		options = &autocliv1.RpcCommandOptions{}
-	}
-
-	if options.Skip {
-		return nil, nil
-	}
-
-	long := options.Long
-	if long == "" {
-		long = util.DescriptorDocs(descriptor)
-	}
-
-	inputType := util.ResolveMessageType(b.TypeResolver, descriptor.Input())
-
-	use := options.Use
-
-	if use == "" {
-		use = protoNameToCliName(descriptor.Name())
-	}
-
-	cmd := &cobra.Command{
-		Use:        use,
-		Long:       long,
-		Short:      options.Short,
-		Example:    options.Example,
-		Aliases:    options.Alias,
-		SuggestFor: options.SuggestFor,
-		Deprecated: options.Deprecated,
-		Version:    options.Version,
-	}
-
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
-	if err != nil {
-		return nil, err
-	}
-	cmd.Args = binder.CobraArgs
-
 	jsonMarshalOptions := protojson.MarshalOptions{
 		Indent:          "  ",
 		UseProtoNames:   true,
@@ -186,18 +147,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		Resolver:        b.TypeResolver,
 	}
 
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		input, err := binder.BuildMessage(args)
-		if err != nil {
-			return err
-		}
-
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(inputType.Descriptor().FullName())
-		fmt.Println("-------")
+	return b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {
 		bz, err := jsonMarshalOptions.Marshal(input.Interface())
 		if err != nil {
 			return err
@@ -205,10 +155,5 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 
 		_, err = fmt.Fprintln(cmd.OutOrStdout(), string(bz))
 		return err
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd, nil
-
+	})
 }

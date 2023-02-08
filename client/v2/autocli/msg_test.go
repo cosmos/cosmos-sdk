@@ -121,11 +121,12 @@ func TestMsgOptions(t *testing.T) {
 	conn := testMsgExec(t,
 		"send", "5", "6",
 		"--uint32", "7",
-		"--u64", "5",
+		"--u64",
 	)
 	response := conn.out.String()
 	var output testpb.MsgRequest
-	json.Unmarshal([]byte(response), &output)
+	err := json.Unmarshal([]byte(response), &output)
+	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(7))
 	assert.Equal(t, output.GetU64(), uint64(0))
 	assert.Equal(t, output.GetPositional1(), int32(5))
@@ -190,7 +191,8 @@ func TestEverythingMsg(t *testing.T) {
 	fmt.Println(response)
 	var output testpb.MsgRequest
 	fmt.Println(output.U64)
-	json.Unmarshal([]byte(response), &output)
+	err := json.Unmarshal([]byte(response), &output)
+	assert.NilError(t, err)
 	assert.Equal(t, output.GetU32(), uint32(27))
 	//assert.Equal(t, output.GetU64(), uint64(5))
 	assert.Equal(t, output.GetPositional1(), int32(1))

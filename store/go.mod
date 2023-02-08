@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
+	cosmossdk.io/log v0.0.0-00010101000000-000000000000
 	cosmossdk.io/math v1.0.0-beta.6
 	github.com/armon/go-metrics v0.4.1
 	github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
@@ -23,8 +24,6 @@ require (
 	google.golang.org/protobuf v1.28.2-0.20230130093322-0430d694e04a // indirect
 	gotest.tools/v3 v3.4.0
 )
-
-require cosmossdk.io/log v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect

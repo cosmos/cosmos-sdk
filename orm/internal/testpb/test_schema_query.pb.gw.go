@@ -195,6 +195,150 @@ func local_request_TestSchemaQueryService_ExampleTableByU64Str_0(ctx context.Con
 
 }
 
+var (
+	filter_TestSchemaQueryService_ExampleTables_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleTables_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTables_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleTables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleTables_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTables_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleTables(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_ExampleTablesByU64Str_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleTablesByU64Str_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesByU64StrRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTablesByU64Str_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleTablesByU64Str(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleTablesByU64Str_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesByU64StrRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTablesByU64Str_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleTablesByU64Str(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_ExampleTablesByStrU32_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleTablesByStrU32_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesByStrU32Request
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTablesByStrU32_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleTablesByStrU32(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleTablesByStrU32_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesByStrU32Request
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTablesByStrU32_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleTablesByStrU32(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_ExampleTablesByBzStr_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleTablesByBzStr_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesByBzStrRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTablesByBzStr_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleTablesByBzStr(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleTablesByBzStr_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTablesByBzStrRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTablesByBzStr_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleTablesByBzStr(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_TestSchemaQueryService_ExampleAutoIncrementTable_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ExampleAutoIncrementTableRequest
 	var metadata runtime.ServerMetadata
@@ -299,6 +443,78 @@ func local_request_TestSchemaQueryService_ExampleAutoIncrementTableByX_0(ctx con
 
 }
 
+var (
+	filter_TestSchemaQueryService_ExampleAutoIncrementTables_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleAutoIncrementTables_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleAutoIncrementTablesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleAutoIncrementTables_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleAutoIncrementTables(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleAutoIncrementTables_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleAutoIncrementTablesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleAutoIncrementTables_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleAutoIncrementTables(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleAutoIncrementTablesByXRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleAutoIncrementTablesByX(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleAutoIncrementTablesByXRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleAutoIncrementTablesByX(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_TestSchemaQueryService_ExampleTimestamp_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ExampleTimestampRequest
 	var metadata runtime.ServerMetadata
@@ -347,6 +563,78 @@ func local_request_TestSchemaQueryService_ExampleTimestamp_0(ctx context.Context
 	}
 
 	msg, err := server.ExampleTimestamp(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_ExampleTimestamps_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleTimestamps_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTimestampsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTimestamps_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleTimestamps(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleTimestamps_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTimestampsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTimestamps_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleTimestamps(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_ExampleTimestampsByTs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleTimestampsByTs_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTimestampsByTsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTimestampsByTs_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleTimestampsByTs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleTimestampsByTs_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleTimestampsByTsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleTimestampsByTs_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleTimestampsByTs(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -455,6 +743,78 @@ func local_request_TestSchemaQueryService_SimpleExampleByUnique_0(ctx context.Co
 
 }
 
+var (
+	filter_TestSchemaQueryService_SimpleExamples_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_SimpleExamples_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SimpleExamplesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_SimpleExamples_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.SimpleExamples(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_SimpleExamples_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SimpleExamplesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_SimpleExamples_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.SimpleExamples(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_TestSchemaQueryService_SimpleExamplesByUnique_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_SimpleExamplesByUnique_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SimpleExamplesByUniqueRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_SimpleExamplesByUnique_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.SimpleExamplesByUnique(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_SimpleExamplesByUnique_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SimpleExamplesByUniqueRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_SimpleExamplesByUnique_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.SimpleExamplesByUnique(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_TestSchemaQueryService_ExampleAutoIncFieldName_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ExampleAutoIncFieldNameRequest
 	var metadata runtime.ServerMetadata
@@ -507,6 +867,42 @@ func local_request_TestSchemaQueryService_ExampleAutoIncFieldName_0(ctx context.
 
 }
 
+var (
+	filter_TestSchemaQueryService_ExampleAutoIncFieldNames_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_TestSchemaQueryService_ExampleAutoIncFieldNames_0(ctx context.Context, marshaler runtime.Marshaler, client TestSchemaQueryServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleAutoIncFieldNamesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleAutoIncFieldNames_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ExampleAutoIncFieldNames(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_TestSchemaQueryService_ExampleAutoIncFieldNames_0(ctx context.Context, marshaler runtime.Marshaler, server TestSchemaQueryServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ExampleAutoIncFieldNamesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_TestSchemaQueryService_ExampleAutoIncFieldNames_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ExampleAutoIncFieldNames(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 // RegisterTestSchemaQueryServiceHandlerServer registers the http handlers for service TestSchemaQueryService to "mux".
 // UnaryRPC     :call TestSchemaQueryServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -542,7 +938,7 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTableByU64Str", runtime.WithHTTPPathPattern("/testpb/example_tables;index=u64-str/{u64}/{str}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTableByU64Str", runtime.WithHTTPPathPattern("/testpb/example_tables.u64-str/{u64}/{str}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -556,6 +952,98 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleTableByU64Str_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTables", runtime.WithHTTPPathPattern("/testpb/example_tables"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleTables_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTables_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTablesByU64Str_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTablesByU64Str", runtime.WithHTTPPathPattern("/testpb/example_tables.u64-str"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleTablesByU64Str_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTablesByU64Str_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTablesByStrU32_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTablesByStrU32", runtime.WithHTTPPathPattern("/testpb/example_tables.str-u32"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleTablesByStrU32_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTablesByStrU32_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTablesByBzStr_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTablesByBzStr", runtime.WithHTTPPathPattern("/testpb/example_tables.bz-str"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleTablesByBzStr_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTablesByBzStr_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -588,7 +1076,7 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTableByX", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables;index=x/{x}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTableByX", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables.x/{x}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -602,6 +1090,52 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleAutoIncrementTableByX_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleAutoIncrementTables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTables", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleAutoIncrementTables_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleAutoIncrementTables_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTablesByX", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables.x"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -625,6 +1159,52 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleTimestamp_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTimestamps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTimestamps", runtime.WithHTTPPathPattern("/testpb/example_timestamps"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleTimestamps_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTimestamps_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTimestampsByTs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTimestampsByTs", runtime.WithHTTPPathPattern("/testpb/example_timestamps.ts"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleTimestampsByTs_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTimestampsByTs_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -657,7 +1237,7 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExampleByUnique", runtime.WithHTTPPathPattern("/testpb/simple_examples;index=unique/{unique}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExampleByUnique", runtime.WithHTTPPathPattern("/testpb/simple_examples.unique/{unique}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -671,6 +1251,52 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_SimpleExampleByUnique_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_SimpleExamples_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExamples", runtime.WithHTTPPathPattern("/testpb/simple_examples"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_SimpleExamples_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_SimpleExamples_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_SimpleExamplesByUnique_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExamplesByUnique", runtime.WithHTTPPathPattern("/testpb/simple_examples.unique"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_SimpleExamplesByUnique_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_SimpleExamplesByUnique_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -694,6 +1320,29 @@ func RegisterTestSchemaQueryServiceHandlerServer(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleAutoIncFieldName_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleAutoIncFieldNames_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncFieldNames", runtime.WithHTTPPathPattern("/testpb/example_auto_inc_field_names"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_TestSchemaQueryService_ExampleAutoIncFieldNames_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleAutoIncFieldNames_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -762,7 +1411,7 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTableByU64Str", runtime.WithHTTPPathPattern("/testpb/example_tables;index=u64-str/{u64}/{str}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTableByU64Str", runtime.WithHTTPPathPattern("/testpb/example_tables.u64-str/{u64}/{str}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -775,6 +1424,86 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleTableByU64Str_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTables", runtime.WithHTTPPathPattern("/testpb/example_tables"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleTables_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTables_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTablesByU64Str_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTablesByU64Str", runtime.WithHTTPPathPattern("/testpb/example_tables.u64-str"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleTablesByU64Str_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTablesByU64Str_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTablesByStrU32_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTablesByStrU32", runtime.WithHTTPPathPattern("/testpb/example_tables.str-u32"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleTablesByStrU32_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTablesByStrU32_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTablesByBzStr_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTablesByBzStr", runtime.WithHTTPPathPattern("/testpb/example_tables.bz-str"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleTablesByBzStr_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTablesByBzStr_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -802,7 +1531,7 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTableByX", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables;index=x/{x}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTableByX", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables.x/{x}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -815,6 +1544,46 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleAutoIncrementTableByX_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleAutoIncrementTables_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTables", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleAutoIncrementTables_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleAutoIncrementTables_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncrementTablesByX", runtime.WithHTTPPathPattern("/testpb/example_auto_increment_tables.x"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -835,6 +1604,46 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_ExampleTimestamp_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTimestamps_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTimestamps", runtime.WithHTTPPathPattern("/testpb/example_timestamps"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleTimestamps_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTimestamps_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleTimestampsByTs_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleTimestampsByTs", runtime.WithHTTPPathPattern("/testpb/example_timestamps.ts"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleTimestampsByTs_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleTimestampsByTs_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -862,7 +1671,7 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExampleByUnique", runtime.WithHTTPPathPattern("/testpb/simple_examples;index=unique/{unique}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExampleByUnique", runtime.WithHTTPPathPattern("/testpb/simple_examples.unique/{unique}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -875,6 +1684,46 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 		}
 
 		forward_TestSchemaQueryService_SimpleExampleByUnique_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_SimpleExamples_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExamples", runtime.WithHTTPPathPattern("/testpb/simple_examples"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_SimpleExamples_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_SimpleExamples_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_TestSchemaQueryService_SimpleExamplesByUnique_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/SimpleExamplesByUnique", runtime.WithHTTPPathPattern("/testpb/simple_examples.unique"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_SimpleExamplesByUnique_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_SimpleExamplesByUnique_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -898,25 +1747,67 @@ func RegisterTestSchemaQueryServiceHandlerClient(ctx context.Context, mux *runti
 
 	})
 
+	mux.Handle("GET", pattern_TestSchemaQueryService_ExampleAutoIncFieldNames_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/testpb.TestSchemaQueryService/ExampleAutoIncFieldNames", runtime.WithHTTPPathPattern("/testpb/example_auto_inc_field_names"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_TestSchemaQueryService_ExampleAutoIncFieldNames_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_TestSchemaQueryService_ExampleAutoIncFieldNames_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
 var (
 	pattern_TestSchemaQueryService_ExampleTable_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"testpb", "example_tables", "u32", "i64", "str"}, ""))
 
-	pattern_TestSchemaQueryService_ExampleTableByU64Str_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"testpb", "example_tables;index=u64-str", "u64", "str"}, ""))
+	pattern_TestSchemaQueryService_ExampleTableByU64Str_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"testpb", "example_tables.u64-str", "u64", "str"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleTables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_tables"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleTablesByU64Str_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_tables.u64-str"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleTablesByStrU32_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_tables.str-u32"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleTablesByBzStr_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_tables.bz-str"}, ""))
 
 	pattern_TestSchemaQueryService_ExampleAutoIncrementTable_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "example_auto_increment_tables", "id"}, ""))
 
-	pattern_TestSchemaQueryService_ExampleAutoIncrementTableByX_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "example_auto_increment_tables;index=x", "x"}, ""))
+	pattern_TestSchemaQueryService_ExampleAutoIncrementTableByX_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "example_auto_increment_tables.x", "x"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleAutoIncrementTables_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_auto_increment_tables"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_auto_increment_tables.x"}, ""))
 
 	pattern_TestSchemaQueryService_ExampleTimestamp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "example_timestamps", "id"}, ""))
 
+	pattern_TestSchemaQueryService_ExampleTimestamps_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_timestamps"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleTimestampsByTs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_timestamps.ts"}, ""))
+
 	pattern_TestSchemaQueryService_SimpleExample_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "simple_examples", "name"}, ""))
 
-	pattern_TestSchemaQueryService_SimpleExampleByUnique_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "simple_examples;index=unique", "unique"}, ""))
+	pattern_TestSchemaQueryService_SimpleExampleByUnique_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "simple_examples.unique", "unique"}, ""))
+
+	pattern_TestSchemaQueryService_SimpleExamples_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "simple_examples"}, ""))
+
+	pattern_TestSchemaQueryService_SimpleExamplesByUnique_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "simple_examples.unique"}, ""))
 
 	pattern_TestSchemaQueryService_ExampleAutoIncFieldName_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"testpb", "example_auto_inc_field_names", "foo"}, ""))
+
+	pattern_TestSchemaQueryService_ExampleAutoIncFieldNames_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"testpb", "example_auto_inc_field_names"}, ""))
 )
 
 var (
@@ -924,15 +1815,37 @@ var (
 
 	forward_TestSchemaQueryService_ExampleTableByU64Str_0 = runtime.ForwardResponseMessage
 
+	forward_TestSchemaQueryService_ExampleTables_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleTablesByU64Str_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleTablesByStrU32_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleTablesByBzStr_0 = runtime.ForwardResponseMessage
+
 	forward_TestSchemaQueryService_ExampleAutoIncrementTable_0 = runtime.ForwardResponseMessage
 
 	forward_TestSchemaQueryService_ExampleAutoIncrementTableByX_0 = runtime.ForwardResponseMessage
 
+	forward_TestSchemaQueryService_ExampleAutoIncrementTables_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleAutoIncrementTablesByX_0 = runtime.ForwardResponseMessage
+
 	forward_TestSchemaQueryService_ExampleTimestamp_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleTimestamps_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleTimestampsByTs_0 = runtime.ForwardResponseMessage
 
 	forward_TestSchemaQueryService_SimpleExample_0 = runtime.ForwardResponseMessage
 
 	forward_TestSchemaQueryService_SimpleExampleByUnique_0 = runtime.ForwardResponseMessage
 
+	forward_TestSchemaQueryService_SimpleExamples_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_SimpleExamplesByUnique_0 = runtime.ForwardResponseMessage
+
 	forward_TestSchemaQueryService_ExampleAutoIncFieldName_0 = runtime.ForwardResponseMessage
+
+	forward_TestSchemaQueryService_ExampleAutoIncFieldNames_0 = runtime.ForwardResponseMessage
 )

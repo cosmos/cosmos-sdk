@@ -15,9 +15,17 @@ service BankQueryService {
     };
   }
   // Balances queries the Balance table using the primary key index.
-  rpc Balances(BalancesRequest) returns (BalancesResponse) {}
+  rpc Balances(BalancesRequest) returns (BalancesResponse) {
+    option (google.api.http) = {
+      get: "/testpb/balances"
+    };
+  }
   // BalancesByDenom queries the Balance table using the primary key index.
-  rpc BalancesByDenom(BalancesByDenomRequest) returns (BalancesByDenomResponse) {}
+  rpc BalancesByDenom(BalancesByDenomRequest) returns (BalancesByDenomResponse) {
+    option (google.api.http) = {
+      get: "/testpb/balances.denom"
+    };
+  }
   // Supply queries the Supply table by its primary key.
   rpc Supply(SupplyRequest) returns (SupplyResponse) {
     option (google.api.http) = {
@@ -25,7 +33,11 @@ service BankQueryService {
     };
   }
   // Supplies queries the Supply table using the primary key index.
-  rpc Supplies(SuppliesRequest) returns (SuppliesResponse) {}
+  rpc Supplies(SuppliesRequest) returns (SuppliesResponse) {
+    option (google.api.http) = {
+      get: "/testpb/supplies"
+    };
+  }
 }
 
 // BalanceRequest is the BankQuery/BalanceRequest request type.

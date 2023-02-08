@@ -146,7 +146,7 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 		for _, fieldName := range fieldNames.Names() {
 			pathSegments = append(pathSegments, fmt.Sprintf("{%s}", fieldName))
 		}
-		g.svc.F(`get: "/%s;index=%s/%s"`, restPath,
+		g.svc.F(`get: "/%s.%s/%s"`, restPath,
 			fieldsToKebabCase(idx.Fields),
 			strings.Join(pathSegments, "/"))
 		g.svc.Dedent()
@@ -180,7 +180,15 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 	// primary key list method
 	pluralMethod := makePluralMethodName(name)
 	g.svc.F("// %s queries the %s table using the primary key index.", pluralMethod, name)
-	g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", pluralMethod, pluralMethod, pluralMethod) // TODO grpc gateway
+	g.svc.F("rpc %s(%sRequest) returns (%sResponse) {", pluralMethod, pluralMethod, pluralMethod)
+	g.svc.Indent()
+	g.svc.F("option (google.api.http) = {")
+	g.svc.Indent()
+	g.svc.F(`get: "/%s"`, restPath)
+	g.svc.Dedent()
+	g.svc.F("};")
+	g.svc.Dedent()
+	g.svc.F("}")
 	keyFields := primaryKeyFields.Names()
 	keyFields = keyFields[:len(keyFields)-1]
 	g.listRequestResponseTypes(name, pluralMethod, keyFields, fields)
@@ -193,7 +201,15 @@ func (g queryProtoGen) genTableRPCMethods(msg *protogen.Message, desc *ormv1.Tab
 		}
 		methodName := pluralMethod + "By" + strings.Join(camelNames, "")
 		g.svc.F("// %s queries the %s table using the primary key index.", methodName, name)
-		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {}", methodName, methodName, methodName) // TODO grpc gateway
+		g.svc.F("rpc %s(%sRequest) returns (%sResponse) {", methodName, methodName, methodName)
+		g.svc.Indent()
+		g.svc.F("option (google.api.http) = {")
+		g.svc.Indent()
+		g.svc.F(`get: "/%s.%s"`, restPath, fieldsToKebabCase(index.Fields))
+		g.svc.Dedent()
+		g.svc.F("};")
+		g.svc.Dedent()
+		g.svc.F("}")
 		g.listRequestResponseTypes(name, methodName, keyFields, fields)
 	}
 

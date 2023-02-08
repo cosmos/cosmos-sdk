@@ -18,17 +18,33 @@ service TestSchemaQueryService {
   // ExampleTableByU64Str queries the ExampleTable table by its U64Str index
   rpc ExampleTableByU64Str(ExampleTableByU64StrRequest) returns (ExampleTableByU64StrResponse) {
     option (google.api.http) = {
-      get: "/testpb/example_tables;index=u64-str/{u64}/{str}"
+      get: "/testpb/example_tables.u64-str/{u64}/{str}"
     };
   }
   // ExampleTables queries the ExampleTable table using the primary key index.
-  rpc ExampleTables(ExampleTablesRequest) returns (ExampleTablesResponse) {}
+  rpc ExampleTables(ExampleTablesRequest) returns (ExampleTablesResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_tables"
+    };
+  }
   // ExampleTablesByU64Str queries the ExampleTable table using the primary key index.
-  rpc ExampleTablesByU64Str(ExampleTablesByU64StrRequest) returns (ExampleTablesByU64StrResponse) {}
+  rpc ExampleTablesByU64Str(ExampleTablesByU64StrRequest) returns (ExampleTablesByU64StrResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_tables.u64-str"
+    };
+  }
   // ExampleTablesByStrU32 queries the ExampleTable table using the primary key index.
-  rpc ExampleTablesByStrU32(ExampleTablesByStrU32Request) returns (ExampleTablesByStrU32Response) {}
+  rpc ExampleTablesByStrU32(ExampleTablesByStrU32Request) returns (ExampleTablesByStrU32Response) {
+    option (google.api.http) = {
+      get: "/testpb/example_tables.str-u32"
+    };
+  }
   // ExampleTablesByBzStr queries the ExampleTable table using the primary key index.
-  rpc ExampleTablesByBzStr(ExampleTablesByBzStrRequest) returns (ExampleTablesByBzStrResponse) {}
+  rpc ExampleTablesByBzStr(ExampleTablesByBzStrRequest) returns (ExampleTablesByBzStrResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_tables.bz-str"
+    };
+  }
   // ExampleAutoIncrementTable queries the ExampleAutoIncrementTable table by its primary key.
   rpc ExampleAutoIncrementTable(ExampleAutoIncrementTableRequest) returns (ExampleAutoIncrementTableResponse) {
     option (google.api.http) = {
@@ -38,13 +54,21 @@ service TestSchemaQueryService {
   // ExampleAutoIncrementTableByX queries the ExampleAutoIncrementTable table by its X index
   rpc ExampleAutoIncrementTableByX(ExampleAutoIncrementTableByXRequest) returns (ExampleAutoIncrementTableByXResponse) {
     option (google.api.http) = {
-      get: "/testpb/example_auto_increment_tables;index=x/{x}"
+      get: "/testpb/example_auto_increment_tables.x/{x}"
     };
   }
   // ExampleAutoIncrementTables queries the ExampleAutoIncrementTable table using the primary key index.
-  rpc ExampleAutoIncrementTables(ExampleAutoIncrementTablesRequest) returns (ExampleAutoIncrementTablesResponse) {}
+  rpc ExampleAutoIncrementTables(ExampleAutoIncrementTablesRequest) returns (ExampleAutoIncrementTablesResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_auto_increment_tables"
+    };
+  }
   // ExampleAutoIncrementTablesByX queries the ExampleAutoIncrementTable table using the primary key index.
-  rpc ExampleAutoIncrementTablesByX(ExampleAutoIncrementTablesByXRequest) returns (ExampleAutoIncrementTablesByXResponse) {}
+  rpc ExampleAutoIncrementTablesByX(ExampleAutoIncrementTablesByXRequest) returns (ExampleAutoIncrementTablesByXResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_auto_increment_tables.x"
+    };
+  }
   // ExampleSingleton queries the ExampleSingleton singleton.
   rpc ExampleSingleton (ExampleSingletonRequest) returns (ExampleSingletonResponse) {}
   // ExampleTimestamp queries the ExampleTimestamp table by its primary key.
@@ -54,9 +78,17 @@ service TestSchemaQueryService {
     };
   }
   // ExampleTimestamps queries the ExampleTimestamp table using the primary key index.
-  rpc ExampleTimestamps(ExampleTimestampsRequest) returns (ExampleTimestampsResponse) {}
+  rpc ExampleTimestamps(ExampleTimestampsRequest) returns (ExampleTimestampsResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_timestamps"
+    };
+  }
   // ExampleTimestampsByTs queries the ExampleTimestamp table using the primary key index.
-  rpc ExampleTimestampsByTs(ExampleTimestampsByTsRequest) returns (ExampleTimestampsByTsResponse) {}
+  rpc ExampleTimestampsByTs(ExampleTimestampsByTsRequest) returns (ExampleTimestampsByTsResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_timestamps.ts"
+    };
+  }
   // SimpleExample queries the SimpleExample table by its primary key.
   rpc SimpleExample(SimpleExampleRequest) returns (SimpleExampleResponse) {
     option (google.api.http) = {
@@ -66,13 +98,21 @@ service TestSchemaQueryService {
   // SimpleExampleByUnique queries the SimpleExample table by its Unique index
   rpc SimpleExampleByUnique(SimpleExampleByUniqueRequest) returns (SimpleExampleByUniqueResponse) {
     option (google.api.http) = {
-      get: "/testpb/simple_examples;index=unique/{unique}"
+      get: "/testpb/simple_examples.unique/{unique}"
     };
   }
   // SimpleExamples queries the SimpleExample table using the primary key index.
-  rpc SimpleExamples(SimpleExamplesRequest) returns (SimpleExamplesResponse) {}
+  rpc SimpleExamples(SimpleExamplesRequest) returns (SimpleExamplesResponse) {
+    option (google.api.http) = {
+      get: "/testpb/simple_examples"
+    };
+  }
   // SimpleExamplesByUnique queries the SimpleExample table using the primary key index.
-  rpc SimpleExamplesByUnique(SimpleExamplesByUniqueRequest) returns (SimpleExamplesByUniqueResponse) {}
+  rpc SimpleExamplesByUnique(SimpleExamplesByUniqueRequest) returns (SimpleExamplesByUniqueResponse) {
+    option (google.api.http) = {
+      get: "/testpb/simple_examples.unique"
+    };
+  }
   // ExampleAutoIncFieldName queries the ExampleAutoIncFieldName table by its primary key.
   rpc ExampleAutoIncFieldName(ExampleAutoIncFieldNameRequest) returns (ExampleAutoIncFieldNameResponse) {
     option (google.api.http) = {
@@ -80,7 +120,11 @@ service TestSchemaQueryService {
     };
   }
   // ExampleAutoIncFieldNames queries the ExampleAutoIncFieldName table using the primary key index.
-  rpc ExampleAutoIncFieldNames(ExampleAutoIncFieldNamesRequest) returns (ExampleAutoIncFieldNamesResponse) {}
+  rpc ExampleAutoIncFieldNames(ExampleAutoIncFieldNamesRequest) returns (ExampleAutoIncFieldNamesResponse) {
+    option (google.api.http) = {
+      get: "/testpb/example_auto_inc_field_names"
+    };
+  }
 }
 
 // ExampleTableRequest is the TestSchemaQuery/ExampleTableRequest request type.

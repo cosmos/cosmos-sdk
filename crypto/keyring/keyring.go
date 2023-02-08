@@ -70,7 +70,7 @@ type Keyring interface {
 	DeleteByAddress(address sdk.Address) error
 
 	// Rename an existing key from the Keyring
-	Rename(from string, to string) error
+	Rename(from, to string) error
 
 	// NewMnemonic generates a new mnemonic, derives a hierarchical deterministic key from it, and
 	// persists the key to storage. Returns the generated mnemonic and the key Info.
@@ -116,7 +116,7 @@ type Importer interface {
 	ImportPrivKey(uid, armor, passphrase string) error
 
 	// ImportPubKey imports ASCII armored public keys.
-	ImportPubKey(uid string, armor string) error
+	ImportPubKey(uid, armor string) error
 }
 
 // Migrator is implemented by key stores and enables migration of keys from amino to proto
@@ -334,7 +334,7 @@ func (ks keystore) ImportPrivKey(uid, armor, passphrase string) error {
 	return nil
 }
 
-func (ks keystore) ImportPubKey(uid string, armor string) error {
+func (ks keystore) ImportPubKey(uid, armor string) error {
 	if _, err := ks.Key(uid); err == nil {
 		return fmt.Errorf("cannot overwrite key: %s", uid)
 	}
@@ -553,7 +553,7 @@ func (ks keystore) NewMnemonic(uid string, language Language, hdPath, bip39Passp
 	return k, mnemonic, nil
 }
 
-func (ks keystore) NewAccount(name string, mnemonic string, bip39Passphrase string, hdPath string, algo SignatureAlgo) (*Record, error) {
+func (ks keystore) NewAccount(name, mnemonic, bip39Passphrase, hdPath string, algo SignatureAlgo) (*Record, error) {
 	if !ks.isSupportedSigningAlgo(algo) {
 		return nil, ErrUnsupportedSigningAlgo
 	}

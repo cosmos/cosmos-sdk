@@ -80,7 +80,7 @@ func (opts GeneratorOptions) setFields(
 		for i := 0; i < n; i++ {
 			f := fields.Get(i)
 			if !rapid.Bool().Draw(t, fmt.Sprintf("gen-%s", f.Name())) {
-				if f.Kind() != protoreflect.MessageKind || !opts.DisallowNilMessages {
+				if (f.Kind() == protoreflect.MessageKind || f.IsList()) && !opts.DisallowNilMessages {
 					continue
 				}
 			}
@@ -105,7 +105,11 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 	switch {
 	case field.IsList():
 		list := msg.Mutable(field).List()
-		n := rapid.IntRange(0, 10).Draw(t, fmt.Sprintf("%sN", name))
+		min := 0
+		if opts.DisallowNilMessages {
+			min = 1
+		}
+		n := rapid.IntRange(min, 10).Draw(t, fmt.Sprintf("%sN", name))
 		for i := 0; i < n; i++ {
 			if kind == protoreflect.MessageKind || kind == protoreflect.GroupKind {
 				if !opts.setFields(t, field, list.AppendMutable().Message(), depth+1) {
@@ -151,6 +155,18 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 }
 
 func (opts GeneratorOptions) genScalarFieldValue(t *rapid.T, field protoreflect.FieldDescriptor, name string) protoreflect.Value {
+	fopts := field.Options()
+	if proto.HasExtension(fopts, cosmos_proto.E_Scalar) {
+		scalar := proto.GetExtension(fopts, cosmos_proto.E_Scalar).(string)
+		switch scalar {
+		case "cosmos.Int":
+			i32 := rapid.Int32().Draw(t, name)
+			return protoreflect.ValueOfString(fmt.Sprintf("%d", i32))
+			//default:
+			//	t.Fatalf("unknown cosmos_proto.scalar type %s", scalar)
+		}
+	}
+
 	switch field.Kind() {
 	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
 		return protoreflect.ValueOfInt32(rapid.Int32().Draw(t, name))

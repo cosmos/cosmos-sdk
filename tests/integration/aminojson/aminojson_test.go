@@ -1,7 +1,6 @@
 package aminojson
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -17,6 +16,7 @@ import (
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
+	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	"cosmossdk.io/x/tx/aminojson"
@@ -31,6 +31,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
@@ -77,45 +79,58 @@ var (
 				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}).
 				WithInterfaceHint("cosmos.base.v1beta1.Msg", &authzapi.MsgGrant{}),
 		),
+
+		// bank
+		genType(&banktypes.MsgSend{}, &bankapi.MsgSend{}, genOpts.WithDisallowNil()),
+		genType(&banktypes.MsgMultiSend{}, &bankapi.MsgMultiSend{}, genOpts.WithDisallowNil()),
+		genType(&banktypes.MsgUpdateParams{}, &bankapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+		genType(&banktypes.MsgSetSendEnabled{}, &bankapi.MsgSetSendEnabled{}, genOpts),
+		genType(&banktypes.SendAuthorization{}, &bankapi.SendAuthorization{}, genOpts.WithDisallowNil()),
+		genType(&banktypes.Params{}, &bankapi.Params{}, genOpts),
 	}
 )
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{})
+		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {
-		gen := rapidproto.MessageGenerator(tt.pulsar, tt.opts)
-		fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
-		rapid.Check(t, func(t *rapid.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					//fmt.Printf("Panic: %+v\n", r)
-					t.FailNow()
-				}
-			}()
-			msg := gen.Draw(t, "msg")
-			postFixPulsarMessage(msg)
+		name := string(tt.pulsar.ProtoReflect().Descriptor().FullName())
+		t.Run(name, func(t *testing.T) {
+			gen := rapidproto.MessageGenerator(tt.pulsar, tt.opts)
+			fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
+			rapid.Check(t, func(t *rapid.T) {
+				defer func() {
+					if r := recover(); r != nil {
+						//fmt.Printf("Panic: %+v\n", r)
+						t.FailNow()
+					}
+				}()
+				msg := gen.Draw(t, "msg")
+				postFixPulsarMessage(msg)
 
-			gogo := tt.gogo
-			sanity := tt.pulsar
+				gogo := tt.gogo
+				sanity := tt.pulsar
 
-			protoBz, err := proto.Marshal(msg)
-			require.NoError(t, err)
+				protoBz, err := proto.Marshal(msg)
+				require.NoError(t, err)
 
-			err = proto.Unmarshal(protoBz, sanity)
-			require.NoError(t, err)
+				err = proto.Unmarshal(protoBz, sanity)
+				require.NoError(t, err)
 
-			err = encCfg.Codec.Unmarshal(protoBz, gogo)
-			require.NoError(t, err)
+				err = encCfg.Codec.Unmarshal(protoBz, gogo)
+				require.NoError(t, err)
 
-			legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
-			aminoJson, err := aj.MarshalAmino(msg)
-			if !bytes.Equal(legacyAminoJson, aminoJson) {
-				println("UNMATCHED")
-			}
-			require.Equal(t, string(legacyAminoJson), string(aminoJson))
+				legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
+				require.NoError(t, err)
+				aminoJson, err := aj.MarshalAmino(msg)
+				require.NoError(t, err)
+				//if !bytes.Equal(legacyAminoJson, aminoJson) {
+				//	println("UNMATCHED")
+				//}
+				require.Equal(t, string(legacyAminoJson), string(aminoJson))
+			})
 		})
 	}
 }
@@ -230,16 +245,28 @@ func TestModuleAccount(t *testing.T) {
 
 	aj := aminojson.NewAminoJSON()
 	addr1 := types.AccAddress([]byte("addr1"))
-	pulsar := &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}}
-	gogo := &authtypes.ModuleAccount{}
+	pulsar := &authapi.ModuleAccount{
+		BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}}
+	gogo := &authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr1.String()}, Permissions: []string{}}
 
 	protoBz, err := proto.Marshal(pulsar)
 	require.NoError(t, err)
 	err = encCfg.Codec.Unmarshal(protoBz, gogo)
 	require.NoError(t, err)
+
+	// !!! see below
+	require.Nil(t, gogo.Permissions)
+	require.NotNil(t, pulsar.Permissions)
+	require.Zero(t, len(pulsar.Permissions))
+
 	legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
 	aminoJson, err := aj.MarshalAmino(pulsar)
+
 	// yes this is expected.  empty []string is not the same as nil []string.  this is a bug in gogo.
+	// `[]string` -> proto.Marshal -> legacyAmino.UnmarshalProto (unmarshals empty slice as nil)
+	//    -> legacyAmino.MarshalJson -> `null`
+	// `[]string` -> [proto.Marshal -> pulsar.Unmarshal] -> amino.MarshalJson -> `[]`
 	require.NotEqual(t, string(legacyAminoJson), string(aminoJson),
 		"gogo: %s vs %s", string(legacyAminoJson), string(aminoJson))
 }

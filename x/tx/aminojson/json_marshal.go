@@ -81,7 +81,6 @@ func (aj AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) {
 
 func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	//vmsg := protoreflect.ValueOfMessage(message.ProtoReflect())
 	err := aj.beginMarshal(message.ProtoReflect(), buf)
 	return buf.Bytes(), err
 }
@@ -239,10 +238,11 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 				zv, found := aj.getZeroValue(f)
 				if found {
 					v = zv
-				} else if f.Cardinality() == protoreflect.Repeated {
+					//} else if f.Cardinality() == protoreflect.Repeated {
 					// TODO
 					// not sure yet
-					fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
+					//fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
+					//return errors.Errorf("not supported: dont_omit_empty=true on empty repeated field: %s", name)
 				} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
 					return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
 				}

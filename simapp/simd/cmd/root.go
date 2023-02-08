@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 
+	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 

@@ -72,6 +72,52 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	return nil
 }
 
+// ValidateBasic implements the sdk.Msg interface.
+func (m MsgSubmitProposal) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Proposer); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid proposer address: %s", err)
+	}
+	if !m.InitialDeposit.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
+	}
+	if m.InitialDeposit.IsAnyNegative() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.InitialDeposit.String())
+	}
+
+	for _, coin := range m.InitialDeposit {
+		if coin.Denom != "inj" {
+			continue
+		}
+		minDepositAmount, ok := sdk.NewIntFromString("50000000000000000000") // 50 INJ
+		if !ok {
+			// should never happen, just defensive programming
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid minDepositAmount amount: %s", minDepositAmount.String())
+		}
+		if coin.Amount.LT(minDepositAmount) {
+			return sdkerrors.Wrapf(sdkerrors.ErrInsufficientFunds, "proposals require a minDepositAmount of at least: %s", minDepositAmount.String())
+		}
+	}
+
+	content := m.GetContent()
+	if content == nil {
+		return sdkerrors.Wrap(types.ErrInvalidProposalContent, "missing content")
+	}
+	if !IsValidProposalType(content.ProposalType()) {
+		return sdkerrors.Wrap(types.ErrInvalidProposalType, content.ProposalType())
+	}
+	if err := content.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// String implements the Stringer interface
+func (m MsgSubmitProposal) String() string {
+	out, _ := yaml.Marshal(m)
+	return string(out)
+}
+
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (m MsgSubmitProposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var content Content

@@ -19,8 +19,6 @@ import (
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 )
@@ -201,33 +199,6 @@ func newGogoMessage(t reflect.Type) gogoproto.Message {
 		return &authtypes.ModuleAccount{BaseAccount: &authtypes.BaseAccount{}}
 	default:
 		return msg.(gogoproto.Message)
-	}
-}
-
-func postFixPulsarMessage(msg proto.Message) {
-	switch m := msg.(type) {
-	case *authapi.ModuleAccount:
-		if m.BaseAccount == nil {
-			m.BaseAccount = &authapi.BaseAccount{}
-		}
-		_, _, bz := testdata.KeyTestPubAddr()
-		text, _ := bech32.ConvertAndEncode("cosmos", bz)
-		m.BaseAccount.Address = text
-
-		// see negative test
-		if len(m.Permissions) == 0 {
-			m.Permissions = nil
-		}
-	case *authapi.MsgUpdateParams:
-		// params is required in the gogo message
-		if m.Params == nil {
-			m.Params = &authapi.Params{}
-		}
-	case *authzapi.MsgGrant:
-		// grant is required in the gogo message
-		if m.Grant == nil {
-			m.Grant = &authzapi.Grant{}
-		}
 	}
 }
 

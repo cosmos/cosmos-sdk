@@ -3,6 +3,7 @@ package rapidproto
 import (
 	"fmt"
 
+	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
@@ -15,20 +16,44 @@ func MessageGenerator[T proto.Message](x T, options GeneratorOptions) *rapid.Gen
 	return rapid.Custom(func(t *rapid.T) T {
 		msg := msgType.New()
 
-		options.setFields(t, msg, 0)
+		options.setFields(t, nil, msg, 0)
 
 		return msg.Interface().(T)
 	})
 }
 
 type GeneratorOptions struct {
-	AnyTypeURLs []string
-	Resolver    protoregistry.MessageTypeResolver
+	AnyTypeURLs         []string
+	InterfaceHints      map[string]string
+	Resolver            protoregistry.MessageTypeResolver
+	DisallowNilMessages bool
 }
 
 const depthLimit = 10
 
-func (opts GeneratorOptions) setFields(t *rapid.T, msg protoreflect.Message, depth int) bool {
+func (opts GeneratorOptions) WithAnyTypes(anyTypes ...proto.Message) GeneratorOptions {
+	for _, a := range anyTypes {
+		opts.AnyTypeURLs = append(opts.AnyTypeURLs, fmt.Sprintf("/%s", a.ProtoReflect().Descriptor().FullName()))
+	}
+	return opts
+}
+
+func (opts GeneratorOptions) WithDisallowNil() GeneratorOptions {
+	o := &opts
+	o.DisallowNilMessages = true
+	return *o
+}
+
+func (opts GeneratorOptions) WithInterfaceHint(i string, impl proto.Message) GeneratorOptions {
+	if opts.InterfaceHints == nil {
+		opts.InterfaceHints = make(map[string]string)
+	}
+	opts.InterfaceHints[i] = string(impl.ProtoReflect().Descriptor().FullName())
+	return opts
+}
+
+func (opts GeneratorOptions) setFields(
+	t *rapid.T, field protoreflect.FieldDescriptor, msg protoreflect.Message, depth int) bool {
 	// to avoid stack overflow we limit the depth of nested messages
 	if depth > depthLimit {
 		return false
@@ -44,7 +69,8 @@ func (opts GeneratorOptions) setFields(t *rapid.T, msg protoreflect.Message, dep
 		opts.genDuration(t, msg)
 		return true
 	case anyFullName:
-		return opts.genAny(t, msg, depth)
+		opts.genAny(t, field, msg, depth)
+		return true
 	case fieldMaskFullName:
 		opts.genFieldMask(t, msg)
 		return true
@@ -52,12 +78,14 @@ func (opts GeneratorOptions) setFields(t *rapid.T, msg protoreflect.Message, dep
 		fields := descriptor.Fields()
 		n := fields.Len()
 		for i := 0; i < n; i++ {
-			field := fields.Get(i)
-			if !rapid.Bool().Draw(t, fmt.Sprintf("gen-%s", field.Name())) {
-				continue
+			f := fields.Get(i)
+			if !rapid.Bool().Draw(t, fmt.Sprintf("gen-%s", f.Name())) {
+				if f.Kind() != protoreflect.MessageKind || !opts.DisallowNilMessages {
+					continue
+				}
 			}
 
-			opts.setFieldValue(t, msg, field, depth)
+			opts.setFieldValue(t, msg, f, depth)
 		}
 		return true
 	}
@@ -80,7 +108,7 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 		n := rapid.IntRange(0, 10).Draw(t, fmt.Sprintf("%sN", name))
 		for i := 0; i < n; i++ {
 			if kind == protoreflect.MessageKind || kind == protoreflect.GroupKind {
-				if !opts.setFields(t, list.AppendMutable().Message(), depth+1) {
+				if !opts.setFields(t, field, list.AppendMutable().Message(), depth+1) {
 					list.Truncate(i)
 				}
 			} else {
@@ -96,7 +124,7 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 			valueKind := valueField.Kind()
 			key := opts.genScalarFieldValue(t, keyField, fmt.Sprintf("%s%d-key", name, i))
 			if valueKind == protoreflect.MessageKind || valueKind == protoreflect.GroupKind {
-				if !opts.setFields(t, m.Mutable(key.MapKey()).Message(), depth+1) {
+				if !opts.setFields(t, field, m.Mutable(key.MapKey()).Message(), depth+1) {
 					m.Clear(key.MapKey())
 				}
 			} else {
@@ -104,14 +132,21 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 				m.Set(key.MapKey(), value)
 			}
 		}
-	default:
-		if kind == protoreflect.MessageKind || kind == protoreflect.GroupKind {
-			if !opts.setFields(t, msg.Mutable(field).Message(), depth+1) {
+	case kind == protoreflect.MessageKind:
+		mutableField := msg.Mutable(field)
+		if mutableField.Message().Descriptor().FullName() == anyFullName {
+			if !opts.genAny(t, field, mutableField.Message(), depth+1) {
 				msg.Clear(field)
 			}
-		} else {
-			msg.Set(field, opts.genScalarFieldValue(t, field, name))
+		} else if !opts.setFields(t, field, mutableField.Message(), depth+1) {
+			msg.Clear(field)
 		}
+	case kind == protoreflect.GroupKind:
+		if !opts.setFields(t, field, msg.Mutable(field).Message(), depth+1) {
+			msg.Clear(field)
+		}
+	default:
+		msg.Set(field, opts.genScalarFieldValue(t, field, name))
 	}
 }
 
@@ -179,23 +214,35 @@ const (
 	valueName   = "value"
 )
 
-func (opts GeneratorOptions) genAny(t *rapid.T, msg protoreflect.Message, depth int) bool {
+func (opts GeneratorOptions) genAny(
+	t *rapid.T, field protoreflect.FieldDescriptor, msg protoreflect.Message, depth int) bool {
 	if len(opts.AnyTypeURLs) == 0 {
 		return false
 	}
 
-	fields := msg.Descriptor().Fields()
+	var typeURL string
+	fopts := field.Options()
+	if proto.HasExtension(fopts, cosmos_proto.E_AcceptsInterface) {
+		ai := proto.GetExtension(fopts, cosmos_proto.E_AcceptsInterface).(string)
+		if impl, found := opts.InterfaceHints[ai]; found {
+			typeURL = fmt.Sprintf("/%s", impl)
+		} else {
+			panic(fmt.Sprintf("no implementation found for interface %s", ai))
+		}
+	} else {
+		typeURL = rapid.SampledFrom(opts.AnyTypeURLs).Draw(t, "type_url")
+	}
 
-	typeURL := rapid.SampledFrom(opts.AnyTypeURLs).Draw(t, "type_url")
 	typ, err := opts.Resolver.FindMessageByURL(typeURL)
 	assert.NilError(t, err)
+	fields := msg.Descriptor().Fields()
 
 	typeURLField := fields.ByName(typeURLName)
 	assert.Assert(t, typeURLField != nil)
 	msg.Set(typeURLField, protoreflect.ValueOfString(typeURL))
 
 	valueMsg := typ.New()
-	opts.setFields(t, valueMsg, depth+1)
+	opts.setFields(t, nil, valueMsg, depth+1)
 	valueBz, err := proto.Marshal(valueMsg.Interface())
 	assert.NilError(t, err)
 

@@ -1,6 +1,7 @@
 package aminojson
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -22,7 +23,9 @@ import (
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -32,62 +35,87 @@ import (
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
-type equivalentType struct {
-	pulsar      proto.Message
-	gogo        gogoproto.Message
-	anyTypeURLs []string
+type generatedType struct {
+	pulsar proto.Message
+	gogo   gogoproto.Message
+	opts   rapidproto.GeneratorOptions
 }
 
-func et(gogo gogoproto.Message, pulsar proto.Message, anyTypes ...proto.Message) equivalentType {
-	var anyTypeURLs []string
-	for _, a := range anyTypes {
-		anyTypeURLs = append(anyTypeURLs, fmt.Sprintf("/%s", a.ProtoReflect().Descriptor().FullName()))
-	}
-	return equivalentType{
-		pulsar:      pulsar,
-		gogo:        gogo,
-		anyTypeURLs: anyTypeURLs,
+func genType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.GeneratorOptions) generatedType {
+	return generatedType{
+		pulsar: pulsar,
+		gogo:   gogo,
+		opts:   opts,
 	}
 }
 
-var equivTypes = []equivalentType{
-	// auth
-	et(&authtypes.Params{}, &authapi.Params{}),
-	et(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, &ed25519.PubKey{}),
-	et(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, &ed25519.PubKey{}),
-}
+var (
+	genOpts  = rapidproto.GeneratorOptions{Resolver: protoregistry.GlobalTypes}
+	genTypes = []generatedType{
+		// auth
+		genType(&authtypes.Params{}, &authapi.Params{}, genOpts),
+		genType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, genOpts.WithAnyTypes(&ed25519.PubKey{})),
+		genType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, genOpts.WithAnyTypes(&ed25519.PubKey{})),
+		genType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, genOpts),
+		genType(&authtypes.MsgUpdateParams{}, &authapi.MsgUpdateParams{}, genOpts),
+
+		// authz
+		genType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, genOpts),
+		genType(&authztypes.Grant{}, &authzapi.Grant{},
+			genOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}),
+		),
+		genType(&authztypes.MsgGrant{}, &authzapi.MsgGrant{},
+			genOpts.WithAnyTypes(&authzapi.GenericAuthorization{}).
+				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}).
+				WithDisallowNil(),
+		),
+		genType(&authztypes.MsgExec{}, &authzapi.MsgExec{},
+			genOpts.WithAnyTypes(&authzapi.MsgGrant{}, &authzapi.GenericAuthorization{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.authz.v1beta1.Authorization", &authzapi.GenericAuthorization{}).
+				WithInterfaceHint("cosmos.base.v1beta1.Msg", &authzapi.MsgGrant{}),
+		),
+	}
+)
 
 func TestAminoJSON_Equivalence(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	encCfg := testutil.MakeTestEncodingConfig(
+		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
-	for _, tt := range equivTypes {
-		genOpts := rapidproto.GeneratorOptions{
-			AnyTypeURLs: tt.anyTypeURLs,
-			Resolver:    protoregistry.GlobalTypes,
-		}
-		gen := rapidproto.MessageGenerator(tt.pulsar, genOpts)
+	for _, tt := range genTypes {
+		gen := rapidproto.MessageGenerator(tt.pulsar, tt.opts)
 		fmt.Printf("testing %s\n", tt.pulsar.ProtoReflect().Descriptor().FullName())
 		rapid.Check(t, func(t *rapid.T) {
 			defer func() {
 				if r := recover(); r != nil {
-					fmt.Printf("Panic: %+v\n", r)
+					//fmt.Printf("Panic: %+v\n", r)
 					t.FailNow()
 				}
 			}()
 			msg := gen.Draw(t, "msg")
 			postFixPulsarMessage(msg)
+
+			gogo := tt.gogo
+			sanity := tt.pulsar
+
 			protoBz, err := proto.Marshal(msg)
 			require.NoError(t, err)
-			err = encCfg.Codec.Unmarshal(protoBz, tt.gogo)
+
+			err = proto.Unmarshal(protoBz, sanity)
 			require.NoError(t, err)
-			legacyAminoJson, err := encCfg.Amino.MarshalJSON(tt.gogo)
+
+			err = encCfg.Codec.Unmarshal(protoBz, gogo)
+			require.NoError(t, err)
+
+			legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
 			aminoJson, err := aj.MarshalAmino(msg)
-			require.Equal(t, string(legacyAminoJson), string(aminoJson),
-				"gogo: %s vs %s", string(legacyAminoJson), string(aminoJson))
-			//if !bytes.Equal(legacyAminoJson, aminoJson) {
-			//	require.Fail(t, fmt.Sprintf("legacy: %s vs %s", string(legacyAminoJson), string(aminoJson)))
-			//}
+			if !bytes.Equal(legacyAminoJson, aminoJson) {
+				println("UNMATCHED")
+			}
+			require.Equal(t, string(legacyAminoJson), string(aminoJson))
 		})
 	}
 }
@@ -123,9 +151,13 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &authtypes.MsgUpdateParams{Params: authtypes.Params{TxSigLimit: 10}},
 			pulsar: &authapi.MsgUpdateParams{Params: &authapi.Params{TxSigLimit: 10}},
 		},
-		"authz/msg_exec": {
+		"authz/msg_exec/empty_msgs": {
 			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{}},
 			pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{}},
+		},
+		"authz/msg_exec/null_msg": {
+			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{(*codectypes.Any)(nil)}},
+			pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{(*anypb.Any)(nil)}},
 		},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
@@ -210,4 +242,31 @@ func TestModuleAccount(t *testing.T) {
 	// yes this is expected.  empty []string is not the same as nil []string.  this is a bug in gogo.
 	require.NotEqual(t, string(legacyAminoJson), string(aminoJson),
 		"gogo: %s vs %s", string(legacyAminoJson), string(aminoJson))
+}
+
+func postFixPulsarMessage(msg proto.Message) {
+	switch m := msg.(type) {
+	case *authapi.ModuleAccount:
+		if m.BaseAccount == nil {
+			m.BaseAccount = &authapi.BaseAccount{}
+		}
+		_, _, bz := testdata.KeyTestPubAddr()
+		text, _ := bech32.ConvertAndEncode("cosmos", bz)
+		m.BaseAccount.Address = text
+
+		// see negative test
+		if len(m.Permissions) == 0 {
+			m.Permissions = nil
+		}
+	case *authapi.MsgUpdateParams:
+		// params is required in the gogo message
+		if m.Params == nil {
+			m.Params = &authapi.Params{}
+		}
+	case *authzapi.MsgGrant:
+		// grant is required in the gogo message
+		if m.Grant == nil {
+			m.Grant = &authzapi.Grant{}
+		}
+	}
 }

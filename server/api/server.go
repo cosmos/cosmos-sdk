@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
 	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
+	"github.com/cosmos/cosmos-sdk/log"
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"

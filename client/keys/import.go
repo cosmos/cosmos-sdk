@@ -2,7 +2,7 @@ package keys
 
 import (
 	"bufio"
-	"io/ioutil"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -24,7 +24,7 @@ func ImportKeyCommand() *cobra.Command {
 			}
 			buf := bufio.NewReader(clientCtx.Input)
 
-			bz, err := ioutil.ReadFile(args[1])
+			bz, err := os.ReadFile(args[1])
 			if err != nil {
 				return err
 			}

@@ -62,6 +62,11 @@ func SetIAVLCacheSize(size int) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetIAVLCacheSize(size) }
 }
 
+// SetIAVLDisableFastNode enables(false)/disables(true) fast node usage from the IAVL store.
+func SetIAVLDisableFastNode(disable bool) func(*BaseApp) {
+	return func(bapp *BaseApp) { bapp.cms.SetIAVLDisableFastNode(disable) }
+}
+
 // SetInterBlockCache provides a BaseApp option function that sets the
 // inter-block cache.
 func SetInterBlockCache(cache sdk.MultiStorePersistentCache) func(*BaseApp) {
@@ -241,4 +246,15 @@ func (app *BaseApp) SetInterfaceRegistry(registry types.InterfaceRegistry) {
 	app.interfaceRegistry = registry
 	app.grpcQueryRouter.SetInterfaceRegistry(registry)
 	app.msgServiceRouter.SetInterfaceRegistry(registry)
+}
+
+// SetStreamingService is used to set a streaming service into the BaseApp hooks and load the listeners into the multistore
+func (app *BaseApp) SetStreamingService(s StreamingService) {
+	// add the listeners for each StoreKey
+	for key, lis := range s.Listeners() {
+		app.cms.AddListeners(key, lis)
+	}
+	// register the StreamingService within the BaseApp
+	// BaseApp will pass BeginBlock, DeliverTx, and EndBlock requests and responses to the streaming services to update their ABCI context
+	app.abciListeners = append(app.abciListeners, s)
 }

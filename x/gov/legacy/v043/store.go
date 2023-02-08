@@ -40,7 +40,7 @@ func migrateVote(oldVote types.Vote) types.Vote {
 	return types.Vote{
 		ProposalId: oldVote.ProposalId,
 		Voter:      oldVote.Voter,
-		Options:    types.NewNonSplitVoteOption(oldVote.Option),
+		Options:    types.NewNonSplitVoteOption(oldVote.Option), //nolint:staticcheck
 	}
 }
 

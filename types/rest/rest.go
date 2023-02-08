@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -135,7 +135,7 @@ func (br BaseReq) ValidateBasic(w http.ResponseWriter) bool {
 // ReadRESTReq reads and unmarshals a Request's body to the the BaseReq struct.
 // Writes an error response to ResponseWriter and returns false if errors occurred.
 func ReadRESTReq(w http.ResponseWriter, r *http.Request, cdc *codec.LegacyAmino, req interface{}) bool {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if CheckBadRequestError(w, err) {
 		return false
 	}
@@ -411,12 +411,12 @@ func ParseQueryParamBool(r *http.Request, param string) bool {
 // GetRequest defines a wrapper around an HTTP GET request with a provided URL.
 // An error is returned if the request or reading the body fails.
 func GetRequest(url string) ([]byte, error) {
-	res, err := http.Get(url) // nolint:gosec
+	res, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -431,12 +431,12 @@ func GetRequest(url string) ([]byte, error) {
 // PostRequest defines a wrapper around an HTTP POST request with a provided URL and data.
 // An error is returned if the request or reading the body fails.
 func PostRequest(url string, contentType string, data []byte) ([]byte, error) {
-	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) // nolint:gosec
+	res, err := http.Post(url, contentType, bytes.NewBuffer(data)) //nolint:gosec
 	if err != nil {
 		return nil, fmt.Errorf("error while sending post request: %w", err)
 	}
 
-	bz, err := ioutil.ReadAll(res.Body)
+	bz, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}

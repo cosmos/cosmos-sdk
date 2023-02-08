@@ -83,7 +83,6 @@ func TestInitCmd(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestInitRecover(t *testing.T) {
@@ -207,7 +206,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 
 // custom tx codec
 func makeCodec() *codec.LegacyAmino {
-	var cdc = codec.NewLegacyAmino()
+	cdc := codec.NewLegacyAmino()
 	sdk.RegisterLegacyAminoCodec(cdc)
 	cryptocodec.RegisterCrypto(cdc)
 	return cdc

@@ -79,15 +79,15 @@ func (op CommitmentOp) GetKey() []byte {
 	return op.Key
 }
 
-// Run takes in a list of arguments and attempts to run the proof op against these arguments
+// Run takes in a list of arguments and attempts to run the proof op against these arguments.
 // Returns the root wrapped in [][]byte if the proof op succeeds with given args. If not,
 // it will return an error.
 //
 // CommitmentOp will accept args of length 1 or length 0
 // If length 1 args is passed in, then CommitmentOp will attempt to prove the existence of the key
-// with the value provided by args[0] using the embedded CommitmentProof and return the CommitmentRoot of the proof
+// with the value provided by args[0] using the embedded CommitmentProof and return the CommitmentRoot of the proof.
 // If length 0 args is passed in, then CommitmentOp will attempt to prove the absence of the key
-// in the CommitmentOp and return the CommitmentRoot of the proof
+// in the CommitmentOp and return the CommitmentRoot of the proof.
 func (op CommitmentOp) Run(args [][]byte) ([][]byte, error) {
 	// calculate root from proof
 	root, err := op.Proof.Calculate()

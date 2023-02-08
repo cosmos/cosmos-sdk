@@ -512,7 +512,6 @@ func (suite *AnteTestSuite) TestAnteHandlerFees() {
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.desc), func() {
-
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 			tc.malleate()
 
@@ -949,7 +948,8 @@ func TestCountSubkeys(t *testing.T) {
 	multiLevelSubKey1 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelSubKey2 := kmultisig.NewLegacyAminoPubKey(4, genPubKeys(5))
 	multiLevelMultiKey := kmultisig.NewLegacyAminoPubKey(2, []cryptotypes.PubKey{
-		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey()})
+		multiLevelSubKey1, multiLevelSubKey2, secp256k1.GenPrivKey().PubKey(),
+	})
 	type args struct {
 		pub cryptotypes.PubKey
 	}
@@ -1096,7 +1096,6 @@ func (suite *AnteTestSuite) TestAnteHandlerReCheck() {
 	// since these decorators don't run on recheck, the tx should pass the antehandler
 	txBuilder, err := suite.clientCtx.TxConfig.WrapTxBuilder(tx)
 	suite.Require().NoError(err)
-	suite.Require().NoError(txBuilder.SetSignatures())
 
 	_, err = suite.anteHandler(suite.ctx, txBuilder.GetTx(), false)
 	suite.Require().Nil(err, "AnteHandler errored on recheck unexpectedly: %v", err)

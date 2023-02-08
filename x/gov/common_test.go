@@ -70,13 +70,11 @@ func SortByteArrays(src [][]byte) [][]byte {
 
 const contextKeyBadProposal = "contextKeyBadProposal"
 
-var (
-	pubkeys = []cryptotypes.PubKey{
-		ed25519.GenPrivKey().PubKey(),
-		ed25519.GenPrivKey().PubKey(),
-		ed25519.GenPrivKey().PubKey(),
-	}
-)
+var pubkeys = []cryptotypes.PubKey{
+	ed25519.GenPrivKey().PubKey(),
+	ed25519.GenPrivKey().PubKey(),
+	ed25519.GenPrivKey().PubKey(),
+}
 
 func createValidators(t *testing.T, stakingHandler sdk.Handler, ctx sdk.Context, addrs []sdk.ValAddress, powerAmt []int64) {
 	require.True(t, len(addrs) <= len(pubkeys), "Not enough pubkeys specified at top of file.")

@@ -37,7 +37,7 @@ func migrateEvidence(oldEvidence v038evidence.Evidence) *codectypes.Any {
 // - Converting Equivocations into Anys.
 // - Re-encode in v0.40 GenesisState.
 func Migrate(evidenceState v038evidence.GenesisState) *v040evidence.GenesisState {
-	var newEvidences = make([]*codectypes.Any, len(evidenceState.Evidence))
+	newEvidences := make([]*codectypes.Any, len(evidenceState.Evidence))
 	for i, oldEvidence := range evidenceState.Evidence {
 		newEvidences[i] = migrateEvidence(oldEvidence)
 	}

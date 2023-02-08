@@ -63,10 +63,7 @@ func InitGenesis(
 	}
 
 	for _, delegation := range data.Delegations {
-		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
 
 		// Call the before-creation hook if not exported
 		if !data.Exported {

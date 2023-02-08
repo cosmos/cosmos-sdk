@@ -8,6 +8,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/store/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/tracekv"
 	"github.com/cosmos/cosmos-sdk/store/types"
 )
 
@@ -39,6 +41,9 @@ func NewFromKVStore(
 	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 	listeners map[types.StoreKey][]types.WriteListener,
 ) Store {
+	if listeners == nil {
+		listeners = make(map[types.StoreKey][]types.WriteListener)
+	}
 	cms := Store{
 		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
@@ -49,17 +54,13 @@ func NewFromKVStore(
 	}
 
 	for key, store := range stores {
-		var cacheWrapped types.CacheWrap
 		if cms.TracingEnabled() {
-			cacheWrapped = store.CacheWrapWithTrace(cms.traceWriter, cms.traceContext)
-		} else {
-			cacheWrapped = store.CacheWrap()
+			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, cms.traceContext)
 		}
 		if cms.ListeningEnabled(key) {
-			cms.stores[key] = cacheWrapped.CacheWrapWithListeners(key, cms.listeners[key])
-		} else {
-			cms.stores[key] = cacheWrapped
+			store = listenkv.NewStore(store.(types.KVStore), key, listeners[key])
 		}
+		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}
 
 	return cms
@@ -71,7 +72,6 @@ func NewStore(
 	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
 	traceWriter io.Writer, traceContext types.TraceContext, listeners map[types.StoreKey][]types.WriteListener,
 ) Store {
-
 	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext, listeners)
 }
 
@@ -81,7 +81,8 @@ func newCacheMultiStoreFromCMS(cms Store) Store {
 		stores[k] = v
 	}
 
-	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, cms.listeners)
+	// don't pass listeners to nested cache store.
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext, nil)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying

@@ -110,7 +110,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				pk = genPk
 			},
 			true,
-		}, {
+		},
+		{
 			"wrong size for sig bit array",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(3)
@@ -165,7 +166,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				)
 			},
 			true,
-		}, {
+		},
+		{
 			"duplicate signatures",
 			func(require *require.Assertions) {
 				pubKeys, sigs := generatePubKeysAndSignatures(5, msg)
@@ -178,7 +180,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				sig.Signatures = append(sig.Signatures, sigs[0])
 			},
 			false,
-		}, {
+		},
+		{
 			"duplicated key",
 			func(require *require.Assertions) {
 				// here we test an edge case where we create a multi sig with two same
@@ -191,7 +194,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				multisig.AddSignature(sig, sigs[0], 1)
 			},
 			true,
-		}, {
+		},
+		{
 			"same key used twice",
 			func(require *require.Assertions) {
 				pubkeys, sigs := generatePubKeysAndSignatures(3, msg)
@@ -201,7 +205,8 @@ func TestVerifyMultisignature(t *testing.T) {
 				multisig.AddSignature(sig, sigs[0], 1)
 			},
 			false,
-		}, {
+		},
+		{
 			"unable to verify signature",
 			func(require *require.Assertions) {
 				pubKeys := generatePubKeys(2)

@@ -32,7 +32,6 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.ctx = app.BaseApp.NewContext(checkTx, tmproto.Header{
 		Time: time.Now(),
 	})
-
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {

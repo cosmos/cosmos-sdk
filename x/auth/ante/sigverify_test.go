@@ -149,21 +149,23 @@ func (suite *AnteTestSuite) TestSigVerification() {
 	antehandler := sdk.ChainAnteDecorators(spkd, svd)
 
 	type testCase struct {
-		name      string
-		privs     []cryptotypes.PrivKey
-		accNums   []uint64
-		accSeqs   []uint64
-		recheck   bool
-		shouldErr bool
+		name        string
+		privs       []cryptotypes.PrivKey
+		accNums     []uint64
+		accSeqs     []uint64
+		invalidSigs bool
+		recheck     bool
+		shouldErr   bool
 	}
+	validSigs := false
 	testCases := []testCase{
-		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, false, true},
-		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, false, true},
-		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, false, true},
-		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
-		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
-		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
-		{"no err on recheck", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, true, false},
+		{"no signers", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, validSigs, false, true},
+		{"not enough signers", []cryptotypes.PrivKey{priv1, priv2}, []uint64{0, 1}, []uint64{0, 0}, validSigs, false, true},
+		{"wrong order signers", []cryptotypes.PrivKey{priv3, priv2, priv1}, []uint64{2, 1, 0}, []uint64{0, 0, 0}, validSigs, false, true},
+		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, validSigs, false, true},
+		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, validSigs, false, true},
+		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, validSigs, false, false},
+		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 0, 0}, []uint64{0, 0, 0}, !validSigs, true, false},
 	}
 	for i, tc := range testCases {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)
@@ -175,6 +177,20 @@ func (suite *AnteTestSuite) TestSigVerification() {
 
 		tx, err := suite.CreateTestTx(tc.privs, tc.accNums, tc.accSeqs, suite.ctx.ChainID())
 		suite.Require().NoError(err)
+		if tc.invalidSigs {
+			txSigs, _ := tx.GetSignaturesV2()
+			badSig, _ := tc.privs[0].Sign([]byte("unrelated message"))
+			txSigs[0] = signing.SignatureV2{
+				PubKey: tc.privs[0].PubKey(),
+				Data: &signing.SingleSignatureData{
+					SignMode:  suite.clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+					Signature: badSig,
+				},
+				Sequence: tc.accSeqs[0],
+			}
+			suite.txBuilder.SetSignatures(txSigs...)
+			tx = suite.txBuilder.GetTx()
+		}
 
 		_, err = antehandler(suite.ctx, tx, false)
 		if tc.shouldErr {
@@ -259,7 +275,7 @@ func (suite *AnteTestSuite) TestSigVerification_ExplicitAmino() {
 		{"wrong accnums", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{7, 8, 9}, []uint64{0, 0, 0}, false, true},
 		{"wrong sequences", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{3, 4, 5}, false, true},
 		{"valid tx", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, false, false},
-		{"no err on recheck", []cryptotypes.PrivKey{}, []uint64{}, []uint64{}, true, false},
+		{"no err on recheck", []cryptotypes.PrivKey{priv1, priv2, priv3}, []uint64{0, 1, 2}, []uint64{0, 0, 0}, true, false},
 	}
 	for i, tc := range testCases {
 		suite.ctx = suite.ctx.WithIsReCheckTx(tc.recheck)

@@ -146,7 +146,6 @@ func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase string, algo st
 func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
 	saltBytes = crypto.CRandBytes(16)
 	key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
-
 	if err != nil {
 		panic(sdkerrors.Wrap(err, "error generating bcrypt key from passphrase"))
 	}

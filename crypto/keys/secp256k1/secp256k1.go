@@ -10,15 +10,17 @@ import (
 
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/tendermint/tendermint/crypto"
-	"golang.org/x/crypto/ripemd160" // nolint: staticcheck // necessary for Bitcoin address format
+	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // necessary for Bitcoin address format
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ cryptotypes.PrivKey = &PrivKey{}
-var _ codec.AminoMarshaler = &PrivKey{}
+var (
+	_ cryptotypes.PrivKey  = &PrivKey{}
+	_ codec.AminoMarshaler = &PrivKey{}
+)
 
 const (
 	PrivKeySize = 32
@@ -138,8 +140,10 @@ func GenPrivKeyFromSecret(secret []byte) *PrivKey {
 
 //-------------------------------------
 
-var _ cryptotypes.PubKey = &PubKey{}
-var _ codec.AminoMarshaler = &PubKey{}
+var (
+	_ cryptotypes.PubKey   = &PubKey{}
+	_ codec.AminoMarshaler = &PubKey{}
+)
 
 // PubKeySize is comprised of 32 bytes for one field element
 // (the x-coordinate), plus one byte for the parity of the y-coordinate.

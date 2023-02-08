@@ -1,10 +1,14 @@
-# Cosmos SDK v0.45.4 Release Notes
+# Cosmos SDK v0.45.11 Release Notes
 
-This release introduces a few bug fixes and improvements. Notably, it adds an
-error check to the `NewNode` call in the `server` package, which would allow nodes
-to sync correctly.
+This release introduces a number of bug fixes and improvements.
 
-See the [Cosmos SDK v0.45.4 Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.45.4/CHANGELOG.md)
-for the exhaustive list of all changes.
+Please see the [CHANGELOG](https://github.com/cosmos/cosmos-sdk/blob/release/v0.45.x/CHANGELOG.md) for an exhaustive list of changes.
 
-**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.3...v0.45.4
+**Full Commit History**: https://github.com/cosmos/cosmos-sdk/compare/v0.45.10...v0.45.11
+
+**NOTE**: The changes mentioned in `v0.45.9` are **still** required:
+
+```go
+# Chains must add the following to their go.mod for the application:
+replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+```

@@ -91,7 +91,6 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().NoError(err)
 	authorization, _ = app.AuthzKeeper.GetCleanAuthorization(ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
 	s.Require().Nil(authorization)
-
 }
 
 func (s *TestSuite) TestKeeperIter() {
@@ -120,7 +119,6 @@ func (s *TestSuite) TestKeeperIter() {
 		s.Require().Equal(grantee, granteeAddr)
 		return true
 	})
-
 }
 
 func (s *TestSuite) TestKeeperFees() {
@@ -230,9 +228,12 @@ func (s *TestSuite) TestDispatchedEvents() {
 	result, err := app.AuthzKeeper.DispatchActions(s.ctx, granteeAddr, executeMsgs)
 	require.NoError(err)
 	require.NotNil(result)
+
 	events := s.ctx.EventManager().Events()
+
 	// get last 5 events (events that occur *after* the grant)
 	events = events[len(events)-5:]
+
 	requiredEvents := map[string]bool{
 		"coin_spent":    false,
 		"coin_received": false,

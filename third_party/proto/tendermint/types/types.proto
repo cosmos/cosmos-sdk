@@ -106,10 +106,10 @@ message Vote {
 
 // Commit contains the evidence that a block was committed by a set of validators.
 message Commit {
-  int64                         height     = 1;
-  int32                         round      = 2;
-  BlockID                       block_id   = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
-  repeated CommitSig            signatures = 4 [(gogoproto.nullable) = false];
+  int64              height     = 1;
+  int32              round      = 2;
+  BlockID            block_id   = 3 [(gogoproto.nullable) = false, (gogoproto.customname) = "BlockID"];
+  repeated CommitSig signatures = 4 [(gogoproto.nullable) = false];
 }
 
 // CommitSig is a part of the Vote included in a Commit.

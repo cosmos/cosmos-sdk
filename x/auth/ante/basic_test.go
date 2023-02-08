@@ -168,10 +168,8 @@ func (suite *AnteTestSuite) TestConsumeGasForTxSize() {
 			// require that antehandler passes and does not underestimate decorator cost
 			suite.Require().Nil(err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 			suite.Require().True(consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
-
 		})
 	}
-
 }
 
 func (suite *AnteTestSuite) TestTxHeightTimeoutDecorator() {

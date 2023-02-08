@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -11,7 +11,7 @@ import (
 func ParseCommunityPoolSpendProposalWithDeposit(cdc codec.JSONCodec, proposalFile string) (types.CommunityPoolSpendProposalWithDeposit, error) {
 	proposal := types.CommunityPoolSpendProposalWithDeposit{}
 
-	contents, err := ioutil.ReadFile(proposalFile)
+	contents, err := os.ReadFile(proposalFile)
 	if err != nil {
 		return proposal, err
 	}

@@ -66,19 +66,19 @@ func (cfg *Config) CurrentBin() (string, error) {
 	// if nothing here, fallback to genesis
 	info, err := os.Lstat(cur)
 	if err != nil {
-		//Create symlink to the genesis
+		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 	// if it is there, ensure it is a symlink
 	if info.Mode()&os.ModeSymlink == 0 {
-		//Create symlink to the genesis
+		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 
 	// resolve it
 	dest, err := os.Readlink(cur)
 	if err != nil {
-		//Create symlink to the genesis
+		// Create symlink to the genesis
 		return cfg.SymLinkToGenesis()
 	}
 

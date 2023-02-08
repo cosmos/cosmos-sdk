@@ -91,7 +91,7 @@ func (suite *SlashingTestSuite) TestGRPCSigningInfos() {
 	})
 
 	// verify all values are returned without pagination
-	var infoResp, err = queryClient.SigningInfos(gocontext.Background(),
+	infoResp, err := queryClient.SigningInfos(gocontext.Background(),
 		&types.QuerySigningInfosRequest{Pagination: nil})
 	suite.NoError(err)
 	suite.Equal(signingInfos, infoResp.Info)

@@ -102,8 +102,7 @@ message RequestEndBlock {
 message RequestCommit {}
 
 // lists available snapshots
-message RequestListSnapshots {
-}
+message RequestListSnapshots {}
 
 // offers a snapshot to the application
 message RequestOfferSnapshot {
@@ -212,6 +211,12 @@ message ResponseCheckTx {
   repeated Event events     = 7
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   string codespace = 8;
+  string sender    = 9;
+  int64  priority  = 10;
+
+  // mempool_error is set by Tendermint.
+  // ABCI applictions creating a ResponseCheckTX should not set mempool_error.
+  string mempool_error = 11;
 }
 
 message ResponseDeliverTx {
@@ -221,16 +226,17 @@ message ResponseDeliverTx {
   string         info       = 4;  // nondeterministic
   int64          gas_wanted = 5 [json_name = "gas_wanted"];
   int64          gas_used   = 6 [json_name = "gas_used"];
-  repeated Event events     = 7
-      [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
+  repeated Event events     = 7 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "events,omitempty"
+  ];  // nondeterministic
   string codespace = 8;
 }
 
 message ResponseEndBlock {
-  repeated ValidatorUpdate validator_updates = 1
-      [(gogoproto.nullable) = false];
-  ConsensusParams consensus_param_updates = 2;
-  repeated Event  events                  = 3
+  repeated ValidatorUpdate validator_updates       = 1 [(gogoproto.nullable) = false];
+  ConsensusParams          consensus_param_updates = 2;
+  repeated Event           events                  = 3
       [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
 }
 
@@ -364,10 +370,8 @@ message Evidence {
   // The height when the offense occurred
   int64 height = 3;
   // The corresponding time where the offense occurred
-  google.protobuf.Timestamp time = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime)  = true
-  ];
+  google.protobuf.Timestamp time = 4
+      [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // Total voting power of the validator set in case the ABCI application does
   // not store historical validators.
   // https://github.com/tendermint/tendermint/issues/4581
@@ -402,6 +406,8 @@ service ABCIApplication {
   rpc EndBlock(RequestEndBlock) returns (ResponseEndBlock);
   rpc ListSnapshots(RequestListSnapshots) returns (ResponseListSnapshots);
   rpc OfferSnapshot(RequestOfferSnapshot) returns (ResponseOfferSnapshot);
-  rpc LoadSnapshotChunk(RequestLoadSnapshotChunk) returns (ResponseLoadSnapshotChunk);
-  rpc ApplySnapshotChunk(RequestApplySnapshotChunk) returns (ResponseApplySnapshotChunk);
+  rpc LoadSnapshotChunk(RequestLoadSnapshotChunk)
+      returns (ResponseLoadSnapshotChunk);
+  rpc ApplySnapshotChunk(RequestApplySnapshotChunk)
+      returns (ResponseApplySnapshotChunk);
 }

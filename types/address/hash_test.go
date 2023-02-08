@@ -63,7 +63,7 @@ func (suite *AddressSuite) TestComposed() {
 
 func (suite *AddressSuite) TestModule() {
 	assert := suite.Assert()
-	var modName, key = "myModule", []byte{1, 2}
+	modName, key := "myModule", []byte{1, 2}
 	addr := Module(modName, key)
 	assert.Len(addr, Len, "must have address length")
 
@@ -77,7 +77,7 @@ func (suite *AddressSuite) TestModule() {
 
 func (suite *AddressSuite) TestDerive() {
 	assert := suite.Assert()
-	var addr, key1, key2 = []byte{1, 2}, []byte{3, 4}, []byte{1, 2}
+	addr, key1, key2 := []byte{1, 2}, []byte{3, 4}, []byte{1, 2}
 	d1 := Derive(addr, key1)
 	d2 := Derive(addr, key2)
 	d3 := Derive(key1, key2)

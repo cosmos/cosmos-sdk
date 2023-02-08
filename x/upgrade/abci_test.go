@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -27,7 +26,7 @@ import (
 )
 
 type TestSuite struct {
-	module  module.AppModule
+	module  module.BeginBlockAppModule
 	keeper  keeper.Keeper
 	querier sdk.Querier
 	handler govtypes.Handler
@@ -395,7 +394,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
 	require.Nil(t, err)
 
-	data, err := ioutil.ReadFile(upgradeInfoFilePath)
+	data, err := os.ReadFile(upgradeInfoFilePath)
 	require.NoError(t, err)
 
 	var upgradeInfo storetypes.UpgradeInfo

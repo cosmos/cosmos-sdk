@@ -7,6 +7,9 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/maps"
+	"golang.org/x/exp/slices"
+
 	"github.com/gogo/protobuf/jsonpb"
 	proto "github.com/gogo/protobuf/proto"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -119,8 +122,13 @@ func TypedEventToEvent(tev proto.Message) (Event, error) {
 		return Event{}, err
 	}
 
+	// sort the keys to ensure the order is always the same
+	keys := maps.Keys(attrMap)
+	slices.Sort(keys)
+
 	attrs := make([]abci.EventAttribute, 0, len(attrMap))
-	for k, v := range attrMap {
+	for _, k := range keys {
+		v := attrMap[k]
 		attrs = append(attrs, abci.EventAttribute{
 			Key:   []byte(k),
 			Value: v,
@@ -260,6 +268,7 @@ var (
 	AttributeKeyAccountSequence = "acc_seq"
 	AttributeKeySignature       = "signature"
 	AttributeKeyFee             = "fee"
+	AttributeKeyFeePayer        = "fee_payer"
 
 	EventTypeMessage = "message"
 

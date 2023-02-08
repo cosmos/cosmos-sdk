@@ -60,7 +60,6 @@ func (pk *PubKey) Bytes() []byte {
 // lower half of the curve order
 // 7/21/21 - expects raw encoded signature (fixed-width 64-bytes, R || S)
 func (pk *PubKey) VerifySignature(msg []byte, sig []byte) bool {
-
 	// check length for raw signature
 	// which is two 32-byte padded big.Ints
 	// concatenated

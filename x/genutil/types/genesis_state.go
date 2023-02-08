@@ -58,7 +58,6 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 func SetGenesisStateInAppState(
 	cdc codec.JSONCodec, appState map[string]json.RawMessage, genesisState *GenesisState,
 ) map[string]json.RawMessage {
-
 	genesisStateBz := cdc.MustMarshalJSON(genesisState)
 	appState[ModuleName] = genesisStateBz
 	return appState
@@ -69,7 +68,6 @@ func SetGenesisStateInAppState(
 //
 // NOTE: The pubkey input is this machines pubkey.
 func GenesisStateFromGenDoc(genDoc tmtypes.GenesisDoc) (genesisState map[string]json.RawMessage, err error) {
-
 	if err = json.Unmarshal(genDoc.AppState, &genesisState); err != nil {
 		return genesisState, err
 	}

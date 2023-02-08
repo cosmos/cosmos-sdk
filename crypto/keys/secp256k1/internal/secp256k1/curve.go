@@ -30,6 +30,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+//nolint
 package secp256k1
 
 import (
@@ -93,19 +94,19 @@ func (BitCurve *BitCurve) Params() *elliptic.CurveParams {
 // IsOnCurve returns true if the given (x,y) lies on the BitCurve.
 func (BitCurve *BitCurve) IsOnCurve(x, y *big.Int) bool {
 	// y² = x³ + b
-	y2 := new(big.Int).Mul(y, y) //y²
-	y2.Mod(y2, BitCurve.P)       //y²%P
+	y2 := new(big.Int).Mul(y, y) // y²
+	y2.Mod(y2, BitCurve.P)       // y²%P
 
-	x3 := new(big.Int).Mul(x, x) //x²
-	x3.Mul(x3, x)                //x³
+	x3 := new(big.Int).Mul(x, x) // x²
+	x3.Mul(x3, x)                // x³
 
-	x3.Add(x3, BitCurve.B) //x³+B
-	x3.Mod(x3, BitCurve.P) //(x³+B)%P
+	x3.Add(x3, BitCurve.B) // x³+B
+	x3.Mod(x3, BitCurve.P) // (x³+B)%P
 
 	return x3.Cmp(y2) == 0
 }
 
-//TODO: double check if the function is okay
+// TODO: double check if the function is okay
 // affineFromJacobian reverses the Jacobian transform. See the comment at the
 // top of the file.
 func (BitCurve *BitCurve) affineFromJacobian(x, y, z *big.Int) (xOut, yOut *big.Int) {
@@ -217,30 +218,30 @@ func (BitCurve *BitCurve) Double(x1, y1 *big.Int) (*big.Int, *big.Int) {
 func (BitCurve *BitCurve) doubleJacobian(x, y, z *big.Int) (*big.Int, *big.Int, *big.Int) {
 	// See http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
 
-	a := new(big.Int).Mul(x, x) //X1²
-	b := new(big.Int).Mul(y, y) //Y1²
-	c := new(big.Int).Mul(b, b) //B²
+	a := new(big.Int).Mul(x, x) // X1²
+	b := new(big.Int).Mul(y, y) // Y1²
+	c := new(big.Int).Mul(b, b) // B²
 
-	d := new(big.Int).Add(x, b) //X1+B
-	d.Mul(d, d)                 //(X1+B)²
-	d.Sub(d, a)                 //(X1+B)²-A
-	d.Sub(d, c)                 //(X1+B)²-A-C
-	d.Mul(d, big.NewInt(2))     //2*((X1+B)²-A-C)
+	d := new(big.Int).Add(x, b) // X1+B
+	d.Mul(d, d)                 // (X1+B)²
+	d.Sub(d, a)                 // (X1+B)²-A
+	d.Sub(d, c)                 // (X1+B)²-A-C
+	d.Mul(d, big.NewInt(2))     // 2*((X1+B)²-A-C)
 
-	e := new(big.Int).Mul(big.NewInt(3), a) //3*A
-	f := new(big.Int).Mul(e, e)             //E²
+	e := new(big.Int).Mul(big.NewInt(3), a) // 3*A
+	f := new(big.Int).Mul(e, e)             // E²
 
-	x3 := new(big.Int).Mul(big.NewInt(2), d) //2*D
-	x3.Sub(f, x3)                            //F-2*D
+	x3 := new(big.Int).Mul(big.NewInt(2), d) // 2*D
+	x3.Sub(f, x3)                            // F-2*D
 	x3.Mod(x3, BitCurve.P)
 
-	y3 := new(big.Int).Sub(d, x3)                  //D-X3
-	y3.Mul(e, y3)                                  //E*(D-X3)
-	y3.Sub(y3, new(big.Int).Mul(big.NewInt(8), c)) //E*(D-X3)-8*C
+	y3 := new(big.Int).Sub(d, x3)                  // D-X3
+	y3.Mul(e, y3)                                  // E*(D-X3)
+	y3.Sub(y3, new(big.Int).Mul(big.NewInt(8), c)) // E*(D-X3)-8*C
 	y3.Mod(y3, BitCurve.P)
 
-	z3 := new(big.Int).Mul(y, z) //Y1*Z1
-	z3.Mul(big.NewInt(2), z3)    //3*Y1*Z1
+	z3 := new(big.Int).Mul(y, z) // Y1*Z1
+	z3.Mul(big.NewInt(2), z3)    // 3*Y1*Z1
 	z3.Mod(z3, BitCurve.P)
 
 	return x3, y3, z3

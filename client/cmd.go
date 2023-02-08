@@ -235,7 +235,7 @@ func readTxCommandFlags(clientCtx Context, flagSet *pflag.FlagSet) (Context, err
 
 	if clientCtx.From == "" || flagSet.Changed(flags.FlagFrom) {
 		from, _ := flagSet.GetString(flags.FlagFrom)
-		fromAddr, fromName, keyType, err := GetFromFields(clientCtx.Keyring, from, clientCtx.GenerateOnly)
+		fromAddr, fromName, keyType, err := GetFromFields(clientCtx, clientCtx.Keyring, from)
 		if err != nil {
 			return clientCtx, err
 		}

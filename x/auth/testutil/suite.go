@@ -149,9 +149,11 @@ func (s *TxConfigTestSuite) TestTxBuilderSetSignatures() {
 	s.Require().NoError(err)
 	msigData = multisig.NewMultisig(2)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{
-		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz1}, 0)
+		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz1,
+	}, 0)
 	multisig.AddSignature(msigData, &signingtypes.SingleSignatureData{
-		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz2}, 0)
+		SignMode: signModeHandler.DefaultMode(), Signature: mSigBz2,
+	}, 0)
 
 	// set signature
 	sigData1.Signature = sigBz

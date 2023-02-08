@@ -1,18 +1,19 @@
 package mock
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 
-	"github.com/tendermint/tendermint/types"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/tendermint/tendermint/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -36,7 +37,6 @@ func NewApp(rootDir string, logger log.Logger) (abci.Application, error) {
 
 	baseApp.SetInitChainer(InitChainer(capKeyMainStore))
 
-	// Set a Route.
 	baseApp.Router().AddRoute(sdk.NewRoute("kvstore", KVStoreHandler(capKeyMainStore)))
 
 	// Load latest version.
@@ -104,7 +104,8 @@ func InitChainer(key sdk.StoreKey) func(sdk.Context, abci.RequestInitChain) abci
 // AppGenState can be passed into InitCmd, returns a static string of a few
 // key-values that can be parsed by InitChainer
 func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (appState json.
-	RawMessage, err error) {
+	RawMessage, err error,
+) {
 	appState = json.RawMessage(`{
   "values": [
     {
@@ -122,7 +123,21 @@ func AppGenState(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) 
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
 func AppGenStateEmpty(_ *codec.LegacyAmino, _ types.GenesisDoc, _ []json.RawMessage) (
-	appState json.RawMessage, err error) {
+	appState json.RawMessage, err error,
+) {
 	appState = json.RawMessage(``)
 	return
+}
+
+// Manually write the handlers for this custom message
+type MsgServer interface {
+	Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error)
+}
+
+type MsgServerImpl struct {
+	capKeyMainStore *storetypes.KVStoreKey
+}
+
+func (m MsgServerImpl) Test(ctx context.Context, msg *kvstoreTx) (*sdk.Result, error) {
+	return KVStoreHandler(m.capKeyMainStore)(sdk.UnwrapSDKContext(ctx), msg)
 }

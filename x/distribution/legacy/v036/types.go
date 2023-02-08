@@ -71,7 +71,6 @@ func NewGenesisState(
 	historical []v034distr.ValidatorHistoricalRewardsRecord, cur []v034distr.ValidatorCurrentRewardsRecord,
 	dels []v034distr.DelegatorStartingInfoRecord, slashes []ValidatorSlashEventRecord,
 ) GenesisState {
-
 	return GenesisState{
 		FeePool:                         feePool,
 		CommunityTax:                    communityTax,

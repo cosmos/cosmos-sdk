@@ -1,4 +1,4 @@
-package tmservice
+package cmtservice
 
 import (
 	abci "github.com/cometbft/cometbft/abci/types"

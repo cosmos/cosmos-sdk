@@ -1,4 +1,4 @@
-package tmservice
+package cmtservice
 
 import (
 	"context"
@@ -245,7 +245,7 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 	return FromABCIResponseQuery(res), nil
 }
 
-// RegisterTendermintService registers the tendermint queries on the gRPC router.
+// RegisterTendermintService registers the cometbft queries on the gRPC router.
 func RegisterTendermintService(
 	clientCtx client.Context,
 	server gogogrpc.Server,
@@ -255,7 +255,7 @@ func RegisterTendermintService(
 	RegisterServiceServer(server, NewQueryServer(clientCtx, iRegistry, queryFn))
 }
 
-// RegisterGRPCGatewayRoutes mounts the tendermint service's GRPC-gateway routes on the
+// RegisterGRPCGatewayRoutes mounts the cometbft service's GRPC-gateway routes on the
 // given Mux.
 func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.ServeMux) {
 	_ = RegisterServiceHandlerClient(context.Background(), mux, NewServiceClient(clientConn))

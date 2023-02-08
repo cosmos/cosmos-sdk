@@ -182,7 +182,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Here are the short-lived replaced for tests
+// Here are the short-lived replace for tests
 // Replace here are pending PRs, or version to be tagged.
 // It must be in sync with SimApp temporary replaces
 replace (

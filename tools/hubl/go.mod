@@ -121,7 +121,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Here are the short-lived replaced of Hubl
+// Here are the short-lived replace of Hubl
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/log => ../../log

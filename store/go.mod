@@ -71,7 +71,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// Here are the short-lived replaced from the module.
+// Here are the short-lived replace from the module.
 // Replace here are pending PRs, or version to be tagged.
 replace (
 	cosmossdk.io/log => ../log

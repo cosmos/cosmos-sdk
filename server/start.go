@@ -254,18 +254,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	cfg := ctx.Config
 	home := cfg.RootDir
 
-	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		f, err := os.Create(cpuProfile)
-		if err != nil {
-			return err
-		}
-
-		ctx.Logger.Info("starting CPU profiler", "profile", cpuProfile)
-		if err := pprof.StartCPUProfile(f); err != nil {
-			return err
-		}
-	}
-
 	db, err := openDB(home, GetAppDBBackend(ctx.Viper))
 	if err != nil {
 		return err

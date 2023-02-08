@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -58,7 +58,7 @@ func (s *PluginTestSuite) SetupTest() {
 	require.True(s.T(), ok, "should pass type check")
 
 	header := tmproto.Header{Height: 1, Time: time.Now()}
-	logger := log.TestingLogger()
+	logger := log.NewNopLogger()
 	streamingService := storetypes.StreamingManager{
 		AbciListeners: []storetypes.ABCIListener{abciListener},
 		StopNodeOnErr: true,

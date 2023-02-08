@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/hashicorp/go-plugin"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
 )

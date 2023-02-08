@@ -47,16 +47,16 @@ This specification assumes that there exists a cache implementation accessible t
 
 The inter-block cache requires that the cache implementation to provide methods to create a cache, add a key/value pair, remove a key/value pair and retrieve the value associated to a key. In this specification, we assume that a `Cache` feature offers this functionality through the following methods:
 
-* `NewCache(size: int)` creates a new cache with `size` capacity and returns it.
-* `Get(key: string)` attempts to retrieve a key/value pair from `Cache.` It returns `[value: []byte, success: bool]`. If `Cache` contains the key, it `value` contains the associated value and `success=true`. Otherwise, `success=false` and `value` should be ignored.
-* `Add(key: string, value: []byte)` inserts a key/value pair into the `Cache`.
-* `Remove(key: string)` removes the key/value pair identified by `key` from `Cache`.
+* `NewCache(size int)` creates a new cache with `size` capacity and returns it.
+* `Get(key string)` attempts to retrieve a key/value pair from `Cache.` It returns `(value []byte, success bool)`. If `Cache` contains the key, it `value` contains the associated value and `success=true`. Otherwise, `success=false` and `value` should be ignored.
+* `Add(key string, value []byte)` inserts a key/value pair into the `Cache`.
+* `Remove(key string)` removes the key/value pair identified by `key` from `Cache`.
 
 The specification also assumes that `CommitKVStore` offers the following API:
 
-* `Get(key: string)` attempts to retrieve a key/value pair from `CommitKVStore`.
-* `Set(key, string, value: []byte)` inserts a key/value pair into the `CommitKVStore`.
-* `Delete(key: string)` removes the key/value pair identified by `key` from `CommitKVStore`.
+* `Get(key string)` attempts to retrieve a key/value pair from `CommitKVStore`.
+* `Set(key, string, value []byte)` inserts a key/value pair into the `CommitKVStore`.
+* `Delete(key string)` removes the key/value pair identified by `key` from `CommitKVStore`.
 
 > Ideally, both `Cache` and `CommitKVStore` should be specified in a different document and referenced here.
 
@@ -88,19 +88,19 @@ The inter-block cache feature is composed by two components: `CommitKVCacheManag
 
 `CommitKVCacheManager` implements the cache manager. It maintains a mapping from a store key to a `KVStore`.
 
-```typescript
-interface CommitKVStoreCacheManager{
-    cacheSize: uint
-    caches: Map<string, CommitKVStore>
+```go
+type CommitKVStoreCacheManager interface{
+    cacheSize uint
+    caches map[string]CommitKVStore
 }
 ```
 
 `CommitKVStoreCache` implements a `KVStore`: a write-through cache that wraps a `CommitKVStore`. This means that deletes and writes always happen to both the cache and the underlying `CommitKVStore`. Reads on the other hand first hit the internal cache. During a cache miss, the read is delegated to the underlying `CommitKVStore` and cached.
 
-```typescript
-interface CommitKVStoreCache{
-    store: CommitKVStore
-    cache: Cache
+```go
+type CommitKVStoreCache interface{
+    store CommitKVStore
+    cache Cache
 }
 ```
 
@@ -116,11 +116,9 @@ The method `NewCommitKVStoreCacheManager` creates a new cache manager and return
 | ------------- | ---------|------- |
 | size  | integer | Determines the capacity of each of the KVCache maintained by the manager |
 
-```typescript
-function NewCommitKVStoreCacheManager(
-    size: uint): CommitKVStoreCacheManager {
-
-    manager = CommitKVStoreCacheManager{size, new Map<string, CommitKVStore>()}
+```go
+func NewCommitKVStoreCacheManager(size uint) CommitKVStoreCacheManager {
+    manager = CommitKVStoreCacheManager{size, make(map[string]CommitKVStore)}
     return manager
 }
 ```
@@ -133,11 +131,11 @@ function NewCommitKVStoreCacheManager(
 | storeKey  | string | The store key of the store being retrieved |
 | store  | `CommitKVStore` | The store that it is cached in case the manager does not have any in its map of caches |
 
-```typescript
-function GetStoreCache(
-    manager: CommitKVStoreCacheManager,
-    storeKey: string,
-    store: CommitKVStore): CommitKVStore {
+```go
+func GetStoreCache(
+    manager CommitKVStoreCacheManager,
+    storeKey string,
+    store CommitKVStore) CommitKVStore {
 
     if manager.caches.has(storeKey) {
         return manager.caches.get(storeKey)
@@ -156,10 +154,10 @@ function GetStoreCache(
 | manager  | `CommitKVStoreCacheManager` | The cache manager |
 | storeKey  | string | The store key of the store being unwrapped |
 
-```typescript
-function Unwrap(
-    manager: CommitKVStoreCacheManager,
-    storeKey: string): CommitKVStore {
+```go
+func Unwrap(
+    manager CommitKVStoreCacheManager,
+    storeKey string) CommitKVStore {
 
     if manager.caches.has(storeKey) {
         cache = manager.caches.get(storeKey)
@@ -176,9 +174,8 @@ function Unwrap(
 | ------------- | ---------|------- |
 | manager  | `CommitKVStoreCacheManager` | The cache manager |
 
-```typescript
-function Reset(
-    manager: CommitKVStoreCacheManager) {
+```go
+function Reset(manager CommitKVStoreCacheManager) {
 
     for (let storeKey of manager.caches.keys()) {
         manager.caches.delete(storeKey)
@@ -195,10 +192,10 @@ function Reset(
 | store  | CommitKVStore | The store to be cached |
 | size  | string | Determines the capacity of the cache being created |
 
-```typescript
-function NewCommitKVStoreCache(
-    store: CommitKVStore,
-    size: uint): CommitKVStoreCache {
+```go
+func NewCommitKVStoreCache(
+    store CommitKVStore,
+    size uint) CommitKVStoreCache {
     KVCache = CommitKVStoreCache{store, NewCache(size)}
     return KVCache
 }
@@ -211,11 +208,11 @@ function NewCommitKVStoreCache(
 | KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` from which the key/value pair is retrieved  |
 | key  | string | Key of the key/value pair being retrieved |
 
-```typescript
-function Get(
-    KVCache: CommitKVStoreCache,
-    key: string): []byte {
-    [valueCache, success] = KVCache.cache.Get(key)
+```go
+func Get(
+    KVCache CommitKVStoreCache,
+    key string) []byte {
+    valueCache, success := KVCache.cache.Get(key)
     if success {
         // cache hit
         return valueCache
@@ -236,10 +233,10 @@ function Get(
 | key  | string | Key of the key/value pair being inserted |
 | value  | []byte | Value of the key/value pair being inserted |
 
-```typescript
-function Set(
-    KVCache: CommitKVStoreCache,
-    key: string,
+```go
+func Set(
+    KVCache CommitKVStoreCache,
+    key string,
     value []byte) {
 
     KVCache.cache.Add(key, value)
@@ -254,10 +251,10 @@ function Set(
 | KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` from which the key/value pair is deleted |
 | key  | string | Key of the key/value pair being deleted |
 
-```typescript
-function Delete(
-    KVCache: CommitKVStoreCache,
-    key: string) {
+```go
+func Delete(
+    KVCache CommitKVStoreCache,
+    key string) {
 
     KVCache.cache.Remove(key)
     KVCache.store.Delete(key)
@@ -272,9 +269,9 @@ function Delete(
 | ------------- | ---------|------- |
 | KVCache  | `CommitKVStoreCache` | The `CommitKVStoreCache` being wrapped |
 
-```typescript
-function CacheWrap(
-    KVCache: CommitKVStoreCache) {
+```go
+func CacheWrap(
+    KVCache CommitKVStoreCache) {
      
     return CacheKV.NewStore(KVCache)
 }

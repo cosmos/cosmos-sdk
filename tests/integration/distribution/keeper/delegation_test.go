@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -34,7 +34,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
@@ -103,7 +103,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
@@ -178,7 +178,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
@@ -265,7 +265,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(100000000))
@@ -342,7 +342,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
@@ -427,7 +427,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 1, sdk.NewInt(1000000000))
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addr)
@@ -507,7 +507,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))
@@ -595,7 +595,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
@@ -756,7 +756,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	tstaking := stakingtestutil.NewHelper(t, ctx, stakingKeeper)
 	addr := simtestutil.AddTestAddrs(bankKeeper, stakingKeeper, ctx, 2, sdk.NewInt(1000000000))

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/rootmulti"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/log"
+	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 

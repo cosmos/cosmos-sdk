@@ -7,9 +7,9 @@ import (
 	context "context"
 	types1 "cosmossdk.io/store/types"
 	fmt "fmt"
+	types "github.com/cometbft/cometbft/abci/types"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	types "github.com/tendermint/tendermint/abci/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -172,7 +172,7 @@ func (m *ListenEndBlockRequest) GetRes() *types.ResponseEndBlock {
 	return nil
 }
 
-// ListenBeginBlockResponse is the response type for the ListenEndBlock RPC method
+// ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
 type ListenEndBlockResponse struct {
 }
 
@@ -271,7 +271,7 @@ func (m *ListenDeliverTxRequest) GetRes() *types.ResponseDeliverTx {
 	return nil
 }
 
-// ListenBeginBlockResponse is the response type for the ListenDeliverTx RPC method
+// ListenDeliverTxResponse is the response type for the ListenDeliverTx RPC method
 type ListenDeliverTxResponse struct {
 }
 
@@ -370,7 +370,7 @@ func (m *ListenCommitRequest) GetChangeSet() []*types1.StoreKVPair {
 	return nil
 }
 
-// ListenBeginBlockResponse is the response type for the ListenCommit RPC method
+// ListenCommitResponse is the response type for the ListenCommit RPC method
 type ListenCommitResponse struct {
 }
 

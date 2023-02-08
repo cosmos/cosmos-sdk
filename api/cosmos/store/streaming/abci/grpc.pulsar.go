@@ -3777,7 +3777,7 @@ func (x *ListenEndBlockRequest) GetRes() *abci.ResponseEndBlock {
 	return nil
 }
 
-// ListenBeginBlockResponse is the response type for the ListenEndBlock RPC method
+// ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
 type ListenEndBlockResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3857,7 +3857,7 @@ func (x *ListenDeliverTxRequest) GetRes() *abci.ResponseDeliverTx {
 	return nil
 }
 
-// ListenBeginBlockResponse is the response type for the ListenDeliverTx RPC method
+// ListenDeliverTxResponse is the response type for the ListenDeliverTx RPC method
 type ListenDeliverTxResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3937,7 +3937,7 @@ func (x *ListenCommitRequest) GetChangeSet() []*v1beta1.StoreKVPair {
 	return nil
 }
 
-// ListenBeginBlockResponse is the response type for the ListenCommit RPC method
+// ListenCommitResponse is the response type for the ListenCommit RPC method
 type ListenCommitResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

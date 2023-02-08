@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 )
 
 // ABCIListener is the interface that we're exposing as a streaming service.

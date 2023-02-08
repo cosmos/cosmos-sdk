@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -15,33 +15,33 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var _ storetypes.ABCIListener = (*mockABCIListener)(nil)
+var _ storetypes.ABCIListener = (*MockABCIListener)(nil)
 
-type mockABCIListener struct {
+type MockABCIListener struct {
 	name      string
 	ChangeSet []*storetypes.StoreKVPair
 }
 
-func NewMockABCIListener(name string) mockABCIListener {
-	return mockABCIListener{
+func NewMockABCIListener(name string) MockABCIListener {
+	return MockABCIListener{
 		name:      name,
 		ChangeSet: make([]*storetypes.StoreKVPair, 0),
 	}
 }
 
-func (m mockABCIListener) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
+func (m MockABCIListener) ListenBeginBlock(ctx context.Context, req abci.RequestBeginBlock, res abci.ResponseBeginBlock) error {
 	return nil
 }
 
-func (m mockABCIListener) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
+func (m MockABCIListener) ListenEndBlock(ctx context.Context, req abci.RequestEndBlock, res abci.ResponseEndBlock) error {
 	return nil
 }
 
-func (m mockABCIListener) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
+func (m MockABCIListener) ListenDeliverTx(ctx context.Context, req abci.RequestDeliverTx, res abci.ResponseDeliverTx) error {
 	return nil
 }
 
-func (m *mockABCIListener) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
+func (m *MockABCIListener) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	m.ChangeSet = changeSet
 	return nil
 }

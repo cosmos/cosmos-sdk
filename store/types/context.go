@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/log"
 )
 
 // Context is an interface used by an App to pass context information

@@ -7,10 +7,10 @@ import (
 	"io"
 	"testing"
 
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/xsalsa20symmetric"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/crypto/xsalsa20symmetric"
 
 	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -51,10 +51,10 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 
 	// armor key manually
 	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes []byte, encBytes []byte) {
-		saltBytes = tmcrypto.CRandBytes(16)
+		saltBytes = cmtcrypto.CRandBytes(16)
 		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
 		require.NoError(t, err)
-		key = tmcrypto.Sha256(key) // get 32 bytes
+		key = cmtcrypto.Sha256(key) // get 32 bytes
 		privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
 		return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
 	}
@@ -173,7 +173,7 @@ func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
 		param := securityParam
 		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
 			b.ReportAllocs()
-			saltBytes := tmcrypto.CRandBytes(16)
+			saltBytes := cmtcrypto.CRandBytes(16)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				_, err := bcrypt.GenerateFromPassword(saltBytes, passphrase, param)

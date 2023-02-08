@@ -346,12 +346,12 @@ just trying the examples, you can skip ahead to the [Testing](#testing) section.
 make proto-gen 
 ```
 
-- stdout plugin
+- stdout plugin; from inside the `store/` dir, run:
 ```shell
 go build -o streaming/abci/examples/stdout/stdout streaming/abci/examples/stdout/stdout.go
 ```
 
-- file plugin (writes to ~/)
+- file plugin (writes to `~/`); from inside the `store/` dir, run:
 ```shell
 go build -o streaming/abci/examples/file/file streaming/abci/examples/file/file.go
 ```

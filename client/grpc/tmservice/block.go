@@ -3,9 +3,9 @@ package tmservice
 import (
 	"context"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*coretypes.ResultBlock, error) {
@@ -18,14 +18,14 @@ func getBlock(ctx context.Context, clientCtx client.Context, height *int64) (*co
 	return node.Block(ctx, height)
 }
 
-func GetProtoBlock(ctx context.Context, clientCtx client.Context, height *int64) (tmproto.BlockID, *tmproto.Block, error) {
+func GetProtoBlock(ctx context.Context, clientCtx client.Context, height *int64) (cmtproto.BlockID, *cmtproto.Block, error) {
 	block, err := getBlock(ctx, clientCtx, height)
 	if err != nil {
-		return tmproto.BlockID{}, nil, err
+		return cmtproto.BlockID{}, nil, err
 	}
 	protoBlock, err := block.Block.ToProto()
 	if err != nil {
-		return tmproto.BlockID{}, nil, err
+		return cmtproto.BlockID{}, nil, err
 	}
 	protoBlockID := block.BlockID.ToProto()
 

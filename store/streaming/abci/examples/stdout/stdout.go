@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/hashicorp/go-plugin"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	streamingabci "cosmossdk.io/store/streaming/abci"
 	store "cosmossdk.io/store/types"

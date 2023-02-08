@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -101,6 +103,38 @@ func NewMsgEditValidator(valAddr string, description Description, newRate *math.
 		ValidatorAddress:  valAddr,
 		MinSelfDelegation: newMinSelfDelegation,
 	}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgEditValidator) ValidateBasic() error {
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	if msg.Description == (Description{}) {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+	}
+
+	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"minimum self delegation must be a positive integer",
+		)
+	}
+
+	if msg.CommissionRate != nil {
+		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
+		}
+		if msg.CommissionRate.LT(MinCommissionRate) {
+			return sdkerrors.Wrap(
+				ErrCommissionTooSmall,
+				fmt.Sprintf("minimum commission rate is %s", MinCommissionRate.String()),
+			)
+		}
+	}
+
+	return nil
 }
 
 // NewMsgDelegate creates a new MsgDelegate instance.

@@ -13,6 +13,7 @@ Some functions have been renamed to reflect the naming change, following an exha
 
 * `client.TendermintRPC` -> `client.CometRPC`
 * `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
 * Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
 
 Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.

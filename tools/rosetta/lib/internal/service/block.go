@@ -65,7 +65,7 @@ func (on OnlineNetwork) Block(ctx context.Context, request *types.BlockRequest) 
 }
 
 // BlockTransaction gets the given transaction in the specified block, we do not need to check the block itself too
-// due to the fact that tendermint achieves instant finality
+// due to the fact that CometBFT achieves instant finality
 func (on OnlineNetwork) BlockTransaction(ctx context.Context, request *types.BlockTransactionRequest) (*types.BlockTransactionResponse, *types.Error) {
 	tx, err := on.client.GetTx(ctx, request.TransactionIdentifier.Hash)
 	if err != nil {

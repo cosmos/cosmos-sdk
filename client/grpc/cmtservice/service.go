@@ -33,7 +33,7 @@ type (
 	}
 )
 
-// NewQueryServer creates a new tendermint query server.
+// NewQueryServer creates a new CometBFT query server.
 func NewQueryServer(
 	clientCtx client.Context,
 	interfaceRegistry codectypes.InterfaceRegistry,

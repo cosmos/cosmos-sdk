@@ -37,7 +37,7 @@ func NewOnlineNetwork(network *types.NetworkIdentifier, client crgtypes.Client, 
 
 // OnlineNetwork groups together all the components required for the full rosetta implementation
 type OnlineNetwork struct {
-	client crgtypes.Client // used to query cosmos app + tendermint
+	client crgtypes.Client // used to query Cosmos app + CometBFT
 
 	network        *types.NetworkIdentifier      // identifies the network, it's static
 	networkOptions *types.NetworkOptionsResponse // identifies the network options, it's static

@@ -202,7 +202,7 @@ func NewSimApp(
 				// For providing a custom a base account type add it below.
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
-				// func() authtypes.AccountI { return authtypes.ProtoBaseAccount() },
+				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
 
 				//
 				// MINT

@@ -102,13 +102,13 @@ message FlagOptions {
   string default_value = 4;
 
   // deprecated is the usage text to show if this flag is deprecated.
-  string deprecated = 6;
+  string deprecated = 5;
 
   // shorthand_deprecated is the usage text to show if the shorthand of this flag is deprecated.
-  string shorthand_deprecated = 7;
+  string shorthand_deprecated = 6;
 
   // hidden hides the flag from help/usage text
-  bool hidden = 8;
+  bool hidden = 7;
 }
 
 // PositionalArgDescriptor describes a positional argument.

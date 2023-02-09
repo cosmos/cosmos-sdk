@@ -3,7 +3,7 @@
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
 FROM bufbuild/buf:1.13.1 as BUILDER
-FROM golang:1.19-alpine
+FROM golang:1.20-alpine
 
 RUN apk add --no-cache \
   nodejs \

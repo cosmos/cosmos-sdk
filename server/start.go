@@ -138,19 +138,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				return err
 			}
 
-<<<<<<< HEAD
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
-				return startStandAlone(serverCtx, appCreator)
-=======
-			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
-			if !withCMT {
-				serverCtx.Logger.Info("starting ABCI without CometBFT")
 				return wrapCPUProfile(serverCtx, func() error {
 					return startStandAlone(serverCtx, appCreator)
 				})
->>>>>>> 4d02519ec (feat: support profiling block replay during abci handshake (#14953))
 			}
 
 			// amino is needed here for backwards compatibility of REST routes

@@ -129,7 +129,7 @@ func QueryBlocksByEventsCmd() *cobra.Command {
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
 		Long: `Search for blocks that match the exact given events where results are paginated.
-The events query is directly passed to Tendermint's RPC BlockSearch method and must
+The events query is directly passed to CometBFT's RPC BlockSearch method and must
 conform to Tendermint's query syntax.
 Please refer to each module's documentation for the full set of events to query
 for. Each module documents its respective events under 'xx_events.md'.

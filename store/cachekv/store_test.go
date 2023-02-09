@@ -120,6 +120,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, nItems, i)
+	require.NoError(t, itr.Close())
 
 	// iterate over none
 	itr = st.Iterator(bz("money"), nil)
@@ -128,6 +129,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 0, i)
+	require.NoError(t, itr.Close())
 
 	// iterate over lower
 	itr = st.Iterator(keyFmt(0), keyFmt(3))
@@ -139,6 +141,7 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 3, i)
+	require.NoError(t, itr.Close())
 
 	// iterate over upper
 	itr = st.Iterator(keyFmt(2), keyFmt(4))
@@ -150,6 +153,64 @@ func TestCacheKVIteratorBounds(t *testing.T) {
 		i++
 	}
 	require.Equal(t, 4, i)
+	require.NoError(t, itr.Close())
+}
+
+func TestCacheKVReverseIteratorBounds(t *testing.T) {
+	st := newCacheKVStore()
+
+	// set some items
+	nItems := 5
+	for i := 0; i < nItems; i++ {
+		st.Set(keyFmt(i), valFmt(i))
+	}
+
+	// iterate over all of them
+	itr := st.ReverseIterator(nil, nil)
+	i := 0
+	for ; itr.Valid(); itr.Next() {
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(nItems-1-i), k)
+		require.Equal(t, valFmt(nItems-1-i), v)
+		i++
+	}
+	require.Equal(t, nItems, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over none
+	itr = st.ReverseIterator(bz("money"), nil)
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+	}
+	require.Equal(t, 0, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over lower
+	end := 3
+	itr = st.ReverseIterator(keyFmt(0), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 3, i)
+	require.NoError(t, itr.Close())
+
+	// iterate over upper
+	end = 4
+	itr = st.ReverseIterator(keyFmt(2), keyFmt(end))
+	i = 0
+	for ; itr.Valid(); itr.Next() {
+		i++
+		k, v := itr.Key(), itr.Value()
+		require.Equal(t, keyFmt(end-i), k)
+		require.Equal(t, valFmt(end-i), v)
+	}
+	require.Equal(t, 2, i)
+	require.NoError(t, itr.Close())
 }
 
 func TestCacheKVMergeIteratorBasics(t *testing.T) {
@@ -291,6 +352,25 @@ func TestCacheKVMergeIteratorChunks(t *testing.T) {
 	assertIterateDomainCheck(t, st, truth, []keyRange{{0, 15}, {25, 35}, {38, 40}, {45, 80}})
 }
 
+func TestCacheKVMergeIteratorDomain(t *testing.T) {
+	st := newCacheKVStore()
+
+	itr := st.Iterator(nil, nil)
+	start, end := itr.Domain()
+	require.Equal(t, start, end)
+	require.NoError(t, itr.Close())
+
+	itr = st.Iterator(keyFmt(40), keyFmt(60))
+	start, end = itr.Domain()
+	require.Equal(t, keyFmt(40), start)
+	require.Equal(t, keyFmt(60), end)
+	require.NoError(t, itr.Close())
+
+	start, end = st.ReverseIterator(keyFmt(0), keyFmt(80)).Domain()
+	require.Equal(t, keyFmt(0), start)
+	require.Equal(t, keyFmt(80), end)
+}
+
 func TestCacheKVMergeIteratorRandom(t *testing.T) {
 	st := newCacheKVStore()
 	truth := dbm.NewMemDB()
@@ -304,6 +384,67 @@ func TestCacheKVMergeIteratorRandom(t *testing.T) {
 		doRandomOp(t, st, truth, max)
 		assertIterateDomainCompare(t, st, truth)
 	}
+}
+
+func TestNilEndIterator(t *testing.T) {
+	const SIZE = 3000
+
+	tests := []struct {
+		name       string
+		write      bool
+		startIndex int
+		end        []byte
+	}{
+		{name: "write=false, end=nil", write: false, end: nil, startIndex: 1000},
+		{name: "write=false, end=nil; full key scan", write: false, end: nil, startIndex: 2000},
+		{name: "write=true, end=nil", write: true, end: nil, startIndex: 1000},
+		{name: "write=false, end=non-nil", write: false, end: keyFmt(3000), startIndex: 1000},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			st := newCacheKVStore()
+
+			for i := 0; i < SIZE; i++ {
+				kstr := keyFmt(i)
+				st.Set(kstr, valFmt(i))
+			}
+
+			if tt.write {
+				st.Write()
+			}
+
+			itr := st.Iterator(keyFmt(tt.startIndex), tt.end)
+			i := tt.startIndex
+			j := 0
+			for itr.Valid() {
+				require.Equal(t, keyFmt(i), itr.Key())
+				require.Equal(t, valFmt(i), itr.Value())
+				itr.Next()
+				i++
+				j++
+			}
+
+			require.Equal(t, SIZE-tt.startIndex, j)
+			require.NoError(t, itr.Close())
+		})
+	}
+}
+
+// TestIteratorDeadlock demonstrate the deadlock issue in cache store.
+func TestIteratorDeadlock(t *testing.T) {
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	store := cachekv.NewStore(mem)
+	// the channel buffer is 64 and received once, so put at least 66 elements.
+	for i := 0; i < 66; i++ {
+		store.Set([]byte(fmt.Sprintf("key%d", i)), []byte{1})
+	}
+	it := store.Iterator(nil, nil)
+	defer it.Close()
+	store.Set([]byte("key20"), []byte{1})
+	// it'll be blocked here with previous version, or enable lock on btree.
+	it2 := store.Iterator(nil, nil)
+	defer it2.Close()
 }
 
 //-------------------------------------------------------------------------------------------
@@ -388,6 +529,7 @@ func assertIterateDomain(t *testing.T, st types.KVStore, expectedN int) {
 		i++
 	}
 	require.Equal(t, expectedN, i)
+	require.NoError(t, itr.Close())
 }
 
 func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []keyRange) {
@@ -419,6 +561,8 @@ func assertIterateDomainCheck(t *testing.T, st types.KVStore, mem dbm.DB, r []ke
 
 	require.False(t, itr.Valid())
 	require.False(t, itr2.Valid())
+	require.NoError(t, itr.Close())
+	require.NoError(t, itr2.Close())
 }
 
 func assertIterateDomainCompare(t *testing.T, st types.KVStore, mem dbm.DB) {
@@ -428,6 +572,8 @@ func assertIterateDomainCompare(t *testing.T, st types.KVStore, mem dbm.DB) {
 	require.NoError(t, err)
 	checkIterators(t, itr, itr2)
 	checkIterators(t, itr2, itr)
+	require.NoError(t, itr.Close())
+	require.NoError(t, itr2.Close())
 }
 
 func checkIterators(t *testing.T, itr, itr2 types.Iterator) {

@@ -5,9 +5,9 @@ package keyring
 
 import (
 	"bytes"
-	"strings"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
@@ -101,8 +101,7 @@ func TestAltKeyring_SaveLedgerKey(t *testing.T) {
 
 	// Test unsupported Algo
 	_, err = kr.SaveLedgerKey("key", notSupportedAlgo{}, "cosmos", 118, 0, 0)
-	require.Error(t, err)
-	require.True(t, strings.Contains(err.Error(), ErrUnsupportedSigningAlgo.Error()))
+	require.True(t, errors.Is(err, ErrUnsupportedSigningAlgo))
 
 	k, err := kr.SaveLedgerKey("some_account", hd.Secp256k1, "cosmos", 118, 3, 1)
 	if err != nil {

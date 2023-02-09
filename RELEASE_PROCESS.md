@@ -23,7 +23,9 @@ v1.0.0-beta1 → v1.0.0-beta2 → ... → v1.0.0-rc1 → v1.0.0-rc2 → ... → 
     * update the GitHub mergify integration by adding instructions for automatically backporting commits from `main` to the `release/vY` using the `backport/Y` label.
 * In the release branch prepare a new version section in the `CHANGELOG.md`
     * All links must be link-ified: `$ python ./scripts/linkify_changelog.py CHANGELOG.md`
-    * Create release notes, in `RELEASE_NOTES.md`, highlighting the changes and how to upgrade the SDK. This is needed so the bot knows which entries to add to the release page on GitHub.
+    * The `CHANGELOG.md` must contain only the changes of that specific released version. All other changelog entries must be deleted and linked to the `main` branch changelog ([example](https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/CHANGELOG.md#previous-versions)).
+    * Create release notes, in `RELEASE_NOTES.md`, highlighting the new features and changes in the version. This is needed so the bot knows which entries to add to the release page on GitHub.
+    * Additionally verify that the `UPGRADING.md` file is up to date and contains all the necessary information for upgrading to the new version.
 * Remove GitHub workflows that should not be in the release branch (eg: `deploy-docs.yml`).
 * Create a new annotated git tag for a release candidate (eg: `git tag -a v1.1.0-rc1`) in the release branch.
     * from this point we unfreeze main.

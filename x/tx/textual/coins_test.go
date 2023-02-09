@@ -9,9 +9,10 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/textual"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"cosmossdk.io/x/tx/textual"
 )
 
 func TestCoinsJsonTestcases(t *testing.T) {
@@ -21,7 +22,7 @@ func TestCoinsJsonTestcases(t *testing.T) {
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
 
-	txt := textual.NewTextual(mockCoinMetadataQuerier)
+	txt := textual.NewSignModeHandler(mockCoinMetadataQuerier)
 	vr, err := txt.GetFieldValueRenderer(fieldDescriptorFromName("COINS"))
 	vrr := vr.(textual.RepeatedValueRenderer)
 	require.NoError(t, err)

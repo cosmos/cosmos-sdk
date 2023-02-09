@@ -16,6 +16,7 @@ import (
 	msg "cosmossdk.io/api/cosmos/msg/v1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
+
 	"cosmossdk.io/x/tx/textual/internal/textualpb"
 )
 
@@ -28,7 +29,7 @@ var (
 )
 
 type txValueRenderer struct {
-	tr *Textual
+	tr *SignModeHandler
 }
 
 // NewTxValueRenderer returns a ValueRenderer for the protobuf
@@ -36,7 +37,7 @@ type txValueRenderer struct {
 // The reason we create a renderer for TextualData (and not directly Tx)
 // is that TextualData is a single place that contains all data needed
 // to create the `[]Screen` SignDoc.
-func NewTxValueRenderer(tr *Textual) ValueRenderer {
+func NewTxValueRenderer(tr *SignModeHandler) ValueRenderer {
 	return txValueRenderer{
 		tr: tr,
 	}

@@ -123,8 +123,8 @@ func VersionCmd() *cobra.Command {
 	}
 }
 
-// QueryBlocksByEventsCmd returns a command to search through blocks by events.
-func QueryBlocksByEventsCmd() *cobra.Command {
+// QueryBlocksCmd returns a command to search through blocks by events.
+func QueryBlocksCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
@@ -148,7 +148,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 			limit, _ := cmd.Flags().GetInt(flags.FlagLimit)
 			orderBy, _ := cmd.Flags().GetString(auth.FlagOrderBy)
 
-			blocks, err := rpc.QueryBlocksByEvents(clientCtx, page, limit, query, orderBy)
+			blocks, err := rpc.QueryBlocks(clientCtx, page, limit, query, orderBy)
 			if err != nil {
 				return err
 			}

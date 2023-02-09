@@ -238,7 +238,7 @@ func queryCommand() *cobra.Command {
 		rpc.ValidatorCommand(),
 		tmcmd.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
-		tmcmd.QueryBlocksByEventsCmd(),
+		tmcmd.QueryBlocksCmd(),
 		authcmd.QueryTxCmd(),
 	)
 

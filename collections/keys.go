@@ -14,6 +14,8 @@ import (
 var (
 	// Uint64Key can be used to encode uint64 keys. Encoding is big endian to retain ordering.
 	Uint64Key KeyCodec[uint64] = uint64Key{}
+	// Uint32Key can be used to encode uint32 keys. Encoding is big endian to retain ordering.
+	Uint32Key KeyCodec[uint32] = uint32Key[uint32]{}
 	// StringKey can be used to encode string keys. The encoding just converts the string
 	// to bytes.
 	// Non-terminality in multipart keys is handled by appending the StringDelimiter,
@@ -209,3 +211,41 @@ func (bytesKey) DecodeNonTerminal(buffer []byte) (int, []byte, error) {
 func (bytesKey) SizeNonTerminal(key []byte) int {
 	return len(key) + 1
 }
+
+type uint32Key[T ~uint32] struct{}
+
+func (uint32Key[T]) Encode(buffer []byte, key T) (int, error) {
+	binary.BigEndian.PutUint32(buffer, (uint32)(key))
+	return 4, nil
+}
+
+func (uint32Key[T]) Decode(buffer []byte) (int, T, error) {
+	if len(buffer) < 4 {
+		return 0, 0, fmt.Errorf("%w: expected buffer of size 4", ErrEncoding)
+	}
+	return 4, (T)(binary.BigEndian.Uint32(buffer)), nil
+}
+
+func (uint32Key[T]) Size(_ T) int { return 4 }
+
+func (uint32Key[T]) EncodeJSON(value T) ([]byte, error) { return uint64EncodeJSON((uint64)(value)) }
+
+func (uint32Key[T]) DecodeJSON(b []byte) (T, error) {
+	u, err := uint64DecodeJSON(b)
+	if err != nil {
+		return 0, err
+	}
+	return (T)(u), nil
+}
+
+func (uint32Key[T]) Stringify(key T) string { return strconv.FormatUint(uint64(key), 10) }
+
+func (uint32Key[T]) KeyType() string { return "uint32" }
+
+func (u uint32Key[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
+	return u.Encode(buffer, key)
+}
+
+func (u uint32Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) { return u.Decode(buffer) }
+
+func (u uint32Key[T]) SizeNonTerminal(_ T) int { return 4 }

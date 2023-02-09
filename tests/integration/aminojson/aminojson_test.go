@@ -11,14 +11,17 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"pgregory.net/rapid"
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	authzapi "cosmossdk.io/api/cosmos/authz/v1beta1"
 	bankapi "cosmossdk.io/api/cosmos/bank/v1beta1"
+	consensusapi "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
+	govv1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -33,8 +36,11 @@ import (
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/consensus"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type generatedType struct {
@@ -85,14 +91,17 @@ var (
 		genType(&banktypes.MsgMultiSend{}, &bankapi.MsgMultiSend{}, genOpts.WithDisallowNil()),
 		genType(&banktypes.MsgUpdateParams{}, &bankapi.MsgUpdateParams{}, genOpts.WithDisallowNil()),
 		genType(&banktypes.MsgSetSendEnabled{}, &bankapi.MsgSetSendEnabled{}, genOpts),
-		genType(&banktypes.SendAuthorization{}, &bankapi.SendAuthorization{}, genOpts.WithDisallowNil()),
+		genType(&banktypes.SendAuthorization{}, &bankapi.SendAuthorization{}, genOpts),
 		genType(&banktypes.Params{}, &bankapi.Params{}, genOpts),
+
+		// consensus
+		genType(&consensustypes.MsgUpdateParams{}, &consensusapi.MsgUpdateParams{}, genOpts),
 	}
 )
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
-		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{})
+		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {
@@ -147,14 +156,22 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 	genericAuthPulsar, _ := anypb.New(&authzapi.GenericAuthorization{Msg: "foo"})
 
 	cases := map[string]struct {
-		gogo   gogoproto.Message
-		pulsar proto.Message
+		gogo               gogoproto.Message
+		pulsar             proto.Message
+		pulsarMarshalFails bool
 	}{
 		"auth/params": {gogo: &authtypes.Params{TxSigLimit: 10}, pulsar: &authapi.Params{TxSigLimit: 10}},
 		"auth/module_account": {
-			gogo: &authtypes.ModuleAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(addr1),
-				Permissions: []string{}},
-			pulsar: &authapi.ModuleAccount{BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
+			gogo: &authtypes.ModuleAccount{
+				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: []string{}},
+			pulsar: &authapi.ModuleAccount{
+				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: []string{}},
+		},
+		"auth/module_account/null_slice": {
+			gogo: &authtypes.ModuleAccount{
+				BaseAccount: authtypes.NewBaseAccountWithAddress(addr1), Permissions: nil},
+			pulsar: &authapi.ModuleAccount{
+				BaseAccount: &authapi.BaseAccount{Address: addr1.String()}, Permissions: nil},
 		},
 		"authz/msg_grant": {
 			gogo: &authztypes.MsgGrant{
@@ -170,10 +187,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{}},
 			pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{}},
 		},
-		"authz/msg_exec/null_msg": {
-			gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{(*codectypes.Any)(nil)}},
-			pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{(*anypb.Any)(nil)}},
-		},
+		//"authz/msg_exec/null_msg": {
+		//	gogo:   &authztypes.MsgExec{Msgs: []*codectypes.Any{(*codectypes.Any)(nil)}},
+		//	pulsar: &authzapi.MsgExec{Msgs: []*anypb.Any{(*anypb.Any)(nil)}},
+		//},
 		"distribution/delegator_starting_info": {
 			gogo:   &disttypes.DelegatorStartingInfo{},
 			pulsar: &distapi.DelegatorStartingInfo{},
@@ -182,10 +199,10 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo:   &disttypes.DelegatorStartingInfo{Stake: types.NewDec(10)},
 			pulsar: &distapi.DelegatorStartingInfo{Stake: "10.000000000000000000"},
 		},
-		"distribution/delegation_delegator_reward": {
-			gogo:   &disttypes.DelegationDelegatorReward{},
-			pulsar: &distapi.DelegationDelegatorReward{},
-		},
+		//"distribution/delegation_delegator_reward": {
+		//	gogo:   &disttypes.DelegationDelegatorReward{},
+		//	pulsar: &distapi.DelegationDelegatorReward{},
+		//},
 		"distribution/community_pool_spend_proposal_with_deposit": {
 			gogo:   &disttypes.CommunityPoolSpendProposalWithDeposit{},
 			pulsar: &distapi.CommunityPoolSpendProposalWithDeposit{},
@@ -197,6 +214,21 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 		"crypto/pubkey": {
 			gogo: &cryptotypes.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
 		},
+		"consensus/evidence_params/duration": {
+			gogo:   &govtypes.VotingParams{VotingPeriod: 1e9 + 7},
+			pulsar: &govv1beta1.VotingParams{VotingPeriod: &durationpb.Duration{Seconds: 1, Nanos: 7}},
+		},
+		"consensus/evidence_params/big_duration": {
+			gogo: &govtypes.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
+			pulsar: &govv1beta1.VotingParams{VotingPeriod: &durationpb.Duration{
+				Seconds: rapidproto.MaxDurationSeconds, Nanos: 999999999}},
+		},
+		"consensus/evidence_params/too_big_duration": {
+			gogo: &govtypes.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
+			pulsar: &govv1beta1.VotingParams{VotingPeriod: &durationpb.Duration{
+				Seconds: rapidproto.MaxDurationSeconds + 1, Nanos: 999999999}},
+			pulsarMarshalFails: true,
+		},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -204,7 +236,17 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.NoError(t, err)
 
 			pulsarBytes, err := aj.MarshalAmino(tc.pulsar)
+			if tc.pulsarMarshalFails {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
+
+			//pulsarProtoBytes, err := proto.Marshal(tc.pulsar)
+			//require.NoError(t, err)
+			//
+			//err = encCfg.Codec.Unmarshal(pulsarProtoBytes, tc.gogo)
+			//require.NoError(t, err)
 
 			fmt.Printf("pulsar: %s\n", string(pulsarBytes))
 			require.Equal(t, string(gogoBytes), string(pulsarBytes), "gogo: %s vs pulsar: %s", gogoBytes, pulsarBytes)

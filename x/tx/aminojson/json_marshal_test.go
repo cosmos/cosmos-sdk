@@ -45,6 +45,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 		"single map":    {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}, shouldErr: true},
 		"any type":      {msg: &testpb.ABitOfEverything{Any: simpleAny}},
 		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
+		"duration":      {msg: &testpb.ABitOfEverything{Duration: &durationpb.Duration{Seconds: 10, Nanos: 10}}},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 			legacyBz, err := cdc.MarshalJSON(tc.msg)
 			assert.NilError(t, err)
 
-			assert.Equal(t, string(legacyBz), string(bz), "legacy: %s vs %s", legacyBz, bz)
+			require.Equal(t, string(legacyBz), string(bz))
 
 			goProtoJSON, err := protojson.Marshal(tc.msg)
 			err = cdc.UnmarshalJSON(bz, msg2)

@@ -2,6 +2,7 @@ package rapidproto
 
 import (
 	"fmt"
+	"math"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
 	"google.golang.org/protobuf/proto"
@@ -197,8 +198,11 @@ func (opts GeneratorOptions) genScalarFieldValue(t *rapid.T, field protoreflect.
 }
 
 const (
-	secondsName = "seconds"
-	nanosName   = "nanos"
+	// MaxDurationSeconds the maximum number of seconds (when expressed as nanoseconds) which can fit in an int64.
+	// gogoproto encodes google.protobuf.Duration as a time.Duration, which is 64-bit signed integer.
+	MaxDurationSeconds = int64(math.MaxInt64/int(1e9)) - 1
+	secondsName        = "seconds"
+	nanosName          = "nanos"
 )
 
 func (opts GeneratorOptions) genTimestamp(t *rapid.T, msg protoreflect.Message) {
@@ -208,7 +212,7 @@ func (opts GeneratorOptions) genTimestamp(t *rapid.T, msg protoreflect.Message) 
 }
 
 func (opts GeneratorOptions) genDuration(t *rapid.T, msg protoreflect.Message) {
-	seconds := rapid.Int64Range(0, 315576000000).Draw(t, "seconds")
+	seconds := rapid.Int64Range(0, int64(MaxDurationSeconds)).Draw(t, "seconds")
 	nanos := rapid.Int32Range(0, 999999999).Draw(t, "nanos")
 	setSecondsNanosFields(t, msg, seconds, nanos)
 }

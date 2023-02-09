@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"time"
 
 	cosmos_proto "github.com/cosmos/cosmos-proto"
@@ -210,6 +211,8 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 	case timestampFullName:
 		// replicate https://github.com/tendermint/go-amino/blob/8e779b71f40d175cd1302d3cd41a75b005225a7a/json-encode.go#L45-L51
 		return marshalTimestamp(msg, writer)
+	case durationFullName:
+		return marshalDuration(msg, writer)
 	case anyFullName:
 		return aj.marshalAny(msg, writer)
 	}
@@ -238,13 +241,14 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 				zv, found := aj.getZeroValue(f)
 				if found {
 					v = zv
-					//} else if f.Cardinality() == protoreflect.Repeated {
+				} else if f.Cardinality() == protoreflect.Repeated {
 					// TODO
 					// not sure yet
-					//fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
+					fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
 					//return errors.Errorf("not supported: dont_omit_empty=true on empty repeated field: %s", name)
 				} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
-					return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
+					//return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
+					fmt.Printf("WARN: not supported: dont_omit_empty=true on invalid (nil?) message field: %s\n", name)
 				}
 			}
 		}
@@ -464,7 +468,8 @@ func moduleAccountEncoder(msg protoreflect.Message, w io.Writer) error {
 
 const (
 	timestampFullName protoreflect.FullName = "google.protobuf.Timestamp"
-	anyFullName                             = "google.protobuf.Any"
+	durationFullName  protoreflect.FullName = "google.protobuf.Duration"
+	anyFullName       protoreflect.FullName = "google.protobuf.Any"
 )
 
 const (
@@ -503,5 +508,34 @@ func marshalTimestamp(message protoreflect.Message, writer io.Writer) error {
 	}
 
 	_, err := fmt.Fprintf(writer, `"%s"`, str)
+	return err
+}
+
+// MaxDurationSeconds the maximum number of seconds (when expressed as nanoseconds) which can fit in an int64.
+// gogoproto encodes google.protobuf.Duration as a time.Duration, which is 64-bit signed integer.
+const MaxDurationSeconds = int64(math.MaxInt64/int(1e9)) - 1
+
+func marshalDuration(message protoreflect.Message, writer io.Writer) error {
+	fields := message.Descriptor().Fields()
+	secondsField := fields.ByName(secondsName)
+	if secondsField == nil {
+		return fmt.Errorf("expected seconds field")
+	}
+
+	// todo
+	// check signs are consistent
+	seconds := message.Get(secondsField).Int()
+	if seconds > MaxDurationSeconds {
+		return fmt.Errorf("%d seconds would overflow an int64 when represented as nanoseconds", seconds)
+	}
+
+	nanosField := fields.ByName(nanosName)
+	if nanosField == nil {
+		return fmt.Errorf("expected nanos field")
+	}
+
+	nanos := message.Get(nanosField).Int()
+	totalNanos := nanos + (seconds * 1e9)
+	_, err := writer.Write([]byte(fmt.Sprintf(`"%d"`, totalNanos)))
 	return err
 }

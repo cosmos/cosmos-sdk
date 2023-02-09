@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#14583](https://github.com/cosmos/cosmos-sdk/pull/14583) Add support for Core API.
+
 ## v0.45.13 - 2023-02-09
 
 ### Improvements

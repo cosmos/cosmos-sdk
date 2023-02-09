@@ -132,6 +132,7 @@ mocks: $(MOCKS_DIR)
 	$(mockgen_cmd) -source=client/account_retriever.go -package mocks -destination tests/mocks/account_retriever.go
 	$(mockgen_cmd) -package mocks -destination tests/mocks/tendermint_tm_db_DB.go github.com/tendermint/tm-db DB
 	$(mockgen_cmd) -source=types/module/module.go -package mocks -destination tests/mocks/types_module_module.go
+	$(mockgen_cmd) -source=types/module/mock_appmodule_test.go -package mocks -destination tests/mocks/mock_appmodule.go
 	$(mockgen_cmd) -source=types/invariant.go -package mocks -destination tests/mocks/types_invariant.go
 	$(mockgen_cmd) -source=types/router.go -package mocks -destination tests/mocks/types_router.go
 	$(mockgen_cmd) -package mocks -destination tests/mocks/grpc_server.go github.com/gogo/protobuf/grpc Server

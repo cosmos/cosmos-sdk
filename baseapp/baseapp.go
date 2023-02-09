@@ -914,6 +914,67 @@ func (app *BaseApp) DefaultPrepareProposal() sdk.PrepareProposalHandler {
 	}
 }
 
+// PrepareProposalWithBlockGasLimit returns the default implementation for processing an
+// ABCI proposal with BlockGasLimit. The application's mempool is enumerated and all valid
+// transactions are added to the proposal. Transactions are valid if they:
+//
+// 1) Successfully encode to bytes.
+// 2) Are valid (i.e. pass runTx, AnteHandler only).
+//
+// Enumeration is halted once RequestPrepareProposal.MaxBytes of transactions is
+// reached, or max block gas reached, or the mempool is exhausted.
+func (app *BaseApp) PrepareProposalWithBlockGasLimit() sdk.PrepareProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+		// If the mempool is nil or a no-op mempool, we simply return the transactions
+		// requested from Tendermint, which, by default, should be in FIFO order.
+		_, isNoOp := app.mempool.(mempool.NoOpMempool)
+		if app.mempool == nil || isNoOp {
+			return abci.ResponsePrepareProposal{Txs: req.Txs}
+		}
+
+		var (
+			txsBytes  [][]byte
+			byteCount int64
+		)
+
+		iterator := app.mempool.Select(ctx, req.Txs)
+		for iterator != nil {
+			memTx := iterator.Tx()
+
+			bz, err := app.txEncoder(memTx)
+			if err != nil {
+				panic(err)
+			}
+
+			txSize := int64(len(bz))
+
+			// NOTE: Since runTx was already executed in CheckTx, which calls
+			// mempool.Insert, ideally everything in the pool should be valid. But
+			// some mempool implementations may insert invalid txs, so we check again.
+			gi, _, _, _, err := app.runTx(runTxPrepareProposal, bz)
+			if err != nil {
+				err := app.mempool.Remove(memTx)
+				if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
+					panic(err)
+				}
+
+				iterator = iterator.Next()
+				continue
+			} else if byteCount += txSize; byteCount <= req.MaxTxBytes &&
+				(ctx.BlockGasMeter().GasRemaining() >= gi.GasUsed) {
+				txsBytes = append(txsBytes, bz)
+				ctx.BlockGasMeter().ConsumeGas(gi.GasUsed, "prepareProposal")
+			} else {
+				break
+			}
+
+			iterator = iterator.Next()
+		}
+
+		return abci.ResponsePrepareProposal{Txs: txsBytes}
+	}
+}
+
 // DefaultProcessProposal returns the default implementation for processing an ABCI proposal.
 // Every transaction in the proposal must pass 2 conditions:
 //
@@ -935,6 +996,37 @@ func (app *BaseApp) DefaultProcessProposal() sdk.ProcessProposalHandler {
 			if err != nil {
 				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 			}
+		}
+		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+	}
+}
+
+// ProcessProposalWithBlockGasLimit returns the proposal execution results with the block gas limit.
+//
+// Reject the proposal if:
+// 1) any of the proposal transaction decode error.
+// 2) any of the proposal transaction excution error.
+// 3) block gas past limit.
+//
+// Otherwise, accept the proposal when all transactions executed without errors.
+func (app *BaseApp) ProcessProposalWithBlockGasLimit() sdk.ProcessProposalHandler {
+	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
+		for _, txBytes := range req.Txs {
+			_, err := app.txDecoder(txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+
+			gi, _, _, _, err := app.runTx(runTxProcessProposal, txBytes)
+			if err != nil {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+
+			if ctx.BlockGasMeter().GasRemaining() < gi.GasUsed {
+				return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
+			}
+
+			ctx.BlockGasMeter().ConsumeGas(gi.GasUsed, "processProposal")
 		}
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}

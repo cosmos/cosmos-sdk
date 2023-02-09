@@ -177,12 +177,7 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	// add block gas meter
-	var gasMeter storetypes.GasMeter
-	if maxGas := app.GetMaximumBlockGas(app.deliverState.ctx); maxGas > 0 {
-		gasMeter = storetypes.NewGasMeter(maxGas)
-	} else {
-		gasMeter = storetypes.NewInfiniteGasMeter()
-	}
+	gasMeter := app.updateBlockGasMeter(app.deliverState.ctx)
 
 	// NOTE: header hash is not set in NewContext, so we manually set it here
 
@@ -277,7 +272,8 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx)).
+		WithBlockGasMeter(app.updateBlockGasMeter(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -323,7 +319,8 @@ func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.
 		WithBlockTime(req.Time).
 		WithHeaderHash(req.Hash).
 		WithProposer(req.ProposerAddress).
-		WithConsensusParams(app.GetConsensusParams(ctx))
+		WithConsensusParams(app.GetConsensusParams(ctx)).
+		WithBlockGasMeter(app.updateBlockGasMeter(ctx))
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -970,4 +967,12 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 		return ctx
 	}
 	return ctx
+}
+
+// updateBlockGasMeter returns gasmeter according to the information of the given context.
+func (app *BaseApp) updateBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
+	if maxGas := app.GetMaximumBlockGas(ctx); maxGas > 0 {
+		return storetypes.NewGasMeter(maxGas)
+	}
+	return storetypes.NewInfiniteGasMeter()
 }

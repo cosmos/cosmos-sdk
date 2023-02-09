@@ -32,7 +32,7 @@ const (
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-// genesisState is the genesis state of the whole app. It can be got using `ModuleBasics.DefaultGenesis(cdc)`
+// genesisState is the default genesis state of the whole app.
 func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
 	return func(
 		r *rand.Rand,

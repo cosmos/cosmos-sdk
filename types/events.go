@@ -194,7 +194,7 @@ func (a Attribute) String() string {
 	return fmt.Sprintf("%s: %s", a.Key, a.Value)
 }
 
-// ToKVPair converts an Attribute object into a Tendermint key/value pair.
+// ToKVPair converts an Attribute object into a CometBFT key/value pair.
 func (a Attribute) ToKVPair() abci.EventAttribute {
 	return abci.EventAttribute{Key: a.Key, Value: a.Value}
 }

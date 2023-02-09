@@ -16,7 +16,7 @@ func GetCmtConsPubKey(v types.Validator) (cmtcrypto.PubKey, error) {
 		return nil, err
 	}
 
-	return cryptocodec.ToTmPubKeyInterface(pk)
+	return cryptocodec.ToCmtPubKeyInterface(pk)
 }
 
 // ToCmtValidator casts an SDK validator to a CometBFT type Validator.

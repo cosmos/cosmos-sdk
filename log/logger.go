@@ -1,6 +1,6 @@
 package log
 
-import cmlog "github.com/cometbft/cometbft/libs/log"
+import cmtlog "github.com/cometbft/cometbft/libs/log"
 
 // Logger is the interface that wraps the basic logging methods.
 type Logger interface {
@@ -8,5 +8,5 @@ type Logger interface {
 	Info(msg string, keyvals ...interface{})
 	Error(msg string, keyvals ...interface{})
 
-	With(keyvals ...interface{}) cmlog.Logger
+	With(keyvals ...interface{}) cmtlog.Logger
 }

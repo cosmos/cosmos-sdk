@@ -22,9 +22,10 @@ import (
 // ValidatorCommand returns the validator set for a given height
 func ValidatorCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tendermint-validator-set [height]",
-		Short: "Get the full tendermint validator set at given height",
-		Args:  cobra.MaximumNArgs(1),
+		Use:     "comet-validator-set [height]",
+		Aliases: []string{"cometbft-validator-set", "tendermint-validator-set"},
+		Short:   "Get the full CometBFT validator set at given height",
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -101,7 +102,7 @@ func (rvo ResultValidatorsOutput) String() string {
 }
 
 func validatorOutput(validator *cmttypes.Validator) (ValidatorOutput, error) {
-	pk, err := cryptocodec.FromTmPubKeyInterface(validator.PubKey)
+	pk, err := cryptocodec.FromCmtPubKeyInterface(validator.PubKey)
 	if err != nil {
 		return ValidatorOutput{}, err
 	}

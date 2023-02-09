@@ -189,7 +189,7 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 	// Create Tendermint keys.
 	tmPrivKey := tmed25519.GenPrivKey()
 	tmPubKey := tmPrivKey.PubKey()
-	// Create our own keys, with the same private key as Tendermint's.
+	// Create our own keys, with the same private key as CometBFT's.
 	privKey := &ed25519.PrivKey{Key: []byte(tmPrivKey)}
 	pubKey := privKey.PubKey().(*ed25519.PubKey)
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 

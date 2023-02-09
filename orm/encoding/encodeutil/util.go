@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+	"reflect"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -42,7 +43,11 @@ func ValuesOf(values ...interface{}) []protoreflect.Value {
 		value := values[i]
 		switch value.(type) {
 		case protoreflect.ProtoMessage:
-			value = value.(protoreflect.ProtoMessage).ProtoReflect()
+			if !reflect.ValueOf(value).IsNil() {
+				value = value.(protoreflect.ProtoMessage).ProtoReflect()
+			} else {
+				value = nil
+			}
 		}
 		res[i] = protoreflect.ValueOf(value)
 	}

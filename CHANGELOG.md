@@ -37,7 +37,28 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.46.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.8) - 2022-01-23
+## [v0.46.9](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.9) - 2022-02-07
+
+### Improvements
+
+* (deps) [#14846](https://github.com/cosmos/cosmos-sdk/pull/14846) Bump btcd.
+* (deps) Bump Tendermint version to [v0.34.26](https://github.com/informalsystems/tendermint/releases/tag/v0.34.26).
+* (store) [#14189](https://github.com/cosmos/cosmos-sdk/pull/14189) Add config `iavl-lazy-loading` to enable lazy loading of iavl store, to improve start up time of archive nodes, add method `SetLazyLoading` to `CommitMultiStore` interface.
+    * A new field has been added to the app.toml. This alllows nodes with larger databases to startup quicker 
+
+    ```toml
+    # IAVLLazyLoading enable/disable the lazy loading of iavl store.
+    # Default is false.
+    iavl-lazy-loading = ""  
+  ```
+
+### Bug Fixes
+
+* (cli) [#14919](https://github.com/cosmos/cosmos-sdk/pull/#14919) Fix never assigned error when write validators.
+* (store) [#14798](https://github.com/cosmos/cosmos-sdk/pull/14798) Copy btree to avoid the problem of modify while iteration.
+* (cli) [#14799](https://github.com/cosmos/cosmos-sdk/pull/14799) Fix Evidence CLI query flag parsing (backport #13458)
+
+## [v0.46.8](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.8) - 2023-01-23
 
 ### Improvements
 

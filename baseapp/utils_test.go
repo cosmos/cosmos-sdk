@@ -392,3 +392,27 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 	builder.SetMsgs(msgs...)
 	return builder.GetTx()
 }
+
+func anteHandlerGasTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte, gasConsumed uint64) sdk.AnteHandler {
+	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+		store := ctx.KVStore(capKey)
+		counter, failOnAnte := parseTxMemo(t, tx)
+
+		if failOnAnte {
+			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+		}
+
+		_, err := incrementingCounter(t, store, storeKey, counter)
+		if err != nil {
+			return ctx, err
+		}
+
+		ctx.EventManager().EmitEvents(
+			counterEvent("ante_handler", counter),
+		)
+
+		ctx = ctx.WithPriority(testTxPriority).WithGasMeter(storetypes.NewGasMeter(gasConsumed))
+		ctx.GasMeter().ConsumeGas(gasConsumed, "test")
+		return ctx, nil
+	}
+}

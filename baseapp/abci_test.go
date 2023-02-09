@@ -1553,3 +1553,95 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 		require.Equal(t, res.Status, abci.ResponseProcessProposal_REJECT)
 	})
 }
+
+func TestABCI_PrepareProposal_ReachBlockGasLimit(t *testing.T) {
+	anteKey := []byte("ante-key")
+	pool := mempool.NewSenderNonceMempool()
+	gasConsumed := uint64(5)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerGasTxTest(t, capKey1, anteKey, gasConsumed))
+		bapp.SetPrepareProposal(bapp.PrepareProposalWithBlockGasLimit())
+		bapp.SetProcessProposal(bapp.ProcessProposalWithBlockGasLimit())
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	maxGas := int64(9)
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: maxGas}},
+	})
+
+	for counter := 0; counter < 5; counter++ {
+		tx := newTxCounter(t, suite.txConfig, int64(counter), 0)
+		_, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		err = pool.Insert(sdk.Context{}, tx)
+		require.NoError(t, err)
+	}
+
+	reqPrepareProposal := abci.RequestPrepareProposal{
+		MaxTxBytes: 1000,
+		Height:     1,
+	}
+	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, uint64(maxGas)/gasConsumed, uint64(len(resPrepareProposal.Txs)))
+
+	// re-init chain with block gas limit to 10
+	newMaxGas := maxGas + 1
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: newMaxGas}},
+	})
+
+	resPrepareProposal = suite.baseApp.PrepareProposal(reqPrepareProposal)
+	require.Equal(t, uint64(newMaxGas)/gasConsumed, uint64(len(resPrepareProposal.Txs)))
+}
+
+func TestABCI_ProposeProposal_ReachBlockGasLimit(t *testing.T) {
+	anteKey := []byte("ante-key")
+	pool := mempool.NewSenderNonceMempool()
+	gasConsumed := uint64(5)
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerGasTxTest(t, capKey1, anteKey, gasConsumed))
+		bapp.SetPrepareProposal(bapp.PrepareProposalWithBlockGasLimit())
+		bapp.SetProcessProposal(bapp.ProcessProposalWithBlockGasLimit())
+	}
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
+
+	maxGas := int64(9)
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: maxGas}},
+	})
+
+	reqProposalTxBytes := [2][]byte{}
+	for counter := 0; counter < 2; counter++ {
+		tx := newTxCounter(t, suite.txConfig, int64(counter), 0)
+		txBytes, err := suite.txConfig.TxEncoder()(tx)
+		require.NoError(t, err)
+
+		reqProposalTxBytes[counter] = txBytes
+	}
+
+	reqProcessProposal := abci.RequestProcessProposal{
+		Txs: reqProposalTxBytes[:],
+	}
+
+	// reject proposal due to reach the block max gas.
+	resProcessProposal := suite.baseApp.ProcessProposal(reqProcessProposal)
+	require.Equal(t, abci.ResponseProcessProposal_REJECT, resProcessProposal.Status)
+
+	// re-init chain with block gas limit to 10
+	newMaxGas := maxGas + 1
+	suite.baseApp.InitChain(abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: newMaxGas}},
+	})
+
+	// accept proposal if block can accommodate the total gas consume in proposal
+	resProcessProposal = suite.baseApp.ProcessProposal(reqProcessProposal)
+	require.Equal(t, abci.ResponseProcessProposal_ACCEPT, resProcessProposal.Status)
+}

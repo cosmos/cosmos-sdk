@@ -129,8 +129,8 @@ func QueryBlocksByEventsCmd() *cobra.Command {
 		Use:   "blocks",
 		Short: "Query for paginated blocks that match a set of events",
 		Long: `Search for blocks that match the exact given events where results are paginated.
-The events query is directly passed to Tendermint's RPC BlockSearch method and must
-conform to Tendermint's query syntax.
+The events query is directly passed to CometBFT's RPC BlockSearch method and must
+conform to CometBFT's query syntax.
 Please refer to each module's documentation for the full set of events to query
 for. Each module documents its respective events under 'xx_events.md'.
 `,
@@ -160,7 +160,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per Tendermint's query semantics")
+	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
 	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
 	_ = cmd.MarkFlagRequired(auth.FlagQuery)
 
@@ -172,7 +172,7 @@ func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
-		Long:  "Query for a specific committed block using the TenderMint RPC `block` and `block_by_hash` method",
+		Long:  "Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method",
 		Example: strings.TrimSpace(fmt.Sprintf(`
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>

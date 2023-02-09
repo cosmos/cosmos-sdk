@@ -16,6 +16,8 @@ var (
 	Uint64Key KeyCodec[uint64] = uint64Key{}
 	// Uint32Key can be used to encode uint32 keys. Encoding is big endian to retain ordering.
 	Uint32Key KeyCodec[uint32] = uint32Key[uint32]{}
+	// Uint16Key can be used to encode uint16 keys. Encoding is big endian to retain ordering.
+	Uint16Key KeyCodec[uint16] = uint16Key[uint16]{}
 	// StringKey can be used to encode string keys. The encoding just converts the string
 	// to bytes.
 	// Non-terminality in multipart keys is handled by appending the StringDelimiter,
@@ -235,6 +237,9 @@ func (uint32Key[T]) DecodeJSON(b []byte) (T, error) {
 	if err != nil {
 		return 0, err
 	}
+	if u > math.MaxUint32 {
+		return 0, fmt.Errorf("%w: json number is bigger than what can be represented with uint32", ErrEncoding)
+	}
 	return (T)(u), nil
 }
 
@@ -248,4 +253,45 @@ func (u uint32Key[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
 
 func (u uint32Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) { return u.Decode(buffer) }
 
-func (u uint32Key[T]) SizeNonTerminal(_ T) int { return 4 }
+func (uint32Key[T]) SizeNonTerminal(_ T) int { return 4 }
+
+type uint16Key[T ~uint16] struct{}
+
+func (uint16Key[T]) Encode(buffer []byte, key T) (int, error) {
+	binary.BigEndian.PutUint16(buffer, (uint16)(key))
+	return 2, nil
+}
+
+func (uint16Key[T]) Decode(buffer []byte) (int, T, error) {
+	if len(buffer) < 2 {
+		return 0, 0, fmt.Errorf("%w: invalid buffer size, wanted at least 2", ErrEncoding)
+	}
+	return 2, (T)(binary.BigEndian.Uint16(buffer)), nil
+}
+
+func (uint16Key[T]) Size(key T) int { return 2 }
+
+func (uint16Key[T]) EncodeJSON(value T) ([]byte, error) { return uint64EncodeJSON((uint64)(value)) }
+
+func (uint16Key[T]) DecodeJSON(b []byte) (T, error) {
+	u, err := uint64DecodeJSON(b)
+	if err != nil {
+		return 0, err
+	}
+	if u > math.MaxUint16 {
+		return 0, fmt.Errorf("%w: json number is bigger than what can be represented with uint16", ErrEncoding)
+	}
+	return (T)(u), nil
+}
+
+func (uint16Key[T]) Stringify(key T) string { return strconv.FormatUint((uint64)(key), 10) }
+
+func (uint16Key[T]) KeyType() string { return "uint16" }
+
+func (u uint16Key[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
+	return u.Encode(buffer, key)
+}
+
+func (u uint16Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) { return u.Decode(buffer) }
+
+func (u uint16Key[T]) SizeNonTerminal(key T) int { return u.Size(key) }

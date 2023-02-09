@@ -28,7 +28,7 @@ func TestNewSigningAlgoByString(t *testing.T) {
 			"notsupportedalgo",
 			false,
 			nil,
-			ErrAlgoNotSupported,
+			ErrUnsupportedSigningAlgo,
 		},
 	}
 

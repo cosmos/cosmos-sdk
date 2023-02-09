@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -26,7 +26,7 @@ func TestRollback(t *testing.T) {
 	ver0 := app.LastBlockHeight()
 	// commit 10 blocks
 	for i := int64(1); i <= 10; i++ {
-		header := tmproto.Header{
+		header := cmtproto.Header{
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
@@ -38,7 +38,7 @@ func TestRollback(t *testing.T) {
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
-	store := app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
+	store := app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value10"), store.Get([]byte("key")))
 
 	// rollback 5 blocks
@@ -48,12 +48,12 @@ func TestRollback(t *testing.T) {
 
 	// recreate app to have clean check state
 	app = simapp.NewSimApp(options.Logger, options.DB, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
-	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
+	store = app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("value5"), store.Get([]byte("key")))
 
 	// commit another 5 blocks with different values
 	for i := int64(6); i <= 10; i++ {
-		header := tmproto.Header{
+		header := cmtproto.Header{
 			Height:  ver0 + i,
 			AppHash: app.LastCommitID().Hash,
 		}
@@ -65,6 +65,6 @@ func TestRollback(t *testing.T) {
 	}
 
 	assert.Equal(t, ver0+10, app.LastBlockHeight())
-	store = app.NewContext(true, tmproto.Header{}).KVStore(app.GetKey("bank"))
+	store = app.NewContext(true, cmtproto.Header{}).KVStore(app.GetKey("bank"))
 	assert.DeepEqual(t, []byte("VALUE10"), store.Get([]byte("key")))
 }

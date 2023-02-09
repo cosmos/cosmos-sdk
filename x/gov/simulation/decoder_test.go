@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -35,16 +36,15 @@ func TestDecodeStore(t *testing.T) {
 	require.NoError(t, err)
 	proposalB, err := v1beta1.NewProposal(content, 2, endTime, endTime.Add(24*time.Hour))
 	require.NoError(t, err)
+	proposalC, err := v1.NewProposal([]sdk.Msg{}, 3, endTime, endTime.Add(24*time.Hour), "metadata", "title", "summary", delAddr1, false)
+	require.NoError(t, err)
+	proposalD, err := v1.NewProposal([]sdk.Msg{}, 4, endTime, endTime.Add(24*time.Hour), "metadata", "title", "summary", delAddr1, true)
+	require.NoError(t, err)
 
 	proposalIDBz := make([]byte, 8)
 	binary.LittleEndian.PutUint64(proposalIDBz, 1)
 	deposit := v1beta1.NewDeposit(1, delAddr1, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
 	vote := v1beta1.NewVote(1, delAddr1, v1beta1.NewNonSplitVoteOption(v1beta1.OptionYes))
-
-	proposalBzA, err := cdc.Marshal(&proposalA)
-	require.NoError(t, err)
-	proposalBzB, err := cdc.Marshal(&proposalB)
-	require.NoError(t, err)
 
 	tests := []struct {
 		name        string
@@ -53,10 +53,16 @@ func TestDecodeStore(t *testing.T) {
 		wantPanic   bool
 	}{
 		{
-			"proposals",
-			kv.Pair{Key: types.ProposalKey(1), Value: proposalBzA},
-			kv.Pair{Key: types.ProposalKey(2), Value: proposalBzB},
+			"proposals v1beta",
+			kv.Pair{Key: types.ProposalKey(1), Value: cdc.MustMarshal(&proposalA)},
+			kv.Pair{Key: types.ProposalKey(2), Value: cdc.MustMarshal(&proposalB)},
 			fmt.Sprintf("%v\n%v", proposalA, proposalB), false,
+		},
+		{
+			"proposals v1",
+			kv.Pair{Key: types.ProposalKey(3), Value: cdc.MustMarshal(&proposalC)},
+			kv.Pair{Key: types.ProposalKey(4), Value: cdc.MustMarshal(&proposalD)},
+			fmt.Sprintf("%v\n%v", proposalC, proposalD), false,
 		},
 		{
 			"proposal IDs",

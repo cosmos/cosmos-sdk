@@ -4,6 +4,23 @@ This guide provides instructions for upgrading to specific versions of Cosmos SD
 
 ## [Unreleased]
 
+### Consensus Engine
+
+The Cosmos SDK has migrated to CometBFT as its default consensus engine.
+CometBFT is an implementation of the Tendermint consensus algorithm, and the successor of Tendermint Core.
+Due to the import changes, this is a breaking change that needs chains to re-generate their protos.
+Some functions have been renamed to reflect the naming change, following an exhaustive list:
+
+* `client.TendermintRPC` -> `client.CometRPC`
+* `clitestutil.MockTendermintRPC` -> `clitestutil.MockCometRPC`
+* `clitestutilgenutil.CreateDefaultTendermintConfig` -> `clitestutilgenutil.CreateDefaultCometConfig`
+* Package `client/grpc/tmservice` -> `client/grpc/cmtservice`
+
+Additionally, the commands and flags mentionning `tendermint` have been renamed to `comet`.
+However, these commands and flags is still supported for backward compatibility.
+
+For backward compatibility, the `**/tendermint/**` gRPC services are still supported.
+
 ### Configuration
 
 A new tool have been created for migrating configuration of the SDK. Use the following command to migrate your configuration:
@@ -25,6 +42,13 @@ Use `confix` to clean-up your `app.toml`. A nginx (or alike) reverse-proxy can b
 ClevelDB, BoltDB and BadgerDB are not supported anymore. To migrate from a unsupported database to a supported database please use the database migration tool.
 
 <!-- TODO: write database migration tool -->
+
+#### GoLevelDB
+
+GoLevelDB version has been pinned to `v1.0.1-0.20210819022825-2ae1ddf74ef7`, following versions might cause unexpected behavior.
+See related issues:
+- [issue #14949 on cosmos-sdk](https://github.com/cosmos/cosmos-sdk/issues/14949)
+- [issue #25413 on go-ethereum](https://github.com/ethereum/go-ethereum/pull/25413)
 
 ### Protobuf
 
@@ -56,6 +80,10 @@ This is no longer the case, the assertion has been loosened to only require modu
 ### Modules
 
 #### `x/gov`
+
+##### Expedited Proposals
+
+The `gov` v1 module has been updated to support the ability to expedite governance proposals. When a proposal is expedited, the voting period will be shortened to `ExpeditedVotingPeriod` parameter. An expedited proposal must have an higher voting threshold than a classic proposal, that threshold is defined with the `ExpeditedThreshold` parameter.
 
 ##### Cancelling Proposals
 

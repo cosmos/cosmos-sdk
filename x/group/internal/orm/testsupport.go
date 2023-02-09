@@ -3,8 +3,8 @@ package orm
 import (
 	"fmt"
 
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/gaskv"

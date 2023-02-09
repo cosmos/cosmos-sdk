@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 func (s *KeeperTestSuite) TestUpdateParams() {
-	defaultConsensusParams := tmtypes.DefaultConsensusParams().ToProto()
+	defaultConsensusParams := cmttypes.DefaultConsensusParams().ToProto()
 	testCases := []struct {
 		name      string
 		input     *types.MsgUpdateParams
@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			name: "invalid  params",
 			input: &types.MsgUpdateParams{
 				Authority: s.consensusParamsKeeper.GetAuthority(),
-				Block:     &tmproto.BlockParams{MaxGas: -10, MaxBytes: -10},
+				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
 				Validator: defaultConsensusParams.Validator,
 				Evidence:  defaultConsensusParams.Evidence,
 			},

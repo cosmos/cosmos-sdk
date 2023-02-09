@@ -2,7 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
-	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,11 +25,11 @@ type ValidatorI interface {
 	IsUnbonding() bool                                       // check if has status unbonding
 	GetOperator() sdk.ValAddress                             // operator address to receive/return validators coins
 	ConsPubKey() (cryptotypes.PubKey, error)                 // validation consensus pubkey (cryptotypes.PubKey)
-	TmConsPublicKey() (tmprotocrypto.PublicKey, error)       // validation consensus pubkey (Tendermint)
+	TmConsPublicKey() (cmtprotocrypto.PublicKey, error)      // validation consensus pubkey (CometBFT)
 	GetConsAddr() (sdk.ConsAddress, error)                   // validation consensus address
 	GetTokens() math.Int                                     // validation tokens
 	GetBondedTokens() math.Int                               // validator bonded tokens
-	GetConsensusPower(math.Int) int64                        // validation power in tendermint
+	GetConsensusPower(math.Int) int64                        // validation power in CometBFT
 	GetCommission() math.LegacyDec                           // validator commission rate
 	GetMinSelfDelegation() math.Int                          // validator minimum self delegation
 	GetDelegatorShares() math.LegacyDec                      // total outstanding delegator shares

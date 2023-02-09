@@ -172,7 +172,7 @@ func QueryBlockCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "block --type=[height|hash] [height|hash]",
 		Short: "Query for a committed block by height, hash, or event(s)",
-		Long:  "Query for a specific committed block using the TenderMint RPC `block` and `block_by_hash` method",
+		Long:  "Query for a specific committed block using the CometBFT RPC `block` and `block_by_hash` method",
 		Example: strings.TrimSpace(fmt.Sprintf(`
 $ %s query block --%s=%s <height>
 $ %s query block --%s=%s <hash>

@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-var (
-	// ErrAlgoNotSupported is used when an algo is not on the supported SigningAlgoList.
-	ErrAlgoNotSupported = errors.New("algorithm is not supported")
-)
-
 // SignatureAlgo defines the interface for a keyring supported algorithm.
 type SignatureAlgo interface {
 	Name() hd.PubKeyType
@@ -25,7 +20,7 @@ func NewSigningAlgoFromString(str string, algoList SigningAlgoList) (SignatureAl
 			return algo, nil
 		}
 	}
-	return nil, errors.Wrap(ErrAlgoNotSupported, str)
+	return nil, errors.Wrap(ErrUnsupportedSigningAlgo, str)
 }
 
 // SigningAlgoList is a slice of signature algorithms

@@ -134,19 +134,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 				return err
 			}
 
-<<<<<<< HEAD
 			withTM, _ := cmd.Flags().GetBool(flagWithTendermint)
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
-				return startStandAlone(serverCtx, appCreator)
-=======
-			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
-			if !withCMT {
-				serverCtx.Logger.Info("starting ABCI without CometBFT")
 				return wrapCPUProfile(serverCtx, func() error {
 					return startStandAlone(serverCtx, appCreator)
 				})
->>>>>>> 4d02519ec (feat: support profiling block replay during abci handshake (#14953))
 			}
 
 			// amino is needed here for backwards compatibility of REST routes
@@ -272,20 +265,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 		return err
 	}
 
-<<<<<<< HEAD
-=======
-	// Clean up the traceWriter when the server is shutting down.
-	var traceWriterCleanup func()
-	// if flagTraceStore is not used then traceWriter is nil
-	if traceWriter != nil {
-		traceWriterCleanup = func() {
-			if err = traceWriter.Close(); err != nil {
-				ctx.Logger.Error("failed to close trace writer", "err", err)
-			}
-		}
-	}
-
->>>>>>> 4d02519ec (feat: support profiling block replay during abci handshake (#14953))
 	config, err := serverconfig.GetConfig(ctx.Viper)
 	if err != nil {
 		return err
@@ -506,10 +485,6 @@ func startInProcess(ctx *Context, clientCtx client.Context, appCreator types.App
 	defer func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
-		}
-
-		if traceWriterCleanup != nil {
-			traceWriterCleanup()
 		}
 
 		if apiSrv != nil {

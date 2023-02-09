@@ -21,6 +21,7 @@ WORKDIR /go/src/github.com/cosmos/cosmos-sdk
 COPY go.mod go.sum ./
 COPY collections/go.mod collections/go.sum ./collections/
 COPY store/go.mod store/go.sum ./store/
+COPY log/go.mod log/go.sum ./log/
 
 RUN go mod download
 

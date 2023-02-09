@@ -72,9 +72,9 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, erro
 		return nil, err
 	}
 
-	out, err := mkBlockResult(resBlock)
-	if err != nil {
-		return out, err
+	out := sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339))
+	if out == nil {
+		return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlock)
 	}
 
 	return out, nil
@@ -100,26 +100,21 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*cmt.Block,
 		return nil, fmt.Errorf("block not found with hash: %s", hashHexString)
 	}
 
-	out, err := mkBlockResult(resBlock)
-	if err != nil {
-		return out, err
+	out := sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339))
+	if out == nil {
+		return nil, fmt.Errorf("Unable to create response block from comet result block: %v", resBlock)
 	}
 
 	return out, nil
 }
 
-func mkBlockResult(resBlock *coretypes.ResultBlock) (*cmt.Block, error) {
-	return sdk.NewResponseResultBlock(resBlock, resBlock.Block.Time.Format(time.RFC3339)), nil
-}
-
 // formatBlockResults parses the indexed blocks into a slice of BlockResponse objects.
 func formatBlockResults(resBlocks []*coretypes.ResultBlock) ([]*cmt.Block, error) {
-	var err error
 	out := make([]*cmt.Block, len(resBlocks))
 	for i := range resBlocks {
-		out[i], err = mkBlockResult(resBlocks[i])
-		if err != nil {
-			return nil, err
+		out[i] = sdk.NewResponseResultBlock(resBlocks[i], resBlocks[i].Block.Time.Format(time.RFC3339))
+		if out[i] == nil {
+			return nil, fmt.Errorf("unable to create response block from comet result block: %v", resBlocks[i])
 		}
 	}
 

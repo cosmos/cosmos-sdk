@@ -10,15 +10,16 @@ import (
 	"syscall"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
+	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	snapshottypes "github.com/cosmos/cosmos-sdk/store/snapshots/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -37,7 +38,7 @@ const (
 func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitChain) {
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
-	initHeader := tmproto.Header{ChainID: req.ChainId, Time: req.Time}
+	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
 
 	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
@@ -45,7 +46,7 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// stores.
 	if req.InitialHeight > 1 {
 		app.initialHeight = req.InitialHeight
-		initHeader = tmproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
+		initHeader = cmtproto.Header{ChainID: req.ChainId, Height: req.InitialHeight, Time: req.Time}
 		err := app.cms.SetInitialVersion(req.InitialHeight)
 		if err != nil {
 			panic(err)
@@ -72,7 +73,10 @@ func (app *BaseApp) InitChain(req abci.RequestInitChain) (res abci.ResponseInitC
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.deliverState.ctx = app.deliverState.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
-	res = app.initChainer(app.deliverState.ctx, req)
+	res, err := app.initChainer(app.deliverState.ctx, req)
+	if err != nil {
+		panic(err)
+	}
 
 	// sanity check
 	if len(req.Validators) > 0 {
@@ -194,7 +198,11 @@ func (app *BaseApp) BeginBlock(req abci.RequestBeginBlock) (res abci.ResponseBeg
 	}
 
 	if app.beginBlocker != nil {
-		res = app.beginBlocker(app.deliverState.ctx, req)
+		var err error
+		res, err = app.beginBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 	// set the signed validators for addition to context in deliverTx
@@ -217,7 +225,11 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 	}
 
 	if app.endBlocker != nil {
-		res = app.endBlocker(app.deliverState.ctx, req)
+		var err error
+		res, err = app.endBlocker(app.deliverState.ctx, req)
+		if err != nil {
+			panic(err)
+		}
 		res.Events = sdk.MarkEventsToIndex(res.Events, app.indexEvents)
 	}
 
@@ -247,14 +259,14 @@ func (app *BaseApp) EndBlock(req abci.RequestEndBlock) (res abci.ResponseEndBloc
 // provided by the client's request.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
-// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+// Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.ResponsePrepareProposal) {
 	if app.prepareProposal == nil {
 		panic("PrepareProposal method not set")
 	}
 
-	// Tendermint must never call PrepareProposal with a height of 0.
-	// Ref: https://github.com/tendermint/tendermint/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	// CometBFT must never call PrepareProposal with a height of 0.
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		panic("PrepareProposal called with invalid height")
 	}
@@ -289,7 +301,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 // block. Note, the application defines the exact implementation details of
 // ProcessProposal. In general, the application must at the very least ensure
 // that all transactions are valid. If all transactions are valid, then we inform
-// Tendermint that the Status is ACCEPT. However, the application is also able
+// CometBFT that the Status is ACCEPT. However, the application is also able
 // to implement optimizations such as executing the entire proposed block
 // immediately.
 //
@@ -297,7 +309,7 @@ func (app *BaseApp) PrepareProposal(req abci.RequestPrepareProposal) (resp abci.
 // handler, it will be recovered and we will reject the proposal.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
-// Ref: https://github.com/tendermint/tendermint/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+// Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req abci.RequestProcessProposal) (resp abci.ResponseProcessProposal) {
 	if app.processProposal == nil {
 		panic("app.ProcessProposal is not set")
@@ -437,7 +449,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 
 	// Reset the Check state to the latest committed.
 	//
-	// NOTE: This is safe because Tendermint holds a lock on the mempool for
+	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
 	app.setState(runTxModeCheck, header)
 	app.setState(runTxPrepareProposal, header)
@@ -457,7 +469,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
 	}
 
 	if halt {
-		// Halt the binary and allow Tendermint to receive the ResponseCommit
+		// Halt the binary and allow CometBFT to receive the ResponseCommit
 		// response with the commit ID hash. This will allow the node to successfully
 		// restart and process blocks assuming the halt configuration has been
 		// reset or moved to a more distant value.
@@ -625,7 +637,7 @@ func (app *BaseApp) OfferSnapshot(req abci.RequestOfferSnapshot) abci.ResponseOf
 		)
 
 		// We currently don't support resetting the IAVL stores and retrying a different snapshot,
-		// so we ask Tendermint to abort all snapshot restoration.
+		// so we ask CometBFT to abort all snapshot restoration.
 		return abci.ResponseOfferSnapshot{Result: abci.ResponseOfferSnapshot_ABORT}
 	}
 }
@@ -765,7 +777,7 @@ func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, e
 }
 
 // GetBlockRetentionHeight returns the height for which all blocks below this height
-// are pruned from Tendermint. Given a commitment height and a non-zero local
+// are pruned from CometBFT. Given a commitment height and a non-zero local
 // minRetainBlocks configuration, the retentionHeight is the smallest height that
 // satisfies:
 //
@@ -806,7 +818,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 
 	// Define retentionHeight as the minimum value that satisfies all non-zero
 	// constraints. All blocks below (commitHeight-retentionHeight) are pruned
-	// from Tendermint.
+	// from CometBFT.
 	var retentionHeight int64
 
 	// Define the number of blocks needed to protect against misbehaving validators

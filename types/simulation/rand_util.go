@@ -22,7 +22,7 @@ const (
 // shamelessly copied from
 // https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
 
-// RandStringOfLength generates a random string of a particular length
+// RandStringOfLength generates a random string of a particular length.
 func RandStringOfLength(r *rand.Rand, n int) string {
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!

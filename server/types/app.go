@@ -7,17 +7,18 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 )
 
 // ServerStartTime defines the time duration that the server need to stay running after startup
@@ -52,7 +53,7 @@ type (
 		// simulation, fetching txs by hash...).
 		RegisterTxService(client.Context)
 
-		// RegisterTendermintService registers the gRPC Query service for tendermint queries.
+		// RegisterTendermintService registers the gRPC Query service for CometBFT queries.
 		RegisterTendermintService(client.Context)
 
 		// RegisterNodeService registers the node gRPC Query service.
@@ -75,11 +76,11 @@ type (
 		// AppState is the application state as JSON.
 		AppState json.RawMessage
 		// Validators is the exported validator set.
-		Validators []tmtypes.GenesisValidator
+		Validators []cmttypes.GenesisValidator
 		// Height is the app's latest block height.
 		Height int64
 		// ConsensusParams are the exported consensus params for ABCI.
-		ConsensusParams *tmproto.ConsensusParams
+		ConsensusParams *cmtproto.ConsensusParams
 	}
 
 	// AppExporter is a function that dumps all app state to

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 )
@@ -34,20 +35,40 @@ func GetChainRegistryEntry(chain string) (*ChainRegistryEntry, error) {
 	}
 
 	data := &ChainRegistryEntry{}
-	err = json.Unmarshal(bz, data)
-	if err != nil {
+	if err = json.Unmarshal(bz, data); err != nil {
 		return nil, err
 	}
 
-	fmt.Printf("Found data for %s in the chain registry\n", chain)
+	// clean-up the URL
+	cleanEntries := make([]*APIEntry, 0)
+	for i, apiEntry := range data.APIs.GRPC {
+		// clean-up the http(s):// prefix
+		if strings.Contains(apiEntry.Address, "https://") {
+			data.APIs.GRPC[i].Address = strings.Replace(apiEntry.Address, "https://", "", 1)
+		} else if strings.Contains(apiEntry.Address, "http://") {
+			data.APIs.GRPC[i].Address = strings.Replace(apiEntry.Address, "http://", "", 1)
+		}
 
+		// remove trailing slashes
+		data.APIs.GRPC[i].Address = strings.TrimSuffix(data.APIs.GRPC[i].Address, "/")
+
+		// remove addresses without a port
+		if !strings.Contains(data.APIs.GRPC[i].Address, ":") {
+			continue
+		}
+
+		cleanEntries = append(cleanEntries, data.APIs.GRPC[i])
+	}
+
+	data.APIs.GRPC = cleanEntries
+	fmt.Printf("Found data for %s in the chain registry\n", chain)
 	return data, nil
 }
 
 func SelectGRPCEndpoints(chain string) (string, error) {
 	entry, err := GetChainRegistryEntry(chain)
 	if err != nil {
-		fmt.Printf("Unable to load data for %s in the chain registry. You'll have to specify a gRPC endpoint manually.\n", chain)
+		fmt.Printf("Unable to load data for %s in the chain registry. Specify a custom gRPC endpoint manually.\n", chain)
 		prompt := &promptui.Prompt{
 			Label: "Enter a gRPC endpoint that you trust",
 		}

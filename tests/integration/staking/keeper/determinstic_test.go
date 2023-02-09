@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -59,7 +59,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(f.ctx, interfaceRegistry)
 	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: f.stakingKeeper})
@@ -565,7 +565,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 		}
 
 		historicalInfo := stakingtypes.HistoricalInfo{
-			Header: tmproto.Header{},
+			Header: cmtproto.Header{},
 			Valset: vals,
 		}
 
@@ -589,7 +589,7 @@ func TestGRPCHistoricalInfo(t *testing.T) {
 	validator := getStaticValidator(f, t)
 
 	historicalInfo := stakingtypes.HistoricalInfo{
-		Header: tmproto.Header{},
+		Header: cmtproto.Header{},
 		Valset: []stakingtypes.Validator{validator},
 	}
 

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -51,7 +51,7 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	suite.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {
@@ -69,10 +69,11 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	expected := []struct {
 		weight     int
 		opMsgRoute string
+		opMsgName  string
 	}{
-		{simulation.WeightGrant, simulation.TypeMsgGrant},
-		{simulation.WeightExec, simulation.TypeMsgExec},
-		{simulation.WeightRevoke, simulation.TypeMsgRevoke},
+		{simulation.WeightGrant, authz.ModuleName, simulation.TypeMsgGrant},
+		{simulation.WeightExec, authz.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightRevoke, authz.ModuleName, simulation.TypeMsgRevoke},
 	}
 
 	require := suite.Require()
@@ -83,12 +84,9 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		// the following checks are very much dependent from the ordering of the output given
 		// by WeightedOperations. if the ordering in WeightedOperations changes some tests
 		// will fail
-		require.Equal(expected[i].weight, w.Weight(),
-			"weight should be the same. %v", op.Comment)
-		require.Equal(expected[i].opMsgRoute, op.Route,
-			"route should be the same. %v", op.Comment)
-		require.Equal(expected[i].opMsgRoute, op.Name,
-			"operation Msg name should be the same %v", op.Comment)
+		require.Equal(expected[i].weight, w.Weight(), "weight should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgRoute, op.Route, "route should be the same. %v", op.Comment)
+		require.Equal(expected[i].opMsgName, op.Name, "operation Msg name should be the same %v", op.Comment)
 	}
 }
 
@@ -117,7 +115,7 @@ func (suite *SimTestSuite) TestSimulateGrant() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -147,7 +145,7 @@ func (suite *SimTestSuite) TestSimulateRevoke() {
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{
-		Header: tmproto.Header{
+		Header: cmtproto.Header{
 			Height:  suite.app.LastBlockHeight() + 1,
 			AppHash: suite.app.LastCommitID().Hash,
 		},
@@ -186,7 +184,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
+	suite.app.BeginBlock(abci.RequestBeginBlock{Header: cmtproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
 
 	initAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	initCoins := sdk.NewCoins(sdk.NewCoin("stake", initAmt))

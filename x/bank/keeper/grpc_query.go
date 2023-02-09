@@ -8,7 +8,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -55,6 +56,15 @@ func (k BaseKeeper) AllBalances(ctx context.Context, req *types.QueryAllBalances
 
 	pageRes, err := query.Paginate(accountStore, req.Pagination, func(key, value []byte) error {
 		denom := string(key)
+
+		// IBC denom metadata will be registered in ibc-go after first mint
+		//
+		// Since: ibc-go v7
+		if req.ResolveDenom {
+			if metadata, ok := k.GetDenomMetaData(sdkCtx, denom); ok {
+				denom = metadata.Display
+			}
+		}
 		balance, err := UnmarshalBalanceCompat(k.cdc, value, denom)
 		if err != nil {
 			return err

@@ -118,8 +118,23 @@ func (s *E2ETestSuite) TestQueryGroupsByMembers() {
 			[]*group.GroupInfo{},
 		},
 		{
+			"expect one group (request with pagination)",
+			[]string{
+				members.Members[0].Member.Address,
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=1",
+			},
+			false,
+			"",
+			1,
+			groups.Groups,
+		},
+		{
 			"expect one group",
-			[]string{members.Members[0].Member.Address, fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			[]string{
+				members.Members[0].Member.Address,
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
 			false,
 			"",
 			1,
@@ -142,6 +157,55 @@ func (s *E2ETestSuite) TestQueryGroupsByMembers() {
 				require.Len(resp.Groups, tc.numItems)
 
 				require.Equal(tc.expectGroups, resp.Groups)
+			}
+		})
+	}
+}
+
+func (s *E2ETestSuite) TestQueryGroups() {
+	val := s.network.Validators[0]
+	clientCtx := val.ClientCtx
+	require := s.Require()
+
+	testCases := []struct {
+		name         string
+		args         []string
+		expectErr    bool
+		expectErrMsg string
+		numItems     int
+		expectGroups []*group.GroupInfo
+	}{
+		{
+			name:      "valid req",
+			args:      []string{fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			expectErr: false,
+			numItems:  5,
+		},
+		{
+			name: "valid req with pagination",
+			args: []string{
+				"--limit=2",
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+			},
+			expectErr: false,
+			numItems:  2,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		s.Run(tc.name, func() {
+			cmd := client.QueryGroupsCmd()
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
+			if tc.expectErr {
+				require.Contains(out.String(), tc.expectErrMsg)
+			} else {
+				require.NoError(err, out.String())
+
+				var resp group.QueryGroupsResponse
+				val.ClientCtx.Codec.MustUnmarshalJSON(out.Bytes(), &resp)
+
+				require.Len(resp.Groups, tc.numItems)
 			}
 		})
 	}
@@ -170,6 +234,27 @@ func (s *E2ETestSuite) TestQueryGroupMembers() {
 		{
 			"members found",
 			[]string{strconv.FormatUint(s.group.Id, 10), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			false,
+			"",
+			0,
+			[]*group.GroupMember{
+				{
+					GroupId: s.group.Id,
+					Member: &group.Member{
+						Address:  val.Address.String(),
+						Weight:   "3",
+						Metadata: validMetadata,
+					},
+				},
+			},
+		},
+		{
+			"members found (request with pagination)",
+			[]string{
+				strconv.FormatUint(s.group.Id, 10),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=1",
+			},
 			false,
 			"",
 			0,
@@ -243,6 +328,20 @@ func (s *E2ETestSuite) TestQueryGroupsByAdmin() {
 		{
 			"found groups",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			false,
+			"",
+			0,
+			[]*group.GroupInfo{
+				s.group,
+			},
+		},
+		{
+			"found groups (request with pagination)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
 			false,
 			"",
 			0,
@@ -378,6 +477,21 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByGroup() {
 				s.groupPolicies[5],
 			},
 		},
+		{
+			"found group policies (request with pagination)",
+			[]string{
+				strconv.FormatUint(s.group.Id, 10),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
+			false,
+			"",
+			0,
+			[]*group.GroupPolicyInfo{
+				s.groupPolicies[0],
+				s.groupPolicies[1],
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -452,6 +566,21 @@ func (s *E2ETestSuite) TestQueryGroupPoliciesByAdmin() {
 				s.groupPolicies[3],
 				s.groupPolicies[4],
 				s.groupPolicies[5],
+			},
+		},
+		{
+			"found group policies (request with pagination)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
+			false,
+			"",
+			0,
+			[]*group.GroupPolicyInfo{
+				s.groupPolicies[0],
+				s.groupPolicies[1],
 			},
 		},
 	}
@@ -568,6 +697,20 @@ func (s *E2ETestSuite) TestQueryProposalsByGroupPolicy() {
 				s.proposal,
 			},
 		},
+		{
+			"found proposals (request with pagination)",
+			[]string{
+				s.groupPolicies[0].Address,
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
+			false,
+			"",
+			0,
+			[]*group.Proposal{
+				s.proposal,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -674,6 +817,20 @@ func (s *E2ETestSuite) TestQueryVotesByProposal() {
 				s.vote,
 			},
 		},
+		{
+			"found votes (request with pagination)",
+			[]string{
+				"1",
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
+			false,
+			"",
+			0,
+			[]*group.Vote{
+				s.vote,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -730,6 +887,20 @@ func (s *E2ETestSuite) TestQueryVotesByVoter() {
 		{
 			"found votes",
 			[]string{val.Address.String(), fmt.Sprintf("--%s=json", flags.FlagOutput)},
+			false,
+			"",
+			0,
+			[]*group.Vote{
+				s.vote,
+			},
+		},
+		{
+			"found votes (request with pagination)",
+			[]string{
+				val.Address.String(),
+				fmt.Sprintf("--%s=json", flags.FlagOutput),
+				"--limit=2",
+			},
 			false,
 			"",
 			0,

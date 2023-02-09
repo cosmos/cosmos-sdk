@@ -10,14 +10,15 @@ import (
 	"cosmossdk.io/x/evidence/keeper"
 	evidencetestutil "cosmossdk.io/x/evidence/testutil"
 	"cosmossdk.io/x/evidence/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -110,7 +111,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 
 	suite.accountKeeper = accountKeeper

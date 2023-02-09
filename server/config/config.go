@@ -7,7 +7,8 @@ import (
 
 	"github.com/spf13/viper"
 
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -60,15 +61,15 @@ type BaseConfig struct {
 
 	// MinRetainBlocks defines the minimum block height offset from the current
 	// block being committed, such that blocks past this offset may be pruned
-	// from Tendermint. It is used as part of the process of determining the
+	// from CometBFT. It is used as part of the process of determining the
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// This configuration value is only responsible for pruning Tendermint blocks.
+	// This configuration value is only responsible for pruning CometBFT blocks.
 	// It has no bearing on application state pruning which is determined by the
 	// "pruning-*" configurations.
 	//
-	// Note: Tendermint block pruning is dependant on this parameter in conunction
+	// Note: CometBFT block pruning is dependant on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -78,7 +79,7 @@ type BaseConfig struct {
 	InterBlockCache bool `mapstructure:"inter-block-cache"`
 
 	// IndexEvents defines the set of events in the form {eventType}.{attributeKey},
-	// which informs Tendermint what to index. If empty, all events will be indexed.
+	// which informs CometBFT what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
 
 	// IavlCacheSize set the size of the iavl tree cache.
@@ -87,8 +88,11 @@ type BaseConfig struct {
 	// IAVLDisableFastNode enables or disables the fast sync node.
 	IAVLDisableFastNode bool `mapstructure:"iavl-disable-fastnode"`
 
+	// IAVLLazyLoading enable/disable the lazy loading of iavl store.
+	IAVLLazyLoading bool `mapstructure:"iavl-lazy-loading"`
+
 	// AppDBBackend defines the type of Database to use for the application and snapshots databases.
-	// An empty string indicates that the Tendermint config's DBBackend value should be used.
+	// An empty string indicates that the CometBFT config's DBBackend value should be used.
 	AppDBBackend string `mapstructure:"app-db-backend"`
 }
 
@@ -109,13 +113,13 @@ type APIConfig struct {
 	// MaxOpenConnections defines the number of maximum open connections
 	MaxOpenConnections uint `mapstructure:"max-open-connections"`
 
-	// RPCReadTimeout defines the Tendermint RPC read timeout (in seconds)
+	// RPCReadTimeout defines the CometBFT RPC read timeout (in seconds)
 	RPCReadTimeout uint `mapstructure:"rpc-read-timeout"`
 
-	// RPCWriteTimeout defines the Tendermint RPC write timeout (in seconds)
+	// RPCWriteTimeout defines the CometBFT RPC write timeout (in seconds)
 	RPCWriteTimeout uint `mapstructure:"rpc-write-timeout"`
 
-	// RPCMaxBodyBytes defines the Tendermint maximum response body (in bytes)
+	// RPCMaxBodyBytes defines the CometBFT maximum request body (in bytes)
 	RPCMaxBodyBytes uint `mapstructure:"rpc-max-body-bytes"`
 
 	// TODO: TLS/Proxy configuration.
@@ -253,6 +257,7 @@ func DefaultConfig() *Config {
 			IndexEvents:         make([]string, 0),
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
+			IAVLLazyLoading:     false,
 			AppDBBackend:        "",
 		},
 		Telemetry: telemetry.Config{

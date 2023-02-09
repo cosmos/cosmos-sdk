@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/rosetta-sdk-go/server"
 	"github.com/rs/zerolog"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/rosetta/lib/internal/service"
-	"cosmossdk.io/tools/rosetta/lib/logger"
 	crgtypes "cosmossdk.io/tools/rosetta/lib/types"
 )
 
@@ -61,7 +61,7 @@ func NewServer(settings Settings) (Server, error) {
 		return Server{}, fmt.Errorf("cannot build asserter: %w", err)
 	}
 
-	logger := logger.NewLogger()
+	logger := log.NewZeroLogger(log.ModuleKey, "rosetta")
 
 	var adapter crgtypes.API
 	switch settings.Offline {

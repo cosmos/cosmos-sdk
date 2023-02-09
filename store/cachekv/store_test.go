@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	cmtrand "github.com/cometbft/cometbft/libs/rand"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
 
-	"github.com/cosmos/cosmos-sdk/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/store/dbadapter"
-	"github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/types"
 )
 
 func newCacheKVStore() types.CacheKVStore {
@@ -461,7 +461,7 @@ const (
 )
 
 func randInt(n int) int {
-	return tmrand.NewRand().Int() % n
+	return cmtrand.NewRand().Int() % n
 }
 
 // useful for replaying a error case if we find one

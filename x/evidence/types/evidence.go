@@ -5,29 +5,23 @@ import (
 	"time"
 
 	"cosmossdk.io/x/evidence/exported"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Evidence type constants
-const (
-	RouteEquivocation = "equivocation"
-	TypeEquivocation  = "equivocation"
-)
+const RouteEquivocation = "equivocation"
 
 var _ exported.Evidence = &Equivocation{}
 
 // Route returns the Evidence Handler route for an Equivocation type.
 func (e *Equivocation) Route() string { return RouteEquivocation }
 
-// Type returns the Evidence Handler type for an Equivocation type.
-func (e *Equivocation) Type() string { return TypeEquivocation }
-
 // Hash returns the hash of an Equivocation object.
-func (e *Equivocation) Hash() tmbytes.HexBytes {
+func (e *Equivocation) Hash() cmtbytes.HexBytes {
 	bz, err := e.Marshal()
 	if err != nil {
 		panic(err)
@@ -79,7 +73,7 @@ func (e Equivocation) GetValidatorPower() int64 {
 // GetTotalPower is a no-op for the Equivocation type.
 func (e Equivocation) GetTotalPower() int64 { return 0 }
 
-// FromABCIEvidence converts a Tendermint concrete Evidence type to
+// FromABCIEvidence converts a CometBFT concrete Evidence type to
 // SDK Evidence using Equivocation as the concrete type.
 func FromABCIEvidence(e abci.Misbehavior) exported.Evidence {
 	bech32PrefixConsAddr := sdk.GetConfig().GetBech32ConsensusAddrPrefix()

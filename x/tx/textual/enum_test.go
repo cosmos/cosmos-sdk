@@ -44,7 +44,7 @@ func TestEnumJsonTestcases(t *testing.T) {
 			screens, err := valrend.Format(context.Background(), val)
 			require.NoError(t, err)
 			require.Equal(t, 1, len(screens))
-			require.Equal(t, tc.Text, screens[0].Text)
+			require.Equal(t, tc.Text, screens[0].Content)
 
 			// Round trip
 			parsedVal, err := valrend.Parse(context.Background(), screens)

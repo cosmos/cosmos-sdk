@@ -5,10 +5,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	storetypes "cosmossdk.io/store/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func TestVerifySignature(t *testing.T) {
@@ -53,7 +54,7 @@ func TestVerifySignature(t *testing.T) {
 	)
 
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{})
 	encCfg.Amino.RegisterConcrete(testdata.TestMsg{}, "cosmos-sdk/Test", nil)
 
 	acc1 := accountKeeper.NewAccountWithAddress(ctx, addr)

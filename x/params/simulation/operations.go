@@ -19,7 +19,7 @@ func min(a int, b int) int {
 // SimulateParamChangeProposalContent returns random parameter change content.
 // It will generate a ParameterChangeProposal object with anywhere between 1 and
 // the total amount of defined parameters changes, all of which have random valid values.
-func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange) simulation.ContentSimulatorFn {
+func SimulateParamChangeProposalContent(paramChangePool []simulation.LegacyParamChange) simulation.ContentSimulatorFn { //nolint:staticcheck
 	numProposals := 0
 	// Bound the maximum number of simultaneous parameter changes
 	maxSimultaneousParamChanges := min(len(paramChangePool), 1000)
@@ -27,7 +27,7 @@ func SimulateParamChangeProposalContent(paramChangePool []simulation.ParamChange
 		panic("param changes array is empty")
 	}
 
-	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content {
+	return func(r *rand.Rand, _ sdk.Context, _ []simulation.Account) simulation.Content { //nolint:staticcheck
 		numChanges := simulation.RandIntBetween(r, 1, maxSimultaneousParamChanges)
 		paramChanges := make([]proposal.ParamChange, numChanges)
 

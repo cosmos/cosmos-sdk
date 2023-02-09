@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/metrics"
+	"cosmossdk.io/store/rootmulti"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
 	"gotest.tools/v3/assert"
 
-	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/metrics"
-	"github.com/cosmos/cosmos-sdk/store/rootmulti"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

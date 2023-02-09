@@ -7,8 +7,8 @@ import (
 
 	"cosmossdk.io/x/evidence/exported"
 	"cosmossdk.io/x/evidence/types"
+	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/stretchr/testify/require"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -160,23 +160,19 @@ type TestEvidence struct{}
 
 var _ exported.Evidence = &TestEvidence{}
 
-func (*TestEvidence) Route() string {
-	return "test-route"
-}
-
-func (*TestEvidence) Type() string {
-	return "test-type"
-}
-
 func (*TestEvidence) String() string {
 	return "test-string"
+}
+
+func (*TestEvidence) Route() string {
+	return "test-route"
 }
 
 func (*TestEvidence) ProtoMessage() {}
 func (*TestEvidence) Reset()        {}
 
-func (*TestEvidence) Hash() tmbytes.HexBytes {
-	return tmbytes.HexBytes([]byte("test-hash"))
+func (*TestEvidence) Hash() cmtbytes.HexBytes {
+	return cmtbytes.HexBytes([]byte("test-hash"))
 }
 
 func (*TestEvidence) ValidateBasic() error {

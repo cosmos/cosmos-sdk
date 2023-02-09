@@ -7,16 +7,17 @@ import (
 	"fmt"
 	"path/filepath"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cometbft/cometbft/types"
 	db "github.com/cosmos/cosmos-db"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/types"
 	"google.golang.org/grpc"
+
+	storetypes "cosmossdk.io/store/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -95,22 +96,21 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) abci.ResponseInitChain {
-	return func(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, abci.RequestInitChain) (abci.ResponseInitChain, error) {
+	return func(ctx sdk.Context, req abci.RequestInitChain) (abci.ResponseInitChain, error) {
 		stateJSON := req.AppStateBytes
 
 		genesisState := new(GenesisJSON)
 		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
-			panic(err) // TODO https://github.com/cosmos/cosmos-sdk/issues/468
-			// return sdk.ErrGenesisParse("").TraceCause(err, "")
+			return abci.ResponseInitChain{}, err
 		}
 
 		for _, val := range genesisState.Values {
 			store := ctx.KVStore(key)
 			store.Set([]byte(val.Key), []byte(val.Value))
 		}
-		return abci.ResponseInitChain{}
+		return abci.ResponseInitChain{}, nil
 	}
 }
 

@@ -3,7 +3,7 @@ package cosmos.store.internal.kv.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/store/internal/kv";
+option go_package = "cosmossdk.io/store/internal/kv";
 
 // This is duplicated from the base kv directory to avoid a circular dependency with the cosmos-sdk
 

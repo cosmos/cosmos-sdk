@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 )
 
 func init() {
@@ -36,7 +35,7 @@ type TxInputs struct {
 	BankKeeper authtypes.BankKeeper `optional:"true"`
 	// TxBankKeeper is the expected bank keeper to be passed to Textual
 	TxBankKeeper   BankKeeper
-	FeeGrantKeeper feegrantkeeper.Keeper `optional:"true"`
+	FeeGrantKeeper ante.FeegrantKeeper `optional:"true"`
 }
 
 //nolint:revive

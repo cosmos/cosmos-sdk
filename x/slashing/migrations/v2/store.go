@@ -1,7 +1,8 @@
 package v2
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v2distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"
 	v1 "github.com/cosmos/cosmos-sdk/x/slashing/migrations/v1"

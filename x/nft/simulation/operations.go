@@ -16,13 +16,10 @@ import (
 	"cosmossdk.io/x/nft/keeper"
 )
 
-//nolint:gosec // these are not hardcoded credentials.
 const (
 	// OpWeightMsgSend Simulation operation weights constants
-	OpWeightMsgSend = "op_weight_msg_send"
-)
+	OpWeightMsgSend = "op_weight_msg_send" //nolint:gosec
 
-const (
 	// WeightSend nft operations weights
 	WeightSend = 100
 )

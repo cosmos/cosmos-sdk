@@ -70,9 +70,7 @@ func (m Map[K, V]) Set(ctx context.Context, key K, value V) error {
 // Get returns the value associated with the provided key,
 // errors with ErrNotFound if the key does not exist, or
 // with ErrEncoding if the key or value decoding fails.
-func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
-	var v V
-
+func (m Map[K, V]) Get(ctx context.Context, key K) (v V, err error) {
 	bytesKey, err := encodeKeyWithPrefix(m.prefix, m.kc, key)
 	if err != nil {
 		return v, err
@@ -80,12 +78,11 @@ func (m Map[K, V]) Get(ctx context.Context, key K) (V, error) {
 
 	kvStore := m.sa(ctx)
 	valueBytes, err := kvStore.Get(bytesKey)
-	if valueBytes == nil {
-		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
-	}
-
 	if err != nil {
 		return v, err
+	}
+	if valueBytes == nil {
+		return v, fmt.Errorf("%w: key '%s' of type %s", ErrNotFound, m.kc.Stringify(key), m.vc.ValueType())
 	}
 
 	v, err = m.vc.Decode(valueBytes)
@@ -115,8 +112,7 @@ func (m Map[K, V]) Remove(ctx context.Context, key K) error {
 		return err
 	}
 	kvStore := m.sa(ctx)
-	kvStore.Delete(bytesKey)
-	return nil
+	return kvStore.Delete(bytesKey)
 }
 
 // Iterate provides an Iterator over K and V. It accepts a Ranger interface.

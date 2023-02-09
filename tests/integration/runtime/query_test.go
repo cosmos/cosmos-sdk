@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -53,7 +53,7 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false, tmproto.Header{})
+	f.ctx = app.BaseApp.NewContext(false, cmtproto.Header{})
 	queryHelper := &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: app.BaseApp.GRPCQueryRouter(),
 		Ctx:             f.ctx,

@@ -21,6 +21,7 @@ var (
 type coinTestSuite struct {
 	suite.Suite
 	ca0, ca1, ca2, ca4, cm0, cm1, cm2, cm4 sdk.Coin
+	emptyCoins                             sdk.Coins
 }
 
 func TestCoinTestSuite(t *testing.T) {
@@ -35,6 +36,7 @@ func (s *coinTestSuite) SetupSuite() {
 
 	s.ca0, s.ca1, s.ca2, s.ca4 = sdk.NewCoin(testDenom1, zero), sdk.NewCoin(testDenom1, one), sdk.NewCoin(testDenom1, two), sdk.NewCoin(testDenom1, four)
 	s.cm0, s.cm1, s.cm2, s.cm4 = sdk.NewCoin(testDenom2, zero), sdk.NewCoin(testDenom2, one), sdk.NewCoin(testDenom2, two), sdk.NewCoin(testDenom2, four)
+	s.emptyCoins = sdk.Coins{}
 }
 
 // ----------------------------------------------------------------------------
@@ -524,24 +526,56 @@ func (s *coinTestSuite) TestEqualCoins() {
 }
 
 func (s *coinTestSuite) TestAddCoins() {
+	cA0M0 := sdk.Coins{s.ca0, s.cm0}
+	cA0M1 := sdk.Coins{s.ca0, s.cm1}
+	cA1M1 := sdk.Coins{s.ca1, s.cm1}
 	cases := []struct {
 		name     string
 		inputOne sdk.Coins
 		inputTwo sdk.Coins
 		expected sdk.Coins
+		msg      string
 	}{
-		{"{1atom,1muon}+{1atom,1muon}", sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca1, s.cm1}, sdk.Coins{s.ca2, s.cm2}},
-		{"{0atom,1muon}+{0atom,0muon}", sdk.Coins{s.ca0, s.cm1}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.cm1}},
-		{"{2atom}+{0muon}", sdk.Coins{s.ca2}, sdk.Coins{s.cm0}, sdk.Coins{s.ca2}},
-		{"{1atom}+{1atom,2muon}", sdk.Coins{s.ca1}, sdk.Coins{s.ca1, s.cm2}, sdk.Coins{s.ca2, s.cm2}},
-		{"{0atom,0muon}+{0atom,0muon}", sdk.Coins{s.ca0, s.cm0}, sdk.Coins{s.ca0, s.cm0}, sdk.Coins(nil)},
+		{"adding two empty lists", s.emptyCoins, s.emptyCoins, s.emptyCoins, "empty, non list should be returned"},
+		{"empty list + set", s.emptyCoins, cA0M1, sdk.Coins{s.cm1}, "zero coins should be removed"},
+		{"empty list + set", s.emptyCoins, cA1M1, cA1M1, "zero + a_non_zero = a_non_zero"},
+		{"set + empty list", cA0M1, s.emptyCoins, sdk.Coins{s.cm1}, "zero coins should be removed"},
+		{"set + empty list", cA1M1, s.emptyCoins, cA1M1, "a_non_zero + zero  = a_non_zero"},
+		{
+			"{1atom,1muon}+{1atom,1muon}", cA1M1, cA1M1,
+			sdk.Coins{s.ca2, s.cm2},
+			"a + a = 2a",
+		},
+		{
+			"{0atom,1muon}+{0atom,0muon}", cA0M1, cA0M0,
+			sdk.Coins{s.cm1},
+			"zero coins should be removed",
+		},
+		{
+			"{2atom}+{0muon}",
+			sdk.Coins{s.ca2},
+			sdk.Coins{s.cm0},
+			sdk.Coins{s.ca2},
+			"zero coins should be removed",
+		},
+		{
+			"{1atom}+{1atom,2muon}",
+			sdk.Coins{s.ca1},
+			sdk.Coins{s.ca1, s.cm2},
+			sdk.Coins{s.ca2, s.cm2},
+			"should be correctly added",
+		},
+		{
+			"{0atom,0muon}+{0atom,0muon}", cA0M0, cA0M0, s.emptyCoins,
+			"sets with zero coins should return empty set",
+		},
 	}
 
 	for _, tc := range cases {
 		s.T().Run(tc.name, func(t *testing.T) {
 			res := tc.inputOne.Add(tc.inputTwo...)
 			require.True(t, res.IsValid(), fmt.Sprintf("%s + %s = %s", tc.inputOne, tc.inputTwo, res))
-			require.Equal(t, tc.expected, res, "sum of coins is incorrect")
+			require.Equal(t, tc.expected, res, tc.msg)
 		})
 	}
 }
@@ -573,12 +607,19 @@ func TestCoinsAddCoalescesDuplicateDenominations(t *testing.T) {
 }
 
 func (s *coinTestSuite) TestSubCoins() {
+	cA0M0 := sdk.Coins{s.ca0, s.cm0}
+	cA0M1 := sdk.Coins{s.ca0, s.cm1}
 	testCases := []struct {
 		inputOne    sdk.Coins
 		inputTwo    sdk.Coins
 		expected    sdk.Coins
 		shouldPanic bool
 	}{
+		{s.emptyCoins, s.emptyCoins, s.emptyCoins, false},
+		{cA0M0, s.emptyCoins, s.emptyCoins, false},
+		{cA0M0, sdk.Coins{s.cm0}, s.emptyCoins, false},
+		{sdk.Coins{s.cm0}, cA0M0, s.emptyCoins, false},
+		{cA0M1, s.emptyCoins, sdk.Coins{s.cm1}, false},
 		// denoms are not sorted - should panic
 		{sdk.Coins{s.ca2}, sdk.Coins{s.cm2, s.ca1}, sdk.Coins{}, true},
 		{sdk.Coins{s.cm2, s.ca2}, sdk.Coins{s.ca1}, sdk.Coins{}, true},

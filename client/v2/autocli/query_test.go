@@ -53,8 +53,8 @@ var testCmdDesc = &autocliv1.ServiceCommandDescriptor{
 					DefaultValue: "3",
 				},
 				"u64": {
-					Usage:             "some random uint64",
-					NoOptDefaultValue: "5",
+					Usage:        "some random uint64",
+					DefaultValue: "5",
 				},
 				"deprecated_field": {
 					Deprecated: "don't use this",

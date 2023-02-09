@@ -151,7 +151,7 @@ func TestGRPCQueryTallyConcurrency(t *testing.T) {
 	wg.Add(concurrency)
 	proposal, _ = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
 
-	t.Run("check", func(t *testing.T) {
+	t.Run("is parallel", func(t *testing.T) {
 		for i := 0; i < concurrency; i++ {
 			go func() {
 				proposal.Status = v1.StatusPassed

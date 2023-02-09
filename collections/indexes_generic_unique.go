@@ -2,6 +2,7 @@ package collections
 
 import (
 	"context"
+	"cosmossdk.io/collections/codec"
 	"fmt"
 )
 
@@ -28,12 +29,12 @@ func NewGenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value any]
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	referencingKeyCodec KeyCodec[ReferencingKey],
-	referencedKeyCodec KeyCodec[ReferencedKey],
+	referencingKeyCodec codec.KeyCodec[ReferencingKey],
+	referencedKeyCodec codec.KeyCodec[ReferencedKey],
 	getRefs func(pk PrimaryKey, value Value) ([]IndexReference[ReferencingKey, ReferencedKey], error),
 ) *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value] {
 	return &GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]{
-		refs:    NewMap[ReferencingKey, ReferencedKey](schema, prefix, name, referencingKeyCodec, keyToValueCodec[ReferencedKey]{kc: referencedKeyCodec}),
+		refs:    NewMap[ReferencingKey, ReferencedKey](schema, prefix, name, referencingKeyCodec, codec.KeyToValueCodec(referencedKeyCodec)),
 		getRefs: getRefs,
 	}
 }
@@ -101,45 +102,4 @@ func (i *GenericUniqueIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]) U
 	}
 
 	return nil
-}
-
-// keyToValueCodec is a ValueCodec that wraps a KeyCodec to make it behave like a ValueCodec.
-type keyToValueCodec[K any] struct {
-	kc KeyCodec[K]
-}
-
-func (k keyToValueCodec[K]) EncodeJSON(value K) ([]byte, error) {
-	return k.kc.EncodeJSON(value)
-}
-
-func (k keyToValueCodec[K]) DecodeJSON(b []byte) (K, error) {
-	return k.kc.DecodeJSON(b)
-}
-
-func (k keyToValueCodec[K]) Encode(value K) ([]byte, error) {
-	buf := make([]byte, k.kc.Size(value))
-	_, err := k.kc.Encode(buf, value)
-	return buf, err
-}
-
-func (k keyToValueCodec[K]) Decode(b []byte) (K, error) {
-	r, key, err := k.kc.Decode(b)
-	if err != nil {
-		var key K
-		return key, err
-	}
-
-	if r != len(b) {
-		var key K
-		return key, fmt.Errorf("%w: was supposed to fully consume the key '%x', consumed %d out of %d", ErrEncoding, b, r, len(b))
-	}
-	return key, nil
-}
-
-func (k keyToValueCodec[K]) Stringify(value K) string {
-	return k.kc.Stringify(value)
-}
-
-func (k keyToValueCodec[K]) ValueType() string {
-	return k.kc.KeyType()
 }

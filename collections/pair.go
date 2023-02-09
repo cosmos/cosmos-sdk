@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"cosmossdk.io/collections/codec"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -45,7 +46,7 @@ func PairPrefix[K1, K2 any](key K1) Pair[K1, K2] {
 
 // PairKeyCodec instantiates a new KeyCodec instance that can encode the Pair, given the KeyCodec of the
 // first part of the key and the KeyCodec of the second part of the key.
-func PairKeyCodec[K1, K2 any](keyCodec1 KeyCodec[K1], keyCodec2 KeyCodec[K2]) KeyCodec[Pair[K1, K2]] {
+func PairKeyCodec[K1, K2 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 codec.KeyCodec[K2]) codec.KeyCodec[Pair[K1, K2]] {
 	return pairKeyCodec[K1, K2]{
 		keyCodec1: keyCodec1,
 		keyCodec2: keyCodec2,
@@ -53,13 +54,13 @@ func PairKeyCodec[K1, K2 any](keyCodec1 KeyCodec[K1], keyCodec2 KeyCodec[K2]) Ke
 }
 
 type pairKeyCodec[K1, K2 any] struct {
-	keyCodec1 KeyCodec[K1]
-	keyCodec2 KeyCodec[K2]
+	keyCodec1 codec.KeyCodec[K1]
+	keyCodec2 codec.KeyCodec[K2]
 }
 
-func (p pairKeyCodec[K1, K2]) KeyCodec1() KeyCodec[K1] { return p.keyCodec1 }
+func (p pairKeyCodec[K1, K2]) KeyCodec1() codec.KeyCodec[K1] { return p.keyCodec1 }
 
-func (p pairKeyCodec[K1, K2]) KeyCodec2() KeyCodec[K2] { return p.keyCodec2 }
+func (p pairKeyCodec[K1, K2]) KeyCodec2() codec.KeyCodec[K2] { return p.keyCodec2 }
 
 func (p pairKeyCodec[K1, K2]) Encode(buffer []byte, pair Pair[K1, K2]) (int, error) {
 	writtenTotal := 0

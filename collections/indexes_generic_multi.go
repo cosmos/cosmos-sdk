@@ -1,6 +1,9 @@
 package collections
 
-import "context"
+import (
+	"context"
+	"cosmossdk.io/collections/codec"
+)
 
 func NewIndexReference[ReferencingKey, ReferencedKey any](referencing ReferencingKey, referenced ReferencedKey) IndexReference[ReferencingKey, ReferencedKey] {
 	return IndexReference[ReferencingKey, ReferencedKey]{
@@ -50,8 +53,8 @@ func NewGenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value any](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	referencingKeyCodec KeyCodec[ReferencingKey],
-	referencedKeyCodec KeyCodec[ReferencedKey],
+	referencingKeyCodec codec.KeyCodec[ReferencingKey],
+	referencedKeyCodec codec.KeyCodec[ReferencedKey],
 	getRefsFunc func(pk PrimaryKey, value Value) ([]IndexReference[ReferencingKey, ReferencedKey], error),
 ) *GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value] {
 	return &GenericMultiIndex[ReferencingKey, ReferencedKey, PrimaryKey, Value]{

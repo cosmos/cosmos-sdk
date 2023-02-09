@@ -3,6 +3,7 @@ package indexes
 import (
 	"context"
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/codec"
 )
 
 // MultiPair is an index that is used with collections.Pair keys. It indexes objects by their second part of the key.
@@ -15,8 +16,8 @@ type MultiPair[K1, K2, Value any] collections.GenericMultiIndex[K2, K1, collecti
 // to improve dev experience with type inference, which means we cannot
 // get the concrete implementation which exposes KeyCodec1 and KeyCodec2.
 type pairKeyCodec[K1, K2 any] interface {
-	KeyCodec1() collections.KeyCodec[K1]
-	KeyCodec2() collections.KeyCodec[K2]
+	KeyCodec1() codec.KeyCodec[K1]
+	KeyCodec2() codec.KeyCodec[K2]
 }
 
 // NewMultiPair instantiates a new MultiPair index.
@@ -26,7 +27,7 @@ func NewMultiPair[Value any, K1, K2 any](
 	sb *collections.SchemaBuilder,
 	prefix collections.Prefix,
 	name string,
-	pairCodec collections.KeyCodec[collections.Pair[K1, K2]],
+	pairCodec codec.KeyCodec[collections.Pair[K1, K2]],
 ) *MultiPair[K1, K2, Value] {
 	pkc := pairCodec.(pairKeyCodec[K1, K2])
 	mi := collections.NewGenericMultiIndex(

@@ -3,6 +3,7 @@ package collections
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/collections/codec"
 	"fmt"
 )
 
@@ -17,7 +18,7 @@ func NewItem[V any](
 	schema *SchemaBuilder,
 	prefix Prefix,
 	name string,
-	valueCodec ValueCodec[V],
+	valueCodec codec.ValueCodec[V],
 ) Item[V] {
 	item := (Item[V])(NewMap[noKey](schema, prefix, name, noKey{}, valueCodec))
 	return item

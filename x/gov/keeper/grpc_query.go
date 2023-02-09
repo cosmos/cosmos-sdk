@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
-
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"time"
 
 	"cosmossdk.io/store/prefix"
 
@@ -250,6 +251,7 @@ func (q Keeper) Deposits(c context.Context, req *v1.QueryDepositsRequest) (*v1.Q
 
 // TallyResult queries the tally of a proposal vote
 func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) (*v1.QueryTallyResultResponse, error) {
+	fmt.Println("TallyResult START")
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -265,6 +267,8 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 		return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 	}
 
+	// TODO debug - Sleep for 2 seconds
+	time.Sleep(2 * time.Second)
 	var tallyResult v1.TallyResult
 
 	switch {
@@ -279,6 +283,7 @@ func (q Keeper) TallyResult(c context.Context, req *v1.QueryTallyResultRequest) 
 		_, _, tallyResult = q.Tally(ctx, proposal)
 	}
 
+	fmt.Println("TallyResult END")
 	return &v1.QueryTallyResultResponse{Tally: &tallyResult}, nil
 }
 

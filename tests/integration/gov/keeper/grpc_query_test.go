@@ -3,6 +3,7 @@ package keeper_test
 import (
 	gocontext "context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -131,6 +132,41 @@ func TestGRPCQueryTally(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGRPCQueryTallyConcurrency(t *testing.T) {
+	f := initFixture(t)
+
+	app, ctx, queryClient := f.app, f.ctx, f.queryClient
+
+	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
+
+	var (
+		req         *v1.QueryTallyResultRequest
+		proposal    v1.Proposal
+		wg          sync.WaitGroup
+		concurrency = 10
+	)
+
+	wg.Add(concurrency)
+	proposal, _ = app.GovKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
+
+	t.Run("check", func(t *testing.T) {
+		for i := 0; i < concurrency; i++ {
+			go func() {
+				proposal.Status = v1.StatusPassed
+				app.GovKeeper.SetProposal(ctx, proposal)
+				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
+
+				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
+
+				queryClient.TallyResult(gocontext.Background(), req)
+				wg.Done()
+			}()
+		}
+		wg.Wait()
+		// TODO assert that TallyResult has being called concurrently
+	})
 }
 
 func TestLegacyGRPCQueryTally(t *testing.T) {

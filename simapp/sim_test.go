@@ -43,9 +43,7 @@ import (
 // SimAppChainID hardcoded chainID for simulation
 const SimAppChainID = "simulation-app"
 
-var (
-	FlagEnableStreamingValue bool
-)
+var FlagEnableStreamingValue bool
 
 // Get flags every time the simulator is run
 func init() {

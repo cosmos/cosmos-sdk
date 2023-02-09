@@ -193,6 +193,7 @@ require (
 replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/log => ../log
+	cosmossdk.io/store => ../store
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
 	cosmossdk.io/x/nft => ../x/nft
@@ -205,8 +206,6 @@ replace (
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	// TODO tag after https://github.com/cosmos/cosmos-sdk/pull/14207 merge
-	cosmossdk.io/store => ../store
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

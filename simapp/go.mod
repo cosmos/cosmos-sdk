@@ -197,6 +197,7 @@ require (
 replace (
 	// TODO tag all extracted modules after SDK refactor
 	cosmossdk.io/log => ../log
+	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	cosmossdk.io/x/evidence => ../x/evidence
 	cosmossdk.io/x/feegrant => ../x/feegrant
@@ -208,8 +209,6 @@ replace (
 
 // Below are the long-lived replace of the SimApp
 replace (
-	// TODO tag after https://github.com/cosmos/cosmos-sdk/pull/14207 merge
-	cosmossdk.io/store => ../store
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

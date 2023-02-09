@@ -417,8 +417,8 @@ func (rs *Store) AddListeners(keys []types.StoreKey) {
 	}
 }
 
-// ListeningEnabled returns if listening is enabled for a specific KVStore
-func (rs *Store) ListeningEnabled(key types.StoreKey) bool {
+// listeningEnabled returns if listening is enabled for a specific KVStore
+func (rs *Store) listeningEnabled(key types.StoreKey) bool {
 	if ls, ok := rs.listeners[key]; ok {
 		return ls != nil
 	}
@@ -522,7 +522,7 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 		store := types.KVStore(v)
 		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
 		// set same listeners on cache store will observe duplicated writes.
-		if rs.ListeningEnabled(k) {
+		if rs.listeningEnabled(k) {
 			store = listenkv.NewStore(store, k, rs.listeners[k])
 		}
 		stores[k] = store
@@ -559,7 +559,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 
 		// Wire the listenkv.Store to allow listeners to observe the writes from the cache store,
 		// set same listeners on cache store will observe duplicated writes.
-		if rs.ListeningEnabled(key) {
+		if rs.listeningEnabled(key) {
 			cacheStore = listenkv.NewStore(cacheStore, key, rs.listeners[key])
 		}
 
@@ -602,7 +602,7 @@ func (rs *Store) GetKVStore(key types.StoreKey) types.KVStore {
 	if rs.TracingEnabled() {
 		store = tracekv.NewStore(store, rs.traceWriter, rs.getTracingContext())
 	}
-	if rs.ListeningEnabled(key) {
+	if rs.listeningEnabled(key) {
 		store = listenkv.NewStore(store, key, rs.listeners[key])
 	}
 

@@ -58,7 +58,7 @@ func (ms multiStore) SetMetrics(metrics.StoreMetrics) {
 	panic("not implemented")
 }
 
-func (ms multiStore) ListeningEnabled(key storetypes.StoreKey) bool {
+func (ms multiStore) listeningEnabled(key storetypes.StoreKey) bool {
 	panic("not implemented")
 }
 

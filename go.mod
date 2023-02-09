@@ -164,15 +164,14 @@ require (
 replace (
 	// TODO update after cosmos-sdk/log tagged
 	cosmossdk.io/log => ./log
+	// TODO tag after https://github.com/cosmos/cosmos-sdk/pull/14207 merge
+	cosmossdk.io/store => ./store
 	// TODO update/remove after v0.37.x tag of CometBFT
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20230203130311-387422ac220d
 )
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	// TODO tag after https://github.com/cosmos/cosmos-sdk/pull/14207 merge
-	cosmossdk.io/store => ./store
-
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.

@@ -18,6 +18,9 @@ var (
 	Uint32Key KeyCodec[uint32] = uint32Key[uint32]{}
 	// Uint16Key can be used to encode uint16 keys. Encoding is big endian to retain ordering.
 	Uint16Key KeyCodec[uint16] = uint16Key[uint16]{}
+	// BoolKey can be used to encode booleans. It uses a single byte to represent the boolean.
+	// 0x0 is used to represent false, and 0x1 is used to represent true.
+	BoolKey KeyCodec[bool] = boolKey[bool]{}
 	// StringKey can be used to encode string keys. The encoding just converts the string
 	// to bytes.
 	// Non-terminality in multipart keys is handled by appending the StringDelimiter,
@@ -62,13 +65,9 @@ func (uint64Key) Decode(buffer []byte) (int, uint64, error) {
 	return 8, binary.BigEndian.Uint64(buffer), nil
 }
 
-func (uint64Key) EncodeJSON(value uint64) ([]byte, error) {
-	return uint64EncodeJSON(value)
-}
+func (uint64Key) EncodeJSON(value uint64) ([]byte, error) { return uint64EncodeJSON(value) }
 
-func (uint64Key) DecodeJSON(b []byte) (uint64, error) {
-	return uint64DecodeJSON(b)
-}
+func (uint64Key) DecodeJSON(b []byte) (uint64, error) { return uint64DecodeJSON(b, 64) }
 
 func (uint64Key) Size(_ uint64) int { return 8 }
 
@@ -233,12 +232,9 @@ func (uint32Key[T]) Size(_ T) int { return 4 }
 func (uint32Key[T]) EncodeJSON(value T) ([]byte, error) { return uint64EncodeJSON((uint64)(value)) }
 
 func (uint32Key[T]) DecodeJSON(b []byte) (T, error) {
-	u, err := uint64DecodeJSON(b)
+	u, err := uint64DecodeJSON(b, 32)
 	if err != nil {
 		return 0, err
-	}
-	if u > math.MaxUint32 {
-		return 0, fmt.Errorf("%w: json number is bigger than what can be represented with uint32", ErrEncoding)
 	}
 	return (T)(u), nil
 }
@@ -274,12 +270,9 @@ func (uint16Key[T]) Size(key T) int { return 2 }
 func (uint16Key[T]) EncodeJSON(value T) ([]byte, error) { return uint64EncodeJSON((uint64)(value)) }
 
 func (uint16Key[T]) DecodeJSON(b []byte) (T, error) {
-	u, err := uint64DecodeJSON(b)
+	u, err := uint64DecodeJSON(b, 16)
 	if err != nil {
 		return 0, err
-	}
-	if u > math.MaxUint16 {
-		return 0, fmt.Errorf("%w: json number is bigger than what can be represented with uint16", ErrEncoding)
 	}
 	return (T)(u), nil
 }
@@ -295,3 +288,67 @@ func (u uint16Key[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
 func (u uint16Key[T]) DecodeNonTerminal(buffer []byte) (int, T, error) { return u.Decode(buffer) }
 
 func (u uint16Key[T]) SizeNonTerminal(key T) int { return u.Size(key) }
+
+type boolKey[T ~bool] struct{}
+
+func (b boolKey[T]) Encode(buffer []byte, key T) (int, error) {
+	if key {
+		buffer[0] = 0x1
+		return 1, nil
+	} else {
+		buffer[0] = 0x0
+		return 1, nil
+	}
+}
+
+func (b boolKey[T]) Decode(buffer []byte) (int, T, error) {
+	if len(buffer) == 0 {
+		return 0, false, fmt.Errorf("%w: wanted size to be at least 1", ErrEncoding)
+	}
+	switch buffer[0] {
+	case 0:
+		return 1, false, nil
+	case 1:
+		return 1, true, nil
+	default:
+		return 0, false, fmt.Errorf("%w: invalid bool value: %d", ErrEncoding, buffer[0])
+	}
+}
+
+func (b boolKey[T]) Size(key T) int { return 1 }
+
+func (b boolKey[T]) EncodeJSON(value T) ([]byte, error) {
+	return []byte(`"` + strconv.FormatBool((bool)(value)) + `"`), nil
+}
+
+func (b boolKey[T]) DecodeJSON(buffer []byte) (T, error) {
+	s, err := StringKey.DecodeJSON(buffer)
+	if err != nil {
+		return false, err
+	}
+	k, err := strconv.ParseBool(s)
+	if err != nil {
+		return false, err
+	}
+	return (T)(k), nil
+}
+
+func (b boolKey[T]) Stringify(key T) string {
+	return strconv.FormatBool((bool)(key))
+}
+
+func (b boolKey[T]) KeyType() string {
+	return "bool"
+}
+
+func (b boolKey[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
+	return b.Encode(buffer, key)
+}
+
+func (b boolKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
+	return b.Decode(buffer)
+}
+
+func (b boolKey[T]) SizeNonTerminal(key T) int {
+	return b.Size(key)
+}

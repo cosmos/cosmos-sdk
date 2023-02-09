@@ -28,6 +28,11 @@ func TestKeyCorrectness(t *testing.T) {
 		colltest.TestKeyCodec(t, collections.Uint16Key, 1005)
 	})
 
+	t.Run("bool", func(t *testing.T) {
+		colltest.TestKeyCodec(t, collections.BoolKey, true)
+		colltest.TestKeyCodec(t, collections.BoolKey, false)
+	})
+
 	t.Run("Pair", func(t *testing.T) {
 		colltest.TestKeyCodec(
 			t,

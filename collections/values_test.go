@@ -18,7 +18,7 @@ func TestUInt64JSON(t *testing.T) {
 	bz, err := uint64EncodeJSON(x)
 	require.NoError(t, err)
 	require.Equal(t, []byte(`"3076"`), bz)
-	y, err := uint64DecodeJSON(bz)
+	y, err := uint64DecodeJSON(bz, 64)
 	require.NoError(t, err)
 	require.Equal(t, x, y)
 }

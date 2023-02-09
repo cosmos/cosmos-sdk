@@ -41,7 +41,7 @@ func (u uint64Value) EncodeJSON(value uint64) ([]byte, error) {
 }
 
 func (u uint64Value) DecodeJSON(b []byte) (uint64, error) {
-	return uint64DecodeJSON(b)
+	return uint64DecodeJSON(b, 64)
 }
 
 func uint64EncodeJSON(value uint64) ([]byte, error) {
@@ -49,13 +49,13 @@ func uint64EncodeJSON(value uint64) ([]byte, error) {
 	return []byte(str), nil
 }
 
-func uint64DecodeJSON(b []byte) (uint64, error) {
+func uint64DecodeJSON(b []byte, bitSize int) (uint64, error) {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err != nil {
 		return 0, err
 	}
-	return strconv.ParseUint(str, 10, 64)
+	return strconv.ParseUint(str, 10, bitSize)
 }
 
 type stringValue struct{}

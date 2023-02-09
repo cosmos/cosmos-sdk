@@ -313,12 +313,6 @@ func jsonMarshal(w io.Writer, v interface{}) error {
 func (aj AminoJSON) marshalList(list protoreflect.List, writer io.Writer) error {
 	n := list.Len()
 
-	// replicate https://github.com/tendermint/go-amino/blob/rc0/v0.16.0/json-encode.go#L222
-	if n == 0 {
-		_, err := writer.Write([]byte("null"))
-		return err
-	}
-
 	_, err := writer.Write([]byte("["))
 	if err != nil {
 		return err

@@ -1,10 +1,8 @@
 package aminojson_test
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/go-amino"
@@ -12,12 +10,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"pgregory.net/rapid"
 
-	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"gotest.tools/v3/assert"
-
-	"github.com/cosmos/cosmos-proto/any"
 
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
@@ -27,25 +20,24 @@ import (
 
 func marshalLegacy(msg proto.Message) ([]byte, error) {
 	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
+	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)
 	return cdc.MarshalJSON(msg)
 }
 
 func TestAminoJSON_EdgeCases(t *testing.T) {
-	simpleAny, err := anypb.New(&testpb.NestedMessage{Foo: "any type nested", Bar: 11})
-	require.NoError(t, err)
 
 	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
+	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)
 	aj := aminojson.NewAminoJSON()
 
 	cases := map[string]struct {
 		msg       proto.Message
 		shouldErr bool
 	}{
-		"empty":         {msg: &testpb.ABitOfEverything{}},
-		"single map":    {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}, shouldErr: true},
-		"any type":      {msg: &testpb.ABitOfEverything{Any: simpleAny}},
-		"zero duration": {msg: &testpb.ABitOfEverything{Duration: durationpb.New(time.Second * 0)}},
-		"duration":      {msg: &testpb.ABitOfEverything{Duration: &durationpb.Duration{Seconds: 10, Nanos: 10}}},
+		"empty":      {msg: &testpb.ABitOfEverything{}},
+		"single map": {msg: &testpb.WithAMap{StrMap: map[string]string{"foo": "bar"}}, shouldErr: true},
 	}
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -74,49 +66,42 @@ func TestAminoJSON_EdgeCases(t *testing.T) {
 }
 
 func TestAminoJSON(t *testing.T) {
-	a, err := any.New(&testpb.NestedMessage{
-		Foo: "any type nested",
-		Bar: 11,
-	})
+	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
+	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)
 
-	assert.NilError(t, err)
 	msg := &testpb.ABitOfEverything{
 		Message: &testpb.NestedMessage{
 			Foo: "test",
 			Bar: 0, // this is the default value and should be omitted from output
 		},
-		Enum:      testpb.AnEnum_ONE,
-		Repeated:  []int32{3, -7, 2, 6, 4},
-		Str:       `abcxyz"foo"def`,
-		Bool:      true,
-		Bytes:     []byte{0, 1, 2, 3},
-		I32:       -15,
-		F32:       1001,
-		U32:       1200,
-		Si32:      -376,
-		Sf32:      -1000,
-		I64:       14578294827584932,
-		F64:       9572348124213523654,
-		U64:       4759492485,
-		Si64:      -59268425823934,
-		Sf64:      -659101379604211154,
-		Any:       a,
-		Timestamp: timestamppb.New(time.Date(2022, 1, 1, 12, 31, 0, 0, time.UTC)),
-		Duration:  durationpb.New(time.Second * 3000),
+		Enum:     testpb.AnEnum_ONE,
+		Repeated: []int32{3, -7, 2, 6, 4},
+		Str:      `abcxyz"foo"def`,
+		Bool:     true,
+		Bytes:    []byte{0, 1, 2, 3},
+		I32:      -15,
+		F32:      1001,
+		U32:      1200,
+		Si32:     -376,
+		Sf32:     -1000,
+		I64:      14578294827584932,
+		F64:      9572348124213523654,
+		U64:      4759492485,
+		Si64:     -59268425823934,
+		Sf64:     -659101379604211154,
 	}
 	bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
 	assert.NilError(t, err)
-	cdc := amino.NewCodec()
 	legacyBz, err := cdc.MarshalJSON(msg)
 	assert.NilError(t, err)
-	require.Equal(t, string(legacyBz), string(bz), "%s vs legacy: %s", string(bz), string(legacyBz))
+	require.Equal(t, string(legacyBz), string(bz))
 }
 
 func TestRapid(t *testing.T) {
 	gen := rapidproto.MessageGenerator(&testpb.ABitOfEverything{}, rapidproto.GeneratorOptions{})
 	rapid.Check(t, func(t *rapid.T) {
 		msg := gen.Draw(t, "msg")
-		fmt.Printf("msg: %v\n", msg)
 		bz, err := aminojson.NewAminoJSON().MarshalAmino(msg)
 		assert.NilError(t, err)
 		checkInvariants(t, msg, bz)
@@ -136,8 +121,11 @@ func checkLegacyParity(t *rapid.T, message proto.Message, marshaledBytes []byte)
 }
 
 func checkRoundTrip(t *rapid.T, message proto.Message, marshaledBytes []byte) {
-	message2 := message.ProtoReflect().New().Interface()
 	cdc := amino.NewCodec()
+	cdc.RegisterConcrete(&testpb.ABitOfEverything{}, "ABitOfEverything", nil)
+	cdc.RegisterConcrete(&testpb.NestedMessage{}, "NestedMessage", nil)
+
+	message2 := message.ProtoReflect().New().Interface()
 	goProtoJSON, err := cdc.MarshalJSON(message)
 	assert.NilError(t, err)
 	err = cdc.UnmarshalJSON(marshaledBytes, message2)

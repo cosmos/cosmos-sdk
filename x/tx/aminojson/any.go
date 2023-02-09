@@ -47,7 +47,7 @@ func (aj AminoJSON) marshalAny(message protoreflect.Message, writer io.Writer) e
 
 	aminoName, named := getMessageName(valueMsg)
 	if !named {
-		return fmt.Errorf("expected amino named message")
+		return fmt.Errorf("any fields require an amino.name annotation")
 	}
 
 	_, err = writer.Write([]byte(fmt.Sprintf(`{"type":"%s","value":`, aminoName)))

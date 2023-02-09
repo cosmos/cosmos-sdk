@@ -8,18 +8,10 @@ import (
 	"os"
 	"time"
 
-<<<<<<< HEAD:simapp/state.go
+	"cosmossdk.io/math"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	"cosmossdk.io/math"
-	simappparams "cosmossdk.io/simapp/params"
-=======
-	"cosmossdk.io/math"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmttypes "github.com/cometbft/cometbft/types"
-
->>>>>>> 4f13b5b31 (refactor!: extract `AppStateFn` out of simapp (#14977)):testutil/sims/state_helpers.go
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -218,28 +210,17 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
-<<<<<<< HEAD:simapp/state.go
-func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
-=======
-func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (cmttypes.GenesisDoc, []simtypes.Account, error) {
->>>>>>> 4f13b5b31 (refactor!: extract `AppStateFn` out of simapp (#14977)):testutil/sims/state_helpers.go
+func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account, error) {
 	bytes, err := os.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
 
-<<<<<<< HEAD:simapp/state.go
 	var genesis tmtypes.GenesisDoc
 	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
 	err = tmjson.Unmarshal(bytes, &genesis)
 	if err != nil {
-		panic(err)
-=======
-	var genesis cmttypes.GenesisDoc
-	// NOTE: CometBFT uses a custom JSON decoder for GenesisDoc
-	if err = cmtjson.Unmarshal(bytes, &genesis); err != nil {
 		return genesis, nil, err
->>>>>>> 4f13b5b31 (refactor!: extract `AppStateFn` out of simapp (#14977)):testutil/sims/state_helpers.go
 	}
 
 	var appState map[string]json.RawMessage
@@ -264,7 +245,7 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
-		a, ok := acc.GetCachedValue().(sdk.AccountI)
+		a, ok := acc.GetCachedValue().(authtypes.AccountI)
 		if !ok {
 			return genesis, nil, fmt.Errorf("expected account")
 		}

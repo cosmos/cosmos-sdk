@@ -27,7 +27,10 @@ func (i Int32Codec) Decode(r Reader) (protoreflect.Value, error) {
 }
 
 func (i Int32Codec) Encode(value protoreflect.Value, w io.Writer) error {
-	x := value.Int()
+	var x int64
+	if value.IsValid() {
+		x = value.Int()
+	}
 	x += int32Offset
 	return binary.Write(w, binary.BigEndian, uint32(x))
 }

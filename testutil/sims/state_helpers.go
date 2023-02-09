@@ -1,4 +1,4 @@
-package simapp
+package sims
 
 import (
 	"encoding/json"
@@ -8,11 +8,18 @@ import (
 	"os"
 	"time"
 
+<<<<<<< HEAD:simapp/state.go
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"cosmossdk.io/math"
 	simappparams "cosmossdk.io/simapp/params"
+=======
+	"cosmossdk.io/math"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmttypes "github.com/cometbft/cometbft/types"
+
+>>>>>>> 4f13b5b31 (refactor!: extract `AppStateFn` out of simapp (#14977)):testutil/sims/state_helpers.go
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,11 +31,21 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// Simulation parameter constants
+const (
+	StakePerAccount           = "stake_per_account"
+	InitiallyBondedValidators = "initially_bonded_validators"
+)
+
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
-	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
+// genesisState is the default genesis state of the whole app.
+func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
+	return func(
+		r *rand.Rand,
+		accs []simtypes.Account,
+		config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if simcli.FlagGenesisTimeValue == 0 {
 			genesisTimestamp = simtypes.RandTimestamp(r)
@@ -43,7 +60,10 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 
 		case config.GenesisFile != "":
 			// override the default chain-id from simapp to set it later to the config
-			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+			genesisDoc, accounts, err := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+			if err != nil {
+				panic(err)
+			}
 
 			if simcli.FlagGenesisTimeValue == 0 {
 				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
@@ -65,11 +85,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams, genesisState)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -84,8 +104,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		}
 
 		stakingState := new(stakingtypes.GenesisState)
-		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
-		if err != nil {
+		if err = cdc.UnmarshalJSON(stakingStateBz, stakingState); err != nil {
 			panic(err)
 		}
 		// compute not bonded balance
@@ -104,8 +123,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic("bank genesis state is missing")
 		}
 		bankState := new(banktypes.GenesisState)
-		err = cdc.UnmarshalJSON(bankStateBz, bankState)
-		if err != nil {
+		if err = cdc.UnmarshalJSON(bankStateBz, bankState); err != nil {
 			panic(err)
 		}
 
@@ -140,12 +158,15 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params
 func AppStateRandomizedFn(
-	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
-	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
+	simManager *module.SimulationManager,
+	r *rand.Rand,
+	cdc codec.JSONCodec,
+	accs []simtypes.Account,
+	genesisTimestamp time.Time,
+	appParams simtypes.AppParams,
+	genesisState map[string]json.RawMessage,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
-	genesisState := ModuleBasics.DefaultGenesis(cdc)
-
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
 	var (
@@ -153,11 +174,11 @@ func AppStateRandomizedFn(
 		initialStake       math.Int
 	)
 	appParams.GetOrGenerate(
-		cdc, simappparams.StakePerAccount, &initialStake, r,
+		cdc, StakePerAccount, &initialStake, r,
 		func(r *rand.Rand) { initialStake = math.NewInt(r.Int63n(1e12)) },
 	)
 	appParams.GetOrGenerate(
-		cdc, simappparams.InitiallyBondedValidators, &numInitiallyBonded, r,
+		cdc, InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
 
@@ -197,23 +218,33 @@ func AppStateRandomizedFn(
 
 // AppStateFromGenesisFileFn util function to generate the genesis AppState
 // from a genesis.json file.
+<<<<<<< HEAD:simapp/state.go
 func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (tmtypes.GenesisDoc, []simtypes.Account) {
+=======
+func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile string) (cmttypes.GenesisDoc, []simtypes.Account, error) {
+>>>>>>> 4f13b5b31 (refactor!: extract `AppStateFn` out of simapp (#14977)):testutil/sims/state_helpers.go
 	bytes, err := os.ReadFile(genesisFile)
 	if err != nil {
 		panic(err)
 	}
 
+<<<<<<< HEAD:simapp/state.go
 	var genesis tmtypes.GenesisDoc
 	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
 	err = tmjson.Unmarshal(bytes, &genesis)
 	if err != nil {
 		panic(err)
+=======
+	var genesis cmttypes.GenesisDoc
+	// NOTE: CometBFT uses a custom JSON decoder for GenesisDoc
+	if err = cmtjson.Unmarshal(bytes, &genesis); err != nil {
+		return genesis, nil, err
+>>>>>>> 4f13b5b31 (refactor!: extract `AppStateFn` out of simapp (#14977)):testutil/sims/state_helpers.go
 	}
 
-	var appState GenesisState
-	err = json.Unmarshal(genesis.AppState, &appState)
-	if err != nil {
-		panic(err)
+	var appState map[string]json.RawMessage
+	if err = json.Unmarshal(genesis.AppState, &appState); err != nil {
+		return genesis, nil, err
 	}
 
 	var authGenesis authtypes.GenesisState
@@ -233,9 +264,9 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 
 		privKey := secp256k1.GenPrivKeyFromSecret(privkeySeed)
 
-		a, ok := acc.GetCachedValue().(authtypes.AccountI)
+		a, ok := acc.GetCachedValue().(sdk.AccountI)
 		if !ok {
-			panic("expected account")
+			return genesis, nil, fmt.Errorf("expected account")
 		}
 
 		// create simulator accounts
@@ -243,5 +274,5 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 		newAccs[i] = simAcc
 	}
 
-	return genesis, newAccs
+	return genesis, newAccs, nil
 }

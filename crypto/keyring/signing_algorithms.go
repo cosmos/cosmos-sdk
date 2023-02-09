@@ -1,9 +1,11 @@
 package keyring
 
 import (
-	"github.com/cockroachdb/errors"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"strings"
+
+	"github.com/cockroachdb/errors"
+
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
 // SignatureAlgo defines the interface for a keyring supported algorithm.

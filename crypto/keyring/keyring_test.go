@@ -54,7 +54,6 @@ func TestNewKeyring(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, nilKr)
 	require.True(t, errors.Is(err, ErrUnknownBacked))
-	//require.Equal(t, "unknown keyring backend fuzzy", err.Error())
 
 	mockIn.Reset("password\npassword\n")
 	k, _, err := kr.NewMnemonic("foo", English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)

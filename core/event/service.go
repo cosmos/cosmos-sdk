@@ -11,6 +11,11 @@ import (
 // event.Service is a core API type that should be provided by the runtime module being used to
 // build an app via depinject.
 type Service interface {
+	EventManager(context.Context) Manager
+}
+
+// Manager represents an event manager which can emit events.
+type Manager interface {
 	// Emit emits events represented as a protobuf message (as described in ADR 032).
 	//
 	// Callers SHOULD assume that these events may be included in consensus. These events

@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	sdkerrors "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/log"
+	"cosmossdk.io/log"
 
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"

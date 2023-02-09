@@ -33,7 +33,7 @@ var fallBackCodec = codec.NewProtoCodec(failingInterfaceRegistry{})
 // Invoke implements the grpc ClientConn.Invoke method
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply interface{}, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
-	// 1. either we're broadcasting a Tx, in which call we call Tendermint's broadcast endpoint directly,
+	// 1. either we're broadcasting a Tx, in which call we call CometBFT's broadcast endpoint directly,
 	// 2-1. or we are querying for state, in which case we call grpc if grpc client set.
 	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 

@@ -27,7 +27,7 @@ func NewLegacyAmino() *LegacyAmino {
 	return &LegacyAmino{amino.NewCodec()}
 }
 
-// RegisterEvidences registers Tendermint evidence types with the provided Amino
+// RegisterEvidences registers CometBFT evidence types with the provided Amino
 // codec.
 func RegisterEvidences(cdc *LegacyAmino) {
 	cdc.Amino.RegisterInterface((*cmttypes.Evidence)(nil), nil)

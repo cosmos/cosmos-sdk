@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 
+	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -98,7 +98,7 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			customAppTemplate, customAppConfig := initAppConfig()
-			customCMTConfig := initTendermintConfig()
+			customCMTConfig := initCometBFTConfig()
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
 		},
@@ -113,9 +113,9 @@ func NewRootCmd() *cobra.Command {
 	return rootCmd
 }
 
-// initTendermintConfig helps to override default Tendermint Config values.
+// initCometBFTConfig helps to override default CometBFT Config values.
 // return cmtcfg.DefaultConfig if no custom configuration is required for the application.
-func initTendermintConfig() *cmtcfg.Config {
+func initCometBFTConfig() *cmtcfg.Config {
 	cfg := cmtcfg.DefaultConfig()
 
 	// these values put a higher strain on node memory

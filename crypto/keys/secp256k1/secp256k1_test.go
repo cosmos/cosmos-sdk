@@ -95,7 +95,7 @@ Here are the specific versions used to generate the vectors.
 github.com/cosmos/btcutil v1.0.5
 github.com/cosmos/cosmos-sdk v0.46.8
 */
-func generateKeyForCheckingConsistency() keyData {
+var _ = func() keyData {
 	priv := secp256k1.GenPrivKey()
 	encPriv := make([]byte, len(priv.Key)*2)
 	hex.Encode(encPriv, priv.Key)

@@ -62,12 +62,12 @@ func (suite *SimTestSuite) SetupTest() {
 	// create validator (non random as using a seed)
 	createValidator := func() (*cmttypes.ValidatorSet, error) {
 		account := accounts[0]
-		tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
+		cmtPk, err := cryptocodec.ToCmtPubKeyInterface(account.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create pubkey: %w", err)
 		}
 
-		validator := cmttypes.NewValidator(tmPk, 1)
+		validator := cmttypes.NewValidator(cmtPk, 1)
 
 		return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 	}

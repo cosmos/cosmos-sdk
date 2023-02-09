@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -59,7 +59,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 	}
 
 	page := int(req.Page)
-	// Tendermint node.TxSearch that is used for querying txs defines pages starting from 1,
+	// CometBFT node.TxSearch that is used for querying txs defines pages starting from 1,
 	// so we default to 1 if not provided in the request.
 	if page == 0 {
 		page = 1
@@ -192,7 +192,7 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 			"or greater than the current height %d", req.Height, currentHeight)
 	}
 
-	blockID, block, err := tmservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
+	blockID, block, err := cmtservice.GetProtoBlock(ctx, s.clientCtx, &req.Height)
 	if err != nil {
 		return nil, err
 	}
@@ -363,6 +363,6 @@ func parseOrderBy(orderBy txtypes.OrderBy) string {
 	case txtypes.OrderBy_ORDER_BY_DESC:
 		return "desc"
 	default:
-		return "" // Defaults to Tendermint's default, which is `asc` now.
+		return "" // Defaults to CometBFT's default, which is `asc` now.
 	}
 }

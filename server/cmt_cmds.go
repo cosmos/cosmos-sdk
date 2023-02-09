@@ -160,7 +160,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 	flags.AddQueryFlagsToCmd(cmd)
 	cmd.Flags().Int(flags.FlagPage, query.DefaultPage, "Query a specific page of paginated results")
 	cmd.Flags().Int(flags.FlagLimit, query.DefaultLimit, "Query number of transactions results per page returned")
-	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per Tendermint's query semantics")
+	cmd.Flags().String(auth.FlagQuery, "", "The blocks events query per CometBFT's query semantics")
 	cmd.Flags().String(auth.FlagOrderBy, "", "The ordering semantics (asc|dsc)")
 	_ = cmd.MarkFlagRequired(auth.FlagQuery)
 

@@ -71,7 +71,14 @@
 		"name": "tricky memo (starts with >, utf-8, trailing whitespaces)",
 		"proto": {
 			"body": {
-				"messages": [{ "@type": "/cosmos.bank.v1beta1.MsgSend", "from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t", "amount": [{ "denom": "uatom", "amount": "10000000" }] }],
+				"messages": [
+					{
+						"@type": "/cosmos.bank.v1beta1.MsgSend",
+						"from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+						"to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t",
+						"amount": [{ "denom": "uatom", "amount": "10000000" }]
+					}
+				],
 				"memo": "> ⚛️\\u269B⚛️     "
 			},
 			"auth_info": {

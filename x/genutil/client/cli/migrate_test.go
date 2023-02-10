@@ -29,7 +29,7 @@ func (s *CLITestSuite) TestMigrateGenesis() {
 			"migrate 0.37 to 0.42",
 			v037Exported,
 			"v0.42",
-			true, "Make sure that you have correctly migrated all Tendermint consensus params", func(_ string) {},
+			true, "Make sure that you have correctly migrated all CometBFT consensus params", func(_ string) {},
 		},
 		{
 			"migrate 0.42 to 0.43",

@@ -1,7 +1,7 @@
 //go:build e2e
 // +build e2e
 
-package tmservice_test
+package cmtservice_test
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/simapp"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -28,7 +28,7 @@ type E2ETestSuite struct {
 
 	cfg         network.Config
 	network     *network.Network
-	queryClient tmservice.ServiceClient
+	queryClient cmtservice.ServiceClient
 }
 
 func TestE2ETestSuite(t *testing.T) {
@@ -48,7 +48,7 @@ func (s *E2ETestSuite) SetupSuite() {
 
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	s.queryClient = tmservice.NewServiceClient(s.network.Validators[0].ClientCtx)
+	s.queryClient = cmtservice.NewServiceClient(s.network.Validators[0].ClientCtx)
 }
 
 func (s *E2ETestSuite) TearDownSuite() {
@@ -59,13 +59,13 @@ func (s *E2ETestSuite) TearDownSuite() {
 func (s *E2ETestSuite) TestQueryNodeInfo() {
 	val := s.network.Validators[0]
 
-	res, err := s.queryClient.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
+	res, err := s.queryClient.GetNodeInfo(context.Background(), &cmtservice.GetNodeInfoRequest{})
 	s.Require().NoError(err)
 	s.Require().Equal(res.ApplicationVersion.AppName, version.NewInfo().AppName)
 
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/node_info", val.APIAddress))
 	s.Require().NoError(err)
-	var getInfoRes tmservice.GetNodeInfoResponse
+	var getInfoRes cmtservice.GetNodeInfoResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &getInfoRes))
 	s.Require().Equal(getInfoRes.ApplicationVersion.AppName, version.NewInfo().AppName)
 }
@@ -73,24 +73,24 @@ func (s *E2ETestSuite) TestQueryNodeInfo() {
 func (s *E2ETestSuite) TestQuerySyncing() {
 	val := s.network.Validators[0]
 
-	_, err := s.queryClient.GetSyncing(context.Background(), &tmservice.GetSyncingRequest{})
+	_, err := s.queryClient.GetSyncing(context.Background(), &cmtservice.GetSyncingRequest{})
 	s.Require().NoError(err)
 
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/syncing", val.APIAddress))
 	s.Require().NoError(err)
-	var syncingRes tmservice.GetSyncingResponse
+	var syncingRes cmtservice.GetSyncingResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &syncingRes))
 }
 
 func (s *E2ETestSuite) TestQueryLatestBlock() {
 	val := s.network.Validators[0]
 
-	_, err := s.queryClient.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
+	_, err := s.queryClient.GetLatestBlock(context.Background(), &cmtservice.GetLatestBlockRequest{})
 	s.Require().NoError(err)
 
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/latest", val.APIAddress))
 	s.Require().NoError(err)
-	var blockInfoRes tmservice.GetLatestBlockResponse
+	var blockInfoRes cmtservice.GetLatestBlockResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
 	s.Require().Equal(types.ValAddress(blockInfoRes.Block.Header.ProposerAddress).String(), blockInfoRes.SdkBlock.Header.ProposerAddress)
 	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
@@ -98,12 +98,12 @@ func (s *E2ETestSuite) TestQueryLatestBlock() {
 
 func (s *E2ETestSuite) TestQueryBlockByHeight() {
 	val := s.network.Validators[0]
-	_, err := s.queryClient.GetBlockByHeight(context.Background(), &tmservice.GetBlockByHeightRequest{Height: 1})
+	_, err := s.queryClient.GetBlockByHeight(context.Background(), &cmtservice.GetBlockByHeightRequest{Height: 1})
 	s.Require().NoError(err)
 
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/blocks/%d", val.APIAddress, 1))
 	s.Require().NoError(err)
-	var blockInfoRes tmservice.GetBlockByHeightResponse
+	var blockInfoRes cmtservice.GetBlockByHeightResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockInfoRes))
 	s.Require().Contains(blockInfoRes.SdkBlock.Header.ProposerAddress, "cosmosvaloper")
 }
@@ -112,7 +112,7 @@ func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 	val := s.network.Validators[0]
 
 	// nil pagination
-	res, err := s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{
+	res, err := s.queryClient.GetLatestValidatorSet(context.Background(), &cmtservice.GetLatestValidatorSetRequest{
 		Pagination: nil,
 	})
 	s.Require().NoError(err)
@@ -122,7 +122,7 @@ func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 	s.Require().Equal(content, val.PubKey)
 
 	// with pagination
-	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
+	_, err = s.queryClient.GetLatestValidatorSet(context.Background(), &cmtservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{
 		Offset: 0,
 		Limit:  10,
 	}})
@@ -135,7 +135,7 @@ func (s *E2ETestSuite) TestQueryLatestValidatorSet() {
 	// rest request with pagination
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/validatorsets/latest?pagination.offset=%d&pagination.limit=%d", val.APIAddress, 0, 1))
 	s.Require().NoError(err)
-	var validatorSetRes tmservice.GetLatestValidatorSetResponse
+	var validatorSetRes cmtservice.GetLatestValidatorSetResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &validatorSetRes))
 	s.Require().Equal(1, len(validatorSetRes.Validators))
 	anyPub, err := codectypes.NewAnyWithValue(val.PubKey)
@@ -147,13 +147,13 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPC() {
 	vals := s.network.Validators
 	testCases := []struct {
 		name      string
-		req       *tmservice.GetLatestValidatorSetRequest
+		req       *cmtservice.GetLatestValidatorSetRequest
 		expErr    bool
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "cannot be nil"},
-		{"no pagination", &tmservice.GetLatestValidatorSetRequest{}, false, ""},
-		{"with pagination", &tmservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{Offset: 0, Limit: uint64(len(vals))}}, false, ""},
+		{"no pagination", &cmtservice.GetLatestValidatorSetRequest{}, false, ""},
+		{"with pagination", &cmtservice.GetLatestValidatorSetRequest{Pagination: &qtypes.PageRequest{Offset: 0, Limit: uint64(len(vals))}}, false, ""},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -194,7 +194,7 @@ func (s *E2ETestSuite) TestLatestValidatorSet_GRPCGateway() {
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
-				var result tmservice.GetLatestValidatorSetResponse
+				var result cmtservice.GetLatestValidatorSetResponse
 				err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
@@ -210,14 +210,14 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPC() {
 	vals := s.network.Validators
 	testCases := []struct {
 		name      string
-		req       *tmservice.GetValidatorSetByHeightRequest
+		req       *cmtservice.GetValidatorSetByHeightRequest
 		expErr    bool
 		expErrMsg string
 	}{
 		{"nil request", nil, true, "request cannot be nil"},
-		{"empty request", &tmservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than 0"},
-		{"no pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1}, false, ""},
-		{"with pagination", &tmservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
+		{"empty request", &cmtservice.GetValidatorSetByHeightRequest{}, true, "height must be greater than 0"},
+		{"no pagination", &cmtservice.GetValidatorSetByHeightRequest{Height: 1}, false, ""},
+		{"with pagination", &cmtservice.GetValidatorSetByHeightRequest{Height: 1, Pagination: &qtypes.PageRequest{Offset: 0, Limit: 1}}, false, ""},
 	}
 	for _, tc := range testCases {
 		tc := tc
@@ -256,7 +256,7 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
-				var result tmservice.GetValidatorSetByHeightResponse
+				var result cmtservice.GetValidatorSetByHeightResponse
 				err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 				s.Require().Equal(uint64(len(vals)), result.Pagination.Total)
@@ -268,14 +268,14 @@ func (s *E2ETestSuite) TestValidatorSetByHeight_GRPCGateway() {
 func (s *E2ETestSuite) TestABCIQuery() {
 	testCases := []struct {
 		name         string
-		req          *tmservice.ABCIQueryRequest
+		req          *cmtservice.ABCIQueryRequest
 		expectErr    bool
 		expectedCode uint32
 		validQuery   bool
 	}{
 		{
 			name: "valid request with proof",
-			req: &tmservice.ABCIQueryRequest{
+			req: &cmtservice.ABCIQueryRequest{
 				Path:  "/store/gov/key",
 				Data:  []byte{0x03},
 				Prove: true,
@@ -284,7 +284,7 @@ func (s *E2ETestSuite) TestABCIQuery() {
 		},
 		{
 			name: "valid request without proof",
-			req: &tmservice.ABCIQueryRequest{
+			req: &cmtservice.ABCIQueryRequest{
 				Path:  "/store/gov/key",
 				Data:  []byte{0x03},
 				Prove: false,
@@ -293,7 +293,7 @@ func (s *E2ETestSuite) TestABCIQuery() {
 		},
 		{
 			name: "request with invalid path",
-			req: &tmservice.ABCIQueryRequest{
+			req: &cmtservice.ABCIQueryRequest{
 				Path: "/foo/bar",
 				Data: []byte{0x03},
 			},
@@ -301,9 +301,9 @@ func (s *E2ETestSuite) TestABCIQuery() {
 		},
 		{
 			name: "request with invalid path recursive",
-			req: &tmservice.ABCIQueryRequest{
+			req: &cmtservice.ABCIQueryRequest{
 				Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
-				Data: s.cfg.Codec.MustMarshal(&tmservice.ABCIQueryRequest{
+				Data: s.cfg.Codec.MustMarshal(&cmtservice.ABCIQueryRequest{
 					Path: "/cosmos.base.tendermint.v1beta1.Service/ABCIQuery",
 				}),
 			},
@@ -311,7 +311,7 @@ func (s *E2ETestSuite) TestABCIQuery() {
 		},
 		{
 			name: "request with invalid broadcast tx path",
-			req: &tmservice.ABCIQueryRequest{
+			req: &cmtservice.ABCIQueryRequest{
 				Path: "/cosmos.tx.v1beta1.Service/BroadcastTx",
 				Data: []byte{0x00},
 			},
@@ -319,7 +319,7 @@ func (s *E2ETestSuite) TestABCIQuery() {
 		},
 		{
 			name: "request with invalid data",
-			req: &tmservice.ABCIQueryRequest{
+			req: &cmtservice.ABCIQueryRequest{
 				Path: "/store/gov/key",
 				Data: []byte{0x0044, 0x00},
 			},

@@ -14,7 +14,7 @@ func Commands(defaultNodeHome string) *cobra.Command {
 		Use:   "keys",
 		Short: "Manage your application's keys",
 		Long: `Keyring management commands. These keys may be in any format supported by the
-Tendermint crypto library and can be used by light-clients, full nodes, or any other application
+CometBFT crypto library and can be used by light-clients, full nodes, or any other application
 that needs to sign with a private key.
 
 The keyring supports the following backends:

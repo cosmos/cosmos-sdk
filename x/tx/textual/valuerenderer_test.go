@@ -34,7 +34,7 @@ func TestDispatcher(t *testing.T) {
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			textual := textual.NewSignModeHandler(nil)
+			textual := textual.SignModeHandler{}
 			rend, err := textual.GetFieldValueRenderer(fieldDescriptorFromName(tc.name))
 
 			if tc.expErr {

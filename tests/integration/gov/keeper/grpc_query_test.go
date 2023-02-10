@@ -142,7 +142,6 @@ func TestGRPCQueryTallyConcurrency(t *testing.T) {
 	addrs, _ := createValidators(t, ctx, app, []int64{5, 5, 5})
 
 	var (
-		req         *v1.QueryTallyResultRequest
 		proposal    v1.Proposal
 		wg          sync.WaitGroup
 		concurrency = 10
@@ -154,18 +153,13 @@ func TestGRPCQueryTallyConcurrency(t *testing.T) {
 	t.Run("is parallel", func(t *testing.T) {
 		for i := 0; i < concurrency; i++ {
 			go func() {
-				proposal.Status = v1.StatusPassed
-				app.GovKeeper.SetProposal(ctx, proposal)
-				proposal, _ = app.GovKeeper.GetProposal(ctx, proposal.Id)
-
-				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
-
+				defer wg.Done()
+				req := &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
 				queryClient.TallyResult(gocontext.Background(), req)
-				wg.Done()
 			}()
 		}
 		wg.Wait()
-		// TODO assert that TallyResult has being called concurrently
+		// TODO assert that TallyResult was called in parallel
 	})
 }
 

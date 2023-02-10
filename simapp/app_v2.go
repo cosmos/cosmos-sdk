@@ -70,6 +70,10 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+
+	// Not needed after https://github.com/cosmos/cosmos-sdk/issues/14647
+	_ "cosmossdk.io/api/cosmos/bank/v1beta1"
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 )
 
 var (

@@ -50,7 +50,7 @@ func TestContext_PrintProto(t *testing.T) {
 	err = ctx.PrintProto(hasAnimal)
 	require.NoError(t, err)
 	require.Equal(t,
-		`{"animal":{"@type":"/testdata.Dog","size":"big","name":"Spot"},"x":"10"}
+		`{"animal":{"@type":"/testpb.Dog","size":"big","name":"Spot"},"x":"10"}
 `, buf.String())
 
 	// yaml
@@ -61,7 +61,7 @@ func TestContext_PrintProto(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t,
 		`animal:
-  '@type': /testdata.Dog
+  '@type': /testpb.Dog
   name: Spot
   size: big
 x: "10"

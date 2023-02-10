@@ -1,6 +1,6 @@
 # Cosmos-SDK Plugins
 
-This package contains an extensible plugin system for the Cosmos-SDK. The plugin system leverages the [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin) system. This system is designed to work over RCP. 
+This package contains an extensible plugin system for the Cosmos-SDK. The plugin system leverages the [hashicorp/go-plugin](https://github.com/hashicorp/go-plugin) system. This system is designed to work over RPC. 
 
 Although the `go-plugin` is built to work over RCP, it is currently only designed to work over a local network.
 

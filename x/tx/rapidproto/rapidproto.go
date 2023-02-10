@@ -24,9 +24,13 @@ func MessageGenerator[T proto.Message](x T, options GeneratorOptions) *rapid.Gen
 }
 
 type GeneratorOptions struct {
-	AnyTypeURLs         []string
-	InterfaceHints      map[string]string
-	Resolver            protoregistry.MessageTypeResolver
+	AnyTypeURLs    []string
+	InterfaceHints map[string]string
+	Resolver       protoregistry.MessageTypeResolver
+	// NoEmptyLists will cause the generator to not generate empty lists
+	// Recall that an empty list will marshal (and unmarshal) to null.   Some encodings may treat these states
+	// differently.  For example, in JSON, an empty list is encoded as [], while null is encoded as null.
+	NoEmptyLists        bool
 	DisallowNilMessages bool
 }
 
@@ -81,7 +85,7 @@ func (opts GeneratorOptions) setFields(
 		for i := 0; i < n; i++ {
 			f := fields.Get(i)
 			if !rapid.Bool().Draw(t, fmt.Sprintf("gen-%s", f.Name())) {
-				if (f.Kind() == protoreflect.MessageKind || f.IsList()) && !opts.DisallowNilMessages {
+				if (f.Kind() == protoreflect.MessageKind) && !opts.DisallowNilMessages {
 					continue
 				}
 			}
@@ -107,7 +111,7 @@ func (opts GeneratorOptions) setFieldValue(t *rapid.T, msg protoreflect.Message,
 	case field.IsList():
 		list := msg.Mutable(field).List()
 		min := 0
-		if opts.DisallowNilMessages {
+		if opts.NoEmptyLists {
 			min = 1
 		}
 		n := rapid.IntRange(min, 10).Draw(t, fmt.Sprintf("%sN", name))

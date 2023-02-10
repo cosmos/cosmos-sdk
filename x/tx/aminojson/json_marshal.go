@@ -19,13 +19,13 @@ import (
 )
 
 type MessageEncoder func(protoreflect.Message, io.Writer) error
-type FieldEncoder func(protoreflect.Value, io.Writer) error
+type FieldEncoder func(AminoJSON, protoreflect.Value, io.Writer) error
 
 type AminoJSON struct {
 	// maps cosmos_proto.scalar -> zero value factory
 	zeroValues      map[string]func() protoreflect.Value
 	messageEncoders map[string]MessageEncoder
-	encodings       map[string]FieldEncoder
+	fieldEncoders   map[string]FieldEncoder
 }
 
 func NewAminoJSON() AminoJSON {
@@ -54,17 +54,30 @@ func NewAminoJSON() AminoJSON {
 			},
 			"module_account": moduleAccountEncoder,
 		},
-		encodings: map[string]FieldEncoder{
-			"empty_string": func(v protoreflect.Value, writer io.Writer) error {
+		fieldEncoders: map[string]FieldEncoder{
+			"empty_string": func(_ AminoJSON, v protoreflect.Value, writer io.Writer) error {
 				_, err := writer.Write([]byte(`""`))
 				return err
 			},
-			"json_default": func(v protoreflect.Value, writer io.Writer) error {
+			"json_default": func(_ AminoJSON, v protoreflect.Value, writer io.Writer) error {
 				switch val := v.Interface().(type) {
 				case string, bool, int32, uint32, uint64, int64, protoreflect.EnumNumber:
 					return jsonMarshal(writer, val)
 				default:
 					return fmt.Errorf("unsupported type %T", val)
+				}
+			},
+			// created to replicate: https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
+			"null_slice_as_empty": func(aj AminoJSON, v protoreflect.Value, writer io.Writer) error {
+				switch list := v.Interface().(type) {
+				case protoreflect.List:
+					if list.Len() == 0 {
+						_, err := writer.Write([]byte("[]"))
+						return err
+					}
+					return aj.marshalList(list, writer)
+				default:
+					return fmt.Errorf("unsupported type %T", list)
 				}
 			},
 		},
@@ -77,7 +90,7 @@ func (aj AminoJSON) DefineMessageEncoding(name string, encoder MessageEncoder) {
 }
 
 func (aj AminoJSON) DefineFieldEncoding(name string, encoder FieldEncoder) {
-	aj.encodings[name] = encoder
+	aj.fieldEncoders[name] = encoder
 }
 
 func (aj AminoJSON) MarshalAmino(message proto.Message) ([]byte, error) {
@@ -125,6 +138,10 @@ func (aj AminoJSON) marshal(value protoreflect.Value, writer io.Writer) error {
 		return errors.New("maps are not supported")
 
 	case protoreflect.List:
+		if !val.IsValid() {
+			_, err := writer.Write([]byte("null"))
+			return err
+		}
 		return aj.marshalList(val, writer)
 
 	case string, bool, int32, uint32, protoreflect.EnumNumber:
@@ -185,7 +202,7 @@ func (aj AminoJSON) marshalEmbedded(msg protoreflect.Message, writer io.Writer) 
 
 		// encode value
 		if encoder := aj.getFieldEncoding(f); encoder != nil {
-			err = encoder(v, writer)
+			err = encoder(aj, v, writer)
 			if err != nil {
 				return wrote, err
 			}
@@ -233,6 +250,7 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 		f := fields.Get(i)
 		v := msg.Get(f)
 		name := getFieldName(f)
+		writeNil := false
 
 		if !msg.Has(f) {
 			if omitEmpty(f) {
@@ -242,13 +260,11 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 				if found {
 					v = zv
 				} else if f.Cardinality() == protoreflect.Repeated {
-					// TODO
-					// not sure yet
 					fmt.Printf("WARN: not supported: dont_omit_empty=true on empty repeated field: %s\n", name)
-					//return errors.Errorf("not supported: dont_omit_empty=true on empty repeated field: %s", name)
+					//writeNil = true
 				} else if f.Kind() == protoreflect.MessageKind && !v.Message().IsValid() {
-					//return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
-					fmt.Printf("WARN: not supported: dont_omit_empty=true on invalid (nil?) message field: %s\n", name)
+					return errors.Errorf("not supported: dont_omit_empty=true on invalid (nil?) message field: %s", name)
+					//fmt.Printf("WARN: not supported: dont_omit_empty=true on invalid (nil?) message field: %s\n", name)
 				}
 			}
 		}
@@ -283,7 +299,12 @@ func (aj AminoJSON) marshalMessage(msg protoreflect.Message, writer io.Writer) e
 
 		// encode value
 		if encoder := aj.getFieldEncoding(f); encoder != nil {
-			err = encoder(v, writer)
+			err = encoder(aj, v, writer)
+			if err != nil {
+				return err
+			}
+		} else if writeNil {
+			_, err = writer.Write([]byte("null"))
 			if err != nil {
 				return err
 			}
@@ -411,7 +432,7 @@ func (aj AminoJSON) getFieldEncoding(field protoreflect.FieldDescriptor) FieldEn
 	opts := field.Options()
 	if proto.HasExtension(opts, amino.E_Encoding) {
 		enc := proto.GetExtension(opts, amino.E_Encoding).(string)
-		if fn, ok := aj.encodings[enc]; ok {
+		if fn, ok := aj.fieldEncoders[enc]; ok {
 			return fn
 		}
 	}

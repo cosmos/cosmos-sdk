@@ -1,5 +1,5 @@
 syntax = "proto3";
-package testdata;
+package testpb;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";

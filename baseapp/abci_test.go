@@ -190,7 +190,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 	resQuery := suite.baseApp.Query(abci.RequestQuery{
 		Data: reqBz,
-		Path: "/testdata.Query/SayHello",
+		Path: "/testpb.Query/SayHello",
 	})
 	require.Equal(t, sdkerrors.ErrInvalidHeight.ABCICode(), resQuery.Code, resQuery)
 	require.Contains(t, resQuery.Log, "TestABCI_GRPCQuery is not ready; please wait for first block")
@@ -201,7 +201,7 @@ func TestABCI_GRPCQuery(t *testing.T) {
 
 	reqQuery := abci.RequestQuery{
 		Data: reqBz,
-		Path: "/testdata.Query/SayHello",
+		Path: "/testpb.Query/SayHello",
 	}
 
 	resQuery = suite.baseApp.Query(reqQuery)
@@ -1453,7 +1453,7 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 		Height:     1,
 	}
 	resPrepareProposal := suite.baseApp.PrepareProposal(reqPrepareProposal)
-	require.Equal(t, 10, len(resPrepareProposal.Txs))
+	require.Equal(t, 11, len(resPrepareProposal.Txs))
 }
 
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {

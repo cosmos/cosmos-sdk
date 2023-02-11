@@ -1,7 +1,16 @@
 run:
+<<<<<<< HEAD
   tests: false
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
+=======
+  tests: true
+  timeout: 10m
+  sort-results: true
+  allow-parallel-runners: true
+  exclude-dir: testutil/testdata
+  concurrency: 4
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991))
 
 linters:
   disable-all: true

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: query.proto
+// source: testpb/query.proto
 
-package testdata_pulsar
+package testpb
 
 import (
 	context "context"
@@ -43,7 +43,11 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 
 func (c *queryClient) Echo(ctx context.Context, in *EchoRequest, opts ...grpc.CallOption) (*EchoResponse, error) {
 	out := new(EchoResponse)
+<<<<<<< HEAD:testutil/testdata_pulsar/query_grpc.pb.go
 	err := c.cc.Invoke(ctx, Query_Echo_FullMethodName, in, out, opts...)
+=======
+	err := c.cc.Invoke(ctx, "/testpb.Query/Echo", in, out, opts...)
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/query_grpc.pb.go
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +56,11 @@ func (c *queryClient) Echo(ctx context.Context, in *EchoRequest, opts ...grpc.Ca
 
 func (c *queryClient) SayHello(ctx context.Context, in *SayHelloRequest, opts ...grpc.CallOption) (*SayHelloResponse, error) {
 	out := new(SayHelloResponse)
+<<<<<<< HEAD:testutil/testdata_pulsar/query_grpc.pb.go
 	err := c.cc.Invoke(ctx, Query_SayHello_FullMethodName, in, out, opts...)
+=======
+	err := c.cc.Invoke(ctx, "/testpb.Query/SayHello", in, out, opts...)
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/query_grpc.pb.go
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +69,11 @@ func (c *queryClient) SayHello(ctx context.Context, in *SayHelloRequest, opts ..
 
 func (c *queryClient) TestAny(ctx context.Context, in *TestAnyRequest, opts ...grpc.CallOption) (*TestAnyResponse, error) {
 	out := new(TestAnyResponse)
+<<<<<<< HEAD:testutil/testdata_pulsar/query_grpc.pb.go
 	err := c.cc.Invoke(ctx, Query_TestAny_FullMethodName, in, out, opts...)
+=======
+	err := c.cc.Invoke(ctx, "/testpb.Query/TestAny", in, out, opts...)
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/query_grpc.pb.go
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +126,11 @@ func _Query_Echo_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
+<<<<<<< HEAD:testutil/testdata_pulsar/query_grpc.pb.go
 		FullMethod: Query_Echo_FullMethodName,
+=======
+		FullMethod: "/testpb.Query/Echo",
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/query_grpc.pb.go
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Echo(ctx, req.(*EchoRequest))
@@ -132,7 +148,11 @@ func _Query_SayHello_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
+<<<<<<< HEAD:testutil/testdata_pulsar/query_grpc.pb.go
 		FullMethod: Query_SayHello_FullMethodName,
+=======
+		FullMethod: "/testpb.Query/SayHello",
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/query_grpc.pb.go
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).SayHello(ctx, req.(*SayHelloRequest))
@@ -150,7 +170,11 @@ func _Query_TestAny_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
+<<<<<<< HEAD:testutil/testdata_pulsar/query_grpc.pb.go
 		FullMethod: Query_TestAny_FullMethodName,
+=======
+		FullMethod: "/testpb.Query/TestAny",
+>>>>>>> a90569c7e (fix: correct path required proto testdata (#14991)):testutil/testdata/testpb/query_grpc.pb.go
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).TestAny(ctx, req.(*TestAnyRequest))
@@ -162,7 +186,7 @@ func _Query_TestAny_Handler(srv interface{}, ctx context.Context, dec func(inter
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testdata.Query",
+	ServiceName: "testpb.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -179,5 +203,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "query.proto",
+	Metadata: "testpb/query.proto",
 }

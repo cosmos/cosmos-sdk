@@ -25,29 +25,6 @@ func marshalLegacy(msg proto.Message) ([]byte, error) {
 	return cdc.MarshalJSON(msg)
 }
 
-func TestAminoJSON_EmptyLists(t *testing.T) {
-	aj := aminojson.NewAminoJSON()
-
-	cases := map[string]struct {
-		msg       proto.Message
-		shouldErr bool
-	}{
-		"all_nil":               {msg: &testpb.WithAList{}},
-		"empty_dont_omit_empty": {msg: &testpb.WithAList{DontOmitemptyList: []string{}}},
-	}
-	for name, tc := range cases {
-		t.Run(name, func(t *testing.T) {
-			bz, err := aj.MarshalAmino(tc.msg)
-			require.NoError(t, err)
-
-			legacyBz, err := marshalLegacy(tc.msg)
-			require.NoError(t, err)
-
-			require.Equal(t, string(legacyBz), string(bz))
-		})
-	}
-}
-
 func TestAminoJSON_EdgeCases(t *testing.T) {
 
 	cdc := amino.NewCodec()

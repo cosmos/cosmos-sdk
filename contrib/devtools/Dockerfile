@@ -28,7 +28,7 @@ RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest &&
       github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${GRPC_GATEWAY_VERSION}
 
 # install all gogo protobuf binaries
-RUN git clone https://github.com/cosmos/gogoproto.git; \
+RUN git -b v.1.4.3 clone https://github.com/cosmos/gogoproto.git; \
   cd gogoproto; \
   go mod download; \
   make install

@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/client/v2/autocli"
@@ -202,7 +202,7 @@ func NewSimApp(
 				// For providing a custom a base account type add it below.
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
-				// func() authtypes.AccountI { return authtypes.ProtoBaseAccount() },
+				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },
 
 				//
 				// MINT

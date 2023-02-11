@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/gorilla/handlers"
@@ -86,9 +86,9 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 	}
 }
 
-// Start starts the API server. Internally, the API server leverages Tendermint's
+// Start starts the API server. Internally, the API server leverages CometBFT's
 // JSON RPC server. Configuration options are provided via config.APIConfig
-// and are delegated to the Tendermint JSON RPC server. The process is
+// and are delegated to the CometBFT JSON RPC server. The process is
 // non-blocking, so an external signal handler must be used.
 func (s *Server) Start(cfg config.Config) error {
 	s.mtx.Lock()

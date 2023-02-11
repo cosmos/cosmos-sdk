@@ -80,7 +80,7 @@ func TestRegister(t *testing.T) {
 	// Duplicate registration with different concrete type on same typeURL.
 	require.PanicsWithError(
 		t,
-		"concrete type *testdata.Dog has already been registered under typeURL /testdata.Dog, cannot register *types_test.FakeDog under same typeURL. "+
+		"concrete type *testdata.Dog has already been registered under typeURL /testpb.Dog, cannot register *types_test.FakeDog under same typeURL. "+
 			"This usually means that there are conflicting modules registering different concrete types for a same interface implementation",
 		func() {
 			registry.RegisterImplementations((*testdata.Animal)(nil), &FakeDog{})
@@ -151,7 +151,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	jm := &jsonpb.Marshaler{}
 	json, err := jm.MarshalToString(any)
 	require.NoError(t, err)
-	require.Equal(t, "{\"@type\":\"/testdata.Dog\",\"name\":\"Spot\"}", json)
+	require.Equal(t, "{\"@type\":\"/testpb.Dog\",\"name\":\"Spot\"}", json)
 
 	registry := testdata.NewTestInterfaceRegistry()
 	jum := &jsonpb.Unmarshaler{}
@@ -170,7 +170,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.NoError(t, err)
 	json, err = jm.MarshalToString(ha)
 	require.NoError(t, err)
-	require.Equal(t, "{\"animal\":{\"@type\":\"/testdata.Dog\",\"name\":\"Spot\"}}", json)
+	require.Equal(t, "{\"animal\":{\"@type\":\"/testpb.Dog\",\"name\":\"Spot\"}}", json)
 
 	require.NoError(t, err)
 	var ha2 testdata.HasAnimal

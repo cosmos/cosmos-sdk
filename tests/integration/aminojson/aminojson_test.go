@@ -1,6 +1,8 @@
 package aminojson
 
 import (
+	"cosmossdk.io/x/evidence"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	"fmt"
 	"reflect"
 	"testing"
@@ -22,6 +24,7 @@ import (
 	consensusapi "cosmossdk.io/api/cosmos/consensus/v1"
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
+	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
 	govv1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
@@ -110,13 +113,20 @@ var (
 		genType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, genOpts),
 		genType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, genOpts),
 		genType(&disttypes.Params{}, &distapi.Params{}, genOpts),
+
+		// evidence
+		genType(&evidencetypes.Equivocation{}, &evidenceapi.Equivocation{}, genOpts.WithDisallowNil()),
+		genType(&evidencetypes.MsgSubmitEvidence{}, &evidenceapi.MsgSubmitEvidence{},
+			genOpts.WithAnyTypes(&evidenceapi.Equivocation{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.evidence.v1beta1.Evidence", &evidenceapi.Equivocation{})),
 	}
 )
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
-		distribution.AppModuleBasic{})
+		distribution.AppModuleBasic{}, evidence.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {

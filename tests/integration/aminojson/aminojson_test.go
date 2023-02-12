@@ -5,6 +5,7 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"reflect"
 	"testing"
 	"time"
@@ -27,7 +28,7 @@ import (
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
 	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
-	govv1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
+	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
 	feegranttypes "cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
@@ -47,7 +48,7 @@ import (
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 type generatedType struct {
@@ -144,13 +145,25 @@ var (
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
 				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
 		),
+
+		// gov v1beta1
+		genType(&gov_v1beta1_types.MsgSubmitProposal{}, &gov_v1beta1_api.MsgSubmitProposal{},
+			genOpts.WithAnyTypes(&gov_v1beta1_api.TextProposal{}).
+				WithDisallowNil().
+				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{}),
+		),
+		genType(&gov_v1beta1_types.MsgDeposit{}, &gov_v1beta1_api.MsgDeposit{}, genOpts),
+		genType(&gov_v1beta1_types.MsgVote{}, &gov_v1beta1_api.MsgVote{}, genOpts),
+		genType(&gov_v1beta1_types.MsgVoteWeighted{}, &gov_v1beta1_api.MsgVoteWeighted{}, genOpts),
+		genType(&gov_v1beta1_types.TextProposal{}, &gov_v1beta1_api.TextProposal{}, genOpts),
 	}
 )
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
-		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{})
+		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
+		gov.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {
@@ -275,17 +288,17 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			gogo: &cryptotypes.PubKey{Key: []byte("key")}, pulsar: &ed25519.PubKey{Key: []byte("key")},
 		},
 		"consensus/evidence_params/duration": {
-			gogo:   &govtypes.VotingParams{VotingPeriod: 1e9 + 7},
-			pulsar: &govv1beta1.VotingParams{VotingPeriod: &durationpb.Duration{Seconds: 1, Nanos: 7}},
+			gogo:   &gov_v1beta1_types.VotingParams{VotingPeriod: 1e9 + 7},
+			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{Seconds: 1, Nanos: 7}},
 		},
 		"consensus/evidence_params/big_duration": {
-			gogo: &govtypes.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
-			pulsar: &govv1beta1.VotingParams{VotingPeriod: &durationpb.Duration{
+			gogo: &gov_v1beta1_types.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
+			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{
 				Seconds: rapidproto.MaxDurationSeconds, Nanos: 999999999}},
 		},
 		"consensus/evidence_params/too_big_duration": {
-			gogo: &govtypes.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
-			pulsar: &govv1beta1.VotingParams{VotingPeriod: &durationpb.Duration{
+			gogo: &gov_v1beta1_types.VotingParams{VotingPeriod: time.Duration(rapidproto.MaxDurationSeconds*1e9) + 999999999},
+			pulsar: &gov_v1beta1_api.VotingParams{VotingPeriod: &durationpb.Duration{
 				Seconds: rapidproto.MaxDurationSeconds + 1, Nanos: 999999999}},
 			pulsarMarshalFails: true,
 		},

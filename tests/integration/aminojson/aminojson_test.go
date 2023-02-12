@@ -1,13 +1,9 @@
 package aminojson
 
 import (
-	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
-	"cosmossdk.io/x/evidence"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/mint"
 	"reflect"
 	"testing"
 	"time"
@@ -30,8 +26,13 @@ import (
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
 	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
+	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
+	groupapi "cosmossdk.io/api/cosmos/group/v1"
+	"cosmossdk.io/x/evidence"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -50,7 +51,10 @@ import (
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 )
 
 type generatedType struct {
@@ -65,6 +69,16 @@ func genType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.Gener
 		gogo:   gogo,
 		opts:   opts,
 	}
+}
+
+func withDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
+	return opts.
+		WithAnyTypes(
+			&groupapi.ThresholdDecisionPolicy{},
+			&groupapi.PercentageDecisionPolicy{}).
+		WithDisallowNil().
+		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.ThresholdDecisionPolicy{}).
+		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.PercentageDecisionPolicy{})
 }
 
 var (
@@ -174,6 +188,29 @@ var (
 				WithDisallowNil().
 				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{})),
 		genType(&gov_v1_types.MsgUpdateParams{}, &gov_v1_api.MsgUpdateParams{}, genOpts.WithDisallowNil()),
+
+		// group
+		genType(&grouptypes.MsgCreateGroup{}, &groupapi.MsgCreateGroup{}, genOpts),
+		genType(&grouptypes.MsgUpdateGroupMembers{}, &groupapi.MsgUpdateGroupMembers{}, genOpts),
+		genType(&grouptypes.MsgUpdateGroupAdmin{}, &groupapi.MsgUpdateGroupAdmin{}, genOpts),
+		genType(&grouptypes.MsgUpdateGroupMetadata{}, &groupapi.MsgUpdateGroupMetadata{}, genOpts),
+		genType(&grouptypes.MsgCreateGroupWithPolicy{}, &groupapi.MsgCreateGroupWithPolicy{},
+			withDecisionPolicy(genOpts)),
+		genType(&grouptypes.MsgCreateGroupPolicy{}, &groupapi.MsgCreateGroupPolicy{},
+			withDecisionPolicy(genOpts)),
+		genType(&grouptypes.MsgUpdateGroupPolicyAdmin{}, &groupapi.MsgUpdateGroupPolicyAdmin{}, genOpts),
+		genType(&grouptypes.MsgUpdateGroupPolicyDecisionPolicy{}, &groupapi.MsgUpdateGroupPolicyDecisionPolicy{},
+			withDecisionPolicy(genOpts)),
+		genType(&grouptypes.MsgUpdateGroupPolicyMetadata{}, &groupapi.MsgUpdateGroupPolicyMetadata{}, genOpts),
+		genType(&grouptypes.MsgSubmitProposal{}, &groupapi.MsgSubmitProposal{},
+			genOpts.WithDisallowNil().
+				WithAnyTypes(&groupapi.MsgCreateGroup{}, &groupapi.MsgUpdateGroupMembers{}).
+				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgCreateGroup{}).
+				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgUpdateGroupMembers{}),
+		),
+		genType(&grouptypes.MsgVote{}, &groupapi.MsgVote{}, genOpts),
+		genType(&grouptypes.MsgExec{}, &groupapi.MsgExec{}, genOpts),
+		genType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, genOpts),
 	}
 )
 
@@ -181,7 +218,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
 		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{},
-		gov.AppModuleBasic{})
+		gov.AppModuleBasic{}, groupmodule.AppModuleBasic{}, mint.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {

@@ -8,7 +8,6 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
-	goamino "github.com/tendermint/go-amino"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -306,82 +305,6 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 }
 
 func TestScratch(t *testing.T) {
-	ti := newTypeIndex(msgTypes)
-	cdc := goamino.NewCodec()
-	aj := aminojson.NewAminoJSON()
-
-	msg := &authzapi.MsgExec{Msgs: []*anypb.Any{{TypeUrl: "", Value: nil}}}
-	cdc.RegisterConcrete(&authztypes.MsgExec{}, "cosmos-sdk/MsgExec", nil)
-	goMsg := &authztypes.MsgExec{}
-
-	ti.deepClone(msg, goMsg)
-	gobz, err := cdc.MarshalJSON(goMsg)
-	require.NoError(t, err)
-	bz, err := aj.MarshalAmino(msg)
-	require.NoError(t, err)
-
-	require.Equal(t, string(gobz), string(bz), "gogo: %s vs pulsar: %s", string(gobz), string(bz))
-
-	fmt.Printf("gogo: %v\npulsar: %v\n", goMsg, msg)
-}
-
-func TestAny(t *testing.T) {
-	cdc := goamino.NewCodec()
-	a := &codectypes.Any{TypeUrl: "foo", Value: []byte("bar")}
-	_, err := cdc.MarshalJSON(a)
-	require.NoError(t, err)
-}
-
-func TestMsgMultiSend(t *testing.T) {
-	encCfg := testutil.MakeTestEncodingConfig(bank.AppModuleBasic{})
-
-	aj := aminojson.NewAminoJSON()
-
-	pulsar := &bankapi.MsgMultiSend{Inputs: []*bankapi.Input{}, Outputs: []*bankapi.Output{}}
-	sanityPulsar := &bankapi.MsgMultiSend{}
-	gogo := &banktypes.MsgMultiSend{}
-
-	protoBz, err := proto.Marshal(pulsar)
-	require.NoError(t, err)
-
-	err = encCfg.Codec.Unmarshal(protoBz, gogo)
-	require.NoError(t, err)
-
-	err = proto.Unmarshal(protoBz, sanityPulsar)
-
-	// !!!
-	//  empty []string is not the same as nil []string.  this is a bug in gogo.
-	// `[]string` -> proto.Marshal -> legacyAmino.UnmarshalProto (unmarshals empty slice as nil)
-	//    -> legacyAmino.MarshalJson -> `null`
-	// `[]string` -> [proto.Marshal -> pulsar.Unmarshal] -> amino.MarshalJson -> `[]`
-	require.Nil(t, gogo.Inputs)
-	require.Nil(t, sanityPulsar.Inputs)
-	require.NotNil(t, pulsar.Inputs)
-	require.Zero(t, len(pulsar.Inputs))
-
-	legacyAminoJson, err := encCfg.Amino.MarshalJSON(gogo)
-	require.NoError(t, err)
-	aminoJson, err := aj.MarshalAmino(sanityPulsar)
-	require.NoError(t, err)
-	aminoJson, err = aj.MarshalAmino(pulsar)
-	require.NoError(t, err)
-
-	// These checks are (predictably) expected to fail since gogo.Inputs=nil and pulsar.Inputs=[]
-	require.NotEqual(t, string(legacyAminoJson), string(aminoJson))
-	require.NotEqual(t, string(legacyAminoJson), string(aminoJson))
-
-	// setting all fields to empty lists are equivalent
-	gogo.Inputs = []banktypes.Input{}
-	gogo.Outputs = []banktypes.Output{}
-	legacyAminoJson, _ = encCfg.Amino.MarshalJSON(gogo)
-	require.Equal(t, string(legacyAminoJson), string(aminoJson))
-
-	// setting all fields to nil are equivalent
-	gogo = &banktypes.MsgMultiSend{}
-	pulsar = &bankapi.MsgMultiSend{}
-	legacyAminoJson, _ = encCfg.Amino.MarshalJSON(gogo)
-	aminoJson, err = aj.MarshalAmino(pulsar)
-	require.Equal(t, string(legacyAminoJson), string(aminoJson))
 }
 
 func TestSendAuthorization(t *testing.T) {

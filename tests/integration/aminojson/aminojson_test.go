@@ -3,6 +3,7 @@ package aminojson
 import (
 	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"fmt"
 	"reflect"
 	"testing"
@@ -25,7 +26,9 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/ed25519"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
 	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
+	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	govv1beta1 "cosmossdk.io/api/cosmos/gov/v1beta1"
+	feegranttypes "cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/tx/aminojson"
 	"cosmossdk.io/x/tx/rapidproto"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -120,13 +123,34 @@ var (
 			genOpts.WithAnyTypes(&evidenceapi.Equivocation{}).
 				WithDisallowNil().
 				WithInterfaceHint("cosmos.evidence.v1beta1.Evidence", &evidenceapi.Equivocation{})),
+
+		// feegrant
+		genType(&feegranttypes.MsgGrantAllowance{}, &feegrantapi.MsgGrantAllowance{},
+			genOpts.WithDisallowNil().
+				WithAnyTypes(
+					&feegrantapi.BasicAllowance{},
+					&feegrantapi.PeriodicAllowance{}).
+				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
+				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
+		),
+		genType(&feegranttypes.MsgRevokeAllowance{}, &feegrantapi.MsgRevokeAllowance{}, genOpts),
+		genType(&feegranttypes.BasicAllowance{}, &feegrantapi.BasicAllowance{}, genOpts.WithDisallowNil()),
+		genType(&feegranttypes.PeriodicAllowance{}, &feegrantapi.PeriodicAllowance{}, genOpts.WithDisallowNil()),
+		genType(&feegranttypes.AllowedMsgAllowance{}, &feegrantapi.AllowedMsgAllowance{},
+			genOpts.WithDisallowNil().
+				WithAnyTypes(
+					&feegrantapi.BasicAllowance{},
+					&feegrantapi.PeriodicAllowance{}).
+				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.BasicAllowance{}).
+				WithInterfaceHint("cosmos.feegrant.v1beta1.FeeAllowanceI", &feegrantapi.PeriodicAllowance{}),
+		),
 	}
 )
 
 func TestAminoJSON_Equivalence(t *testing.T) {
 	encCfg := testutil.MakeTestEncodingConfig(
 		auth.AppModuleBasic{}, authzmodule.AppModuleBasic{}, bank.AppModuleBasic{}, consensus.AppModuleBasic{},
-		distribution.AppModuleBasic{}, evidence.AppModuleBasic{})
+		distribution.AppModuleBasic{}, evidence.AppModuleBasic{}, feegrantmodule.AppModuleBasic{})
 	aj := aminojson.NewAminoJSON()
 
 	for _, tt := range genTypes {
